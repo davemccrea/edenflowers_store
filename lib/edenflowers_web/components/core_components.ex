@@ -17,7 +17,9 @@ defmodule EdenflowersWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import EdenflowersWeb.Gettext
+
+  use Gettext,
+    backend: EdenflowersWeb.Gettext
 
   @doc """
   Renders a modal.

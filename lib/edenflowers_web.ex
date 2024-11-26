@@ -43,7 +43,9 @@ defmodule EdenflowersWeb do
         layouts: [html: EdenflowersWeb.Layouts]
 
       import Plug.Conn
-      import EdenflowersWeb.Gettext
+
+      use Gettext,
+        backend: EdenflowersWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +87,9 @@ defmodule EdenflowersWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import EdenflowersWeb.CoreComponents
-      import EdenflowersWeb.Gettext
+
+      use Gettext,
+        backend: EdenflowersWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
