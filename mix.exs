@@ -10,7 +10,10 @@ defmodule Edenflowers.MixProject do
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      preferred_cli_env: [
+        "test.watch": :test
+      ]
     ]
   end
 
@@ -35,6 +38,7 @@ defmodule Edenflowers.MixProject do
     [
       {:ash_postgres, "~> 2.0"},
       {:ash_phoenix, "~> 2.0"},
+      {:ash_archival, "~> 1.0.4"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.4"},
       {:phoenix, "~> 1.7.17"},
@@ -49,12 +53,7 @@ defmodule Edenflowers.MixProject do
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
+       github: "tailwindlabs/heroicons", tag: "v2.1.1", sparse: "optimized", app: false, compile: false, depth: 1},
       {:swoosh, "~> 1.5"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},
@@ -62,7 +61,11 @@ defmodule Edenflowers.MixProject do
       {:gettext, "~> 0.26 and >= 0.26.1"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:faker, "~> 0.18", only: :test},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:tz, "~> 0.28"},
+      {:req, "~> 0.5.0"}
     ]
   end
 
