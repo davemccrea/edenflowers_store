@@ -4,47 +4,63 @@ defmodule Edenflowers.Fixtures do
   def fixture(resource), do: fixture(resource, [])
 
   def fixture(:tax_rate, opts) do
+    default_params = %{
+      name: words(),
+      percentage: "0.255"
+    }
+
+    params = Enum.into(opts, default_params)
+
     TaxRate
-    |> Ash.Changeset.for_create(opts[:acton] || :create, %{
-      name: opts[:name] || words(),
-      percentage: opts[:percentage] || "0.255"
-    })
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
   def fixture(:promotion, opts) do
+    default_params = %{
+      name: words(),
+      code: "code",
+      discount_percentage: "0.15",
+      minimum_cart_total: "30.00",
+      start_date: nil,
+      expiration_date: nil
+    }
+
+    params = Enum.into(opts, default_params)
+
     Promotion
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      name: opts[:name] || words(),
-      code: opts[:code] || "code",
-      discount_percentage: opts[:discount_percentage] || "0.15",
-      minimum_cart_total: opts[:minimum_cart_total] || "30.00",
-      start_date: opts[:start_date],
-      expiration_date: opts[:expiration_date]
-    })
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
   def fixture(:product, opts) do
+    default_params = %{
+      tax_rate_id: nil,
+      name: words(),
+      description: words()
+    }
+
+    params = Enum.into(opts, default_params)
+
     Product
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      tax_rate_id: opts[:tax_rate_id],
-      name: opts[:name] || words(),
-      description: opts[:description] || words()
-    })
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
   def fixture(:product_variant, opts) do
-    ProductVariant
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      product_id: opts[:product_id],
-      price: opts[:price] || "35.00",
-      size: opts[:size] || :medium,
+    default_params = %{
+      product_id: nil,
+      price: "35.00",
+      size: :medium,
       image: "image.png",
       stock_trackable: false,
       stock_quantity: 0
-    })
+    }
+
+    params = Enum.into(opts, default_params)
+
+    ProductVariant
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
@@ -78,22 +94,30 @@ defmodule Edenflowers.Fixtures do
   end
 
   def fixture(:order, opts) do
+    default_params = %{
+      promotion_id: nil
+    }
+
+    params = Enum.into(opts, default_params)
+
     Order
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      promotion_id: opts[:promotion_id]
-    })
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
   def fixture(:order_item, opts) do
+    default_params = %{
+      order_id: nil,
+      product_variant_id: nil,
+      unit_price: nil,
+      quantity: nil,
+      tax_rate: nil
+    }
+
+    params = Enum.into(opts, default_params)
+
     LineItem
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      order_id: opts[:order_id],
-      product_variant_id: opts[:product_variant_id],
-      unit_price: opts[:unit_price],
-      quantity: opts[:quantity],
-      tax_rate: opts[:tax_rate]
-    })
+    |> Ash.Changeset.for_create(opts[:action] || :create, params)
     |> Ash.create!()
   end
 
