@@ -49,14 +49,12 @@ defmodule Edenflowers.Fixtures do
   end
 
   def fixture(:fulfillment_option, opts) do
-    FulfillmentOption
-    |> Ash.Changeset.for_create(opts[:action] || :create, %{
-      tax_rate_id: opts[:tax_rate_id],
-      name: opts[:name] || words(),
+    default_params = %{
+      name: words(),
       type: :fixed,
       minimum_cart_total: 0,
-      base_price: "3.00",
-      price_per_km: "1.50",
+      base_price: "4.50",
+      price_per_km: "1.60",
       free_dist_km: 5,
       max_dist_km: 20,
       same_day: true,
@@ -70,7 +68,12 @@ defmodule Edenflowers.Fixtures do
       sunday: true,
       enabled_dates: [],
       disabled_dates: []
-    })
+    }
+
+    params = Enum.into(opts, default_params)
+
+    FulfillmentOption
+    |> Ash.Changeset.for_create(opts[:create] || :create, params)
     |> Ash.create!()
   end
 
