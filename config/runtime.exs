@@ -20,6 +20,8 @@ if System.get_env("PHX_SERVER") do
   config :edenflowers, EdenflowersWeb.Endpoint, server: true
 end
 
+config :edenflowers, :here_api_key, System.get_env("HERE_API_KEY")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

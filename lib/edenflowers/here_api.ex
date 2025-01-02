@@ -1,5 +1,23 @@
-defmodule Edenflowers.Store.HereAPI do
+defmodule Edenflowers.HereAPI do
+  require Logger
+
   @origin "63.1243488,21.5974075"
+  @get_coordinates_error {:error, "HereAPI: could not get coordinates"}
+  @get_distance_error {:error, "HereAPI: could not get distance"}
+
+  def complete_address(query) do
+    url =
+      "https://autocomplete.search.hereapi.com/v1/autocomplete?q=#{URI.encode(query)}&at=#{@origin}&limit=1&apiKey=#{api_key()}"
+
+    with {:ok, %{body: body}} <- Req.get(url),
+         %{"items" => [%{"address" => %{"city" => city, "postalCode" => postal_code}} | _]} <- body do
+      %{query: query, city: city, postal_code: postal_code}
+    else
+      err ->
+        Logger.error(err)
+        {:error, "HereAPI: could not complete address"}
+    end
+  end
 
   @spec get_coordinates(binary()) :: {:ok, {number(), number()}} | {:error, binary()}
   def get_coordinates(address) do
@@ -10,7 +28,9 @@ defmodule Edenflowers.Store.HereAPI do
          %{"items" => [%{"position" => %{"lat" => lat, "lng" => lng}} | _]} <- body do
       {:ok, {lat, lng}}
     else
-      _ -> {:error, "HereAPI: could not get coordinates"}
+      err ->
+        Logger.error(err)
+        @get_coordinates_error
     end
   end
 
@@ -25,11 +45,13 @@ defmodule Edenflowers.Store.HereAPI do
          %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body do
       {:ok, length}
     else
-      _ -> {:error, "HereAPI: could not get distance"}
+      err ->
+        Logger.error(err)
+        @get_distance_error
     end
   end
 
-  def get_distance({:error, _}), do: {:error, "HereAPI: could not get distance"}
+  def get_distance({:error, _}), do: @get_distance_error
 
   defp api_key, do: Application.get_env(:edenflowers, :here_api_key)
 end
