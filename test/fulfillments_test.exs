@@ -10,7 +10,7 @@ defmodule Edenflowers.FulfillmentsTest do
 
   describe "calculate_price/1" do
     test "calculates fixed pricing", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id, type: :fixed, base_price: 0)
+      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id, rate_type: :fixed, base_price: 0)
       assert Fulfillments.calculate_price(fulfillment_option) == {:ok, Decimal.new("0")}
     end
   end
@@ -20,7 +20,8 @@ defmodule Edenflowers.FulfillmentsTest do
       fulfillment_option =
         fixture(:fulfillment_option,
           tax_rate_id: tax_rate_id,
-          type: :dynamic,
+          fulfillment_method: :delivery,
+          rate_type: :dynamic,
           base_price: "4.50",
           price_per_km: "1.60",
           free_dist_km: 5,

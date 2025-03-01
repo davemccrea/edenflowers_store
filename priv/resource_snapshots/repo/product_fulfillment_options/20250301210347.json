@@ -12,59 +12,9 @@
     },
     {
       "allow_nil?": false,
-      "default": "1",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "quantity",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "unit_price",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "tax_rate",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "inserted_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "updated_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
+      "primary_key?": true,
       "references": {
         "deferrable": false,
         "destination_attribute": "id",
@@ -78,22 +28,22 @@
           "global": null,
           "strategy": null
         },
-        "name": "line_items_order_id_fkey",
+        "name": "product_fulfillment_options_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders"
+        "table": "products"
       },
       "size": null,
-      "source": "order_id",
+      "source": "product_id",
       "type": "uuid"
     },
     {
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
-      "primary_key?": false,
+      "primary_key?": true,
       "references": {
         "deferrable": false,
         "destination_attribute": "id",
@@ -107,24 +57,69 @@
           "global": null,
           "strategy": null
         },
-        "name": "line_items_product_variant_id_fkey",
+        "name": "product_fulfillment_options_fulfillment_option_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "product_variants"
+        "table": "fulfillment_options"
       },
       "size": null,
-      "source": "product_variant_id",
+      "source": "fulfillment_option_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
-  "custom_indexes": [],
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "product_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "product_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "fulfillment_option_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "fulfillment_option_id"
+        }
+      ],
+      "include": null,
+      "message": null,
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "67F1BF7E0409F52EB490E3F2D9862687E210AFF3CDE848F09045C039DF4CDBC3",
+  "hash": "1EFBF2E8EE3DE7511EBEBCA89FCB68A86E191FCF817017F42765397E7543F4EA",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -133,5 +128,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "line_items"
+  "table": "product_fulfillment_options"
 }

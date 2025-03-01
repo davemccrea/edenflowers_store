@@ -24,7 +24,7 @@ defmodule Edenflowers.Store.LineItem do
 
   attributes do
     uuid_primary_key :id
-    attribute :quantity, :integer, allow_nil?: false, default: 1, constraints: [min: 1]
+    attribute :quantity, :integer, default: 1, constraints: [min: 1]
     attribute :unit_price, :decimal, allow_nil?: false
     attribute :tax_rate, :decimal, allow_nil?: false
     timestamps()

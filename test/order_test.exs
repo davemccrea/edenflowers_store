@@ -12,14 +12,22 @@ defmodule Edenflowers.Store.OrderTest do
                |> Ash.create()
     end
 
-    test "sums line_total and line_tax_amount correctly" do
-      tax_rate_1 = fixture(:tax_rate, percentage: "0.255")
-      product_1 = fixture(:product, tax_rate_id: tax_rate_1.id)
-      product_variant_1 = fixture(:product_variant, product_id: product_1.id, price: "40.00")
+    # test "completes an order" do
+    #   order = fixture(:order, customer_name: "Customer")
 
-      tax_rate_2 = fixture(:tax_rate, percentage: "0.10")
-      product_2 = fixture(:product, tax_rate_id: tax_rate_2.id)
-      product_variant_2 = fixture(:product_variant, product_id: product_2.id, price: "6.00")
+    #   order
+    #   |> Ash.Changeset.for_update(:complete)
+    #   |> Ash.update!()
+
+    #   assert false
+    # end
+
+    test "counts number of items in cart" do
+      tax_rate = fixture(:tax_rate)
+      product_1 = fixture(:product, tax_rate_id: tax_rate.id)
+      product_1_product_variant_1 = fixture(:product_variant, product_id: product_1.id)
+      product_2 = fixture(:product, tax_rate_id: tax_rate.id)
+      product_2_product_variant_1 = fixture(:product_variant, product_id: product_2.id)
 
       order =
         Order
@@ -28,16 +36,51 @@ defmodule Edenflowers.Store.OrderTest do
 
       fixture(:order_item, %{
         order_id: order.id,
-        product_variant_id: product_variant_1.id,
-        unit_price: product_variant_1.price,
+        product_variant_id: product_1_product_variant_1.id,
+        unit_price: product_1_product_variant_1.price,
+        tax_rate: tax_rate.percentage,
+        quantity: 2
+      })
+
+      fixture(:order_item, %{
+        order_id: order.id,
+        product_variant_id: product_2_product_variant_1.id,
+        unit_price: product_2_product_variant_1.price,
+        tax_rate: tax_rate.percentage,
+        quantity: 1
+      })
+
+      order = Ash.load!(order, [:total_items_in_cart])
+
+      assert order.total_items_in_cart == 3
+    end
+
+    test "sums line_total and line_tax_amount correctly" do
+      tax_rate_1 = fixture(:tax_rate, percentage: "0.255")
+      product_1 = fixture(:product, tax_rate_id: tax_rate_1.id)
+      product_1_product_variant_1 = fixture(:product_variant, product_id: product_1.id, price: "40.00")
+
+      tax_rate_2 = fixture(:tax_rate, percentage: "0.10")
+      product_2 = fixture(:product, tax_rate_id: tax_rate_2.id)
+      product_2_product_variant_1 = fixture(:product_variant, product_id: product_2.id, price: "6.00")
+
+      order =
+        Order
+        |> Ash.Changeset.for_create(:create, %{})
+        |> Ash.create!()
+
+      fixture(:order_item, %{
+        order_id: order.id,
+        product_variant_id: product_1_product_variant_1.id,
+        unit_price: product_1_product_variant_1.price,
         tax_rate: tax_rate_1.percentage,
         quantity: 2
       })
 
       fixture(:order_item, %{
         order_id: order.id,
-        product_variant_id: product_variant_2.id,
-        unit_price: product_variant_2.price,
+        product_variant_id: product_2_product_variant_1.id,
+        unit_price: product_2_product_variant_1.price,
         tax_rate: tax_rate_2.percentage,
         quantity: 1
       })

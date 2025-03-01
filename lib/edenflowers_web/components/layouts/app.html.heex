@@ -1,29 +1,35 @@
-<header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4">
-      <a href="/">
-        <img src={~p"/images/logo.svg"} width="36" />
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v{Application.spec(:phoenix, :vsn)}
-      </p>
+<div class="flex min-h-screen flex-col">
+  <header>
+    <div class="flex items-center justify-center bg-green-100 py-2">
+      <span>This is a banner 🚀</span>
     </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <a href="https://twitter.com/elixirphoenix" class="hover:text-zinc-700">
-        @elixirphoenix
-      </a>
-      <a href="https://github.com/phoenixframework/phoenix" class="hover:text-zinc-700">
-        GitHub
-      </a>
-      <a href="https://hexdocs.pm/phoenix/overview.html" class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80">
-        Get Started <span aria-hidden="true">&rarr;</span>
-      </a>
+
+    <div class="my-12 flex items-center justify-center">
+      <div class="text-center leading-none">
+        <h1 class="font-serif text-4xl font-bold tracking-wide">
+          Eden Flowers
+        </h1>
+      </div>
     </div>
-  </div>
-</header>
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
+  </header>
+
+  <main class="mb-24 flex-1 p-4">
+    <%!-- TODO: replace with wa-toast when eventually released --%>
     <.flash_group flash={@flash} />
     {@inner_content}
-  </div>
-</main>
+  </main>
+
+  <footer class="bg-stone-100 p-4">
+    <div class="container mx-auto">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="p-4">
+          <p>Footer content for the first column goes here.</p>
+        </div>
+
+        <div class="p-4">
+          <p>Footer content for the second column goes here.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

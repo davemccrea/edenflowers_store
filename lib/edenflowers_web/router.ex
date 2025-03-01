@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Router do
     plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug EdenflowersWeb.Plugs.InitStore, ["test"]
   end
 
   pipeline :api do
@@ -18,6 +19,7 @@ defmodule EdenflowersWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/checkout", CheckoutLive
   end
 
   # Other scopes may use custom stacks.

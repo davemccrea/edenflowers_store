@@ -1,5 +1,17 @@
-@import "tailwindcss/base";
+/* Tweaked Preflight as some styles were propogating to the shadow DOM and affecting Web Awesome components */
+/* @import "tailwindcss/base"; */
+@import "preflight.css";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
+.checkout__section {
+  @apply flex flex-col gap-8 mb-12;
+}
+
+.checkout__form {
+  @apply flex flex-col space-y-4;
+}
+
+.checkout__heading-container {
+  @apply space-y-4 mb-4;
+}

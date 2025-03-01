@@ -67,7 +67,8 @@ defmodule Edenflowers.Fixtures do
   def fixture(:fulfillment_option, opts) do
     default_params = %{
       name: words(),
-      type: :fixed,
+      fulfillment_method: :pickup,
+      rate_type: :fixed,
       minimum_cart_total: 0,
       base_price: "4.50",
       price_per_km: "1.60",

@@ -96,20 +96,17 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :state, :text, null: false
+      add :state, :text, null: false, default: "cart"
+      add :step, :bigint, default: 1
+      add :recipient_phone_number, :text
+      add :recipient_address, :text
+      add :delivery_instructions, :text
+      add :fulfillment_date, :date
+      add :fulfillment_amount, :decimal
+      add :gift_message, :text
       add :customer_name, :text
       add :customer_email, :text
-      add :recipient_name, :text
-      add :recipient_address, :text
-      add :recipient_city, :text
-      add :recipient_postal_code, :text
-      add :recipient_phone_number, :text
-      add :delivery_instructions, :text
-      add :is_gift, :boolean
-      add :gift_message, :text
-      add :fulfillment_date, :date
       add :stripe_payment_id, :text
-      add :fulfillment_amount, :decimal
       add :inserted_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
       add :updated_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
       add :fulfillment_option_id, :uuid
@@ -122,7 +119,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:line_items, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :quantity, :bigint, null: false, default: 1
+      add :quantity, :bigint, default: 1
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
       add :inserted_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
@@ -142,6 +139,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     create table(:fulfillment_options, primary_key: false) do
+      add :translations, :map
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
     end
 
@@ -171,7 +169,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     alter table(:fulfillment_options) do
       add :name, :text, null: false
       add :minimum_cart_total, :decimal, default: "0"
-      add :type, :text, null: false
+      add :fulfillment_method, :text, null: false
+      add :rate_type, :text, null: false
       add :base_price, :decimal, null: false
       add :price_per_km, :decimal
       add :free_dist_km, :bigint
@@ -223,7 +222,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :free_dist_km
       remove :price_per_km
       remove :base_price
-      remove :type
+      remove :rate_type
+      remove :fulfillment_method
       remove :minimum_cart_total
       remove :name
     end

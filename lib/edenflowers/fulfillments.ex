@@ -5,15 +5,15 @@ defmodule Edenflowers.Fulfillments do
   @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))
 
-  def calculate_price(%{type: :fixed, base_price: base_price}, _distance) do
+  def calculate_price(%{rate_type: :fixed, base_price: base_price}, _distance) do
     {:ok, base_price}
   end
 
-  def calculate_price(%{type: :dynamic} = fulfillment_option, distance) when is_integer(distance) do
+  def calculate_price(%{rate_type: :dynamic} = fulfillment_option, distance) when is_integer(distance) do
     calculate_price(fulfillment_option, Decimal.new(distance))
   end
 
-  def calculate_price(%{type: :dynamic} = fulfillment_option, distance) when is_decimal(distance) do
+  def calculate_price(%{rate_type: :dynamic} = fulfillment_option, distance) when is_decimal(distance) do
     %{
       price_per_km: price_per_km,
       base_price: base_price,

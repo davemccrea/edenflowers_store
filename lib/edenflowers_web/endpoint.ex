@@ -8,6 +8,9 @@ defmodule EdenflowersWeb.Endpoint do
     store: :cookie,
     key: "_edenflowers_key",
     signing_salt: "ZUXNYtPz",
+    # TODO: by default cookies expire when browser session ends - add max age for longer sessions?
+    # For example:
+    # max_age: 2 * 24 * 60 * 60,
     same_site: "Lax"
   ]
 

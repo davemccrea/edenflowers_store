@@ -2,56 +2,50 @@ defmodule Edenflowers.HereAPI do
   require Logger
 
   @origin "63.1243488,21.5974075"
-  @get_coordinates_error {:error, "HereAPI: could not get coordinates"}
-  @get_distance_error {:error, "HereAPI: could not get distance"}
+  # TODO
+  @lang "sv"
 
-  def complete_address(query) do
+  def get_address(query) when is_binary(query) do
     url =
-      "https://autocomplete.search.hereapi.com/v1/autocomplete?q=#{URI.encode(query)}&at=#{@origin}&limit=1&apiKey=#{api_key()}"
+      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
 
     with {:ok, %{body: body}} <- Req.get(url),
-         %{"items" => [%{"address" => %{"city" => city, "postalCode" => postal_code}} | _]} <- body do
-      %{query: query, city: city, postal_code: postal_code}
+         %{
+           "items" => [
+             %{
+               "address" => %{
+                 "street" => street,
+                 "houseNumber" => house_number,
+                 "postalCode" => postal_code,
+                 "city" => city
+               },
+               "id" => here_id,
+               "position" => %{"lat" => lat, "lng" => lng}
+             } = _head
+             | _tail
+           ]
+         } <- body do
+      address = "#{street} #{house_number}, #{postal_code} #{city}"
+      position = "#{lat},#{lng}"
+
+      {:ok, {address, position, here_id}}
     else
-      err ->
-        Logger.error(err)
-        {:error, "HereAPI: could not complete address"}
+      _ ->
+        {:error, :geocode}
     end
   end
 
-  @spec get_coordinates(binary()) :: {:ok, {number(), number()}} | {:error, binary()}
-  def get_coordinates(address) do
+  def get_distance(query) when is_binary(query) do
     url =
-      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(address)}&at=#{@origin}&limit=1&apiKey=#{api_key()}"
-
-    with {:ok, %{body: body}} <- Req.get(url),
-         %{"items" => [%{"position" => %{"lat" => lat, "lng" => lng}} | _]} <- body do
-      {:ok, {lat, lng}}
-    else
-      err ->
-        Logger.error(err)
-        @get_coordinates_error
-    end
-  end
-
-  @spec get_distance({:ok, {number(), number()}}) :: {:ok, number()} | {:error, binary()}
-  def get_distance({:ok, {lat, lng}}) when is_number(lat) and is_number(lng) do
-    destination = "#{lat},#{lng}"
-
-    url =
-      "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{destination}&return=summary&apikey=#{api_key()}"
+      "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{query}&return=summary&apikey=#{api_key()}"
 
     with {:ok, %{body: body}} <- Req.get(url),
          %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body do
       {:ok, length}
     else
-      err ->
-        Logger.error(err)
-        @get_distance_error
+      _ -> {:error, :distance}
     end
   end
-
-  def get_distance({:error, _}), do: @get_distance_error
 
   defp api_key, do: Application.get_env(:edenflowers, :here_api_key)
 end

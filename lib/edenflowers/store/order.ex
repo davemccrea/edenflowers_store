@@ -1,5 +1,7 @@
 defmodule Edenflowers.Store.Order do
-  use Ash.Resource, domain: Edenflowers.Store, data_layer: AshPostgres.DataLayer
+  use Ash.Resource,
+    domain: Edenflowers.Store,
+    data_layer: AshPostgres.DataLayer
 
   postgres do
     repo Edenflowers.Repo
@@ -10,12 +12,52 @@ defmodule Edenflowers.Store.Order do
     defaults [:read, :destroy]
 
     create :create do
-      accept [:promotion_id]
-      change set_attribute(:state, :cart)
+      accept [:promotion_id, :fulfillment_option_id]
+      change set_attribute(:step, 1)
     end
 
-    update :complete do
-      change atomic_update(:state, :completed)
+    update :edit_step_1 do
+      change set_attribute(:step, 1)
+    end
+
+    update :edit_step_2 do
+      change set_attribute(:step, 2)
+    end
+
+    update :edit_step_3 do
+      change set_attribute(:step, 3)
+    end
+
+    update :save_step_1 do
+      accept [
+        :fulfillment_option_id,
+        :recipient_phone_number,
+        :delivery_address,
+        :delivery_instructions,
+        :fulfillment_amount,
+        :calculated_address,
+        :here_id,
+        :distance,
+        :position
+      ]
+
+      change set_attribute(:step, 2)
+    end
+
+    update :save_step_2 do
+      accept [:gift_message]
+
+      change set_attribute(:step, 3)
+    end
+
+    update :save_step_3 do
+      accept []
+      # TODO: should state be :cart and :order, instead of :cart and :completed?
+      change set_attribute(:state, :completed)
+    end
+
+    update :add_stripe_payment_id do
+      accept [:stripe_payment_id]
     end
 
     update :add_promotion do
@@ -26,27 +68,36 @@ defmodule Edenflowers.Store.Order do
 
   attributes do
     uuid_primary_key :id
-    attribute :state, Edenflowers.Store.OrderState, allow_nil?: false
+    attribute :state, Edenflowers.Store.OrderState, default: :cart, allow_nil?: false
+
+    attribute :step, :integer, default: 1, constraints: [min: 1, max: 3]
+
+    # Step 1 - Delivery
+    attribute :recipient_phone_number, :string
+    attribute :delivery_address, :string
+    attribute :delivery_instructions, :string
+    attribute :fulfillment_date, :date
+    attribute :fulfillment_amount, :decimal
+    attribute :calculated_address, :string
+    attribute :here_id, :string
+    attribute :distance, :integer
+    attribute :position, :string
+
+    # Step 2 - Customise
+    attribute :gift_message, :string
+
+    # Step 3 - Payment
     attribute :customer_name, :string
     attribute :customer_email, :string
-    attribute :recipient_name, :string
-    attribute :recipient_address, :string
-    attribute :recipient_city, :string
-    attribute :recipient_postal_code, :string
-    attribute :recipient_phone_number, :string
-    attribute :delivery_instructions, :string
-    attribute :is_gift, :boolean
-    attribute :gift_message, :string
-    attribute :fulfillment_date, :date
     attribute :stripe_payment_id, :string
-    attribute :fulfillment_amount, :decimal
+
     timestamps()
   end
 
   relationships do
     belongs_to :fulfillment_option, Edenflowers.Store.FulfillmentOption
     belongs_to :promotion, Edenflowers.Store.Promotion
-    has_many :order_items, Edenflowers.Store.LineItem
+    has_many :line_items, Edenflowers.Store.LineItem
   end
 
   calculations do
@@ -54,8 +105,9 @@ defmodule Edenflowers.Store.Order do
   end
 
   aggregates do
-    sum :line_total, :order_items, :line_total
-    sum :line_total_with_discount, :order_items, :line_total_with_discount
-    sum :line_tax_amount, :order_items, :line_tax_amount
+    sum :total_items_in_cart, :line_items, :quantity
+    sum :line_total, :line_items, :line_total
+    sum :line_total_with_discount, :line_items, :line_total_with_discount
+    sum :line_tax_amount, :line_items, :line_tax_amount
   end
 end
