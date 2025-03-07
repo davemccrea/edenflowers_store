@@ -20,7 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :edenflowers, EdenflowersWeb.Endpoint, server: true
 end
 
-config :edenflowers, :here_api_key, System.get_env("HERE_API_KEY")
+config :edenflowers,
+       :here_api_key,
+       System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
 if config_env() == :prod do
   database_url =

@@ -30,8 +30,8 @@ defmodule Edenflowers.HereAPI do
 
       {:ok, {address, position, here_id}}
     else
-      _ ->
-        {:error, :geocode}
+      {:error, _} = error -> error
+      _ -> {:error, :address_not_found}
     end
   end
 
@@ -43,7 +43,8 @@ defmodule Edenflowers.HereAPI do
          %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body do
       {:ok, length}
     else
-      _ -> {:error, :distance}
+      {:error, _} = error -> error
+      _ -> {:error, :distance_not_found}
     end
   end
 

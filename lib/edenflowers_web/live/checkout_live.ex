@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
               <div>
                 <.input
-                  hint="The delivery fee is calcuted based on distance."
+                  hint="The delivery fee is calcuted based on distance from Minimosen."
                   placeholder=""
                   label="Address *"
                   field={@form[:delivery_address]}
@@ -298,7 +298,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         add_field_error(socket, :delivery_address, error)
 
       error ->
-        Logger.error("#{inspect(error)}")
+        Logger.error("Unhandled error in calculate_delivery_details: #{inspect(error)}")
         update_order_and_form(socket, params)
     end
   end
@@ -323,8 +323,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp add_field_error(socket, field, error) when is_atom(field) do
     error_message =
       case error do
-        :geocode -> gettext("Address not found")
+        :address_not_found -> gettext("Address not found")
         :delivery_address_required -> gettext("Address is required")
+        :out_of_delivery_range -> gettext("Out of delivery range")
         _ -> nil
       end
 
@@ -379,6 +380,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   defp create_step_action_name(action, step) when is_atom(action) and is_integer(step) do
-    "#{action}_step_#{step}" |> String.to_atom()
+    String.to_atom("#{action}_step_#{step}")
   end
 end
