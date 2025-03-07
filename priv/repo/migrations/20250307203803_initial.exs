@@ -99,10 +99,14 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :state, :text, null: false, default: "cart"
       add :step, :bigint, default: 1
       add :recipient_phone_number, :text
-      add :recipient_address, :text
+      add :delivery_address, :text
       add :delivery_instructions, :text
       add :fulfillment_date, :date
       add :fulfillment_amount, :decimal
+      add :calculated_address, :text
+      add :here_id, :text
+      add :distance, :bigint
+      add :position, :text
       add :gift_message, :text
       add :customer_name, :text
       add :customer_email, :text
