@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             class="checkout__form"
           >
             <.input
-              class="wa"
+              class="disable-preflight"
               label={gettext("Delivery Method")}
               field={@form[:fulfillment_option_id]}
               options={format_options_for_select(@fulfillment_options)}
@@ -55,6 +55,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             />
 
             <.input
+              class="disable-preflight"
               hint="You will receive a text message when your order is ready for collection."
               label="Phone Number"
               field={@form[:recipient_phone_number]}
@@ -64,6 +65,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
               <div>
                 <.input
+                  class="disable-preflight"
                   hint="The delivery fee is calcuted based on distance from Minimosen."
                   placeholder=""
                   label="Address *"
@@ -73,10 +75,17 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <.error :if={@errors[:delivery_address]}>{@errors[:delivery_address]}</.error>
               </div>
 
-              <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
+              <.input
+                class="disable-preflight"
+                label="Delivery Instructions"
+                field={@form[:delivery_instructions]}
+                type="text"
+              />
+            </div>
+            </div>
             </div>
 
-            <wa-button class="submit-button" type="submit">Next</wa-button>
+            <wa-button class="submit-button disable-preflight mt-2" type="submit">Next</wa-button>
           </.form>
         </section>
 
@@ -137,6 +146,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               <div class="relative">
                 <.label for={@form[:gift_message].id}>
                   Gift Message <textarea
+                    class="disable-preflight"
                     id={@form[:gift_message].id}
                     name={@form[:gift_message].name}
                     maxlength={200}
@@ -154,7 +164,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.error>
             </div>
 
-            <wa-button class="submit-button" type="submit">Next</wa-button>
+            <wa-button class="submit-button disable-preflight" type="submit">Next</wa-button>
           </.form>
         </section>
 
@@ -201,7 +211,9 @@ defmodule EdenflowersWeb.CheckoutLive do
         {render_slot(@inner_block)}
       </h1>
       <%= if @step do %>
-        <wa-button phx-click={"edit_step_#{@step}"} appearance="plain" variant="neutral">Edit</wa-button>
+        <wa-button class="disable-preflight" phx-click={"edit_step_#{@step}"} appearance="plain" variant="neutral">
+          Edit
+        </wa-button>
       <% end %>
     </div>
     """

@@ -1,8 +1,40 @@
-/* Tweaked Preflight as some styles were propogating to the shadow DOM and affecting Web Awesome components */
-/* @import "tailwindcss/base"; */
-@import "preflight.css";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import url("https://cdn.jsdelivr.net/npm/wc-datepicker/dist/themes/light.css")
+layer(datepicker);
+
+@import url("https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/styles/webawesome.css")
+layer(wa);
+
+@layer wa {
+  .wa-off,
+  .wa-off-deep,
+  .wa-off-deep * {
+    all: revert-layer;
+  }
+}
+
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@layer base {
+  .disable-preflight,
+  .disable-preflight-deep,
+  .disable-preflight-deep * {
+    all: revert-layer;
+  }
+}
+
+@variant dark (&:where(.dark, .dark *));
+@variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+@plugin "./heroicons.tailwind.plugin.js";
+
+@source "../js/**/*.js";
+@source "../../lib/edenflowers.ex";
+@source "../../lib/edenflowers_web/**/*.*ex";
 
 .checkout__section {
   @apply flex flex-col gap-8 mb-12;
@@ -14,4 +46,8 @@
 
 .checkout__heading-container {
   @apply space-y-4 mb-4;
+}
+
+.disable-dbl-tap-zoom {
+  touch-action: manipulation;
 }
