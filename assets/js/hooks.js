@@ -62,7 +62,8 @@ Hooks.CalendarHook = {
 
     this.el
       .querySelector(`#${this.id}-grid`)
-      .addEventListener("keydown", ({ key }) => {
+      .addEventListener("keydown", (event) => {
+        const key = event.key;
         const keys = {
           ArrowUp: "data-key-arrow-up",
           ArrowDown: "data-key-arrow-down",
@@ -75,6 +76,7 @@ Hooks.CalendarHook = {
         };
 
         if (key in keys) {
+          event.preventDefault();
           this.handleKeyDown(key, keys[key]);
         }
       });
