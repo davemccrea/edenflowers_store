@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.HereAPI
+  alias Edenflowers.{HereAPI, Fulfillments}
   alias Edenflowers.Store.{FulfillmentOption, Order}
 
   def mount(_params, session, socket) do
@@ -305,9 +305,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       update_order_and_form(socket, params)
     else
-      {:error, error} ->
-        Logger.error("#{inspect(error)}")
-        add_field_error(socket, :delivery_address, error)
+      {:error, {_error, error_msg}} ->
+        add_field_error(socket, :delivery_address, error_msg)
 
       error ->
         Logger.error("Unhandled error in calculate_delivery_details: #{inspect(error)}")
@@ -332,16 +331,8 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp add_field_error(socket, field, error) when is_atom(field) do
-    error_message =
-      case error do
-        :address_not_found -> gettext("Address not found")
-        :delivery_address_required -> gettext("Address is required")
-        :out_of_delivery_range -> gettext("Out of delivery range")
-        _ -> nil
-      end
-
-    errors = Map.put(socket.assigns.errors, field, error_message)
+  defp add_field_error(socket, field, error_msg) when is_atom(field) do
+    errors = Map.put(socket.assigns.errors, field, error_msg)
     assign(socket, errors: errors)
   end
 
@@ -353,27 +344,27 @@ defmodule EdenflowersWeb.CheckoutLive do
         socket
         |> add_field_error(:delivery_address, nil)
 
-      {:error, error} ->
+      {:error, {_error, error_msg}} ->
         socket
-        |> add_field_error(:delivery_address, error)
+        |> add_field_error(:delivery_address, error_msg)
     end
   end
 
   defp ensure_valid_delivery_address(socket, params) do
-    %{assigns: %{fulfillment_options: options}} = socket
+    %{assigns: %{fulfillment_options: fulfillment_options}} = socket
     %{"fulfillment_option_id" => id, "delivery_address" => delivery_address} = params
 
-    with %{fulfillment_method: :delivery} <- Enum.find(options, &(&1.id == id)),
+    with %{fulfillment_method: :delivery} <- Enum.find(fulfillment_options, &(&1.id == id)),
          {:ok, delivery_address} <- ensure_non_empty_value(delivery_address) do
       {:ok, delivery_address}
     else
-      _ -> {:error, :delivery_address_required}
+      _ -> {:error, {:delivery_address_required, gettext("Delivery address is required")}}
     end
   end
 
   defp ensure_non_empty_value(value) when is_binary(value) do
     case String.trim(value) do
-      "" -> {:error, :empty_value}
+      "" -> {:error, {:empty_value, gettext("Empty value")}}
       trimmed -> {:ok, trimmed}
     end
   end

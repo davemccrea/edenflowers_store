@@ -7,7 +7,7 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
     test "creates fulfillment option of type :dynamic" do
       tax_rate = fixture(:tax_rate)
 
-      assert {:ok, option} =
+      assert {:ok, _option} =
                FulfillmentOption
                |> Ash.Changeset.for_create(:create, %{
                  name: "Home delivery",

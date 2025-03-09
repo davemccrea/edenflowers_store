@@ -1,4 +1,6 @@
 defmodule Edenflowers.HereAPI do
+  use Gettext, backend: EdenflowersWeb.Gettext
+
   require Logger
 
   @origin "63.1243488,21.5974075"
@@ -30,8 +32,7 @@ defmodule Edenflowers.HereAPI do
 
       {:ok, {address, position, here_id}}
     else
-      {:error, _} = error -> error
-      _ -> {:error, :address_not_found}
+      _ -> {:error, {:address, gettext("Address not found")}}
     end
   end
 
@@ -39,13 +40,25 @@ defmodule Edenflowers.HereAPI do
     url =
       "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{query}&return=summary&apikey=#{api_key()}"
 
+    # %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body
     with {:ok, %{body: body}} <- Req.get(url),
-         %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body do
-      {:ok, length}
+         {:ok, total_length} <- sum_route_lengths(body) do
+      {:ok, total_length}
     else
-      {:error, _} = error -> error
-      _ -> {:error, :distance_not_found}
+      _ -> {:error, {:route, gettext("Error calculating distance")}}
     end
+  end
+
+  def sum_route_lengths(%{"routes" => []}), do: {:error, 0}
+
+  def sum_route_lengths(%{"routes" => routes}) do
+    total_length =
+      routes
+      |> Enum.flat_map(& &1["sections"])
+      |> Enum.map(&get_in(&1, ["summary", "length"]))
+      |> Enum.sum()
+
+    {:ok, total_length}
   end
 
   defp api_key, do: Application.get_env(:edenflowers, :here_api_key)

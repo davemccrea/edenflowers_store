@@ -2,7 +2,10 @@ defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
   import Decimal, only: [is_decimal: 1]
 
-  @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
+  use Gettext, backend: EdenflowersWeb.Gettext
+
+  @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) ::
+          {:ok, %Decimal{}} | {:error, {atom(), binary()}}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))
 
   def calculate_price(%{rate_type: :fixed, base_price: base_price}, _distance) do
@@ -39,7 +42,7 @@ defmodule Edenflowers.Fulfillments do
          |> Decimal.round(2)}
 
       true ->
-        {:error, :out_of_delivery_range}
+        {:error, {:out_of_delivery_range, gettext("Out of delivery range")}}
     end
   end
 

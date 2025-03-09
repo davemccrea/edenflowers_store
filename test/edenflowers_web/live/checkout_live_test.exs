@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     {:ok, view, html} = live(conn, ~p"/checkout")
 
     assert has_element?(view, "#checkout-step-1")
-    refute html =~ "Address is required"
+    refute html =~ "Delivery address is required"
 
     html =
       view
@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         }
       })
 
-    assert html =~ "Address is required"
+    assert html =~ "Delivery address is required"
   end
 
   test "form progresses to step 2 if address ok", %{conn: conn, fulfillment_option_2: fulfillment_option_2} do
@@ -106,25 +106,25 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     assert html =~ "id=\"checkout-step-2\""
   end
 
-  # test "displays error if address is outside delivery zone", %{
-  #   conn: conn,
-  #   fulfillment_option_2: fulfillment_option_2
-  # } do
-  #   conn = get(conn, ~p"/checkout")
-  #   {:ok, view, html} = live(conn)
+  test "displays error if address is outside delivery zone", %{
+    conn: conn,
+    fulfillment_option_2: fulfillment_option_2
+  } do
+    conn = get(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn)
 
-  #   assert view |> element("#checkout-step-1") |> has_element?()
+    assert view |> element("#checkout-step-1") |> has_element?()
 
-  #   html =
-  #     view
-  #     |> form("#checkout-step-1", %{
-  #       "form" => %{
-  #         "fulfillment_option_id" => fulfillment_option_2.id,
-  #         "delivery_address" => "Södra Lappfjärdsvägen 45, 64300 Kristinestad"
-  #       }
-  #     })
-  #     |> render_submit()
+    html =
+      view
+      |> element("#checkout-step-1")
+      |> render_submit(%{
+        "form" => %{
+          "fulfillment_option_id" => fulfillment_option_2.id,
+          "delivery_address" => "Södra Lappfjärdsvägen 45, 64300 Kristinestad"
+        }
+      })
 
-  #   assert html =~ "Out of delivery range"
-  # end
+    assert html =~ "Out of delivery range"
+  end
 end
