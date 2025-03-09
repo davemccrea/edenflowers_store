@@ -1,5 +1,4 @@
 defmodule EdenflowersWeb.CheckoutLive do
-  alias Edenflowers.Fulfillments
   use EdenflowersWeb, :live_view
 
   require Logger
@@ -82,7 +81,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                 type="text"
               />
             </div>
-            </div>
+
+            <div>
+              <.label>Delivery Date</.label>
+              <div class="disable-dbl-tap-zoom mt-2 max-w-sm rounded border border-gray-400 p-4">
+                <.live_component id="calendar" module={EdenflowersWeb.CalendarComponent}></.live_component>
+              </div>
             </div>
 
             <wa-button class="submit-button disable-preflight mt-2" type="submit">Next</wa-button>

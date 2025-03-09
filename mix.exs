@@ -67,7 +67,10 @@ defmodule Edenflowers.MixProject do
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:tz, "~> 0.28"},
       {:req, "~> 0.5.0"},
-      {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false}
+      {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
+      {:ex_cldr, "~> 2.40"},
+      {:ex_cldr_calendars, "~> 2.0"},
+      {:ex_cldr_dates_times, "~> 2.0"}
     ]
   end
 

@@ -7,6 +7,10 @@
 # General application configuration
 import Config
 
+config :ex_cldr,
+  default_locale: "en",
+  default_backend: Edenflowers.Cldr
+
 config :ash,
   include_embedded_source_by_default?: false,
   default_page_type: :keyset,
