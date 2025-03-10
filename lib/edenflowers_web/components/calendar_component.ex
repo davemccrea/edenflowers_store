@@ -28,86 +28,130 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   def render(assigns) do
     ~H"""
-    <div id={@id} phx-hook="CalendarHook" data-current-date={@current_date} data-focusable-dates={focusable(@current_date)}>
+    <div
+      id={@id}
+      class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
+      phx-hook="CalendarHook"
+      data-current-date={@current_date}
+      data-focusable-dates={focusable(@current_date)}
+    >
       <div class="flex items-center justify-between">
+        <button
+          phx-target={@myself}
+          phx-click="previous-month"
+          type="button"
+          class="flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+        >
+          <span class="sr-only">{gettext("Previous month")}</span>
+          <.icon name="hero-chevron-left" class="h-5 w-5" />
+        </button>
         <button
           phx-target={@myself}
           phx-click="current-month"
           aria-label={gettext("Show current month")}
           type="button"
-          class="text-sm text-gray-900"
+          class="font-medium"
         >
           {Cldr.DateTime.to_string!(@current_date, format: "MMMM y")}
         </button>
-        <div class="flex items-center">
-          <button
-            phx-target={@myself}
-            phx-click="previous-month"
-            type="button"
-            class="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
-          >
-            <span class="sr-only">{gettext("Previous month")}</span>
-            <.icon name="hero-chevron-left" class="h-5 w-5" />
-          </button>
-          <button
-            phx-target={@myself}
-            phx-click="next-month"
-            type="button"
-            class="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
-          >
-            <span class="sr-only">{gettext("Next month")}</span>
-            <.icon name="hero-chevron-right" class="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          phx-target={@myself}
+          phx-click="next-month"
+          type="button"
+          class="flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+        >
+          <span class="sr-only">{gettext("Next month")}</span>
+          <.icon name="hero-chevron-right" class="h-5 w-5" />
+        </button>
       </div>
-      <div class="mt-10 grid grid-cols-7 text-center text-xs leading-6 text-gray-500">
+
+      <div class="mt-2 grid grid-cols-7 border-b border-gray-200 text-center text-sm leading-6 text-gray-500">
         <%= for week_day <- List.first(@week_rows) do %>
           <span>
             {Cldr.DateTime.to_string!(week_day, format: "EEEEEE")}
           </span>
         <% end %>
       </div>
-      <div role="grid" id={"#{@id}-grid"} class="mt-2 grid select-none grid-cols-7 text-sm">
-        <%= for {week, index} <- Enum.with_index(@week_rows) do %>
+
+      <div role="grid" id={"#{@id}-grid"} class="mt-1 grid select-none grid-cols-7">
+        <%= for {week, _index} <- Enum.with_index(@week_rows) do %>
           <%= for day <- week do %>
             <% disabled = @date_callback.(day) == :disabled %>
             <% past = @date_callback.(day) == :past %>
             <% disabled_or_past = disabled || past %>
 
-            <div class={["relative py-2", index > 0 && "border-t border-gray-200"]}>
-              <button
-                phx-target={@myself}
-                phx-click="select"
-                phx-value-date={day}
-                data-key-arrow-up={update_date(day, "ArrowUp")}
-                data-key-arrow-down={update_date(day, "ArrowDown")}
-                data-key-arrow-left={update_date(day, "ArrowLeft")}
-                data-key-arrow-right={update_date(day, "ArrowRight")}
-                data-key-home={update_date(day, "Home")}
-                data-key-end={update_date(day, "End")}
-                data-key-page-up={update_date(day, "PageUp")}
-                data-key-page-down={update_date(day, "PageDown")}
-                type="button"
-                aria-selected={
-                  if @selected_date,
-                    do: selected?(day, @selected_date),
-                    else: selected?(day, @current_date)
-                }
-                tabindex="-1"
-                class={["mx-auto flex h-9 w-9 items-center justify-center rounded-full opacity-100", selected?(day, @selected_date) && "text-white", selected?(day, @selected_date) && today?(day) && "bg-blue-600", selected?(day, @selected_date) && not today?(day) && "bg-gray-900", selected?(day, @selected_date) || (today?(day) && "font-semibold"), not selected?(day, @selected_date) && not disabled_or_past && "hover:bg-gray-200", not selected?(day, @selected_date) && today?(day) && "text-blue-600", not selected?(day, @selected_date) && not today?(day) && current_month?(day, @current_date) && not disabled_or_past && "text-gray-900", ((not selected?(day, @selected_date) && not today?(day) && not current_month?(day, @current_date)) || disabled_or_past) && "text-gray-400", disabled_or_past && "cursor-default", disabled && "diagonal-strikethrough"]}
-              >
-                <time datetime={day}>
-                  {Cldr.DateTime.to_string!(day, format: "d")}
-                </time>
-              </button>
+            <button
+              phx-target={@myself}
+              phx-click="select"
+              phx-value-date={day}
+              data-key-arrow-up={update_date(day, "ArrowUp")}
+              data-key-arrow-down={update_date(day, "ArrowDown")}
+              data-key-arrow-left={update_date(day, "ArrowLeft")}
+              data-key-arrow-right={update_date(day, "ArrowRight")}
+              data-key-home={update_date(day, "Home")}
+              data-key-end={update_date(day, "End")}
+              data-key-page-up={update_date(day, "PageUp")}
+              data-key-page-down={update_date(day, "PageDown")}
+              type="button"
+              aria-selected={
+                if @selected_date,
+                  do: selected?(day, @selected_date),
+                  else: selected?(day, @current_date)
+              }
+              tabindex="-1"
+              class={calendar_day_class(day, @current_date, @selected_date, @date_callback.(day))}
+            >
+              <time datetime={day}>
+                {Cldr.DateTime.to_string!(day, format: "d")}
+              </time>
+            </button>
 
-              {render_slot(@day_decoration, day)}
-            </div>
+            {render_slot(@day_decoration, day)}
           <% end %>
         <% end %>
       </div>
     </div>
     """
+  end
+
+  defp calendar_day_class(day, current_date, selected_date, date_status) do
+    is_selected = selected?(day, selected_date)
+    is_today = today?(day)
+    is_current_month = current_month?(day, current_date)
+    is_disabled = date_status == :disabled
+    is_past = date_status == :past
+    is_disabled_or_past = is_disabled || is_past
+
+    base_classes = "mx-auto flex h-9 w-9 items-center justify-center rounded-full"
+
+    cond do
+      # Selected state
+      is_selected and is_today ->
+        "#{base_classes} text-white bg-blue-600"
+
+      is_selected and not is_today ->
+        "#{base_classes} text-white bg-gray-900"
+
+      # Today but not selected
+      is_today and not is_selected ->
+        "#{base_classes} font-semibold text-blue-600 #{unless is_disabled_or_past, do: "hover:bg-gray-200"}"
+
+      # Disabled dates
+      is_disabled ->
+        "#{base_classes} text-gray-400 cursor-default opacity-60 line-through"
+
+      # Past dates
+      is_past ->
+        "#{base_classes} text-gray-400 cursor-default italic opacity-70"
+
+      # Current month, not selected, not today
+      is_current_month and not is_selected and not is_today ->
+        "#{base_classes} text-gray-900 hover:bg-gray-200"
+
+      # Other month days
+      true ->
+        "#{base_classes} text-gray-400"
+    end
   end
 
   def handle_event("current-month", _, socket) do
