@@ -76,10 +76,6 @@ defmodule EdenflowersWeb.CalendarComponent do
       <div role="grid" id={"#{@id}-grid"} class="mt-1 grid select-none grid-cols-7">
         <%= for {week, _index} <- Enum.with_index(@week_rows) do %>
           <%= for day <- week do %>
-            <% disabled = @date_callback.(day) == :disabled %>
-            <% past = @date_callback.(day) == :past %>
-            <% disabled_or_past = disabled || past %>
-
             <button
               phx-target={@myself}
               phx-click="select"
@@ -118,39 +114,26 @@ defmodule EdenflowersWeb.CalendarComponent do
     is_selected = selected?(day, selected_date)
     is_today = today?(day)
     is_current_month = current_month?(day, current_date)
-    is_disabled = date_status == :disabled
+    is_next_month = next_month?(day, current_date)
+    is_previous_month = previous_month?(day, current_date)
     is_past = date_status == :past
-    is_disabled_or_past = is_disabled || is_past
+    is_disabled = date_status == :disabled
+    is_disabled_or_past = date_status in [:disabled, :past]
 
-    base_classes = "mx-auto flex h-9 w-9 items-center justify-center rounded-full"
+    if is_previous_month || is_next_month do
+      "opacity-0 cursor-default"
+    else
+      class_conditions = [
+        {"underline", is_today},
+        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and not is_disabled_or_past},
+        {"hover:bg-gray-100", not is_selected and not is_disabled_or_past},
+        {"text-gray-300 cursor-not-allowed", is_disabled_or_past}
+      ]
 
-    cond do
-      # Selected state
-      is_selected and is_today ->
-        "#{base_classes} text-white bg-blue-600"
-
-      is_selected and not is_today ->
-        "#{base_classes} text-white bg-gray-900"
-
-      # Today but not selected
-      is_today and not is_selected ->
-        "#{base_classes} font-semibold text-blue-600 #{unless is_disabled_or_past, do: "hover:bg-gray-200"}"
-
-      # Disabled dates
-      is_disabled ->
-        "#{base_classes} text-gray-400 cursor-default opacity-60 line-through"
-
-      # Past dates
-      is_past ->
-        "#{base_classes} text-gray-400 cursor-default italic opacity-70"
-
-      # Current month, not selected, not today
-      is_current_month and not is_selected and not is_today ->
-        "#{base_classes} text-gray-900 hover:bg-gray-200"
-
-      # Other month days
-      true ->
-        "#{base_classes} text-gray-400"
+      class_conditions
+      |> Enum.filter(fn {_class, condition} -> condition end)
+      |> Enum.map(fn {class, _condition} -> class end)
+      |> Enum.join(" ")
     end
   end
 
@@ -191,8 +174,8 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("select", %{"date" => date}, socket) do
     date = Date.from_iso8601!(date)
 
-    case socket.assigns.date_callback.(date) == :ok do
-      true ->
+    case socket.assigns.date_callback.(date) do
+      :ok ->
         socket.assigns.event_callback.(date)
         selected_date = if socket.assigns.allow_selection, do: date, else: nil
 
@@ -203,7 +186,7 @@ defmodule EdenflowersWeb.CalendarComponent do
          |> assign(current_date: date)
          |> assign(week_rows: week_rows(date))}
 
-      false ->
+      _ ->
         {:noreply, socket}
     end
   end
@@ -287,8 +270,21 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp today?(day), do: day == today()
 
-  defp current_month?(day, current_date),
-    do: Date.beginning_of_month(day) == Date.beginning_of_month(current_date)
+  defp current_month?(day, current_date) do
+    Date.beginning_of_month(day) == Date.beginning_of_month(current_date)
+  end
+
+  defp previous_month?(day, current_date) do
+    current_date
+    |> Date.beginning_of_month()
+    |> Cldr.Calendar.minus(:months, 1) == Date.beginning_of_month(day)
+  end
+
+  defp next_month?(day, current_date) do
+    current_date
+    |> Date.beginning_of_month()
+    |> Cldr.Calendar.plus(:months, 1) == Date.beginning_of_month(day)
+  end
 
   def today(tz \\ "Europe/Helsinki") do
     tz
