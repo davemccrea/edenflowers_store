@@ -5,16 +5,16 @@ defmodule EdenflowersWeb.CalendarComponent do
   @week_begins :default
 
   def mount(socket) do
-    current_date = today()
+    view_date = today()
     date_callback = fn _date -> :ok end
     event_callback = fn _date -> Logger.warning("Event callback not set in CalendarComponent") end
 
     {:ok,
      socket
-     |> assign(current_date: current_date)
+     |> assign(view_date: view_date)
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
-     |> assign(week_rows: week_rows(current_date))
+     |> assign(week_rows: week_rows(view_date))
      |> assign(allow_selection: Map.get(socket.assigns, :allow_selection, true))
      |> assign(event_callback: Map.get(socket.assigns, :event_callback, event_callback))
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, date_callback))}
@@ -32,8 +32,8 @@ defmodule EdenflowersWeb.CalendarComponent do
       id={@id}
       class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
       phx-hook="CalendarHook"
-      data-current-date={@current_date}
-      data-focusable-dates={focusable(@current_date)}
+      data-view-date={@view_date}
+      data-focusable-dates={focusable(@view_date)}
     >
       <div class="flex items-center justify-between">
         <button
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           type="button"
           class="font-medium"
         >
-          {Cldr.DateTime.to_string!(@current_date, format: "MMMM y")}
+          {Cldr.DateTime.to_string!(@view_date, format: "MMMM y")}
         </button>
         <button
           phx-target={@myself}
@@ -92,10 +92,10 @@ defmodule EdenflowersWeb.CalendarComponent do
               aria-selected={
                 if @selected_date,
                   do: selected?(day, @selected_date),
-                  else: selected?(day, @current_date)
+                  else: selected?(day, @view_date)
               }
               tabindex="-1"
-              class={calendar_day_class(day, @current_date, @selected_date, @date_callback.(day))}
+              class={calendar_day_class(day, @view_date, @selected_date, @date_callback.(day))}
             >
               <time datetime={day}>
                 {Cldr.DateTime.to_string!(day, format: "d")}
@@ -110,12 +110,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     """
   end
 
-  defp calendar_day_class(day, current_date, selected_date, date_status) do
+  defp calendar_day_class(day, view_date, selected_date, date_status) do
     is_selected = selected?(day, selected_date)
     is_today = today?(day)
-    is_current_month = current_month?(day, current_date)
-    is_next_month = next_month?(day, current_date)
-    is_previous_month = previous_month?(day, current_date)
+    is_current_month = current_month?(day, view_date)
+    is_next_month = next_month?(day, view_date)
+    is_previous_month = previous_month?(day, view_date)
     is_past = date_status == :past
     is_disabled = date_status == :disabled
     is_disabled_or_past = date_status in [:disabled, :past]
@@ -143,31 +143,31 @@ defmodule EdenflowersWeb.CalendarComponent do
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(current_date: date)
+     |> assign(view_date: date)
      |> assign(week_rows: week_rows(date))}
   end
 
   def handle_event("previous-month", _, socket) do
     date =
-      socket.assigns.current_date
+      socket.assigns.view_date
       |> Cldr.Calendar.minus(:months, 1)
 
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(current_date: date)
+     |> assign(view_date: date)
      |> assign(week_rows: week_rows(date))}
   end
 
   def handle_event("next-month", _, socket) do
     date =
-      socket.assigns.current_date
+      socket.assigns.view_date
       |> Cldr.Calendar.plus(:months, 1)
 
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(current_date: date)
+     |> assign(view_date: date)
      |> assign(week_rows: week_rows(date))}
   end
 
@@ -183,7 +183,7 @@ defmodule EdenflowersWeb.CalendarComponent do
          socket
          |> push_event("update-client", %{focus: true})
          |> assign(selected_date: selected_date)
-         |> assign(current_date: date)
+         |> assign(view_date: date)
          |> assign(week_rows: week_rows(date))}
 
       _ ->
@@ -191,16 +191,16 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  def handle_event("keydown", %{"key" => key, "currentDate" => current_date}, socket) do
+  def handle_event("keydown", %{"key" => key, "currentDate" => view_date}, socket) do
     date =
-      current_date
+      view_date
       |> Date.from_iso8601!()
       |> update_date(key)
 
     {:noreply,
      socket
      |> push_event("update-client", %{focus: true})
-     |> assign(current_date: date)
+     |> assign(view_date: date)
      |> assign(week_rows: week_rows(date))}
   end
 
@@ -241,14 +241,14 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp week_rows(current_date) do
+  defp week_rows(view_date) do
     first =
-      current_date
+      view_date
       |> Date.beginning_of_month()
       |> Date.beginning_of_week(@week_begins)
 
     last =
-      current_date
+      view_date
       |> Date.end_of_month()
       |> Date.end_of_week(@week_begins)
 
@@ -257,9 +257,9 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> Enum.chunk_every(7)
   end
 
-  defp focusable(current_date) do
-    first = Date.beginning_of_month(current_date)
-    last = Date.end_of_month(current_date)
+  defp focusable(view_date) do
+    first = Date.beginning_of_month(view_date)
+    last = Date.end_of_month(view_date)
 
     Date.range(first, last)
     |> Enum.map(&Calendar.strftime(&1, "%Y-%m-%d"))
@@ -270,18 +270,18 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp today?(day), do: day == today()
 
-  defp current_month?(day, current_date) do
-    Date.beginning_of_month(day) == Date.beginning_of_month(current_date)
+  defp current_month?(day, view_date) do
+    Date.beginning_of_month(day) == Date.beginning_of_month(view_date)
   end
 
-  defp previous_month?(day, current_date) do
-    current_date
+  defp previous_month?(day, view_date) do
+    view_date
     |> Date.beginning_of_month()
     |> Cldr.Calendar.minus(:months, 1) == Date.beginning_of_month(day)
   end
 
-  defp next_month?(day, current_date) do
-    current_date
+  defp next_month?(day, view_date) do
+    view_date
     |> Date.beginning_of_month()
     |> Cldr.Calendar.plus(:months, 1) == Date.beginning_of_month(day)
   end

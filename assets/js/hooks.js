@@ -202,7 +202,7 @@ Hooks.CalendarHook = {
   },
 
   getCurrentDate() {
-    return this.el.getAttribute("data-current-date");
+    return this.el.getAttribute("data-view-date");
   },
 
   /**
