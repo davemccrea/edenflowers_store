@@ -111,23 +111,20 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   defp calendar_day_class(day, view_date, selected_date, date_status) do
-    is_selected = selected?(day, selected_date)
-    is_today = today?(day)
-    is_current_month = current_month?(day, view_date)
-    is_next_month = next_month?(day, view_date)
-    is_previous_month = previous_month?(day, view_date)
-    is_past = date_status == :past
-    is_disabled = date_status == :disabled
-    is_disabled_or_past = date_status in [:disabled, :past]
+    selected = selected?(day, selected_date)
+    today = today?(day)
+    next_month = next_month?(day, view_date)
+    previous_month = previous_month?(day, view_date)
+    disabled = date_status != :ok
 
-    if is_previous_month || is_next_month do
+    if previous_month || next_month do
       "opacity-0 cursor-default"
     else
       class_conditions = [
-        {"underline", is_today},
-        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and not is_disabled_or_past},
-        {"hover:bg-gray-100", not is_selected and not is_disabled_or_past},
-        {"text-gray-300 cursor-not-allowed", is_disabled_or_past}
+        {"underline", today},
+        {"bg-blue-700 text-white hover:bg-blue-600", selected and not disabled},
+        {"hover:bg-gray-100", not selected and not disabled},
+        {"text-gray-300 cursor-not-allowed", disabled}
       ]
 
       class_conditions

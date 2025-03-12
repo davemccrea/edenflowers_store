@@ -84,8 +84,20 @@ defmodule EdenflowersWeb.CheckoutLive do
 
             <div>
               <.label>Delivery Date</.label>
-              <div class="disable-dbl-tap-zoom mt-2 max-w-sm rounded border border-gray-400 p-4">
-                <.live_component id="calendar" module={EdenflowersWeb.CalendarComponent}></.live_component>
+              <div class="disable-dbl-tap-zoom mt-2">
+                <.live_component
+                  id="calendar"
+                  module={EdenflowersWeb.CalendarComponent}
+                  date_callback={
+                    fn date ->
+                      fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
+                      fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
+                      {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
+                      state
+                    end
+                  }
+                >
+                </.live_component>
               </div>
             </div>
 
@@ -228,6 +240,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("validate_step_1", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
+
+    dbg(form)
 
     {:noreply,
      socket
