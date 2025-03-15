@@ -6,17 +6,21 @@ defmodule EdenflowersWeb.CalendarComponent do
   @default_timezone "Europe/Helsinki"
 
   def mount(socket) do
+    today_date = calculate_today()
+
     {:ok,
      socket
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
+     |> assign(today_date: today_date)
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
-     |> update_calendar_view(today())}
+     |> update_calendar_view(today_date)}
   end
 
   def update(assigns, socket) do
     selected_date = assigns.selected_date
-    view_date = if selected_date, do: selected_date, else: today()
+    today_date = socket.assigns.today_date
+    view_date = if selected_date, do: selected_date, else: today_date
 
     {:ok,
      socket
@@ -43,13 +47,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     >
       <input type="hidden" id={@hidden_input_id} name={@hidden_input_name} value={@selected_date} />
       <div class="flex items-center justify-between">
-        <%!-- view_date month is the same as today month --%>
         <button
-          disabled={@view_date.month == today().month}
+          disabled={@view_date.month == @today_date.month}
           phx-target={@myself}
           phx-click="previous-month"
           type="button"
-          class={previous_month_button_class(@view_date)}
+          class={previous_month_button_class(@view_date, @today_date)}
         >
           <span class="sr-only">{gettext("Previous month")}</span>
           <.icon name="hero-chevron-left" class="h-5 w-5" />
@@ -89,14 +92,14 @@ defmodule EdenflowersWeb.CalendarComponent do
               phx-target={@myself}
               phx-click="select"
               phx-value-date={day}
-              data-key-arrow-up={calculate_date_for_key(day, "ArrowUp")}
-              data-key-arrow-down={calculate_date_for_key(day, "ArrowDown")}
-              data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft")}
-              data-key-arrow-right={calculate_date_for_key(day, "ArrowRight")}
-              data-key-home={calculate_date_for_key(day, "Home")}
-              data-key-end={calculate_date_for_key(day, "End")}
-              data-key-page-up={calculate_date_for_key(day, "PageUp")}
-              data-key-page-down={calculate_date_for_key(day, "PageDown")}
+              data-key-arrow-up={calculate_date_for_key(day, "ArrowUp", @today_date)}
+              data-key-arrow-down={calculate_date_for_key(day, "ArrowDown", @today_date)}
+              data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft", @today_date)}
+              data-key-arrow-right={calculate_date_for_key(day, "ArrowRight", @today_date)}
+              data-key-home={calculate_date_for_key(day, "Home", @today_date)}
+              data-key-end={calculate_date_for_key(day, "End", @today_date)}
+              data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
+              data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
               type="button"
               aria-selected={
                 if @selected_date,
@@ -104,7 +107,7 @@ defmodule EdenflowersWeb.CalendarComponent do
                   else: selected?(day, @view_date)
               }
               tabindex="-1"
-              class={calendar_day_class(day, @view_date, @selected_date, @date_callback.(day))}
+              class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
             >
               <time datetime={day}>
                 {Cldr.DateTime.to_string!(day, format: "d")}
@@ -119,8 +122,8 @@ defmodule EdenflowersWeb.CalendarComponent do
     """
   end
 
-  defp previous_month_button_class(view_date) do
-    is_disabled = view_date.month == today().month
+  defp previous_month_button_class(view_date, today_date) do
+    is_disabled = view_date.month == today_date.month
 
     base_class = "flex flex-none items-center justify-center p-1.5"
 
@@ -131,10 +134,10 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp calendar_day_class(day, view_date, selected_date, date_status) do
+  defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
     current_month = current_month?(day, view_date)
     selected = selected?(day, selected_date)
-    today = today?(day)
+    today = day == today_date
     disabled = date_status != :ok
 
     if not current_month do
@@ -155,7 +158,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   def handle_event("current-month", _, socket) do
-    date = today()
+    date = socket.assigns.today_date
 
     {:noreply,
      socket
@@ -203,7 +206,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     date =
       view_date
       |> Date.from_iso8601!()
-      |> handle_date_navigation(key)
+      |> handle_date_navigation(key, socket.assigns.today_date)
 
     {:noreply,
      socket
@@ -216,9 +219,9 @@ defmodule EdenflowersWeb.CalendarComponent do
     {:noreply, socket}
   end
 
-  defp calculate_date_for_key(date, key), do: handle_date_navigation(date, key)
+  defp calculate_date_for_key(date, key, today_date), do: handle_date_navigation(date, key, today_date)
 
-  defp handle_date_navigation(date, key) do
+  defp handle_date_navigation(date, key, today_date) do
     target_date =
       case key do
         "ArrowUp" ->
@@ -250,11 +253,11 @@ defmodule EdenflowersWeb.CalendarComponent do
           date
       end
 
-    disallow_past_months(target_date, date)
+    disallow_past_months(target_date, date, today_date)
   end
 
-  defp disallow_past_months(target_date, focused_date) do
-    if Date.before?(target_date, Date.beginning_of_month(today())),
+  defp disallow_past_months(target_date, focused_date, today_date) do
+    if Date.before?(target_date, Date.beginning_of_month(today_date)),
       do: focused_date,
       else: target_date
   end
@@ -286,13 +289,12 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp selected?(day, selected_date), do: day == selected_date
 
-  defp today?(day), do: day == today()
-
   defp current_month?(day, view_date) do
     Date.beginning_of_month(day) == Date.beginning_of_month(view_date)
   end
 
-  def today(tz \\ @default_timezone) do
+  # Calculate today's date only once
+  defp calculate_today(tz \\ @default_timezone) do
     tz
     |> DateTime.now!()
     |> DateTime.to_date()
