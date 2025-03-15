@@ -83,13 +83,13 @@ defmodule EdenflowersWeb do
 
   defp html_helpers do
     quote do
+      # Translation
+      use Gettext, backend: EdenflowersWeb.Gettext
+
       # HTML escaping functionality
       import Phoenix.HTML
-      # Core UI components and translation
+      # Core UI components
       import EdenflowersWeb.CoreComponents
-
-      use Gettext,
-        backend: EdenflowersWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
