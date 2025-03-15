@@ -2,8 +2,6 @@
 
 export const Hooks = {};
 
-const PHX_VALUE_DATE = "phx-value-date";
-
 Hooks.Spinner = {
   mounted() {
     const element = this.el;
@@ -54,33 +52,44 @@ Hooks.CharacterCount = {
  * forwarded to the server and the server re-renders the view.
  */
 Hooks.CalendarHook = {
+  // Constants
+  PHX_VALUE_DATE: "phx-value-date",
+
   mounted() {
+    // Initialize properties
     this.id = this.el.getAttribute("id");
+    if (!this.id) {
+      return this.error("Element must have an 'id' attribute.");
+    }
+
     this.currentDate = this.getCurrentDate();
+    if (!this.currentDate) {
+      return this.error("Attribute 'data-view-date' is required.");
+    }
+
     this.focusableDates = this.getFocusableDates();
+    if (!this.focusableDates || !this.focusableDates.length) {
+      return this.error(
+        "Attribute 'data-focusable-dates' is required and must not be empty."
+      );
+    }
+
+    // Cache DOM elements
+    this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
+    if (!this.calendarGrid) {
+      return this.error(`Calendar grid with id '${this.id}-grid' not found.`);
+    }
+
+    // Set initial tab index
     this.setTabIndex(this.currentDate);
 
-    this.el
-      .querySelector(`#${this.id}-grid`)
-      .addEventListener("keydown", (event) => {
-        const key = event.key;
-        const keys = {
-          ArrowUp: "data-key-arrow-up",
-          ArrowDown: "data-key-arrow-down",
-          ArrowLeft: "data-key-arrow-left",
-          ArrowRight: "data-key-arrow-right",
-          Home: "data-key-home",
-          End: "data-key-end",
-          PageUp: "data-key-page-up",
-          PageDown: "data-key-page-down",
-        };
+    // Event listeners
+    this.calendarGrid.addEventListener(
+      "keydown",
+      this.handleGridKeyDown.bind(this)
+    );
 
-        if (key in keys) {
-          event.preventDefault();
-          this.handleKeyDown(key, keys[key]);
-        }
-      });
-
+    // Phoenix event handlers
     this.handleEvent("update-client", ({ focus = true }) => {
       this.currentDate = this.getCurrentDate();
       this.focusableDates = this.getFocusableDates();
@@ -89,6 +98,34 @@ Hooks.CalendarHook = {
         this.clientFocus(this.currentDate);
       }
     });
+  },
+
+  //
+  // Event Handlers
+  //
+
+  /**
+   * Handles keydown events for the calendar grid.
+   * @param {KeyboardEvent} event - The keydown event.
+   * @returns {void}
+   */
+  handleGridKeyDown(event) {
+    const key = event.key;
+    const keys = {
+      ArrowUp: "data-key-arrow-up",
+      ArrowDown: "data-key-arrow-down",
+      ArrowLeft: "data-key-arrow-left",
+      ArrowRight: "data-key-arrow-right",
+      Home: "data-key-home",
+      End: "data-key-end",
+      PageUp: "data-key-page-up",
+      PageDown: "data-key-page-down",
+    };
+
+    if (key in keys) {
+      event.preventDefault();
+      this.handleKeyDown(key, keys[key]);
+    }
   },
 
   /**
@@ -101,17 +138,21 @@ Hooks.CalendarHook = {
    */
   handleKeyDown(key, attribute) {
     const currentDateEl = document.querySelector(
-      `[${PHX_VALUE_DATE}="${this.currentDate}"]`
+      `[${this.PHX_VALUE_DATE}="${this.currentDate}"]`
     );
 
     if (!currentDateEl) {
-      return this.pushError(`Attribute '${PHX_VALUE_DATE}' is required.`);
+      return this.error(
+        `Current date element with ${this.PHX_VALUE_DATE}="${this.currentDate}" not found.`
+      );
     }
 
     const nextDate = currentDateEl.getAttribute(attribute);
 
     if (!nextDate) {
-      return this.pushError(`Attribute '${attribute}' is required.`);
+      return this.error(
+        `Attribute '${attribute}' is missing on current date element.`
+      );
     }
 
     // This part is important - check if the next date is focusable by the client.
@@ -125,6 +166,10 @@ Hooks.CalendarHook = {
     this.currentDate = nextDate;
   },
 
+  //
+  // Focus Management
+  //
+
   /**
    * Moves focus to the given date.
    * @example
@@ -133,8 +178,16 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   clientFocus(date) {
-    // @ts-ignore
-    document.querySelector(`[${PHX_VALUE_DATE}="${date}"]`).focus();
+    if (!date) {
+      return this.error("Cannot focus on null date.");
+    }
+
+    const dateEl = document.querySelector(`[${this.PHX_VALUE_DATE}="${date}"]`);
+    if (dateEl) {
+      /** @type {HTMLElement} */ (dateEl).focus();
+    } else {
+      this.error(`Element with ${this.PHX_VALUE_DATE}="${date}" not found.`);
+    }
   },
 
   /**
@@ -160,22 +213,28 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   setTabIndex(nextDate = null) {
+    // Remove focus from current date
     const currentDateEl = document.querySelector(
-      `[${PHX_VALUE_DATE}="${this.currentDate}"]`
+      `[${this.PHX_VALUE_DATE}="${this.currentDate}"]`
     );
     if (currentDateEl) {
-      // @ts-ignore
-      currentDateEl.tabIndex = "-1";
+      currentDateEl.setAttribute("tabindex", "-1");
     }
 
-    const nextDateEl = document.querySelector(
-      `[${PHX_VALUE_DATE}="${nextDate}"]`
-    );
-    if (nextDateEl) {
-      // @ts-ignore
-      nextDateEl.tabIndex = "0";
+    // Set focus on next date
+    if (nextDate) {
+      const nextDateEl = document.querySelector(
+        `[${this.PHX_VALUE_DATE}="${nextDate}"]`
+      );
+      if (nextDateEl) {
+        nextDateEl.setAttribute("tabindex", "0");
+      }
     }
   },
+
+  //
+  // Utility Methods
+  //
 
   /**
    * Checks if the given date is focusable by the client.
@@ -198,9 +257,24 @@ Hooks.CalendarHook = {
   },
 
   getFocusableDates() {
-    return JSON.parse(this.el.getAttribute("data-focusable-dates"));
+    const focusableDatesAttr = this.el.getAttribute("data-focusable-dates");
+    if (!focusableDatesAttr) {
+      this.error("Attribute 'data-focusable-dates' is required.");
+      return [];
+    }
+
+    try {
+      return JSON.parse(focusableDatesAttr);
+    } catch (error) {
+      this.error(`Failed to parse 'data-focusable-dates': ${error.message}`);
+      return [];
+    }
   },
 
+  /**
+   * Gets the current date from the element's data attribute.
+   * @returns {String | null}
+   */
   getCurrentDate() {
     return this.el.getAttribute("data-view-date");
   },
@@ -208,12 +282,12 @@ Hooks.CalendarHook = {
   /**
    * Logs error message to the console and forwards error to the server.
    * @example
-   * pushError("Attribute 'data-focusable-dates' is required.");
+   * error("Attribute 'data-focusable-dates' is required.");
    * @param {String} message - The error message to send to the server.
    * @returns {void}
    */
-  pushError(message) {
-    console.error(message);
+  error(message) {
+    console.error(`CalendarHook Error: ${message}`);
     this.pushEventTo(this.el, "client-error", { message: message });
   },
 };

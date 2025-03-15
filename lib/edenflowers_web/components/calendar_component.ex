@@ -3,21 +3,17 @@ defmodule EdenflowersWeb.CalendarComponent do
   require Logger
 
   @week_begins :default
+  @default_timezone "Europe/Helsinki"
 
   def mount(socket) do
-    view_date = today()
-    date_callback = fn _date -> :ok end
-    event_callback = fn _date -> :ok end
-
     {:ok,
      socket
      |> assign(selected_date: nil)
-     |> assign(view_date: view_date)
-     |> assign(week_rows: week_rows(view_date))
      |> assign(week_begins: @week_begins)
      |> assign(allow_selection: Map.get(socket.assigns, :allow_selection, true))
-     |> assign(event_callback: Map.get(socket.assigns, :event_callback, event_callback))
-     |> assign(date_callback: Map.get(socket.assigns, :date_callback, date_callback))}
+     |> assign(event_callback: Map.get(socket.assigns, :event_callback, & &1))
+     |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
+     |> update_calendar_view(today())}
   end
 
   def update(assigns, socket) do
@@ -28,8 +24,7 @@ defmodule EdenflowersWeb.CalendarComponent do
      socket
      |> assign(assigns)
      |> assign(selected_date: selected_date)
-     |> assign(view_date: view_date)
-     |> assign(week_rows: week_rows(view_date))}
+     |> update_calendar_view(view_date)}
   end
 
   attr :id, :string, required: true
@@ -49,7 +44,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
       phx-hook="CalendarHook"
       data-view-date={@view_date}
-      data-focusable-dates={focusable(@view_date)}
+      data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
       <input type="hidden" id={@hidden_input_id} name={@hidden_input_name} value={@selected_date} />
       <div class="flex items-center justify-between">
@@ -97,14 +92,14 @@ defmodule EdenflowersWeb.CalendarComponent do
               phx-target={@myself}
               phx-click="select"
               phx-value-date={day}
-              data-key-arrow-up={update_date(day, "ArrowUp")}
-              data-key-arrow-down={update_date(day, "ArrowDown")}
-              data-key-arrow-left={update_date(day, "ArrowLeft")}
-              data-key-arrow-right={update_date(day, "ArrowRight")}
-              data-key-home={update_date(day, "Home")}
-              data-key-end={update_date(day, "End")}
-              data-key-page-up={update_date(day, "PageUp")}
-              data-key-page-down={update_date(day, "PageDown")}
+              data-key-arrow-up={calculate_date_for_key(day, "ArrowUp")}
+              data-key-arrow-down={calculate_date_for_key(day, "ArrowDown")}
+              data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft")}
+              data-key-arrow-right={calculate_date_for_key(day, "ArrowRight")}
+              data-key-home={calculate_date_for_key(day, "Home")}
+              data-key-end={calculate_date_for_key(day, "End")}
+              data-key-page-up={calculate_date_for_key(day, "PageUp")}
+              data-key-page-down={calculate_date_for_key(day, "PageDown")}
               type="button"
               aria-selected={
                 if @selected_date,
@@ -128,27 +123,33 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   defp calendar_day_class(day, view_date, selected_date, date_status) do
-    selected = selected?(day, selected_date)
-    today = today?(day)
-    next_month = next_month?(day, view_date)
-    previous_month = previous_month?(day, view_date)
-    disabled = date_status != :ok
-
-    if previous_month || next_month do
+    if out_of_month?(day, view_date) do
       "opacity-0 cursor-default"
     else
-      class_conditions = [
-        {"underline", today},
-        {"bg-blue-700 text-white hover:bg-blue-600", selected and not disabled},
-        {"hover:bg-gray-100", not selected and not disabled},
-        {"text-gray-300 cursor-not-allowed", disabled}
-      ]
-
-      class_conditions
-      |> Enum.filter(fn {_class, condition} -> condition end)
-      |> Enum.map(fn {class, _condition} -> class end)
-      |> Enum.join(" ")
+      get_in_month_day_class(day, selected_date, date_status)
     end
+  end
+
+  defp out_of_month?(day, view_date) do
+    previous_month?(day, view_date) || next_month?(day, view_date)
+  end
+
+  defp get_in_month_day_class(day, selected_date, date_status) do
+    selected = selected?(day, selected_date)
+    today = today?(day)
+    disabled = date_status != :ok
+
+    class_conditions = [
+      {"underline", today},
+      {"bg-blue-700 text-white hover:bg-blue-600", selected and not disabled},
+      {"hover:bg-gray-100", not selected and not disabled},
+      {"text-gray-300 cursor-not-allowed", disabled}
+    ]
+
+    class_conditions
+    |> Enum.filter(fn {_class, condition} -> condition end)
+    |> Enum.map(fn {class, _condition} -> class end)
+    |> Enum.join(" ")
   end
 
   def handle_event("current-month", _, socket) do
@@ -157,8 +158,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(view_date: date)
-     |> assign(week_rows: week_rows(date))}
+     |> update_calendar_view(date)}
   end
 
   def handle_event("previous-month", _, socket) do
@@ -169,8 +169,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(view_date: date)
-     |> assign(week_rows: week_rows(date))}
+     |> update_calendar_view(date)}
   end
 
   def handle_event("next-month", _, socket) do
@@ -181,8 +180,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     {:noreply,
      socket
      |> push_event("update-client", %{focus: false})
-     |> assign(view_date: date)
-     |> assign(week_rows: week_rows(date))}
+     |> update_calendar_view(date)}
   end
 
   def handle_event("select", %{"date" => date}, socket) do
@@ -197,8 +195,7 @@ defmodule EdenflowersWeb.CalendarComponent do
          socket
          |> push_event("update-client", %{focus: true})
          |> assign(selected_date: selected_date)
-         |> assign(view_date: date)
-         |> assign(week_rows: week_rows(date))}
+         |> update_calendar_view(date)}
 
       _ ->
         {:noreply, socket}
@@ -209,21 +206,22 @@ defmodule EdenflowersWeb.CalendarComponent do
     date =
       view_date
       |> Date.from_iso8601!()
-      |> update_date(key)
+      |> handle_date_navigation(key)
 
     {:noreply,
      socket
      |> push_event("update-client", %{focus: true})
-     |> assign(view_date: date)
-     |> assign(week_rows: week_rows(date))}
+     |> update_calendar_view(date)}
   end
 
-  def handle_event("error", %{"message" => message}, socket) do
+  def handle_event("client-error", %{"message" => message}, socket) do
     Logger.error("Client error for #{socket.assigns.id} component: #{message}")
     {:noreply, socket}
   end
 
-  defp update_date(date, key) do
+  defp calculate_date_for_key(date, key), do: handle_date_navigation(date, key)
+
+  defp handle_date_navigation(date, key) do
     case key do
       "ArrowUp" ->
         Date.add(date, -7)
@@ -271,7 +269,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> Enum.chunk_every(7)
   end
 
-  defp focusable(view_date) do
+  defp get_focusable_dates_json(view_date) do
     first = Date.beginning_of_month(view_date)
     last = Date.end_of_month(view_date)
 
@@ -300,9 +298,16 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> Cldr.Calendar.plus(:months, 1) == Date.beginning_of_month(day)
   end
 
-  def today(tz \\ "Europe/Helsinki") do
+  def today(tz \\ @default_timezone) do
     tz
     |> DateTime.now!()
     |> DateTime.to_date()
+  end
+
+  # Helper to update both view_date and week_rows together
+  defp update_calendar_view(socket, date) do
+    socket
+    |> assign(view_date: date)
+    |> assign(week_rows: week_rows(date))
   end
 end
