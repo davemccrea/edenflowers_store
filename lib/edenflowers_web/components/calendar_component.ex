@@ -48,6 +48,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       <input type="hidden" id={@hidden_input_id} name={@hidden_input_name} value={@selected_date} />
       <div class="flex items-center justify-between">
         <button
+          id={"#{@id}-previous-month"}
           disabled={@view_date.month == @today_date.month}
           phx-target={@myself}
           phx-click="previous-month"
@@ -58,6 +59,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           <.icon name="hero-chevron-left" class="h-5 w-5" />
         </button>
         <button
+          id={"#{@id}-current-month"}
           phx-target={@myself}
           phx-click="current-month"
           aria-label={gettext("Show current month")}
@@ -67,6 +69,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           {Cldr.DateTime.to_string!(@view_date, format: "MMMM y")}
         </button>
         <button
+          id={"#{@id}-next-month"}
           phx-target={@myself}
           phx-click="next-month"
           type="button"
@@ -89,6 +92,7 @@ defmodule EdenflowersWeb.CalendarComponent do
         <%= for {week, _index} <- Enum.with_index(@week_rows) do %>
           <%= for day <- week do %>
             <button
+              id={"#{@id}-day-#{day}"}
               phx-target={@myself}
               phx-click="select"
               phx-value-date={day}
@@ -124,7 +128,6 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp previous_month_button_class(view_date, today_date) do
     is_disabled = view_date.month == today_date.month
-
     base_class = "flex flex-none items-center justify-center p-1.5"
 
     if is_disabled do
@@ -135,19 +138,19 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
-    current_month = current_month?(day, view_date)
-    selected = selected?(day, selected_date)
-    today = day == today_date
-    disabled = date_status != :ok
+    is_current_month = current_month?(day, view_date)
+    is_selected = selected?(day, selected_date)
+    is_today = day == today_date
+    is_disabled = date_status != :ok
 
-    if not current_month do
+    if !is_current_month do
       "opacity-0 cursor-default"
     else
       class_conditions = [
-        {"underline", today},
-        {"bg-blue-700 text-white hover:bg-blue-600", selected and not disabled},
-        {"hover:bg-gray-100", not selected and not disabled},
-        {"text-gray-300 cursor-not-allowed", disabled}
+        {"underline", is_today},
+        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and !is_disabled},
+        {"hover:bg-gray-100", !is_selected and !is_disabled},
+        {"text-gray-300 cursor-not-allowed", is_disabled}
       ]
 
       class_conditions
@@ -293,14 +296,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     Date.beginning_of_month(day) == Date.beginning_of_month(view_date)
   end
 
-  # Calculate today's date only once
   defp calculate_today(tz \\ @default_timezone) do
     tz
     |> DateTime.now!()
     |> DateTime.to_date()
   end
 
-  # Helper to update both view_date and week_rows together
   defp update_calendar_view(socket, date) do
     socket
     |> assign(view_date: date)
