@@ -7,34 +7,51 @@ defmodule EdenflowersWeb.CalendarComponent do
   def mount(socket) do
     view_date = today()
     date_callback = fn _date -> :ok end
-    event_callback = fn _date -> Logger.warning("Event callback not set in CalendarComponent") end
+    event_callback = fn _date -> :ok end
 
     {:ok,
      socket
-     |> assign(view_date: view_date)
      |> assign(selected_date: nil)
-     |> assign(week_begins: @week_begins)
+     |> assign(view_date: view_date)
      |> assign(week_rows: week_rows(view_date))
+     |> assign(week_begins: @week_begins)
      |> assign(allow_selection: Map.get(socket.assigns, :allow_selection, true))
      |> assign(event_callback: Map.get(socket.assigns, :event_callback, event_callback))
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, date_callback))}
   end
 
+  def update(assigns, socket) do
+    selected_date = assigns.selected_date
+    view_date = if selected_date, do: selected_date, else: today()
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(selected_date: selected_date)
+     |> assign(view_date: view_date)
+     |> assign(week_rows: week_rows(view_date))}
+  end
+
   attr :id, :string, required: true
+  attr :hidden_input_id, :string, required: true
+  attr :hidden_input_name, :string, required: true
+  attr :selected_date, :string, required: false
   attr :allow_selection, :boolean, required: false
   attr :event_callback, :any, required: false
   attr :date_callback, :any, required: false
+  slot :hidden_input, required: false
   slot :day_decoration, required: false
 
   def render(assigns) do
     ~H"""
     <div
-      id={@id}
+      id={"#{@id}"}
       class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
       phx-hook="CalendarHook"
       data-view-date={@view_date}
       data-focusable-dates={focusable(@view_date)}
     >
+      <input type="hidden" id={@hidden_input_id} name={@hidden_input_name} value={@selected_date} />
       <div class="flex items-center justify-between">
         <button
           phx-target={@myself}

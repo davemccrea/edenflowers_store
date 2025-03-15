@@ -87,6 +87,9 @@ defmodule EdenflowersWeb.CheckoutLive do
               <div class="disable-dbl-tap-zoom mt-2">
                 <.live_component
                   id="calendar"
+                  hidden_input_id="form_fulfillment_date"
+                  hidden_input_name="form[fulfillment_date]"
+                  selected_date={@form[:fulfillment_date].value}
                   module={EdenflowersWeb.CalendarComponent}
                   date_callback={
                     fn date ->
@@ -240,8 +243,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("validate_step_1", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
-
-    dbg(form)
 
     {:noreply,
      socket

@@ -31,6 +31,7 @@ defmodule Edenflowers.Store.Order do
     update :save_step_1 do
       accept [
         :fulfillment_option_id,
+        :fulfillment_date,
         :recipient_phone_number,
         :delivery_address,
         :delivery_instructions,
