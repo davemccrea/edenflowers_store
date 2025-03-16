@@ -53,6 +53,7 @@ Hooks.CharacterCount = {
  */
 Hooks.CalendarHook = {
   PHX_VALUE_DATE: "phx-value-date",
+  DATA_VIEW_DATE: "data-view-date",
 
   mounted() {
     this.id = this.el.getAttribute("id");
@@ -62,7 +63,7 @@ Hooks.CalendarHook = {
 
     this.viewDate = this.getViewDate();
     if (!this.viewDate) {
-      return this.error("Attribute 'data-view-date' is required.");
+      return this.error(`Attribute ${this.DATA_VIEW_DATE} is required.`);
     }
 
     this.focusableDates = this.getFocusableDates();
@@ -259,7 +260,7 @@ Hooks.CalendarHook = {
    * @returns {String | null}
    */
   getViewDate() {
-    return this.el.getAttribute("data-view-date");
+    return this.el.getAttribute(this.DATA_VIEW_DATE);
   },
 
   /**
