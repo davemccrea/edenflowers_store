@@ -126,39 +126,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     """
   end
 
-  defp previous_month_button_class(view_date, today_date) do
-    is_disabled = view_date.month == today_date.month
-    base_class = "flex flex-none items-center justify-center p-1.5"
-
-    if is_disabled do
-      "#{base_class} text-gray-300 opacity-50"
-    else
-      "#{base_class} text-gray-400 hover:text-gray-500"
-    end
-  end
-
-  defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
-    is_current_month = current_month?(day, view_date)
-    is_selected = selected?(day, selected_date)
-    is_today = day == today_date
-    is_disabled = date_status != :ok
-
-    if !is_current_month do
-      "opacity-0 cursor-default"
-    else
-      class_conditions = [
-        {"underline", is_today},
-        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and !is_disabled},
-        {"hover:bg-gray-100", !is_selected and !is_disabled},
-        {"text-gray-300 cursor-not-allowed", is_disabled}
-      ]
-
-      class_conditions
-      |> Enum.filter(fn {_class, condition} -> condition end)
-      |> Enum.map(fn {class, _condition} -> class end)
-      |> Enum.join(" ")
-    end
-  end
+  # Event Handlers
 
   def handle_event("current-month", _, socket) do
     date = socket.assigns.today_date
@@ -220,6 +188,48 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("client-error", %{"message" => message}, socket) do
     Logger.error("Client error for #{socket.assigns.id} component: #{message}")
     {:noreply, socket}
+  end
+
+  # Helper Functions
+
+  defp previous_month_button_class(view_date, today_date) do
+    is_disabled = view_date.month == today_date.month
+    base_class = "flex flex-none items-center justify-center p-1.5"
+
+    if is_disabled do
+      "#{base_class} text-gray-300 opacity-50"
+    else
+      "#{base_class} text-gray-400 hover:text-gray-500"
+    end
+  end
+
+  defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
+    is_current_month = current_month?(day, view_date)
+    is_selected = selected?(day, selected_date)
+    is_today = day == today_date
+    is_disabled = date_status != :ok
+
+    if !is_current_month do
+      "opacity-0 cursor-default"
+    else
+      class_conditions = [
+        {"underline", is_today},
+        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and !is_disabled},
+        {"hover:bg-gray-100", !is_selected and !is_disabled},
+        {"text-gray-300 cursor-not-allowed", is_disabled}
+      ]
+
+      class_conditions
+      |> Enum.filter(fn {_class, condition} -> condition end)
+      |> Enum.map(fn {class, _condition} -> class end)
+      |> Enum.join(" ")
+    end
+  end
+
+  defp update_calendar_view(socket, date) do
+    socket
+    |> assign(view_date: date)
+    |> assign(week_rows: week_rows(date))
   end
 
   defp calculate_date_for_key(date, key, today_date), do: handle_date_navigation(date, key, today_date)
@@ -300,11 +310,5 @@ defmodule EdenflowersWeb.CalendarComponent do
     tz
     |> DateTime.now!()
     |> DateTime.to_date()
-  end
-
-  defp update_calendar_view(socket, date) do
-    socket
-    |> assign(view_date: date)
-    |> assign(week_rows: week_rows(date))
   end
 end
