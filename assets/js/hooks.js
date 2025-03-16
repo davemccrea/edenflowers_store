@@ -60,8 +60,8 @@ Hooks.CalendarHook = {
       return this.error("Element must have an 'id' attribute.");
     }
 
-    this.currentDate = this.getCurrentDate();
-    if (!this.currentDate) {
+    this.viewDate = this.getViewDate();
+    if (!this.viewDate) {
       return this.error("Attribute 'data-view-date' is required.");
     }
 
@@ -78,7 +78,7 @@ Hooks.CalendarHook = {
     }
 
     // Set initial tab index
-    this.setTabIndex(this.currentDate);
+    this.setTabIndex(this.viewDate);
 
     this.calendarGrid.addEventListener("keydown", (event) => {
       const key = event.key;
@@ -102,12 +102,12 @@ Hooks.CalendarHook = {
 
   updated() {
     this.focus = this.el.getAttribute("data-focus");
-    this.currentDate = this.getCurrentDate();
+    this.viewDate = this.getViewDate();
     this.focusableDates = this.getFocusableDates();
-    this.setTabIndex(this.currentDate);
+    this.setTabIndex(this.viewDate);
 
     if (this.el.hasAttribute("data-should-focus")) {
-      this.clientFocus(this.currentDate);
+      this.clientFocus(this.viewDate);
     }
   },
 
@@ -120,21 +120,21 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   handleKeyDown(key, attribute) {
-    const currentDateEl = document.querySelector(
-      `[${this.PHX_VALUE_DATE}="${this.currentDate}"]`
+    const viewDateEl = document.querySelector(
+      `[${this.PHX_VALUE_DATE}="${this.viewDate}"]`
     );
 
-    if (!currentDateEl) {
+    if (!viewDateEl) {
       return this.error(
-        `Current date element with ${this.PHX_VALUE_DATE}="${this.currentDate}" not found.`
+        `View date element with ${this.PHX_VALUE_DATE}="${this.viewDate}" not found.`
       );
     }
 
-    const nextDate = currentDateEl.getAttribute(attribute);
+    const nextDate = viewDateEl.getAttribute(attribute);
 
     if (!nextDate) {
       return this.error(
-        `Attribute '${attribute}' is missing on current date element.`
+        `Attribute '${attribute}' is missing on view date element.`
       );
     }
 
@@ -146,7 +146,7 @@ Hooks.CalendarHook = {
 
     this.clientFocus(nextDate);
     this.setTabIndex(nextDate);
-    this.currentDate = nextDate;
+    this.viewDate = nextDate;
   },
 
   //
@@ -183,7 +183,7 @@ Hooks.CalendarHook = {
   serverFocus(key) {
     this.pushEventTo(this.el, "keydown", {
       key: key,
-      currentDate: this.currentDate,
+      viewDate: this.viewDate,
     });
   },
 
@@ -196,12 +196,12 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   setTabIndex(nextDate = null) {
-    // Remove focus from current date
-    const currentDateEl = document.querySelector(
-      `[${this.PHX_VALUE_DATE}="${this.currentDate}"]`
+    // Remove focus from view date
+    const viewDateEl = document.querySelector(
+      `[${this.PHX_VALUE_DATE}="${this.viewDate}"]`
     );
-    if (currentDateEl) {
-      currentDateEl.setAttribute("tabindex", "-1");
+    if (viewDateEl) {
+      viewDateEl.setAttribute("tabindex", "-1");
     }
 
     // Set focus on next date
@@ -255,10 +255,10 @@ Hooks.CalendarHook = {
   },
 
   /**
-   * Gets the current date from the element's data attribute.
+   * Gets the view date from the element's data attribute.
    * @returns {String | null}
    */
-  getCurrentDate() {
+  getViewDate() {
     return this.el.getAttribute("data-view-date");
   },
 

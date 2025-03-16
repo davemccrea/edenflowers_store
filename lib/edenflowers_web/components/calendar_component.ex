@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  def handle_event("keydown", %{"key" => key, "currentDate" => view_date}, socket) do
+  def handle_event("keydown", %{"key" => key, "viewDate" => view_date}, socket) do
     date =
       view_date
       |> Date.from_iso8601!()
