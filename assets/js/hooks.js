@@ -52,31 +52,11 @@ Hooks.CharacterCount = {
  * forwarded to the server and the server re-renders the view.
  */
 Hooks.CalendarHook = {
-  PHX_VALUE_DATE: "phx-value-date",
   DATA_VIEW_DATE: "data-view-date",
 
   mounted() {
-    this.id = this.el.getAttribute("id");
-    if (!this.id) {
-      return this.error("Element must have an 'id' attribute.");
-    }
-
-    this.viewDate = this.getViewDate();
-    if (!this.viewDate) {
-      return this.error(`Attribute ${this.DATA_VIEW_DATE} is required.`);
-    }
-
-    this.focusableDates = this.getFocusableDates();
-    if (!this.focusableDates || !this.focusableDates.length) {
-      return this.error(
-        "Attribute 'data-focusable-dates' is required and must not be empty."
-      );
-    }
-
-    this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
-    if (!this.calendarGrid) {
-      return this.error(`Calendar grid with id '${this.id}-grid' not found.`);
-    }
+    // Validate required elements and attributes
+    if (!this.validateRequirements()) return;
 
     // Set initial tab index
     this.setTabIndex(this.viewDate);
@@ -113,6 +93,44 @@ Hooks.CalendarHook = {
   },
 
   /**
+   * Validates all requirements for the hook to work properly
+   * @returns {Boolean} Whether all requirements are met
+   */
+  validateRequirements() {
+    // Check for ID
+    this.id = this.el.getAttribute("id");
+    if (!this.id) {
+      this.error("Element must have an 'id' attribute.");
+      return false;
+    }
+
+    // Check for view date
+    this.viewDate = this.getViewDate();
+    if (!this.viewDate) {
+      this.error(`Attribute ${this.DATA_VIEW_DATE} is required.`);
+      return false;
+    }
+
+    // Check for focusable dates
+    this.focusableDates = this.getFocusableDates();
+    if (!this.focusableDates || !this.focusableDates.length) {
+      this.error(
+        "Attribute 'data-focusable-dates' is required and must not be empty."
+      );
+      return false;
+    }
+
+    // Check for calendar grid
+    this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
+    if (!this.calendarGrid) {
+      this.error(`Calendar grid with id '${this.id}-grid' not found.`);
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
    * Handles the keydown event for the calendar grid.
    * @example
    * handleKeyDown("ArrowUp", "data-key-arrow-up");
@@ -121,22 +139,13 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   handleKeyDown(key, attribute) {
-    const viewDateEl = document.querySelector(
-      `[${this.PHX_VALUE_DATE}="${this.viewDate}"]`
-    );
-
-    if (!viewDateEl) {
-      return this.error(
-        `View date element with ${this.PHX_VALUE_DATE}="${this.viewDate}" not found.`
-      );
-    }
+    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
+    if (!viewDateEl) return;
 
     const nextDate = viewDateEl.getAttribute(attribute);
-
     if (!nextDate) {
-      return this.error(
-        `Attribute '${attribute}' is missing on view date element.`
-      );
+      this.error(`Attribute '${attribute}' is missing on view date element.`);
+      return;
     }
 
     // This part is important - check if the next date is focusable by the client.
@@ -163,19 +172,18 @@ Hooks.CalendarHook = {
    */
   clientFocus(date) {
     if (!date) {
-      return this.error("Cannot focus on null date.");
+      this.error("Cannot focus on null date.");
+      return;
     }
 
-    const dateEl = document.querySelector(`[${this.PHX_VALUE_DATE}="${date}"]`);
+    const dateEl = this.getElement(`calendar-day-${date}`);
     if (dateEl) {
       /** @type {HTMLElement} */ (dateEl).focus();
-    } else {
-      this.error(`Element with ${this.PHX_VALUE_DATE}="${date}" not found.`);
     }
   },
 
   /**
-   * Used when the focus is moved to a date that is not focusable by the client.
+   * Used when the focus is to be moved to a date that is not focusable by the client.
    * @example
    * serverFocus("ArrowUp");
    * @param {String} key - The key pressed by the user.
@@ -198,18 +206,14 @@ Hooks.CalendarHook = {
    */
   setTabIndex(nextDate = null) {
     // Remove focus from view date
-    const viewDateEl = document.querySelector(
-      `[${this.PHX_VALUE_DATE}="${this.viewDate}"]`
-    );
+    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
     if (viewDateEl) {
       viewDateEl.setAttribute("tabindex", "-1");
     }
 
     // Set focus on next date
     if (nextDate) {
-      const nextDateEl = document.querySelector(
-        `[${this.PHX_VALUE_DATE}="${nextDate}"]`
-      );
+      const nextDateEl = this.getElement(`calendar-day-${nextDate}`);
       if (nextDateEl) {
         nextDateEl.setAttribute("tabindex", "0");
       }
@@ -221,6 +225,19 @@ Hooks.CalendarHook = {
   //
 
   /**
+   * Gets an element by ID and logs an error if not found
+   * @param {String} id - The element ID
+   * @returns {Element | null} - The found element or null
+   */
+  getElement(id) {
+    const element = document.getElementById(id);
+    if (!element) {
+      this.error(`Element with id "${id}" not found.`);
+    }
+    return element;
+  },
+
+  /**
    * Checks if the given date is focusable by the client.
    * A focusable date is a date within the current month.
    * @example
@@ -230,14 +247,7 @@ Hooks.CalendarHook = {
    */
   isClientFocusable(date) {
     if (!date) return false;
-
-    for (let i = 0; i < this.focusableDates.length; i++) {
-      if (this.focusableDates[i] == date) {
-        return true;
-      }
-    }
-
-    return false;
+    return this.focusableDates.includes(date);
   },
 
   getFocusableDates() {
