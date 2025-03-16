@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
+     |> assign(should_focus: true)
      |> update_calendar_view(today_date)}
   end
 
@@ -39,9 +40,11 @@ defmodule EdenflowersWeb.CalendarComponent do
   def render(assigns) do
     ~H"""
     <div
+      style="touch-action: manipulation;"
       id={"#{@id}"}
       class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
       phx-hook="CalendarHook"
+      data-should-focus={@should_focus}
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
@@ -133,7 +136,7 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:noreply,
      socket
-     |> push_event("update-client", %{focus: false})
+     |> assign(should_focus: false)
      |> update_calendar_view(date)}
   end
 
@@ -144,7 +147,7 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:noreply,
      socket
-     |> push_event("update-client", %{focus: false})
+     |> assign(should_focus: false)
      |> update_calendar_view(date)}
   end
 
@@ -155,7 +158,7 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:noreply,
      socket
-     |> push_event("update-client", %{focus: false})
+     |> assign(should_focus: false)
      |> update_calendar_view(date)}
   end
 
@@ -165,7 +168,7 @@ defmodule EdenflowersWeb.CalendarComponent do
          :ok <- socket.assigns.date_callback.(date) do
       {:noreply,
        socket
-       |> push_event("update-client", %{focus: true})
+       |> assign(should_focus: true)
        |> assign(selected_date: date)
        |> update_calendar_view(date)}
     else
@@ -181,7 +184,7 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:noreply,
      socket
-     |> push_event("update-client", %{focus: true})
+     |> assign(should_focus: true)
      |> update_calendar_view(date)}
   end
 

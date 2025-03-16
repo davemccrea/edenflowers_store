@@ -52,11 +52,9 @@ Hooks.CharacterCount = {
  * forwarded to the server and the server re-renders the view.
  */
 Hooks.CalendarHook = {
-  // Constants
   PHX_VALUE_DATE: "phx-value-date",
 
   mounted() {
-    // Initialize properties
     this.id = this.el.getAttribute("id");
     if (!this.id) {
       return this.error("Element must have an 'id' attribute.");
@@ -74,7 +72,6 @@ Hooks.CalendarHook = {
       );
     }
 
-    // Cache DOM elements
     this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
     if (!this.calendarGrid) {
       return this.error(`Calendar grid with id '${this.id}-grid' not found.`);
@@ -83,48 +80,34 @@ Hooks.CalendarHook = {
     // Set initial tab index
     this.setTabIndex(this.currentDate);
 
-    // Event listeners
-    this.calendarGrid.addEventListener(
-      "keydown",
-      this.handleGridKeyDown.bind(this)
-    );
+    this.calendarGrid.addEventListener("keydown", (event) => {
+      const key = event.key;
+      const keys = {
+        ArrowUp: "data-key-arrow-up",
+        ArrowDown: "data-key-arrow-down",
+        ArrowLeft: "data-key-arrow-left",
+        ArrowRight: "data-key-arrow-right",
+        Home: "data-key-home",
+        End: "data-key-end",
+        PageUp: "data-key-page-up",
+        PageDown: "data-key-page-down",
+      };
 
-    // Phoenix event handlers
-    this.handleEvent("update-client", ({ focus = true }) => {
-      this.currentDate = this.getCurrentDate();
-      this.focusableDates = this.getFocusableDates();
-      this.setTabIndex(this.currentDate);
-      if (focus) {
-        this.clientFocus(this.currentDate);
+      if (key in keys) {
+        event.preventDefault();
+        this.handleKeyDown(key, keys[key]);
       }
     });
   },
 
-  //
-  // Event Handlers
-  //
+  updated() {
+    this.focus = this.el.getAttribute("data-focus");
+    this.currentDate = this.getCurrentDate();
+    this.focusableDates = this.getFocusableDates();
+    this.setTabIndex(this.currentDate);
 
-  /**
-   * Handles keydown events for the calendar grid.
-   * @param {KeyboardEvent} event - The keydown event.
-   * @returns {void}
-   */
-  handleGridKeyDown(event) {
-    const key = event.key;
-    const keys = {
-      ArrowUp: "data-key-arrow-up",
-      ArrowDown: "data-key-arrow-down",
-      ArrowLeft: "data-key-arrow-left",
-      ArrowRight: "data-key-arrow-right",
-      Home: "data-key-home",
-      End: "data-key-end",
-      PageUp: "data-key-page-up",
-      PageDown: "data-key-page-down",
-    };
-
-    if (key in keys) {
-      event.preventDefault();
-      this.handleKeyDown(key, keys[key]);
+    if (this.el.hasAttribute("data-should-focus")) {
+      this.clientFocus(this.currentDate);
     }
   },
 
