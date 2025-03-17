@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     {:ok,
      socket
+     |> assign(id: "checkout")
      |> assign(page_title: "Checkout")
      |> assign(fulfillment_options: fulfillment_options)
      |> assign(order: order)
@@ -31,18 +32,18 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <div class="m-auto max-w-xl">
+    <div id={@id} phx-hook="Scroll" class="m-auto max-w-xl">
       <%= if @order.step == 1 do %>
-        <section class="checkout__section">
+        <section id={"#{@id}-section-1"} class="checkout__section">
           <.form_heading>{gettext("Delivery")}</.form_heading>
 
           <.form
             :if={@order.step == 1}
-            id="checkout-step-1"
+            id="checkout-form-1"
             phx-hook="Spinner"
             for={@form}
-            phx-change="validate_step_1"
-            phx-submit="save_step_1"
+            phx-change="validate_form_1"
+            phx-submit="save_form_1"
             class="checkout__form"
           >
             <.input
@@ -119,15 +120,15 @@ defmodule EdenflowersWeb.CheckoutLive do
           <.form_heading step={1} active={false}>Delivery</.form_heading>
         </div>
 
-        <section class="checkout__section">
+        <section id={"#{@id}-section-2"} class="checkout__section">
           <.form_heading>Customise</.form_heading>
 
           <.form
-            id="checkout-step-2"
+            id="checkout-form-2"
             phx-hook="Spinner"
             for={@form}
-            phx-change="validate_step_2"
-            phx-submit="save_step_2"
+            phx-change="validate_form_2"
+            phx-submit="save_form_2"
             class="checkout__form"
           >
             <div class="space-y-2">
@@ -198,15 +199,15 @@ defmodule EdenflowersWeb.CheckoutLive do
           <.form_heading step={2} active={false}>Customise</.form_heading>
         </div>
 
-        <section class="checkout__section">
+        <section id={"#{@id}-section-3"} class="checkout__section">
           <.form_heading>Payment</.form_heading>
 
           <.form
-            id="checkout-step-3"
+            id="checkout-form-3"
             phx-hook="Spinner"
             for={@form}
-            phx-change="validate_step_3"
-            phx-submit="save_step_3"
+            phx-change="validate_form_3"
+            phx-submit="save_form_3"
             class="checkout__form"
           >
           </.form>
@@ -240,7 +241,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Event handlers
 
-  def handle_event("validate_step_1", %{"form" => params}, socket) do
+  def handle_event("validate_form_1", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
 
@@ -251,12 +252,12 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(form: form)}
   end
 
-  def handle_event("validate_step_" <> _step, %{"form" => params}, socket) do
+  def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_event("save_step_1", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
+  def handle_event("save_form_1", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
     fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
 
     if fulfillment_option.fulfillment_method == :delivery do
@@ -266,7 +267,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("save_step_" <> _step, %{"form" => params}, socket) do
+  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
     {:noreply, update_order_and_form(socket, params)}
   end
 
@@ -285,6 +286,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     {:noreply,
      socket
+     |> push_event("scroll", %{anchor: "#{socket.assigns.id}-section-#{order.step}"})
      |> assign(order: order)
      |> assign(form: form)}
   end
@@ -342,6 +344,7 @@ defmodule EdenflowersWeb.CheckoutLive do
           |> to_form()
 
         socket
+        |> push_event("scroll", %{anchor: "#{socket.assigns.id}-section-#{order.step}"})
         |> assign(order: order)
         |> assign(form: form)
 
