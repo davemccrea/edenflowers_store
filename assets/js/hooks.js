@@ -52,8 +52,6 @@ Hooks.CharacterCount = {
  * forwarded to the server and the server re-renders the view.
  */
 Hooks.CalendarHook = {
-  DATA_VIEW_DATE: "data-view-date",
-
   mounted() {
     // Validate required elements and attributes
     if (!this.validateRequirements()) return;
@@ -82,52 +80,9 @@ Hooks.CalendarHook = {
   },
 
   updated() {
-    this.focus = this.el.getAttribute("data-focus");
-    this.viewDate = this.getViewDate();
     this.focusableDates = this.getFocusableDates();
+    this.viewDate = this.getViewDate();
     this.setTabIndex(this.viewDate);
-
-    if (this.el.hasAttribute("data-should-focus")) {
-      this.clientFocus(this.viewDate);
-    }
-  },
-
-  /**
-   * Validates all requirements for the hook to work properly
-   * @returns {Boolean} Whether all requirements are met
-   */
-  validateRequirements() {
-    // Check for ID
-    this.id = this.el.getAttribute("id");
-    if (!this.id) {
-      this.error("Element must have an 'id' attribute.");
-      return false;
-    }
-
-    // Check for view date
-    this.viewDate = this.getViewDate();
-    if (!this.viewDate) {
-      this.error(`Attribute ${this.DATA_VIEW_DATE} is required.`);
-      return false;
-    }
-
-    // Check for focusable dates
-    this.focusableDates = this.getFocusableDates();
-    if (!this.focusableDates || !this.focusableDates.length) {
-      this.error(
-        "Attribute 'data-focusable-dates' is required and must not be empty."
-      );
-      return false;
-    }
-
-    // Check for calendar grid
-    this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
-    if (!this.calendarGrid) {
-      this.error(`Calendar grid with id '${this.id}-grid' not found.`);
-      return false;
-    }
-
-    return true;
   },
 
   /**
@@ -190,10 +145,14 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   serverFocus(key) {
-    this.pushEventTo(this.el, "keydown", {
+    const payload = {
       key: key,
       viewDate: this.viewDate,
-    });
+    };
+
+    const callback = () => this.clientFocus(this.viewDate);
+
+    this.pushEventTo(this.el, "keydown", payload, callback);
   },
 
   /**
@@ -218,6 +177,44 @@ Hooks.CalendarHook = {
         nextDateEl.setAttribute("tabindex", "0");
       }
     }
+  },
+
+  /**
+   * Validates all requirements for the hook to work properly
+   * @returns {Boolean} Whether all requirements are met
+   */
+  validateRequirements() {
+    // Check for ID
+    this.id = this.el.getAttribute("id");
+    if (!this.id) {
+      this.error("Element must have an 'id' attribute.");
+      return false;
+    }
+
+    // Check for view date
+    this.viewDate = this.getViewDate();
+    if (!this.viewDate) {
+      this.error(`Attribute 'data-view-date' is required.`);
+      return false;
+    }
+
+    // Check for focusable dates
+    this.focusableDates = this.getFocusableDates();
+    if (!this.focusableDates || !this.focusableDates.length) {
+      this.error(
+        "Attribute 'data-focusable-dates' is required and must not be empty."
+      );
+      return false;
+    }
+
+    // Check for calendar grid
+    this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
+    if (!this.calendarGrid) {
+      this.error(`Calendar grid with id '${this.id}-grid' not found.`);
+      return false;
+    }
+
+    return true;
   },
 
   //
@@ -270,7 +267,7 @@ Hooks.CalendarHook = {
    * @returns {String | null}
    */
   getViewDate() {
-    return this.el.getAttribute(this.DATA_VIEW_DATE);
+    return this.el.getAttribute("data-view-date");
   },
 
   /**

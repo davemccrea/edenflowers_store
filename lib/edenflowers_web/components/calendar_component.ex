@@ -14,7 +14,6 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
-     |> assign(should_focus: true)
      |> update_calendar_view(today_date)}
   end
 
@@ -44,7 +43,6 @@ defmodule EdenflowersWeb.CalendarComponent do
       id={"#{@id}"}
       class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
       phx-hook="CalendarHook"
-      data-should-focus={@should_focus}
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
@@ -67,7 +65,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           phx-click="current-month"
           aria-label={gettext("Show current month")}
           type="button"
-          class="font-medium"
+          class="cursor-pointer font-medium"
         >
           {Cldr.DateTime.to_string!(@view_date, format: "MMMM y")}
         </button>
@@ -76,7 +74,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+          class="flex flex-none cursor-pointer items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
         >
           <span class="sr-only">{gettext("Next month")}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
@@ -134,10 +132,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("current-month", _, socket) do
     date = socket.assigns.today_date
 
-    {:noreply,
-     socket
-     |> assign(should_focus: false)
-     |> update_calendar_view(date)}
+    {:noreply, update_calendar_view(socket, date)}
   end
 
   def handle_event("previous-month", _, socket) do
@@ -145,10 +140,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       socket.assigns.view_date
       |> Cldr.Calendar.minus(:months, 1)
 
-    {:noreply,
-     socket
-     |> assign(should_focus: false)
-     |> update_calendar_view(date)}
+    {:noreply, update_calendar_view(socket, date)}
   end
 
   def handle_event("next-month", _, socket) do
@@ -156,10 +148,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       socket.assigns.view_date
       |> Cldr.Calendar.plus(:months, 1)
 
-    {:noreply,
-     socket
-     |> assign(should_focus: false)
-     |> update_calendar_view(date)}
+    {:noreply, update_calendar_view(socket, date)}
   end
 
   def handle_event("select", %{"date" => date_string}, socket) do
@@ -168,7 +157,6 @@ defmodule EdenflowersWeb.CalendarComponent do
          :ok <- socket.assigns.date_callback.(date) do
       {:noreply,
        socket
-       |> assign(should_focus: true)
        |> assign(selected_date: date)
        |> update_calendar_view(date)}
     else
@@ -182,10 +170,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       |> Date.from_iso8601!()
       |> handle_date_navigation(key, socket.assigns.today_date)
 
-    {:noreply,
-     socket
-     |> assign(should_focus: true)
-     |> update_calendar_view(date)}
+    {:noreply, update_calendar_view(socket, date)}
   end
 
   def handle_event("client-error", %{"message" => message}, socket) do
@@ -202,7 +187,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     if is_disabled do
       "#{base_class} text-gray-300 opacity-50"
     else
-      "#{base_class} text-gray-400 hover:text-gray-500"
+      "#{base_class} cursor-pointer text-gray-400 hover:text-gray-500"
     end
   end
 
@@ -213,10 +198,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     is_disabled = date_status != :ok
 
     if !is_current_month do
-      "opacity-0 cursor-default"
+      "opacity-0"
     else
       class_conditions = [
+        {"aspect-square", true},
         {"underline", is_today},
+        {"cursor-pointer", !is_disabled},
         {"bg-blue-700 text-white hover:bg-blue-600", is_selected and !is_disabled},
         {"hover:bg-gray-100", !is_selected and !is_disabled},
         {"text-gray-300 cursor-not-allowed", is_disabled}
