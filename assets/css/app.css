@@ -1,8 +1,4 @@
-@import url("https://cdn.jsdelivr.net/npm/wc-datepicker/dist/themes/light.css")
-layer(datepicker);
-
-@import url("https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/styles/webawesome.css")
-layer(wa);
+@import url("https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/styles/webawesome.css") layer(wa);
 
 @layer wa {
   .wa-off,
