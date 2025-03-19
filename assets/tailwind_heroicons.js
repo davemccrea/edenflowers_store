@@ -1,8 +1,10 @@
+// A Tailwind plugin that makes "hero-#{ICON}" classes available
+const plugin = require("tailwindcss/plugin");
 const fs = require("fs");
 const path = require("path");
 
-module.exports = function ({ matchComponents, theme }) {
-  let iconsDir = path.join(process.cwd(), "../deps/heroicons/optimized");
+module.exports = plugin(function ({ matchComponents, theme }) {
+  let iconsDir = path.join(__dirname, "../deps/heroicons/optimized");
   let values = {};
   let icons = [
     ["", "/24/outline"],
@@ -23,6 +25,7 @@ module.exports = function ({ matchComponents, theme }) {
           .readFileSync(fullPath)
           .toString()
           .replace(/\r?\n|\r/g, "");
+        content = encodeURIComponent(content);
         let size = theme("spacing.6");
         if (name.endsWith("-mini")) {
           size = theme("spacing.5");
@@ -42,6 +45,6 @@ module.exports = function ({ matchComponents, theme }) {
         };
       },
     },
-    { values },
+    { values }
   );
-};
+});
