@@ -209,14 +209,12 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div>
-      <.label for={@id}>
-        {@label}
-        <select id={@id} name={@name} multiple={@multiple} {@rest}>
-          <option :if={@prompt} value="">{@prompt}</option>
-          {Phoenix.HTML.Form.options_for_select(@options, @value)}
-        </select>
-      </.label>
+    <div class="flex flex-col">
+      <label for={@id} class="mb-1">{@label}</label>
+      <select class="select select-lg w-full" id={@id} name={@name} multiple={@multiple} {@rest}>
+        <option :if={@prompt} value="">{@prompt}</option>
+        {Phoenix.HTML.Form.options_for_select(@options, @value)}
+      </select>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -237,12 +235,19 @@ defmodule EdenflowersWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div>
+    <div class="flex flex-col">
       <.label for={@id}>
         {@label}
-        <input type={@type} name={@name} id={@id} value={Phoenix.HTML.Form.normalize_value(@type, @value)} {@rest} />
+        <input
+          class="input input-lg w-full"
+          type={@type}
+          name={@name}
+          id={@id}
+          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+          {@rest}
+        />
       </.label>
-      <p :if={@hint} class="mt-2 text-sm text-stone-500">{@hint}</p>
+      <p :if={@hint} class="text-base-content/60 mt-2 text-sm">{@hint}</p>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -256,7 +261,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for}>
+    <label for={@for} class="mb-1">
       {render_slot(@inner_block)}
     </label>
     """

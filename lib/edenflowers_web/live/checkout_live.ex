@@ -33,6 +33,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   def render(assigns) do
     ~H"""
     <div id={@id} phx-hook="Scroll" class="m-auto max-w-xl">
+      <ul class="steps mb-12 w-full">
+        <li class={"#{if @order.step == 1 or @order.step == 2 or @order.step == 3, do: "step-primary"} step"}>Delivery</li>
+        <li class={"#{if @order.step == 2 or @order.step == 3, do: "step-primary"} step"}>Customise</li>
+        <li class={"#{if @order.step == 3, do: "step-primary"} step"}>Payment</li>
+      </ul>
+
       <%= if @order.step == 1 do %>
         <section id={"#{@id}-section-1"} class="checkout__section">
           <.form_heading>{gettext("Delivery")}</.form_heading>
@@ -47,7 +53,6 @@ defmodule EdenflowersWeb.CheckoutLive do
             class="checkout__form"
           >
             <.input
-              class="disable-preflight"
               label={gettext("Delivery Method")}
               field={@form[:fulfillment_option_id]}
               options={format_options_for_select(@fulfillment_options)}
@@ -55,7 +60,6 @@ defmodule EdenflowersWeb.CheckoutLive do
             />
 
             <.input
-              class="disable-preflight"
               hint="You will receive a text message when your order is ready for collection."
               label="Phone Number"
               field={@form[:recipient_phone_number]}
@@ -65,7 +69,6 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
               <div>
                 <.input
-                  class="disable-preflight"
                   hint="The delivery fee is calcuted based on distance from Minimosen."
                   placeholder=""
                   label="Address *"
@@ -75,17 +78,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <.error :if={@errors[:delivery_address]}>{@errors[:delivery_address]}</.error>
               </div>
 
-              <.input
-                class="disable-preflight"
-                label="Delivery Instructions"
-                field={@form[:delivery_instructions]}
-                type="text"
-              />
+              <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
             </div>
 
-            <div>
+            <div class="flex flex-col">
               <.label>Delivery Date</.label>
-              <div class="disable-dbl-tap-zoom mt-2">
+              <div class="disable-dbl-tap-zoom">
                 <.live_component
                   id="calendar"
                   hidden_input_id="form_fulfillment_date"
@@ -105,7 +103,9 @@ defmodule EdenflowersWeb.CheckoutLive do
               </div>
             </div>
 
-            <wa-button class="submit-button disable-preflight mt-2" type="submit">Next</wa-button>
+            <button type="submit" class="btn btn-primary btn-lg mt-2">
+              Next
+            </button>
           </.form>
         </section>
 
@@ -131,49 +131,18 @@ defmodule EdenflowersWeb.CheckoutLive do
             phx-submit="save_form_2"
             class="checkout__form"
           >
-            <div class="space-y-2">
-              <.label for="card-picker">Choose a Card</.label>
-              <div id="card-picker" class="relative w-full">
-                <div class="flex snap-x snap-mandatory flex-row gap-4 overflow-x-auto pb-4">
-                  <div
-                    :for={
-                      color <- [
-                        "bg-red-100",
-                        "bg-orange-100",
-                        "bg-amber-100",
-                        "bg-yellow-100",
-                        "bg-lime-100",
-                        "bg-green-100",
-                        "bg-emerald-100",
-                        "bg-teal-100",
-                        "bg-cyan-100",
-                        "bg-sky-100",
-                        "bg-blue-100",
-                        "bg-indigo-100",
-                        "bg-violet-100",
-                        "bg-purple-100",
-                        "bg-pink-100"
-                      ]
-                    }
-                    class={"#{color} aspect-square h-auto w-64 flex-none snap-center rounded-lg"}
-                  >
-                  </div>
-                </div>
-              </div>
-            </div>
+            <button class="btn" type="button">Open card picker</button>
 
             <div id="gift-message-container" phx-hook="CharacterCount">
-              <div class="relative">
-                <.label for={@form[:gift_message].id}>
-                  Gift Message <textarea
-                    class="disable-preflight"
+              <div class="relative flex flex-col">
+                <.label for={@form[:gift_message].id}>Gift Message</.label>
+                <textarea
                     id={@form[:gift_message].id}
                     name={@form[:gift_message].name}
+                  class="textarea w-full"
                     maxlength={200}
                     rows={5}
                   >{@form[:gift_message].value}</textarea>
-                </.label>
-
                 <div class="absolute right-2 bottom-1">
                   <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
                 </div>
@@ -184,7 +153,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.error>
             </div>
 
-            <wa-button class="submit-button disable-preflight" type="submit">Next</wa-button>
+            <button type="submit" class="btn btn-primary btn-lg mt-2">Next</button>
           </.form>
         </section>
 
@@ -210,6 +179,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             phx-submit="save_form_3"
             class="checkout__form"
           >
+            <div id="stripe-elements" phx-hook="StripeElements"></div>
           </.form>
         </section>
       <% end %>
@@ -227,13 +197,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row justify-between">
-      <h1 class={"#{not @active && "text-neutral-400"} font-serif text-3xl"} {@rest}>
+      <h1 class={"#{not @active && "text-neutral-400"} font-serif text-3xl font-medium"} {@rest}>
         {render_slot(@inner_block)}
       </h1>
       <%= if @step do %>
-        <wa-button class="disable-preflight" phx-click={"edit_step_#{@step}"} appearance="plain" variant="neutral">
-          Edit
-        </wa-button>
+        <button class="btn btn-ghost" phx-click={"edit_step_#{@step}"}>Edit</button>
       <% end %>
     </div>
     """

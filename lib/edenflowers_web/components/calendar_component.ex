@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     <div
       style="touch-action: manipulation;"
       id={"#{@id}"}
-      class="rounded border border-gray-400 p-2 shadow sm:max-w-xs"
+      class="border-base-content/20 rounded border p-2 sm:max-w-xs"
       phx-hook="CalendarHook"
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
@@ -74,14 +74,14 @@ defmodule EdenflowersWeb.CalendarComponent do
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="flex flex-none cursor-pointer items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+          class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
         >
           <span class="sr-only">{gettext("Next month")}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
         </button>
       </div>
 
-      <div class="mt-2 grid grid-cols-7 border-b border-gray-200 text-center text-sm leading-6 text-gray-500">
+      <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
         <%= for week_day <- List.first(@week_rows) do %>
           <span>
             {Cldr.DateTime.to_string!(week_day, format: "EEEEEE")}
@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     if is_disabled do
       "#{base_class} text-gray-300 opacity-50"
     else
-      "#{base_class} cursor-pointer text-gray-400 hover:text-gray-500"
+      "#{base_class} cursor-pointer text-base-content hover:text-base-content/60"
     end
   end
 
@@ -204,9 +204,9 @@ defmodule EdenflowersWeb.CalendarComponent do
         {"aspect-square", true},
         {"underline", is_today},
         {"cursor-pointer", !is_disabled},
-        {"bg-blue-700 text-white hover:bg-blue-600", is_selected and !is_disabled},
-        {"hover:bg-gray-100", !is_selected and !is_disabled},
-        {"text-gray-300 cursor-not-allowed", is_disabled}
+        {"bg-primary text-neutral-content hover:bg-primary/90", is_selected and !is_disabled},
+        {"hover:bg-base-content/20", !is_selected and !is_disabled},
+        {"cursor-not-allowed text-base-content/20", is_disabled}
       ]
 
       class_conditions

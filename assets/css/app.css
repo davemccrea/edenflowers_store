@@ -1,41 +1,42 @@
-@import url("https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/styles/webawesome.css") layer(wa);
-
-@layer wa {
-  .wa-off,
-  .wa-off-deep,
-  .wa-off-deep * {
-    all: revert-layer;
-  }
-}
-
-/* See the Tailwind configuration guide for advanced usage
-   https://tailwindcss.com/docs/configuration */
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap");
 
 @import "tailwindcss" source(none);
+
+@theme {
+  --font-sans: "Open Sans", sans-serif;
+  --font-serif: Merriweather, serif;
+}
+
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+@plugin "../tailwind_heroicons.js";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  --color-primary: oklch(36.84% 0.0478 156.76); /* brand green */
+  --color-primary-content: oklch(98% 0.001 106.423); /* stone-50 */
+  --color-secondary: oklch(97% 0.071 103.193); /* yellow-100 */
+  --color-base-100: oklch(98% 0.001 106.423); /* stone-100 */
+  --color-base-200: oklch(97% 0.001 106.424); /* stone-200 */
+  --color-base-300: oklch(92% 0.003 48.717); /* sonte-300 */
+}
+
 @source "../css";
 @source "../js";
 @source "../../lib/edenflowers_web";
-@plugin "@tailwindcss/forms";
-@plugin "../tailwind_heroicons.js";
+
 @custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
 @custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
 @custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
-@theme {
-  --color-brand: oklch(66.64% 0.2202 37.57);
-}
 
 /*
  * Make LiveView wrapper divs transparent for layout.
  * This makes it possible to use LiveViews as flex children for example.
  */
-[data-phx-root-id] { display: contents }
-
-@layer base {
-  .disable-preflight,
-  .disable-preflight-deep,
-  .disable-preflight-deep * {
-    all: revert-layer;
-  }
+[data-phx-root-id] {
+  display: contents;
 }
 
 .checkout__section {
@@ -43,7 +44,7 @@
 }
 
 .checkout__form {
-  @apply flex flex-col space-y-4;
+  @apply flex flex-col space-y-8;
 }
 
 .checkout__heading-container {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="overflow-y-scroll">
+<html lang="en" data-theme="light" class="overflow-y-scroll">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,15 +8,11 @@
       {assigns[:page_title]}
     </.live_title>
 
-    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/styles/themes/default.css" />
-    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-alpha.11/dist/webawesome.loader.js">
-    </script>
-
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class="antialiased">
+  <body class="bg-base-100 antialiased">
     {@inner_content}
   </body>
 </html>
