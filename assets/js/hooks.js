@@ -296,4 +296,15 @@ Hooks.Scroll = {
   },
 };
 
+Hooks.StripeElements = {
+  mounted() {
+    // @ts-ignore
+    const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
+    const elements = stripe.elements();
+    const card = elements.create("card");
+    card.mount(this.el);
+    // Handle submission with JS hook
+  },
+};
+
 export default Hooks;

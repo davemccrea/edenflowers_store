@@ -19,6 +19,12 @@ defmodule EdenflowersWeb.CheckoutLive do
       |> AshPhoenix.Form.for_update(create_step_action_name(:save, order.step))
       |> to_form()
 
+    if order.payment_intent_id do
+      # Update the total
+    else
+      # Create payment intent with current order total
+    end
+
     {:ok,
      socket
      |> assign(id: "checkout")
@@ -137,12 +143,12 @@ defmodule EdenflowersWeb.CheckoutLive do
               <div class="relative flex flex-col">
                 <.label for={@form[:gift_message].id}>Gift Message</.label>
                 <textarea
-                    id={@form[:gift_message].id}
-                    name={@form[:gift_message].name}
+                  id={@form[:gift_message].id}
+                  name={@form[:gift_message].name}
                   class="textarea w-full"
-                    maxlength={200}
-                    rows={5}
-                  >{@form[:gift_message].value}</textarea>
+                  maxlength={200}
+                  rows={5}
+                >{@form[:gift_message].value}</textarea>
                 <div class="absolute right-2 bottom-1">
                   <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
                 </div>

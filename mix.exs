@@ -70,7 +70,8 @@ defmodule Edenflowers.MixProject do
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:ex_cldr, "~> 2.40"},
       {:ex_cldr_calendars, "~> 2.0"},
-      {:ex_cldr_dates_times, "~> 2.0"}
+      {:ex_cldr_dates_times, "~> 2.0"},
+      {:stripity_stripe, "~> 3.2"}
     ]
   end
 

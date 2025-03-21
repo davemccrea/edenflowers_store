@@ -45,9 +45,5 @@ defmodule EdenflowersWeb.Plugs.InitStore do
     Order
     |> Ash.Changeset.for_create(:create, %{fulfillment_option_id: fulfillment_option_id})
     |> Ash.create()
-    |> case do
-      {:ok, order} -> {:ok, order}
-      error -> error
-    end
   end
 end

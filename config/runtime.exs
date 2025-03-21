@@ -24,6 +24,9 @@ config :edenflowers,
        :here_api_key,
        System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+config :stripity_stripe,
+  api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

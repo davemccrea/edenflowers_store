@@ -57,8 +57,8 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:state, :completed)
     end
 
-    update :add_stripe_payment_id do
-      accept [:stripe_payment_id]
+    update :add_payment_intent_id do
+      accept [:payment_intent_id]
     end
 
     update :add_promotion do
@@ -90,7 +90,7 @@ defmodule Edenflowers.Store.Order do
     # Step 3 - Payment
     attribute :customer_name, :string
     attribute :customer_email, :string
-    attribute :stripe_payment_id, :string
+    attribute :payment_intent_id, :string
 
     timestamps()
   end
