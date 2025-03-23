@@ -8,9 +8,7 @@
   --font-serif: Merriweather, serif;
 }
 
-@plugin "@tailwindcss/forms";
-@plugin "@tailwindcss/typography";
-@plugin "../tailwind_heroicons.js";
+@plugin "../vendor/heroicons";
 @plugin "daisyui";
 @plugin "daisyui/theme" {
   name: "light";
