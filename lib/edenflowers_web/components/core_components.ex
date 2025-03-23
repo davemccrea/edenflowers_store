@@ -210,7 +210,7 @@ defmodule EdenflowersWeb.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div class="flex flex-col">
-      <label for={@id} class="mb-1">{@label}</label>
+      <.label for={@id}>{@label}</.label>
       <select class="select select-lg w-full" id={@id} name={@name} multiple={@multiple} {@rest}>
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
@@ -238,16 +238,16 @@ defmodule EdenflowersWeb.CoreComponents do
     <div class="flex flex-col">
       <.label for={@id}>
         {@label}
-        <input
-          class="input input-lg w-full"
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          {@rest}
-        />
       </.label>
-      <p :if={@hint} class="text-base-content/60 mt-2 text-sm">{@hint}</p>
+      <input
+        class="input input-lg w-full"
+        type={@type}
+        name={@name}
+        id={@id}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        {@rest}
+      />
+      <.hint :if={@hint}>{@hint}</.hint>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -261,9 +261,17 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="mb-1">
+    <label for={@for} class="mb-1 text-sm font-medium">
       {render_slot(@inner_block)}
     </label>
+    """
+  end
+
+  def hint(assigns) do
+    ~H"""
+    <p class="text-base-content/60 mt-1 text-sm">
+      {render_slot(@inner_block)}
+    </p>
     """
   end
 
@@ -274,7 +282,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
+    <p class="text-warning-content mt-1 flex gap-2 text-sm leading-6">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       {render_slot(@inner_block)}
     </p>

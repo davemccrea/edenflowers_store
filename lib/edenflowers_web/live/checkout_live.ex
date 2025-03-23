@@ -38,157 +38,212 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <div id={@id} phx-hook="Scroll" class="m-auto max-w-xl">
-      <ul class="steps mb-12 w-full">
-        <li class={"#{if @order.step == 1 or @order.step == 2 or @order.step == 3, do: "step-primary"} step"}>Delivery</li>
-        <li class={"#{if @order.step == 2 or @order.step == 3, do: "step-primary"} step"}>Customise</li>
-        <li class={"#{if @order.step == 3, do: "step-primary"} step"}>Payment</li>
-      </ul>
+    <div class="lg:mx-36 xl:mx-48">
+      <div class="flex flex-col gap-12">
+        <div class="text-neutral/60 flex flex-row gap-2">
+          <.icon name="hero-lock-closed" class="h-4 w-4" />
+          <span class="items-center text-xs uppercase">Secure Checkout</span>
+        </div>
 
-      <%= if @order.step == 1 do %>
-        <section id={"#{@id}-section-1"} class="checkout__section">
-          <.form_heading>{gettext("Delivery")}</.form_heading>
+        <div class="flex flex-row gap-8">
+          <div id={@id} class="w-[60%]" phx-hook="Scroll">
+            <%= if @order.step == 1 do %>
+              <section id={"#{@id}-section-1"} class="checkout__section">
+                <.form_heading>{gettext("Delivery")}</.form_heading>
 
-          <.form
-            :if={@order.step == 1}
-            id="checkout-form-1"
-            phx-hook="Spinner"
-            for={@form}
-            phx-change="validate_form_1"
-            phx-submit="save_form_1"
-            class="checkout__form"
-          >
-            <.input
-              label={gettext("Delivery Method")}
-              field={@form[:fulfillment_option_id]}
-              options={format_options_for_select(@fulfillment_options)}
-              type="select"
-            />
-
-            <.input
-              hint="You will receive a text message when your order is ready for collection."
-              label="Phone Number"
-              field={@form[:recipient_phone_number]}
-              type="text"
-            />
-
-            <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
-              <div>
-                <.input
-                  hint="The delivery fee is calcuted based on distance from Minimosen."
-                  placeholder=""
-                  label="Address *"
-                  field={@form[:delivery_address]}
-                  type="text"
-                />
-                <.error :if={@errors[:delivery_address]}>{@errors[:delivery_address]}</.error>
-              </div>
-
-              <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
-            </div>
-
-            <div class="flex flex-col">
-              <.label>Delivery Date</.label>
-              <div class="disable-dbl-tap-zoom">
-                <.live_component
-                  id="calendar"
-                  hidden_input_id="form_fulfillment_date"
-                  hidden_input_name="form[fulfillment_date]"
-                  selected_date={@form[:fulfillment_date].value}
-                  module={EdenflowersWeb.CalendarComponent}
-                  date_callback={
-                    fn date ->
-                      fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
-                      fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
-                      {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
-                      state
-                    end
-                  }
+                <.form
+                  :if={@order.step == 1}
+                  id="checkout-form-1"
+                  for={@form}
+                  phx-change="validate_form_1"
+                  phx-submit="save_form_1"
+                  class="checkout__form"
                 >
-                </.live_component>
+                  <.input
+                    label={gettext("Delivery Method")}
+                    field={@form[:fulfillment_option_id]}
+                    options={format_options_for_select(@fulfillment_options)}
+                    type="select"
+                  />
+
+                  <.input
+                    hint="You will receive a text message when your order is ready for collection."
+                    label="Phone Number"
+                    placeholder="045 1505141"
+                    field={@form[:recipient_phone_number]}
+                    type="text"
+                  />
+
+                  <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
+                    <div>
+                      <.input
+                        hint="The delivery fee is calcuted based on distance from Minimosen."
+                        placeholder="Stadsgatan 3, 65300 Vasa"
+                        label="Address *"
+                        field={@form[:delivery_address]}
+                        type="text"
+                      />
+                      <.error :if={@errors[:delivery_address]}>{@errors[:delivery_address]}</.error>
+                    </div>
+
+                    <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
+                  </div>
+
+                  <div class="flex flex-col">
+                    <.label>Delivery Date</.label>
+                    <div class="disable-dbl-tap-zoom max-w-xs">
+                      <.live_component
+                        id="calendar"
+                        hidden_input_id="form_fulfillment_date"
+                        hidden_input_name="form[fulfillment_date]"
+                        selected_date={@form[:fulfillment_date].value}
+                        module={EdenflowersWeb.CalendarComponent}
+                        date_callback={
+                          fn date ->
+                            fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
+                            fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
+                            {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
+                            state
+                          end
+                        }
+                      >
+                      </.live_component>
+                    </div>
+                  </div>
+
+                  <.form_button>Next <.icon name="hero-arrow-right" class="h-4 w-4" /></.form_button>
+                </.form>
+              </section>
+
+              <div class="checkout__heading-container">
+                <.form_heading active={false}>Customise</.form_heading>
+                <.form_heading active={false}>Payment</.form_heading>
               </div>
-            </div>
+            <% end %>
 
-            <button type="submit" class="btn btn-primary btn-lg mt-2">
-              Next
-            </button>
-          </.form>
-        </section>
+            <%= if @order.step == 2 do %>
+              <div class="checkout__heading-container">
+                <.form_heading step={1} active={false}>Delivery</.form_heading>
+              </div>
 
-        <div class="checkout__heading-container">
-          <.form_heading active={false}>Customise</.form_heading>
-          <.form_heading active={false}>Payment</.form_heading>
-        </div>
-      <% end %>
+              <section id={"#{@id}-section-2"} class="checkout__section">
+                <.form_heading>Customise</.form_heading>
 
-      <%= if @order.step == 2 do %>
-        <div class="checkout__heading-container">
-          <.form_heading step={1} active={false}>Delivery</.form_heading>
-        </div>
+                <.form
+                  id="checkout-form-2"
+                  for={@form}
+                  phx-change="validate_form_2"
+                  phx-submit="save_form_2"
+                  class="checkout__form"
+                >
+                  <div id="gift-message-container" phx-hook="CharacterCount">
+                    <div class="relative flex flex-col">
+                      <textarea
+                        id={@form[:gift_message].id}
+                        name={@form[:gift_message].name}
+                        class="textarea w-full resize-none"
+                        maxlength={200}
+                        rows={5}
+                      >{@form[:gift_message].value}</textarea>
+                      <div class="absolute right-2 bottom-1">
+                        <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
+                      </div>
+                    </div>
 
-        <section id={"#{@id}-section-2"} class="checkout__section">
-          <.form_heading>Customise</.form_heading>
+                    <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
+                      {gettext("Gift Message")} {msg}
+                    </.error>
+                  </div>
 
-          <.form
-            id="checkout-form-2"
-            phx-hook="Spinner"
-            for={@form}
-            phx-change="validate_form_2"
-            phx-submit="save_form_2"
-            class="checkout__form"
-          >
-            <button class="btn" type="button">Open card picker</button>
+                  <.form_button>Next <.icon name="hero-arrow-right" class="h-4 w-4" /></.form_button>
+                </.form>
+              </section>
 
-            <div id="gift-message-container" phx-hook="CharacterCount">
-              <div class="relative flex flex-col">
-                <.label for={@form[:gift_message].id}>Gift Message</.label>
-                <textarea
-                  id={@form[:gift_message].id}
-                  name={@form[:gift_message].name}
-                  class="textarea w-full"
-                  maxlength={200}
-                  rows={5}
-                >{@form[:gift_message].value}</textarea>
-                <div class="absolute right-2 bottom-1">
-                  <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
+              <div class="checkout__heading-container">
+                <.form_heading active={false}>Payment</.form_heading>
+              </div>
+            <% end %>
+
+            <%= if @order.step == 3 do %>
+              <div class="checkout__heading-container">
+                <.form_heading step={1} active={false}>Delivery</.form_heading>
+                <.form_heading step={2} active={false}>Customise</.form_heading>
+              </div>
+
+              <section id={"#{@id}-section-3"} class="checkout__section">
+                <.form_heading>Payment</.form_heading>
+
+                <.form
+                  id="checkout-form-3"
+                  for={@form}
+                  phx-change="validate_form_3"
+                  phx-submit="save_form_3"
+                  class="checkout__form"
+                >
+                  <div id="stripe-elements" phx-hook="StripeElements"></div>
+                </.form>
+              </section>
+            <% end %>
+          </div>
+
+          <div class="md:border-neutral/5 md:border-r"></div>
+
+          <div class="w-[35%] sticky top-6 h-fit overflow-y-auto">
+            <div class="flex flex-col gap-6">
+              <%!-- Heading --%>
+              <h2 class="font-bold">Your Cart</h2>
+
+              <%!-- Cart products --%>
+              <div class="flex flex-col gap-2">
+                <div class="flex flex-row gap-4 text-sm">
+                  <div class="flex flex-row gap-4">
+                    <div class="h-14 w-14 rounded bg-blue-100"></div>
+                    <div class="flex flex-col">
+                      <span>Spring Bouquet (medium)</span>
+                      <span>€45.00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-row gap-4 text-sm">
+                  <div class="flex flex-row gap-4">
+                    <div class="h-14 w-14 rounded bg-yellow-100"></div>
+                    <div class="flex flex-col">
+                      <span>Autumn Bouquet (large)</span>
+                      <span>€60.00</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
-                {gettext("Gift Message")} {msg}
-              </.error>
+              <div class="border-neutral/5 border-t"></div>
+
+              <%!-- Line items --%>
+              <div class="flex flex-col gap-2 text-sm">
+                <div class="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>€70.00</span>
+                </div>
+
+                <div class="flex justify-between">
+                  <span>Delivery</span>
+                  <span>€5.99</span>
+                </div>
+
+                <div class="flex justify-between">
+                  <span>Discount</span>
+                  <span class="text-green-600">-€10.00</span>
+                </div>
+
+                <div class="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>€65.99</span>
+                </div>
+              </div>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-lg mt-2">Next</button>
-          </.form>
-        </section>
-
-        <div class="checkout__heading-container">
-          <.form_heading active={false}>Payment</.form_heading>
+          </div>
         </div>
-      <% end %>
-
-      <%= if @order.step == 3 do %>
-        <div class="checkout__heading-container">
-          <.form_heading step={1} active={false}>Delivery</.form_heading>
-          <.form_heading step={2} active={false}>Customise</.form_heading>
-        </div>
-
-        <section id={"#{@id}-section-3"} class="checkout__section">
-          <.form_heading>Payment</.form_heading>
-
-          <.form
-            id="checkout-form-3"
-            phx-hook="Spinner"
-            for={@form}
-            phx-change="validate_form_3"
-            phx-submit="save_form_3"
-            class="checkout__form"
-          >
-            <div id="stripe-elements" phx-hook="StripeElements"></div>
-          </.form>
-        </section>
-      <% end %>
+      </div>
     </div>
     """
   end
@@ -203,13 +258,25 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row justify-between">
-      <h1 class={"#{not @active && "text-neutral-400"} font-serif text-3xl font-medium"} {@rest}>
+      <h1 class={"#{if not @active, do: "text-neutral/40", else: "text-neutral"} font-serif text-2xl font-medium"} {@rest}>
         {render_slot(@inner_block)}
       </h1>
       <%= if @step do %>
         <button class="btn btn-ghost" phx-click={"edit_step_#{@step}"}>Edit</button>
       <% end %>
     </div>
+    """
+  end
+
+  slot :inner_block
+  attr :rest, :global
+
+  defp form_button(assigns) do
+    ~H"""
+    <button type="submit" class="btn btn-primary btn-lg mt-2 flex flex-row gap-2">
+      <span class="phx-submit-loading:loading phx-submit-loading:loading-spinner"></span>
+      <span>{render_slot(@inner_block)}</span>
+    </button>
     """
   end
 

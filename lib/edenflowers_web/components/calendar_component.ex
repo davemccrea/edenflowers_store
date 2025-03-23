@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     <div
       style="touch-action: manipulation;"
       id={"#{@id}"}
-      class="border-base-content/20 rounded border p-2 sm:max-w-xs"
+      class="border-base-content/20 bg-base-100 rounded border p-2 sm:max-w-xs"
       phx-hook="CalendarHook"
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
