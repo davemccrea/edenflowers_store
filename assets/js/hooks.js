@@ -2,31 +2,6 @@
 
 export const Hooks = {};
 
-Hooks.Spinner = {
-  mounted() {
-    const element = this.el;
-    const submitButton = element.querySelector(".submit-button");
-
-    this.mutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (element.classList.contains("phx-submit-loading")) {
-          submitButton.setAttribute("loading", "");
-        } else {
-          submitButton.removeAttribute("loading");
-        }
-      });
-    });
-
-    this.mutationObserver.observe(element, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-  },
-  destroyed() {
-    this.mutationObserver.disconnect();
-  },
-};
-
 Hooks.CharacterCount = {
   mounted() {
     const textarea = this.el.querySelector("textarea");
