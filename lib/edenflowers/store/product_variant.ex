@@ -15,6 +15,10 @@ defmodule Edenflowers.Store.ProductVariant do
     create :create do
       accept [:price, :size, :image, :stock_trackable, :stock_quantity, :product_id]
     end
+
+    update :update do
+      accept [:price, :size, :image, :stock_trackable, :stock_quantity]
+    end
   end
 
   attributes do

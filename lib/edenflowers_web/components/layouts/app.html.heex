@@ -1,35 +1,96 @@
-<div class="flex min-h-screen flex-col">
-  <header>
-    <div class="flex items-center justify-center border-b py-3">
-      <span>This is a banner 🚀</span>
-    </div>
+<sl-drawer id="cart-drawer" placement="end" label="Cart" class="drawer-custom-size"></sl-drawer>
+<sl-drawer id="nav-drawer" placement="start" label="Nav" class="drawer-custom-size"></sl-drawer>
 
-    <div class="bg-secondary flex w-full items-center justify-center border-b py-6">
-      <div class="flex flex-col items-center space-y-1">
-        <a href={~p"/"} class="font-montserrat text-primary text-3xl font-semibold uppercase tracking-widest">
-          Eden Flowers
-        </a>
-        <span class="font-serif text-primary text-xs italic">Vaasa, Finland</span>
-      </div>
+<hotfx-shy-header>
+  <header class="w-full">
+    <div class="mr-[var(--scrollbar-width)]">
+      <section class="bg-accent border-b py-2 text-center">
+        <span class="text-accent-content text-sm">Let us know what you think of the new website! 🚀</span>
+      </section>
+
+      <section class="bg-base-100 border-b px-3 py-3 md:px-6">
+        <div class="flex items-center">
+          <div class="flex flex-1 justify-start">
+            <div class="md:hidden">
+              <button id="nav-drawer-button" type="button" class="h-12 w-12 cursor-pointer">
+                <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
+              </button>
+            </div>
+
+            <nav class="hidden md:block">
+              <ul class="flex gap-3">
+                <li>
+                  <a
+                    href="#"
+                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
+                  >
+                    {gettext("Store")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
+                  >
+                    {gettext("Courses")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
+                  >
+                    {gettext("Wedding")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
+                  >
+                    {gettext("Condolence")}
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          <div class="flex flex-1 flex-col items-center">
+            <a
+              href={~p"/"}
+              class="text-primary font-sans whitespace-nowrap text-2xl font-bold uppercase tracking-widest"
+            >
+              Eden Flowers
+            </a>
+            <span class="text-primary font-serif text-sm italic">{gettext("Vaasa Finland")}</span>
+          </div>
+
+          <div class="flex flex-1 justify-end">
+            <button id="cart-drawer-button" type="button" class="h-12 w-12 cursor-pointer">
+              <.icon class="text-base-content h-5 w-5 hover:text-base-content/80" name="hero-shopping-bag" />
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   </header>
+</hotfx-shy-header>
 
-  <main class="flex-1">
-    <.flash_group flash={@flash} />
-    {@inner_content}
-  </main>
+<main class="flex-grow">
+  <.flash_group flash={@flash} />
+  {@inner_content}
+</main>
 
-  <footer class="bg-base-200 border-primary border-t p-4">
-    <div class="mx-auto">
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div class="p-4">
-          <p>Footer content for the first column goes here.</p>
-        </div>
-
-        <div class="p-4">
-          <p>Footer content for the second column goes here.</p>
-        </div>
+<%!-- bg-[#E3BD33] --%>
+<footer class="bg-base-200 border-primary border-t p-4">
+  <div class="mx-auto max-w-6xl">
+    <div class="flex flex-col md:flex-row md:gap-8">
+      <div class="flex-1 p-4">
+        <p>Footer content for the first column goes here.</p>
+      </div>
+      <div class="flex-1 p-4">
+        <img src="/images/logo_header_250px.png" class="h-18 w-18" alt="" />
       </div>
     </div>
-  </footer>
-</div>
+  </div>
+</footer>

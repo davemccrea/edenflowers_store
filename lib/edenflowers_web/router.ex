@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.Router do
     live_session :default do
       live "/", HomeLive
       live "/checkout", CheckoutLive
+      live "/courses", CoursesLive
     end
   end
 

@@ -35,7 +35,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :description, :text, null: false
 
       add :tax_rate_id,
-          references(:tax_rates, column: :id, name: "products_tax_rate_id_fkey", type: :uuid, prefix: "public"),
+          references(:tax_rates,
+            column: :id,
+            name: "products_tax_rate_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ),
           null: false
 
       add :product_category_id, :uuid
@@ -50,7 +55,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :stock_quantity, :bigint
 
       add :product_id,
-          references(:products, column: :id, name: "product_variants_product_id_fkey", type: :uuid, prefix: "public"),
+          references(:products,
+            column: :id,
+            name: "product_variants_product_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ),
           null: false
     end
 
@@ -111,8 +121,15 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :customer_name, :text
       add :customer_email, :text
       add :stripe_payment_id, :text
-      add :inserted_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
-      add :updated_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
       add :fulfillment_option_id, :uuid
       add :promotion_id, :uuid
     end
@@ -126,11 +143,23 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :quantity, :bigint, default: 1
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
-      add :inserted_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
-      add :updated_at, :utc_datetime_usec, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
 
-      add :order_id, references(:orders, column: :id, name: "line_items_order_id_fkey", type: :uuid, prefix: "public"),
-        null: false
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :order_id,
+          references(:orders,
+            column: :id,
+            name: "line_items_order_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ),
+          null: false
 
       add :product_variant_id,
           references(:product_variants,
@@ -167,7 +196,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              )
 
       modify :promotion_id,
-             references(:promotions, column: :id, name: "orders_promotion_id_fkey", type: :uuid, prefix: "public")
+             references(:promotions,
+               column: :id,
+               name: "orders_promotion_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
     end
 
     alter table(:fulfillment_options) do
@@ -201,11 +235,15 @@ defmodule Edenflowers.Repo.Migrations.Initial do
           null: false
     end
 
-    create unique_index(:fulfillment_options, [:name], name: "fulfillment_options_unique_name_index")
+    create unique_index(:fulfillment_options, [:name],
+             name: "fulfillment_options_unique_name_index"
+           )
   end
 
   def down do
-    drop_if_exists unique_index(:fulfillment_options, [:name], name: "fulfillment_options_unique_name_index")
+    drop_if_exists unique_index(:fulfillment_options, [:name],
+                     name: "fulfillment_options_unique_name_index"
+                   )
 
     drop constraint(:fulfillment_options, "fulfillment_options_tax_rate_id_fkey")
 
@@ -241,7 +279,10 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       modify :fulfillment_option_id, :uuid
     end
 
-    drop constraint(:product_fulfillment_options, "product_fulfillment_options_fulfillment_option_id_fkey")
+    drop constraint(
+           :product_fulfillment_options,
+           "product_fulfillment_options_fulfillment_option_id_fkey"
+         )
 
     alter table(:product_fulfillment_options) do
       modify :fulfillment_option_id, :uuid

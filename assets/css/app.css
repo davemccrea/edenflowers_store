@@ -1,11 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap");
 
 @import "tailwindcss" source(none);
 
 @theme {
   --font-sans: "Open Sans", sans-serif;
-  --font-serif: Merriweather, serif;
+  --font-serif: "Crimson Text", serif;
+  --header-height: 118px;
 }
 
 @plugin "../vendor/heroicons";
@@ -15,10 +16,12 @@
   default: true;
   --color-primary: oklch(36.84% 0.0478 156.76); /* brand primary */
   --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
+  --color-accent: var(--color-pink-100);
+  --color-accent-content: var(--color-base-content);
   --color-secondary: oklch(83.01% 0.0222 158.49); /* brand secondary */
-  --color-base-100: oklch(98% 0.001 106.423); /* stone-100 */
-  --color-base-200: oklch(97% 0.001 106.424); /* stone-200 */
-  --color-base-300: oklch(92% 0.003 48.717); /* stone-300 */
+  --color-base-100: white;
+  --color-base-200: oklch(0.985 0.001 106.423); /* stone-50 */
+  --color-base-300: oklch(0.97 0.001 106.424); /* stone-100 */
 }
 
 @source "../css";
@@ -29,10 +32,6 @@
 @variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
-/*
- * Make LiveView wrapper divs transparent for layout.
- * This makes it possible to use LiveViews as flex children for example.
- */
 [data-phx-root-id] {
   display: contents;
 }
@@ -51,4 +50,21 @@
 
 .disable-dbl-tap-zoom {
   touch-action: manipulation;
+}
+
+sl-drawer::part(panel) {
+  --sl-panel-background-color: var(--color-base-100);
+}
+
+@utility container {
+  @apply mt-(--header-offset);
+  @apply my-36
+  @apply mx-auto;
+  @apply px-4 sm:px-8;
+}
+
+@utility hero-heading {
+  @apply text-5xl;
+  @apply sm:text-6xl;
+  @apply md:text-7xl;
 }

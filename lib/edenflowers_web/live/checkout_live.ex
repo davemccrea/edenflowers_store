@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-4 my-16 lg:mx-24 lg:my-24 xl:mx-48 2xl:mx-96">
+    <div class="mt-[calc(var(--header-height)+var(--spacing)*24)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-96">
       <div class="flex flex-col gap-12">
         <div class="text-neutral/60 flex flex-row gap-2">
           <.icon name="hero-lock-closed" class="h-4 w-4" />
@@ -206,13 +206,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                   >
                   </div>
 
-                  <.form_button id="payment-button" disabled={true}>Pay {format_currency(@order.total)}</.form_button>
+                  <.form_button id="payment-button" disabled="true">
+                    Pay {format_currency(@order.total)}
+                  </.form_button>
                 </.form>
               </section>
             <% end %>
           </div>
 
-          <div class="md:border-neutral/5 md:border-r"></div>
+          <div class="md:border-neutral/10 md:border-r"></div>
 
           <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
             <div class="flex flex-col gap-4">
@@ -248,7 +250,11 @@ defmodule EdenflowersWeb.CheckoutLive do
               <div class="flex flex-col gap-2 text-sm">
                 <div class="flex justify-between">
                   <span>{gettext("Delivery")}</span>
-                  <span>{format_currency(@order.fulfillment_amount)}</span>
+                  <%= if Decimal.eq?(@order.fulfillment_amount, 0) do %>
+                    {gettext("Free")}
+                  <% else %>
+                    <span>{format_currency(@order.fulfillment_amount)}</span>
+                  <% end %>
                 </div>
 
                 <div class="flex justify-between">

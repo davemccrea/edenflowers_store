@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" class="h-full" style="--scrollbar-width: 0px;">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,8 +14,26 @@
 
     <script src="https://js.stripe.com/v3/">
     </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js">
+    </script>
   </head>
-  <body class="bg-white antialiased">
+  <body class="bg-base-200 flex min-h-screen flex-col antialiased">
     {@inner_content}
+
+    <script>
+      const cartDrawer = document.getElementById("cart-drawer");
+      const navDrawer = document.getElementById("nav-drawer");
+      const cartDrawerButton = document.getElementById("cart-drawer-button");
+      const navDrawerButton = document.getElementById("nav-drawer-button");
+      cartDrawerButton.addEventListener("click", () => cartDrawer.show());
+      navDrawerButton.addEventListener("click", () => navDrawer.show());
+    </script>
+
+    <script>
+      const scrollbarWidth = () => window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty("--scrollbar-width", `${scrollbarWidth()}px`);
+    </script>
   </body>
 </html>

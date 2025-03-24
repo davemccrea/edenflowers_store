@@ -1,0 +1,37 @@
+# Notebook
+
+## Section
+
+```elixir
+alias Edenflowers.Store.{LineItem, Order, ProductVariant}
+```
+
+```elixir
+order_id = "609c2c5d-5cbf-4ede-8f57-d8b8a63cd852"
+```
+
+```elixir
+order = Ash.get!(Order, order_id)
+```
+
+```elixir
+product_variant =
+  ProductVariant
+  |> Ash.Query.load(product: :tax_rate)
+  |> Ash.read_first!()
+
+product_variant
+|> Ash.Changeset.for_update(:update, %{image: "https://placehold.co/200x200/fef9c3/fef9c3"})
+|> Ash.update!()
+```
+
+```elixir
+Ash.Changeset.for_create(LineItem, :create, %{
+  order_id: order_id,
+  product_variant_id: product_variant.id, 
+  quantity: 2,
+  tax_rate: product_variant.product.tax_rate.percentage,
+  unit_price: product_variant.price
+})
+|> Ash.create!()
+```
