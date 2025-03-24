@@ -112,5 +112,6 @@ defmodule Edenflowers.Store.Order do
     sum :total_items_in_cart, :line_items, :quantity
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
+    sum :discount_amount, :line_items, :discount_amount
   end
 end
