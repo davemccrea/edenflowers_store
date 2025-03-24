@@ -261,7 +261,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="mb-1 text-sm font-medium">
+    <label for={@for} class="mb-1 font-medium">
       {render_slot(@inner_block)}
     </label>
     """
