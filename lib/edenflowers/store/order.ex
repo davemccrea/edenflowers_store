@@ -103,12 +103,14 @@ defmodule Edenflowers.Store.Order do
 
   calculations do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion))
+    calculate :total, :decimal, expr(line_total + fulfillment_amount)
+    calculate :fulfillment_tax_amount, :decimal, expr(fulfillment_amount * fulfillment_option.tax_rate.percentage)
+    calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
   end
 
   aggregates do
     sum :total_items_in_cart, :line_items, :quantity
     sum :line_total, :line_items, :line_total
-    sum :line_total_with_discount, :line_items, :line_total_with_discount
     sum :line_tax_amount, :line_items, :line_tax_amount
   end
 end
