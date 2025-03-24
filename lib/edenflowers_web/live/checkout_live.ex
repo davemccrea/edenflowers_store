@@ -38,15 +38,15 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <div class="lg:mx-36 xl:mx-48">
+    <div class="my-12 mx-4 lg:mx-24 xl:mx-48 2xl:mx-72">
       <div class="flex flex-col gap-12">
         <div class="text-neutral/60 flex flex-row gap-2">
           <.icon name="hero-lock-closed" class="h-4 w-4" />
           <span class="items-center text-xs uppercase">Secure Checkout</span>
         </div>
 
-        <div class="flex flex-row gap-8">
-          <div id={@id} class="w-[60%]" phx-hook="Scroll">
+        <div class="flex flex-col gap-8 md:flex-row">
+          <div id={@id} class="md:w-[60%]" phx-hook="Scroll">
             <%= if @order.step == 1 do %>
               <section id={"#{@id}-section-1"} class="checkout__section">
                 <.form_heading>{gettext("Delivery")}</.form_heading>
@@ -189,8 +189,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
           <div class="md:border-neutral/5 md:border-r"></div>
 
-          <div class="w-[35%] sticky top-6 h-fit overflow-y-auto">
-            <div class="flex flex-col gap-6">
+          <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
+            <div class="flex flex-col gap-4">
               <%!-- Heading --%>
               <h2 class="font-bold">Your Cart</h2>
 
