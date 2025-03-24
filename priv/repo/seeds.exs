@@ -10,7 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Edenflowers.Store.{TaxRate, FulfillmentOption}
+alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant}
 
 tax_rate =
   TaxRate
@@ -40,5 +40,23 @@ Ash.Changeset.for_create(FulfillmentOption, :create, %{
   rate_type: :fixed,
   base_price: "0.00",
   tax_rate_id: tax_rate.id
+})
+|> Ash.create!()
+
+product =
+  Ash.Changeset.for_create(Product, :create, %{
+    tax_rate_id: tax_rate.id,
+    name: "Product 1",
+    description: "Product 1 description"
+  })
+  |> Ash.create!()
+
+Ash.Changeset.for_create(ProductVariant, :create, %{
+  product_id: product.id,
+  price: "35.00",
+  size: :medium,
+  image: "image.png",
+  stock_trackable: false,
+  stock_quantity: 0
 })
 |> Ash.create!()
