@@ -138,10 +138,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                 >
                   <div id="gift-message-container" phx-hook="CharacterCount">
                     <div class="relative flex flex-col">
+                      <.label>Gift message</.label>
                       <textarea
                         id={@form[:gift_message].id}
                         name={@form[:gift_message].name}
-                        class="textarea w-full resize-none"
+                        class="textarea textarea-lg w-full resize-none"
                         maxlength={200}
                         rows={5}
                       >{@form[:gift_message].value}</textarea>
