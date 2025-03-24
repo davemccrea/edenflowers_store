@@ -55,8 +55,18 @@ defmodule Edenflowers.Store.LineItem do
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal * (1 - order.promotion.discount_percentage),
+                  do: line_subtotal - discount_amount,
                   else: line_subtotal
+                )
+              )
+
+    calculate :discount_amount,
+              :decimal,
+              expr(
+                if(
+                  promotion_applied?,
+                  do: line_subtotal * order.promotion.discount_percentage,
+                  else: 0
                 )
               )
 

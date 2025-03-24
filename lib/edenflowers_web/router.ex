@@ -18,8 +18,10 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-    live "/checkout", CheckoutLive
+    live_session :default do
+      live "/", HomeLive
+      live "/checkout", CheckoutLive
+    end
   end
 
   # Other scopes may use custom stacks.

@@ -271,14 +271,32 @@ Hooks.Scroll = {
   },
 };
 
-Hooks.StripeElements = {
+Hooks.PaymentElement = {
   mounted() {
+    const button = document.getElementById("payment-button");
+    if (!button) {
+      console.error(`Element with id "payment-button" not found`);
+      return;
+    }
+
     // @ts-ignore
     const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
-    const elements = stripe.elements();
-    const card = elements.create("card");
-    card.mount(this.el);
-    // Handle submission with JS hook
+    const clientSecret = this.el.getAttribute("data-client-secret");
+    const elements = stripe.elements({ clientSecret, appearance: {} });
+    const paymentElement = elements.create("payment", {
+      layout: {
+        type: "accordion",
+        defaultCollapsed: false,
+        radios: true,
+        spacedAccordionItems: false,
+      },
+    });
+
+    paymentElement.mount("#payment-element");
+
+    paymentElement.on("ready", function () {
+      button.removeAttribute("disabled");
+    });
   },
 };
 
