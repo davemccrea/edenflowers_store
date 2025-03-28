@@ -1,5 +1,27 @@
-<sl-drawer id="cart-drawer" placement="end" label="Cart" class="drawer-custom-size"></sl-drawer>
-<sl-drawer id="nav-drawer" placement="start" label="Nav" class="drawer-custom-size"></sl-drawer>
+<sl-drawer
+  open={false}
+  id="nav-drawer"
+  placement="start"
+  no-header="true"
+  class="drawer-custom-size"
+  style="--size: 80vw;"
+>
+  <header class="flex flex-row items-center justify-between">
+    <h1 class="font-serif text-3xl">{gettext("Eden Flowers")}</h1>
+    <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="cursor-pointer">
+      <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+    </button>
+  </header>
+</sl-drawer>
+
+<sl-drawer open={false} id="cart-drawer" placement="end" no-header="true">
+  <header class="flex flex-row items-center justify-between">
+    <h1 class="font-serif text-3xl">{gettext("Cart")}</h1>
+    <button type="button" phx-click={JS.remove_attribute("open", to: "#cart-drawer")} class="cursor-pointer">
+      <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+    </button>
+  </header>
+</sl-drawer>
 
 <hotfx-shy-header>
   <header class="w-full">
@@ -12,7 +34,11 @@
         <div class="flex items-center">
           <div class="flex flex-1 justify-start">
             <div class="md:hidden">
-              <button id="nav-drawer-button" type="button" class="h-12 w-12 cursor-pointer">
+              <button
+                phx-click={JS.set_attribute({"open", true}, to: "#nav-drawer")}
+                type="button"
+                class="h-12 w-12 cursor-pointer"
+              >
                 <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
               </button>
             </div>
@@ -66,7 +92,11 @@
           </div>
 
           <div class="flex flex-1 justify-end">
-            <button id="cart-drawer-button" type="button" class="h-12 w-12 cursor-pointer">
+            <button
+              phx-click={JS.set_attribute({"open", true}, to: "#cart-drawer")}
+              type="button"
+              class="h-12 w-12 cursor-pointer"
+            >
               <.icon class="text-base-content h-5 w-5 hover:text-base-content/80" name="hero-shopping-bag" />
             </button>
           </div>
@@ -81,16 +111,13 @@
   {@inner_content}
 </main>
 
-<%!-- bg-[#E3BD33] --%>
-<footer class="bg-base-200 border-primary border-t p-4">
-  <div class="mx-auto max-w-6xl">
-    <div class="flex flex-col md:flex-row md:gap-8">
-      <div class="flex-1 p-4">
-        <p>Footer content for the first column goes here.</p>
-      </div>
-      <div class="flex-1 p-4">
-        <img src="/images/logo_header_250px.png" class="h-18 w-18" alt="" />
-      </div>
+<footer class="bg-[#E3BD33] border-t">
+  <div class="container my-12 flex flex-col md:flex-row">
+    <div class="flex-1">
+      <p>Footer content for the first column goes here.</p>
+    </div>
+    <div class="flex-1">
+      <img src="/images/logo_header_250px.png" class="h-18 w-18" alt="" />
     </div>
   </div>
 </footer>

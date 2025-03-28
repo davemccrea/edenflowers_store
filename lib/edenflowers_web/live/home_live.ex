@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   def render(assigns) do
     ~H"""
-    <div class="relative border-b">
+    <section class="relative not-last:border-b">
       <img src="/images/image_5.jpg" class="h-[100vh] w-full object-cover" alt="" />
 
       <div class="container absolute inset-0 flex flex-col justify-center gap-8 text-center">
@@ -16,16 +16,24 @@ defmodule EdenflowersWeb.HomeLive do
         </h1>
         <button class="btn btn-primary mx-auto lg:btn-lg">Shop Now</button>
       </div>
-    </div>
+    </section>
 
-    <div class="my-36 flex flex-col items-center px-4">
-      <h1 class="font-serif leading-14 max-w-4xl text-center text-4xl font-light">
-        Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door.
-      </h1>
-      <a class="mt-12 font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
-        Learn more
-      </a>
-    </div>
+    <section class="py-24 not-last:border-b">
+      <div class="container flex flex-col items-center gap-12">
+        <h1 class="font-serif leading-14 max-w-4xl text-center text-4xl font-light">
+          Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door.
+        </h1>
+        <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
+          Learn more
+        </a>
+      </div>
+    </section>
+
+    <section class="py-24 not-last:border-b">
+      <div class="container">
+        Testing
+      </div>
+    </section>
     """
   end
 end
