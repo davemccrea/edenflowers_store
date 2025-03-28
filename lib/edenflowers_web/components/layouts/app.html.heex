@@ -1,3 +1,12 @@
+<% nav = [
+  {~p"/#store", gettext("Store")},
+  {~p"/#courses", gettext("Courses")},
+  {~p"/#weddings", gettext("Weddings")},
+  {~p"/#condolences", gettext("Condolences")},
+  {~p"/#about", gettext("About")},
+  {~p"/#contact", gettext("Contact")}
+] %>
+
 <sl-drawer
   open={false}
   id="nav-drawer"
@@ -6,12 +15,27 @@
   class="drawer-custom-size"
   style="--size: 80vw;"
 >
-  <header class="flex flex-row items-center justify-between">
-    <h1 class="font-serif text-3xl">{gettext("Eden Flowers")}</h1>
-    <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="cursor-pointer">
-      <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-    </button>
-  </header>
+  <div class="flex flex-col">
+    <header class="flex flex-row items-center justify-between p-8">
+      <a href="/" class="text-primary font-sans whitespace-nowrap text-2xl font-bold uppercase tracking-widest">
+        Eden Flowers
+      </a>
+
+      <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="cursor-pointer">
+        <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+      </button>
+    </header>
+
+    <nav class="flex-1 p-8">
+      <ul class="font-serif space-y-4 text-3xl">
+        <li :for={{url, label} <- nav}>
+          <.link phx-click={JS.remove_attribute("open", to: "#nav-drawer")} navigate={url}>{label}</.link>
+        </li>
+      </ul>
+    </nav>
+
+    <footer class="my-24 flex-1 bg-red-200"></footer>
+  </div>
 </sl-drawer>
 
 <sl-drawer open={false} id="cart-drawer" placement="end" no-header="true">
@@ -45,37 +69,14 @@
 
             <nav class="hidden md:block">
               <ul class="flex gap-3">
-                <li>
-                  <a
-                    href="#"
+                <li :for={{url, label} <- nav}>
+                  <.link
                     class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
+                    phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
+                    navigate={url}
                   >
-                    {gettext("Store")}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
-                  >
-                    {gettext("Courses")}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
-                  >
-                    {gettext("Wedding")}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
-                  >
-                    {gettext("Condolence")}
-                  </a>
+                    {label}
+                  </.link>
                 </li>
               </ul>
             </nav>
