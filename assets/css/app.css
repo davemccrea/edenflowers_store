@@ -6,7 +6,8 @@
 @theme {
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
-  --header-height: 118px;
+  --header-height: 8rem;
+  --color-image: white;
 }
 
 @plugin "../vendor/heroicons";
@@ -14,14 +15,15 @@
 @plugin "daisyui/theme" {
   name: "light";
   default: true;
-  --color-primary: oklch(36.84% 0.0478 156.76); /* brand primary */
+  --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
   --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
   --color-accent: var(--color-pink-100);
+  --color-accent-alt: oklch(0.81 0.15 93); /* a mustardy yellow */
   --color-accent-content: var(--color-base-content);
-  --color-secondary: oklch(83.01% 0.0222 158.49); /* brand secondary */
+  --color-secondary: oklch(0.83 0.0222 158.49); /* brand secondary */
   --color-base-100: white;
-  --color-base-200: oklch(0.985 0.001 106.423); /* stone-50 */
-  --color-base-300: oklch(0.97 0.001 106.424); /* stone-100 */
+  --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
+  --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
 }
 
 @source "../css";
@@ -58,6 +60,21 @@ body.ready {
 
 .disable-dbl-tap-zoom {
   touch-action: manipulation;
+}
+
+sl-dropdown {
+  --sl-panel-background-color: var(--color-base-100);
+  --sl-border-radius-medium: 0px;
+  --sl-color-primary-600: var(--color-base-300);
+  --sl-color-neutral-0: var(--color-base-content);
+}
+
+sl-dropdown::part(panel) {
+  @apply border-1;
+}
+
+sl-drawer::part(body) {
+  @apply p-0;
 }
 
 #cart-drawer::part(panel) {

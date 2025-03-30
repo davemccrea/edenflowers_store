@@ -8,7 +8,15 @@ defmodule EdenflowersWeb.Router do
     plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug EdenflowersWeb.Plugs.InitStore, ["test"]
+    plug EdenflowersWeb.Plugs.InitStore
+
+    plug Cldr.Plug.PutLocale,
+      apps: [:cldr, :gettext],
+      from: [:session, :accept_language],
+      gettext: EdenflowersWeb.Gettext,
+      cldr: Edenflowers.Cldr
+
+    plug Cldr.Plug.PutSession, as: :string
   end
 
   pipeline :api do
@@ -18,11 +26,12 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    live_session :default do
+    live_session :default, on_mount: EdenflowersWeb.PutLocale do
       live "/", HomeLive
       live "/checkout", CheckoutLive
-      live "/courses", CoursesLive
     end
+
+    get "/cldr_locale/:cldr_locale", LocaleController, :index
   end
 
   # Other scopes may use custom stacks.
