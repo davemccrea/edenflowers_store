@@ -419,6 +419,21 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
+  attr :size, :integer, default: 5
+
+  def social_media_links(assigns) do
+    ~H"""
+    <div class="flex flex-row gap-4">
+      <a href="#">
+        <img class={"h-#{@size} w-#{@size}"} src="/images/facebook_logo_bw_128px.png" alt="Facebook logo" />
+      </a>
+      <a href="#">
+        <img class={"h-#{@size} w-#{@size}"} src="/images/instagram_logo_bw_128px.png" alt="Instagram logo" />
+      </a>
+    </div>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

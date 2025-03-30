@@ -1,46 +1,59 @@
 <% nav = [
   {~p"/#store", gettext("Store")},
-  {~p"/#courses", gettext("Courses")},
-  {~p"/#weddings", gettext("Weddings")},
-  {~p"/#condolences", gettext("Condolences")},
-  {~p"/#about", gettext("About")},
-  {~p"/#contact", gettext("Contact")}
+  {~p"/courses", gettext("Courses")},
+  {~p"/weddings", gettext("Weddings")},
+  {~p"/condolences", gettext("Condolences")},
+  {~p"/about", gettext("About")},
+  {~p"/contact", gettext("Contact")}
 ] %>
 
-<sl-drawer
-  open={false}
-  id="nav-drawer"
-  placement="start"
-  no-header="true"
-  class="drawer-custom-size"
-  style="--size: 80vw;"
->
-  <div class="flex flex-col">
-    <header class="flex flex-row items-center justify-between p-8">
-      <a href="/" class="text-primary font-sans whitespace-nowrap text-2xl font-bold uppercase tracking-widest">
-        Eden Flowers
-      </a>
+<% locale = Cldr.get_locale()
+{:ok, locale_name} = Edenflowers.Cldr.Language.to_string(locale)
+locale_name = String.capitalize(locale_name) %>
 
-      <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="cursor-pointer">
+<%!-- Nav drawer --%>
+<sl-drawer open={false} id="nav-drawer" placement="start" no-header="true" style="--size: 80vw;">
+  <div class="bg-base-200 flex h-full flex-col">
+    <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+      <.link
+        navigate={~p"/"}
+        class="text-primary font-sans whitespace-nowrap font-bold uppercase tracking-widest sm:text-2xl"
+      >
+        Eden Flowers
+      </.link>
+
+      <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="h-12 w-12 cursor-pointer">
         <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
       </button>
     </header>
 
-    <nav class="flex-1 p-8">
-      <ul class="font-serif space-y-4 text-3xl">
-        <li :for={{url, label} <- nav}>
-          <.link phx-click={JS.remove_attribute("open", to: "#nav-drawer")} navigate={url}>{label}</.link>
-        </li>
-      </ul>
-    </nav>
+    <div class="flex flex-1 flex-col justify-between p-8">
+      <nav>
+        <ul class="space-y-4">
+          <li :for={{url, name} <- nav}>
+            <.link
+              class="font-serif text-base-content text-2xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4 sm:text-3xl"
+              phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
+              navigate={url}
+            >
+              {name}
+            </.link>
+          </li>
+        </ul>
+      </nav>
+    </div>
 
-    <footer class="my-24 flex-1 bg-red-200"></footer>
+    <footer class="bg-base-300 flex flex-col px-8 py-8">
+      <%!-- TODO: what else should go here? --%>
+      <.social_media_links size={6} />
+    </footer>
   </div>
 </sl-drawer>
 
 <sl-drawer open={false} id="cart-drawer" placement="end" no-header="true">
   <header class="flex flex-row items-center justify-between">
     <h1 class="font-serif text-3xl">{gettext("Cart")}</h1>
+
     <button type="button" phx-click={JS.remove_attribute("open", to: "#cart-drawer")} class="cursor-pointer">
       <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
     </button>
@@ -49,61 +62,80 @@
 
 <hotfx-shy-header>
   <header class="w-full">
-    <div class="mr-[var(--scrollbar-width)]">
-      <section class="bg-accent border-b py-2 text-center">
-        <span class="text-accent-content text-sm">Let us know what you think of the new website! 🚀</span>
-      </section>
+    <%!-- Banner --%>
+    <section class="border-b bg-sky-100 py-2 text-center">
+      <span class="text-accent-content text-sm">{gettext("Let us know what you think of the new website! 🚀")}</span>
+    </section>
 
-      <section class="bg-base-100 border-b px-3 py-3 md:px-6">
-        <div class="flex items-center">
-          <div class="flex flex-1 justify-start">
-            <div class="md:hidden">
-              <button
-                phx-click={JS.set_attribute({"open", true}, to: "#nav-drawer")}
-                type="button"
-                class="h-12 w-12 cursor-pointer"
-              >
-                <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
-              </button>
-            </div>
-
-            <nav class="hidden md:block">
-              <ul class="flex gap-3">
-                <li :for={{url, label} <- nav}>
-                  <.link
-                    class="text-base-content text-sm hover:text-base-content/80 hover:underline hover:underline-offset-2"
-                    phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
-                    navigate={url}
-                  >
-                    {label}
-                  </.link>
-                </li>
-              </ul>
-            </nav>
-          </div>
-
-          <div class="flex flex-1 flex-col items-center">
-            <a
-              href={~p"/"}
-              class="text-primary font-sans whitespace-nowrap text-2xl font-bold uppercase tracking-widest"
-            >
-              Eden Flowers
-            </a>
-            <span class="text-primary font-serif text-sm italic">{gettext("Vaasa Finland")}</span>
-          </div>
-
-          <div class="flex flex-1 justify-end">
+    <%!-- Main header --%>
+    <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
+      <div class="flex items-center">
+        <%!-- Left --%>
+        <div class="flex flex-1 justify-start">
+          <%!-- Mobile hamburger menu --%>
+          <div class="block xl:hidden">
             <button
-              phx-click={JS.set_attribute({"open", true}, to: "#cart-drawer")}
+              phx-click={JS.set_attribute({"open", true}, to: "#nav-drawer")}
               type="button"
               class="h-12 w-12 cursor-pointer"
             >
-              <.icon class="text-base-content h-5 w-5 hover:text-base-content/80" name="hero-shopping-bag" />
+              <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
             </button>
           </div>
+
+          <%!-- Desktop navigation --%>
+          <nav class="hidden xl:block">
+            <ul class="flex gap-3">
+              <li :for={{url, name} <- nav}>
+                <.link
+                  class="text-base-content whitespace-nowrap text-sm hover:underline hover:underline-offset-2"
+                  phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
+                  navigate={url}
+                >
+                  {name}
+                </.link>
+              </li>
+            </ul>
+          </nav>
         </div>
-      </section>
-    </div>
+
+        <%!-- Centre --%>
+        <div class="flex flex-1 flex-col items-center">
+          <%!-- Logo --%>
+          <.link
+            navigate={~p"/"}
+            class="text-primary font-sans whitespace-nowrap text-xl font-bold uppercase tracking-widest sm:text-2xl"
+          >
+            Eden Flowers
+          </.link>
+        </div>
+
+        <%!-- Right --%>
+        <div class="flex flex-1 items-center justify-end sm:gap-4">
+          <%!-- Locale picker button --%>
+          <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker}>
+            <button class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto">
+              <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+                {locale_name}
+              </span>
+            </button>
+          </.live_component>
+
+          <%!-- Cart button --%>
+          <button
+            phx-click={JS.set_attribute({"open", true}, to: "#cart-drawer")}
+            type="button"
+            class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto"
+          >
+            <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
+            <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+              {gettext("Cart")}
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
   </header>
 </hotfx-shy-header>
 
@@ -112,13 +144,49 @@
   {@inner_content}
 </main>
 
-<footer class="bg-[#E3BD33] border-t">
-  <div class="container my-12 flex flex-col md:flex-row">
-    <div class="flex-1">
-      <p>Footer content for the first column goes here.</p>
+<footer>
+  <div class="border-t border-b bg-pink-100">
+    <div class="container my-12 md:my-24">
+      <div class="flex flex-col gap-8 md:flex-row">
+        <div class="m-auto flex-1">
+          <div class="m-auto max-w-lg space-y-4">
+            <h2 class="font-serif text-2xl sm:text-3xl">
+              {gettext("Enjoy 20% off your next order and get occassional floral advice in your inbox.")}
+            </h2>
+
+            <.form for={to_form(%{})}>
+              <input type="text" class="input input-lg w-full text-sm" placeholder="Email Address" name="email_address" />
+            </.form>
+          </div>
+        </div>
+
+        <div class="flex-1">
+          <div class="m-auto max-w-lg">
+            <.social_media_links size={6} />
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="flex-1">
-      <img src="/images/logo_header_250px.png" class="h-18 w-18" alt="" />
-    </div>
+  </div>
+
+  <div class="flex flex-col items-center gap-4 py-8">
+    <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
+      <button class="group cursor-pointer">
+        <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+        <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+          {locale_name}
+        </span>
+      </button>
+    </.live_component>
+
+    <span class="text-xs">
+      © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
+      <a
+        class="text-base-content whitespace-nowrap hover:underline hover:underline-offset-2"
+        href="https://github.com/davemccrea/edenflowers_store"
+      >
+        Built with <span>❤️</span>
+      </a>
+    </span>
   </div>
 </footer>

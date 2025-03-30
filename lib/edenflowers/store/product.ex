@@ -29,10 +29,15 @@ defmodule Edenflowers.Store.Product do
   relationships do
     belongs_to :tax_rate, Edenflowers.Store.TaxRate, allow_nil?: false
     belongs_to :product_category, Edenflowers.Store.ProductCategory
+    has_many :product_variants, Edenflowers.Store.ProductVariant
 
     many_to_many :fulfillment_options, Edenflowers.Store.FulfillmentOption do
       through Edenflowers.Store.ProductFulfillmentOption
     end
+  end
+
+  aggregates do
+    min :cheapest_price, :product_variants, :price
   end
 
   identities do

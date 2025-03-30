@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mt-[calc(var(--header-height)+var(--spacing)*24)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-96">
+    <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-96">
       <div class="flex flex-col gap-12">
         <div class="text-neutral/60 flex flex-row gap-2">
           <.icon name="hero-lock-closed" class="h-4 w-4" />
@@ -206,8 +206,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                   >
                   </div>
 
-                  <.form_button id="payment-button" disabled="true">
-                    Pay {format_currency(@order.total)}
+                  <.form_button id="payment-button" disabled={true}>
+                    Pay {Edenflowers.Utils.format_money(@order.total)}
                   </.form_button>
                 </.form>
               </section>
@@ -217,7 +217,7 @@ defmodule EdenflowersWeb.CheckoutLive do
           <div class="md:border-neutral/10 md:border-r"></div>
 
           <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4 p-1">
               <h2 class="font-serif text-xl font-medium">
                 Your Cart ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
               </h2>
@@ -234,11 +234,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <span>{line_item.product_variant.product.name}</span>
                     </div>
                   </div>
-                  <span>{format_currency(line_item.product_variant.price)}</span>
+                  <span>{Edenflowers.Utils.format_money(line_item.product_variant.price)}</span>
                 </div>
               </div>
 
-              <div class="join mx-1">
+              <div class="join">
                 <label class="input join-item w-full">
                   <input type="email" placeholder="Enter promo code" required />
                 </label>
@@ -253,16 +253,16 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <%= if Decimal.eq?(@order.fulfillment_amount, 0) do %>
                     {gettext("Free")}
                   <% else %>
-                    <span>{format_currency(@order.fulfillment_amount)}</span>
+                    <span>{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                   <% end %>
                 </div>
 
                 <div class="flex justify-between">
                   <span>{gettext("Discount")}</span>
                   <%= if @order.promotion_applied? do %>
-                    <span class="text-success">- {format_currency(@order.discount_amount)}</span>
+                    <span class="text-success">- {Edenflowers.Utils.format_money(@order.discount_amount)}</span>
                   <% else %>
-                    <span>- {format_currency(0)}</span>
+                    <span>- {Edenflowers.Utils.format_money(0)}</span>
                   <% end %>
                 </div>
               </div>
@@ -272,7 +272,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <div class="flex justify-between font-semibold">
                   <span>{gettext("Total")}</span>
-                  <span>{format_currency(@order.total)}</span>
+                  <span>{Edenflowers.Utils.format_money(@order.total)}</span>
                 </div>
               </div>
             </div>
@@ -306,6 +306,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   slot :inner_block
+  attr :disabled, :boolean
   attr :rest, :global
 
   defp form_button(assigns) do
@@ -503,11 +504,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ╔═══════════╗
   # ║ Utilities ║
   # ╚═══════════╝
-
-  defp format_currency(value) do
-    # TODO: dynamic locale
-    Cldr.Number.to_string!(value, Edenflowers.Cldr, format: :currency, currency: "EUR", locale: "sv")
-  end
 
   defp order_load_statement do
     [

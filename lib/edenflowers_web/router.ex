@@ -28,6 +28,11 @@ defmodule EdenflowersWeb.Router do
 
     live_session :default, on_mount: EdenflowersWeb.PutLocale do
       live "/", HomeLive
+      live "/courses", CoursesLive
+      live "/weddings", WeddingsLive
+      live "/condolences", CondolencesLive
+      live "/about", AboutLive
+      live "/contact", ContactLive
       live "/checkout", CheckoutLive
     end
 
