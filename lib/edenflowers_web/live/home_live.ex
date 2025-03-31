@@ -24,32 +24,28 @@ defmodule EdenflowersWeb.HomeLive do
     </section>
 
     <section class="not-last:border-b">
-      <div class="space-y-6 py-16 sm:space-y-8 sm:py-24">
-        <h2 class="font-serif px-2 text-3xl sm:text-4xl">{gettext("Shop Flowers")}</h2>
-        
-    <!-- Product slider container -->
-        <div class="relative">
-          <!-- Horizontal scrollable container -->
-          <div class="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent flex snap-x snap-mandatory overflow-x-auto pb-6">
-            <!-- Product cards -->
-            <ul class="flex space-x-2 px-2 sm:space-x-4 md:px-4" role="list">
-              <li :for={product <- @products} class="w-2/5 flex-none snap-center xs:w-1/2 sm:w-72 md:w-64">
-                <a href="#" aria-labelledby={product.name} class="flex flex-col transition duration-300 hover:opacity-90">
-                  <div class="mb-2 overflow-hidden rounded-lg">
-                    <img
-                      src={product.image}
-                      alt={"#{product.name} image"}
-                      class="aspect-square w-full object-cover transition duration-500 hover:scale-105"
-                    />
-                  </div>
-                  <div class="text-base-content flex flex-col items-center">
-                    <h3 id={product.name} class="font-serif text-lg sm:text-xl md:text-2xl">{product.name}</h3>
-                    <p class="mt-1 text-sm sm:text-base">{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
-                  </div>
-                </a>
-              </li>
-            </ul>
-          </div>
+      <div class="m-auto py-24 xl:max-w-[70vw]">
+        <h2 class="font-serif mb-4 px-2 text-3xl">{gettext("Shop Flowers")}</h2>
+
+        <div
+          id="product-slider"
+          phx-hook="HorizontalScroll"
+          style="scrollbar-width: thin;"
+          class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
+        >
+          <ul class="flex space-x-2" role="list">
+            <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
+              <a href="#" aria-labelledby={product.name} class="flex flex-col transition duration-100 hover:opacity-90">
+                <div class="mb-2 overflow-hidden rounded-lg">
+                  <img src={product.image} alt={"#{product.name} image"} class="aspect-square w-full object-cover" />
+                </div>
+                <div class="text-base-content flex flex-col items-center space-y-2">
+                  <h3 id={product.name} class="font-serif leadning-none text-xl">{product.name}</h3>
+                  <p class="leading-0 text-sm">{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
+                </div>
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </section>

@@ -300,48 +300,27 @@ Hooks.PaymentElement = {
   },
 };
 
-Hooks.ProductSwiper = {
+Hooks.HorizontalScroll = {
   mounted() {
-    // @ts-ignore
-    const swiper = new Swiper(".swiper", {
-      direction: "horizontal",
-      slidesPerView: 1.3,
-      spaceBetween: 6,
-      centeredSlides: true,
-      centeredSlidesBounds: true,
-      centerInsufficientSlides: true,
+    const slider = this.el;
+    if (slider) {
+      this.handleWheel = (e) => {
+        e.preventDefault();
+        const scrollAmount = e.deltaX || e.deltaY;
+        slider.scrollLeft += scrollAmount;
+      };
 
-      keyboard: {
-        enabled: true,
-        onlyInViewport: true,
-      },
+      // Add the event listener
+      slider.addEventListener("wheel", this.handleWheel, { passive: false });
+    }
+  },
 
-      breakpoints: {
-        // sm
-        640: {
-          slidesPerView: 2,
-          centeredSlides: false,
-        },
-        // md
-        768: {
-          slidesPerView: 3,
-          centeredSlides: false,
-        },
-        // lg
-        1024: {
-          slidesPerView: 4,
-          centeredSlides: false,
-        },
-      },
-
-      scrollbar: {
-        el: ".swiper-scrollbar",
-        draggable: true,
-        dragSize: "auto",
-        snapOnRelease: true,
-      },
-    });
+  // Cleanup when the element is removed from the DOM
+  destroyed() {
+    const slider = this.el;
+    if (slider && this.handleWheel) {
+      slider.removeEventListener("wheel", this.handleWheel, { passive: false });
+    }
   },
 };
-
 export default Hooks;
