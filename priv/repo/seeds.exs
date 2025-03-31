@@ -43,20 +43,23 @@ Ash.Changeset.for_create(FulfillmentOption, :create, %{
 })
 |> Ash.create!()
 
-product =
-  Ash.Changeset.for_create(Product, :create, %{
-    tax_rate_id: tax_rate.id,
-    name: "Product 1",
-    description: "Product 1 description"
+for n <- 1..10 do
+  product =
+    Ash.Changeset.for_create(Product, :create, %{
+      tax_rate_id: tax_rate.id,
+      name: "Product #{n}",
+      image: "https://placehold.co/400x400",
+      description: "Product #{n} description"
+    })
+    |> Ash.create!()
+
+  Ash.Changeset.for_create(ProductVariant, :create, %{
+    product_id: product.id,
+    price: Enum.random(30..60) |> Integer.to_string(),
+    size: :medium,
+    image: "https://placehold.co/400x400",
+    stock_trackable: false,
+    stock_quantity: 0
   })
   |> Ash.create!()
-
-Ash.Changeset.for_create(ProductVariant, :create, %{
-  product_id: product.id,
-  price: "35.00",
-  size: :medium,
-  image: "image.png",
-  stock_trackable: false,
-  stock_quantity: 0
-})
-|> Ash.create!()
+end
