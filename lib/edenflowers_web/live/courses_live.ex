@@ -11,8 +11,8 @@ defmodule EdenflowersWeb.CoursesLive do
 
   def render(assigns) do
     ~H"""
-    <div class="container">
-      <h1 class="font-serif text-4xl">Courses</h1>
+    <div class="container my-36">
+      <h1 class="font-serif text-4xl">{gettext("Courses")}</h1>
     </div>
     """
   end
