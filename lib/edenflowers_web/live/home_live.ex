@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   alias Edenflowers.Store.Product
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     # TODO: get only main products
     products = Ash.read!(Product)
 
@@ -24,20 +24,24 @@ defmodule EdenflowersWeb.HomeLive do
     </section>
 
     <section class="not-last:border-b">
-      <div class="container py-24">
-        <h2 class="font-serif text-3xl">{gettext("Shop Flowers")}</h2>
+      <div class="space-y-8 py-24">
+        <h2 class="font-serif px-2 text-4xl">{gettext("Shop Flowers")}</h2>
 
-        <div class="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto py-8">
-          <div class="-translate-y-[calc(var(--spacing)*0.25)] touch-manipulation select-none shadow-md transition-all duration-75 ease-in active:translate-0 active:shadow-none">
-            <div :for={product <- @products} class="bg-base-300 snap-center border">
-              <div class="relative">
-                <img src="/images/ai_placeholder_1.png" alt="Product 1" class="aspect-square w-64 border-b object-cover" />
-              </div>
-              <div class="text-base-content flex flex-col items-center p-3">
-                <h3 class="font-serif text-xl">{product.name}</h3>
-                <span class="text-sm">{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</span>
-              </div>
-            </div>
+        <div id="product-swiper" phx-hook="ProductSwiper" class="swiper">
+          <ul class="swiper-wrapper" role="list">
+            <li :for={product <- @products} class="swiper-slide select-none py-2">
+              <a href="#" aria-labelledby={product.name} class="mb-4 flex flex-col">
+                <img src={product.image} alt={"#{product.name} image"} class="mb-2 object-cover" />
+                <div class="text-base-content flex flex-col items-center">
+                  <h3 class="font-serif text-2xl">{product.name}</h3>
+                  <p>{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
+                </div>
+              </a>
+            </li>
+          </ul>
+
+          <div class="scrollbar-container">
+            <div class="swiper-scrollbar"></div>
           </div>
         </div>
       </div>

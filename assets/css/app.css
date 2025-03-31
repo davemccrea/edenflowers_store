@@ -93,3 +93,15 @@ sl-drawer::part(body) {
 @utility hero-heading {
   @apply text-5xl sm:text-6xl md:text-7xl;
 }
+
+.scrollbar-container {
+  width: 50%;
+  margin: 20px auto;
+  position: relative;
+}
+
+.swiper-horizontal > .swiper-scrollbar,
+.swiper-scrollbar.swiper-scrollbar-horizontal {
+  cursor: pointer;
+  --swiper-scrollbar-size: 6px;
+}

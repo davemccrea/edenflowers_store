@@ -300,4 +300,48 @@ Hooks.PaymentElement = {
   },
 };
 
+Hooks.ProductSwiper = {
+  mounted() {
+    // @ts-ignore
+    const swiper = new Swiper(".swiper", {
+      direction: "horizontal",
+      slidesPerView: 1.3,
+      spaceBetween: 6,
+      centeredSlides: true,
+      centeredSlidesBounds: true,
+      centerInsufficientSlides: true,
+
+      keyboard: {
+        enabled: true,
+        onlyInViewport: true,
+      },
+
+      breakpoints: {
+        // sm
+        640: {
+          slidesPerView: 2,
+          centeredSlides: false,
+        },
+        // md
+        768: {
+          slidesPerView: 3,
+          centeredSlides: false,
+        },
+        // lg
+        1024: {
+          slidesPerView: 4,
+          centeredSlides: false,
+        },
+      },
+
+      scrollbar: {
+        el: ".swiper-scrollbar",
+        draggable: true,
+        dragSize: "auto",
+        snapOnRelease: true,
+      },
+    });
+  },
+};
+
 export default Hooks;
