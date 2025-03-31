@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   alias Edenflowers.Store.{FulfillmentOption, Order}
 
   def mount(_params, %{"order_id" => id}, socket) do
-    with {:ok, order} <- fetch_order(id),
+    with order = %Order{} <- fetch_order(id),
          {:ok, _line_items} <- validate_cart(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     Order
     |> Ash.Query.filter(id == ^id)
     |> Ash.Query.load(order_load_statement())
-    |> Ash.read_one()
+    |> Ash.read_one!()
   end
 
   defp validate_cart(%{line_items: []}), do: {:error, :empty_cart}
@@ -77,6 +77,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   class="checkout__form"
                 >
                   <.input
+                    prompt={gettext("Select a delivery method")}
                     label={gettext("Delivery Method")}
                     field={@form[:fulfillment_option_id]}
                     options={format_options_for_select(@fulfillment_options)}
@@ -250,7 +251,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               <div class="flex flex-col gap-2 text-sm">
                 <div class="flex justify-between">
                   <span>{gettext("Delivery")}</span>
-                  <%= if Decimal.eq?(@order.fulfillment_amount, 0) do %>
+                  <%= if Decimal.eq?(@order.fulfillment_amount || 0, 0) do %>
                     {gettext("Free")}
                   <% else %>
                     <span>{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
