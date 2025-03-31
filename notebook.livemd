@@ -2,34 +2,40 @@
 
 ## Section
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 alias Edenflowers.Store.{LineItem, Order, ProductVariant}
 ```
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
-order_id = "609c2c5d-5cbf-4ede-8f57-d8b8a63cd852"
+order_id = ""
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 order = Ash.get!(Order, order_id)
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 product_variant =
   ProductVariant
   |> Ash.Query.load(product: :tax_rate)
   |> Ash.read_first!()
-
-product_variant
-|> Ash.Changeset.for_update(:update, %{image: "https://placehold.co/200x200/fef9c3/fef9c3"})
-|> Ash.update!()
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 Ash.Changeset.for_create(LineItem, :create, %{
   order_id: order_id,
-  product_variant_id: product_variant.id, 
-  quantity: 2,
+  product_variant_id: product_variant.id,
+  quantity: 1,
   tax_rate: product_variant.product.tax_rate.percentage,
   unit_price: product_variant.price
 })
