@@ -180,7 +180,7 @@ msgstr "Njut av 20% rabatt på din nästa beställning och få då och då bloms
 #: lib/edenflowers_web/live/home_live.ex:20
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers for everyday moments."
-msgstr "Färska blommor för vardagens stunder."
+msgstr "Färska blommor som förgyller vardagens stunder."
 
 #: lib/edenflowers_web/components/layouts/app.html.heex:67
 #, elixir-autogen, elixir-format
