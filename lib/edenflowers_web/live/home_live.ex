@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   alias Edenflowers.Store.Product
 
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     # TODO: get only main products
     products = Ash.read!(Product)
 
@@ -24,24 +24,31 @@ defmodule EdenflowersWeb.HomeLive do
     </section>
 
     <section class="not-last:border-b">
-      <div class="space-y-8 py-24">
-        <h2 class="font-serif px-2 text-4xl">{gettext("Shop Flowers")}</h2>
-
-        <div id="product-swiper" phx-hook="ProductSwiper" class="swiper">
-          <ul class="swiper-wrapper" role="list">
-            <li :for={product <- @products} class="swiper-slide select-none py-2">
-              <a href="#" aria-labelledby={product.name} class="mb-4 flex flex-col">
-                <img src={product.image} alt={"#{product.name} image"} class="mb-2 object-cover" />
-                <div class="text-base-content flex flex-col items-center">
-                  <h3 class="font-serif text-2xl">{product.name}</h3>
-                  <p>{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
-                </div>
-              </a>
-            </li>
-          </ul>
-
-          <div class="scrollbar-container">
-            <div class="swiper-scrollbar"></div>
+      <div class="space-y-6 py-16 sm:space-y-8 sm:py-24">
+        <h2 class="font-serif px-2 text-3xl sm:text-4xl">{gettext("Shop Flowers")}</h2>
+        
+    <!-- Product slider container -->
+        <div class="relative">
+          <!-- Horizontal scrollable container -->
+          <div class="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent flex snap-x snap-mandatory overflow-x-auto pb-6">
+            <!-- Product cards -->
+            <ul class="flex space-x-2 px-2 sm:space-x-4 md:px-4" role="list">
+              <li :for={product <- @products} class="w-2/5 flex-none snap-center xs:w-1/2 sm:w-72 md:w-64">
+                <a href="#" aria-labelledby={product.name} class="flex flex-col transition duration-300 hover:opacity-90">
+                  <div class="mb-2 overflow-hidden rounded-lg">
+                    <img
+                      src={product.image}
+                      alt={"#{product.name} image"}
+                      class="aspect-square w-full object-cover transition duration-500 hover:scale-105"
+                    />
+                  </div>
+                  <div class="text-base-content flex flex-col items-center">
+                    <h3 id={product.name} class="font-serif text-lg sm:text-xl md:text-2xl">{product.name}</h3>
+                    <p class="mt-1 text-sm sm:text-base">{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
+                  </div>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
