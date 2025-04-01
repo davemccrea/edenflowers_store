@@ -3,6 +3,7 @@ defmodule Edenflowers.Store.ProductTest do
   import Edenflowers.Fixtures
 
   alias Edenflowers.Store.Product
+  alias Edenflowers.Store.ProductVariant
 
   describe "Product Resource" do
     test "fails to create product without tax_rate" do
@@ -23,7 +24,8 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.Changeset.for_create(:create, %{
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
-                 description: "Product 1 description"
+                 description: "Product 1 description",
+                 image: "image.png"
                })
                |> Ash.create()
     end
@@ -38,7 +40,8 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.Changeset.for_create(:create, %{
                  tax_rate_id: tax_rate.id,
                  name: name,
-                 description: "Product 1 description"
+                 description: "Product 1 description",
+                 image: "image.jpg"
                })
                |> Ash.create()
 
@@ -64,6 +67,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
                  description: "Product 1 description",
+                 image: "image.jpg",
                  fulfillment_option_ids: [fulfillment_option_id]
                })
                |> Ash.create()
@@ -81,9 +85,52 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
                  description: "Product 1 description",
+                 image: "image.jpg",
                  fulfillment_option_ids: [id]
                })
                |> Ash.create()
+    end
+
+    test "returns nil cheapest_price when product has no variants" do
+      tax_rate = fixture(:tax_rate)
+      product = fixture(:product, tax_rate_id: tax_rate.id)
+
+      loaded_product =
+        Product
+        |> Ash.get!(product.id)
+        |> Ash.load!([:cheapest_price])
+
+      assert loaded_product.cheapest_price == nil
+    end
+
+    test "returns correct cheapest_price with one variant" do
+      tax_rate = fixture(:tax_rate)
+      product = fixture(:product, tax_rate_id: tax_rate.id)
+      price = Decimal.new("15.99")
+      _variant = fixture(:product_variant, product_id: product.id, price: price)
+
+      loaded_product = Product |> Ash.get!(product.id) |> Ash.load!([:cheapest_price])
+
+      assert loaded_product.cheapest_price == price
+    end
+
+    test "returns correct cheapest_price with multiple variants" do
+      tax_rate = fixture(:tax_rate)
+      product = fixture(:product, tax_rate_id: tax_rate.id)
+      price1 = Decimal.new("18.50")
+      # Cheapest
+      price2 = Decimal.new("12.00")
+      price3 = Decimal.new("20.00")
+      _variant1 = fixture(:product_variant, product_id: product.id, price: price1)
+      _variant2 = fixture(:product_variant, product_id: product.id, price: price2)
+      _variant3 = fixture(:product_variant, product_id: product.id, price: price3)
+
+      loaded_product =
+        Product
+        |> Ash.get!(product.id)
+        |> Ash.load!([:cheapest_price])
+
+      assert loaded_product.cheapest_price == price2
     end
   end
 end

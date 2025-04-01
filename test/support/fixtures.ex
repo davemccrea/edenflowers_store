@@ -37,7 +37,8 @@ defmodule Edenflowers.Fixtures do
     default_params = %{
       tax_rate_id: nil,
       name: words(),
-      description: words()
+      description: words(),
+      image: "image.png"
     }
 
     params = Enum.into(opts, default_params)
