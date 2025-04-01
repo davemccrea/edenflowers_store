@@ -4,11 +4,14 @@ defmodule Edenflowers.Store.ProductVariantTest do
 
   alias Edenflowers.Store.ProductVariant
 
-  describe "ProductVariant Resource" do
-    test "creates product variant with required fields" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
+  setup do
+    tax_rate = fixture(:tax_rate)
+    product = fixture(:product, tax_rate_id: tax_rate.id)
+    {:ok, tax_rate: tax_rate, product: product}
+  end
 
+  describe "ProductVariant Resource" do
+    test "creates product variant with required fields", %{product: product} do
       params = %{
         product_id: product.id,
         price: Decimal.new("10.99"),
@@ -25,10 +28,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert product_id == product.id
     end
 
-    test "creates product variant with all fields" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-
+    test "creates product variant with all fields", %{product: product} do
       params = %{
         product_id: product.id,
         price: Decimal.new("12.50"),
@@ -60,10 +60,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
                |> Ash.create()
     end
 
-    test "fails to create product variant without price" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-
+    test "fails to create product variant without price", %{product: product} do
       params = %{
         product_id: product.id,
         image: "/images/variant1.jpg"
@@ -75,10 +72,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
                |> Ash.create()
     end
 
-    test "fails to create product variant without image" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-
+    test "fails to create product variant without image", %{product: product} do
       params = %{
         product_id: product.id,
         price: Decimal.new("10.99")
@@ -90,10 +84,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
                |> Ash.create()
     end
 
-    test "fails to create product variant with negative stock_quantity" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-
+    test "fails to create product variant with negative stock_quantity", %{product: product} do
       params = %{
         product_id: product.id,
         price: Decimal.new("10.99"),
@@ -110,9 +101,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert msg =~ "must be more than or equal to"
     end
 
-    test "updates product variant price" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
+    test "updates product variant price", %{product: product} do
       variant = fixture(:product_variant, product_id: product.id, price: Decimal.new("9.99"))
 
       new_price = Decimal.new("11.50")
@@ -125,9 +114,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert updated_price == new_price
     end
 
-    test "updates product variant stock quantity" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
+    test "updates product variant stock quantity", %{product: product} do
       variant = fixture(:product_variant, product_id: product.id, stock_quantity: 50)
 
       new_quantity = 75
@@ -140,9 +127,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert updated_quantity == new_quantity
     end
 
-    test "fails to update product variant stock quantity to negative" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
+    test "fails to update product variant stock quantity to negative", %{product: product} do
       variant = fixture(:product_variant, product_id: product.id, stock_quantity: 50)
 
       new_quantity = -5
@@ -156,9 +141,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert msg =~ "must be more than or equal to"
     end
 
-    test "destroys product variant" do
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
+    test "destroys product variant", %{product: product} do
       variant = fixture(:product_variant, product_id: product.id)
 
       assert :ok = Ash.destroy!(variant)

@@ -3,13 +3,17 @@ defmodule Edenflowers.Store.LineItemTest do
   import Edenflowers.Fixtures
   alias Edenflowers.Store.LineItem
 
-  describe "Order Item Resource" do
-    test "creates an order item" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
+  setup do
+    order = fixture(:order)
+    tax_rate = fixture(:tax_rate)
+    product = fixture(:product, tax_rate_id: tax_rate.id)
+    product_variant = fixture(:product_variant, product_id: product.id)
 
+    {:ok, order: order, tax_rate: tax_rate, product: product, product_variant: product_variant}
+  end
+
+  describe "Order Item Resource" do
+    test "creates an order item", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       assert {:ok, _} =
                LineItem
                |> Ash.Changeset.for_create(:create, %{
@@ -21,12 +25,7 @@ defmodule Edenflowers.Store.LineItemTest do
                |> Ash.create()
     end
 
-    test "default quantity is 1" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "default quantity is 1", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
@@ -40,12 +39,7 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 1
     end
 
-    test "quantity can only be 1 or greater" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "quantity can only be 1 or greater", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       assert {:error, _} =
                LineItem
                |> Ash.Changeset.for_create(:create, %{
@@ -58,12 +52,7 @@ defmodule Edenflowers.Store.LineItemTest do
                |> Ash.create()
     end
 
-    test "increments quantity" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "increments quantity", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
@@ -79,12 +68,7 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 2
     end
 
-    test "decrements quantity" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "decrements quantity", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
@@ -101,12 +85,7 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 2
     end
 
-    test "decrements quantity no lower than 1" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "decrements quantity no lower than 1", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
@@ -122,12 +101,13 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 1
     end
 
-    test "promotion_applied? returns true if promotion applied to order" do
+    test "promotion_applied? returns true if promotion applied to order", %{
+      tax_rate: tax_rate,
+      product: product,
+      product_variant: product_variant
+    } do
       promotion = fixture(:promotion, discount_percentage: "0.20")
       order = fixture(:order, promotion_id: promotion.id)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
 
       line_item =
         LineItem
@@ -143,12 +123,11 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.promotion_applied? == true
     end
 
-    test "promotion_applied? returns false if no promotion applied to order" do
-      order = fixture(:order)
-      tax_rate = fixture(:tax_rate)
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant = fixture(:product_variant, product_id: product.id)
-
+    test "promotion_applied? returns false if no promotion applied to order", %{
+      order: order,
+      tax_rate: tax_rate,
+      product_variant: product_variant
+    } do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{

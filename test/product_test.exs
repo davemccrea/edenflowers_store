@@ -5,6 +5,11 @@ defmodule Edenflowers.Store.ProductTest do
   alias Edenflowers.Store.Product
   alias Edenflowers.Store.ProductVariant
 
+  setup do
+    tax_rate = fixture(:tax_rate)
+    {:ok, tax_rate: tax_rate}
+  end
+
   describe "Product Resource" do
     test "fails to create product without tax_rate" do
       assert {:error, _} =
@@ -16,9 +21,7 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.create()
     end
 
-    test "creates product when tax_rate is assigned" do
-      tax_rate = fixture(:tax_rate)
-
+    test "creates product when tax_rate is assigned", %{tax_rate: tax_rate} do
       assert {:ok, _} =
                Product
                |> Ash.Changeset.for_create(:create, %{
@@ -30,9 +33,8 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.create()
     end
 
-    test "fails to create product if product name is not unique" do
+    test "fails to create product if product name is not unique", %{tax_rate: tax_rate} do
       name = "Product 1"
-      tax_rate = fixture(:tax_rate)
       _product = fixture(:product, tax_rate_id: tax_rate.id, name: name)
 
       assert {:error, error} =
@@ -55,8 +57,7 @@ defmodule Edenflowers.Store.ProductTest do
              } = error
     end
 
-    test "assigns fulfillment option to product" do
-      tax_rate = fixture(:tax_rate)
+    test "assigns fulfillment option to product", %{tax_rate: tax_rate} do
       fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate.id)
 
       fulfillment_option_id = fulfillment_option.id
@@ -73,9 +74,7 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.create()
     end
 
-    test "fails to assign fulfillment option to product if fulfillment option does not exist" do
-      tax_rate = fixture(:tax_rate)
-
+    test "fails to assign fulfillment option to product if fulfillment option does not exist", %{tax_rate: tax_rate} do
       # Non existing resource
       id = Ecto.UUID.generate()
 
@@ -91,8 +90,7 @@ defmodule Edenflowers.Store.ProductTest do
                |> Ash.create()
     end
 
-    test "returns nil cheapest_price when product has no variants" do
-      tax_rate = fixture(:tax_rate)
+    test "returns nil cheapest_price when product has no variants", %{tax_rate: tax_rate} do
       product = fixture(:product, tax_rate_id: tax_rate.id)
 
       loaded_product =
@@ -103,8 +101,7 @@ defmodule Edenflowers.Store.ProductTest do
       assert loaded_product.cheapest_price == nil
     end
 
-    test "returns correct cheapest_price with one variant" do
-      tax_rate = fixture(:tax_rate)
+    test "returns correct cheapest_price with one variant", %{tax_rate: tax_rate} do
       product = fixture(:product, tax_rate_id: tax_rate.id)
       price = Decimal.new("15.99")
       _variant = fixture(:product_variant, product_id: product.id, price: price)
@@ -114,8 +111,7 @@ defmodule Edenflowers.Store.ProductTest do
       assert loaded_product.cheapest_price == price
     end
 
-    test "returns correct cheapest_price with multiple variants" do
-      tax_rate = fixture(:tax_rate)
+    test "returns correct cheapest_price with multiple variants", %{tax_rate: tax_rate} do
       product = fixture(:product, tax_rate_id: tax_rate.id)
       price1 = Decimal.new("18.50")
       # Cheapest
