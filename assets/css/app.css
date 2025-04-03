@@ -105,3 +105,14 @@ sl-drawer::part(body) {
   cursor: pointer;
   --swiper-scrollbar-size: 6px;
 }
+
+
+sl-drawer {
+  --size: 25rem;
+}
+
+@media (max-width: 768px) {
+  sl-drawer {
+    --size: 80vw;
+  }
+}
