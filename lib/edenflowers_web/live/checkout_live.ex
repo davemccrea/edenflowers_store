@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.CheckoutLive do
           </div>
 
           <div class="flex flex-col gap-8 md:flex-row">
-            <div id={@id} class="md:w-[60%]" phx-hook="Scroll">
+            <div id={@id} class="md:w-[60%]">
               <%= if @order.step == 1 do %>
                 <section id={"#{@id}-section-1"} class="checkout__section">
                   <.form_heading>{gettext("Personalise")}</.form_heading>
@@ -81,18 +81,18 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <fieldset>
                         <label class="relative flex flex-col">
                           <span class="mb-1">{gettext("Gift Message")}</span>
-                        <textarea
-                          id={@form[:gift_message].id}
-                          name={@form[:gift_message].name}
-                          class="textarea textarea-lg w-full resize-none"
-                          maxlength={200}
-                          rows={5}
-                        >{@form[:gift_message].value}</textarea>
-                        <div class="absolute right-2 bottom-1">
+                          <textarea
+                            id={@form[:gift_message].id}
+                            name={@form[:gift_message].name}
+                            class="textarea textarea-lg w-full resize-none"
+                            maxlength={200}
+                            rows={5}
+                          >{@form[:gift_message].value}</textarea>
+                          <div class="absolute right-2 bottom-1">
                             <span id="char-count" class="text-xs" id="gift-message-char-count" phx-update="ignore">
                               0/200
                             </span>
-                        </div>
+                          </div>
                         </label>
                       </fieldset>
 
@@ -160,24 +160,24 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <fieldset>
                       <label class="flex flex-col">
                         <span class="mb-1">{gettext("Delivery Date")}</span>
-                      <div class="disable-dbl-tap-zoom max-w-xs">
-                        <.live_component
-                          id="calendar"
-                          hidden_input_id="form_fulfillment_date"
-                          hidden_input_name="form[fulfillment_date]"
-                          selected_date={@form[:fulfillment_date].value}
-                          module={EdenflowersWeb.CalendarComponent}
-                          date_callback={
-                            fn date ->
-                              fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
-                              fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
-                              {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
-                              state
-                            end
-                          }
-                        >
-                        </.live_component>
-                      </div>
+                        <div class="disable-dbl-tap-zoom max-w-xs">
+                          <.live_component
+                            id="calendar"
+                            hidden_input_id="form_fulfillment_date"
+                            hidden_input_name="form[fulfillment_date]"
+                            selected_date={@form[:fulfillment_date].value}
+                            module={EdenflowersWeb.CalendarComponent}
+                            date_callback={
+                              fn date ->
+                                fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
+                                fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
+                                {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
+                                state
+                              end
+                            }
+                          >
+                          </.live_component>
+                        </div>
                       </label>
                     </fieldset>
 

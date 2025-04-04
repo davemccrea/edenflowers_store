@@ -257,19 +257,6 @@ Hooks.CalendarHook = {
   },
 };
 
-Hooks.Scroll = {
-  mounted() {
-    this.handleEvent("scroll", ({ anchor }) => {
-      if (anchor) {
-        const element = document.getElementById(anchor);
-        if (element) {
-          element.scrollIntoView();
-        }
-      }
-    });
-  },
-};
-
 Hooks.PaymentElement = {
   mounted() {
     const button = document.getElementById("payment-button");
