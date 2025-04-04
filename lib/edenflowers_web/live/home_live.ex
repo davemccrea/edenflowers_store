@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.HomeLive do
           )}
         </h1>
         <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
-          Learn more
+          {gettext("Learn more")}
         </a>
       </div>
     </section>
