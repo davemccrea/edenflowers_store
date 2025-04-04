@@ -12,8 +12,6 @@ defmodule Edenflowers.Application do
       Edenflowers.Repo,
       {DNSCluster, query: Application.get_env(:edenflowers, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Edenflowers.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: Edenflowers.Finch},
       # Start a worker by calling: Edenflowers.Worker.start_link(arg)
       # {Edenflowers.Worker, arg},
       # Start to serve requests, typically the last entry

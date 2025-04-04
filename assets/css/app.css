@@ -2,6 +2,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap");
 
 @import "tailwindcss" source(none);
+@source "../css";
+@source "../js";
+@source "../../lib/edenflowers_web";
 
 @theme {
   --font-sans: "Open Sans", sans-serif;
@@ -10,11 +13,22 @@
   --color-image: white;
 }
 
+/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
+   The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
-@plugin "daisyui";
-@plugin "daisyui/theme" {
+
+/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
+   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+@plugin "../vendor/daisyui" {
+  themes: false;
+}
+
+@plugin "../vendor/daisyui-theme" {
   name: "light";
   default: true;
+  prefersdark: false;
+  color-scheme: "light";
   --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
   --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
   --color-accent: var(--color-pink-100);
@@ -26,13 +40,15 @@
   --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
 }
 
-@source "../css";
-@source "../js";
-@source "../../lib/edenflowers_web";
-
+/* Add variants based on LiveView classes */
 @custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
 @custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
 @custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
+
+/* Make LiveView wrapper divs transparent for layout */
+[data-phx-root-id] {
+  display: contents;
+}
 
 /* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
@@ -40,10 +56,6 @@ body {
 }
 body.ready {
   opacity: 1;
-}
-
-[data-phx-root-id] {
-  display: contents;
 }
 
 .checkout__section {
@@ -105,7 +117,6 @@ sl-drawer::part(body) {
   cursor: pointer;
   --swiper-scrollbar-size: 6px;
 }
-
 
 sl-drawer {
   --size: 25rem;

@@ -38,9 +38,7 @@ defmodule EdenflowersWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: EdenflowersWeb.Layouts]
+      use Phoenix.Controller, formats: [:html, :json]
 
       import Plug.Conn
 
@@ -53,8 +51,7 @@ defmodule EdenflowersWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {EdenflowersWeb.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end
@@ -91,8 +88,9 @@ defmodule EdenflowersWeb do
       # Core UI components
       import EdenflowersWeb.CoreComponents
 
-      # Shortcut for generating JS commands
+      # Common modules used in templates
       alias Phoenix.LiveView.JS
+      alias EdenflowersWeb.Layouts
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
