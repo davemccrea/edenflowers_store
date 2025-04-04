@@ -33,15 +33,19 @@ defmodule EdenflowersWeb.HomeLive do
           style="scrollbar-width: thin;"
           class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
         >
-          <ul class="flex space-x-2" role="list">
+          <ul class="flex space-x-2 py-2" role="list">
             <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
-              <a href="#" aria-labelledby={product.name} class="flex flex-col transition duration-100 hover:opacity-90">
+              <a
+                href={~p"/products/#{product}"}
+                aria-labelledby={product.name}
+                class="flex flex-col transition duration-100 hover:opacity-90"
+              >
                 <div class="mb-2 overflow-hidden rounded-lg">
                   <img src={product.image} alt={"#{product.name} image"} class="aspect-square w-full object-cover" />
                 </div>
-                <div class="text-base-content flex flex-col items-center space-y-2">
-                  <h3 id={product.name} class="font-serif leadning-none text-xl">{product.name}</h3>
-                  <p class="leading-0 text-sm">{Edenflowers.Utils.format_money(Decimal.new("70.00"))}</p>
+                <div class="text-base-content flex flex-col items-center">
+                  <h3 id={product.name} class="font-serif text-xl">{product.name}</h3>
+                  <p class="text-sm">{Edenflowers.Utils.format_money(70)}</p>
                 </div>
               </a>
             </li>
