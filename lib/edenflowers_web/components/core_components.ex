@@ -186,13 +186,13 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+    <fieldset>
+      <label class="flex flex-col">
+        <span :if={@label} class="mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
-          class={["select w-full", @errors != [] && "select-error"]}
+          class={["select select-lg w-full", @errors != [] && "select-error"]}
           multiple={@multiple}
           {@rest}
         >
@@ -220,34 +220,20 @@ defmodule EdenflowersWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+    <fieldset>
+      <label class="flex flex-col">
+        <span :if={@label} class="mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={["input w-full", @errors != [] && "input-error"]}
+          class={["input input-lg w-full", @errors != [] && "input-error"]}
           {@rest}
         />
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </fieldset>
-    """
-  end
-
-  @doc """
-  Renders a label.
-  """
-  attr :for, :string, default: nil
-  slot :inner_block, required: true
-
-  def label(assigns) do
-    ~H"""
-    <label for={@for} class="mb-1 font-medium">
-      {render_slot(@inner_block)}
-    </label>
     """
   end
 
