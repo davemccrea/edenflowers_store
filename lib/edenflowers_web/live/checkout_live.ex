@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <.input
                     hint="You will receive a text message when your order is ready for collection."
-                    label="Phone Number"
+                    label={gettext("Phone Number")}
                     placeholder="045 1505141"
                     field={@form[:recipient_phone_number]}
                     type="text"
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </div>
 
                   <div class="flex flex-col">
-                    <.label>Delivery Date</.label>
+                    <.label>{gettext("Delivery Date")}</.label>
                     <div class="disable-dbl-tap-zoom max-w-xs">
                       <.live_component
                         id="calendar"
