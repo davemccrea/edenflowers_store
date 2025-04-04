@@ -29,6 +29,11 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :save_step_1 do
+      accept [:gift_message]
+      change set_attribute(:step, 2)
+    end
+
+    update :save_step_2 do
       accept [
         :fulfillment_option_id,
         :fulfillment_date,
@@ -41,12 +46,6 @@ defmodule Edenflowers.Store.Order do
         :distance,
         :position
       ]
-
-      change set_attribute(:step, 2)
-    end
-
-    update :save_step_2 do
-      accept [:gift_message]
 
       change set_attribute(:step, 3)
     end

@@ -61,12 +61,13 @@ msgstr ""
 msgid "Address not found"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:245
+#: lib/edenflowers_web/live/checkout_live.ex:246
 #, elixir-autogen, elixir-format
 msgid "Apply"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts/app.html.heex:56
+#: lib/edenflowers_web/components/layouts/app.html.heex:143
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr ""
@@ -82,32 +83,34 @@ msgid "Contact"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts/app.html.heex:3
+#: lib/edenflowers_web/live/courses_live.ex:15
 #, elixir-autogen, elixir-format
 msgid "Courses"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:69
-#: lib/edenflowers_web/live/checkout_live.ex:252
+#: lib/edenflowers_web/live/checkout_live.ex:115
+#: lib/edenflowers_web/live/checkout_live.ex:189
+#: lib/edenflowers_web/live/checkout_live.ex:253
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:80
+#: lib/edenflowers_web/live/checkout_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Delivery Method"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:450
+#: lib/edenflowers_web/live/checkout_live.ex:451
 #, elixir-autogen, elixir-format
 msgid "Delivery address is required"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:261
+#: lib/edenflowers_web/live/checkout_live.ex:262
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:527
+#: lib/edenflowers_web/live/checkout_live.ex:523
 #, elixir-autogen, elixir-format
 msgid "Empty value"
 msgstr ""
@@ -117,12 +120,12 @@ msgstr ""
 msgid "Error calculating distance"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:254
+#: lib/edenflowers_web/live/checkout_live.ex:255
 #, elixir-autogen, elixir-format
 msgid "Free"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:172
+#: lib/edenflowers_web/live/checkout_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Gift Message"
 msgstr ""
@@ -152,14 +155,9 @@ msgstr ""
 msgid "Store"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:274
+#: lib/edenflowers_web/live/checkout_live.ex:275
 #, elixir-autogen, elixir-format
 msgid "Total"
-msgstr ""
-
-#: lib/edenflowers_web/components/layouts/app.html.heex:105
-#, elixir-autogen, elixir-format
-msgid "Vaasa Finland"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts/app.html.heex:4
@@ -172,7 +170,7 @@ msgstr ""
 msgid "Shop Flowers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts/app.html.heex:139
+#: lib/edenflowers_web/components/layouts/app.html.heex:164
 #, elixir-autogen, elixir-format
 msgid "Enjoy 20% off your next order and get occassional floral advice in your inbox."
 msgstr ""
@@ -182,7 +180,7 @@ msgstr ""
 msgid "Fresh flowers for everyday moments."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts/app.html.heex:67
+#: lib/edenflowers_web/components/layouts/app.html.heex:77
 #, elixir-autogen, elixir-format
 msgid "Let us know what you think of the new website! 🚀"
 msgstr ""
@@ -192,7 +190,46 @@ msgstr ""
 msgid "Shop Now"
 msgstr ""
 
-#: lib/edenflowers_web/live/home_live.ex:49
+#: lib/edenflowers_web/live/home_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts/app.html.heex:68
+#, elixir-autogen, elixir-format
+msgid "Checkout"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "Customise"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:156
+#, elixir-autogen, elixir-format
+msgid "Delivery Date"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:105
+#: lib/edenflowers_web/live/checkout_live.ex:182
+#: lib/edenflowers_web/live/checkout_live.ex:193
+#, elixir-autogen, elixir-format
+msgid "Payment"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:69
+#: lib/edenflowers_web/live/checkout_live.ex:111
+#: lib/edenflowers_web/live/checkout_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "Personalise"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:134
+#, elixir-autogen, elixir-format
+msgid "Phone Number"
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:125
+#, elixir-autogen, elixir-format
+msgid "Select a delivery method"
 msgstr ""

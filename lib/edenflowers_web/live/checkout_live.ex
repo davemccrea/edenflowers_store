@@ -59,14 +59,14 @@ defmodule EdenflowersWeb.CheckoutLive do
       <div class="flex flex-col gap-12">
         <div class="text-neutral/60 flex flex-row gap-2">
           <.icon name="hero-lock-closed" class="h-4 w-4" />
-          <span class="items-center text-xs uppercase">Secure Checkout</span>
+          <span class="items-center text-xs uppercase">{gettext("Secure Checkout")}</span>
         </div>
 
         <div class="flex flex-col gap-8 md:flex-row">
           <div id={@id} class="md:w-[60%]" phx-hook="Scroll">
             <%= if @order.step == 1 do %>
               <section id={"#{@id}-section-1"} class="checkout__section">
-                <.form_heading>{gettext("Delivery")}</.form_heading>
+                <.form_heading>{gettext("Personalise")}</.form_heading>
 
                 <.form
                   :if={@order.step == 1}
@@ -74,6 +74,51 @@ defmodule EdenflowersWeb.CheckoutLive do
                   for={@form}
                   phx-change="validate_form_1"
                   phx-submit="save_form_1"
+                  class="checkout__form"
+                >
+                  <div id="gift-message-container" phx-hook="CharacterCount">
+                    <div class="relative flex flex-col">
+                      <.label>Gift message</.label>
+                      <textarea
+                        id={@form[:gift_message].id}
+                        name={@form[:gift_message].name}
+                        class="textarea textarea-lg w-full resize-none"
+                        maxlength={200}
+                        rows={5}
+                      >{@form[:gift_message].value}</textarea>
+                      <div class="absolute right-2 bottom-1">
+                        <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
+                      </div>
+                    </div>
+
+                    <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
+                      {gettext("Gift Message")} {msg}
+                    </.error>
+                  </div>
+
+                  <.form_button>Next</.form_button>
+                </.form>
+              </section>
+
+              <div class="checkout__heading-container">
+                <.form_heading active={false}>{gettext("Personalise")}</.form_heading>
+                <.form_heading active={false}>{gettext("Payment")}</.form_heading>
+              </div>
+            <% end %>
+
+            <%= if @order.step == 2 do %>
+              <div class="checkout__heading-container">
+                <.form_heading step={1} active={false}>{gettext("Personalise")}</.form_heading>
+              </div>
+
+              <section id={"#{@id}-section-2"} class="checkout__section">
+                <.form_heading>{gettext("Delivery")}</.form_heading>
+
+                <.form
+                  id="checkout-form-2"
+                  for={@form}
+                  phx-change="validate_form_2"
+                  phx-submit="save_form_2"
                   class="checkout__form"
                 >
                   <.input
@@ -134,63 +179,18 @@ defmodule EdenflowersWeb.CheckoutLive do
               </section>
 
               <div class="checkout__heading-container">
-                <.form_heading active={false}>Customise</.form_heading>
-                <.form_heading active={false}>Payment</.form_heading>
-              </div>
-            <% end %>
-
-            <%= if @order.step == 2 do %>
-              <div class="checkout__heading-container">
-                <.form_heading step={1} active={false}>Delivery</.form_heading>
-              </div>
-
-              <section id={"#{@id}-section-2"} class="checkout__section">
-                <.form_heading>Customise</.form_heading>
-
-                <.form
-                  id="checkout-form-2"
-                  for={@form}
-                  phx-change="validate_form_2"
-                  phx-submit="save_form_2"
-                  class="checkout__form"
-                >
-                  <div id="gift-message-container" phx-hook="CharacterCount">
-                    <div class="relative flex flex-col">
-                      <.label>Gift message</.label>
-                      <textarea
-                        id={@form[:gift_message].id}
-                        name={@form[:gift_message].name}
-                        class="textarea textarea-lg w-full resize-none"
-                        maxlength={200}
-                        rows={5}
-                      >{@form[:gift_message].value}</textarea>
-                      <div class="absolute right-2 bottom-1">
-                        <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
-                      </div>
-                    </div>
-
-                    <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
-                      {gettext("Gift Message")} {msg}
-                    </.error>
-                  </div>
-
-                  <.form_button>Next</.form_button>
-                </.form>
-              </section>
-
-              <div class="checkout__heading-container">
-                <.form_heading active={false}>Payment</.form_heading>
+                <.form_heading active={false}>{gettext("Payment")}</.form_heading>
               </div>
             <% end %>
 
             <%= if @order.step == 3 do %>
               <div class="checkout__heading-container">
-                <.form_heading step={1} active={false}>Delivery</.form_heading>
-                <.form_heading step={2} active={false}>Customise</.form_heading>
+                <.form_heading step={1} active={false}>{gettext("Personalise")}</.form_heading>
+                <.form_heading step={2} active={false}>{gettext("Delivery")}</.form_heading>
               </div>
 
               <section id={"#{@id}-section-3"} class="checkout__section">
-                <.form_heading>Payment</.form_heading>
+                <.form_heading>{gettext("Payment")}</.form_heading>
 
                 <.form
                   id="checkout-form-3"
@@ -220,7 +220,7 @@ defmodule EdenflowersWeb.CheckoutLive do
           <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
             <div class="flex flex-col gap-4 p-1">
               <h2 class="font-serif text-xl font-medium">
-                Your Cart ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
+                {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
               </h2>
 
               <div :for={line_item <- @order.line_items} class="flex flex-col gap-2">
@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ║ Event Helpers ║
   # ╚═══════════════╝
 
-  def handle_event("validate_form_1", %{"form" => params}, socket) do
+  def handle_event("validate_form_2", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
 
@@ -339,7 +339,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_event("save_form_1", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
+  def handle_event("save_form_2", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
     fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
     {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
   end
