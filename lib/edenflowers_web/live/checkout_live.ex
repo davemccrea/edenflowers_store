@@ -78,8 +78,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                     class="checkout__form"
                   >
                     <div id="gift-message-container" phx-hook="CharacterCount">
-                      <div class="relative flex flex-col">
-                        <.label>Gift message</.label>
+                      <fieldset>
+                        <label class="relative flex flex-col">
+                          <span class="mb-1">{gettext("Gift Message")}</span>
                         <textarea
                           id={@form[:gift_message].id}
                           name={@form[:gift_message].name}
@@ -88,9 +89,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                           rows={5}
                         >{@form[:gift_message].value}</textarea>
                         <div class="absolute right-2 bottom-1">
-                          <span class="text-xs" id="gift-message-char-count" phx-update="ignore">0/200</span>
+                            <span id="char-count" class="text-xs" id="gift-message-char-count" phx-update="ignore">
+                              0/200
+                            </span>
                         </div>
-                      </div>
+                        </label>
+                      </fieldset>
 
                       <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
                         {gettext("Gift Message")} {msg}
@@ -153,8 +157,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
                     </div>
 
-                    <div class="flex flex-col">
-                      <.label>{gettext("Delivery Date")}</.label>
+                    <fieldset>
+                      <label class="flex flex-col">
+                        <span class="mb-1">{gettext("Delivery Date")}</span>
                       <div class="disable-dbl-tap-zoom max-w-xs">
                         <.live_component
                           id="calendar"
@@ -173,7 +178,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                         >
                         </.live_component>
                       </div>
-                    </div>
+                      </label>
+                    </fieldset>
 
                     <.form_button>Next</.form_button>
                   </.form>
@@ -220,7 +226,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <div class="flex flex-col gap-4 p-1">
-                <h2 class="font-serif text-xl font-medium">
+                <h2 class="font-serif text-xl">
                   {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
@@ -298,7 +304,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row items-center justify-between">
-      <h1 class={"#{if not @active, do: "text-neutral/40", else: "text-neutral"} font-serif text-3xl font-medium"} {@rest}>
+      <h1 class={"#{if not @active, do: "text-neutral/40", else: "text-neutral"} font-serif text-3xl"} {@rest}>
         {render_slot(@inner_block)}
       </h1>
       <%= if @step do %>

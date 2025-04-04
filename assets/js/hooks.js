@@ -5,8 +5,7 @@ export const Hooks = {};
 Hooks.CharacterCount = {
   mounted() {
     const textarea = this.el.querySelector("textarea");
-    // const charCountDisplay = this.el.querySelector("#gift-message-char-count");
-    const charCountDisplay = this.el.querySelector("span");
+    const charCountDisplay = this.el.querySelector("#char-count");
 
     // Update character count on page load (in case there's initial text)
     updateCharCount();
