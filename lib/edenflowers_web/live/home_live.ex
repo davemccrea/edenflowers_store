@@ -20,13 +20,15 @@ defmodule EdenflowersWeb.HomeLive do
           <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
             {gettext("Fresh flowers for everyday moments.")}
           </h1>
-          <button class="btn btn-primary mx-auto lg:btn-lg">{gettext("Shop Now")}</button>
+          <a href="#featured" class="btn btn-primary mx-auto lg:btn-lg" role="button">
+            {gettext("Shop Now")}
+          </a>
         </div>
       </section>
 
-      <section class="not-last:border-b">
+      <section id="featured" class="not-last:border-b">
         <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="font-serif mb-4 px-2 text-3xl">{gettext("Shop Flowers")}</h2>
+          <h2 class="font-serif mb-4 px-2 text-3xl">{gettext("Featured Blooms")}</h2>
 
           <div
             id="product-slider"
