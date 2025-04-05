@@ -11,7 +11,7 @@ alias Edenflowers.Store.{LineItem, Order, ProductVariant}
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-order_id = ""
+order_id = "255a542c-7279-4da2-a3c4-ba50a4f572ea"
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -34,7 +34,10 @@ product_variant =
 ```elixir
 Ash.Changeset.for_create(LineItem, :create, %{
   order_id: order_id,
+  product_id: product_variant.product.id,
   product_variant_id: product_variant.id,
+  product_name: product_variant.product.name,
+  product_image_slug: product_variant.product.image_slug,
   quantity: 1,
   tax_rate: product_variant.product.tax_rate.percentage,
   unit_price: product_variant.price
