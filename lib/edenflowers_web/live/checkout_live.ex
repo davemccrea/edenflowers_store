@@ -208,13 +208,14 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div
                       class="max-w-xl"
                       id="payment-element"
-                      data-client-secret={@stripe_client_secret}
                       phx-hook="PaymentElement"
+                      phx-update="ignore"
+                      data-client-secret={@stripe_client_secret}
                     >
                     </div>
 
                     <.form_button id="payment-button" disabled={true}>
-                      Pay {Edenflowers.Utils.format_money(@order.total)}
+                      {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </.form>
                 </section>
@@ -519,29 +520,24 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ╚════════════════════╝
 
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    # amount =
-    #   order.total
-    #   |> Decimal.mult(100)
-    #   |> Decimal.to_integer()
+    amount =
+      order.total
+      |> Decimal.mult(100)
+      |> Decimal.to_integer()
 
-    # Create payment intent with current order total
     {:ok, payment_intent} =
       Stripe.PaymentIntent.create(%{
-        # TODO
-        amount: 100,
+        amount: amount,
         currency: "EUR",
         automatic_payment_methods: %{enabled: true}
       })
 
-    order =
-      order
-      |> Ash.Changeset.for_update(:add_payment_intent_id, %{payment_intent_id: payment_intent.id()})
-      |> Ash.update!(load: order_load_statement())
+    order = Order.add_payment_intent_id(order, payment_intent.id, load: order_load_statement())
 
-    assign(socket, order: order)
+    assign(socket, order: order, stripe_client_secret: payment_intent.client_secret)
   end
 
-  defp setup_stripe(socket, %{payment_intent_id: payment_intent_id} = _order) when is_binary(payment_intent_id) do
+  defp setup_stripe(socket, %{payment_intent_id: payment_intent_id} = _order) do
     {:ok, payment_intent} = Stripe.PaymentIntent.retrieve(payment_intent_id)
     assign(socket, stripe_client_secret: payment_intent.client_secret)
   end
@@ -556,10 +552,8 @@ defmodule EdenflowersWeb.CheckoutLive do
       :promotion_applied?,
       :discount_amount,
       :total,
-      :fulfillment_option,
       :tax_amount,
-      :line_items,
-      {:line_items, [product_variant: :product]}
+      :line_items
     ]
   end
 

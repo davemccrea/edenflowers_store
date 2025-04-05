@@ -10,6 +10,7 @@ defmodule Edenflowers.Store.Order do
 
   code_interface do
     define :get_order_for_checkout, action: :get_order_for_checkout, args: [:id]
+    define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
   end
 
   actions do
@@ -26,7 +27,6 @@ defmodule Edenflowers.Store.Order do
                   :promotion_applied?,
                   :discount_amount,
                   :total,
-                  :fulfillment_option,
                   :tax_amount,
                   :line_items
                 ]
