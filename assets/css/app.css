@@ -1,10 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap");
-
 @import "tailwindcss" source(none);
 @source "../css";
 @source "../js";
 @source "../../lib/edenflowers_web";
+
+/* Add variants based on LiveView classes */
+@custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
+@custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
+@custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
 
 @theme {
   --font-sans: "Open Sans", sans-serif;
@@ -39,11 +41,6 @@
   --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
   --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
 }
-
-/* Add variants based on LiveView classes */
-@custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
-@custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
-@custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-root-id] {
