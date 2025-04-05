@@ -385,7 +385,6 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     {:noreply,
      socket
-     |> push_event("scroll", %{anchor: "#{socket.assigns.id}-section-#{order.step}"})
      |> assign(order: order)
      |> assign(form: form)}
   end
@@ -427,7 +426,6 @@ defmodule EdenflowersWeb.CheckoutLive do
           |> to_form()
 
         socket
-        |> push_event("scroll", %{anchor: "#{socket.assigns.id}-section-#{order.step}"})
         |> assign(order: order)
         |> assign(form: form)
 
