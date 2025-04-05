@@ -4,12 +4,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
-  alias Edenflowers.Store
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Store.{Order, LineItem, FulfillmentOption}
   alias Edenflowers.{HereAPI, Fulfillments}
 
   def mount(_params, %{"order_id" => id}, socket) do
-    with {:ok, order} <- Store.Order.get_order_for_checkout(id),
+    with {:ok, order} <- Order.get_order_for_checkout(id),
          {:ok, _line_items} <- validate_cart(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
@@ -393,25 +392,25 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("remove_item", %{"id" => id}, socket) do
     socket.assigns.order.line_items
     |> Enum.find(&(&1.id == id))
-    |> Store.LineItem.remove_item()
+    |> LineItem.remove_item()
 
-    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
+    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
     socket.assigns.order.line_items
     |> Enum.find(&(&1.id == id))
-    |> Store.LineItem.increment_quantity()
+    |> LineItem.increment_quantity()
 
-    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
+    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     socket.assigns.order.line_items
     |> Enum.find(&(&1.id == id))
-    |> Store.LineItem.decrement_quantity()
+    |> LineItem.decrement_quantity()
 
-    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
+    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
   end
 
   # ╔══════════════╗
