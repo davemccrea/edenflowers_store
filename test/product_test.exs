@@ -3,7 +3,6 @@ defmodule Edenflowers.Store.ProductTest do
   import Edenflowers.Fixtures
 
   alias Edenflowers.Store.Product
-  alias Edenflowers.Store.ProductVariant
 
   setup do
     tax_rate = fixture(:tax_rate)
@@ -28,7 +27,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
                  description: "Product 1 description",
-                 image: "image.png"
+                 image_slug: "image.jpg"
                })
                |> Ash.create()
     end
@@ -43,7 +42,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: name,
                  description: "Product 1 description",
-                 image: "image.jpg"
+                 image_slug: "image.jpg"
                })
                |> Ash.create()
 
@@ -68,7 +67,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
                  description: "Product 1 description",
-                 image: "image.jpg",
+                 image_slug: "image.jpg",
                  fulfillment_option_ids: [fulfillment_option_id]
                })
                |> Ash.create()
@@ -84,7 +83,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  name: "Product 1",
                  description: "Product 1 description",
-                 image: "image.jpg",
+                 image_slug: "image.jpg",
                  fulfillment_option_ids: [id]
                })
                |> Ash.create()

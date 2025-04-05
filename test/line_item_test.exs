@@ -13,11 +13,17 @@ defmodule Edenflowers.Store.LineItemTest do
   end
 
   describe "Order Item Resource" do
-    test "creates an order item", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "creates an order item", %{
+      order: order,
+      tax_rate: tax_rate,
+      product: product,
+      product_variant: product_variant
+    } do
       assert {:ok, _} =
                LineItem
                |> Ash.Changeset.for_create(:create, %{
                  order_id: order.id,
+                 product_id: product.id,
                  product_variant_id: product_variant.id,
                  unit_price: product_variant.price,
                  tax_rate: tax_rate.percentage
@@ -25,11 +31,17 @@ defmodule Edenflowers.Store.LineItemTest do
                |> Ash.create()
     end
 
-    test "default quantity is 1", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "default quantity is 1", %{
+      order: order,
+      tax_rate: tax_rate,
+      product: product,
+      product_variant: product_variant
+    } do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -39,24 +51,31 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 1
     end
 
-    test "quantity can only be 1 or greater", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "quantity can only be 1 or greater", %{
+      order: order,
+      tax_rate: tax_rate,
+      product: product,
+      product_variant: product_variant
+    } do
       assert {:error, _} =
                LineItem
                |> Ash.Changeset.for_create(:create, %{
                  order_id: order.id,
-                 quantity: 0,
+                 product_id: product.id,
                  product_variant_id: product_variant.id,
+                 quantity: 0,
                  unit_price: product_variant.price,
                  tax_rate: tax_rate.percentage
                })
                |> Ash.create()
     end
 
-    test "increments quantity", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "increments quantity", %{order: order, tax_rate: tax_rate, product: product, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -68,11 +87,12 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 2
     end
 
-    test "decrements quantity", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "decrements quantity", %{order: order, tax_rate: tax_rate, product: product, product_variant: product_variant} do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           quantity: 3,
           unit_price: product_variant.price,
@@ -85,11 +105,17 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.quantity == 2
     end
 
-    test "decrements quantity no lower than 1", %{order: order, tax_rate: tax_rate, product_variant: product_variant} do
+    test "decrements quantity no lower than 1", %{
+      order: order,
+      tax_rate: tax_rate,
+      product: product,
+      product_variant: product_variant
+    } do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -113,6 +139,7 @@ defmodule Edenflowers.Store.LineItemTest do
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -126,12 +153,14 @@ defmodule Edenflowers.Store.LineItemTest do
     test "promotion_applied? returns false if no promotion applied to order", %{
       order: order,
       tax_rate: tax_rate,
+      product: product,
       product_variant: product_variant
     } do
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
+          product_id: product.id,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage

@@ -4,11 +4,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
+  alias Edenflowers.Store
+  alias Edenflowers.Store.FulfillmentOption
   alias Edenflowers.{HereAPI, Fulfillments}
-  alias Edenflowers.Store.{FulfillmentOption, Order}
 
   def mount(_params, %{"order_id" => id}, socket) do
-    with order = %Order{} <- fetch_order(id),
+    with {:ok, order} <- Store.Order.get_order_for_checkout(id),
          {:ok, _line_items} <- validate_cart(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
@@ -28,23 +29,26 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> set_delivery_fields_visibility(order.fulfillment_option_id)}
     else
       {:error, :empty_cart} ->
-        {:ok, push_navigate(socket, to: ~p"/")}
+        Logger.error("Cart is empty")
 
-      _ ->
-        {:ok, redirect(socket, to: ~p"/")}
+        {:ok,
+         socket
+         |> put_flash(:error, "Cart is empty")
+         |> push_navigate(to: ~p"/")}
+
+      error ->
+        Logger.error("Error loading checkout: #{inspect(error)}")
+
+        {:ok,
+         socket
+         |> put_flash(:error, "Error loading checkout")
+         |> push_navigate(to: ~p"/")}
     end
   end
 
   # ╔═══════════════╗
   # ║ Mount Helpers ║
   # ╚═══════════════╝
-
-  defp fetch_order(id) do
-    Order
-    |> Ash.Query.filter(id == ^id)
-    |> Ash.Query.load(order_load_statement())
-    |> Ash.read_one!()
-  end
 
   defp validate_cart(%{line_items: []}), do: {:error, :empty_cart}
   defp validate_cart(%{line_items: line_items}), do: {:ok, line_items}
@@ -56,7 +60,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-96">
+      <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
           <div class="text-neutral/60 flex flex-row gap-2">
             <.icon name="hero-lock-closed" class="h-4 w-4" />
@@ -77,29 +81,27 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-submit="save_form_1"
                     class="checkout__form"
                   >
-                    <div id="gift-message-container" phx-hook="CharacterCount">
-                      <fieldset>
-                        <label class="relative flex flex-col">
-                          <span class="mb-1">{gettext("Gift Message")}</span>
-                          <textarea
-                            id={@form[:gift_message].id}
-                            name={@form[:gift_message].name}
-                            class="textarea textarea-lg w-full resize-none"
-                            maxlength={200}
-                            rows={5}
-                          >{@form[:gift_message].value}</textarea>
-                          <div class="absolute right-2 bottom-1">
-                            <span id="char-count" class="text-xs" id="gift-message-char-count" phx-update="ignore">
-                              0/200
-                            </span>
-                          </div>
-                        </label>
-                      </fieldset>
+                    <fieldset id="gift-message-fieldset" phx-hook="CharacterCount">
+                      <label class="relative flex flex-col">
+                        <span class="mb-1">{gettext("Gift Message")}</span>
+                        <textarea
+                          id={@form[:gift_message].id}
+                          name={@form[:gift_message].name}
+                          class="textarea textarea-lg w-full resize-none"
+                          maxlength={200}
+                          rows={5}
+                        >{@form[:gift_message].value}</textarea>
+                        <div class="absolute right-2 bottom-1">
+                          <span id="char-count" class="text-xs" id="gift-message-char-count" phx-update="ignore">
+                            0/200
+                          </span>
+                        </div>
+                      </label>
 
                       <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
                         {gettext("Gift Message")} {msg}
                       </.error>
-                    </div>
+                    </fieldset>
 
                     <.form_button>Next</.form_button>
                   </.form>
@@ -135,7 +137,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                     />
 
                     <.input
-                      hint="You will receive a text message when your order is ready for collection."
                       label={gettext("Phone Number")}
                       placeholder="045 1505141"
                       field={@form[:recipient_phone_number]}
@@ -145,7 +146,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
                       <div>
                         <.input
-                          hint="The delivery fee is calcuted based on distance from Minimosen."
                           placeholder="Stadsgatan 3, 65300 Vasa"
                           label="Address *"
                           field={@form[:delivery_address]}
@@ -225,32 +225,46 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div class="md:border-neutral/10 md:border-r"></div>
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
-              <div class="flex flex-col gap-4 p-1">
+              <section class="flex flex-col gap-4 p-1">
                 <h2 class="font-serif text-xl">
                   {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
-                <div :for={line_item <- @order.line_items} class="flex flex-col gap-2">
-                  <div class="flex flex-row justify-between gap-4 text-sm">
-                    <div class="flex flex-row gap-4">
-                      <img
-                        class="h-18 w-18 rounded"
-                        src={line_item.product_variant.image}
-                        alt={"Image of #{line_item.product_variant.product.name}"}
-                      />
-                      <div class="flex flex-col">
+                <ul class="flex flex-col gap-2">
+                  <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
+                    <img
+                      class="h-18 w-18 rounded"
+                      src={line_item.product_variant.image}
+                      alt={"Image of #{line_item.product_variant.product.name}"}
+                    />
+
+                    <div class="flex flex-1 flex-row justify-between">
+                      <div class="flex flex-col gap-2">
                         <span>{line_item.product_variant.product.name}</span>
+                        <.increment_decrement resource="line_item" resource_id={line_item.id} count={line_item.quantity} />
+                      </div>
+                      <div class="flex flex-col items-end gap-2">
+                        <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
+                        <button
+                          id={"remove-item-#{line_item.id}"}
+                          phx-hook="DisableButton"
+                          class="btn btn-square btn-ghost btn-xs"
+                          phx-click="remove_item"
+                          phx-value-id={line_item.id}
+                          aria-label={gettext("Remove item")}
+                        >
+                          <.icon name="hero-trash" class="text-error h-4 w-4" />
+                        </button>
                       </div>
                     </div>
-                    <span>{Edenflowers.Utils.format_money(line_item.product_variant.price)}</span>
-                  </div>
-                </div>
+                  </li>
+                </ul>
 
                 <div class="join">
                   <label class="input join-item w-full">
                     <input type="email" placeholder="Enter promo code" required />
                   </label>
-                  <button class="btn btn-primary join-item">{gettext("Apply")}</button>
+                  <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
                 </div>
 
                 <div class="border-neutral/5 border-t"></div>
@@ -283,7 +297,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <span>{Edenflowers.Utils.format_money(@order.total)}</span>
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
           </div>
         </div>
@@ -327,9 +341,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
-  # ╔═══════════════╗
-  # ║ Event Helpers ║
-  # ╚═══════════════╝
+  # ╔════════════════╗
+  # ║ Event Handlers ║
+  # ╚════════════════╝
 
   def handle_event("validate_form_2", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
@@ -374,6 +388,30 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> push_event("scroll", %{anchor: "#{socket.assigns.id}-section-#{order.step}"})
      |> assign(order: order)
      |> assign(form: form)}
+  end
+
+  def handle_event("remove_item", %{"id" => id}, socket) do
+    socket.assigns.order.line_items
+    |> Enum.find(&(&1.id == id))
+    |> Store.LineItem.remove_item()
+
+    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
+  end
+
+  def handle_event("increment_line_item", %{"id" => id}, socket) do
+    socket.assigns.order.line_items
+    |> Enum.find(&(&1.id == id))
+    |> Store.LineItem.increment_quantity()
+
+    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
+  end
+
+  def handle_event("decrement_line_item", %{"id" => id}, socket) do
+    socket.assigns.order.line_items
+    |> Enum.find(&(&1.id == id))
+    |> Store.LineItem.decrement_quantity()
+
+    {:noreply, socket |> assign(order: Store.Order.get_order_for_checkout!(socket.assigns.order.id))}
   end
 
   # ╔══════════════╗
@@ -522,6 +560,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       :total,
       :fulfillment_option,
       :tax_amount,
+      :line_items,
       {:line_items, [product_variant: :product]}
     ]
   end

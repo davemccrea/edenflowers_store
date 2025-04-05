@@ -48,7 +48,7 @@ for n <- 1..10 do
     Ash.Changeset.for_create(Product, :create, %{
       tax_rate_id: tax_rate.id,
       name: "Product #{n}",
-      image: "https://placehold.co/400x400",
+      image_slug: "https://placehold.co/400x400",
       description: "Product #{n} description"
     })
     |> Ash.create!()
@@ -57,7 +57,7 @@ for n <- 1..10 do
     product_id: product.id,
     price: Enum.random(30..60) |> Integer.to_string(),
     size: :medium,
-    image: "https://placehold.co/400x400",
+    image_slug: "https://placehold.co/400x400",
     stock_trackable: false,
     stock_quantity: 0
   })

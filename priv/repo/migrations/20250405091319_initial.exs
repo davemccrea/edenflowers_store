@@ -32,6 +32,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     create table(:products, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :name, :text, null: false
+      add :image_slug, :text, null: false
       add :description, :text, null: false
 
       add :tax_rate_id,
@@ -50,7 +51,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :price, :decimal, null: false
       add :size, :text
-      add :image, :text, null: false
+      add :image_slug, :text, null: false
       add :stock_trackable, :boolean, default: false
       add :stock_quantity, :bigint
 
@@ -120,7 +121,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :gift_message, :text
       add :customer_name, :text
       add :customer_email, :text
-      add :stripe_payment_id, :text
+      add :payment_intent_id, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -143,6 +144,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :quantity, :bigint, default: 1
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
+      add :product_name, :text
+      add :product_image_url, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -156,6 +159,15 @@ defmodule Edenflowers.Repo.Migrations.Initial do
           references(:orders,
             column: :id,
             name: "line_items_order_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ),
+          null: false
+
+      add :product_id,
+          references(:products,
+            column: :id,
+            name: "line_items_product_id_fkey",
             type: :uuid,
             prefix: "public"
           ),
@@ -291,6 +303,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop table(:fulfillment_options)
 
     drop constraint(:line_items, "line_items_order_id_fkey")
+
+    drop constraint(:line_items, "line_items_product_id_fkey")
 
     drop constraint(:line_items, "line_items_product_variant_id_fkey")
 

@@ -15,16 +15,16 @@ defmodule Edenflowers.Store.ProductVariantTest do
       params = %{
         product_id: product.id,
         price: Decimal.new("10.99"),
-        image: "/images/variant1.jpg"
+        image_slug: "image.jpg"
       }
 
-      assert {:ok, %ProductVariant{price: price, image: image, product_id: product_id}} =
+      assert {:ok, %ProductVariant{price: price, image_slug: image_slug, product_id: product_id}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
                |> Ash.create()
 
       assert price == Decimal.new("10.99")
-      assert image == "/images/variant1.jpg"
+      assert image_slug == "image.jpg"
       assert product_id == product.id
     end
 
@@ -32,7 +32,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       params = %{
         product_id: product.id,
         price: Decimal.new("12.50"),
-        image: "/images/variant_full.jpg",
+        image_slug: "image.jpg",
         size: :medium,
         stock_trackable: true,
         stock_quantity: 100
@@ -51,7 +51,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "fails to create product variant without product_id" do
       params = %{
         price: Decimal.new("10.99"),
-        image: "/images/variant1.jpg"
+        image_slug: "image.jpg"
       }
 
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :product_id}]}} =
@@ -63,7 +63,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "fails to create product variant without price", %{product: product} do
       params = %{
         product_id: product.id,
-        image: "/images/variant1.jpg"
+        image_slug: "image.jpg"
       }
 
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :price}]}} =
@@ -78,7 +78,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
         price: Decimal.new("10.99")
       }
 
-      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :image}]}} =
+      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :image_slug}]}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
                |> Ash.create()
@@ -88,7 +88,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       params = %{
         product_id: product.id,
         price: Decimal.new("10.99"),
-        image: "/images/variant1.jpg",
+        image_slug: "image.jpg",
         stock_quantity: -10
       }
 

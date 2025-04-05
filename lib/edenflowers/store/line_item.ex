@@ -6,12 +6,29 @@ defmodule Edenflowers.Store.LineItem do
     table "line_items"
   end
 
+  code_interface do
+    define :increment_quantity, action: :increment_quantity
+    define :decrement_quantity, action: :decrement_quantity
+    define :remove_item, action: :remove_item
+  end
+
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
 
     create :create do
-      accept [:order_id, :product_variant_id, :quantity, :unit_price, :tax_rate]
+      accept [
+        :order_id,
+        :product_id,
+        :product_variant_id,
+        :product_name,
+        :product_image_url,
+        :quantity,
+        :unit_price,
+        :tax_rate
+      ]
     end
+
+    destroy :remove_item
 
     update :increment_quantity do
       change atomic_update(:quantity, expr(quantity + 1))
@@ -22,16 +39,23 @@ defmodule Edenflowers.Store.LineItem do
     end
   end
 
+  preparations do
+    prepare build(load: [:line_subtotal])
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :quantity, :integer, default: 1, constraints: [min: 1]
     attribute :unit_price, :decimal, allow_nil?: false
     attribute :tax_rate, :decimal, allow_nil?: false
+    attribute :product_name, :string, allow_nil?: true
+    attribute :product_image_url, :string, allow_nil?: true
     timestamps()
   end
 
   relationships do
     belongs_to :order, Edenflowers.Store.Order, allow_nil?: false
+    belongs_to :product, Edenflowers.Store.Product, allow_nil?: false
     belongs_to :product_variant, Edenflowers.Store.ProductVariant, allow_nil?: false
   end
 

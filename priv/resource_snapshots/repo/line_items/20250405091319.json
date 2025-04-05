@@ -11,73 +11,33 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
-      "default": "\"cart\"",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "state",
-      "type": "text"
-    },
-    {
       "allow_nil?": true,
       "default": "1",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "step",
+      "source": "quantity",
       "type": "bigint"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "recipient_phone_number",
-      "type": "text"
+      "source": "unit_price",
+      "type": "decimal"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "delivery_address",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "delivery_instructions",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "fulfillment_date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "fulfillment_amount",
+      "source": "tax_rate",
       "type": "decimal"
     },
     {
@@ -87,7 +47,7 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "calculated_address",
+      "source": "product_name",
       "type": "text"
     },
     {
@@ -97,67 +57,7 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "here_id",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "distance",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "position",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "gift_message",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "customer_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "customer_email",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "payment_intent_id",
+      "source": "product_image_url",
       "type": "text"
     },
     {
@@ -181,7 +81,7 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -198,19 +98,19 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_fulfillment_option_id_fkey",
+        "name": "line_items_order_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "fulfillment_options"
+        "table": "orders"
       },
       "size": null,
-      "source": "fulfillment_option_id",
+      "source": "order_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -227,15 +127,44 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_promotion_id_fkey",
+        "name": "line_items_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "promotions"
+        "table": "products"
       },
       "size": null,
-      "source": "promotion_id",
+      "source": "product_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "line_items_product_variant_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "product_variants"
+      },
+      "size": null,
+      "source": "product_variant_id",
       "type": "uuid"
     }
   ],
@@ -244,7 +173,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "A4BC38EEA73D38AE75C5AC134FCC5BE6CFCF11A1F2ACC4B1CF46DFB07852991A",
+  "hash": "744ADD1F41F8DE2142563882DFA8EE5DEEDB14CC910769530BAC016CC11EC3A3",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -253,5 +182,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "orders"
+  "table": "line_items"
 }

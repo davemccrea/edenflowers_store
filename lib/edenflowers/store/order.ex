@@ -8,8 +8,30 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
+  code_interface do
+    define :get_order_for_checkout, action: :get_order_for_checkout, args: [:id]
+  end
+
   actions do
     defaults [:read, :destroy]
+
+    read :get_order_for_checkout do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+
+      prepare build(
+                load: [
+                  :total_items_in_cart,
+                  :promotion_applied?,
+                  :discount_amount,
+                  :total,
+                  :fulfillment_option,
+                  :tax_amount,
+                  :line_items
+                ]
+              )
+    end
 
     create :create do
       accept [:promotion_id, :fulfillment_option_id]

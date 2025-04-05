@@ -34,16 +34,18 @@ defmodule Edenflowers.Store.OrderTest do
         |> Ash.Changeset.for_create(:create, %{})
         |> Ash.create!()
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product_1.id,
         product_variant_id: product_1_product_variant_1.id,
         unit_price: product_1_product_variant_1.price,
         tax_rate: tax_rate.percentage,
         quantity: 2
       })
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product_2.id,
         product_variant_id: product_2_product_variant_1.id,
         unit_price: product_2_product_variant_1.price,
         tax_rate: tax_rate.percentage,
@@ -69,16 +71,18 @@ defmodule Edenflowers.Store.OrderTest do
         |> Ash.Changeset.for_create(:create, %{})
         |> Ash.create!()
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product_1.id,
         product_variant_id: product_1_product_variant_1.id,
         unit_price: product_1_product_variant_1.price,
         tax_rate: tax_rate_1.percentage,
         quantity: 2
       })
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product_2.id,
         product_variant_id: product_2_product_variant_1.id,
         unit_price: product_2_product_variant_1.price,
         tax_rate: tax_rate_2.percentage,
@@ -105,16 +109,18 @@ defmodule Edenflowers.Store.OrderTest do
         |> Ash.Changeset.for_update(:add_promotion, %{promotion_id: promotion.id})
         |> Ash.update!()
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product.id,
         product_variant_id: product_variant_1.id,
         unit_price: product_variant_1.price,
         tax_rate: tax_rate.percentage,
         quantity: 1
       })
 
-      fixture(:order_item, %{
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product.id,
         product_variant_id: product_variant_2.id,
         unit_price: product_variant_2.price,
         tax_rate: tax_rate.percentage,
@@ -183,12 +189,13 @@ defmodule Edenflowers.Store.OrderTest do
 
     order =
       order
-      |> Ash.Changeset.for_update(:save_step_1, %{fulfillment_amount: fulfillment_amount})
+      |> Ash.Changeset.for_update(:save_step_2, %{fulfillment_amount: fulfillment_amount})
       |> Ash.update!()
 
-    _order_item =
-      fixture(:order_item, %{
+    _line_item =
+      fixture(:line_item, %{
         order_id: order.id,
+        product_id: product.id,
         product_variant_id: product_variant.id,
         unit_price: product_variant.price,
         tax_rate: tax_rate_2.percentage,

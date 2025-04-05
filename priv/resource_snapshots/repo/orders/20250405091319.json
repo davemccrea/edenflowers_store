@@ -157,7 +157,7 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "stripe_payment_id",
+      "source": "payment_intent_id",
       "type": "text"
     },
     {
@@ -244,7 +244,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "366F9FCAE23A50E21E82E0FA21A122FC376BFD7C0A47B045EE6DEE2F41EA6FB5",
+  "hash": "ACFD52D7AC830645BC43488E8F76544FD32C1CAA4C226B0587B1AA4853B8574D",
   "identities": [],
   "multitenancy": {
     "attribute": null,

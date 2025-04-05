@@ -13,11 +13,11 @@ defmodule Edenflowers.Store.ProductVariant do
     defaults [:read, :destroy]
 
     create :create do
-      accept [:price, :size, :image, :stock_trackable, :stock_quantity, :product_id]
+      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id]
     end
 
     update :update do
-      accept [:price, :size, :image, :stock_trackable, :stock_quantity]
+      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity]
     end
   end
 
@@ -25,7 +25,7 @@ defmodule Edenflowers.Store.ProductVariant do
     uuid_primary_key :id
     attribute :price, :decimal, allow_nil?: false
     attribute :size, Edenflowers.Store.ProductVariantSize
-    attribute :image, :string, allow_nil?: false
+    attribute :image_slug, :string, allow_nil?: false
     attribute :stock_trackable, :boolean, default: false
     attribute :stock_quantity, :integer, constraints: [min: 0]
   end

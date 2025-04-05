@@ -38,7 +38,7 @@ defmodule Edenflowers.Fixtures do
       tax_rate_id: nil,
       name: words(),
       description: words(),
-      image: "image.png"
+      image_slug: "image.png"
     }
 
     params = Enum.into(opts, default_params)
@@ -53,7 +53,7 @@ defmodule Edenflowers.Fixtures do
       product_id: nil,
       price: "35.00",
       size: :medium,
-      image: "image.png",
+      image_slug: "image.png",
       stock_trackable: false,
       stock_quantity: 0
     }
@@ -107,9 +107,10 @@ defmodule Edenflowers.Fixtures do
     |> Ash.create!()
   end
 
-  def fixture(:order_item, opts) do
+  def fixture(:line_item, opts) do
     default_params = %{
       order_id: nil,
+      product_id: nil,
       product_variant_id: nil,
       unit_price: nil,
       quantity: nil,

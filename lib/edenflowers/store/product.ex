@@ -13,7 +13,7 @@ defmodule Edenflowers.Store.Product do
     defaults [:read, :destroy]
 
     create :create do
-      accept [:name, :image, :description, :tax_rate_id, :product_category_id]
+      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id]
       argument :fulfillment_option_ids, {:array, :uuid}
 
       change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
@@ -23,7 +23,7 @@ defmodule Edenflowers.Store.Product do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
-    attribute :image, :string, allow_nil?: false
+    attribute :image_slug, :string, allow_nil?: false
     attribute :description, :string, allow_nil?: false
   end
 

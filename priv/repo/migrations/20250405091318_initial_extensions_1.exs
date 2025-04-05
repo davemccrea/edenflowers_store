@@ -12,6 +12,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
     CREATE OR REPLACE FUNCTION ash_elixir_or(left BOOLEAN, in right ANYCOMPATIBLE, out f1 ANYCOMPATIBLE)
     AS $$ SELECT COALESCE(NULLIF($1, FALSE), $2) $$
     LANGUAGE SQL
+    SET search_path = ''
     IMMUTABLE;
     """)
 
@@ -19,6 +20,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
     CREATE OR REPLACE FUNCTION ash_elixir_or(left ANYCOMPATIBLE, in right ANYCOMPATIBLE, out f1 ANYCOMPATIBLE)
     AS $$ SELECT COALESCE($1, $2) $$
     LANGUAGE SQL
+    SET search_path = ''
     IMMUTABLE;
     """)
 
@@ -29,6 +31,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
         ELSE $1
       END $$
     LANGUAGE SQL
+    SET search_path = ''
     IMMUTABLE;
     """)
 
@@ -39,6 +42,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
         ELSE $1
       END $$
     LANGUAGE SQL
+    SET search_path = ''
     IMMUTABLE;
     """)
 
@@ -64,6 +68,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
         END IF;
     END; $$
     LANGUAGE plpgsql
+    SET search_path = ''
     IMMUTABLE;
     """)
 
@@ -76,7 +81,9 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
         RAISE EXCEPTION 'ash_error: %', json_data::text;
         RETURN NULL;
     END;
-    $$ LANGUAGE plpgsql;
+    $$ LANGUAGE plpgsql
+    STABLE
+    SET search_path = '';
     """)
 
     execute("""
@@ -88,7 +95,9 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
         RAISE EXCEPTION 'ash_error: %', json_data::text;
         RETURN NULL;
     END;
-    $$ LANGUAGE plpgsql;
+    $$ LANGUAGE plpgsql
+    STABLE
+    SET search_path = '';
     """)
 
     execute("""
@@ -115,6 +124,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
     END
     $$
     LANGUAGE PLPGSQL
+    SET search_path = ''
     VOLATILE;
     """)
 
@@ -125,6 +135,7 @@ defmodule Edenflowers.Repo.Migrations.InitialExtensions1 do
       SELECT to_timestamp(('x0000' || substr(_uuid::TEXT, 1, 8) || substr(_uuid::TEXT, 10, 4))::BIT(64)::BIGINT::NUMERIC / 1000);
     $$
     LANGUAGE SQL
+    SET search_path = ''
     IMMUTABLE PARALLEL SAFE STRICT;
     """)
 

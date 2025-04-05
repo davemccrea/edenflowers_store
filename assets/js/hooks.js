@@ -309,4 +309,40 @@ Hooks.HorizontalScroll = {
     }
   },
 };
+
+Hooks.DisableButton = {
+  mounted() {
+    const button = this.el;
+
+    const checkAndDisable = () => {
+      if (button.classList.contains("phx-click-loading")) {
+        button.disabled = true;
+      } else {
+        button.disabled = false;
+      }
+    };
+
+    // Initial check in case the class is already present on mount
+    checkAndDisable();
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes" && mutation.attributeName === "class") {
+          checkAndDisable();
+        }
+      });
+    });
+
+    observer.observe(button, { attributes: true, attributeFilter: ["class"] });
+
+    this.observer = observer;
+  },
+
+  destroyed() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  },
+};
+
 export default Hooks;

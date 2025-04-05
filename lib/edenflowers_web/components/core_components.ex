@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="toast toast-top toast-end z-100"
       {@rest}
     >
       <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
@@ -396,6 +396,39 @@ defmodule EdenflowersWeb.CoreComponents do
       <a href="#">
         <img class={"h-#{@size} w-#{@size}"} src="/images/instagram_logo_bw_128px.png" alt="Instagram logo" />
       </a>
+    </div>
+    """
+  end
+
+  attr :resource, :string, required: true
+  attr :resource_id, :string, required: true
+  attr :count, :integer, default: 0
+  attr :rest, :global
+
+  def increment_decrement(assigns) do
+    ~H"""
+    <div {@rest} class="flex flex-row items-center justify-center gap-2">
+      <button
+        id={"decrement-#{@resource_id}"}
+        phx-hook="DisableButton"
+        class="btn btn-xs btn-square"
+        phx-click={"decrement_#{@resource}"}
+        phx-value-id={@resource_id}
+        aria-label={gettext("Decrement")}
+      >
+        <.icon class="h-4 w-4" name="hero-minus-mini" />
+      </button>
+      <span>{@count}</span>
+      <button
+        id={"increment-#{@resource_id}"}
+        phx-hook="DisableButton"
+        class="btn btn-xs btn-square"
+        phx-click={"increment_#{@resource}"}
+        phx-value-id={@resource_id}
+        aria-label={gettext("Increment")}
+      >
+        <.icon class="h-4 w-4" name="hero-plus-mini" />
+      </button>
     </div>
     """
   end

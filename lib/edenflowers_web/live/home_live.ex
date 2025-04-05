@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.HomeLive do
   alias Edenflowers.Store.Product
 
   def mount(_params, _session, socket) do
-    # TODO: get only main products
+    # TODO: get only featured products
     products = Ash.read!(Product)
 
     {:ok, socket |> assign(products: products)}
