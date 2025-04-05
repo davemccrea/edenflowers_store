@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.HomeLive do
                   class="flex flex-col transition duration-100 hover:opacity-90"
                 >
                   <div class="mb-2 overflow-hidden rounded-lg">
-                    <img src={product.image} alt={"#{product.name} image"} class="aspect-square w-full object-cover" />
+                    <img src={product.image_slug} alt={"#{product.name} image"} class="aspect-square w-full object-cover" />
                   </div>
                   <div class="text-base-content flex flex-col items-center">
                     <h3 id={product.name} class="font-serif text-xl">{product.name}</h3>

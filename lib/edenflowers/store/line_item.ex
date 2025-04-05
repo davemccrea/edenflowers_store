@@ -21,7 +21,7 @@ defmodule Edenflowers.Store.LineItem do
         :product_id,
         :product_variant_id,
         :product_name,
-        :product_image_url,
+        :product_image_slug,
         :quantity,
         :unit_price,
         :tax_rate
@@ -48,8 +48,8 @@ defmodule Edenflowers.Store.LineItem do
     attribute :quantity, :integer, default: 1, constraints: [min: 1]
     attribute :unit_price, :decimal, allow_nil?: false
     attribute :tax_rate, :decimal, allow_nil?: false
-    attribute :product_name, :string, allow_nil?: true
-    attribute :product_image_url, :string, allow_nil?: true
+    attribute :product_name, :string, allow_nil?: false
+    attribute :product_image_slug, :string, allow_nil?: false
     timestamps()
   end
 

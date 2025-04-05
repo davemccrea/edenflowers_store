@@ -234,13 +234,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
                     <img
                       class="h-18 w-18 rounded"
-                      src={line_item.product_variant.image}
-                      alt={"Image of #{line_item.product_variant.product.name}"}
+                      src={line_item.product_image_slug}
+                      alt={"Image of #{line_item.product_name}"}
                     />
 
                     <div class="flex flex-1 flex-row justify-between">
                       <div class="flex flex-col gap-2">
-                        <span>{line_item.product_variant.product.name}</span>
+                        <span>{line_item.product_name}</span>
                         <.increment_decrement resource="line_item" resource_id={line_item.id} count={line_item.quantity} />
                       </div>
                       <div class="flex flex-col items-end gap-2">
