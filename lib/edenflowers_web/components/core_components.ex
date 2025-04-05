@@ -409,6 +409,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div {@rest} class="flex flex-row items-center justify-center gap-2">
       <button
+        type="button"
         id={"decrement-#{@resource_id}"}
         phx-hook="DisableButton"
         class="btn btn-xs btn-square"
@@ -420,6 +421,7 @@ defmodule EdenflowersWeb.CoreComponents do
       </button>
       <span>{@count}</span>
       <button
+        type="button"
         id={"increment-#{@resource_id}"}
         phx-hook="DisableButton"
         class="btn btn-xs btn-square"

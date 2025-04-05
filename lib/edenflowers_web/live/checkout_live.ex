@@ -245,6 +245,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <div class="flex flex-col items-end gap-2">
                         <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
                         <button
+                          type="button"
                           id={"remove-item-#{line_item.id}"}
                           phx-hook="DisableButton"
                           class="btn btn-square btn-ghost btn-xs"
@@ -263,7 +264,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <label class="input join-item w-full">
                     <input type="email" placeholder="Enter promo code" required />
                   </label>
-                  <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
+                  <button type="button" class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
                 </div>
 
                 <div class="border-neutral/5 border-t"></div>
@@ -321,7 +322,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {render_slot(@inner_block)}
       </h1>
       <%= if @step do %>
-        <button class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@step}"}>Edit</button>
+        <button type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@step}"}>Edit</button>
       <% end %>
     </div>
     """

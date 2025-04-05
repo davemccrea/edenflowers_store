@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Layouts do
 
     ~H"""
     <%!-- Nav drawer --%>
-    <sl-drawer open={false} id="nav-drawer" placement="start" no-header="true">
+    <sl-drawer id="nav-drawer" placement="start" no-header="true">
       <div class="bg-base-200 flex h-full flex-col">
         <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
           <.link
@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Layouts do
             Eden Flowers
           </.link>
 
-          <button type="button" phx-click={JS.remove_attribute("open", to: "#nav-drawer")} class="h-12 w-12 cursor-pointer">
+          <button type="button" phx-click={JS.dispatch("hide-nav")} class="h-12 w-12 cursor-pointer">
             <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
           </button>
         </header>
@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Layouts do
               <li :for={{url, name} <- @nav}>
                 <.link
                   class="font-serif text-base-content text-2xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4 sm:text-3xl"
-                  phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
+                  phx-click={JS.dispatch("hide-nav")}
                   navigate={url}
                 >
                   {name}
@@ -70,12 +70,12 @@ defmodule EdenflowersWeb.Layouts do
       </div>
     </sl-drawer>
 
-    <sl-drawer open={false} id="cart-drawer" placement="end" no-header="true">
+    <sl-drawer id="cart-drawer" placement="end" no-header="true">
       <div class="bg-base-200 flex h-full flex-col">
         <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
           <h1 class="font-serif text-3xl">{gettext("Cart")}</h1>
 
-          <button type="button" phx-click={JS.remove_attribute("open", to: "#cart-drawer")} class="h-12 w-12 cursor-pointer">
+          <button phx-click={JS.dispatch("hide-cart")} type="button" class="h-12 w-12 cursor-pointer">
             <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
           </button>
         </header>
@@ -104,11 +104,7 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex flex-1 justify-start">
               <%!-- Mobile hamburger menu --%>
               <div class="block xl:hidden">
-                <button
-                  phx-click={JS.set_attribute({"open", true}, to: "#nav-drawer")}
-                  type="button"
-                  class="h-12 w-12 cursor-pointer"
-                >
+                <button phx-click={JS.dispatch("show-nav")} type="button" class="h-12 w-12 cursor-pointer">
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
                 </button>
               </div>
@@ -119,7 +115,6 @@ defmodule EdenflowersWeb.Layouts do
                   <li :for={{url, name} <- @nav}>
                     <.link
                       class="text-base-content whitespace-nowrap text-sm hover:underline hover:underline-offset-2"
-                      phx-click={JS.remove_attribute("open", to: "#nav-drawer")}
                       navigate={url}
                     >
                       {name}
@@ -154,7 +149,7 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Cart button --%>
               <button
-                phx-click={JS.set_attribute({"open", true}, to: "#cart-drawer")}
+                phx-click={JS.dispatch("show-cart")}
                 type="button"
                 class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto"
               >
