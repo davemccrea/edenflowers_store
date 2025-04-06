@@ -20,17 +20,6 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
-
-      prepare build(
-                load: [
-                  :total_items_in_cart,
-                  :promotion_applied?,
-                  :discount_amount,
-                  :total,
-                  :tax_amount,
-                  :line_items
-                ]
-              )
     end
 
     create :create do

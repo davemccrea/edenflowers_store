@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   alias Edenflowers.{HereAPI, Fulfillments}
 
   def mount(_params, %{"order_id" => id}, socket) do
-    with {:ok, order} <- Order.get_order_for_checkout(id),
+    with {:ok, order} <- Order.get_order_for_checkout(id, load: order_load_statement()),
          {:ok, _line_items} <- validate_cart(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(order: order)
        |> assign(form: form)
        |> assign(errors: %{delivery_address: nil})
-       |> setup_stripe(order)
+       |> setup_payment_intent(order)
        |> set_delivery_fields_visibility(order.fulfillment_option_id)}
     else
       {:error, :empty_cart} ->
@@ -362,12 +362,18 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
+  def handle_event("save_form_1", %{"form" => params}, socket) do
+    {:noreply, submit(socket, params)}
+  end
+
   def handle_event("save_form_2", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
     fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
     {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
   end
 
-  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
+  def handle_event("save_form_3", %{"form" => params}, socket) do
+    dbg(params)
+
     {:noreply, submit(socket, params)}
   end
 
@@ -395,7 +401,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Enum.find(&(&1.id == id))
     |> LineItem.remove_item()
 
-    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
+    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
+
+    {:noreply,
+     socket
+     |> assign(order: order)
+     |> update_payment_intent(order)}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
@@ -403,7 +414,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Enum.find(&(&1.id == id))
     |> LineItem.increment_quantity()
 
-    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
+    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
+
+    {:noreply,
+     socket
+     |> assign(order: order)
+     |> update_payment_intent(order)}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
@@ -411,7 +427,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Enum.find(&(&1.id == id))
     |> LineItem.decrement_quantity()
 
-    {:noreply, socket |> assign(order: Order.get_order_for_checkout!(socket.assigns.order.id))}
+    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
+
+    {:noreply,
+     socket
+     |> assign(order: order)
+     |> update_payment_intent(order)}
   end
 
   # ╔══════════════╗
@@ -429,6 +450,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         socket
         |> assign(order: order)
         |> assign(form: form)
+        |> update_payment_intent(order)
 
       {:error, form} ->
         assign(socket, form: form)
@@ -519,11 +541,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ║ Payment Processing ║
   # ╚════════════════════╝
 
-  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    amount =
-      order.total
-      |> Decimal.mult(100)
-      |> Decimal.to_integer()
+  defp setup_payment_intent(socket, %{payment_intent_id: nil} = order) do
+    amount = zero_decimal(order.total)
 
     {:ok, payment_intent} =
       Stripe.PaymentIntent.create(%{
@@ -534,17 +553,41 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     order = Order.add_payment_intent_id(order, payment_intent.id, load: order_load_statement())
 
-    assign(socket, order: order, stripe_client_secret: payment_intent.client_secret)
+    socket
+    |> assign(order: order)
+    |> assign(stripe_client_secret: payment_intent.client_secret)
   end
 
-  defp setup_stripe(socket, %{payment_intent_id: payment_intent_id} = _order) do
+  defp setup_payment_intent(socket, %{payment_intent_id: payment_intent_id} = _order) do
     {:ok, payment_intent} = Stripe.PaymentIntent.retrieve(payment_intent_id)
-    assign(socket, stripe_client_secret: payment_intent.client_secret)
+
+    socket
+    |> assign(stripe_client_secret: payment_intent.client_secret)
+  end
+
+  defp update_payment_intent(socket, %{payment_intent_id: payment_intent_id, total: total}) do
+    amount = zero_decimal(total)
+
+    case Stripe.PaymentIntent.update(payment_intent_id, %{amount: amount}) do
+      {:ok, _} ->
+        Logger.info("Updated Stripe Payment Intent #{payment_intent_id} to amount #{amount}")
+        socket
+
+      {:error, reason} ->
+        Logger.error("Failed to update Stripe Payment Intent #{payment_intent_id}: #{inspect(reason)}")
+        socket
+    end
   end
 
   # ╔═══════════╗
   # ║ Utilities ║
   # ╚═══════════╝
+
+  defp zero_decimal(n) do
+    n
+    |> Decimal.mult(100)
+    |> Decimal.to_integer()
+  end
 
   defp order_load_statement do
     [
