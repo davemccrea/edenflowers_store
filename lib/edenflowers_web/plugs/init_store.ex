@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Plugs.InitStore do
 
   def call(conn, _opts) do
     if get_session(conn, :order_id) do
+      # TODO: check order exists
       conn
     else
       case create_new_order() do

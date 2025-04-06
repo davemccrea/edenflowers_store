@@ -7,8 +7,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   alias Edenflowers.Store.{Order, LineItem, FulfillmentOption}
   alias Edenflowers.{HereAPI, Fulfillments}
 
-  def mount(_params, %{"order_id" => id}, socket) do
-    with {:ok, order} <- Order.get_order_for_checkout(id, load: order_load_statement()),
+  def mount(_params, %{"order_id" => order_id}, socket) do
+    with {:ok, order} <- Order.get_order_for_checkout(order_id, load: order_load_statement()),
          {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
@@ -75,16 +75,47 @@ defmodule EdenflowersWeb.CheckoutLive do
 
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]">
+              <%!-- Step 1 - Your Details --%>
               <%= if @order.step == 1 do %>
-                <section id={"#{@id}-section-1"} class="checkout__section">
-                  <.form_heading>{gettext("Personalise")}</.form_heading>
+                <section id={"#{@id}-section-3"} class="checkout__section">
+                  <.form_heading>{gettext("Your Details")}</.form_heading>
 
                   <.form
-                    :if={@order.step == 1}
                     id="checkout-form-1"
                     for={@form}
                     phx-change="validate_form_1"
                     phx-submit="save_form_1"
+                    class="checkout__form"
+                  >
+                    <.input label={gettext("Name")} field={@form[:customer_name]} type="text" />
+                    <.input label={gettext("Email")} field={@form[:customer_email]} type="text" />
+
+                    <.form_button>Next</.form_button>
+                  </.form>
+                </section>
+
+                <div class="checkout__heading-container">
+                  <.form_heading active={false}>{gettext("Gift Options")}</.form_heading>
+                  <.form_heading active={false}>{gettext("Delivery Information")}</.form_heading>
+                  <.form_heading active={false}>{gettext("Payment")}</.form_heading>
+                </div>
+              <% end %>
+
+              <%!-- Step 2 - Gift Options --%>
+              <%= if @order.step == 2 do %>
+                <div class="checkout__heading-container">
+                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
+                </div>
+
+                <section id={"#{@id}-section-2"} class="checkout__section">
+                  <.form_heading>{gettext("Gift Options")}</.form_heading>
+
+                  <.form
+                    :if={@order.step == 2}
+                    id="checkout-form-2"
+                    for={@form}
+                    phx-change="validate_form_2"
+                    phx-submit="save_form_2"
                     class="checkout__form"
                   >
                     <fieldset id="gift-message-fieldset" phx-hook="CharacterCount">
@@ -114,24 +145,26 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <div class="checkout__heading-container">
-                  <.form_heading active={false}>{gettext("Delivery")}</.form_heading>
+                  <.form_heading active={false}>{gettext("Delivery Information")}</.form_heading>
                   <.form_heading active={false}>{gettext("Payment")}</.form_heading>
                 </div>
               <% end %>
 
-              <%= if @order.step == 2 do %>
+              <%!-- Step 3 - Delivery Information --%>
+              <%= if @order.step == 3 do %>
                 <div class="checkout__heading-container">
-                  <.form_heading step={1} active={false}>{gettext("Personalise")}</.form_heading>
+                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
+                  <.form_heading step={2} active={false}>{gettext("Gift Options")}</.form_heading>
                 </div>
 
-                <section id={"#{@id}-section-2"} class="checkout__section">
-                  <.form_heading>{gettext("Delivery")}</.form_heading>
+                <section id={"#{@id}-section-3"} class="checkout__section">
+                  <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
                   <.form
-                    id="checkout-form-2"
+                    id="checkout-form-3"
                     for={@form}
-                    phx-change="validate_form_2"
-                    phx-submit="save_form_2"
+                    phx-change="validate_form_3"
+                    phx-submit="save_form_3"
                     class="checkout__form"
                   >
                     <.input
@@ -196,35 +229,33 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </div>
               <% end %>
 
-              <%= if @order.step == 3 do %>
+              <%!-- Step 4 - Payment --%>
+              <%= if @order.step == 4 do %>
                 <div class="checkout__heading-container">
-                  <.form_heading step={1} active={false}>{gettext("Personalise")}</.form_heading>
-                  <.form_heading step={2} active={false}>{gettext("Delivery")}</.form_heading>
+                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
+                  <.form_heading step={2} active={false}>{gettext("Gift Options")}</.form_heading>
+                  <.form_heading step={3} active={false}>{gettext("Delivery Information")}</.form_heading>
                 </div>
 
-                <section id={"#{@id}-section-3"} class="checkout__section">
+                <section id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
-                  <.form
-                    id="checkout-form-3"
-                    for={@form}
-                    phx-change="validate_form_3"
-                    phx-submit="save_form_3"
-                    class="checkout__form"
+                  <div
+                    class="max-w-xl"
+                    id="payment-element"
+                    phx-hook="PaymentElement"
+                    phx-update="ignore"
+                    data-client-secret={@stripe_client_secret}
                   >
-                    <div
-                      class="max-w-xl"
-                      id="payment-element"
-                      phx-hook="PaymentElement"
-                      phx-update="ignore"
-                      data-client-secret={@stripe_client_secret}
-                    >
-                    </div>
+                  </div>
 
-                    <.form_button id="payment-button" disabled={true}>
-                      {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
-                    </.form_button>
-                  </.form>
+                  <.form_button
+                    phx-click={JS.dispatch("process-payment", to: "#payment-element")}
+                    id="payment-button"
+                    disabled={true}
+                  >
+                    {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
+                  </.form_button>
                 </section>
               <% end %>
             </div>
@@ -343,7 +374,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_button(assigns) do
     ~H"""
     <button {@rest} type="submit" class="btn btn-primary btn-lg mt-2 flex flex-row gap-2">
-      <span class="phx-submit-loading:loading phx-submit-loading:loading-spinner"></span>
       <span>{render_slot(@inner_block)}</span>
     </button>
     """
@@ -353,7 +383,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ║ Event Handlers ║
   # ╚════════════════╝
 
-  def handle_event("validate_form_2", %{"form" => params}, socket) do
+  def handle_event("validate_form_3", %{"form" => params}, socket) do
     fulfillment_option_id = Map.get(params, "fulfillment_option_id")
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
 
@@ -369,18 +399,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_event("save_form_1", %{"form" => params}, socket) do
-    {:noreply, submit(socket, params)}
-  end
-
-  def handle_event("save_form_2", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
+  def handle_event("save_form_3", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
     fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
     {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
   end
 
-  def handle_event("save_form_3", %{"form" => params}, socket) do
-    dbg(params)
-
+  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
     {:noreply, submit(socket, params)}
   end
 
@@ -482,10 +506,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     else
       {:error, {_error, error_msg}} ->
         add_field_error(socket, :delivery_address, error_msg)
-
-      _ ->
-        Logger.error("Unhandled error in handle_fulfillment_method")
-        submit(socket, params)
     end
   end
 
@@ -555,7 +575,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       Stripe.PaymentIntent.create(%{
         amount: amount,
         currency: "EUR",
-        automatic_payment_methods: %{enabled: true}
+        automatic_payment_methods: %{enabled: true, allow_redirects: :never}
       })
 
     order = Order.add_payment_intent_id(order, payment_intent.id, load: order_load_statement())

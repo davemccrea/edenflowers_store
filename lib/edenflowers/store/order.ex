@@ -27,30 +27,42 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:step, 1)
     end
 
+    # Step 1 - Your Details
     update :edit_step_1 do
       change set_attribute(:step, 1)
     end
 
+    # Step 2 - Gift Options
     update :edit_step_2 do
       change set_attribute(:step, 2)
     end
 
+    # Step 3 - Delivery Information
     update :edit_step_3 do
       change set_attribute(:step, 3)
     end
 
+    # Step 1 - Your Details
     update :save_step_1 do
-      accept [:gift_message]
+      accept [:customer_name, :customer_email]
       change set_attribute(:step, 2)
     end
 
+    # Step 2 - Gift Options
     update :save_step_2 do
+      accept [:is_gift, :gift_message]
+      change set_attribute(:step, 3)
+    end
+
+    # Step 3 - Delivery Information
+    update :save_step_3 do
       accept [
         :fulfillment_option_id,
-        :fulfillment_date,
+        :recipient_name,
         :recipient_phone_number,
         :delivery_address,
         :delivery_instructions,
+        :fulfillment_date,
         :fulfillment_amount,
         :calculated_address,
         :here_id,
@@ -58,13 +70,11 @@ defmodule Edenflowers.Store.Order do
         :position
       ]
 
-      change set_attribute(:step, 3)
+      change set_attribute(:step, 4)
     end
 
-    update :save_step_3 do
+    update :save_step_4 do
       accept []
-      # TODO: should state be :cart and :order, instead of :cart and :completed?
-      change set_attribute(:state, :completed)
     end
 
     update :add_payment_intent_id do
@@ -79,27 +89,30 @@ defmodule Edenflowers.Store.Order do
 
   attributes do
     uuid_primary_key :id
-    attribute :state, Edenflowers.Store.OrderState, default: :cart, allow_nil?: false
 
-    attribute :step, :integer, default: 1, constraints: [min: 1, max: 3]
+    attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
-    # Step 1 - Delivery
+    # Step 1 - Your Details
+    attribute :customer_name, :string
+    attribute :customer_email, :string
+
+    # Step 2 - Gift Options
+    attribute :is_gift, :boolean
+    attribute :gift_message, :string
+
+    # Step 3 - Delivery Information
+    attribute :recipient_name, :string
     attribute :recipient_phone_number, :string
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
+
     attribute :fulfillment_amount, :decimal
     attribute :calculated_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
     attribute :position, :string
 
-    # Step 2 - Customise
-    attribute :gift_message, :string
-
-    # Step 3 - Payment
-    attribute :customer_name, :string
-    attribute :customer_email, :string
     attribute :payment_intent_id, :string
 
     timestamps()

@@ -27,7 +27,27 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "percentage",
+      "source": "code",
+      "type": "citext"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "discount_percentage",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "minimum_cart_total",
       "type": "decimal"
     },
     {
@@ -37,8 +57,18 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "archived_at",
-      "type": "utc_datetime_usec"
+      "source": "start_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "expiration_date",
+      "type": "date"
     }
   ],
   "base_filter": null,
@@ -46,19 +76,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B4963E733251096487E004F2B7A9D8DDC4704BFE2BA0BFDE9E7D0BCF3A2CEEB2",
+  "hash": "8013832AB7EA5989A3D74A736BA1B247BDFD46F89FEEAEC593A5FAB0C1BA286D",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "tax_rates_unique_name_index",
+      "index_name": "promotions_unique_code_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "code"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_code",
       "nils_distinct?": true,
       "where": null
     }
@@ -70,5 +100,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "tax_rates"
+  "table": "promotions"
 }

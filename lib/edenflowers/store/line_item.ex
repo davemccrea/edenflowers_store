@@ -4,6 +4,10 @@ defmodule Edenflowers.Store.LineItem do
   postgres do
     repo Edenflowers.Repo
     table "line_items"
+
+    references do
+      reference :order, on_delete: :delete
+    end
   end
 
   code_interface do
@@ -96,5 +100,9 @@ defmodule Edenflowers.Store.LineItem do
 
     # This is the amount of tax applied to a specific line item.
     calculate :line_tax_amount, :decimal, expr(line_total * tax_rate)
+  end
+
+  identities do
+    identity :unique_product_variant, [:order_id, :product_variant_id]
   end
 end

@@ -107,8 +107,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :state, :text, null: false, default: "cart"
       add :step, :bigint, default: 1
+      add :customer_name, :text
+      add :customer_email, :text
+      add :is_gift, :boolean
+      add :gift_message, :text
+      add :recipient_name, :text
       add :recipient_phone_number, :text
       add :delivery_address, :text
       add :delivery_instructions, :text
@@ -118,9 +122,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :here_id, :text
       add :distance, :bigint
       add :position, :text
-      add :gift_message, :text
-      add :customer_name, :text
-      add :customer_email, :text
       add :payment_intent_id, :text
 
       add :inserted_at, :utc_datetime_usec,
@@ -144,8 +145,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :quantity, :bigint, default: 1
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
-      add :product_name, :text
-      add :product_image_url, :text
+      add :product_name, :text, null: false
+      add :product_image_slug, :text, null: false
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -160,7 +161,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             column: :id,
             name: "line_items_order_id_fkey",
             type: :uuid,
-            prefix: "public"
+            prefix: "public",
+            on_delete: :delete_all
           ),
           null: false
 
@@ -182,6 +184,10 @@ defmodule Edenflowers.Repo.Migrations.Initial do
           ),
           null: false
     end
+
+    create unique_index(:line_items, [:order_id, :product_variant_id],
+             name: "line_items_unique_product_variant_index"
+           )
 
     create table(:fulfillment_options, primary_key: false) do
       add :translations, :map
@@ -301,6 +307,10 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     drop table(:fulfillment_options)
+
+    drop_if_exists unique_index(:line_items, [:order_id, :product_variant_id],
+                     name: "line_items_unique_product_variant_index"
+                   )
 
     drop constraint(:line_items, "line_items_order_id_fkey")
 

@@ -43,7 +43,7 @@ Ash.Changeset.for_create(FulfillmentOption, :create, %{
 })
 |> Ash.create!()
 
-for n <- 1..10 do
+for n <- 1..6 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
       tax_rate_id: tax_rate.id,

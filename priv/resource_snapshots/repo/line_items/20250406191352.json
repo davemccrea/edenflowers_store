@@ -41,7 +41,7 @@
       "type": "decimal"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -51,7 +51,7 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -99,7 +99,7 @@
           "strategy": null
         },
         "name": "line_items_order_id_fkey",
-        "on_delete": null,
+        "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
@@ -173,8 +173,27 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "DFA6242E3187068D0A9AC2F6214D5F0134BE535EA43298813084A487CA19475A",
-  "identities": [],
+  "hash": "C7B75444887B26B10CD1D2CE956233B0D4E47CF0D5500EA7158C78DBFC82DB46",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "line_items_unique_product_variant_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "order_id"
+        },
+        {
+          "type": "atom",
+          "value": "product_variant_id"
+        }
+      ],
+      "name": "unique_product_variant",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
