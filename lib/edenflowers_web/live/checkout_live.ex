@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <div class="checkout__heading-container">
-                  <.form_heading active={false}>{gettext("Personalise")}</.form_heading>
+                  <.form_heading active={false}>{gettext("Delivery")}</.form_heading>
                   <.form_heading active={false}>{gettext("Payment")}</.form_heading>
                 </div>
               <% end %>
