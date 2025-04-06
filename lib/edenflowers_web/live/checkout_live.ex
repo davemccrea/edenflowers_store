@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def mount(_params, %{"order_id" => id}, socket) do
     with {:ok, order} <- Order.get_order_for_checkout(id, load: order_load_statement()),
-         {:ok, _line_items} <- validate_cart(order),
+         {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
         order
@@ -45,12 +45,19 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  # ╔═══════════════╗
-  # ║ Mount Helpers ║
-  # ╚═══════════════╝
+  defp order_load_statement do
+    [
+      :total_items_in_cart,
+      :promotion_applied?,
+      :discount_amount,
+      :total,
+      :tax_amount,
+      :line_items
+    ]
+  end
 
-  defp validate_cart(%{line_items: []}), do: {:error, :empty_cart}
-  defp validate_cart(%{line_items: line_items}), do: {:ok, line_items}
+  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
+  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
 
   # ╔════════╗
   # ║ Markup ║
@@ -476,8 +483,8 @@ defmodule EdenflowersWeb.CheckoutLive do
       {:error, {_error, error_msg}} ->
         add_field_error(socket, :delivery_address, error_msg)
 
-      error ->
-        Logger.error("Unhandled error in handle_fulfillment_method: #{inspect(error)}")
+      _ ->
+        Logger.error("Unhandled error in handle_fulfillment_method")
         submit(socket, params)
     end
   end
@@ -587,17 +594,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     n
     |> Decimal.mult(100)
     |> Decimal.to_integer()
-  end
-
-  defp order_load_statement do
-    [
-      :total_items_in_cart,
-      :promotion_applied?,
-      :discount_amount,
-      :total,
-      :tax_amount,
-      :line_items
-    ]
   end
 
   defp ensure_non_empty_value(value) when is_binary(value) do
