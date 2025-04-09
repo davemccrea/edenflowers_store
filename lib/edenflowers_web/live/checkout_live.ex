@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
-  alias Edenflowers.Store.{Order, LineItem, FulfillmentOption}
+  alias Edenflowers.Store.{Order, LineItem, FulfillmentOption, Promotion}
   alias Edenflowers.{HereAPI, Fulfillments}
 
   def mount(_params, %{"order_id" => order_id}, socket) do
@@ -24,6 +24,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(order: order)
        |> assign(form: form)
        |> assign(errors: %{delivery_address: nil})
+       |> assign(promo_form: %{})
        |> setup_payment_intent(order)
        |> set_delivery_fields_visibility(order.fulfillment_option_id)}
     else
@@ -52,7 +53,8 @@ defmodule EdenflowersWeb.CheckoutLive do
       :discount_amount,
       :total,
       :tax_amount,
-      :line_items
+      :line_items,
+      :promotion
     ]
   end
 
@@ -299,12 +301,18 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </li>
                 </ul>
 
-                <div class="join">
+                <%= if not @order.promotion_applied? do %>
+                  <.form for={@promo_form} phx-submit="apply_promo" class="space-y-2">
+                    <fieldset class="join w-full">
                   <label class="input join-item w-full">
-                    <input type="email" placeholder="Enter promo code" required />
+                        <input name="code" value={@promo_form["code"]} type="text" placeholder="Enter promo code" required />
                   </label>
-                  <button type="button" class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
-                </div>
+                      <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
+                    </fieldset>
+
+                    <.error :if={@errors[:promo_code]}>{@errors[:promo_code]}</.error>
+                  </.form>
+                <% end %>
 
                 <div class="border-neutral/5 border-t"></div>
 
@@ -319,7 +327,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </div>
 
                   <div class="flex justify-between">
+                    <div class="flex flex-row gap-2">
                     <span>{gettext("Discount")}</span>
+                      <%= if @order.promotion_applied? do %>
+                        <button phx-click="clear_promo" class="badge badge-dash badge-neutral badge-sm cursor-pointer">
+                          {@order.promotion.code}
+                        </button>
+                      <% end %>
+                    </div>
+
                     <%= if @order.promotion_applied? do %>
                       <span class="text-success">- {Edenflowers.Utils.format_money(@order.discount_amount)}</span>
                     <% else %>
@@ -466,6 +482,37 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> update_payment_intent(order)}
   end
 
+  def handle_event("apply_promo", %{"code" => code}, socket) do
+    promo_form = %{"code" => ""}
+
+    case Promotion.get_by_code(code) do
+      {:ok, promotion} ->
+        order = Order.add_promotion!(socket.assigns.order, promotion.id, load: order_load_statement())
+
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> update_payment_intent(order)
+         |> add_field_error(:promo_code, nil)
+         |> assign(promo_form: promo_form)}
+
+      _ ->
+        {:noreply,
+         socket
+         |> add_field_error(:promo_code, gettext("Not found"))
+         |> assign(promo_form: promo_form)}
+    end
+  end
+
+  def handle_event("clear_promo", _, socket) do
+    order = Order.clear_promotion!(socket.assigns.order, load: order_load_statement())
+
+    {:noreply,
+     socket
+     |> assign(order: order)
+     |> update_payment_intent(order)}
+  end
+
   # ╔══════════════╗
   # ║ Form Helpers ║
   # ╚══════════════╝
@@ -592,6 +639,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> assign(stripe_client_secret: payment_intent.client_secret)
   end
 
+  # TODO: perform the update asynchronously?
   defp update_payment_intent(socket, %{payment_intent_id: payment_intent_id, total: total}) do
     amount = zero_decimal(total)
 

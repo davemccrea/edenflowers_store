@@ -27,7 +27,8 @@ defmodule Edenflowers.Store.Promotion do
           |> DateTime.to_date()
 
       filter expr(
-               code == ^arg(:code) and ^arg(:today) >= start_date and
+               code == ^arg(:code) and
+                 if(not is_nil(start_date), do: ^arg(:today) >= start_date, else: true) and
                  if(not is_nil(expiration_date), do: ^arg(:today) <= expiration_date, else: true)
              )
     end

@@ -10,7 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant}
+alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
 
 tax_rate =
   TaxRate
@@ -63,3 +63,17 @@ for n <- 1..6 do
   })
   |> Ash.create!()
 end
+
+Promotion
+|> Ash.Changeset.for_create(
+  :create,
+  %{
+    name: "Summer offer, 15% off",
+    code: "SUMMER15",
+    discount_percentage: "0.15",
+    minimum_cart_total: "30.00",
+    start_date: nil,
+    expiration_date: ~D[2025-07-01]
+  }
+)
+|> Ash.create!()

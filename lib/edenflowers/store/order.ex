@@ -11,6 +11,8 @@ defmodule Edenflowers.Store.Order do
   code_interface do
     define :get_order_for_checkout, action: :get_order_for_checkout, args: [:id]
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
+    define :add_promotion, action: :add_promotion, args: [:promotion_id]
+    define :clear_promotion, action: :clear_promotion
   end
 
   actions do
@@ -84,6 +86,10 @@ defmodule Edenflowers.Store.Order do
     update :add_promotion do
       argument :promotion_id, :uuid, allow_nil?: false
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+    end
+
+    update :clear_promotion do
+      change set_attribute(:promotion_id, nil)
     end
   end
 
