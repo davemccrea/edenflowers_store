@@ -252,8 +252,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                   >
                     <div id="payment-element"></div>
                     <.form_button>
-                    {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
-                  </.form_button>
+                      {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
+                    </.form_button>
                   </form>
                 </section>
               <% end %>
@@ -301,9 +301,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <%= if not @order.promotion_applied? do %>
                   <.form for={@promo_form} phx-submit="apply_promo" class="space-y-2">
                     <fieldset class="join w-full">
-                  <label class="input join-item w-full">
+                      <label class="input join-item w-full">
                         <input name="code" value={@promo_form["code"]} type="text" placeholder="Enter promo code" required />
-                  </label>
+                      </label>
                       <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
                     </fieldset>
 
@@ -325,7 +325,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <div class="flex justify-between">
                     <div class="flex flex-row gap-2">
-                    <span>{gettext("Discount")}</span>
+                      <span>{gettext("Discount")}</span>
                       <%= if @order.promotion_applied? do %>
                         <button phx-click="clear_promo" class="badge badge-dash badge-neutral badge-sm cursor-pointer">
                           {@order.promotion.code}
@@ -417,7 +417,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
   end
 
-  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
+  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
     {:noreply, submit(socket, params)}
   end
 
@@ -622,7 +622,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         automatic_payment_methods: %{enabled: true, allow_redirects: :never}
       })
 
-    order = Order.add_payment_intent_id(order, payment_intent.id, load: order_load_statement())
+    order = Order.add_payment_intent_id!(order, payment_intent.id, load: order_load_statement())
 
     socket
     |> assign(order: order)
