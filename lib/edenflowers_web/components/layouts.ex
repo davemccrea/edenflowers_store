@@ -85,7 +85,9 @@ defmodule EdenflowersWeb.Layouts do
         </div>
 
         <footer class="bg-base-300 flex flex-col px-8 py-8">
-          <.link navigate={~p"/checkout"} class="btn btn-primary">{gettext("Checkout")}</.link>
+          <.link navigate={~p"/checkout"} phx-click={JS.dispatch("hide-cart")} class="btn btn-primary">
+            {gettext("Checkout")}
+          </.link>
         </footer>
       </div>
     </sl-drawer>
