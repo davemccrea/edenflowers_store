@@ -11,9 +11,10 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   code_interface do
+    define :add_item, action: :create
+    define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
-    define :remove_item, action: :remove_item
   end
 
   actions do

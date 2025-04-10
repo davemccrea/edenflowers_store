@@ -9,8 +9,18 @@ defmodule Edenflowers.Store.ProductVariant do
     repo Edenflowers.Repo
   end
 
+  code_interface do
+    define :get_by_id, action: :get_by_id, args: [:id]
+  end
+
   actions do
     defaults [:read, :destroy]
+
+    read :get_by_id do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+    end
 
     create :create do
       accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id]
@@ -19,6 +29,10 @@ defmodule Edenflowers.Store.ProductVariant do
     update :update do
       accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity]
     end
+  end
+
+  preparations do
+    prepare build(sort: [price: :asc])
   end
 
   attributes do

@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   def mount(_params, _session, socket) do
     # TODO: get only featured products
-    products = Ash.read!(Product)
+    products = Ash.read!(Product, load: [:cheapest_price])
 
     {:ok, socket |> assign(products: products)}
   end

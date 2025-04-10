@@ -9,8 +9,18 @@ defmodule Edenflowers.Store.Product do
     repo Edenflowers.Repo
   end
 
+  code_interface do
+    define :get_by_id, action: :get_by_id, args: [:id]
+  end
+
   actions do
     defaults [:read, :destroy]
+
+    read :get_by_id do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+    end
 
     create :create do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id]
