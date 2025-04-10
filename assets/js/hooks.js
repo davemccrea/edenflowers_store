@@ -286,30 +286,6 @@ Hooks.PaymentElement = {
   },
 };
 
-Hooks.HorizontalScroll = {
-  mounted() {
-    const slider = this.el;
-    if (slider) {
-      this.handleWheel = (e) => {
-        e.preventDefault();
-        const scrollAmount = e.deltaX || e.deltaY;
-        slider.scrollLeft += scrollAmount;
-      };
-
-      // Add the event listener
-      slider.addEventListener("wheel", this.handleWheel, { passive: false });
-    }
-  },
-
-  // Cleanup when the element is removed from the DOM
-  destroyed() {
-    const slider = this.el;
-    if (slider && this.handleWheel) {
-      slider.removeEventListener("wheel", this.handleWheel, { passive: false });
-    }
-  },
-};
-
 Hooks.DisableButton = {
   mounted() {
     const button = this.el;
