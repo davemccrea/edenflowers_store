@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       {:ok,
        socket
        |> assign(:id, "checkout")
-       |> assign(:page_title, "Checkout")
+       |> assign(:page_title, gettext("Checkout"))
        |> assign(fulfillment_options: fulfillment_options)
        |> assign(order: order)
        |> assign(form: form)

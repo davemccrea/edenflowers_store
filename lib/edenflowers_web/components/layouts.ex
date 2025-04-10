@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Layouts do
         </header>
 
         <div class="flex flex-1 flex-col justify-between p-8">
-          <p>Your cart is empty.</p>
+          <p>{gettext("Your cart is empty.")}</p>
         </div>
 
         <footer class="bg-base-300 flex flex-col px-8 py-8">
@@ -212,7 +212,7 @@ defmodule EdenflowersWeb.Layouts do
             class="text-base-content whitespace-nowrap hover:underline hover:underline-offset-2"
             href="https://github.com/davemccrea/edenflowers_store"
           >
-            Built with <span>❤️</span>
+            {gettext("Built with ")} <span>❤️</span>
           </a>
         </span>
       </div>
