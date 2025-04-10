@@ -47,6 +47,7 @@ defmodule Edenflowers.Store.Order do
     # Step 1 - Your Details
     update :save_step_1 do
       accept [:customer_name, :customer_email]
+      require_attributes [:customer_name, :customer_email]
       change set_attribute(:step, 2)
     end
 
