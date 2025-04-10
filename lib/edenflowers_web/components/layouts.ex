@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Layouts do
         </section>
 
         <%!-- Main header --%>
-        <section class="bg-base-100 border-b py-2 pr-3 pl-3 sm:py-4 sm:pr-6">
+        <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="flex items-center">
             <%!-- Left --%>
             <div class="flex flex-1 justify-start">
