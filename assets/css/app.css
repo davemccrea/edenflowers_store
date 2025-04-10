@@ -63,10 +63,6 @@ body.ready {
   @apply flex flex-col space-y-6;
 }
 
-.checkout__heading-container {
-  @apply space-y-4 mb-4;
-}
-
 .disable-dbl-tap-zoom {
   touch-action: manipulation;
 }

@@ -77,9 +77,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]">
-              <%!-- Step 1 - Your Details --%>
-              <%= if @order.step == 1 do %>
-                <section id={"#{@id}-section-3"} class="checkout__section">
+              <.checkout_step_wrapper step={@order.step}>
+                <%!-- Your Details --%>
+                <section :if={@order.step == 1} id={"#{@id}-section-1"} class="checkout__section">
                   <.form_heading>{gettext("Your Details")}</.form_heading>
 
                   <.form
@@ -96,20 +96,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <div class="checkout__heading-container">
-                  <.form_heading active={false}>{gettext("Gift Options")}</.form_heading>
-                  <.form_heading active={false}>{gettext("Delivery Information")}</.form_heading>
-                  <.form_heading active={false}>{gettext("Payment")}</.form_heading>
-                </div>
-              <% end %>
-
-              <%!-- Step 2 - Gift Options --%>
-              <%= if @order.step == 2 do %>
-                <div class="checkout__heading-container">
-                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
-                </div>
-
-                <section id={"#{@id}-section-2"} class="checkout__section">
+                <%!-- Gift Options --%>
+                <section :if={@order.step == 2} id={"#{@id}-section-2"} class="checkout__section">
                   <.form_heading>{gettext("Gift Options")}</.form_heading>
 
                   <.form
@@ -146,20 +134,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <div class="checkout__heading-container">
-                  <.form_heading active={false}>{gettext("Delivery Information")}</.form_heading>
-                  <.form_heading active={false}>{gettext("Payment")}</.form_heading>
-                </div>
-              <% end %>
-
-              <%!-- Step 3 - Delivery Information --%>
-              <%= if @order.step == 3 do %>
-                <div class="checkout__heading-container">
-                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
-                  <.form_heading step={2} active={false}>{gettext("Gift Options")}</.form_heading>
-                </div>
-
-                <section id={"#{@id}-section-3"} class="checkout__section">
+                <%!-- Delivery Information --%>
+                <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
                   <.form
@@ -226,20 +202,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <div class="checkout__heading-container">
-                  <.form_heading active={false}>{gettext("Payment")}</.form_heading>
-                </div>
-              <% end %>
-
-              <%!-- Step 4 - Payment --%>
-              <%= if @order.step == 4 do %>
-                <div class="checkout__heading-container">
-                  <.form_heading step={1} active={false}>{gettext("Your Details")}</.form_heading>
-                  <.form_heading step={2} active={false}>{gettext("Gift Options")}</.form_heading>
-                  <.form_heading step={3} active={false}>{gettext("Delivery Information")}</.form_heading>
-                </div>
-
-                <section id={"#{@id}-section-4"} class="checkout__section">
+                <%!-- Payment --%>
+                <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
                   <form
@@ -256,7 +220,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </.form_button>
                   </form>
                 </section>
-              <% end %>
+              </.checkout_step_wrapper>
             </div>
 
             <div class="md:border-neutral/10 md:border-r"></div>
@@ -298,18 +262,16 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </li>
                 </ul>
 
-                <%= if not @order.promotion_applied? do %>
-                  <.form for={@promo_form} phx-submit="apply_promo" class="space-y-2">
-                    <fieldset class="join w-full">
-                      <label class="input join-item w-full">
-                        <input name="code" value={@promo_form["code"]} type="text" placeholder="Enter promo code" required />
-                      </label>
-                      <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
-                    </fieldset>
+                <.form :if={not @order.promotion_applied?} for={@promo_form} phx-submit="apply_promo" class="space-y-2">
+                  <fieldset class="join w-full">
+                    <label class="input join-item w-full">
+                      <input name="code" value={@promo_form["code"]} type="text" placeholder="Enter promo code" required />
+                    </label>
+                    <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
+                  </fieldset>
 
-                    <.error :if={@errors[:promo_code]}>{@errors[:promo_code]}</.error>
-                  </.form>
-                <% end %>
+                  <.error :if={@errors[:promo_code]}>{@errors[:promo_code]}</.error>
+                </.form>
 
                 <div class="border-neutral/5 border-t"></div>
 
@@ -326,11 +288,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <div class="flex justify-between">
                     <div class="flex flex-row gap-2">
                       <span>{gettext("Discount")}</span>
-                      <%= if @order.promotion_applied? do %>
-                        <button phx-click="clear_promo" class="badge badge-dash badge-neutral badge-sm cursor-pointer">
-                          {@order.promotion.code}
-                        </button>
-                      <% end %>
+                      <button
+                        :if={@order.promotion_applied?}
+                        phx-click="clear_promo"
+                        class="badge badge-dash badge-neutral badge-sm cursor-pointer"
+                      >
+                        {@order.promotion.code}
+                      </button>
                     </div>
 
                     <%= if @order.promotion_applied? do %>
@@ -363,19 +327,48 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ╚════════════╝
 
   slot :inner_block
-  attr :step, :integer, default: nil
+  attr :step, :integer, required: true
+
+  def checkout_step_wrapper(assigns) do
+    assigns =
+      assign(assigns,
+        step_title: fn n ->
+          case n do
+            1 -> gettext("Your Details")
+            2 -> gettext("Gift Options")
+            3 -> gettext("Delivery Information")
+            4 -> gettext("Payment")
+          end
+        end
+      )
+
+    ~H"""
+    <div :if={@step > 1} class="mb-4 space-y-4">
+      <.form_heading :for={n <- 1..(@step - 1)} active={false} edit_step={n}>{@step_title.(n)}</.form_heading>
+    </div>
+
+    {render_slot(@inner_block)}
+
+    <div :if={@step < 4} class="mb-4 space-y-4">
+      <.form_heading :for={n <- (@step + 1)..4} active={false}>{@step_title.(n)}</.form_heading>
+    </div>
+    """
+  end
+
+  slot :inner_block
   attr :active, :boolean, default: true
+  attr :edit_step, :integer, default: nil
   attr :rest, :global
 
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row items-center justify-between">
-      <h1 class={"#{if not @active, do: "text-neutral/40", else: "text-neutral"} font-serif text-3xl"} {@rest}>
+      <h1 class={"#{if @active, do: "text-neutral", else: "text-neutral/40"} font-serif text-3xl"} {@rest}>
         {render_slot(@inner_block)}
       </h1>
-      <%= if @step do %>
-        <button type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@step}"}>Edit</button>
-      <% end %>
+      <button :if={@edit_step} type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@edit_step}"}>
+        Edit
+      </button>
     </div>
     """
   end
