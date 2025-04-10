@@ -257,21 +257,21 @@ Hooks.CalendarHook = {
   },
 };
 
-Hooks.PaymentElement = {
+Hooks.Stripe = {
   mounted() {
-    const button = document.getElementById("payment-button");
-    if (!button) {
-      console.error(`Element with id "payment-button" not found`);
-      return;
-    }
+    const returnUrl = this.el.getAttribute("data-return-url");
+    const clientSecret = this.el.getAttribute("data-client-secret");
 
+    // TODO: use env variable?
     // @ts-ignore
     const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
-    const clientSecret = this.el.getAttribute("data-client-secret");
-    const elements = stripe.elements({ clientSecret, appearance: {} });
+    const elements = stripe.elements({
+      clientSecret,
+      appearance: {},
+    });
     const paymentElement = elements.create("payment", {
       layout: {
-        type: "accordion",
+        type: "tabs",
         defaultCollapsed: false,
         radios: true,
         spacedAccordionItems: false,
@@ -280,8 +280,31 @@ Hooks.PaymentElement = {
 
     paymentElement.mount("#payment-element");
 
-    paymentElement.on("ready", function () {
-      button.removeAttribute("disabled");
+    let submitted = false;
+    this.el.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (submitted) {
+        return;
+      }
+      submitted = true;
+
+      const button = this.el.querySelector("button");
+      button.disabled = true;
+
+      const { error: stripeError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: returnUrl,
+        },
+      });
+
+      if (stripeError) {
+        // TODO: do something with stripeError.message
+        submitted = false;
+        button.disabled = false;
+        return;
+      }
     });
   },
 };

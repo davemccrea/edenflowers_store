@@ -242,22 +242,19 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
-                  <div
-                    class="max-w-xl"
-                    id="payment-element"
-                    phx-hook="PaymentElement"
+                  <form
+                    id="stripe"
+                    phx-hook="Stripe"
                     phx-update="ignore"
                     data-client-secret={@stripe_client_secret}
+                    data-return-url={"http://localhost:4000/checkout/complete/#{@order.id}"}
+                    class="flex flex-col gap-4"
                   >
-                  </div>
-
-                  <.form_button
-                    phx-click={JS.dispatch("process-payment", to: "#payment-element")}
-                    id="payment-button"
-                    disabled={true}
-                  >
+                    <div id="payment-element"></div>
+                    <.form_button>
                     {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
                   </.form_button>
+                  </form>
                 </section>
               <% end %>
             </div>
