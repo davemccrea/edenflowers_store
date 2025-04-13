@@ -293,7 +293,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         phx-click="clear_promo"
                         class="badge badge-dash badge-neutral badge-sm cursor-pointer"
                       >
-                        {@order.promotion.code}
+                        {@order.promotion.code} <span><.icon name="hero-x-mark" class="h-4 w-4" /></span>
                       </button>
                     </div>
 
