@@ -26,7 +26,11 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    live_session :default, on_mount: EdenflowersWeb.PutLocale do
+    live_session :default,
+      on_mount: [
+        {EdenflowersWeb.Hooks.InitStore, :put_locale},
+        {EdenflowersWeb.Hooks.InitStore, :put_order}
+      ] do
       live "/", HomeLive
       live "/courses", CoursesLive
       live "/weddings", WeddingsLive
