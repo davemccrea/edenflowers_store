@@ -1,26 +1,18 @@
 # Notebook
 
-## Section
-
-<!-- livebook:{"reevaluate_automatically":true} -->
+## Add Product Variant to Order
 
 ```elixir
-alias Edenflowers.Store.{LineItem, Order, ProductVariant}
+alias Edenflowers.Store.{LineItem, Order, ProductVariant, Promotion}
 ```
-
-<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-order_id = "255a542c-7279-4da2-a3c4-ba50a4f572ea"
+order_id = "9769b201-16bc-4af1-9dd3-c6451adf6585"
 ```
-
-<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 order = Ash.get!(Order, order_id)
 ```
-
-<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 product_variant =
@@ -28,8 +20,6 @@ product_variant =
   |> Ash.Query.load(product: :tax_rate)
   |> Ash.read_first!()
 ```
-
-<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 Ash.Changeset.for_create(LineItem, :create, %{
