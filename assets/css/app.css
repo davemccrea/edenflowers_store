@@ -78,45 +78,10 @@ sl-dropdown::part(panel) {
   @apply border-1;
 }
 
-sl-drawer::part(body) {
-  @apply p-0;
-}
-
-#cart-drawer::part(panel) {
-  --sl-panel-background-color: var(--color-base-100);
-  @apply border-l;
-}
-
-#nav-drawer::part(panel) {
-  @apply border-r;
-}
-
 @utility container {
   @apply mx-auto px-4 sm:px-8;
 }
 
 @utility hero-heading {
   @apply text-5xl sm:text-6xl md:text-7xl;
-}
-
-.scrollbar-container {
-  width: 50%;
-  margin: 20px auto;
-  position: relative;
-}
-
-.swiper-horizontal > .swiper-scrollbar,
-.swiper-scrollbar.swiper-scrollbar-horizontal {
-  cursor: pointer;
-  --swiper-scrollbar-size: 6px;
-}
-
-sl-drawer {
-  --size: 25rem;
-}
-
-@media (max-width: 768px) {
-  sl-drawer {
-    --size: 80vw;
-  }
 }

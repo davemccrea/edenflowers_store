@@ -34,65 +34,66 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(current_locale: String.capitalize(current_locale))
 
     ~H"""
-    <%!-- Nav drawer --%>
-    <sl-drawer id="nav-drawer" placement="start" no-header="true">
-      <div class="bg-base-200 flex h-full flex-col">
-        <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
-          <.link
-            navigate={~p"/"}
-            class="text-primary font-sans whitespace-nowrap font-bold uppercase tracking-widest sm:text-2xl"
-          >
-            Eden Flowers
-          </.link>
+    <.drawer id="nav-drawer" placement="left" class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
+      <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+        <.link
+          navigate={~p"/"}
+          class="text-primary font-sans whitespace-nowrap font-bold uppercase tracking-widest sm:text-2xl"
+        >
+          Eden Flowers
+        </.link>
 
-          <button type="button" phx-click={JS.dispatch("hide-nav")} class="h-12 w-12 cursor-pointer">
-            <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-          </button>
-        </header>
+        <button type="button" phx-click={JS.exec("phx-hide", to: "#nav-drawer")} class="h-12 w-12 cursor-pointer">
+          <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+        </button>
+      </header>
 
-        <div class="flex flex-1 flex-col justify-between p-8">
-          <nav>
-            <ul class="space-y-4">
-              <li :for={{url, name} <- @nav}>
-                <.link
-                  class="font-serif text-base-content text-2xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4 sm:text-3xl"
-                  phx-click={JS.dispatch("hide-nav")}
-                  navigate={url}
-                >
-                  {name}
-                </.link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        <footer class="bg-base-300 flex flex-col px-8 py-8">
-          <.social_media_links size={6} />
-        </footer>
+      <div class="flex flex-1 flex-col justify-between p-8">
+        <nav>
+          <ul class="space-y-4">
+            <li :for={{url, name} <- @nav}>
+              <.link
+                class="font-serif text-base-content text-2xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4 sm:text-3xl"
+                phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
+                navigate={url}
+              >
+                {name}
+              </.link>
+            </li>
+          </ul>
+        </nav>
       </div>
-    </sl-drawer>
 
-    <sl-drawer id="cart-drawer" placement="end" no-header="true">
-      <div class="bg-base-200 flex h-full flex-col">
-        <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
-          <h1 class="font-serif text-3xl">{gettext("Cart")}</h1>
+      <footer class="bg-base-300 flex flex-col px-8 py-8">
+        <.social_media_links size={6} />
+      </footer>
+    </.drawer>
 
-          <button phx-click={JS.dispatch("hide-cart")} type="button" class="h-12 w-12 cursor-pointer">
-            <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-          </button>
-        </header>
+    <.drawer id="cart-drawer" placement="right" class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
+      <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+        <h1 class="font-serif text-3xl">
+          <%= if not is_nil(@order.total_items_in_cart) do %>
+            {gettext("Cart")} ({@order.total_items_in_cart})
+          <% else %>
+            {gettext("Cart")}
+          <% end %>
+        </h1>
 
-        <div class="flex flex-1 flex-col justify-between p-8">
-          <p>{gettext("Your cart is empty.")}</p>
-        </div>
+        <button phx-click={JS.exec("phx-hide", to: "#cart-drawer")} type="button" class="h-12 w-12 cursor-pointer">
+          <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+        </button>
+      </header>
 
-        <footer class="bg-base-300 flex flex-col px-8 py-8">
-          <.link navigate={~p"/checkout"} phx-click={JS.dispatch("hide-cart")} class="btn btn-primary">
-            {gettext("Checkout")}
-          </.link>
-        </footer>
+      <div class="flex flex-1 flex-col justify-between overflow-y-auto p-8">
+        <.live_component id="cart-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
       </div>
-    </sl-drawer>
+
+      <footer :if={Enum.any?(@order.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
+        <.link navigate={~p"/checkout"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")} class="btn btn-primary">
+          {gettext("Checkout")}
+        </.link>
+      </footer>
+    </.drawer>
 
     <hotfx-shy-header>
       <header class="w-full">
@@ -108,7 +109,12 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex flex-1 justify-start">
               <%!-- Mobile hamburger menu --%>
               <div class="block xl:hidden">
-                <button phx-click={JS.dispatch("show-nav")} type="button" class="h-12 w-12 cursor-pointer">
+                <button
+                  phx-click={JS.exec("phx-show", to: "#nav-drawer")}
+                  type="button"
+                  class="h-12 w-12 cursor-pointer"
+                  aria-label={gettext("Open navigation menu")}
+                >
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
                 </button>
               </div>
@@ -146,14 +152,14 @@ defmodule EdenflowersWeb.Layouts do
                 <button class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto">
                   <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
                   <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
-                    {@locale_name}
+                    {@current_locale}
                   </span>
                 </button>
               </.live_component>
 
               <%!-- Cart button --%>
               <button
-                phx-click={JS.dispatch("show-cart")}
+                phx-click={JS.exec("phx-show", to: "#cart-drawer")}
                 type="button"
                 class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto"
               >
@@ -207,7 +213,7 @@ defmodule EdenflowersWeb.Layouts do
           <button class="group cursor-pointer">
             <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
             <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@locale_name}
+              {@current_locale}
             </span>
           </button>
         </.live_component>

@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.ProductLive do
                   </div>
                 </fieldset>
 
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" phx-click={JS.exec("phx-show", to: "#cart-drawer")} class="btn btn-primary btn-lg">
                   <span class="flex items-center gap-2">
                     <.icon name="hero-shopping-bag" class="h-5 w-5" />
                     {gettext("Add to Cart")}

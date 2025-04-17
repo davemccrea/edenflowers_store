@@ -400,6 +400,90 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
+  @placement %{
+    "left" => %{
+      class: "justify-start",
+      transition_in: "translate-x-0 opacity-100",
+      transition_out: "-translate-x-full opacity-0"
+    },
+    "right" => %{
+      class: "justify-end",
+      transition_in: "translate-x-0 opacity-100",
+      transition_out: "translate-x-full opacity-0"
+    },
+    "top" => %{
+      class: "items-start",
+      transition_in: "translate-y-0 opacity-100",
+      transition_out: "-translate-y-full opacity-0"
+    },
+    "bottom" => %{
+      class: "items-end",
+      transition_in: "translate-y-0 opacity-100",
+      transition_out: "translate-y-full opacity-0"
+    }
+  }
+
+  attr :id, :string, required: true
+  attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
+  attr :class, :string, default: "bg-white min-w-96"
+  slot :inner_block, required: true
+
+  def drawer(%{placement: placement} = assigns) do
+    assigns =
+      assigns
+      |> assign(:transition, "transition-all duration-250 ease-in-out")
+      |> assign(:placement_class, @placement[placement].class)
+      |> assign(:transition_in, @placement[placement].transition_in)
+      |> assign(:transition_out, @placement[placement].transition_out)
+      |> assign(:time, 250)
+
+    ~H"""
+    <div
+      id={@id}
+      phx-window-keydown={JS.exec("phx-hide", to: "##{@id}")}
+      phx-key="Escape"
+      phx-show={
+        %JS{}
+        |> JS.show(to: "##{@id}-backdrop", transition: {@transition, "opacity-0", "opacity-100"}, time: @time)
+        |> JS.show(
+          to: "##{@id}-dialog",
+          display: "flex",
+          transition: {@transition, @transition_out, @transition_in},
+          time: @time
+        )
+        |> JS.focus(to: "##{@id}-top")
+        |> JS.toggle_class("overflow-hidden", to: "html")
+      }
+      phx-hide={
+        %JS{}
+        |> JS.hide(to: "##{@id}-backdrop", transition: {@transition, "opacity-100", "opacity-0"}, time: @time)
+        |> JS.hide(
+          to: "##{@id}-dialog",
+          transition: {@transition, @transition_in, @transition_out},
+          time: @time
+        )
+        |> JS.toggle_class("overflow-hidden", to: "html")
+      }
+      class="z-100 relative"
+    >
+      <div id={"#{@id}-backdrop"} class="bg-black/30 fixed inset-0 hidden"></div>
+      <div
+        id={"#{@id}-dialog"}
+        role="dialog"
+        aria-modal="true"
+        class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
+      >
+        <.focus_wrap id={"#{@id}-body"}>
+          <div tabindex="0" id={"#{@id}-top"}></div>
+          <div phx-click-away={JS.exec("phx-hide", to: "##{@id}")} id={"#{@id}-content"} class={@class}>
+            {render_slot(@inner_block)}
+          </div>
+        </.focus_wrap>
+      </div>
+    </div>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
