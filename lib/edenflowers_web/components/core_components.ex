@@ -400,41 +400,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  attr :resource, :string, required: true
-  attr :resource_id, :string, required: true
-  attr :count, :integer, default: 0
-  attr :rest, :global
-
-  def increment_decrement(assigns) do
-    ~H"""
-    <div {@rest} class="flex flex-row items-center justify-center gap-2">
-      <button
-        type="button"
-        id={"decrement-#{@resource_id}"}
-        phx-hook="DisableButton"
-        class="btn btn-xs btn-square"
-        phx-click={"decrement_#{@resource}"}
-        phx-value-id={@resource_id}
-        aria-label={gettext("Decrement")}
-      >
-        <.icon class="h-4 w-4" name="hero-minus-mini" />
-      </button>
-      <span>{@count}</span>
-      <button
-        type="button"
-        id={"increment-#{@resource_id}"}
-        phx-hook="DisableButton"
-        class="btn btn-xs btn-square"
-        phx-click={"increment_#{@resource}"}
-        phx-value-id={@resource_id}
-        aria-label={gettext("Increment")}
-      >
-        <.icon class="h-4 w-4" name="hero-plus-mini" />
-      </button>
-    </div>
-    """
-  end
-
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
