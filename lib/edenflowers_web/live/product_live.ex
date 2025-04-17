@@ -61,13 +61,16 @@ defmodule EdenflowersWeb.ProductLive do
           </ol>
         </nav>
 
-        <div class="grid gap-12 md:grid-cols-2">
+        <div class="grid gap-12 md:grid-cols-2 md:items-start">
           <%!-- Product Image --%>
-          <figure class="relative overflow-hidden rounded shadow-md">
+          <figure class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md">
             <img
               src={@selected_variant.image_slug}
-              alt={"#{@product.name} - #{String.capitalize(to_string(@selected_variant.size))} size"}
-              class="aspect-square w-full object-cover"
+              alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
+              class="h-full w-full object-cover"
+              width="1"
+              height="1"
+              loading="lazy"
             />
             <div class="badge badge-primary badge-outline absolute top-4 right-4">{gettext("Popular")}</div>
             <%!-- Optionally add figcaption here if needed --%>
