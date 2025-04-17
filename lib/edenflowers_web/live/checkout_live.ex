@@ -4,16 +4,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
-  alias Edenflowers.Store.{Order, LineItem, FulfillmentOption, Promotion}
+  alias Edenflowers.Store.{Order, FulfillmentOption, Promotion}
   alias Edenflowers.{HereAPI, Fulfillments}
 
-  def mount(_params, %{"order_id" => order_id}, socket) do
-    with {:ok, order} <- Order.get_order_for_checkout(order_id, load: order_load_statement()),
-         {:ok, _line_items} <- cart_has_items?(order),
+  def mount(_params, _session, %{assigns: %{order: order}} = socket) do
+    with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
       form =
         order
-        |> AshPhoenix.Form.for_update(create_step_action_name(:save, order.step))
+        |> AshPhoenix.Form.for_update(action_name(:save, order.step))
         |> to_form()
 
       {:ok,
@@ -44,18 +43,6 @@ defmodule EdenflowersWeb.CheckoutLive do
          |> put_flash(:error, "Error loading checkout")
          |> push_navigate(to: ~p"/")}
     end
-  end
-
-  defp order_load_statement do
-    [
-      :total_items_in_cart,
-      :promotion_applied?,
-      :discount_amount,
-      :total,
-      :tax_amount,
-      :line_items,
-      :promotion
-    ]
   end
 
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
@@ -390,12 +377,12 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     order =
       order
-      |> Ash.Changeset.for_update(create_step_action_name(:edit, step))
-      |> Ash.update!(load: order_load_statement())
+      |> Ash.Changeset.for_update(action_name(:edit, step))
+      |> Ash.update!()
 
     form =
       order
-      |> AshPhoenix.Form.for_update(create_step_action_name(:save, order.step))
+      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
       |> to_form()
 
     {:noreply,
@@ -409,12 +396,11 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     case Promotion.get_by_code(code) do
       {:ok, promotion} ->
-        order = Order.add_promotion!(socket.assigns.order, promotion.id, load: order_load_statement())
+        order = Order.add_promotion!(socket.assigns.order, promotion.id)
 
         {:noreply,
          socket
          |> assign(order: order)
-         |> update_payment_intent(order)
          |> add_field_error(:promo_code, nil)
          |> assign(promo_form: promo_form)}
 
@@ -427,12 +413,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    order = Order.clear_promotion!(socket.assigns.order, load: order_load_statement())
+    order = Order.clear_promotion!(socket.assigns.order)
 
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> update_payment_intent(order)}
+    {:noreply, assign(socket, order: order)}
   end
 
   # ╔══════════════╗
@@ -440,17 +423,16 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ╚══════════════╝
 
   defp submit(socket, params) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params, action_opts: [load: order_load_statement()]) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
         form =
           order
-          |> AshPhoenix.Form.for_update(create_step_action_name(:save, order.step))
+          |> AshPhoenix.Form.for_update(action_name(:save, order.step))
           |> to_form()
 
         socket
         |> assign(order: order)
         |> assign(form: form)
-        |> update_payment_intent(order)
 
       {:error, form} ->
         assign(socket, form: form)
@@ -547,7 +529,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         automatic_payment_methods: %{enabled: true, allow_redirects: :never}
       })
 
-    order = Order.add_payment_intent_id!(order, payment_intent.id, load: order_load_statement())
+    order = Order.add_payment_intent_id!(order, payment_intent.id)
 
     socket
     |> assign(order: order)
@@ -559,21 +541,6 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     socket
     |> assign(stripe_client_secret: payment_intent.client_secret)
-  end
-
-  # TODO: perform the update asynchronously?
-  defp update_payment_intent(socket, %{payment_intent_id: payment_intent_id, total: total}) do
-    amount = zero_decimal(total)
-
-    case Stripe.PaymentIntent.update(payment_intent_id, %{amount: amount}) do
-      {:ok, _} ->
-        Logger.info("Updated Stripe Payment Intent #{payment_intent_id} to amount #{amount}")
-        socket
-
-      {:error, reason} ->
-        Logger.error("Failed to update Stripe Payment Intent #{payment_intent_id}: #{inspect(reason)}")
-        socket
-    end
   end
 
   # ╔═══════════╗
@@ -597,7 +564,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     Enum.map(resources, &{&1.name, &1.id})
   end
 
-  defp create_step_action_name(action, step) when is_atom(action) and is_integer(step) do
+  defp action_name(action, step) when is_atom(action) and is_integer(step) do
     String.to_atom("#{action}_step_#{step}")
   end
 end

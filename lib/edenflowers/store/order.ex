@@ -3,6 +3,16 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer
 
+  @load [
+    :total_items_in_cart,
+    :promotion_applied?,
+    :discount_amount,
+    :total,
+    :tax_amount,
+    :line_items,
+    :promotion
+  ]
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -22,26 +32,31 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
+      prepare build(load: @load)
     end
 
     create :create do
       accept [:promotion_id, :fulfillment_option_id]
       change set_attribute(:step, 1)
+      change load(@load)
     end
 
     # Step 1 - Your Details
     update :edit_step_1 do
       change set_attribute(:step, 1)
+      change load(@load)
     end
 
     # Step 2 - Gift Options
     update :edit_step_2 do
       change set_attribute(:step, 2)
+      change load(@load)
     end
 
     # Step 3 - Delivery Information
     update :edit_step_3 do
       change set_attribute(:step, 3)
+      change load(@load)
     end
 
     # Step 1 - Your Details
@@ -49,12 +64,14 @@ defmodule Edenflowers.Store.Order do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
       change set_attribute(:step, 2)
+      change load(@load)
     end
 
     # Step 2 - Gift Options
     update :save_step_2 do
       accept [:is_gift, :gift_message]
       change set_attribute(:step, 3)
+      change load(@load)
     end
 
     # Step 3 - Delivery Information
@@ -74,6 +91,7 @@ defmodule Edenflowers.Store.Order do
       ]
 
       change set_attribute(:step, 4)
+      change load(@load)
     end
 
     update :save_step_4 do
@@ -82,15 +100,18 @@ defmodule Edenflowers.Store.Order do
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
+      change load(@load)
     end
 
     update :add_promotion do
       argument :promotion_id, :uuid, allow_nil?: false
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+      change load(@load)
     end
 
     update :clear_promotion do
       change set_attribute(:promotion_id, nil)
+      change load(@load)
     end
   end
 
