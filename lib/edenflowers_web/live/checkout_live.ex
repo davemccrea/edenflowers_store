@@ -231,36 +231,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
-                <ul class="flex flex-col gap-2">
-                  <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
-                    <img
-                      class="h-18 w-18 rounded"
-                      src={line_item.product_image_slug}
-                      alt={"Image of #{line_item.product_name}"}
-                    />
-
-                    <div class="flex flex-1 flex-row justify-between">
-                      <div class="flex flex-col gap-2">
-                        <span>{line_item.product_name}</span>
-                        <.increment_decrement resource="line_item" resource_id={line_item.id} count={line_item.quantity} />
-                      </div>
-                      <div class="flex flex-col items-end gap-2">
-                        <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
-                        <button
-                          type="button"
-                          id={"remove-item-#{line_item.id}"}
-                          phx-hook="DisableButton"
-                          class="btn btn-square btn-ghost btn-xs"
-                          phx-click="remove_item"
-                          phx-value-id={line_item.id}
-                          aria-label={gettext("Remove item")}
-                        >
-                          <.icon name="hero-trash" class="text-error h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
+                <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
 
                 <.form :if={not @order.promotion_applied?} for={@promo_form} phx-submit="apply_promo" class="space-y-2">
                   <fieldset class="join w-full">
@@ -431,45 +402,6 @@ defmodule EdenflowersWeb.CheckoutLive do
      socket
      |> assign(order: order)
      |> assign(form: form)}
-  end
-
-  def handle_event("remove_item", %{"id" => id}, socket) do
-    socket.assigns.order.line_items
-    |> Enum.find(&(&1.id == id))
-    |> LineItem.remove_item()
-
-    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> update_payment_intent(order)}
-  end
-
-  def handle_event("increment_line_item", %{"id" => id}, socket) do
-    socket.assigns.order.line_items
-    |> Enum.find(&(&1.id == id))
-    |> LineItem.increment_quantity()
-
-    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> update_payment_intent(order)}
-  end
-
-  def handle_event("decrement_line_item", %{"id" => id}, socket) do
-    socket.assigns.order.line_items
-    |> Enum.find(&(&1.id == id))
-    |> LineItem.decrement_quantity()
-
-    order = Order.get_order_for_checkout!(socket.assigns.order.id, load: order_load_statement())
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> update_payment_intent(order)}
   end
 
   def handle_event("apply_promo", %{"code" => code}, socket) do
