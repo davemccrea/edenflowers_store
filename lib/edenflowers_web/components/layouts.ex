@@ -17,8 +17,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    locale = Cldr.get_locale()
-    {:ok, locale_name} = Edenflowers.Cldr.Language.to_string(locale)
+    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
 
     assigns =
       assigns
@@ -32,7 +31,7 @@ defmodule EdenflowersWeb.Layouts do
           {~p"/contact", gettext("Contact")}
         ]
       )
-      |> assign(locale_name: String.capitalize(locale_name))
+      |> assign(current_locale: String.capitalize(current_locale))
 
     ~H"""
     <%!-- Nav drawer --%>
@@ -68,7 +67,6 @@ defmodule EdenflowersWeb.Layouts do
         </div>
 
         <footer class="bg-base-300 flex flex-col px-8 py-8">
-          <%!-- TODO: what else should go here? --%>
           <.social_media_links size={6} />
         </footer>
       </div>
@@ -161,7 +159,11 @@ defmodule EdenflowersWeb.Layouts do
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
                 <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
-                  {gettext("Cart")}
+                  <%= if not is_nil(@order.total_items_in_cart) do %>
+                    {gettext("Cart")} ({@order.total_items_in_cart})
+                  <% else %>
+                    {gettext("Cart")}
+                  <% end %>
                 </span>
               </button>
             </div>
