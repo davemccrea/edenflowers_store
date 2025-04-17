@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.ProductLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app order={@order} flash={@flash}>
       <div class="container my-36">
         <%!-- Breadcrumbs --%>
         <nav aria-label="Breadcrumb" class="mb-8 text-sm">

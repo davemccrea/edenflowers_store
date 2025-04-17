@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app order={@order} flash={@flash}>
       <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
           <div class="text-neutral/60 flex flex-row gap-2">

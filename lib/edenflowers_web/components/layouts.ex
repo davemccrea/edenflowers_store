@@ -12,6 +12,10 @@ defmodule EdenflowersWeb.Layouts do
 
   embed_templates "layouts/*"
 
+  attr :flash, :map, required: true
+  attr :order, :map, required: true
+  slot :inner_block, required: true
+
   def app(assigns) do
     locale = Cldr.get_locale()
     {:ok, locale_name} = Edenflowers.Cldr.Language.to_string(locale)

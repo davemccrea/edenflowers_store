@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.OrderLive do
+defmodule EdenflowersWeb.WeddingsLive do
   use EdenflowersWeb, :live_view
 
   def mount(_params, _session, socket) do
@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.OrderLive do
     ~H"""
     <Layouts.app order={@order} flash={@flash}>
       <div class="container my-36">
-        <h1>{gettext("Order #1234")}</h1>
+        <h1 class="font-serif text-4xl">{gettext("Weddings")}</h1>
       </div>
     </Layouts.app>
     """

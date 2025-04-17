@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app order={@order} flash={@flash}>
       <section class="relative not-last:border-b">
         <img src="/images/image_1.jpg" class="h-[100vh] w-full object-cover" alt="" />
 
