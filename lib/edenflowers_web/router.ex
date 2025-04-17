@@ -29,7 +29,8 @@ defmodule EdenflowersWeb.Router do
     live_session :default,
       on_mount: [
         {EdenflowersWeb.Hooks.InitStore, :put_locale},
-        {EdenflowersWeb.Hooks.InitStore, :put_order}
+        {EdenflowersWeb.Hooks.InitStore, :put_order},
+        {EdenflowersWeb.Hooks.InitStore, :handle_info_hook}
       ] do
       live "/", HomeLive
       live "/courses", CoursesLive

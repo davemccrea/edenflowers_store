@@ -1,5 +1,8 @@
 defmodule Edenflowers.Store.LineItem do
-  use Ash.Resource, domain: Edenflowers.Store, data_layer: AshPostgres.DataLayer
+  use Ash.Resource,
+    domain: Edenflowers.Store,
+    data_layer: AshPostgres.DataLayer,
+    notifiers: [Ash.Notifier.PubSub]
 
   postgres do
     repo Edenflowers.Repo
@@ -44,8 +47,17 @@ defmodule Edenflowers.Store.LineItem do
     end
   end
 
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    # No matter what action is performed, we want to broadcast the _order_ (not the line item) as updated
+    publish_all :create, ["order", "updated", :order_id]
+    publish_all :update, ["order", "updated", :order_id]
+    publish_all :destroy, ["order", "updated", :order_id]
+  end
+
   preparations do
-    prepare build(load: [:line_subtotal])
+    prepare build(load: [:line_subtotal], sort: [inserted_at: :asc])
   end
 
   attributes do
