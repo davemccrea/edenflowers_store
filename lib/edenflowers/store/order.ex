@@ -3,6 +3,8 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer
 
+  use Gettext, backend: EdenflowersWeb.Gettext
+
   @load [
     :total_items_in_cart,
     :promotion_applied?,
@@ -65,6 +67,11 @@ defmodule Edenflowers.Store.Order do
       require_attributes [:customer_name, :customer_email]
       change set_attribute(:step, 2)
       change load(@load)
+      require_atomic? false
+
+      validate match(:customer_email, ~r/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i) do
+        message gettext("must be valid email address")
+      end
     end
 
     # Step 2 - Gift Options
