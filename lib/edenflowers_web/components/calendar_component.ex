@@ -10,10 +10,12 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:ok,
      socket
+     |> assign(render_count: 0)
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
      |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
+     |> assign(on_select: fn date -> send(self(), {:date_selected, date}) end)
      |> update_calendar_view(today_date)}
   end
 
@@ -22,16 +24,22 @@ defmodule EdenflowersWeb.CalendarComponent do
     today_date = socket.assigns.today_date
     view_date = if selected_date, do: selected_date, else: today_date
 
+    # Only update the calendar view if the component is being rendered for the first time
+    # TODO: is this even necessary?
+    socket =
+      if socket.assigns.render_count == 0,
+        do: update_calendar_view(socket, view_date),
+        else: socket
+
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(selected_date: selected_date)
-     |> update_calendar_view(view_date)}
+     |> assign(render_count: socket.assigns.render_count + 1)
+     |> assign(selected_date: selected_date)}
   end
 
   attr :id, :string, required: true
-  attr :hidden_input_id, :string, required: true
-  attr :hidden_input_name, :string, required: true
+  attr :field, :any, required: true
   attr :selected_date, :string, required: false
   attr :date_callback, :any, required: false
   slot :day_decoration, required: false
@@ -39,14 +47,12 @@ defmodule EdenflowersWeb.CalendarComponent do
   def render(assigns) do
     ~H"""
     <div
-      style="touch-action: manipulation;"
       id={"#{@id}"}
-      class="border-base-content/20 bg-base-100 rounded border p-2 sm:max-w-xs"
+      class="border-base-content/20 bg-base-100 select-none rounded border p-2 sm:max-w-xs"
       phx-hook="CalendarHook"
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
-      <input type="hidden" id={@hidden_input_id} name={@hidden_input_name} value={@selected_date} />
       <div class="flex items-center justify-between">
         <button
           id={"#{@id}-previous-month"}
@@ -89,7 +95,7 @@ defmodule EdenflowersWeb.CalendarComponent do
         <% end %>
       </div>
 
-      <div id={"#{@id}-grid"} role="grid" class="mt-1 grid select-none grid-cols-7">
+      <div id={"#{@id}-grid"} role="grid" class="mt-1 grid grid-cols-7">
         <%= for {week, _index} <- Enum.with_index(@week_rows) do %>
           <%= for day <- week do %>
             <button
@@ -155,6 +161,8 @@ defmodule EdenflowersWeb.CalendarComponent do
     with {:ok, date} <- Date.from_iso8601(date_string),
          true <- current_month?(date, socket.assigns.view_date),
          :ok <- socket.assigns.date_callback.(date) do
+      socket.assigns.on_select.(date)
+
       {:noreply,
        socket
        |> assign(selected_date: date)

@@ -176,15 +176,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </div>
 
                     <fieldset>
-                      <label class="flex flex-col">
-                        <span class="mb-1">{gettext("Delivery Date")}</span>
-                        <div class="disable-dbl-tap-zoom max-w-xs">
+                      <label class="mb-1">{gettext("Delivery Date")}</label>
                           <.live_component
                             id="calendar"
-                            hidden_input_id="form_fulfillment_date"
-                            hidden_input_name="form[fulfillment_date]"
                             selected_date={@form[:fulfillment_date].value}
                             module={EdenflowersWeb.CalendarComponent}
+                        on_select={fn date -> send(self(), {:date_selected, date}) end}
                             date_callback={
                               fn date ->
                                 fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
@@ -195,8 +192,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             }
                           >
                           </.live_component>
-                        </div>
-                      </label>
+                      <.input hidden field={@form[:fulfillment_date]} type="date" />
                     </fieldset>
 
                     <.form_button>Next</.form_button>
@@ -445,6 +441,10 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, socket}
   end
 
+  def handle_info({:date_selected, date}, socket) do
+    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
+    {:noreply, assign(socket, form: form)}
+  end
 
   # ╔══════════════╗
   # ║ Form Helpers ║
