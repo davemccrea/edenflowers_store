@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Ash.Query
 
   alias Edenflowers.Store.{Order, FulfillmentOption, Promotion}
-  alias Edenflowers.{HereAPI, Fulfillments}
+  alias Edenflowers.{HereAPI, Fulfillments, StripeAPI}
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     with {:ok, _line_items} <- cart_has_items?(order),
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(form: form)
        |> assign(errors: %{delivery_address: nil})
        |> assign(promo_form: %{})
-       |> setup_payment_intent(order)
+       |> setup_stripe(order)
        |> set_delivery_fields_visibility(order.fulfillment_option_id)}
     else
       {:error, :empty_cart} ->
@@ -47,6 +47,20 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+
+  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
+    {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
+    order = Order.add_payment_intent_id!(order, payment_intent.id)
+
+    socket
+    |> assign(order: order)
+    |> assign(client_secret: payment_intent.client_secret)
+  end
+
+  defp setup_stripe(socket, order) do
+    {:ok, payment_intent} = StripeAPI.retrieve_payment_intent(order)
+    assign(socket, client_secret: payment_intent.client_secret)
+  end
 
   # ╔════════╗
   # ║ Markup ║
@@ -194,15 +208,19 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
                   <form
-                    id="stripe"
+                    id={"#{@id}-form-4"}
                     phx-hook="Stripe"
-                    phx-update="ignore"
-                    data-client-secret={@stripe_client_secret}
+                    phx-submit="save_form_4"
+                    data-client-secret={@client_secret}
                     data-return-url={"http://localhost:4000/checkout/complete/#{@order.id}"}
+                    data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
+                    data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
                     class="flex flex-col gap-4"
                   >
-                    <div id="payment-element"></div>
-                    <.form_button>
+                    <div phx-update="ignore" id="payment-element"></div>
+                    <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
+
+                    <.form_button disabled="true" id="payment-button">
                       {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </form>
@@ -331,14 +349,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
-  slot :inner_block
-  attr :disabled, :boolean
   attr :rest, :global
+  slot :inner_block
 
   defp form_button(assigns) do
     ~H"""
-    <button {@rest} type="submit" class="btn btn-primary btn-lg mt-2 flex flex-row gap-2">
+    <button {@rest} type="submit" class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled">
       <span>{render_slot(@inner_block)}</span>
+      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
     </button>
     """
   end
@@ -366,6 +384,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("save_form_3", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
     fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
     {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
+  end
+
+  def handle_event("save_form_4", _, socket) do
+    StripeAPI.update_payment_intent(socket.assigns.order)
+    {:noreply, push_event(socket, "stripe:process_payment", %{})}
   end
 
   def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
@@ -414,9 +437,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("clear_promo", _, socket) do
     order = Order.clear_promotion!(socket.assigns.order)
-
     {:noreply, assign(socket, order: order)}
   end
+
+  def handle_event("stripe:error", %{"error" => error}, socket) do
+    Logger.error("Stripe Hook Error: #{inspect(error)}")
+    {:noreply, socket}
+  end
+
 
   # ╔══════════════╗
   # ║ Form Helpers ║
@@ -515,43 +543,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     assign(socket, errors: errors)
   end
 
-  # ╔════════════════════╗
-  # ║ Payment Processing ║
-  # ╚════════════════════╝
-
-  defp setup_payment_intent(socket, %{payment_intent_id: nil} = order) do
-    amount = zero_decimal(order.total)
-
-    {:ok, payment_intent} =
-      Stripe.PaymentIntent.create(%{
-        amount: amount,
-        currency: "EUR",
-        automatic_payment_methods: %{enabled: true, allow_redirects: :never}
-      })
-
-    order = Order.add_payment_intent_id!(order, payment_intent.id)
-
-    socket
-    |> assign(order: order)
-    |> assign(stripe_client_secret: payment_intent.client_secret)
-  end
-
-  defp setup_payment_intent(socket, %{payment_intent_id: payment_intent_id} = _order) do
-    {:ok, payment_intent} = Stripe.PaymentIntent.retrieve(payment_intent_id)
-
-    socket
-    |> assign(stripe_client_secret: payment_intent.client_secret)
-  end
-
   # ╔═══════════╗
   # ║ Utilities ║
   # ╚═══════════╝
-
-  defp zero_decimal(n) do
-    n
-    |> Decimal.mult(100)
-    |> Decimal.to_integer()
-  end
 
   defp ensure_non_empty_value(value) when is_binary(value) do
     case String.trim(value) do

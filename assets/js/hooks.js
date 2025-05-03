@@ -259,91 +259,99 @@ Hooks.CalendarHook = {
 
 Hooks.Stripe = {
   mounted() {
-    const returnUrl = this.el.getAttribute("data-return-url");
-    const clientSecret = this.el.getAttribute("data-client-secret");
-
-    // TODO: use env variable?
-    // @ts-ignore
-    const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
-    const elements = stripe.elements({
-      clientSecret,
-      appearance: {},
-    });
-    const paymentElement = elements.create("payment", {
-      layout: {
-        type: "tabs",
-        defaultCollapsed: false,
-        radios: true,
-        spacedAccordionItems: false,
-      },
-    });
-
-    paymentElement.mount("#payment-element");
-
-    let submitted = false;
-    this.el.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (submitted) {
-        return;
-      }
-      submitted = true;
-
-      const button = this.el.querySelector("button");
-      button.disabled = true;
-
-      const { error: stripeError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: returnUrl,
-        },
-      });
-
-      if (stripeError) {
-        // TODO: do something with stripeError.message
-        submitted = false;
-        button.disabled = false;
-        return;
-      }
-    });
-  },
-};
-
-Hooks.DisableButton = {
-  mounted() {
-    const button = this.el;
-
-    const checkAndDisable = () => {
-      if (button.classList.contains("phx-click-loading")) {
-        button.disabled = true;
-      } else {
-        button.disabled = false;
-      }
-    };
-
-    // Initial check in case the class is already present on mount
-    checkAndDisable();
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === "class"
-        ) {
-          checkAndDisable();
-        }
-      });
-    });
-
-    observer.observe(button, { attributes: true, attributeFilter: ["class"] });
-
-    this.observer = observer;
-  },
-
-  destroyed() {
-    if (this.observer) {
-      this.observer.disconnect();
+    this.returnUrl = this.el.getAttribute("data-return-url");
+    if (!this.returnUrl) {
+      return this.logAndPushError("data-return-url attribute is missing.");
     }
+
+    this.clientSecret = this.el.getAttribute("data-client-secret");
+    if (!this.clientSecret) {
+      return this.logAndPushError("data-client-secret attribute is missing.");
+    }
+
+    this.stripeReadyJS = this.el.getAttribute("data-stripe-ready");
+    if (!this.stripeReadyJS) {
+      return this.logAndPushError("data-stripe-ready attribute is missing.");
+    }
+
+    this.stripeLoadingJS = this.el.getAttribute("data-stripe-loading");
+    if (!this.stripeLoadingJS) {
+      return this.logAndPushError("data-stripe-loading attribute is missing.");
+    }
+
+    this.stripeErrorMessage = document.getElementById("stripe-error-message");
+    if (!this.stripeErrorMessage) {
+      return this.logAndPushError("#stripe-error-message element not found.");
+    }
+
+    this.button = document.getElementById("payment-button");
+    if (!this.button) {
+      return this.logAndPushError("#payment-button element not found.");
+    }
+
+    this.paymentElement = document.getElementById("payment-element");
+    if (!this.paymentElement) {
+      return this.logAndPushError("#payment-element element not found.");
+    }
+
+    try {
+      // @ts-ignore
+      const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
+      const elements = stripe.elements({
+        clientSecret: this.clientSecret,
+        appearance: {},
+      });
+
+      const paymentElement = elements.create("payment", {});
+      paymentElement.mount("#payment-element");
+      paymentElement.on("ready", (event) => {
+        this.stripeReady();
+      });
+
+      this.handleEvent("stripe:process_payment", async () => {
+        this.stripeLoading();
+        this.stripeErrorMessage.textContent = ""; // Clear previous errors
+
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: this.returnUrl,
+          },
+        });
+
+        if (error) {
+          // Stripe shows validation errors inline
+          this.stripeReady(); // Re-enable button after payment error
+        }
+
+        // No 'else' needed, success is handled by Stripe redirecting to return_url
+      });
+    } catch (error) {
+      const message =
+        "Failed to initialize payment form. Please try again later.";
+      this.logAndPushError(message, error);
+      this.stripeReady(); // Re-enable button if initialization fails
+    }
+  },
+
+  /**
+   * Logs an error message and pushes a 'stripe:error' event to the server.
+   * @param {string} message - The error message.
+   * @param {object | null} [errorObject=null] - The original error object, if available.
+   */
+  logAndPushError(message, errorObject = null) {
+    console.error(`Stripe Hook Error: ${message}`, errorObject || "");
+    this.pushEvent("stripe:error", {
+      error: { message: message, details: errorObject },
+    });
+  },
+
+  stripeReady() {
+    this.liveSocket.execJS(this.el, this.stripeReadyJS);
+  },
+
+  stripeLoading() {
+    this.liveSocket.execJS(this.el, this.stripeLoadingJS);
   },
 };
 
