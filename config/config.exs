@@ -7,6 +7,23 @@
 # General application configuration
 import Config
 
+config :edenflowers, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 10],
+  repo: Edenflowers.Repo,
+  plugins: [
+    # {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(30)},
+    # TODO: maybe enabled priner and reindexer at some point
+    # {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    # Oban.Plugins.Reindexer,
+    # {Oban.Plugins.Cron,
+    #  crontab: [
+    #    # Run every Sunday at 18:00
+    #    {"0 18 * * SUN", Edenflowers.Workers.WeeklyRecap}
+    #  ]}
+  ]
+
 config :ex_cldr,
   default_locale: "en",
   default_backend: Edenflowers.Cldr

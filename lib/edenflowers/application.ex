@@ -7,10 +7,13 @@ defmodule Edenflowers.Application do
 
   @impl true
   def start(_type, _args) do
+    Oban.Telemetry.attach_default_logger()
+
     children = [
       EdenflowersWeb.Telemetry,
       Edenflowers.Repo,
       {DNSCluster, query: Application.get_env(:edenflowers, :dns_cluster_query) || :ignore},
+      {Oban, Application.fetch_env!(:edenflowers, Oban)},
       {Phoenix.PubSub, name: Edenflowers.PubSub},
       # Start a worker by calling: Edenflowers.Worker.start_link(arg)
       # {Edenflowers.Worker, arg},

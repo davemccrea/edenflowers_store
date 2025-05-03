@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
+  import Oban.Web.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -45,6 +46,12 @@ defmodule EdenflowersWeb.Router do
 
     get "/checkout/complete/:id", CheckoutCompleteController, :index
     get "/cldr_locale/:cldr_locale", LocaleController, :index
+  end
+
+  # TODO: auth
+  scope "/admin", EdenflowersWeb do
+    pipe_through :browser
+    oban_dashboard("/oban")
   end
 
   # Other scopes may use custom stacks.

@@ -1,4 +1,5 @@
 import Config
+config :edenflowers, Oban, testing: :manual
 config :ash, disable_async?: true
 
 # Configure your database
