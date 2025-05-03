@@ -1,7 +1,8 @@
 defmodule Edenflowers.Store.Order do
   use Ash.Resource,
     domain: Edenflowers.Store,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    notifiers: [Ash.Notifier.PubSub]
 
   use Gettext, backend: EdenflowersWeb.Gettext
 
@@ -120,6 +121,11 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:promotion_id, nil)
       change load(@load)
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+    publish_all :update, ["order", "updated", :_pkey]
   end
 
   attributes do
