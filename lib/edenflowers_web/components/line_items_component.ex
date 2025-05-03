@@ -22,8 +22,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="btn btn-xs btn-square"
-                    phx-hook="DisableButton"
+                    class="btn btn-xs btn-square phx-click-loading:btn-disabled"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -35,8 +34,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="btn btn-xs btn-square"
-                    phx-hook="DisableButton"
+                    class="btn btn-xs btn-square phx-click-loading:btn-disabled"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -52,8 +50,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  phx-hook="DisableButton"
-                  class="btn btn-square btn-ghost btn-xs"
+                  class="btn btn-square btn-ghost btn-xs hphx-click-loading:btn-disabled"
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
@@ -74,19 +71,16 @@ defmodule EdenflowersWeb.LineItemsComponent do
 
   def handle_event("remove_item", %{"id" => id}, socket) do
     LineItem.remove_item(id)
-
     {:noreply, socket}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
     LineItem.increment_quantity(id)
-
     {:noreply, socket}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     LineItem.decrement_quantity(id)
-
     {:noreply, socket}
   end
 end
