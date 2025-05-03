@@ -64,13 +64,13 @@ defmodule EdenflowersWeb.CheckoutLive do
 
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]">
-              <.checkout_step_wrapper step={@order.step}>
+              <.steps step={@order.step}>
                 <%!-- Your Details --%>
                 <section :if={@order.step == 1} id={"#{@id}-section-1"} class="checkout__section">
                   <.form_heading>{gettext("Your Details")}</.form_heading>
 
                   <.form
-                    id="checkout-form-1"
+                    id={"#{@id}-form-1"}
                     for={@form}
                     phx-change="validate_form_1"
                     phx-submit="save_form_1"
@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <.form
                     :if={@order.step == 2}
-                    id="checkout-form-2"
+                    id={"#{@id}-form-2"}
                     for={@form}
                     phx-change="validate_form_2"
                     phx-submit="save_form_2"
@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       </label>
 
                       <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
-                        {gettext("Gift Message")} {msg}
+                        {msg}
                       </.error>
                     </fieldset>
 
@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
                   <.form
-                    id="checkout-form-3"
+                    id={"#{@id}-form-3"}
                     for={@form}
                     phx-change="validate_form_3"
                     phx-submit="save_form_3"
@@ -207,7 +207,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </.form_button>
                   </form>
                 </section>
-              </.checkout_step_wrapper>
+              </.steps>
             </div>
 
             <div class="md:border-neutral/10 md:border-r"></div>
@@ -284,10 +284,10 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ║ Components ║
   # ╚════════════╝
 
-  slot :inner_block
   attr :step, :integer, required: true
+  slot :inner_block
 
-  def checkout_step_wrapper(assigns) do
+  def steps(assigns) do
     assigns =
       assign(assigns,
         step_title: fn n ->
