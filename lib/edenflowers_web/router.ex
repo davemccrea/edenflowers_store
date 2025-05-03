@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Router do
       on_mount: [
         {EdenflowersWeb.Hooks.InitStore, :put_locale},
         {EdenflowersWeb.Hooks.InitStore, :put_order},
-        {EdenflowersWeb.Hooks.InitStore, :handle_info_hook}
+        {EdenflowersWeb.Hooks.InitStore, :attach_hooks}
       ] do
       live "/", HomeLive
       live "/courses", CoursesLive

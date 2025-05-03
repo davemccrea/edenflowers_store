@@ -50,10 +50,9 @@ defmodule Edenflowers.Store.LineItem do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    # No matter what action is performed, we want to broadcast the _order_ (not the line item) as updated
-    publish_all :create, ["order", "updated", :order_id]
-    publish_all :update, ["order", "updated", :order_id]
-    publish_all :destroy, ["order", "updated", :order_id]
+    publish_all :create, ["line_item", "changed", :order_id]
+    publish_all :update, ["line_item", "changed", :order_id]
+    publish_all :destroy, ["line_item", "changed", :order_id]
   end
 
   preparations do

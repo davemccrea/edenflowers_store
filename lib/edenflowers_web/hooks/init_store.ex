@@ -14,15 +14,18 @@ defmodule EdenflowersWeb.Hooks.InitStore do
     {:cont, socket |> assign(order: order)}
   end
 
-  def on_mount(:handle_info_hook, _params, _session, socket) do
-    if connected?(socket), do: PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{socket.assigns.order.id}")
-    {:cont, attach_hook(socket, :handle_info_hook, :handle_info, &handler/2)}
+  def on_mount(:attach_hooks, _params, _session, socket) do
+    if connected?(socket) do
+      PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
+    end
+
+    {:cont, attach_hook(socket, :handle_line_item_changed, :handle_info, &handle_line_item_changed/2)}
   end
 
-  defp handler(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
+  defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
     order = Order.get_order_for_checkout!(order_id)
-    {:halt, socket |> assign(order: order)}
+    {:halt, assign(socket, order: order)}
   end
 
-  defp handler(_, socket), do: {:cont, socket}
+  defp handle_line_item_changed(_, socket), do: {:cont, socket}
 end
