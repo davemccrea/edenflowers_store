@@ -43,26 +43,6 @@ topbar.config({
 window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
-window.addEventListener("hide-nav", e => {
-  const nav = document.getElementById("nav-drawer");
-  nav.hide();
-});
-
-window.addEventListener("show-nav", e => {
-  const nav = document.getElementById("nav-drawer");
-  nav.show();
-});
-
-window.addEventListener("hide-cart", e => {
-  const cart = document.getElementById("cart-drawer");
-  cart.hide();
-});
-
-window.addEventListener("show-cart", e => {
-  const cart = document.getElementById("cart-drawer");
-  cart.show();
-});
-
 // connect if there are any LiveViews on the page
 liveSocket.connect();
 
