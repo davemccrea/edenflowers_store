@@ -49,7 +49,8 @@ for n <- 1..6 do
       tax_rate_id: tax_rate.id,
       name: "Product #{n}",
       image_slug: "https://placehold.co/400x400",
-      description: "Product #{n} description"
+      description: "Product #{n} description",
+      draft: false
     })
     |> Ash.create!()
 
@@ -65,7 +66,8 @@ for n <- 1..6 do
       size: size,
       image_slug: "https://placehold.co/400x400",
       stock_trackable: false,
-      stock_quantity: 0
+      stock_quantity: 0,
+      draft: false
     })
     |> Ash.create!()
   end

@@ -221,7 +221,6 @@ defmodule EdenflowersWeb.ProductLive do
       unit_price: socket.assigns.selected_variant.price,
       tax_rate: socket.assigns.product.tax_rate.percentage
     })
-    |> dbg()
 
     {:noreply, socket}
   end

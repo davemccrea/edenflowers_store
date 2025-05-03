@@ -23,11 +23,11 @@ defmodule Edenflowers.Store.ProductVariant do
     end
 
     create :create do
-      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id]
+      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id, :draft]
     end
 
     update :update do
-      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity]
+      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
     end
   end
 
@@ -42,6 +42,7 @@ defmodule Edenflowers.Store.ProductVariant do
     attribute :image_slug, :string, allow_nil?: false
     attribute :stock_trackable, :boolean, default: false
     attribute :stock_quantity, :integer, constraints: [min: 0]
+    attribute :draft, :boolean, allow_nil?: false, default: true
   end
 
   relationships do
