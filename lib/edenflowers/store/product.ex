@@ -10,11 +10,17 @@ defmodule Edenflowers.Store.Product do
   end
 
   code_interface do
+    define :get_all_for_store, action: :get_all_for_store
     define :get_by_id, action: :get_by_id, args: [:id]
   end
 
   actions do
     defaults [:read, :destroy]
+
+    read :get_all_for_store do
+      filter expr(draft == false and exists(product_variants))
+      prepare build(load: [:cheapest_price, :product_variants])
+    end
 
     read :get_by_id do
       argument :id, :uuid, allow_nil?: false
