@@ -30,7 +30,8 @@ FulfillmentOption
   price_per_km: "1.50",
   free_dist_km: 5,
   max_dist_km: 20,
-  tax_rate_id: tax_rate.id
+  tax_rate_id: tax_rate.id,
+  monday: false
 })
 |> Ash.create!()
 

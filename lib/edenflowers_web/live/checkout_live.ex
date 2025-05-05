@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Ash.Query
 
   alias Edenflowers.Store.{Order, FulfillmentOption, Promotion}
-  alias Edenflowers.{HereAPI, Fulfillments, StripeAPI}
+  alias Edenflowers.{Fulfillments, StripeAPI}
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     with {:ok, _line_items} <- cart_has_items?(order),
@@ -22,10 +22,9 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(fulfillment_options: fulfillment_options)
        |> assign(order: order)
        |> assign(form: form)
-       |> assign(errors: %{delivery_address: nil})
        |> assign(promo_form: %{})
-       |> setup_stripe(order)
-       |> set_delivery_fields_visibility(order.fulfillment_option_id)}
+       |> assign(errors: %{})
+       |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
         Logger.error("Cart is empty")
@@ -45,23 +44,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
-  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
-
-  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
-    order = Order.add_payment_intent_id!(order, payment_intent.id)
-
-    socket
-    |> assign(order: order)
-    |> assign(client_secret: payment_intent.client_secret)
-  end
-
-  defp setup_stripe(socket, order) do
-    {:ok, payment_intent} = StripeAPI.retrieve_payment_intent(order)
-    assign(socket, client_secret: payment_intent.client_secret)
-  end
-
   # ╔════════╗
   # ║ Markup ║
   # ╚════════╝
@@ -79,7 +61,6 @@ defmodule EdenflowersWeb.CheckoutLive do
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]">
               <.steps step={@order.step}>
-                <%!-- Your Details --%>
                 <section :if={@order.step == 1} id={"#{@id}-section-1"} class="checkout__section">
                   <.form_heading>{gettext("Your Details")}</.form_heading>
 
@@ -97,7 +78,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <%!-- Gift Options --%>
                 <section :if={@order.step == 2} id={"#{@id}-section-2"} class="checkout__section">
                   <.form_heading>{gettext("Gift Options")}</.form_heading>
 
@@ -135,71 +115,74 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <%!-- Delivery Information --%>
                 <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
-                  <.form
-                    id={"#{@id}-form-3"}
-                    for={@form}
-                    phx-change="validate_form_3"
-                    phx-submit="save_form_3"
-                    class="checkout__form"
-                  >
+                  <.form id={"#{@id}-fulfillment-option"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
-                      prompt={gettext("Select a delivery method")}
-                      label={gettext("Delivery Method")}
+                      :let={option}
+                      type="radio-card"
                       field={@form[:fulfillment_option_id]}
-                      options={format_options_for_select(@fulfillment_options)}
-                      type="select"
-                    />
+                      options={Enum.map(@fulfillment_options, fn %{id: id, name: name} -> %{name: name, value: id} end)}
+                      label={gettext("Delivery Method")}
+                    >
+                      {option.name}
+                    </.input>
+                  </.form>
 
-                    <.input
-                      label={gettext("Phone Number")}
-                      placeholder="045 1505141"
-                      field={@form[:recipient_phone_number]}
-                      type="text"
-                    />
+                  <%= if not is_nil(@order.fulfillment_option) do %>
+                    <.form
+                      id={"#{@id}-form-3"}
+                      for={@form}
+                      phx-change="validate_form_3"
+                      phx-submit="save_form_3"
+                      class="checkout__form"
+                    >
+                      <.input
+                        label={gettext("Phone Number")}
+                        placeholder="045 1505141"
+                        field={@form[:recipient_phone_number]}
+                        type="text"
+                      />
 
-                    <div id="delivery-fields" class={"#{not @show_delivery_inputs && "hidden"} flex flex-col space-y-4"}>
-                      <div>
+                      <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
                         <.input
                           placeholder="Stadsgatan 3, 65300 Vasa"
                           label="Address *"
                           field={@form[:delivery_address]}
                           type="text"
                         />
-                        <.error :if={@errors[:delivery_address]}>{@errors[:delivery_address]}</.error>
-                      </div>
 
-                      <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
-                    </div>
+                        <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
+                      <% end %>
 
-                    <fieldset>
-                      <label class="mb-1">{gettext("Delivery Date")}</label>
-                          <.live_component
-                            id="calendar"
-                            selected_date={@form[:fulfillment_date].value}
-                            module={EdenflowersWeb.CalendarComponent}
-                        on_select={fn date -> send(self(), {:date_selected, date}) end}
-                            date_callback={
-                              fn date ->
-                                fulfillment_option_id = Phoenix.HTML.Form.input_value(@form, :fulfillment_option_id)
-                                fulfillment_option = Enum.find(@fulfillment_options, &(&1.id == fulfillment_option_id))
-                                {_, state} = Fulfillments.fulfill_on_date(fulfillment_option, date)
-                                state
-                              end
-                            }
-                          >
-                          </.live_component>
-                      <.input hidden field={@form[:fulfillment_date]} type="date" />
-                    </fieldset>
+                      <fieldset>
+                        <label class="mb-1">{gettext("Delivery Date")}</label>
+                        <.live_component
+                          id="calendar"
+                          error={
+                            Phoenix.Component.used_input?(@form[:fulfillment_date]) and
+                              Enum.any?(@form[:fulfillment_date].errors)
+                          }
+                          selected_date={@form[:fulfillment_date].value}
+                          module={EdenflowersWeb.CalendarComponent}
+                          on_select={fn date -> send(self(), {:date_selected, date}) end}
+                          date_callback={
+                            fn date ->
+                              {_, state} = Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
+                              state
+                            end
+                          }
+                        >
+                        </.live_component>
+                        <.input field={@form[:fulfillment_date]} hidden />
+                      </fieldset>
 
-                    <.form_button>Next</.form_button>
-                  </.form>
+                      <.form_button>Next</.form_button>
+                    </.form>
+                  <% end %>
                 </section>
 
-                <%!-- Payment --%>
                 <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
@@ -216,7 +199,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div phx-update="ignore" id="payment-element"></div>
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
-                    <.form_button disabled="true" id="payment-button">
+                    <.form_button disabled={true} id="payment-button">
                       {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </form>
@@ -294,6 +277,105 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
+  # ╔════════════════╗
+  # ║ Event Handlers ║
+  # ╚════════════════╝
+
+  def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
+    form = AshPhoenix.Form.validate(socket.assigns.form, params)
+    {:noreply, assign(socket, form: form)}
+  end
+
+  def handle_event("save_form_4", _, socket) do
+    StripeAPI.update_payment_intent(socket.assigns.order)
+    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+  end
+
+  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, order} ->
+        form =
+          order
+          |> AshPhoenix.Form.for_update(action_name(:save, order.step))
+          |> to_form()
+
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> assign(form: form)}
+
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
+    end
+  end
+
+  def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
+    step = String.to_integer(step)
+
+    order =
+      order
+      |> Ash.Changeset.for_update(action_name(:edit, step))
+      |> Ash.update!()
+
+    form =
+      order
+      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
+      |> to_form()
+
+    {:noreply,
+     socket
+     |> assign(order: order)
+     |> assign(form: form)}
+  end
+
+  def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
+    order = Order.update_fulfillment_option!(socket.assigns.order, id)
+
+    form =
+      order
+      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
+      |> to_form()
+
+    {:noreply, assign(socket, order: order, form: form)}
+  end
+
+  def handle_event("apply_promo", %{"code" => code}, socket) do
+    case Promotion.get_by_code(code) do
+      {:ok, promotion} ->
+        errors = Map.put(socket.assigns.errors, :promo_code, nil)
+        order = Order.add_promotion!(socket.assigns.order, promotion.id)
+
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> assign(errors: errors)
+         |> assign(promo_form: %{})}
+
+      _ ->
+        errors = Map.put(socket.assigns.errors, :promo_code, gettext("Not found"))
+
+        {:noreply,
+         socket
+         |> assign(errors: errors)
+         |> assign(promo_form: %{})}
+    end
+  end
+
+  def handle_event("clear_promo", _, socket) do
+    order = Order.clear_promotion!(socket.assigns.order)
+    {:noreply, assign(socket, order: order)}
+  end
+
+  def handle_event("stripe:error", %{"error" => error}, socket) do
+    Logger.error("Stripe Hook Error: #{inspect(error)}")
+    {:noreply, socket}
+  end
+
+  def handle_info({:date_selected, date}, socket) do
+    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
+    {:noreply, assign(socket, form: form)}
+  end
+
   # ╔════════════╗
   # ║ Components ║
   # ╚════════════╝
@@ -346,216 +428,42 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   attr :rest, :global
+  attr :disabled, :boolean, default: false
   slot :inner_block
 
   defp form_button(assigns) do
     ~H"""
-    <button {@rest} type="submit" class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled">
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
+    >
       <span>{render_slot(@inner_block)}</span>
       <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
     </button>
     """
   end
 
-  # ╔════════════════╗
-  # ║ Event Handlers ║
-  # ╚════════════════╝
-
-  def handle_event("validate_form_3", %{"form" => params}, socket) do
-    fulfillment_option_id = Map.get(params, "fulfillment_option_id")
-    form = AshPhoenix.Form.validate(socket.assigns.form, params)
-
-    {:noreply,
-     socket
-     |> validate_delivery_address(params)
-     |> set_delivery_fields_visibility(fulfillment_option_id)
-     |> assign(form: form)}
-  end
-
-  def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
-    form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("save_form_3", %{"form" => %{"fulfillment_option_id" => id} = params}, socket) do
-    fulfillment_option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == id))
-    {:noreply, handle_fulfillment_method(socket, params, fulfillment_option)}
-  end
-
-  def handle_event("save_form_4", _, socket) do
-    StripeAPI.update_payment_intent(socket.assigns.order)
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
-  end
-
-  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
-    {:noreply, submit(socket, params)}
-  end
-
-  def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
-    step = String.to_integer(step)
-
-    order =
-      order
-      |> Ash.Changeset.for_update(action_name(:edit, step))
-      |> Ash.update!()
-
-    form =
-      order
-      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-      |> to_form()
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> assign(form: form)}
-  end
-
-  def handle_event("apply_promo", %{"code" => code}, socket) do
-    promo_form = %{"code" => ""}
-
-    case Promotion.get_by_code(code) do
-      {:ok, promotion} ->
-        order = Order.add_promotion!(socket.assigns.order, promotion.id)
-
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> add_field_error(:promo_code, nil)
-         |> assign(promo_form: promo_form)}
-
-      _ ->
-        {:noreply,
-         socket
-         |> add_field_error(:promo_code, gettext("Not found"))
-         |> assign(promo_form: promo_form)}
-    end
-  end
-
-  def handle_event("clear_promo", _, socket) do
-    order = Order.clear_promotion!(socket.assigns.order)
-    {:noreply, assign(socket, order: order)}
-  end
-
-  def handle_event("stripe:error", %{"error" => error}, socket) do
-    Logger.error("Stripe Hook Error: #{inspect(error)}")
-    {:noreply, socket}
-  end
-
-  def handle_info({:date_selected, date}, socket) do
-    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
-    {:noreply, assign(socket, form: form)}
-  end
-
-  # ╔══════════════╗
-  # ║ Form Helpers ║
-  # ╚══════════════╝
-
-  defp submit(socket, params) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        form =
-          order
-          |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-          |> to_form()
-
-        socket
-        |> assign(order: order)
-        |> assign(form: form)
-
-      {:error, form} ->
-        assign(socket, form: form)
-    end
-  end
-
-  defp handle_fulfillment_method(socket, params, %{fulfillment_method: :delivery} = fulfillment_option) do
-    with {:ok, delivery_address} <- ensure_valid_delivery_address(socket, params),
-         {:ok, {calculated_address, position, here_id}} <- HereAPI.get_address(delivery_address),
-         {:ok, distance} <- HereAPI.get_distance(position),
-         {:ok, fulfillment_amount} <- Fulfillments.calculate_price(fulfillment_option, distance) do
-      params =
-        Map.merge(params, %{
-          fulfillment_amount: fulfillment_amount,
-          calculated_address: calculated_address,
-          here_id: here_id,
-          distance: distance,
-          position: position
-        })
-
-      submit(socket, params)
-    else
-      {:error, {_error, error_msg}} ->
-        add_field_error(socket, :delivery_address, error_msg)
-    end
-  end
-
-  defp handle_fulfillment_method(socket, params, %{fulfillment_method: :pickup} = fulfillment_option) do
-    {:ok, fulfillment_amount} = Fulfillments.calculate_price(fulfillment_option)
-
-    # Note: using string keys below because forms use string keys
-    params =
-      Map.merge(params, %{
-        "fulfillment_amount" => fulfillment_amount,
-        "delivery_address" => nil,
-        "calculated_address" => nil,
-        "here_id" => nil,
-        "distance" => nil,
-        "position" => nil
-      })
-
-    submit(socket, params)
-  end
-
-  defp set_delivery_fields_visibility(socket, fulfillment_id) do
-    fulfillment_method =
-      socket.assigns.fulfillment_options
-      |> Enum.find(&(&1.id == fulfillment_id))
-      |> Map.get(:fulfillment_method)
-
-    assign(socket, show_delivery_inputs: fulfillment_method == :delivery)
-  end
-
-  defp ensure_valid_delivery_address(socket, params) do
-    %{"fulfillment_option_id" => id, "delivery_address" => delivery_address} = params
-
-    with %{fulfillment_method: :delivery} <- Enum.find(socket.assigns.fulfillment_options, &(&1.id == id)),
-         {:ok, delivery_address} <- ensure_non_empty_value(delivery_address) do
-      {:ok, delivery_address}
-    else
-      _ -> {:error, {:delivery_address_required, gettext("Delivery address is required")}}
-    end
-  end
-
-  # Return socket if the field has not yet been interacted with
-  defp validate_delivery_address(socket, %{"_unused_delivery_address" => ""}), do: socket
-
-  defp validate_delivery_address(socket, params) do
-    case ensure_valid_delivery_address(socket, params) do
-      {:ok, _} ->
-        add_field_error(socket, :delivery_address, nil)
-
-      {:error, {_error, error_msg}} ->
-        add_field_error(socket, :delivery_address, error_msg)
-    end
-  end
-
-  defp add_field_error(socket, field, error_msg) when is_atom(field) do
-    errors = Map.put(socket.assigns.errors, field, error_msg)
-    assign(socket, errors: errors)
-  end
-
   # ╔═══════════╗
   # ║ Utilities ║
   # ╚═══════════╝
 
-  defp ensure_non_empty_value(value) when is_binary(value) do
-    case String.trim(value) do
-      "" -> {:error, {:empty_value, gettext("Empty value")}}
-      trimmed -> {:ok, trimmed}
-    end
+  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
+  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+
+  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
+    {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
+    order = Order.add_payment_intent_id!(order, payment_intent.id)
+
+    socket
+    |> assign(order: order)
+    |> assign(client_secret: payment_intent.client_secret)
   end
 
-  defp format_options_for_select(resources) when is_list(resources) do
-    Enum.map(resources, &{&1.name, &1.id})
+  defp setup_stripe(socket, order) do
+    {:ok, payment_intent} = StripeAPI.retrieve_payment_intent(order)
+    assign(socket, client_secret: payment_intent.client_secret)
   end
 
   defp action_name(action, step) when is_atom(action) and is_integer(step) do

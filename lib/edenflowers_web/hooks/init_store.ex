@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Hooks.InitStore do
   end
 
   def on_mount(:put_order, _params, %{"order_id" => order_id} = _session, socket) do
-    order = Order.get_order_for_checkout!(order_id)
+    order = Order.get_for_checkout!(order_id)
     {:cont, socket |> assign(order: order)}
   end
 
@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Hooks.InitStore do
   end
 
   defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
-    order = Order.get_order_for_checkout!(order_id)
+    order = Order.get_for_checkout!(order_id)
     {:halt, assign(socket, order: order)}
   end
 
