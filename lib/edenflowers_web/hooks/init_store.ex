@@ -24,7 +24,13 @@ defmodule EdenflowersWeb.Hooks.InitStore do
 
   defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
     order = Order.get_for_checkout!(order_id)
-    {:halt, assign(socket, order: order)}
+
+    order =
+      if Enum.empty?(order.line_items),
+        do: Order.reset!(order),
+        else: order
+
+    {:cont, assign(socket, order: order)}
   end
 
   defp handle_line_item_changed(_, socket), do: {:cont, socket}

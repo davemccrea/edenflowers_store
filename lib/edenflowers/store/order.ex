@@ -40,6 +40,7 @@ defmodule Edenflowers.Store.Order do
     define :add_promotion, action: :add_promotion, args: [:promotion_id]
     define :clear_promotion, action: :clear_promotion
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
+    define :reset, action: :reset
   end
 
   actions do
@@ -153,6 +154,28 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:promotion_id, nil)
       change load(@load)
     end
+
+    update :reset do
+      change set_attribute(:step, 1)
+      change set_attribute(:customer_name, nil)
+      change set_attribute(:customer_email, nil)
+      change set_attribute(:is_gift, false)
+      change set_attribute(:gift_message, nil)
+      change set_attribute(:recipient_name, nil)
+      change set_attribute(:recipient_phone_number, nil)
+      change set_attribute(:delivery_address, nil)
+      change set_attribute(:delivery_instructions, nil)
+      change set_attribute(:fulfillment_date, nil)
+      change set_attribute(:fulfillment_amount, nil)
+      change set_attribute(:calculated_address, nil)
+      change set_attribute(:here_id, nil)
+      change set_attribute(:distance, nil)
+      change set_attribute(:position, nil)
+      change set_attribute(:payment_intent_id, nil)
+      change set_attribute(:promotion_id, nil)
+      change set_attribute(:fulfillment_option_id, nil)
+      change load(@load)
+    end
   end
 
   pub_sub do
@@ -170,7 +193,7 @@ defmodule Edenflowers.Store.Order do
     attribute :customer_email, :string
 
     # Step 2 - Gift Options
-    attribute :is_gift, :boolean
+    attribute :is_gift, :boolean, default: false
     attribute :gift_message, :string
 
     # Step 3 - Delivery Information

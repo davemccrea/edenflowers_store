@@ -224,7 +224,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </label>
                     <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
                   </fieldset>
-
                   <.error :if={@errors[:promo_code]}>{@errors[:promo_code]}</.error>
                 </.form>
 
@@ -374,6 +373,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _order_id}, socket) do
+    if Enum.empty?(socket.assigns.order.line_items),
+      do: {:noreply, push_navigate(socket, to: ~p"/")},
+      else: {:noreply, socket}
   end
 
   # ╔════════════╗
