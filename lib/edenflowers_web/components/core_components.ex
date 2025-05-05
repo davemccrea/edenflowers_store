@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+               range search select tel text textarea time url week radio-card)
 
   attr :field, Phoenix.HTML.FormField, doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
@@ -153,6 +153,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
+
+  slot :inner_block
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -213,6 +215,38 @@ defmodule EdenflowersWeb.CoreComponents do
         <textarea id={@id} name={@name} class={["textarea w-full", @errors != [] && "textarea-error"]} {@rest}>{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
+    </fieldset>
+    """
+  end
+
+  def input(%{type: "radio-card"} = assigns) do
+    assigns =
+      assigns
+      |> assign_new(:checked, fn -> nil end)
+      |> assign_new(:options, fn -> [] end)
+      |> assign_new(:id_prefix, fn -> assigns.id || assigns.name || "radio_card" end)
+
+    ~H"""
+    <fieldset>
+      <span :if={@label} class="mb-1">{@label}</span>
+      <div class="flex flex-col flex-wrap gap-2 md:flex-row">
+        <input type="hidden" name={@name} value="" />
+        <label
+          :for={option <- @options}
+          class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 rounded border px-4 py-3 transition-all hover:border-primary", @checked == option[:value] && "border-primary bg-primary/5"]}
+        >
+          <input
+            type="radio"
+            name={@name}
+            id={"#{@id_prefix}_#{option[:value]}"}
+            value={option[:value]}
+            checked={option[:value] == to_string(@value)}
+            class="radio radio-xs radio-primary"
+            {@rest}
+          />
+          {render_slot(@inner_block, option)}
+        </label>
+      </div>
     </fieldset>
     """
   end
