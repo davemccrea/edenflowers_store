@@ -4,8 +4,7 @@ defmodule Edenflowers.Fulfillments do
 
   use Gettext, backend: EdenflowersWeb.Gettext
 
-  @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) ::
-          {:ok, %Decimal{}} | {:error, {atom(), binary()}}
+  @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))
 
   def calculate_price(%{rate_type: :fixed, base_price: base_price}, _distance) do
@@ -42,7 +41,7 @@ defmodule Edenflowers.Fulfillments do
          |> Decimal.round(2)}
 
       true ->
-        {:error, {:out_of_delivery_range, gettext("Out of delivery range")}}
+        {:error, :out_of_delivery_range}
     end
   end
 

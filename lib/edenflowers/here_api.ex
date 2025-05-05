@@ -32,7 +32,7 @@ defmodule Edenflowers.HereAPI do
 
       {:ok, {address, position, here_id}}
     else
-      _ -> {:error, {:address, gettext("Address not found")}}
+      _ -> {:error, :address_not_found}
     end
   end
 
@@ -45,7 +45,7 @@ defmodule Edenflowers.HereAPI do
          {:ok, total_length} <- sum_route_lengths(body) do
       {:ok, total_length}
     else
-      _ -> {:error, {:route, gettext("Error calculating distance")}}
+      _ -> {:error, :distance_not_calculated}
     end
   end
 
