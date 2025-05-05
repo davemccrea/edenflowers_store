@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
-     |> assign(date_callback: Map.get(socket.assigns, :date_callback, & &1))
+     |> assign(date_callback: Map.get(socket.assigns, :date_callback, fn _ -> :ok end))
      |> assign(on_select: fn date -> send(self(), {:date_selected, date}) end)
      |> update_calendar_view(today_date)}
   end
@@ -42,13 +42,14 @@ defmodule EdenflowersWeb.CalendarComponent do
   attr :field, :any, required: true
   attr :selected_date, :string, required: false
   attr :date_callback, :any, required: false
+  attr :error, :boolean, default: false
   slot :day_decoration, required: false
 
   def render(assigns) do
     ~H"""
     <div
       id={"#{@id}"}
-      class="border-base-content/20 bg-base-100 select-none rounded border p-2 sm:max-w-xs"
+      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2 sm:max-w-xs"}
       phx-hook="CalendarHook"
       data-view-date={@view_date}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
