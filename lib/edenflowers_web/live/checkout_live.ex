@@ -245,9 +245,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <button
                         :if={@order.promotion_applied?}
                         phx-click="clear_promo"
-                        class="badge badge-dash badge-neutral badge-sm cursor-pointer"
+                        class="badge badge-dash badge-neutral badge-sm flex cursor-pointer items-center gap-1"
                       >
-                        {@order.promotion.code} <span><.icon name="hero-x-mark" class="h-4 w-4" /></span>
+                        {@order.promotion.code} <span><.icon name="hero-x-mark" class="flex h-4 w-4" /></span>
                       </button>
                     </div>
 
