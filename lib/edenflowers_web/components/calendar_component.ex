@@ -208,7 +208,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       "opacity-0"
     else
       class_conditions = [
-        {"aspect-square", true},
+        {"relative aspect-square", true},
         {"underline", is_today},
         {"cursor-pointer", !is_disabled},
         {"bg-primary rounded-sm text-neutral-content hover:bg-primary/90", is_selected and !is_disabled},
