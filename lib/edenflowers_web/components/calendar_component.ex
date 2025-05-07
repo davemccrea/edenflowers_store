@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           phx-click="current-month"
           aria-label={gettext("Show current month")}
           type="button"
-          class="cursor-pointer font-medium"
+          class="cursor-pointer"
         >
           {Cldr.DateTime.to_string!(@view_date, format: "MMMM y")}
         </button>
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.CalendarComponent do
         </button>
       </div>
 
-      <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
+      <div class="border-base-content/10 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
         <%= for week_day <- List.first(@week_rows) do %>
           <span>
             {Cldr.DateTime.to_string!(week_day, format: "EEEEEE")}
@@ -96,10 +96,10 @@ defmodule EdenflowersWeb.CalendarComponent do
         <% end %>
       </div>
 
-      <div id={"#{@id}-grid"} role="grid" class="mt-1 grid grid-cols-7">
-        <%= for {week, _index} <- Enum.with_index(@week_rows) do %>
-          <%= for day <- week do %>
+      <div id={"#{@id}-grid"} role="grid" class="mt-1">
+        <div :for={{week, _index} <- Enum.with_index(@week_rows)} role="row" class="grid grid-cols-7">
             <button
+            :for={day <- week}
               id={"#{@id}-day-#{day}"}
               phx-target={@myself}
               phx-click="select"
@@ -124,11 +124,9 @@ defmodule EdenflowersWeb.CalendarComponent do
               <time datetime={day}>
                 {Cldr.DateTime.to_string!(day, format: "d")}
               </time>
-            </button>
-
             {render_slot(@day_decoration, day)}
-          <% end %>
-        <% end %>
+          </button>
+        </div>
       </div>
     </div>
     """
