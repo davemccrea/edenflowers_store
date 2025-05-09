@@ -4,16 +4,18 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, Promotion}
+  alias Edenflowers.Store.{Order, FulfillmentOption}
   alias Edenflowers.{Fulfillments, StripeAPI}
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
+    end
+
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
-      form =
-        order
-        |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-        |> to_form()
+      form = make_form(order, action_name(:save, order.step))
+      promotional_form = make_form(order, :add_promotion_with_code)
 
       {:ok,
        socket
@@ -22,8 +24,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(fulfillment_options: fulfillment_options)
        |> assign(order: order)
        |> assign(form: form)
-       |> assign(promo_form: %{})
-       |> assign(errors: %{})
+       |> assign(promotional_form: promotional_form)
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -71,8 +72,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-submit="save_form_1"
                     class="checkout__form"
                   >
-                    <.input label={gettext("Name")} field={@form[:customer_name]} type="text" />
-                    <.input label={gettext("Email")} field={@form[:customer_email]} type="text" />
+                    <.input label={gettext("Name *")} field={@form[:customer_name]} type="text" />
+                    <.input label={gettext("Email *")} field={@form[:customer_email]} type="text" />
 
                     <.form_button>Next</.form_button>
                   </.form>
@@ -82,14 +83,28 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <.form_heading>{gettext("Gift Options")}</.form_heading>
 
                   <.form
-                    :if={@order.step == 2}
                     id={"#{@id}-form-2"}
                     for={@form}
                     phx-change="validate_form_2"
                     phx-submit="save_form_2"
                     class="checkout__form"
                   >
-                    <fieldset id="gift-message-fieldset" phx-hook="CharacterCount">
+                    <.input
+                      :let={option}
+                      type="radio-card"
+                      label={gettext("Recipient *")}
+                      field={@form[:gift]}
+                      options={[%{name: "😊 Just for me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
+                      phx-change="update_gift"
+                    >
+                      {option.name}
+                    </.input>
+
+                    <fieldset
+                      class={[not @order.gift && "hidden"]}
+                      id={"#{@id}-field-gift-message"}
+                      phx-hook="CharacterCount"
+                    >
                       <label class="relative flex flex-col">
                         <span class="mb-1">{gettext("Gift Message")}</span>
                         <textarea
@@ -110,7 +125,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                         {msg}
                       </.error>
                     </fieldset>
-
                     <.form_button>Next</.form_button>
                   </.form>
                 </section>
@@ -118,13 +132,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
-                  <.form id={"#{@id}-fulfillment-option"} for={%{}} phx-change="update_fulfillment_option">
+                  <.form id={"#{@id}-form-fulfillment-option"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
                       type="radio-card"
                       field={@form[:fulfillment_option_id]}
                       options={Enum.map(@fulfillment_options, fn %{id: id, name: name} -> %{name: name, value: id} end)}
-                      label={gettext("Delivery Method")}
+                      label={gettext("Delivery Method *")}
                     >
                       {option.name}
                     </.input>
@@ -135,16 +149,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                       id={"#{@id}-form-3"}
                       for={@form}
                       phx-change="validate_form_3"
-                      phx-submit="save_form_3"
+                      phx-submit={JS.push("save_form_3") |> JS.focus_first(to: "##{@id}-form-4")}
                       class="checkout__form"
                     >
-                      <.input
-                        label={gettext("Phone Number")}
-                        placeholder="045 1505141"
-                        field={@form[:recipient_phone_number]}
-                        type="text"
-                      />
-
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
                         <.input
                           placeholder="Stadsgatan 3, 65300 Vasa"
@@ -153,11 +160,29 @@ defmodule EdenflowersWeb.CheckoutLive do
                           type="text"
                         />
 
-                        <.input label="Delivery Instructions" field={@form[:delivery_instructions]} type="text" />
+                        <.input
+                          label="Delivery Instructions"
+                          field={@form[:delivery_instructions]}
+                          type="text"
+                          placeholder="e.g. Door code 1234, leave at the front door"
+                        />
                       <% end %>
 
-                      <fieldset>
-                        <label class="mb-1">{gettext("Delivery Date")}</label>
+                      <.input
+                        label={gettext("Phone Number")}
+                        placeholder="045 1505141"
+                        field={@form[:recipient_phone_number]}
+                        type="text"
+                      />
+
+                      <fieldset class="flex flex-col">
+                        <label class="mb-1">
+                          <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
+                            {gettext("Delivery Date *")}
+                          <% else %>
+                            {gettext("Pickup Date *")}
+                          <% end %>
+                        </label>
                         <.live_component
                           id="calendar"
                           error={
@@ -174,6 +199,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                             end
                           }
                         >
+                          <:day_decoration :let={day}>
+                            <.icon
+                              :if={day == ~D[2025-05-07]}
+                              name="hero-heart-solid"
+                              class="absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5 text-red-400"
+                            />
+                          </:day_decoration>
                         </.live_component>
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
@@ -186,11 +218,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
+                  <%!-- TODO: Change to production URL --%>
                   <form
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
                     phx-submit="save_form_4"
                     data-client-secret={@client_secret}
+                    data-order-id={@order.id}
                     data-return-url={"http://localhost:4000/checkout/complete/#{@order.id}"}
                     data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
                     data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
@@ -207,7 +241,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.steps>
             </div>
 
-            <div class="md:border-neutral/10 md:border-r"></div>
+            <div class="md:border-neutral/10 md:border-r" />
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <section class="flex flex-col gap-4 p-1">
@@ -217,14 +251,21 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
 
-                <.form :if={not @order.promotion_applied?} for={@promo_form} phx-submit="apply_promo" class="space-y-2">
-                  <fieldset class="join w-full">
-                    <label class="input join-item w-full">
-                      <input name="code" value={@promo_form["code"]} type="text" placeholder="Enter promo code" required />
-                    </label>
-                    <button class="btn btn-primary join-item z-50">{gettext("Apply")}</button>
-                  </fieldset>
-                  <.error :if={@errors[:promo_code]}>{@errors[:promo_code]}</.error>
+                <.form
+                  :if={not @order.promotion_applied?}
+                  id={"#{@id}-form-promotional"}
+                  for={@promotional_form}
+                  phx-submit="update_promotional"
+                  class="space-y-2"
+                >
+                  <.input
+                    style="button-addon"
+                    label={gettext("Promo Code")}
+                    field={@promotional_form[:code]}
+                    type="text"
+                    button_text={gettext("Apply")}
+                    placeholder="Enter promo code"
+                  />
                 </.form>
 
                 <div class="border-neutral/5 border-t"></div>
@@ -292,19 +333,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        form =
-          order
-          |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-          |> to_form()
-
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> assign(form: form)}
-
-      {:error, form} ->
-        {:noreply, assign(socket, form: form)}
+      {:ok, order} -> {:noreply, assign(socket, order: order)}
+      {:error, form} -> {:noreply, assign(socket, form: form)}
     end
   end
 
@@ -316,47 +346,26 @@ defmodule EdenflowersWeb.CheckoutLive do
       |> Ash.Changeset.for_update(action_name(:edit, step))
       |> Ash.update!()
 
-    form =
-      order
-      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-      |> to_form()
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> assign(form: form)}
+    {:noreply, assign(socket, order: order)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     order = Order.update_fulfillment_option!(socket.assigns.order, id)
-
-    form =
-      order
-      |> AshPhoenix.Form.for_update(action_name(:save, order.step))
-      |> to_form()
-
-    {:noreply, assign(socket, order: order, form: form)}
+    {:noreply, assign(socket, order: order)}
   end
 
-  def handle_event("apply_promo", %{"code" => code}, socket) do
-    case Promotion.get_by_code(code) do
-      {:ok, promotion} ->
-        errors = Map.put(socket.assigns.errors, :promo_code, nil)
-        order = Order.add_promotion!(socket.assigns.order, promotion.id)
+  def handle_event("update_gift", %{"form" => %{"gift" => gift}}, socket) do
+    order = Order.update_gift!(socket.assigns.order, gift)
+    {:noreply, assign(socket, order: order)}
+  end
 
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> assign(errors: errors)
-         |> assign(promo_form: %{})}
+  def handle_event("update_promotional", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.promotional_form, params: params) do
+      {:ok, order} ->
+        {:noreply, assign(socket, order: order)}
 
-      _ ->
-        errors = Map.put(socket.assigns.errors, :promo_code, gettext("Not found"))
-
-        {:noreply,
-         socket
-         |> assign(errors: errors)
-         |> assign(promo_form: %{})}
+      {:error, promotional_form} ->
+        {:noreply, assign(socket, promotional_form: promotional_form)}
     end
   end
 
@@ -373,6 +382,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
+  end
+
+  # Important! When the order is updated, the forms need to be updated so that they contain the latest data.
+  # I am centralising this in the handle_info/2 callback to avoid having to do it in every other callback.
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> _order_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(form: make_form(socket.assigns.order, action_name(:save, socket.assigns.order.step)))
+     |> assign(promotional_form: make_form(socket.assigns.order, :add_promotion_with_code))}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _order_id}, socket) do
@@ -453,6 +471,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ╔═══════════╗
   # ║ Utilities ║
   # ╚═══════════╝
+
+  defp make_form(order, action) do
+    order
+    |> AshPhoenix.Form.for_update(action)
+    |> to_form()
+  end
 
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}

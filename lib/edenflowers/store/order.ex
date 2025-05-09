@@ -8,7 +8,16 @@ defmodule Edenflowers.Store.Order do
 
   require Ash.Resource.Change.Builtins
 
-  alias Edenflowers.Store.Order.{RequireDeliveryAddress, ProcessDeliveryAddress}
+  alias Edenflowers.Store.Order.{
+    ProcessFulfillment,
+    MaybeRequireDeliveryAddress,
+    LookupPromotionCode
+  }
+
+  postgres do
+    repo Edenflowers.Repo
+    table "orders"
+  end
 
   @load [
     # Aggregates
@@ -33,18 +42,28 @@ defmodule Edenflowers.Store.Order do
   end
 
   code_interface do
-    define :create, action: :create
+    define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
+    define :payment_received, action: :payment_received, args: [:payment_intent_id]
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
-    define :add_promotion, action: :add_promotion, args: [:promotion_id]
+    define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
+    define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
+    define :update_gift, action: :update_gift, args: [:gift]
     define :reset, action: :reset
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:create, :read, :update, :destroy]
+
+    # Read Actions
+    read :get_by_id do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+    end
 
     read :get_for_checkout do
       argument :id, :uuid, allow_nil?: false
@@ -53,57 +72,43 @@ defmodule Edenflowers.Store.Order do
       prepare build(load: @load)
     end
 
-    read :get_by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-    end
-
-    create :create do
+    # Create Actions
+    create :create_for_checkout do
       accept [:promotion_id, :fulfillment_option_id]
       change set_attribute(:step, 1)
       change load(@load)
     end
 
-    # Step 1 - Your Details
+    # Step-specific Update Actions
     update :edit_step_1 do
       change set_attribute(:step, 1)
       change load(@load)
     end
 
-    # Step 2 - Gift Options
-    update :edit_step_2 do
-      change set_attribute(:step, 2)
-      change load(@load)
-    end
-
-    # Step 3 - Delivery Information
-    update :edit_step_3 do
-      change set_attribute(:step, 3)
-      change load(@load)
-    end
-
-    # Step 1 - Your Details
     update :save_step_1 do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
       change set_attribute(:step, 2)
       change load(@load)
       require_atomic? false
-
-      validate match(:customer_email, ~r/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i) do
-        message gettext("must be valid email address")
-      end
     end
 
-    # Step 2 - Gift Options
+    update :edit_step_2 do
+      change set_attribute(:step, 2)
+      change load(@load)
+    end
+
     update :save_step_2 do
-      accept [:is_gift, :gift_message]
+      accept [:gift, :gift_message]
       change set_attribute(:step, 3)
       change load(@load)
     end
 
-    # Step 3 - Delivery Information
+    update :edit_step_3 do
+      change set_attribute(:step, 3)
+      change load(@load)
+    end
+
     update :save_step_3 do
       accept [
         :fulfillment_option_id,
@@ -120,12 +125,29 @@ defmodule Edenflowers.Store.Order do
       ]
 
       require_attributes [:fulfillment_date]
-      change {RequireDeliveryAddress, []}
-      change {ProcessDeliveryAddress, []}
+      change {MaybeRequireDeliveryAddress, []}
+      change {ProcessFulfillment, []}
       change set_attribute(:step, 4)
       change load(@load)
 
       require_atomic? false
+    end
+
+    update :save_step_4 do
+      accept []
+    end
+
+    # Other Update Actions
+    update :payment_received do
+      argument :payment_intent_id, :string, allow_nil?: false
+      change set_attribute(:state, :order)
+      change set_attribute(:payment_state, :paid)
+      validate confirm(:payment_intent_id, expr(^arg(:payment_intent_id)))
+    end
+
+    update :update_gift do
+      accept [:gift]
+      change load(@load)
     end
 
     update :update_fulfillment_option do
@@ -135,19 +157,22 @@ defmodule Edenflowers.Store.Order do
       change load(@load)
     end
 
-    update :save_step_4 do
-      accept []
-    end
-
     update :add_payment_intent_id do
       accept [:payment_intent_id]
       change load(@load)
     end
 
-    update :add_promotion do
+    update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       change load(@load)
+    end
+
+    update :add_promotion_with_code do
+      argument :code, :string
+      change {LookupPromotionCode, []}
+      change load(@load)
+      require_atomic? false
     end
 
     update :clear_promotion do
@@ -159,7 +184,7 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:step, 1)
       change set_attribute(:customer_name, nil)
       change set_attribute(:customer_email, nil)
-      change set_attribute(:is_gift, false)
+      change set_attribute(:gift, false)
       change set_attribute(:gift_message, nil)
       change set_attribute(:recipient_name, nil)
       change set_attribute(:recipient_phone_number, nil)
@@ -188,12 +213,37 @@ defmodule Edenflowers.Store.Order do
 
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
+    # When checkout is completed the state is set to :order
+    attribute :state, :atom,
+      default: :checkout,
+      constraints: [one_of: [:checkout, :order]]
+
+    attribute :payment_state, :atom,
+      default: :pending,
+      constraints: [
+        one_of: [
+          :pending,
+          :paid,
+          :failed,
+          :refunded
+        ]
+      ]
+
+    attribute :fulfillment_state, :atom,
+      default: :pending,
+      constraints: [
+        one_of: [
+          :pending,
+          :fulfilled
+        ]
+      ]
+
     # Step 1 - Your Details
     attribute :customer_name, :string
     attribute :customer_email, :string
 
     # Step 2 - Gift Options
-    attribute :is_gift, :boolean, default: false
+    attribute :gift, :boolean, default: false
     attribute :gift_message, :string
 
     # Step 3 - Delivery Information
@@ -202,13 +252,13 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-
     attribute :fulfillment_amount, :decimal
     attribute :calculated_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
     attribute :position, :string
 
+    # Step 4 - Payment
     attribute :payment_intent_id, :string
 
     timestamps()
@@ -239,7 +289,7 @@ defmodule Edenflowers.Store.Order do
   end
 end
 
-defmodule Edenflowers.Store.Order.RequireDeliveryAddress do
+defmodule Edenflowers.Store.Order.MaybeRequireDeliveryAddress do
   use Ash.Resource.Change
 
   @impl true
@@ -257,7 +307,7 @@ defmodule Edenflowers.Store.Order.RequireDeliveryAddress do
   end
 end
 
-defmodule Edenflowers.Store.Order.ProcessDeliveryAddress do
+defmodule Edenflowers.Store.Order.ProcessFulfillment do
   use Ash.Resource.Change
   use Gettext, backend: EdenflowersWeb.Gettext
 
@@ -328,5 +378,30 @@ defmodule Edenflowers.Store.Order.ProcessDeliveryAddress do
       "" -> {:error, :delivery_address_is_empty}
       delivery_address -> {:ok, delivery_address}
     end
+  end
+end
+
+defmodule Edenflowers.Store.Order.LookupPromotionCode do
+  use Ash.Resource.Change
+
+  alias Edenflowers.Store.Promotion
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      case Promotion.get_by_code(changeset.arguments.code) do
+        {:ok, promotion} ->
+          Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
+
+        _ ->
+          Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
+            field: :code,
+            message: "Invalid code"
+          })
+      end
+    end)
   end
 end

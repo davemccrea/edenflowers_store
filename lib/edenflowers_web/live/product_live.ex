@@ -5,30 +5,30 @@ defmodule EdenflowersWeb.ProductLive do
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
-    variants = product.product_variants
+    product_variants = product.product_variants
 
     selected_variant =
-      case length(variants) do
+      case length(product_variants) do
         1 ->
-          List.first(variants)
+          List.first(product_variants)
 
         2 ->
-          List.first(variants)
+          List.first(product_variants)
 
         _ ->
           middle_index =
-            variants
+            product_variants
             |> length()
             |> div(2)
 
-          Enum.at(variants, middle_index)
+          Enum.at(product_variants, middle_index)
       end
 
     {:ok,
      socket
      |> assign(order_id: order_id)
      |> assign(product: product)
-     |> assign(variants: variants)
+     |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)}
   end
 
@@ -93,30 +93,27 @@ defmodule EdenflowersWeb.ProductLive do
 
             <div class="flex flex-col gap-6">
               <%!-- Size Selection --%>
-              <.form for={%{}} phx-submit="add_to_cart" phx-change="select_variant" class="flex flex-col gap-4">
-                <fieldset>
-                  <legend class="mb-1 text-base font-medium">{gettext("Select Size")}</legend>
-                  <div class="flex flex-col flex-wrap gap-2 md:flex-row">
-                    <label
-                      :for={variant <- @variants}
-                      class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 rounded border px-4 py-3 transition-all hover:border-primary", @selected_variant.id == variant.id && "border-primary bg-primary/5"]}
-                    >
-                      <input
-                        type="radio"
-                        name="variant_id"
-                        value={variant.id}
-                        checked={@selected_variant.id == variant.id}
-                        class="radio radio-sm radio-primary"
-                      />
-                      <div class="flex flex-col">
-                        <span class="font-medium">{String.capitalize(to_string(variant.size))}</span>
-                        <span class="text-base-content/60 text-sm">
-                          {Edenflowers.Utils.format_money(variant.price)}
-                        </span>
-                      </div>
-                    </label>
+              <.form for={%{}} phx-submit="submit" phx-change="change" class="flex flex-col gap-4">
+                <.input
+                  :let={option}
+                  type="radio-card"
+                  options={
+                    Enum.map(
+                      @product_variants,
+                      &%{name: String.capitalize(to_string(&1.size)), value: &1.id, price: &1.price}
+                    )
+                  }
+                  name="product_variant_id"
+                  value={@selected_variant.id}
+                  label={gettext("Select Size")}
+                >
+                  <div class="flex flex-col">
+                    <span class="font-medium">{option.name}</span>
+                    <span class="text-base-content/60 text-sm">
+                      {Edenflowers.Utils.format_money(option.price)}
+                    </span>
                   </div>
-                </fieldset>
+                </.input>
 
                 <button type="submit" phx-click={JS.exec("phx-show", to: "#cart-drawer")} class="btn btn-primary btn-lg">
                   <span class="flex items-center gap-2">
@@ -205,12 +202,12 @@ defmodule EdenflowersWeb.ProductLive do
     """
   end
 
-  def handle_event("select_variant", %{"variant_id" => id}, socket) do
-    variant = Enum.find(socket.assigns.variants, &(&1.id == id))
+  def handle_event("change", %{"product_variant_id" => id}, socket) do
+    variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
     {:noreply, assign(socket, selected_variant: variant)}
   end
 
-  def handle_event("add_to_cart", _params, socket) do
+  def handle_event("submit", _params, socket) do
     LineItem.add_item(%{
       order_id: socket.assigns.order_id,
       product_id: socket.assigns.product.id,

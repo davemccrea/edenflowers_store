@@ -1,7 +1,6 @@
 defmodule EdenflowersWeb.Plugs.InitStore do
   import Plug.Conn
   require Logger
-  # Assuming Order.get_by_id/1 and Order.create/0 exist
   alias Edenflowers.Store.Order
 
   def init(opts), do: opts
@@ -13,7 +12,7 @@ defmodule EdenflowersWeb.Plugs.InitStore do
     if order_id && Order.get_by_id(order_id) do
       conn
     else
-      order = Order.create!()
+      order = Order.create_for_checkout!()
       put_session(conn, :order_id, order.id)
     end
   end

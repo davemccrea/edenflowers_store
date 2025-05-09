@@ -27,6 +27,10 @@ config :edenflowers,
 config :stripity_stripe,
   api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
 
+config :edenflowers,
+       :stripe_webhook_secret,
+       System.get_env("STRIPE_WEBHOOK_SECRET") || raise("environment variable STRIPE_WEBHOOK_SECRET is missing.")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

@@ -316,6 +316,9 @@ Hooks.Stripe = {
           elements,
           confirmParams: {
             return_url: this.returnUrl,
+            metadata: {
+              order_id: this.el.getAttribute("data-order-id"),
+            },
           },
         });
 

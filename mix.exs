@@ -41,7 +41,6 @@ defmodule Edenflowers.MixProject do
       {:ash_phoenix, "~> 2.0"},
       {:ash_archival, "~> 1.0.4"},
       {:ash_trans, "~> 0.1.0"},
-      {:ash_state_machine, "~> 0.2.8"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.4"},
       {:phoenix, "~> 1.8.0-rc.0", override: true},

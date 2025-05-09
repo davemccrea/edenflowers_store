@@ -98,32 +98,32 @@ defmodule EdenflowersWeb.CalendarComponent do
 
       <div id={"#{@id}-grid"} role="grid" class="mt-1">
         <div :for={{week, _index} <- Enum.with_index(@week_rows)} role="row" class="grid grid-cols-7">
-            <button
+          <button
             :for={day <- week}
-              id={"#{@id}-day-#{day}"}
-              phx-target={@myself}
-              phx-click="select"
-              phx-value-date={day}
-              data-key-arrow-up={calculate_date_for_key(day, "ArrowUp", @today_date)}
-              data-key-arrow-down={calculate_date_for_key(day, "ArrowDown", @today_date)}
-              data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft", @today_date)}
-              data-key-arrow-right={calculate_date_for_key(day, "ArrowRight", @today_date)}
-              data-key-home={calculate_date_for_key(day, "Home", @today_date)}
-              data-key-end={calculate_date_for_key(day, "End", @today_date)}
-              data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
-              data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
-              type="button"
-              aria-selected={
-                if @selected_date,
-                  do: selected?(day, @selected_date),
-                  else: selected?(day, @view_date)
-              }
-              tabindex="-1"
-              class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
-            >
-              <time datetime={day}>
-                {Cldr.DateTime.to_string!(day, format: "d")}
-              </time>
+            id={"#{@id}-day-#{day}"}
+            phx-target={@myself}
+            phx-click="select"
+            phx-value-date={day}
+            data-key-arrow-up={calculate_date_for_key(day, "ArrowUp", @today_date)}
+            data-key-arrow-down={calculate_date_for_key(day, "ArrowDown", @today_date)}
+            data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft", @today_date)}
+            data-key-arrow-right={calculate_date_for_key(day, "ArrowRight", @today_date)}
+            data-key-home={calculate_date_for_key(day, "Home", @today_date)}
+            data-key-end={calculate_date_for_key(day, "End", @today_date)}
+            data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
+            data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
+            type="button"
+            aria-selected={
+              if @selected_date,
+                do: selected?(day, @selected_date),
+                else: selected?(day, @view_date)
+            }
+            tabindex="-1"
+            class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
+          >
+            <time datetime={day}>
+              {Cldr.DateTime.to_string!(day, format: "d")}
+            </time>
             {render_slot(@day_decoration, day)}
           </button>
         </div>

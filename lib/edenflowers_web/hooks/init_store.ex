@@ -1,7 +1,6 @@
 defmodule EdenflowersWeb.Hooks.InitStore do
   use EdenflowersWeb, :live_view
   alias Edenflowers.Store.Order
-  alias Phoenix.PubSub
 
   def on_mount(:put_locale, _params, %{"cldr_locale" => cldr_locale} = _session, socket) do
     {:ok, language_tag} = Edenflowers.Cldr.put_locale(cldr_locale)
@@ -16,7 +15,7 @@ defmodule EdenflowersWeb.Hooks.InitStore do
 
   def on_mount(:attach_hooks, _params, _session, socket) do
     if connected?(socket) do
-      PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
     end
 
     {:cont, attach_hook(socket, :handle_line_item_changed, :handle_info, &handle_line_item_changed/2)}

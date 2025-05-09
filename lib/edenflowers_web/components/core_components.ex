@@ -137,11 +137,16 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
+  attr :button_text, :string, default: nil
 
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
                range search select tel text textarea time url week radio-card)
+
+  attr :style, :string,
+    default: "default",
+    values: ~w(default button-addon)
 
   attr :field, Phoenix.HTML.FormField, doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
@@ -227,27 +232,50 @@ defmodule EdenflowersWeb.CoreComponents do
       |> assign_new(:id_prefix, fn -> assigns.id || assigns.name || "radio_card" end)
 
     ~H"""
-    <fieldset>
-      <span :if={@label} class="mb-1">{@label}</span>
+    <fieldset class="flex flex-col gap-1">
+      <span :if={@label}>{@label}</span>
       <div class="flex flex-col flex-wrap gap-2 md:flex-row">
         <input type="hidden" name={@name} value="" />
-        <label
-          :for={option <- @options}
-          class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 rounded border px-4 py-3 transition-all hover:border-primary", @checked == option[:value] && "border-primary bg-primary/5"]}
-        >
-          <input
-            type="radio"
-            name={@name}
-            id={"#{@id_prefix}_#{option[:value]}"}
-            value={option[:value]}
-            checked={option[:value] == to_string(@value)}
-            class="radio radio-xs radio-primary"
-            {@rest}
-          />
-          {render_slot(@inner_block, option)}
-        </label>
+        <%= for option <- @options do %>
+          <label
+            for={"#{@id_prefix}_#{option[:value]}"}
+            class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 rounded border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 has-[input:checked]:border-primary hover:border-primary"]}
+          >
+            <input
+              type="radio"
+              name={@name}
+              id={"#{@id_prefix}_#{option[:value]}"}
+              value={option[:value]}
+              checked={option[:value] == to_string(@value)}
+              class="radio radio-xs radio-primary"
+              {@rest}
+            />
+            <span>
+              {render_slot(@inner_block, option)}
+            </span>
+          </label>
+        <% end %>
       </div>
     </fieldset>
+    """
+  end
+
+  def input(%{style: "button-addon"} = assigns) do
+    ~H"""
+    <fieldset class="join w-full">
+      <label class="input join-item w-full">
+        <input
+          type={@type}
+          name={@name}
+          id={@id}
+          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+          class={[@errors != [] && "input-error"]}
+          {@rest}
+        />
+      </label>
+      <button class="btn btn-primary join-item z-50">{@button_text}</button>
+    </fieldset>
+    <.error :for={msg <- @errors}>{msg}</.error>
     """
   end
 
