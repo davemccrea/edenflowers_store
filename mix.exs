@@ -11,10 +11,7 @@ defmodule Edenflowers.MixProject do
       consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
       deps: deps(),
-      listeners: [Phoenix.CodeReloader],
-      preferred_cli_env: [
-        "test.watch": :test
-      ]
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -69,7 +66,7 @@ defmodule Edenflowers.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:faker, "~> 0.18", only: :test},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:ex_cldr, "~> 2.40"},
