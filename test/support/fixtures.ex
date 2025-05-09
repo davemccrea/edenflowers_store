@@ -1,4 +1,6 @@
 defmodule Edenflowers.Fixtures do
+  use Ash.Generator
+
   alias Edenflowers.Store.{TaxRate, Promotion, Product, ProductVariant, FulfillmentOption, Order, LineItem}
 
   def fixture(resource), do: fixture(resource, [])
@@ -96,9 +98,7 @@ defmodule Edenflowers.Fixtures do
   end
 
   def fixture(:order, opts) do
-    default_params = %{
-      promotion_id: nil
-    }
+    default_params = %{}
 
     params = Enum.into(opts, default_params)
 
@@ -108,15 +108,7 @@ defmodule Edenflowers.Fixtures do
   end
 
   def fixture(:line_item, opts) do
-    default_params = %{
-      order_id: nil,
-      product_id: nil,
-      product_variant_id: nil,
-      unit_price: nil,
-      quantity: nil,
-      tax_rate: nil
-    }
-
+    default_params = %{}
     params = Enum.into(opts, default_params)
 
     LineItem

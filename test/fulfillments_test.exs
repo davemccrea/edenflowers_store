@@ -42,7 +42,7 @@ defmodule Edenflowers.FulfillmentsTest do
     end
 
     test "returns error when distance is outside of delivery range", %{fulfillment_option: fulfillment_option} do
-      assert {:error, {:out_of_delivery_range, _}} = Fulfillments.calculate_price(fulfillment_option, 20000)
+      assert {:error, :out_of_delivery_range} = Fulfillments.calculate_price(fulfillment_option, 20000)
     end
   end
 

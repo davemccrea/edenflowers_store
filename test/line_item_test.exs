@@ -1,7 +1,7 @@
 defmodule Edenflowers.Store.LineItemTest do
   use Edenflowers.DataCase
   import Edenflowers.Fixtures
-  alias Edenflowers.Store.LineItem
+  alias Edenflowers.Store.{Order, LineItem}
 
   setup do
     order = fixture(:order)
@@ -24,6 +24,8 @@ defmodule Edenflowers.Store.LineItemTest do
                |> Ash.Changeset.for_create(:create, %{
                  order_id: order.id,
                  product_id: product.id,
+                 product_name: product.name,
+                 product_image_slug: product.image_slug,
                  product_variant_id: product_variant.id,
                  unit_price: product_variant.price,
                  tax_rate: tax_rate.percentage
@@ -42,6 +44,8 @@ defmodule Edenflowers.Store.LineItemTest do
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -62,6 +66,8 @@ defmodule Edenflowers.Store.LineItemTest do
                |> Ash.Changeset.for_create(:create, %{
                  order_id: order.id,
                  product_id: product.id,
+                 product_name: product.name,
+                 product_image_slug: product.image_slug,
                  product_variant_id: product_variant.id,
                  quantity: 0,
                  unit_price: product_variant.price,
@@ -76,6 +82,8 @@ defmodule Edenflowers.Store.LineItemTest do
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -93,6 +101,8 @@ defmodule Edenflowers.Store.LineItemTest do
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           quantity: 3,
           unit_price: product_variant.price,
@@ -116,6 +126,8 @@ defmodule Edenflowers.Store.LineItemTest do
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -133,13 +145,16 @@ defmodule Edenflowers.Store.LineItemTest do
       product_variant: product_variant
     } do
       promotion = fixture(:promotion, discount_percentage: "0.20")
-      order = fixture(:order, promotion_id: promotion.id)
+      order = fixture(:order)
+      order = Order.add_promotion_with_id!(order, promotion.id)
 
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
@@ -161,6 +176,8 @@ defmodule Edenflowers.Store.LineItemTest do
         |> Ash.Changeset.for_create(:create, %{
           order_id: order.id,
           product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
