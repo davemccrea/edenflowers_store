@@ -9,24 +9,14 @@
       "size": null,
       "source": "id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "name",
-      "type": "text"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "custom_indexes": [],
   "custom_statements": [],
-  "has_create_action": true,
-  "hash": "CEA8D844288E769F8CEDBDCA3FEC5B10EA23F6F14FA5BF138C1ADCB6094E5A56",
+  "has_create_action": false,
+  "hash": "22DDE564471665F1A1A3A0809AA5AB801444A19B0155170A2CD08ACB4347E5B8",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -35,5 +25,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "product_categories"
+  "table": "opening_hours"
 }

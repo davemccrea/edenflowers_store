@@ -34,6 +34,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :name, :text, null: false
       add :image_slug, :text, null: false
       add :description, :text, null: false
+      add :draft, :boolean, null: false, default: true
 
       add :tax_rate_id,
           references(:tax_rates,
@@ -54,6 +55,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :image_slug, :text, null: false
       add :stock_trackable, :boolean, default: false
       add :stock_quantity, :bigint
+      add :draft, :boolean, null: false, default: true
 
       add :product_id,
           references(:products,
@@ -108,9 +110,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :step, :bigint, default: 1
+      add :state, :text, default: "checkout"
+      add :payment_state, :text, default: "pending"
+      add :fulfillment_state, :text, default: "pending"
       add :customer_name, :text
       add :customer_email, :text
-      add :is_gift, :boolean
+      add :gift, :boolean, default: false
       add :gift_message, :text
       add :recipient_name, :text
       add :recipient_phone_number, :text

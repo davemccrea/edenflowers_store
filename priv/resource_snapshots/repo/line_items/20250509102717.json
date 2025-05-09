@@ -11,13 +11,43 @@
       "type": "uuid"
     },
     {
+      "allow_nil?": true,
+      "default": "1",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "quantity",
+      "type": "bigint"
+    },
+    {
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "name",
+      "source": "unit_price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "tax_rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "product_name",
       "type": "text"
     },
     {
@@ -27,18 +57,28 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "image_slug",
+      "source": "product_image_slug",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "description",
-      "type": "text"
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
@@ -58,19 +98,19 @@
           "global": null,
           "strategy": null
         },
-        "name": "products_tax_rate_id_fkey",
-        "on_delete": null,
+        "name": "line_items_order_id_fkey",
+        "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "tax_rates"
+        "table": "orders"
       },
       "size": null,
-      "source": "tax_rate_id",
+      "source": "order_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -87,15 +127,44 @@
           "global": null,
           "strategy": null
         },
-        "name": "products_product_category_id_fkey",
+        "name": "line_items_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "product_categories"
+        "table": "products"
       },
       "size": null,
-      "source": "product_category_id",
+      "source": "product_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "line_items_product_variant_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "product_variants"
+      },
+      "size": null,
+      "source": "product_variant_id",
       "type": "uuid"
     }
   ],
@@ -104,19 +173,23 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "8675C1CEF1B3086D685424334C378510895F47462FAB88C22BDA865D8F6CFC7B",
+  "hash": "1E09A84B7B0E2197FE5EDA9158153CB9DAD2B82DDE071328F827A3EB7FF941AC",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "products_unique_name_index",
+      "index_name": "line_items_unique_product_variant_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "order_id"
+        },
+        {
+          "type": "atom",
+          "value": "product_variant_id"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_product_variant",
       "nils_distinct?": true,
       "where": null
     }
@@ -128,5 +201,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "products"
+  "table": "line_items"
 }
