@@ -12,16 +12,6 @@ defmodule Edenflowers.Store.OrderTest do
                |> Ash.create()
     end
 
-    # test "completes an order" do
-    #   order = fixture(:order, customer_name: "Customer")
-
-    #   order
-    #   |> Ash.Changeset.for_update(:complete)
-    #   |> Ash.update!()
-
-    #   assert false
-    # end
-
     test "counts number of items in cart" do
       tax_rate = fixture(:tax_rate)
       product_1 = fixture(:product, tax_rate_id: tax_rate.id)
@@ -37,6 +27,8 @@ defmodule Edenflowers.Store.OrderTest do
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product_1.id,
+        product_name: product_1.name,
+        product_image_slug: product_1.image_slug,
         product_variant_id: product_1_product_variant_1.id,
         unit_price: product_1_product_variant_1.price,
         tax_rate: tax_rate.percentage,
@@ -46,6 +38,8 @@ defmodule Edenflowers.Store.OrderTest do
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product_2.id,
+        product_name: product_2.name,
+        product_image_slug: product_2.image_slug,
         product_variant_id: product_2_product_variant_1.id,
         unit_price: product_2_product_variant_1.price,
         tax_rate: tax_rate.percentage,
@@ -74,6 +68,8 @@ defmodule Edenflowers.Store.OrderTest do
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product_1.id,
+        product_name: product_1.name,
+        product_image_slug: product_1.image_slug,
         product_variant_id: product_1_product_variant_1.id,
         unit_price: product_1_product_variant_1.price,
         tax_rate: tax_rate_1.percentage,
@@ -83,6 +79,8 @@ defmodule Edenflowers.Store.OrderTest do
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product_2.id,
+        product_name: product_2.name,
+        product_image_slug: product_2.image_slug,
         product_variant_id: product_2_product_variant_1.id,
         unit_price: product_2_product_variant_1.price,
         tax_rate: tax_rate_2.percentage,
@@ -103,15 +101,15 @@ defmodule Edenflowers.Store.OrderTest do
       promotion = fixture(:promotion, discount_percentage: "0.20")
 
       order =
-        Order
-        |> Ash.Changeset.for_create(:create, %{})
-        |> Ash.create!()
-        |> Ash.Changeset.for_update(:add_promotion, %{promotion_id: promotion.id})
-        |> Ash.update!()
+        %{}
+        |> Order.create_for_checkout!()
+        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
 
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product.id,
+        product_name: product.name,
+        product_image_slug: product.image_slug,
         product_variant_id: product_variant_1.id,
         unit_price: product_variant_1.price,
         tax_rate: tax_rate.percentage,
@@ -121,6 +119,8 @@ defmodule Edenflowers.Store.OrderTest do
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product.id,
+        product_name: product.name,
+        product_image_slug: product.image_slug,
         product_variant_id: product_variant_2.id,
         unit_price: product_variant_2.price,
         tax_rate: tax_rate.percentage,
@@ -142,23 +142,15 @@ defmodule Edenflowers.Store.OrderTest do
       promotion = fixture(:promotion, discount_percentage: "0.20")
 
       order =
-        Order
-        |> Ash.Changeset.for_create(:create, %{})
-        |> Ash.create!()
-        |> Ash.Changeset.for_update(:add_promotion, %{promotion_id: promotion.id})
-        |> Ash.update!()
-        |> Ash.load!(:promotion_applied?)
+        %{}
+        |> Order.create_for_checkout!()
+        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
 
       assert order.promotion_applied? == true
     end
 
     test "promotion_applied? returns false if no promotion applied" do
-      order =
-        Order
-        |> Ash.Changeset.for_create(:create, %{})
-        |> Ash.create!()
-        |> Ash.load!(:promotion_applied?)
-
+      order = Order.create_for_checkout!()
       assert order.promotion_applied? == false
     end
   end
@@ -179,23 +171,26 @@ defmodule Edenflowers.Store.OrderTest do
         tax_rate_id: tax_rate_1.id
       })
 
+    {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
+
     order =
       Order
-      |> Ash.Changeset.for_create(:create, %{fulfillment_option_id: fulfillment_option.id})
+      |> Ash.Changeset.for_create(:create)
       |> Ash.create!()
-      |> Ash.load!([:fulfillment_option])
-
-    {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(order.fulfillment_option)
 
     order =
       order
-      |> Ash.Changeset.for_update(:save_step_2, %{fulfillment_amount: fulfillment_amount})
+      |> Ash.Changeset.for_update(:update)
+      |> Ash.Changeset.force_change_attribute(:fulfillment_option_id, fulfillment_option.id)
+      |> Ash.Changeset.force_change_attribute(:fulfillment_amount, fulfillment_amount)
       |> Ash.update!()
 
     _line_item =
       fixture(:line_item, %{
         order_id: order.id,
         product_id: product.id,
+        product_name: product.name,
+        product_image_slug: product.image_slug,
         product_variant_id: product_variant.id,
         unit_price: product_variant.price,
         tax_rate: tax_rate_2.percentage,
