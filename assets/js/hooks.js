@@ -316,14 +316,16 @@ Hooks.Stripe = {
           elements,
           confirmParams: {
             return_url: this.returnUrl,
-            metadata: {
-              order_id: this.el.getAttribute("data-order-id"),
-            },
           },
         });
 
         if (error) {
           // Stripe shows validation errors inline
+
+          if (error.type !== "validation_error") {
+            this.logAndPushError("error confirming payment", error);
+          }
+
           this.stripeReady(); // Re-enable button after payment error
         }
 
@@ -343,9 +345,11 @@ Hooks.Stripe = {
    * @param {object | null} [errorObject=null] - The original error object, if available.
    */
   logAndPushError(message, errorObject = null) {
-    console.error(`Stripe Hook Error: ${message}`, errorObject || "");
+    const msg = `Stripe Hook Error: ${message}`;
+    console.error(msg, errorObject || "");
     this.pushEvent("stripe:error", {
-      error: { message: message, details: errorObject },
+      message: msg,
+      details: errorObject || "",
     });
   },
 
