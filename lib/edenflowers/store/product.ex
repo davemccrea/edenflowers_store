@@ -46,7 +46,8 @@ defmodule Edenflowers.Store.Product do
 
   relationships do
     belongs_to :tax_rate, Edenflowers.Store.TaxRate, allow_nil?: false
-    belongs_to :product_category, Edenflowers.Store.ProductCategory
+    belongs_to :product_category, Edenflowers.Store.ProductCategory, allow_nil?: false
+
     has_many :product_variants, Edenflowers.Store.ProductVariant
 
     many_to_many :fulfillment_options, Edenflowers.Store.FulfillmentOption do

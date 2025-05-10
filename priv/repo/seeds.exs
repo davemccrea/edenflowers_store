@@ -10,6 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
 
 tax_rate =
@@ -35,7 +36,8 @@ FulfillmentOption
 })
 |> Ash.create!()
 
-Ash.Changeset.for_create(FulfillmentOption, :create, %{
+FulfillmentOption
+|> Ash.Changeset.for_create(:create, %{
   name: "In store pickup",
   fulfillment_method: :pickup,
   rate_type: :fixed,
@@ -44,9 +46,15 @@ Ash.Changeset.for_create(FulfillmentOption, :create, %{
 })
 |> Ash.create!()
 
+product_category =
+  ProductCategory
+  |> Ash.Changeset.for_create(:create, %{name: "Bouquets"})
+  |> Ash.create!()
+
 for n <- 1..6 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
+      product_category_id: product_category.id,
       tax_rate_id: tax_rate.id,
       name: "Product #{n}",
       image_slug: "https://placehold.co/400x400",
