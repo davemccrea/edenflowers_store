@@ -138,6 +138,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :label, :string, default: nil
   attr :value, :any
   attr :button_text, :string, default: nil
+  attr :hidden, :boolean, default: false
 
   attr :type, :string,
     default: "text",
@@ -179,7 +180,7 @@ defmodule EdenflowersWeb.CoreComponents do
       end)
 
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <span class="fieldset-label">
@@ -193,7 +194,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <fieldset>
+    <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
         <span :if={@label} class="mb-1">{@label}</span>
         <select
@@ -214,7 +215,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <textarea id={@id} name={@name} class={["textarea w-full", @errors != [] && "textarea-error"]} {@rest}>{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
@@ -232,7 +233,7 @@ defmodule EdenflowersWeb.CoreComponents do
       |> assign_new(:id_prefix, fn -> assigns.id || assigns.name || "radio_card" end)
 
     ~H"""
-    <fieldset class="flex flex-col gap-1">
+    <fieldset class={["flex flex-col gap-1", @hidden && "hidden"]}>
       <span :if={@label}>{@label}</span>
       <div class="flex flex-col flex-wrap gap-2 md:flex-row">
         <input type="hidden" name={@name} value="" />
@@ -262,7 +263,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{style: "button-addon"} = assigns) do
     ~H"""
-    <fieldset class="join w-full">
+    <fieldset class={["join w-full", @hidden && "hidden"]}>
       <label class="input join-item w-full">
         <input
           type={@type}
@@ -282,7 +283,7 @@ defmodule EdenflowersWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <fieldset>
+    <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
         <span :if={@label} class="mb-1">{@label}</span>
         <input
