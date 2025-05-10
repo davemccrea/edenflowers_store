@@ -1,11 +1,14 @@
 defmodule Edenflowers.StripeAPI do
-  def create_payment_intent(%{total: total}) do
+  def create_payment_intent(%{total: total, id: id}) do
     amount = convert_to_stripe_amount(total)
 
     Stripe.PaymentIntent.create(%{
       amount: amount,
       currency: "EUR",
-      automatic_payment_methods: %{enabled: true, allow_redirects: :never}
+      automatic_payment_methods: %{enabled: true, allow_redirects: :never},
+      metadata: %{
+        "order_id" => id
+      }
     })
   end
 
