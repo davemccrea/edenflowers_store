@@ -11,7 +11,9 @@ defmodule Edenflowers.Store.Order do
   alias Edenflowers.Store.Order.{
     ProcessFulfillment,
     MaybeRequireDeliveryAddress,
-    LookupPromotionCode
+    LookupPromotionCode,
+    MaybeRequireRecipientName,
+    ClearGiftFields
   }
 
   postgres do
@@ -45,7 +47,7 @@ defmodule Edenflowers.Store.Order do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
-    define :payment_received, action: :payment_received, args: [:payment_intent_id]
+    define :payment_received, action: :payment_received
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
@@ -74,7 +76,6 @@ defmodule Edenflowers.Store.Order do
 
     # Create Actions
     create :create_for_checkout do
-      accept [:promotion_id, :fulfillment_option_id]
       change set_attribute(:step, 1)
       change load(@load)
     end
@@ -99,9 +100,12 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :save_step_2 do
-      accept [:gift, :gift_message]
+      accept [:gift, :recipient_name, :gift_message]
       change set_attribute(:step, 3)
+      change {MaybeRequireRecipientName, []}
+      change {ClearGiftFields, []}
       change load(@load)
+      require_atomic? false
     end
 
     update :edit_step_3 do
@@ -139,21 +143,19 @@ defmodule Edenflowers.Store.Order do
 
     # Other Update Actions
     update :payment_received do
-      argument :payment_intent_id, :string, allow_nil?: false
       change set_attribute(:state, :order)
       change set_attribute(:payment_state, :paid)
-      validate confirm(:payment_intent_id, expr(^arg(:payment_intent_id)))
-    end
-
-    update :update_gift do
-      accept [:gift]
-      change load(@load)
     end
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
       # When filfillment_option is updated, clear chosen fulfillment date
       change set_attribute(:fulfillment_date, nil)
+      change load(@load)
+    end
+
+    update :update_gift do
+      accept [:gift]
       change load(@load)
     end
 
@@ -286,6 +288,45 @@ defmodule Edenflowers.Store.Order do
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
     sum :discount_amount, :line_items, :discount_amount
+  end
+end
+
+defmodule Edenflowers.Store.Order.ClearGiftFields do
+  use Ash.Resource.Change
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      gift = Ash.Changeset.get_argument_or_attribute(changeset, :gift)
+
+      if not gift do
+        Ash.Changeset.force_change_attributes(changeset, %{
+          recipient_name: nil,
+          gift_message: nil
+        })
+      else
+        changeset
+      end
+    end)
+  end
+end
+
+defmodule Edenflowers.Store.Order.MaybeRequireRecipientName do
+  use Ash.Resource.Change
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    if Ash.Changeset.get_argument_or_attribute(changeset, :gift) do
+      Ash.Changeset.require_values(changeset, :update, false, [:recipient_name])
+    else
+      changeset
+    end
   end
 end
 
