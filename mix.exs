@@ -66,6 +66,7 @@ defmodule Edenflowers.MixProject do
       {:bandit, "~> 1.5"},
       {:faker, "~> 0.18", only: :test},
       {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
+      {:phoenix_test, "~> 0.6.0", only: :test, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:ex_cldr, "~> 2.40"},
