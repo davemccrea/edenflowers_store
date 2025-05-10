@@ -4,23 +4,24 @@ defmodule EdenflowersWeb.StripeHandler do
   require Logger
 
   alias Edenflowers.Store.Order
+  alias Edenflowers.Workers.SendOrderConfirmationEmail
 
   @impl true
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     with %{data: %{object: %{metadata: %{"order_id" => order_id}}}} <- event,
-         {:ok, order} <- Order.payment_received(order_id) do
-      Logger.info("Payment received for order #{order.id}")
+         {:ok, order} <- Order.payment_received(order_id),
+         changeset <- SendOrderConfirmationEmail.new(%{order_id: order.id}),
+         {:ok, _job} <- Oban.insert(changeset) do
+      :ok
     else
-      error ->
-        Logger.error("Error handling payment_intent.succeeded event: #{inspect(error)}")
+      _error ->
+        :error
     end
-
-    :ok
   end
 
   @impl true
   def handle_event(%Stripe.Event{type: type} = _event) do
-    Logger.warning("Unhandled Stripe event of type #{type}")
+    Logger.warning("Unhandled Stripe event: #{type}")
     :ok
   end
 end

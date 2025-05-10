@@ -18,12 +18,14 @@ defmodule Edenflowers.DataCase do
 
   using do
     quote do
-      alias Edenflowers.Repo
+      use Oban.Testing, repo: Edenflowers.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
       import Edenflowers.DataCase
+
+      alias Edenflowers.Repo
     end
   end
 
