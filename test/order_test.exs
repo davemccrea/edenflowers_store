@@ -1,50 +1,50 @@
 defmodule Edenflowers.Store.OrderTest do
-  alias Edenflowers.Store.Order
   use Edenflowers.DataCase
-
-  import Edenflowers.Fixtures
+  import Generator
+  alias Edenflowers.Store.Order
 
   describe "Store Resource" do
-    test "creates an order" do
-      assert {:ok, _order} =
-               Order
-               |> Ash.Changeset.for_create(:create, %{})
-               |> Ash.create()
+    test "creates an order for checkout" do
+      order = Order.create_for_checkout!()
+      assert order.state == :checkout
+      assert order.step == 1
     end
 
     test "counts number of items in cart" do
-      tax_rate = fixture(:tax_rate)
-      product_1 = fixture(:product, tax_rate_id: tax_rate.id)
-      product_1_product_variant_1 = fixture(:product_variant, product_id: product_1.id)
-      product_2 = fixture(:product, tax_rate_id: tax_rate.id)
-      product_2_product_variant_1 = fixture(:product_variant, product_id: product_2.id)
+      tax_rate = generate(tax_rate())
+      product_1 = generate(product(tax_rate_id: tax_rate.id))
+      product_1_product_variant_1 = generate(product_variant(product_id: product_1.id))
+      product_2 = generate(product(tax_rate_id: tax_rate.id))
+      product_2_product_variant_1 = generate(product_variant(product_id: product_2.id))
+      order = generate(order())
 
-      order =
-        Order
-        |> Ash.Changeset.for_create(:create, %{})
-        |> Ash.create!()
+      _line_item_1 =
+        generate(
+          line_item(
+            order_id: order.id,
+            product_id: product_1.id,
+            product_name: product_1.name,
+            product_image_slug: product_1.image_slug,
+            product_variant_id: product_1_product_variant_1.id,
+            unit_price: product_1_product_variant_1.price,
+            tax_rate: tax_rate.percentage,
+            quantity: 2
+          )
+        )
 
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product_1.id,
-        product_name: product_1.name,
-        product_image_slug: product_1.image_slug,
-        product_variant_id: product_1_product_variant_1.id,
-        unit_price: product_1_product_variant_1.price,
-        tax_rate: tax_rate.percentage,
-        quantity: 2
-      })
-
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product_2.id,
-        product_name: product_2.name,
-        product_image_slug: product_2.image_slug,
-        product_variant_id: product_2_product_variant_1.id,
-        unit_price: product_2_product_variant_1.price,
-        tax_rate: tax_rate.percentage,
-        quantity: 1
-      })
+      _line_item_2 =
+        generate(
+          line_item(
+            order_id: order.id,
+            product_id: product_2.id,
+            product_name: product_2.name,
+            product_image_slug: product_2.image_slug,
+            product_variant_id: product_2_product_variant_1.id,
+            unit_price: product_2_product_variant_1.price,
+            tax_rate: tax_rate.percentage,
+            quantity: 1
+          )
+        )
 
       order = Ash.load!(order, [:total_items_in_cart])
 
@@ -52,40 +52,41 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "sums line_total and line_tax_amount correctly when no promotion is applied" do
-      tax_rate_1 = fixture(:tax_rate, percentage: "0.255")
-      product_1 = fixture(:product, tax_rate_id: tax_rate_1.id)
-      product_1_product_variant_1 = fixture(:product_variant, product_id: product_1.id, price: "40.00")
+      tax_rate_1 = generate(tax_rate(percentage: "0.255"))
+      product_1 = generate(product(tax_rate_id: tax_rate_1.id))
+      product_1_product_variant_1 = generate(product_variant(product_id: product_1.id, price: "40.00"))
 
-      tax_rate_2 = fixture(:tax_rate, percentage: "0.10")
-      product_2 = fixture(:product, tax_rate_id: tax_rate_2.id)
-      product_2_product_variant_1 = fixture(:product_variant, product_id: product_2.id, price: "6.00")
+      tax_rate_2 = generate(tax_rate(percentage: "0.10"))
+      product_2 = generate(product(tax_rate_id: tax_rate_2.id))
+      product_2_product_variant_1 = generate(product_variant(product_id: product_2.id, price: "6.00"))
 
-      order =
-        Order
-        |> Ash.Changeset.for_create(:create, %{})
-        |> Ash.create!()
+      order = Order.create_for_checkout!()
 
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product_1.id,
-        product_name: product_1.name,
-        product_image_slug: product_1.image_slug,
-        product_variant_id: product_1_product_variant_1.id,
-        unit_price: product_1_product_variant_1.price,
-        tax_rate: tax_rate_1.percentage,
-        quantity: 2
-      })
+      generate(
+        line_item(
+          order_id: order.id,
+          product_id: product_1.id,
+          product_name: product_1.name,
+          product_image_slug: product_1.image_slug,
+          product_variant_id: product_1_product_variant_1.id,
+          unit_price: product_1_product_variant_1.price,
+          tax_rate: tax_rate_1.percentage,
+          quantity: 2
+        )
+      )
 
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product_2.id,
-        product_name: product_2.name,
-        product_image_slug: product_2.image_slug,
-        product_variant_id: product_2_product_variant_1.id,
-        unit_price: product_2_product_variant_1.price,
-        tax_rate: tax_rate_2.percentage,
-        quantity: 1
-      })
+      generate(
+        line_item(
+          order_id: order.id,
+          product_id: product_2.id,
+          product_name: product_2.name,
+          product_image_slug: product_2.image_slug,
+          product_variant_id: product_2_product_variant_1.id,
+          unit_price: product_2_product_variant_1.price,
+          tax_rate: tax_rate_2.percentage,
+          quantity: 1
+        )
+      )
 
       order = Ash.load!(order, [:line_total, :line_tax_amount])
 
@@ -94,38 +95,41 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "sums line_total and line_tax_amount correctly when promotion is applied" do
-      tax_rate = fixture(:tax_rate, percentage: "0.255")
-      product = fixture(:product, tax_rate_id: tax_rate.id)
-      product_variant_1 = fixture(:product_variant, product_id: product.id, price: "49.99")
-      product_variant_2 = fixture(:product_variant, product_id: product.id, price: "29.99")
-      promotion = fixture(:promotion, discount_percentage: "0.20")
+      tax_rate = generate(tax_rate(percentage: "0.255"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      product_variant_1 = generate(product_variant(product_id: product.id, price: "49.99"))
+      product_variant_2 = generate(product_variant(product_id: product.id, price: "29.99"))
+      promotion = generate(promotion(discount_percentage: "0.20"))
 
       order =
-        %{}
-        |> Order.create_for_checkout!()
+        Order.create_for_checkout!()
         |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
 
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        product_image_slug: product.image_slug,
-        product_variant_id: product_variant_1.id,
-        unit_price: product_variant_1.price,
-        tax_rate: tax_rate.percentage,
-        quantity: 1
-      })
+      generate(
+        line_item(
+          order_id: order.id,
+          product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
+          product_variant_id: product_variant_1.id,
+          unit_price: product_variant_1.price,
+          tax_rate: tax_rate.percentage,
+          quantity: 1
+        )
+      )
 
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        product_image_slug: product.image_slug,
-        product_variant_id: product_variant_2.id,
-        unit_price: product_variant_2.price,
-        tax_rate: tax_rate.percentage,
-        quantity: 2
-      })
+      generate(
+        line_item(
+          order_id: order.id,
+          product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
+          product_variant_id: product_variant_2.id,
+          unit_price: product_variant_2.price,
+          tax_rate: tax_rate.percentage,
+          quantity: 2
+        )
+      )
 
       order = Ash.load!(order, [:line_total, :line_tax_amount])
 
@@ -139,11 +143,10 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "promotion_applied? returns true if promotion applied" do
-      promotion = fixture(:promotion, discount_percentage: "0.20")
+      promotion = generate(promotion(discount_percentage: "0.20"))
 
       order =
-        %{}
-        |> Order.create_for_checkout!()
+        Order.create_for_checkout!()
         |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
 
       assert order.promotion_applied? == true
@@ -156,46 +159,41 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   test "calculates total and tax_amount correctly" do
-    tax_rate_2 = fixture(:tax_rate, percentage: "0.255")
-    tax_rate_1 = fixture(:tax_rate, percentage: "0.15")
-    product = fixture(:product, tax_rate_id: tax_rate_2.id)
-    product_variant = fixture(:product_variant, product_id: product.id, price: "29.99")
+    tax_rate_2 = generate(tax_rate(percentage: "0.255"))
+    tax_rate_1 = generate(tax_rate(percentage: "0.15"))
+    product = generate(product(tax_rate_id: tax_rate_2.id))
+    product_variant = generate(product_variant(product_id: product.id, price: "29.99"))
 
     fulfillment_option =
-      fixture(:fulfillment_option, %{
-        name: "Pickup",
-        fulfillment_method: :pickup,
-        rate_type: :fixed,
-        base_price: "4.99",
-        # Note: using a different tax rate for fulfillment!
-        tax_rate_id: tax_rate_1.id
-      })
+      generate(
+        fulfillment_option(
+          name: "Pickup",
+          fulfillment_method: :pickup,
+          rate_type: :fixed,
+          base_price: "4.99",
+          # Note: using a different tax rate for fulfillment!
+          tax_rate_id: tax_rate_1.id
+        )
+      )
 
     {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
-      Order
-      |> Ash.Changeset.for_create(:create)
-      |> Ash.create!()
-
-    order =
-      order
-      |> Ash.Changeset.for_update(:update)
-      |> Ash.Changeset.force_change_attribute(:fulfillment_option_id, fulfillment_option.id)
-      |> Ash.Changeset.force_change_attribute(:fulfillment_amount, fulfillment_amount)
-      |> Ash.update!()
+      Ash.Seed.seed!(Order, %{fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount})
 
     _line_item =
-      fixture(:line_item, %{
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        product_image_slug: product.image_slug,
-        product_variant_id: product_variant.id,
-        unit_price: product_variant.price,
-        tax_rate: tax_rate_2.percentage,
-        quantity: 2
-      })
+      generate(
+        line_item(
+          order_id: order.id,
+          product_id: product.id,
+          product_name: product.name,
+          product_image_slug: product.image_slug,
+          product_variant_id: product_variant.id,
+          unit_price: product_variant.price,
+          tax_rate: tax_rate_2.percentage,
+          quantity: 2
+        )
+      )
 
     order = Ash.load!(order, [:total, :tax_amount])
 
@@ -206,5 +204,13 @@ defmodule Edenflowers.Store.OrderTest do
     assert order.tax_amount
            |> Decimal.round(2)
            |> Decimal.equal?("16.04")
+  end
+
+  test "calling payment_received updates state and payment_state" do
+    order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"})
+
+    assert {:ok, order} = Order.payment_received(order.id)
+    assert order.state == :order
+    assert order.payment_state == :paid
   end
 end

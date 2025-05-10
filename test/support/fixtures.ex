@@ -1,6 +1,4 @@
 defmodule Edenflowers.Fixtures do
-  use Ash.Generator
-
   alias Edenflowers.Store.{TaxRate, Promotion, Product, ProductVariant, FulfillmentOption, Order, LineItem}
 
   def fixture(resource), do: fixture(resource, [])
