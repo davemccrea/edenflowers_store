@@ -56,7 +56,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
     attribute :max_dist_km, :integer, public?: true
 
     attribute :same_day, :boolean, default: false, public?: true
-    attribute :order_deadline, :time, default: ~T[14:00:00], public?: true
+    attribute :order_deadline, :time, public?: true
 
     attribute :monday, :boolean, default: true, public?: true
     attribute :tuesday, :boolean, default: true, public?: true
