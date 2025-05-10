@@ -1,6 +1,4 @@
 import Config
-config :edenflowers, Oban, testing: :manual
-config :ash, disable_async?: true
 
 # Configure your database
 #
@@ -37,5 +35,9 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+config :edenflowers, Oban, testing: :manual
+
+config :ash, disable_async?: true
 
 config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
