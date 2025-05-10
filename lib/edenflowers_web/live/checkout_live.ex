@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-submit="save_form_1"
                     class="checkout__form"
                   >
-                    <.input label={gettext("Name *")} field={@form[:customer_name]} type="text" />
+                    <.input label={gettext("Your Name *")} field={@form[:customer_name]} type="text" />
                     <.input label={gettext("Email *")} field={@form[:customer_email]} type="text" />
 
                     <.form_button>Next</.form_button>
@@ -99,6 +99,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                     >
                       {option.name}
                     </.input>
+
+                    <.input
+                      hidden={not @order.gift}
+                      label={gettext("Recipient Name *")}
+                      field={@form[:recipient_name]}
+                      type="text"
+                    />
 
                     <fieldset
                       class={[not @order.gift && "hidden"]}
@@ -374,8 +381,8 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order)}
   end
 
-  def handle_event("stripe:error", %{"error" => error}, socket) do
-    Logger.error("Stripe Hook Error: #{inspect(error)}")
+  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
+    Logger.error("#{message}: #{inspect(details)}")
     {:noreply, socket}
   end
 
