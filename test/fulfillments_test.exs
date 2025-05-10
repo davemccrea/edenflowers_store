@@ -1,16 +1,16 @@
 defmodule Edenflowers.FulfillmentsTest do
-  alias Edenflowers.Fulfillments
   use Edenflowers.DataCase
-  import Edenflowers.Fixtures
+  import Generator
+  alias Edenflowers.Fulfillments
 
   setup do
-    tax_rate = fixture(:tax_rate)
+    tax_rate = generate(tax_rate())
     [tax_rate_id: tax_rate.id]
   end
 
   describe "calculate_price/1" do
     test "calculates fixed pricing", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id, rate_type: :fixed, base_price: 0)
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id, rate_type: :fixed, base_price: 0))
       assert {:ok, Decimal.new("0")} == Fulfillments.calculate_price(fulfillment_option)
     end
   end
@@ -18,14 +18,16 @@ defmodule Edenflowers.FulfillmentsTest do
   describe "calculate_price/2" do
     setup %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
-        fixture(:fulfillment_option,
-          tax_rate_id: tax_rate_id,
-          fulfillment_method: :delivery,
-          rate_type: :dynamic,
-          base_price: "4.50",
-          price_per_km: "1.60",
-          free_dist_km: 5,
-          max_dist_km: 20
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            fulfillment_method: :delivery,
+            rate_type: :dynamic,
+            base_price: "4.50",
+            price_per_km: "1.60",
+            free_dist_km: 5,
+            max_dist_km: 20
+          )
         )
 
       [fulfillment_option: fulfillment_option]
@@ -48,7 +50,7 @@ defmodule Edenflowers.FulfillmentsTest do
 
   describe "fulfill_on_date/3" do
     test "returns :past when date is in the past", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id)
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
       now = DateTime.from_naive!(~N[2023-09-15 10:30:00], "Europe/Helsinki")
 
@@ -56,7 +58,7 @@ defmodule Edenflowers.FulfillmentsTest do
     end
 
     test "returns :day_of_week_disabled when day of week is disabled", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id, sunday: false)
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id, sunday: false))
 
       now = DateTime.from_naive!(~N[2023-09-09 20:15:00], "Europe/Helsinki")
 
@@ -66,7 +68,7 @@ defmodule Edenflowers.FulfillmentsTest do
 
     test "returns :same_day_delivery_disabled when same day fulfillment is not enabled", %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
-        fixture(:fulfillment_option, tax_rate_id: tax_rate_id, same_day: false, order_deadline: ~T[14:00:00])
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: false, order_deadline: ~T[14:00:00]))
 
       now = DateTime.from_naive!(~N[2023-09-20 09:45:00], "Europe/Helsinki")
 
@@ -76,7 +78,7 @@ defmodule Edenflowers.FulfillmentsTest do
 
     test "returns :ok when same day fulfillment is enabled", %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
-        fixture(:fulfillment_option, tax_rate_id: tax_rate_id, same_day: true, order_deadline: ~T[14:00:00])
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: true, order_deadline: ~T[14:00:00]))
 
       now = DateTime.from_naive!(~N[2023-06-01 13:59:00], "Europe/Helsinki")
 
@@ -87,7 +89,7 @@ defmodule Edenflowers.FulfillmentsTest do
       tax_rate_id: tax_rate_id
     } do
       fulfillment_option =
-        fixture(:fulfillment_option, tax_rate_id: tax_rate_id, same_day: true, order_deadline: ~T[14:00:00])
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: true, order_deadline: ~T[14:00:00]))
 
       now = DateTime.from_naive!(~N[2023-06-01 14:01:00], "Europe/Helsinki")
 
@@ -96,7 +98,7 @@ defmodule Edenflowers.FulfillmentsTest do
     end
 
     test "returns :disabled if date is disabled", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = fixture(:fulfillment_option, tax_rate_id: tax_rate_id, disabled_dates: [~D[2023-02-15]])
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id, disabled_dates: [~D[2023-02-15]]))
 
       now = DateTime.from_naive!(~N[2023-02-10 12:00:00], "Europe/Helsinki")
 
@@ -106,7 +108,7 @@ defmodule Edenflowers.FulfillmentsTest do
     test "fulfillment date overrides weekday 1/2", %{tax_rate_id: tax_rate_id} do
       # Disable fulfillment on Sundays except on Sunday 7th April 2024
       fulfillment_option =
-        fixture(:fulfillment_option, tax_rate_id: tax_rate_id, sunday: false, enabled_dates: [~D[2024-04-07]])
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, sunday: false, enabled_dates: [~D[2024-04-07]]))
 
       now = DateTime.from_naive!(~N[2024-04-06 09:20:00], "Europe/Helsinki")
       assert {true, :ok} = Fulfillments.fulfill_on_date(fulfillment_option, ~D[2024-04-07], now)
@@ -115,7 +117,7 @@ defmodule Edenflowers.FulfillmentsTest do
     test "fulfillment date overrides weekday 2/2", %{tax_rate_id: tax_rate_id} do
       # Enable fulfillment on Wednesdays except on Wednesday 3rd April 2024
       fulfillment_option =
-        fixture(:fulfillment_option, tax_rate_id: tax_rate_id, wednesday: true, disabled_dates: [~D[2024-04-03]])
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, wednesday: true, disabled_dates: [~D[2024-04-03]]))
 
       now = DateTime.from_naive!(~N[2024-04-02 17:50:00], "Europe/Helsinki")
 

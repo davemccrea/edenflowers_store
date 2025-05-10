@@ -87,7 +87,26 @@ defmodule Generator do
 
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
-        tax_rate_id: tax_rate_id
+        tax_rate_id: tax_rate_id,
+        name: words(),
+        fulfillment_method: :pickup,
+        rate_type: :fixed,
+        minimum_cart_total: 0,
+        base_price: "4.50",
+        price_per_km: "1.60",
+        free_dist_km: 5,
+        max_dist_km: 20,
+        same_day: true,
+        order_deadline: ~T[14:00:00],
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true,
+        enabled_dates: [],
+        disabled_dates: []
       },
       overrides: opts
     )

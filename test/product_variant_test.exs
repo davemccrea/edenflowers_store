@@ -1,12 +1,11 @@
 defmodule Edenflowers.Store.ProductVariantTest do
   use Edenflowers.DataCase
-  import Edenflowers.Fixtures
-
+  import Generator
   alias Edenflowers.Store.ProductVariant
 
   setup do
-    tax_rate = fixture(:tax_rate)
-    product = fixture(:product, tax_rate_id: tax_rate.id)
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
     {:ok, tax_rate: tax_rate, product: product}
   end
 
@@ -102,7 +101,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     end
 
     test "updates product variant price", %{product: product} do
-      variant = fixture(:product_variant, product_id: product.id, price: Decimal.new("9.99"))
+      variant = generate(product_variant(product_id: product.id, price: Decimal.new("9.99")))
 
       new_price = Decimal.new("11.50")
 
@@ -115,7 +114,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     end
 
     test "updates product variant stock quantity", %{product: product} do
-      variant = fixture(:product_variant, product_id: product.id, stock_quantity: 50)
+      variant = generate(product_variant(product_id: product.id, stock_quantity: 50))
 
       new_quantity = 75
 
@@ -128,7 +127,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     end
 
     test "fails to update product variant stock quantity to negative", %{product: product} do
-      variant = fixture(:product_variant, product_id: product.id, stock_quantity: 50)
+      variant = generate(product_variant(product_id: product.id, stock_quantity: 50))
 
       new_quantity = -5
 
@@ -142,7 +141,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     end
 
     test "destroys product variant", %{product: product} do
-      variant = fixture(:product_variant, product_id: product.id)
+      variant = generate(product_variant(product_id: product.id))
 
       assert :ok = Ash.destroy!(variant)
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{}]}} = Ash.get(ProductVariant, variant.id)

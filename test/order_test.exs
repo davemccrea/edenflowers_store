@@ -171,6 +171,7 @@ defmodule Edenflowers.Store.OrderTest do
           fulfillment_method: :pickup,
           rate_type: :fixed,
           base_price: "4.99",
+          order_deadline: ~T[12:00:00],
           # Note: using a different tax rate for fulfillment!
           tax_rate_id: tax_rate_1.id
         )

@@ -1,10 +1,10 @@
 defmodule Edenflowers.Store.FulfillmentOptionTest do
   use Edenflowers.DataCase
-  import Edenflowers.Fixtures
+  import Generator
   alias Edenflowers.Store.FulfillmentOption
 
   setup do
-    tax_rate = fixture(:tax_rate)
+    tax_rate = generate(tax_rate())
     {:ok, tax_rate: tax_rate}
   end
 

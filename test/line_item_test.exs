@@ -1,13 +1,13 @@
 defmodule Edenflowers.Store.LineItemTest do
   use Edenflowers.DataCase
-  import Edenflowers.Fixtures
+  import Generator
   alias Edenflowers.Store.{Order, LineItem}
 
   setup do
-    order = fixture(:order)
-    tax_rate = fixture(:tax_rate)
-    product = fixture(:product, tax_rate_id: tax_rate.id)
-    product_variant = fixture(:product_variant, product_id: product.id)
+    order = generate(order())
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    product_variant = generate(product_variant(product_id: product.id))
 
     {:ok, order: order, tax_rate: tax_rate, product: product, product_variant: product_variant}
   end
@@ -144,8 +144,8 @@ defmodule Edenflowers.Store.LineItemTest do
       product: product,
       product_variant: product_variant
     } do
-      promotion = fixture(:promotion, discount_percentage: "0.20")
-      order = fixture(:order)
+      promotion = generate(promotion(discount_percentage: "0.20"))
+      order = generate(order())
       order = Order.add_promotion_with_id!(order, promotion.id)
 
       line_item =
