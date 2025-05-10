@@ -144,7 +144,7 @@ defmodule Edenflowers.Store.Order do
     # Other Update Actions
     update :payment_received do
       change set_attribute(:state, :order)
-      change set_attribute(:payment_state, :paid)
+      change set_attribute(:payment_status, :paid)
     end
 
     update :update_fulfillment_option do
@@ -220,7 +220,7 @@ defmodule Edenflowers.Store.Order do
       default: :checkout,
       constraints: [one_of: [:checkout, :order]]
 
-    attribute :payment_state, :atom,
+    attribute :payment_status, :atom,
       default: :pending,
       constraints: [
         one_of: [
@@ -231,7 +231,7 @@ defmodule Edenflowers.Store.Order do
         ]
       ]
 
-    attribute :fulfillment_state, :atom,
+    attribute :fulfillment_status, :atom,
       default: :pending,
       constraints: [
         one_of: [
