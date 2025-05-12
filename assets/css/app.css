@@ -53,6 +53,7 @@ body {
   opacity: 0;
 }
 body.ready {
+  transition: 0.25s opacity;
   opacity: 1;
 }
 
