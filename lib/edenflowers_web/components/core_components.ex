@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch)
+  attr :rest, :global, include: ~w(href navigate patch method)
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
@@ -156,6 +156,8 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :class, :string, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :string, default: nil, doc: "the input error class to use over defaults"
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
@@ -184,7 +186,15 @@ defmodule EdenflowersWeb.CoreComponents do
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <span class="fieldset-label">
-          <input type="checkbox" id={@id} name={@name} value="true" checked={@checked} class="checkbox checkbox-sm" {@rest} />{@label}
+          <input
+            type="checkbox"
+            id={@id}
+            name={@name}
+            value="true"
+            checked={@checked}
+            class={@class || "checkbox checkbox-sm"}
+            {@rest}
+          />{@label}
         </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -200,7 +210,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={["select select-lg w-full", @errors != [] && "select-error"]}
+          class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           {@rest}
         >
@@ -218,7 +228,12 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <span :if={@label} class="fieldset-label mb-1">{@label}</span>
-        <textarea id={@id} name={@name} class={["textarea w-full", @errors != [] && "textarea-error"]} {@rest}>{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+        <textarea
+          id={@id}
+          name={@name}
+          class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
+          {@rest}
+        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </fieldset>
@@ -291,7 +306,7 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={["input input-lg w-full", @errors != [] && "input-error"]}
+          class={[@class || "input input-lg w-full", @errors != [] && (@error_class || "input-error")]}
           {@rest}
         />
       </label>

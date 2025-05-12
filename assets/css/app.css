@@ -43,7 +43,7 @@
 }
 
 /* Make LiveView wrapper divs transparent for layout */
-[data-phx-root-id] {
+[data-phx-session] {
   display: contents;
 }
 
