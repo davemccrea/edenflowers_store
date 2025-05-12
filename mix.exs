@@ -34,6 +34,8 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:simple_sat, "~> 0.1"},
+      {:ash_authentication, "~> 4.0"},
       {:live_debugger, "~> 0.1", only: [:dev]},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.11"},

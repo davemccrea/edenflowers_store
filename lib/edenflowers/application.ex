@@ -18,7 +18,8 @@ defmodule Edenflowers.Application do
       # Start a worker by calling: Edenflowers.Worker.start_link(arg)
       # {Edenflowers.Worker, arg},
       # Start to serve requests, typically the last entry
-      EdenflowersWeb.Endpoint
+      EdenflowersWeb.Endpoint,
+      {AshAuthentication.Supervisor, [otp_app: :edenflowers]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -64,7 +64,7 @@ config :edenflowers, EdenflowersWeb.Endpoint,
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :edenflowers, dev_routes: true
+config :edenflowers, dev_routes: true, token_signing_secret: "gfVwyABSNkPTnaZdjgjlMpEoNPEvxcgQ"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

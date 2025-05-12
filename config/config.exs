@@ -38,6 +38,8 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :authentication,
+        :tokens,
         :postgres,
         :resource,
         :code_interface,
@@ -61,7 +63,7 @@ config :spark,
 config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Edenflowers.Store]
+  ash_domains: [Edenflowers.Accounts, Edenflowers.Store]
 
 # Configures the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
