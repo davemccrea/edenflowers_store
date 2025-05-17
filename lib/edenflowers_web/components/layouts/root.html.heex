@@ -33,15 +33,20 @@
 
     <script type="module">
       // https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/
-       const dropdownExists = document.querySelector('sl-dropdown');
+      async function ensureCustomElementDefined(elementName) {
+        const elementExists = document.querySelector(elementName);
+        if (elementExists) {
+          await customElements.whenDefined(elementName);
+        }
+      }
 
-       if (dropdownExists) {
-         await Promise.allSettled([
-           customElements.whenDefined('sl-dropdown'),
-         ]);
-       }
-       
-       document.body.classList.add('ready');
+      await Promise.allSettled([
+        ensureCustomElementDefined("sl-dropdown"),
+        ensureCustomElementDefined("sl-alert"),
+        ensureCustomElementDefined("sl-icon"),
+      ]);
+
+      document.body.classList.add('ready');
     </script>
   </body>
 </html>

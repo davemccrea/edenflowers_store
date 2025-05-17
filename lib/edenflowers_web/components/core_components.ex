@@ -30,47 +30,22 @@ defmodule EdenflowersWeb.CoreComponents do
   use Gettext, backend: EdenflowersWeb.Gettext
 
   alias Phoenix.LiveView.JS
+  alias EdenflowersWeb.LiveToast
 
-  @doc """
-  Renders flash notices.
-
-  ## Examples
-
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
-  """
-  attr :id, :string, doc: "the optional id of flash container"
-  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
-  attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
-  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
-
-  slot :inner_block, doc: "the optional inner block that renders the flash message"
-
-  def flash(assigns) do
-    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
-
+  def notifications(assigns) do
     ~H"""
-    <div
-      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
-      id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
-      class="toast toast-top toast-end z-100"
-      {@rest}
-    >
-      <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
-        </div>
-        <div class="flex-1" />
-        <button type="button" class="group cursor-pointer self-start" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark-solid" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
-      </div>
+    <div id="alert-group" phx-hook="AlertHandler">
+      <sl-alert id={"alert-#{Ecto.UUID.generate()}"} variant="warning">
+        <sl-icon slot="icon" name="exclamation-octagon" />
+        {gettext("Disconnected from server. Reconnecting...")}
+      </sl-alert>
+    </div>
+
+    <div id="flash-group" phx-hook="FlashHandler">
+      <sl-alert :for={{variant, message} <- @flash} id={"flash-#{Ecto.UUID.generate()}"} variant={variant} closable>
+        <sl-icon slot="icon" name={LiveToast.icon_name(String.to_existing_atom(variant))} />
+        {message}
+      </sl-alert>
     </div>
     """
   end

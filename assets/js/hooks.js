@@ -362,4 +362,75 @@ Hooks.Stripe = {
   },
 };
 
+Hooks.AlertHandler = {
+  mounted() {
+    this.errorToast = this.el.firstElementChild;
+
+    // Toasts are triggered by the server and inserted into the DOM when event is received.
+    this.handleEvent(
+      "toast:show",
+      ({ id, variant, duration, closable, countdown, icon, message }) => {
+        const html = `
+      <sl-alert 
+        id="toast-${id}" 
+        variant="${variant}" 
+        duration="${duration}" 
+        ${closable ? "closable" : ""} 
+        ${
+          countdown == "rtl" || countdown == "ltr"
+            ? `countdown="${countdown}"`
+            : ""
+        }
+      >
+        <sl-icon slot="icon" name="${icon}"></sl-icon>
+        ${message}
+      </sl-alert>
+      `;
+
+        // Insert the toast into the DOM.
+        this.el.insertAdjacentHTML("beforeend", html);
+
+        const toastEl = this.el.querySelector(`#toast-${id}`);
+
+        customElements.whenDefined("sl-alert").then(() => {
+          toastEl.toast();
+        });
+      }
+    );
+  },
+  disconnected() {
+    if (this.errorToast) {
+      customElements.whenDefined("sl-alert").then(() => {
+        this.errorToast.toast();
+      });
+    }
+  },
+  reconnected() {
+    if (this.errorToast) {
+      customElements.whenDefined("sl-alert").then(() => {
+        this.errorToast.hide();
+      });
+    }
+  },
+};
+
+Hooks.FlashHandler = {
+  mounted() {
+    customElements.whenDefined("sl-alert").then(() => {
+      for (const alertEl of this.el.children) {
+        alertEl.toast();
+      }
+
+      this.pushEvent("lv:clear-flash");
+    });
+  },
+  disconnected() {
+    if (this.el) {
+      for (const alertEl of this.el.children) {
+        alertEl.remove();
+      }
+    }
+  },
+};
+
 export default Hooks;
