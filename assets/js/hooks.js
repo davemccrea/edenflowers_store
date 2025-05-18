@@ -431,4 +431,35 @@ Hooks.DisconnectedHandler = {
   },
 };
 
+Hooks.HotFxShyHeader = {
+  mounted() {
+    this.hideJS = this.el.getAttribute("data-hide");
+    this.showJS = this.el.getAttribute("data-show");
+
+    this.lastScroll = 0;
+    this.lastMaxScroll = 0;
+
+    this.boundHandleScroll = this.handleScroll.bind(this);
+
+    document.addEventListener("scroll", this.boundHandleScroll);
+  },
+
+  destroyed() {
+    document.removeEventListener("scroll", this.boundHandleScroll);
+  },
+
+  handleScroll() {
+    if (window.scrollY > Math.max(150, this.lastScroll)) {
+      this.liveSocket.execJS(this.el, this.hideJS);
+    } else if (window.scrollY < this.lastMaxScroll - 150) {
+      this.liveSocket.execJS(this.el, this.showJS);
+      this.lastMaxScroll = window.scrollY;
+    }
+    this.lastScroll = window.scrollY;
+    if (window.scrollY > this.lastMaxScroll) {
+      this.lastMaxScroll = window.scrollY;
+    }
+  },
+};
+
 export default Hooks;

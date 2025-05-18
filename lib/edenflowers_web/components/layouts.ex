@@ -95,7 +95,12 @@ defmodule EdenflowersWeb.Layouts do
       </footer>
     </.drawer>
 
-    <hotfx-shy-header>
+    <div
+      id="hotfx-shy-header"
+      phx-hook="HotFxShyHeader"
+      data-hide={JS.add_class("hidden")}
+      data-show={JS.remove_class("hidden")}
+    >
       <header class="w-full">
         <%!-- Banner --%>
         <section class="border-b bg-sky-100 py-2 text-center">
@@ -176,7 +181,7 @@ defmodule EdenflowersWeb.Layouts do
           </div>
         </section>
       </header>
-    </hotfx-shy-header>
+    </div>
 
     <main class="flex-grow">
       <.alert_group />
