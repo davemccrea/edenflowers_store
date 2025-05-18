@@ -364,71 +364,69 @@ Hooks.Stripe = {
 
 Hooks.AlertHandler = {
   mounted() {
-    this.errorToast = this.el.firstElementChild;
-
     // Toasts are triggered by the server and inserted into the DOM when event is received.
-    this.handleEvent(
-      "toast:show",
-      ({ id, variant, duration, closable, countdown, icon, message }) => {
-        const html = `
+    this.handleEvent("toast:show", (alert) => {
+      const html = `
       <sl-alert 
-        id="toast-${id}" 
-        variant="${variant}" 
-        duration="${duration}" 
-        ${closable ? "closable" : ""} 
+        id="alert-${alert.id}" 
+        variant="${alert.variant}" 
+        duration="${alert.duration}" 
+        ${alert.closable ? "closable" : ""} 
         ${
-          countdown == "rtl" || countdown == "ltr"
-            ? `countdown="${countdown}"`
+          alert.countdown == "rtl" || alert.countdown == "ltr"
+            ? `countdown="${alert.countdown}"`
             : ""
         }
       >
-        <sl-icon slot="icon" name="${icon}"></sl-icon>
-        ${message}
+        <sl-icon slot="icon" name="${alert.icon}"></sl-icon>
+        ${alert.message}
       </sl-alert>
       `;
 
-        // Insert the toast into the DOM.
-        this.el.insertAdjacentHTML("beforeend", html);
+      // Insert the toast into the DOM.
+      this.el.insertAdjacentHTML("beforeend", html);
 
-        const toastEl = this.el.querySelector(`#toast-${id}`);
-
-        customElements.whenDefined("sl-alert").then(() => {
-          toastEl.toast();
-        });
-      }
-    );
-  },
-  disconnected() {
-    if (this.errorToast) {
+      const alertEl = this.el.querySelector(`#alert-${alert.id}`);
       customElements.whenDefined("sl-alert").then(() => {
-        this.errorToast.toast();
+        alertEl.toast();
       });
-    }
-  },
-  reconnected() {
-    if (this.errorToast) {
-      customElements.whenDefined("sl-alert").then(() => {
-        this.errorToast.hide();
-      });
-    }
+    });
   },
 };
 
 Hooks.FlashHandler = {
   mounted() {
     customElements.whenDefined("sl-alert").then(() => {
-      for (const alertEl of this.el.children) {
-        alertEl.toast();
+      for (const flashEl of Array.from(this.el.children)) {
+        flashEl.toast();
       }
 
-      this.pushEvent("lv:clear-flash");
+      this.pushEvent("lv:clear-flash", {});
     });
   },
   disconnected() {
+    // TODO: Is it necessary to check for this.el?
     if (this.el) {
-      for (const alertEl of this.el.children) {
-        alertEl.remove();
+      for (const flashEl of this.el.children) {
+        flashEl.remove();
       }
+    }
+  },
+};
+
+Hooks.DisconnectedHandler = {
+  disconnected() {
+    if (this.el) {
+      customElements.whenDefined("sl-alert").then(() => {
+        this.el.toast();
+      });
+    }
+  },
+  reconnected() {
+    if (this.el) {
+      customElements.whenDefined("sl-alert").then(() => {
+        this.el.hide();
+      });
     }
   },
 };

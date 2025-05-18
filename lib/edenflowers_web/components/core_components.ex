@@ -32,21 +32,53 @@ defmodule EdenflowersWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   alias EdenflowersWeb.LiveToast
 
-  def notifications(assigns) do
+  @doc """
+  Renders a component for dynamic, client-side alerts.
+
+  This component is typically used for displaying alerts that are not part of
+  the standard Phoenix flash message lifecycle. For example, you might use this
+  for real-time notifications triggered by client-side events or LiveView pushes
+  that require a more persistent or distinct UI treatment than flash messages.
+  """
+  def alert_group(assigns) do
     ~H"""
-    <div id="alert-group" phx-hook="AlertHandler">
-      <sl-alert id={"alert-#{Ecto.UUID.generate()}"} variant="warning">
-        <sl-icon slot="icon" name="exclamation-octagon" />
-        {gettext("Disconnected from server. Reconnecting...")}
+    <div id="alert-group" phx-hook="AlertHandler" />
+    """
+  end
+
+  @doc """
+  Renders the Phoenix flash messages.
+
+  Flash messages are typically used for feedback after an action, such as a successful
+  form submission or an error during an operation. Due to limitations in the Phoenix
+  flash system, only one type of flash message (e.g., one :info or one :error) can be
+  displayed at a time when set directly on the connection.
+
+  It also includes a built-in alert for disconnection/reconnection status.
+  """
+  def flash_group(assigns) do
+    flash = Enum.map(assigns.flash, fn {key, msg} -> LiveToast.new(key, msg) end)
+    assigns = assign(assigns, :flash, flash)
+
+    ~H"""
+    <div id="flash-group" phx-hook="FlashHandler">
+      <sl-alert
+        :for={f <- @flash}
+        id={"flash-#{f.id}"}
+        variant={f.variant}
+        duration={f.duration}
+        closable={f.closable}
+        countdown={f.countdown}
+      >
+        <sl-icon slot="icon" name={f.icon} />
+        {f.message}
       </sl-alert>
     </div>
 
-    <div id="flash-group" phx-hook="FlashHandler">
-      <sl-alert :for={{variant, message} <- @flash} id={"flash-#{Ecto.UUID.generate()}"} variant={variant} closable>
-        <sl-icon slot="icon" name={LiveToast.icon_name(String.to_existing_atom(variant))} />
-        {message}
-      </sl-alert>
-    </div>
+    <sl-alert id={"flash-#{Ecto.UUID.generate()}"} phx-hook="DisconnectedHandler" variant="warning">
+      <sl-icon slot="icon" name="exclamation-octagon" />
+      {gettext("Disconnected from server. Reconnecting...")}
+    </sl-alert>
     """
   end
 

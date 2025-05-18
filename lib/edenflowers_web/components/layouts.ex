@@ -179,7 +179,8 @@ defmodule EdenflowersWeb.Layouts do
     </hotfx-shy-header>
 
     <main class="flex-grow">
-      <.notifications flash={@flash} />
+      <.alert_group />
+      <.flash_group flash={@flash} />
       {render_slot(@inner_block)}
     </main>
 
