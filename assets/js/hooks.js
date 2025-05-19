@@ -363,7 +363,28 @@ Hooks.Stripe = {
 };
 
 Hooks.AlertHandler = {
+  createDisconnectedAlert() {
+    this.disconnectedMessage = this.el.getAttribute(
+      "data-disconnected-message"
+    );
+
+    const disconnectedAlert = `
+      <sl-alert 
+        id="alert-disconnected" 
+        variant="warning" 
+        closable="false"
+      >
+        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+         ${this.disconnectedMessage}
+      </sl-alert>
+      `;
+
+    this.el.insertAdjacentHTML("beforeend", disconnectedAlert);
+  },
+
   mounted() {
+    this.createDisconnectedAlert();
+
     // Toasts are triggered by the server and inserted into the DOM when event is received.
     this.handleEvent("toast:show", (alert) => {
       const html = `
@@ -392,6 +413,24 @@ Hooks.AlertHandler = {
       });
     });
   },
+
+  disconnected() {
+    const disconnectedAlert = document.querySelector("#alert-disconnected");
+    if (disconnectedAlert) {
+      customElements.whenDefined("sl-alert").then(() => {
+        /** @type {any} */ (disconnectedAlert).toast();
+      });
+    }
+  },
+
+  reconnected() {
+    const disconnectedAlert = document.querySelector("#alert-disconnected");
+    if (disconnectedAlert) {
+      /** @type {any} */ (disconnectedAlert).hide();
+    }
+
+    this.createDisconnectedAlert();
+  },
 };
 
 Hooks.FlashHandler = {
@@ -410,23 +449,6 @@ Hooks.FlashHandler = {
       for (const flashEl of this.el.children) {
         flashEl.remove();
       }
-    }
-  },
-};
-
-Hooks.DisconnectedHandler = {
-  disconnected() {
-    if (this.el) {
-      customElements.whenDefined("sl-alert").then(() => {
-        this.el.toast();
-      });
-    }
-  },
-  reconnected() {
-    if (this.el) {
-      customElements.whenDefined("sl-alert").then(() => {
-        this.el.hide();
-      });
     }
   },
 };

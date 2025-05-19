@@ -42,7 +42,11 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   def alert_group(assigns) do
     ~H"""
-    <div id="alert-group" phx-hook="AlertHandler" />
+    <div
+      id="alert-group"
+      phx-hook="AlertHandler"
+      data-disconnected-message={gettext("Disconnected from server. Reconnecting...")}
+    />
     """
   end
 
@@ -74,11 +78,6 @@ defmodule EdenflowersWeb.CoreComponents do
         {f.message}
       </sl-alert>
     </div>
-
-    <sl-alert id={"flash-#{Ecto.UUID.generate()}"} phx-hook="DisconnectedHandler" variant="warning">
-      <sl-icon slot="icon" name="exclamation-octagon" />
-      {gettext("Disconnected from server. Reconnecting...")}
-    </sl-alert>
     """
   end
 
