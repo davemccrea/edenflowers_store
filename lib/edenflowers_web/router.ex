@@ -33,24 +33,7 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    ash_authentication_live_session :authenticated_routes do
-      # in each liveview, add one of the following at the top of the module:
-      #
-      # If an authenticated user must be present:
-      # on_mount {EdenflowersWeb.LiveUserAuth, :live_user_required}
-      #
-      # If an authenticated user *may* be present:
-      # on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
-      #
-      # If an authenticated user must *not* be present:
-      # on_mount {EdenflowersWeb.LiveUserAuth, :live_no_user}
-    end
-  end
-
-  scope "/", EdenflowersWeb do
-    pipe_through :browser
-
-    live_session :default,
+    ash_authentication_live_session :authenticated_routes,
       on_mount: [
         {EdenflowersWeb.Hooks.InitStore, :put_locale},
         {EdenflowersWeb.Hooks.InitStore, :put_order},
@@ -65,33 +48,31 @@ defmodule EdenflowersWeb.Router do
       live "/product/:id", ProductLive
       live "/checkout", CheckoutLive
       live "/order/:id", OrderLive
+      live "/account", AccountLive
     end
 
     get "/checkout/complete/:id", CheckoutCompleteController, :index
     get "/cldr_locale/:cldr_locale", LocaleController, :index
+
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    # Remove these if you'd like to use your own authentication views
-    sign_in_route register_path: "/register",
-                  reset_path: "/reset",
-                  auth_routes_prefix: "/auth",
-                  on_mount: [{EdenflowersWeb.LiveUserAuth, :live_no_user}],
-                  overrides: [EdenflowersWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
-
-    # Remove this if you do not want to use the reset password feature
-    reset_route auth_routes_prefix: "/auth",
-                overrides: [EdenflowersWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
-
-    # Remove this if you do not use the confirmation strategy
-    confirm_route Edenflowers.Accounts.User, :confirm_new_user,
+    # Using a custom live view which only handles magic link strategy
+    sign_in_route(
+      live_view: EdenflowersWeb.MagicLinkRequestLive,
       auth_routes_prefix: "/auth",
-      overrides: [EdenflowersWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      on_mount: [
+        {EdenflowersWeb.LiveUserAuth, :live_no_user},
+        {EdenflowersWeb.Hooks.InitStore, :put_locale}
+      ]
+    )
 
-    # Remove this if you do not use the magic link strategy.
     magic_sign_in_route(Edenflowers.Accounts.User, :magic_link,
+      live_view: EdenflowersWeb.MagicLinkCompleteLive,
       auth_routes_prefix: "/auth",
-      overrides: [EdenflowersWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+      on_mount: [
+        {EdenflowersWeb.Hooks.InitStore, :put_locale}
+      ]
     )
   end
 

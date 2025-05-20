@@ -1,17 +1,44 @@
 defmodule EdenflowersWeb.Layouts do
-  @moduledoc """
-  This module holds different layouts used by your application.
-
-  See the `layouts` directory for all templates available.
-  The "root" layout is a skeleton rendered as part of the
-  application router. The "app" layout is set as the default
-  layout on both `use EdenflowersWeb, :controller` and
-  `use EdenflowersWeb, :live_view`.
-  """
   use EdenflowersWeb, :html
 
   embed_templates "layouts/*"
 
+  def auth(assigns) do
+    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
+
+    assigns =
+      assigns
+      |> assign(current_locale: String.capitalize(current_locale))
+
+    ~H"""
+    <div class="auth-background-pattern flex min-h-screen flex-col">
+      <header class="py-8 text-center">
+        <.link navigate={~p"/"} class="text-primary font-sans text-xl font-bold uppercase tracking-widest sm:text-2xl">
+          Eden Flowers
+        </.link>
+      </header>
+
+      <main class="flex flex-grow items-center justify-center">
+        <.alert_group />
+        <.flash_group flash={@flash} />
+        {render_slot(@inner_block)}
+      </main>
+
+      <footer class="py-8 text-center">
+        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
+          <button class="group cursor-pointer">
+            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+              {@current_locale}
+            </span>
+          </button>
+        </.live_component>
+      </footer>
+    </div>
+    """
+  end
+
+  attr :current_user, :map, required: true
   attr :flash, :map, required: true
   attr :order, :map, required: true
   slot :inner_block, required: true
@@ -152,6 +179,19 @@ defmodule EdenflowersWeb.Layouts do
 
             <%!-- Right --%>
             <div class="flex flex-1 items-center justify-end sm:gap-4">
+              <%!-- Sign in --%>
+              <.link
+                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+                class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto"
+              >
+                <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
+                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+                  {if @current_user,
+                    do: gettext("Your Account"),
+                    else: gettext("Sign In")}
+                </span>
+              </.link>
+
               <%!-- Locale picker button --%>
               <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker}>
                 <button class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto">
@@ -195,20 +235,14 @@ defmodule EdenflowersWeb.Layouts do
           <div class="flex flex-col gap-8 md:flex-row">
             <div class="m-auto flex-1">
               <div class="m-auto max-w-lg space-y-4">
-                <h2 class="font-serif text-2xl sm:text-3xl">
-                  {gettext("Enjoy 20% off your next order and get occassional floral advice in your inbox.")}
-                </h2>
-
-                <.form for={to_form(%{})}>
-                  <input type="text" class="input input-lg w-full text-sm" placeholder="Email Address" name="email_address" />
-                </.form>
+                <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
               </div>
             </div>
 
             <div class="flex-1">
-              <div class="m-auto max-w-lg">
+              <section class="m-auto max-w-lg">
                 <.social_media_links size={6} />
-              </div>
+              </section>
             </div>
           </div>
         </div>

@@ -37,6 +37,10 @@ defmodule Edenflowers.Accounts.User do
     repo Edenflowers.Repo
   end
 
+  code_interface do
+    define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
+  end
+
   actions do
     defaults [:read]
 
@@ -85,6 +89,13 @@ defmodule Edenflowers.Accounts.User do
 
       run AshAuthentication.Strategy.MagicLink.Request
     end
+
+    create :subscribe_to_newsletter do
+      accept [:email]
+      upsert? true
+      upsert_identity :unique_email
+      change set_attribute(:newsletter_opt_in, true)
+    end
   end
 
   policies do
@@ -100,10 +111,9 @@ defmodule Edenflowers.Accounts.User do
   attributes do
     uuid_primary_key :id
 
-    attribute :email, :ci_string do
-      allow_nil? false
-      public? true
-    end
+    attribute :email, :ci_string, allow_nil?: false, public?: true
+    attribute :newsletter_opt_in, :boolean, default: false, public?: true
+    attribute :promotion_claimed, :boolean, default: false, public?: true
   end
 
   identities do

@@ -3,6 +3,8 @@ defmodule EdenflowersWeb.HomeLive do
 
   alias Edenflowers.Store.Product
 
+  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+
   def mount(_params, _session, socket) do
     # TODO: get only featured products
     products = Product.get_all_for_store!()
@@ -12,7 +14,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <section class="relative not-last:border-b">
         <img src="/images/image_1.jpg" class="h-[100vh] w-full object-cover" alt="" />
 

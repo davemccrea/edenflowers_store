@@ -3,6 +3,8 @@ defmodule EdenflowersWeb.ProductLive do
 
   alias Edenflowers.Store.{Product, LineItem}
 
+  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
@@ -34,7 +36,7 @@ defmodule EdenflowersWeb.ProductLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="container my-36">
         <%!-- Breadcrumbs --%>
         <nav aria-label="Breadcrumb" class="mb-8 text-sm">

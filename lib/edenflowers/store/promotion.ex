@@ -52,6 +52,7 @@ defmodule Edenflowers.Store.Promotion do
     attribute :minimum_cart_total, :decimal, allow_nil?: false
     attribute :start_date, :date
     attribute :expiration_date, :date
+    attribute :usage_limit, :integer, allow_nil?: true
   end
 
   identities do

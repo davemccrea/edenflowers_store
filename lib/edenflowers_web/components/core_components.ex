@@ -149,7 +149,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week radio-card)
+               range search select tel text textarea time url week radio-card hidden)
 
   attr :style, :string,
     default: "default",
@@ -298,6 +298,12 @@ defmodule EdenflowersWeb.CoreComponents do
       <button class="btn btn-primary join-item z-50">{@button_text}</button>
     </fieldset>
     <.error :for={msg <- @errors}>{msg}</.error>
+    """
+  end
+
+  def input(%{type: "hidden"} = assigns) do
+    ~H"""
+    <input type="hidden" name={@name} id={@id} value={Phoenix.HTML.Form.normalize_value(@type, @value)} {@rest} />
     """
   end
 
