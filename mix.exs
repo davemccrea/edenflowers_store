@@ -78,7 +78,8 @@ defmodule Edenflowers.MixProject do
       {:ex_cldr_plugs, "~> 1.3"},
       {:ex_cldr_languages, "~> 0.3"},
       {:cldr_html, "~> 1.6"},
-      {:stripity_stripe, "~> 3.2"}
+      {:stripity_stripe, "~> 3.2"},
+      {:tidewave, "~> 0.1", only: :dev}
     ]
   end
 
