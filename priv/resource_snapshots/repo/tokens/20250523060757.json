@@ -2,22 +2,12 @@
   "attributes": [
     {
       "allow_nil?": false,
-      "default": "fragment(\"gen_random_uuid()\")",
+      "default": "nil",
       "generated?": false,
       "primary_key?": true,
       "references": null,
       "size": null,
-      "source": "id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "name",
+      "source": "jti",
       "type": "text"
     },
     {
@@ -27,8 +17,8 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "code",
-      "type": "citext"
+      "source": "subject",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -37,8 +27,8 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "discount_percentage",
-      "type": "decimal"
+      "source": "expires_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -47,8 +37,8 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "minimum_cart_total",
-      "type": "decimal"
+      "source": "purpose",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -57,28 +47,28 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "start_date",
-      "type": "date"
+      "source": "extra_data",
+      "type": "map"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "expiration_date",
-      "type": "date"
+      "source": "created_at",
+      "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "usage_limit",
-      "type": "bigint"
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -86,23 +76,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "06F2A33A65FC21DEDF73D9E96ED5E528EB5A624E0EC337007D412E573CBB8046",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "promotions_unique_code_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "code"
-        }
-      ],
-      "name": "unique_code",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "5A26E3CD104DD74A3D7EF328B967D05CCFDF735DBFCC0511FF365BE1EFF87C95",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -110,5 +85,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "promotions"
+  "table": "tokens"
 }

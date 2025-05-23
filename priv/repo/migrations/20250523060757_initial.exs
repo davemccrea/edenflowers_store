@@ -8,6 +8,32 @@ defmodule Edenflowers.Repo.Migrations.Initial do
   use Ecto.Migration
 
   def up do
+    create table(:users, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :name, :text
+      add :email, :citext, null: false
+      add :newsletter_opt_in, :boolean, default: false
+      add :promotion_claimed, :boolean, default: false
+    end
+
+    create unique_index(:users, [:email], name: "users_unique_email_index")
+
+    create table(:tokens, primary_key: false) do
+      add :jti, :text, null: false, primary_key: true
+      add :subject, :text, null: false
+      add :expires_at, :utc_datetime, null: false
+      add :purpose, :text, null: false
+      add :extra_data, :map
+
+      add :created_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+    end
+
     create table(:tax_rates, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :name, :text, null: false
@@ -25,6 +51,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :minimum_cart_total, :decimal, null: false
       add :start_date, :date
       add :expiration_date, :date
+      add :usage_limit, :bigint
     end
 
     create unique_index(:promotions, [:code], name: "promotions_unique_code_index")
@@ -45,7 +72,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
           ),
           null: false
 
-      add :product_category_id, :uuid
+      add :product_category_id, :uuid, null: false
     end
 
     create table(:product_variants, primary_key: false) do
@@ -111,8 +138,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :step, :bigint, default: 1
       add :state, :text, default: "checkout"
-      add :payment_state, :text, default: "pending"
-      add :fulfillment_state, :text, default: "pending"
+      add :payment_status, :text, default: "pending"
+      add :fulfillment_status, :text, default: "pending"
       add :customer_name, :text
       add :customer_email, :text
       add :gift, :boolean, default: false
@@ -136,6 +163,14 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :updated_at, :utc_datetime_usec,
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :user_id,
+          references(:users,
+            column: :id,
+            name: "orders_user_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          )
 
       add :fulfillment_option_id, :uuid
       add :promotion_id, :uuid
@@ -237,7 +272,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :free_dist_km, :bigint
       add :max_dist_km, :bigint
       add :same_day, :boolean, default: false
-      add :order_deadline, :time, default: fragment("'14:00:00'")
+      add :order_deadline, :time
       add :monday, :boolean, default: true
       add :tuesday, :boolean, default: true
       add :wednesday, :boolean, default: true
@@ -327,6 +362,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:opening_hours)
 
+    drop constraint(:orders, "orders_user_id_fkey")
+
     drop table(:orders)
 
     alter table(:product_categories) do
@@ -366,5 +403,11 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop_if_exists unique_index(:tax_rates, [:name], name: "tax_rates_unique_name_index")
 
     drop table(:tax_rates)
+
+    drop table(:tokens)
+
+    drop_if_exists unique_index(:users, [:email], name: "users_unique_email_index")
+
+    drop table(:users)
   end
 end

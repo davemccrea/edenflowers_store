@@ -1,16 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -21,53 +11,143 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
+      "allow_nil?": true,
+      "default": "1",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "name",
+      "source": "step",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "\"checkout\"",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "state",
       "type": "text"
     },
     {
       "allow_nil?": true,
-      "default": "\"0\"",
+      "default": "\"pending\"",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "minimum_cart_total",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "fulfillment_method",
+      "source": "payment_status",
       "type": "text"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
+      "allow_nil?": true,
+      "default": "\"pending\"",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "rate_type",
+      "source": "fulfillment_status",
       "type": "text"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "base_price",
+      "source": "customer_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "customer_email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "false",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "gift",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "gift_message",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "recipient_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "recipient_phone_number",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "delivery_address",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "delivery_instructions",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "fulfillment_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "fulfillment_amount",
       "type": "decimal"
     },
     {
@@ -77,8 +157,8 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "price_per_km",
-      "type": "decimal"
+      "source": "calculated_address",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -87,7 +167,17 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "free_dist_km",
+      "source": "here_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "distance",
       "type": "bigint"
     },
     {
@@ -97,18 +187,8 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "max_dist_km",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "same_day",
-      "type": "boolean"
+      "source": "position",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -117,107 +197,31 @@
       "primary_key?": false,
       "references": null,
       "size": null,
-      "source": "order_deadline",
-      "type": "time"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "monday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "tuesday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "wednesday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "thursday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "friday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "true",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "saturday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "sunday",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "[]",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "enabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
-    },
-    {
-      "allow_nil?": true,
-      "default": "[]",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "disabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
+      "source": "payment_intent_id",
+      "type": "text"
     },
     {
       "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "primary_key?": false,
@@ -234,15 +238,73 @@
           "global": null,
           "strategy": null
         },
-        "name": "fulfillment_options_tax_rate_id_fkey",
+        "name": "orders_user_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "tax_rates"
+        "table": "users"
       },
       "size": null,
-      "source": "tax_rate_id",
+      "source": "user_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_fulfillment_option_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "fulfillment_options"
+      },
+      "size": null,
+      "source": "fulfillment_option_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "orders_promotion_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "promotions"
+      },
+      "size": null,
+      "source": "promotion_id",
       "type": "uuid"
     }
   ],
@@ -251,23 +313,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "15E70A9424F52862FD2CFEDABB3372ED5311BF55507C361F2BEA943CF4CCC1D5",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "fulfillment_options_unique_name_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "name"
-        }
-      ],
-      "name": "unique_name",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "1EFD3B0106906941B1B63FD5B2AAF5A47965525E00A15E66D3C1CC0BF3B63CFF",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -275,5 +322,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "fulfillment_options"
+  "table": "orders"
 }

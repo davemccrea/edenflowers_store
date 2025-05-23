@@ -69,6 +69,16 @@
       "size": null,
       "source": "expiration_date",
       "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "primary_key?": false,
+      "references": null,
+      "size": null,
+      "source": "usage_limit",
+      "type": "bigint"
     }
   ],
   "base_filter": null,
@@ -76,7 +86,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "714842359DE55F7D06B3F80EF98AA3AF1A98F42B4882E8008343477076DE94E0",
+  "hash": "300DDE1A7C926AA865229882909B254942915A06AA259CD2A30740176B6F8FD7",
   "identities": [
     {
       "all_tenants?": false,
