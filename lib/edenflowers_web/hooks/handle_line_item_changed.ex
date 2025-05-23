@@ -1,19 +1,19 @@
-defmodule EdenflowersWeb.Hooks.InitStore do
+defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
+  @moduledoc """
+  A LiveView hook that subscribes to line item change events for a given order
+  and updates the socket with the latest order state.
+
+  If an order becomes empty as a result of a line item change, the order is reset.
+  """
   use EdenflowersWeb, :live_view
+
   alias Edenflowers.Store.Order
 
-  def on_mount(:put_locale, _params, %{"cldr_locale" => cldr_locale} = _session, socket) do
-    {:ok, language_tag} = Edenflowers.Cldr.put_locale(cldr_locale)
-    Edenflowers.Cldr.put_gettext_locale(language_tag)
-    {:cont, socket}
-  end
-
-  def on_mount(:put_order, _params, %{"order_id" => order_id} = _session, socket) do
-    order = Order.get_for_checkout!(order_id)
-    {:cont, socket |> assign(order: order)}
-  end
-
-  def on_mount(:attach_hooks, _params, _session, socket) do
+  @doc """
+  Subscribes to PubSub events for line item changes on the current order
+  and attaches the `handle_line_item_changed/2` hook.
+  """
+  def on_mount(:default, _params, _session, socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
     end
