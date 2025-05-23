@@ -38,6 +38,7 @@ defmodule Edenflowers.Accounts.User do
   end
 
   code_interface do
+    define :upsert, action: :upsert, args: [:email, :name]
     define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
   end
 
@@ -60,6 +61,12 @@ defmodule Edenflowers.Accounts.User do
       end
 
       filter expr(email == ^arg(:email))
+    end
+
+    create :upsert do
+      accept [:email, :name]
+      upsert? true
+      upsert_identity :unique_email
     end
 
     create :sign_in_with_magic_link do
@@ -111,6 +118,7 @@ defmodule Edenflowers.Accounts.User do
   attributes do
     uuid_primary_key :id
 
+    attribute :name, :string, allow_nil?: true, public?: true
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :newsletter_opt_in, :boolean, default: false, public?: true
     attribute :promotion_claimed, :boolean, default: false, public?: true

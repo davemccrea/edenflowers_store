@@ -13,7 +13,8 @@ defmodule Edenflowers.Store.Order do
     MaybeRequireDeliveryAddress,
     LookupPromotionCode,
     MaybeRequireRecipientName,
-    ClearGiftFields
+    ClearGiftFields,
+    UpsertUserAndAssignToOrder
   }
 
   postgres do
@@ -47,6 +48,7 @@ defmodule Edenflowers.Store.Order do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
+    define :get_all_for_user, action: :get_all_for_user, args: [:user_id]
     define :payment_received, action: :payment_received
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
@@ -74,6 +76,18 @@ defmodule Edenflowers.Store.Order do
       prepare build(load: @load)
     end
 
+    read :get_all_for_user do
+      argument :user_id, :uuid, allow_nil?: false
+      filter expr(user_id == ^arg(:user_id))
+
+      prepare build(
+                load: [
+                  :total,
+                  :tax_amount
+                ]
+              )
+    end
+
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
@@ -89,6 +103,7 @@ defmodule Edenflowers.Store.Order do
     update :save_step_1 do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
+      change {UpsertUserAndAssignToOrder, []}
       change set_attribute(:step, 2)
       change load(@load)
       require_atomic? false
@@ -267,6 +282,7 @@ defmodule Edenflowers.Store.Order do
   end
 
   relationships do
+    belongs_to :user, Edenflowers.Accounts.User
     belongs_to :fulfillment_option, Edenflowers.Store.FulfillmentOption
     belongs_to :promotion, Edenflowers.Store.Promotion
     has_many :line_items, Edenflowers.Store.LineItem
@@ -442,6 +458,33 @@ defmodule Edenflowers.Store.Order.LookupPromotionCode do
             field: :code,
             message: "Invalid code"
           })
+      end
+    end)
+  end
+end
+
+defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
+  use Ash.Resource.Change
+
+  alias Edenflowers.Accounts.User
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      customer_email = Ash.Changeset.get_argument_or_attribute(changeset, :customer_email)
+      customer_name = Ash.Changeset.get_argument_or_attribute(changeset, :customer_name)
+
+      case User.upsert(customer_email, customer_name, authorize?: false) do
+        {:ok, user} ->
+          dbg(user)
+          Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
+
+        {:error, error} ->
+          dbg(error)
+          changeset
       end
     end)
   end

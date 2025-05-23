@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Layouts do
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
                 <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
                   {if @current_user,
-                    do: gettext("Your Account"),
+                    do: gettext("Account"),
                     else: gettext("Sign In")}
                 </span>
               </.link>
@@ -226,6 +226,7 @@ defmodule EdenflowersWeb.Layouts do
     <main class="flex-grow">
       <.alert_group />
       <.flash_group flash={@flash} />
+
       {render_slot(@inner_block)}
     </main>
 
