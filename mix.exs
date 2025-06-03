@@ -68,7 +68,8 @@ defmodule Edenflowers.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:faker, "~> 0.18", only: :test},
-      {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
+      # Waiting for https://github.com/randycoulman/mix_test_interactive/pull/138
+      # {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
       {:phoenix_test, "~> 0.6.0", only: :test, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
