@@ -34,6 +34,7 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:usage_rules, "~> 0.1", only: [:dev]},
       {:ash_authentication_phoenix, "~> 2.0"},
       {:simple_sat, "~> 0.1"},
       {:ash_authentication, "~> 4.0"},
@@ -80,7 +81,8 @@ defmodule Edenflowers.MixProject do
       {:ex_cldr_languages, "~> 0.3"},
       {:cldr_html, "~> 1.6"},
       {:stripity_stripe, "~> 3.2"},
-      {:tidewave, "~> 0.1", only: :dev}
+      {:tidewave, "~> 0.1", only: :dev},
+      {:mdex, "~> 0.6"}
     ]
   end
 
