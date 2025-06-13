@@ -39,11 +39,6 @@ defmodule Edenflowers.Store.Order do
     :line_items
   ]
 
-  postgres do
-    repo Edenflowers.Repo
-    table "orders"
-  end
-
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
@@ -479,11 +474,9 @@ defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
 
       case User.upsert(customer_email, customer_name, authorize?: false) do
         {:ok, user} ->
-          dbg(user)
           Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
 
-        {:error, error} ->
-          dbg(error)
+        {:error, _error} ->
           changeset
       end
     end)
