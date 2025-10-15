@@ -63,7 +63,7 @@ config :spark,
 config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Edenflowers.Accounts, Edenflowers.Store]
+  ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services]
 
 # Configures the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
