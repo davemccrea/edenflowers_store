@@ -2,8 +2,8 @@ import Config
 
 # Configure your database
 config :edenflowers, Edenflowers.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "david",
+  password: nil,
   hostname: "localhost",
   database: "edenflowers_dev",
   stacktrace: true,
