@@ -35,7 +35,7 @@ defmodule Edenflowers.MixProject do
   defp deps do
     [
       {:usage_rules, "~> 0.1", only: [:dev]},
-      {:ash_authentication_phoenix, "~> 2.0"},
+      {:ash_authentication_phoenix, "~> 2.0 and < 2.11.0"},
       {:simple_sat, "~> 0.1"},
       {:ash_authentication, "~> 4.0"},
       {:live_debugger, "~> 0.1", only: [:dev]},
