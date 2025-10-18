@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       type="radio-card"
                       label={gettext("Recipient *")}
                       field={@form[:gift]}
-                      options={[%{name: "😊 Just for me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
+                      options={[%{name: "❤️ For me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
                       phx-change="update_gift"
                     >
                       {option.name}

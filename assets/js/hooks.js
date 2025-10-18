@@ -176,7 +176,7 @@ Hooks.CalendarHook = {
     this.focusableDates = this.getFocusableDates();
     if (!this.focusableDates || !this.focusableDates.length) {
       this.error(
-        "Attribute 'data-focusable-dates' is required and must not be empty."
+        "Attribute 'data-focusable-dates' is required and must not be empty.",
       );
       return false;
     }
@@ -365,13 +365,13 @@ Hooks.Stripe = {
 Hooks.AlertHandler = {
   createDisconnectedAlert() {
     this.disconnectedMessage = this.el.getAttribute(
-      "data-disconnected-message"
+      "data-disconnected-message",
     );
 
     const disconnectedAlert = `
-      <sl-alert 
-        id="alert-disconnected" 
-        variant="warning" 
+      <sl-alert
+        id="alert-disconnected"
+        variant="warning"
         closable="false"
       >
         <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
@@ -388,11 +388,11 @@ Hooks.AlertHandler = {
     // Toasts are triggered by the server and inserted into the DOM when event is received.
     this.handleEvent("toast:show", (alert) => {
       const html = `
-      <sl-alert 
-        id="alert-${alert.id}" 
-        variant="${alert.variant}" 
-        duration="${alert.duration}" 
-        ${alert.closable ? "closable" : ""} 
+      <sl-alert
+        id="alert-${alert.id}"
+        variant="${alert.variant}"
+        duration="${alert.duration}"
+        ${alert.closable ? "closable" : ""}
         ${
           alert.countdown == "rtl" || alert.countdown == "ltr"
             ? `countdown="${alert.countdown}"`
