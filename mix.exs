@@ -45,7 +45,6 @@ defmodule Edenflowers.MixProject do
       {:ash_authentication_phoenix, "~> 2.0 and < 2.11.0"},
       {:simple_sat, "~> 0.1"},
       {:ash_authentication, "~> 4.0"},
-      {:live_debugger, "~> 0.4", only: [:dev]},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.11"},
       {:ash_postgres, "~> 2.0"},
