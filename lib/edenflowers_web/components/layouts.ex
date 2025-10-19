@@ -186,14 +186,14 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <%!-- Right --%>
-            <div class="flex flex-1 items-center justify-end sm:gap-4">
+            <div class="flex flex-1 items-center justify-end md:gap-4">
               <%!-- Sign in --%>
               <.link
                 navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
-                class="group flex h-12 w-12 cursor-pointer items-center justify-center sm:h-auto sm:w-auto"
+                class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
-                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
                   {if @current_user,
                     do: gettext("Account"),
                     else: gettext("Sign In")}
@@ -202,9 +202,9 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Locale picker button --%>
               <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker}>
-                <button class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto">
+                <button class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2">
                   <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-                  <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+                  <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
                     {@current_locale}
                   </span>
                 </button>
@@ -214,10 +214,10 @@ defmodule EdenflowersWeb.Layouts do
               <button
                 phx-click={JS.exec("phx-show", to: "#cart-drawer")}
                 type="button"
-                class="group h-12 w-12 cursor-pointer sm:h-auto sm:w-auto"
+                class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
-                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline-flex">
+                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
                   <%= if not is_nil(@order.total_items_in_cart) do %>
                     {gettext("Cart")} ({@order.total_items_in_cart})
                   <% else %>
