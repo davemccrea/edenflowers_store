@@ -155,6 +155,7 @@ defmodule Edenflowers.Store.Order do
     update :payment_received do
       change set_attribute(:state, :order)
       change set_attribute(:payment_status, :paid)
+      change set_attribute(:ordered_at, &DateTime.utc_now/0)
     end
 
     update :update_fulfillment_option do
@@ -229,6 +230,8 @@ defmodule Edenflowers.Store.Order do
     attribute :state, :atom,
       default: :checkout,
       constraints: [one_of: [:checkout, :order]]
+
+    attribute :ordered_at, :utc_datetime
 
     attribute :payment_status, :atom,
       default: :pending,

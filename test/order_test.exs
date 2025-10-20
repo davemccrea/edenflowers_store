@@ -213,5 +213,6 @@ defmodule Edenflowers.Store.OrderTest do
     assert {:ok, order} = Order.payment_received(order.id)
     assert order.state == :order
     assert order.payment_status == :paid
+    assert %DateTime{} = order.ordered_at
   end
 end
