@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,8 +16,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "name",
       "type": "text"
@@ -24,8 +28,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "code",
       "type": "citext"
@@ -34,8 +40,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "discount_percentage",
       "type": "decimal"
@@ -44,8 +52,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "minimum_cart_total",
       "type": "decimal"
@@ -54,8 +64,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "start_date",
       "type": "date"
@@ -64,8 +76,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "expiration_date",
       "type": "date"
@@ -74,8 +88,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "usage_limit",
       "type": "bigint"
@@ -86,7 +102,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "300DDE1A7C926AA865229882909B254942915A06AA259CD2A30740176B6F8FD7",
+  "hash": "D3EFFEBCE02CC41C78B2C82932691208800B5316EF24E4F7A19BDCA80124093C",
   "identities": [
     {
       "all_tenants?": false,

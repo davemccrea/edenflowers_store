@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,6 +16,7 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": {
         "deferrable": false,
@@ -35,6 +38,7 @@
         "schema": "public",
         "table": "products"
       },
+      "scale": null,
       "size": null,
       "source": "product_id",
       "type": "uuid"
@@ -43,6 +47,7 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": {
         "deferrable": false,
@@ -64,6 +69,7 @@
         "schema": "public",
         "table": "fulfillment_options"
       },
+      "scale": null,
       "size": null,
       "source": "fulfillment_option_id",
       "type": "uuid"
@@ -119,7 +125,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "E5491B8C13C2FDB17FAC2DFEC28C2672063BB08FEAEF89C8D96934B10ADF97A2",
+  "hash": "532F6AF4C32F11FE94715E8A933C8BFD813C9C2FE73F826A5EE5598F61F164A5",
   "identities": [],
   "multitenancy": {
     "attribute": null,

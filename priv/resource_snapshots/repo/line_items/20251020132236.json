@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,8 +16,10 @@
       "allow_nil?": true,
       "default": "1",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "quantity",
       "type": "bigint"
@@ -24,8 +28,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "unit_price",
       "type": "decimal"
@@ -34,8 +40,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "tax_rate",
       "type": "decimal"
@@ -44,8 +52,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "product_name",
       "type": "text"
@@ -54,8 +64,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "product_image_slug",
       "type": "text"
@@ -64,8 +76,10 @@
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "inserted_at",
       "type": "utc_datetime_usec"
@@ -74,8 +88,10 @@
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "updated_at",
       "type": "utc_datetime_usec"
@@ -84,6 +100,7 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -105,6 +122,7 @@
         "schema": "public",
         "table": "orders"
       },
+      "scale": null,
       "size": null,
       "source": "order_id",
       "type": "uuid"
@@ -113,6 +131,7 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -134,6 +153,7 @@
         "schema": "public",
         "table": "products"
       },
+      "scale": null,
       "size": null,
       "source": "product_id",
       "type": "uuid"
@@ -142,6 +162,7 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -163,6 +184,7 @@
         "schema": "public",
         "table": "product_variants"
       },
+      "scale": null,
       "size": null,
       "source": "product_variant_id",
       "type": "uuid"
@@ -173,7 +195,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "5323D6EF1CAC77B2F73BD4E59406AD6B3D6A14FFE6380EC3E015D8BBD28BA5A1",
+  "hash": "EAE673E57FDF5A4AE3465AE8091BEB45893D1751DAEFDE3781ED2B45DD3D6209",
   "identities": [
     {
       "all_tenants?": false,

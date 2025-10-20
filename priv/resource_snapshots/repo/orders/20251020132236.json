@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,8 +16,10 @@
       "allow_nil?": true,
       "default": "1",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "step",
       "type": "bigint"
@@ -24,18 +28,34 @@
       "allow_nil?": true,
       "default": "\"checkout\"",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "state",
       "type": "text"
     },
     {
       "allow_nil?": true,
-      "default": "\"pending\"",
+      "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
+      "size": null,
+      "source": "ordered_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "\"pending\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
       "size": null,
       "source": "payment_status",
       "type": "text"
@@ -44,8 +64,10 @@
       "allow_nil?": true,
       "default": "\"pending\"",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "fulfillment_status",
       "type": "text"
@@ -54,8 +76,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "customer_name",
       "type": "text"
@@ -64,8 +88,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "customer_email",
       "type": "text"
@@ -74,8 +100,10 @@
       "allow_nil?": true,
       "default": "false",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "gift",
       "type": "boolean"
@@ -84,8 +112,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "gift_message",
       "type": "text"
@@ -94,8 +124,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "recipient_name",
       "type": "text"
@@ -104,8 +136,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "recipient_phone_number",
       "type": "text"
@@ -114,8 +148,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "delivery_address",
       "type": "text"
@@ -124,8 +160,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "delivery_instructions",
       "type": "text"
@@ -134,8 +172,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "fulfillment_date",
       "type": "date"
@@ -144,8 +184,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "fulfillment_amount",
       "type": "decimal"
@@ -154,8 +196,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "calculated_address",
       "type": "text"
@@ -164,8 +208,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "here_id",
       "type": "text"
@@ -174,8 +220,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "distance",
       "type": "bigint"
@@ -184,8 +232,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "position",
       "type": "text"
@@ -194,8 +244,10 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "payment_intent_id",
       "type": "text"
@@ -204,8 +256,10 @@
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "inserted_at",
       "type": "utc_datetime_usec"
@@ -214,8 +268,10 @@
       "allow_nil?": false,
       "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "updated_at",
       "type": "utc_datetime_usec"
@@ -224,6 +280,7 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -245,6 +302,7 @@
         "schema": "public",
         "table": "users"
       },
+      "scale": null,
       "size": null,
       "source": "user_id",
       "type": "uuid"
@@ -253,6 +311,7 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -274,6 +333,7 @@
         "schema": "public",
         "table": "fulfillment_options"
       },
+      "scale": null,
       "size": null,
       "source": "fulfillment_option_id",
       "type": "uuid"
@@ -282,6 +342,7 @@
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -303,6 +364,7 @@
         "schema": "public",
         "table": "promotions"
       },
+      "scale": null,
       "size": null,
       "source": "promotion_id",
       "type": "uuid"
@@ -313,7 +375,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1EFD3B0106906941B1B63FD5B2AAF5A47965525E00A15E66D3C1CC0BF3B63CFF",
+  "hash": "0D44732474A20C69A6B02ED5CED2D8C9328CF32F9AA955222B845333C4BCB080",
   "identities": [],
   "multitenancy": {
     "attribute": null,

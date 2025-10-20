@@ -142,11 +142,7 @@
       "scale": null,
       "size": null,
       "source": "price",
-      "type": [
-        "decimal",
-        null,
-        null
-      ]
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
@@ -178,7 +174,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F821360B6772D1BCC5179C60EFC4B4282C9BC2A7B875A01269FC59C5C31A6BF5",
+  "hash": "E79E6539098441CD540231696DA0DAF05E1158470BC05405240E02164E206F63",
   "identities": [],
   "multitenancy": {
     "attribute": null,

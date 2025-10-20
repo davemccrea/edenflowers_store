@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,8 +16,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "name",
       "type": "text"
@@ -26,7 +30,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "5C0273101341D007020ABBEA6661BFF9AA00A823EB4256011028C0BF57D7F1A2",
+  "hash": "DF4B437B8ED4237081B3D2B83C9977B2AEA81E6CF8BA8BA6349B83B0701B5B4A",
   "identities": [],
   "multitenancy": {
     "attribute": null,

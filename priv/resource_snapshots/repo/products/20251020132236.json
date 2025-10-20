@@ -33,23 +33,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "image_slug",
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "\"pending\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "status",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -57,35 +45,23 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "registered",
-      "type": "utc_datetime"
+      "source": "description",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "default": "true",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "inserted_at",
-      "type": "utc_datetime_usec"
+      "source": "draft",
+      "type": "boolean"
     },
     {
       "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "updated_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -103,20 +79,20 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_user_id_fkey",
+        "name": "products_tax_rate_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "users"
+        "table": "tax_rates"
       },
       "scale": null,
       "size": null,
-      "source": "user_id",
+      "source": "tax_rate_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -134,16 +110,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_course_id_fkey",
+        "name": "products_product_category_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "courses"
+        "table": "product_categories"
       },
       "scale": null,
       "size": null,
-      "source": "course_id",
+      "source": "product_category_id",
       "type": "uuid"
     }
   ],
@@ -152,8 +128,23 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "29DA871BAD210199C97C22D08EE9D4BEB9B447D83A8D6D0C58F414299F1D9B0B",
-  "identities": [],
+  "hash": "E84FFD1A3902032F1FC9A42F1117F6E4D774F2FBC8FF28F72C20725953E2B2F8",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "products_unique_name_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "name"
+        }
+      ],
+      "name": "unique_name",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -161,5 +152,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "course_registrations"
+  "table": "products"
 }

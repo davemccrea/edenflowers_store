@@ -4,18 +4,22 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "name",
       "type": "text"
@@ -24,31 +28,25 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
+      "source": "percentage",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
-      "default": "false",
+      "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "primary_key?": false,
-      "references": null,
-      "size": null,
-      "source": "promotion_claimed",
-      "type": "boolean"
+      "source": "archived_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -56,19 +54,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F4C20B952C17A9B444D1E15185603DFEA4F2AE5B23C482F2F4A79676E2D323FE",
+  "hash": "9B5DA343152DD812529E2BA4AF9C5A27FE73D1B6D22F29E1DCDA9DB4F1E15F50",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "tax_rates_unique_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "name"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_name",
       "nils_distinct?": true,
       "where": null
     }
@@ -80,5 +78,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "tax_rates"
 }

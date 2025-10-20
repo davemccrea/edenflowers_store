@@ -69,8 +69,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_tax_rate_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :product_category_id, :uuid, null: false
     end
@@ -90,8 +89,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "product_variants_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:product_fulfillment_options, primary_key: false) do
@@ -103,9 +101,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "product_fulfillment_options_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          primary_key: true,
-          null: false
+          ), primary_key: true, null: false
 
       add :fulfillment_option_id, :uuid, null: false, primary_key: true
     end
@@ -138,6 +134,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :step, :bigint, default: 1
       add :state, :text, default: "checkout"
+      add :ordered_at, :utc_datetime
       add :payment_status, :text, default: "pending"
       add :fulfillment_status, :text, default: "pending"
       add :customer_name, :text
@@ -203,8 +200,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
 
       add :product_id,
           references(:products,
@@ -212,8 +208,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "line_items_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :product_variant_id,
           references(:product_variants,
@@ -221,8 +216,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "line_items_product_variant_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:line_items, [:order_id, :product_variant_id],
@@ -289,16 +283,77 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "fulfillment_options_tax_rate_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:fulfillment_options, [:name],
              name: "fulfillment_options_unique_name_index"
            )
+
+    create table(:courses, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :name, :text, null: false
+      add :description, :text, null: false
+      add :location_name, :text, null: false
+      add :location_address, :text, null: false
+      add :image_slug, :text, null: false
+      add :date, :date, null: false
+      add :start_time, :time, null: false
+      add :end_time, :time, null: false
+      add :register_before, :date, null: false
+      add :total_places, :bigint, null: false
+      add :price, :decimal, null: false
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+    end
+
+    create table(:course_registrations, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :name, :text, null: false
+      add :email, :text, null: false
+      add :status, :text, default: "pending"
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :user_id,
+          references(:users,
+            column: :id,
+            name: "course_registrations_user_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          )
+
+      add :course_id,
+          references(:courses,
+            column: :id,
+            name: "course_registrations_course_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          )
+    end
   end
 
   def down do
+    drop constraint(:course_registrations, "course_registrations_user_id_fkey")
+
+    drop constraint(:course_registrations, "course_registrations_course_id_fkey")
+
+    drop table(:course_registrations)
+
+    drop table(:courses)
+
     drop_if_exists unique_index(:fulfillment_options, [:name],
                      name: "fulfillment_options_unique_name_index"
                    )

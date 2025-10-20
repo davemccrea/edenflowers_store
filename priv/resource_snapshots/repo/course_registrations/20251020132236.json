@@ -4,8 +4,10 @@
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": true,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "id",
       "type": "uuid"
@@ -14,8 +16,10 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
       "source": "name",
       "type": "text"
@@ -24,36 +28,55 @@
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
-      "source": "image_slug",
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "\"pending\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
-      "source": "description",
-      "type": "text"
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
-      "default": "true",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": null,
+      "scale": null,
       "size": null,
-      "source": "draft",
-      "type": "boolean"
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -68,21 +91,23 @@
           "global": null,
           "strategy": null
         },
-        "name": "products_tax_rate_id_fkey",
+        "name": "course_registrations_user_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "tax_rates"
+        "table": "users"
       },
+      "scale": null,
       "size": null,
-      "source": "tax_rate_id",
+      "source": "user_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
+      "precision": null,
       "primary_key?": false,
       "references": {
         "deferrable": false,
@@ -97,15 +122,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "products_product_category_id_fkey",
+        "name": "course_registrations_course_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "product_categories"
+        "table": "courses"
       },
+      "scale": null,
       "size": null,
-      "source": "product_category_id",
+      "source": "course_id",
       "type": "uuid"
     }
   ],
@@ -114,23 +140,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "7146053787D78C7B0C6C1019C062ED653E0DFF08231332070ACD313617997684",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "products_unique_name_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "name"
-        }
-      ],
-      "name": "unique_name",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "519306933E17CCAE83D5B33C8D2EB3DE6F7B6EB2211D721CAA9E9E0729553EF1",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -138,5 +149,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "products"
+  "table": "course_registrations"
 }
