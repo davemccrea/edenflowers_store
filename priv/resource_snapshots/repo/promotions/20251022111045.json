@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,32 +33,68 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "code",
       "type": "citext"
     },
     {
-      "allow_nil?": true,
-      "default": "false",
+      "allow_nil?": false,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
+      "source": "discount_percentage",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "minimum_cart_total",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
-      "default": "false",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "promotion_claimed",
-      "type": "boolean"
+      "source": "start_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "expiration_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "usage_limit",
+      "type": "bigint"
     }
   ],
   "base_filter": null,
@@ -66,19 +102,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "5E816B400AEE7646B66748796B095374FA25B5152C73BAEC6AE3D9D954E10F4A",
+  "hash": "06F2A33A65FC21DEDF73D9E96ED5E528EB5A624E0EC337007D412E573CBB8046",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "promotions_unique_code_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "code"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_code",
       "nils_distinct?": true,
       "where": null
     }
@@ -90,5 +126,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "promotions"
 }

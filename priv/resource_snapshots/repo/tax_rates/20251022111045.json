@@ -33,31 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "code",
-      "type": "citext"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "discount_percentage",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "minimum_cart_total",
+      "source": "percentage",
       "type": "decimal"
     },
     {
@@ -69,32 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "start_date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "expiration_date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "usage_limit",
-      "type": "bigint"
+      "source": "archived_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -102,19 +54,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "D3EFFEBCE02CC41C78B2C82932691208800B5316EF24E4F7A19BDCA80124093C",
+  "hash": "9FCDC16C1AEE094CB9980C46155BB9A1F2696681326588E2BE7CB509C3F0FC66",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "promotions_unique_code_index",
+      "index_name": "tax_rates_unique_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "code"
+          "value": "name"
         }
       ],
-      "name": "unique_code",
+      "name": "unique_name",
       "nils_distinct?": true,
       "where": null
     }
@@ -126,5 +78,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "promotions"
+  "table": "tax_rates"
 }

@@ -29,6 +29,7 @@ defmodule Edenflowers.Store.Order do
 
     # Calculations
     :promotion_applied?,
+    :order_reference,
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
@@ -224,6 +225,13 @@ defmodule Edenflowers.Store.Order do
   attributes do
     uuid_primary_key :id
 
+    attribute :order_number, :integer do
+      writable? false
+      generated? true
+      primary_key? false
+      allow_nil? false
+    end
+
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
     # When checkout is completed the state is set to :order
@@ -287,6 +295,7 @@ defmodule Edenflowers.Store.Order do
   end
 
   calculations do
+    calculate :order_reference, :string, {Edenflowers.Store.Order.EncodeOrderReference, []}
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
 
@@ -302,6 +311,25 @@ defmodule Edenflowers.Store.Order do
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
     sum :discount_amount, :line_items, :discount_amount
+  end
+end
+
+defmodule Edenflowers.Store.Order.EncodeOrderReference do
+  use Ash.Resource.Calculation
+
+  alias Edenflowers.Sqids
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def calculate(records, _opts, _context) do
+    Enum.map(records, fn record ->
+      case Map.get(record, :order_number) do
+        nil -> nil
+        order_number -> Sqids.encode!([order_number])
+      end
+    end)
   end
 end
 
