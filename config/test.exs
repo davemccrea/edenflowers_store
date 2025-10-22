@@ -2,6 +2,11 @@ import Config
 config :edenflowers, token_signing_secret: "Ru1t3J1eZMoIIz6LEIYtCN9CK7SlGbKg"
 config :bcrypt_elixir, log_rounds: 1
 
+# Set dummy values for required environment variables in test
+System.put_env("HERE_API_KEY", "test_here_api_key")
+System.put_env("STRIPE_API_KEY", "sk_test_dummy_key")
+System.put_env("STRIPE_WEBHOOK_SECRET", "whsec_test_dummy_secret")
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

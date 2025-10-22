@@ -1,0 +1,56 @@
+Hi <%= @order.customer_name %>,
+
+Thank you for your order!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ORDER CONFIRMATION
+Order Reference: <%= @order.order_reference %>
+<%= if @order.ordered_at do %>Order Date: <%= @format_datetime.(@order.ordered_at) %>
+<% end %>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ORDER DETAILS
+
+<%= for line_item <- @order.line_items do %>  • <%= line_item.product_name %> × <%= line_item.quantity %>
+<% end %>
+
+Subtotal: <%= @format_currency.(@order.line_total) %>
+<%= if @order.discount_amount && Decimal.compare(@order.discount_amount, 0) == :gt do %>Discount: -<%= @format_currency.(@order.discount_amount) %>
+<% end %>Tax: <%= @format_currency.(@order.tax_amount) %>
+<%= if @order.fulfillment_amount do %>Fulfillment: <%= @format_currency.(@order.fulfillment_amount) %>
+<% end %>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOTAL: <%= @format_currency.(@order.total) %>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<%= if @order.fulfillment_option do %>FULFILLMENT DETAILS
+
+Method: <%= @humanize_fulfillment_method.(@order.fulfillment_option.fulfillment_method) %>
+<%= if @order.fulfillment_date do %>Date: <%= @format_date.(@order.fulfillment_date) %>
+<% end %>
+<%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
+<%= if @order.recipient_name do %>Recipient: <%= @order.recipient_name %>
+<% end %>Delivery Address: <%= @order.calculated_address || @order.delivery_address %>
+<%= if @order.recipient_phone_number do %>Phone: <%= @order.recipient_phone_number %>
+<% end %><%= if @order.delivery_instructions do %>Instructions: <%= @order.delivery_instructions %>
+<% end %><% end %>
+
+<% end %><%= if @order.gift do %>GIFT MESSAGE
+<%= if @order.recipient_name do %>
+To: <%= @order.recipient_name %>
+<% end %><%= if @order.gift_message do %>
+<%= @order.gift_message %>
+<% end %>
+
+<% end %>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+We'll send you another email when your order is on its way.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+The Eden Flowers Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
