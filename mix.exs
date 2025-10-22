@@ -88,7 +88,8 @@ defmodule Edenflowers.MixProject do
       {:cldr_html, "~> 1.6"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
-      {:mdex, "~> 0.6"}
+      {:mdex, "~> 0.6"},
+      {:sqids, "~> 0.2.0"}
     ]
   end
 
