@@ -11,18 +11,18 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/components/core_components.ex:402
+#: lib/edenflowers_web/components/core_components.ex:405
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "Toiminnot"
 
-#: lib/edenflowers_web/components/layouts.ex:57
+#: lib/edenflowers_web/components/layouts.ex:65
 #: lib/edenflowers_web/live/about_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr "Tietoa meistä"
 
-#: lib/edenflowers/store/order.ex:402
+#: lib/edenflowers/store/order.ex:465
 #, elixir-autogen, elixir-format
 msgid "Address not found"
 msgstr "Osoitetta ei löytynyt"
@@ -32,28 +32,28 @@ msgstr "Osoitetta ei löytynyt"
 msgid "Apply"
 msgstr "Käytä"
 
-#: lib/edenflowers_web/components/layouts.ex:103
-#: lib/edenflowers_web/components/layouts.ex:105
-#: lib/edenflowers_web/components/layouts.ex:214
-#: lib/edenflowers_web/components/layouts.ex:216
+#: lib/edenflowers_web/components/layouts.ex:111
+#: lib/edenflowers_web/components/layouts.ex:113
+#: lib/edenflowers_web/components/layouts.ex:222
+#: lib/edenflowers_web/components/layouts.ex:224
 #: lib/edenflowers_web/live/checkout_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr "Ostoskori"
 
-#: lib/edenflowers_web/components/layouts.ex:56
+#: lib/edenflowers_web/components/layouts.ex:64
 #: lib/edenflowers_web/live/condolences_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "Condolences"
 msgstr "Suruvalittelut"
 
-#: lib/edenflowers_web/components/layouts.ex:58
+#: lib/edenflowers_web/components/layouts.ex:66
 #: lib/edenflowers_web/live/contact_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "Contact"
 msgstr "Yhteystiedot"
 
-#: lib/edenflowers_web/components/layouts.ex:54
+#: lib/edenflowers_web/components/layouts.ex:62
 #: lib/edenflowers_web/live/courses_live.ex:29
 #, elixir-autogen, elixir-format
 msgid "Courses"
@@ -94,7 +94,7 @@ msgstr "Edellinen kuukausi"
 msgid "Show current month"
 msgstr "Näytä nykyinen kuukausi"
 
-#: lib/edenflowers_web/components/layouts.ex:53
+#: lib/edenflowers_web/components/layouts.ex:61
 #: lib/edenflowers_web/live/product_live.ex:54
 #, elixir-autogen, elixir-format
 msgid "Store"
@@ -105,7 +105,7 @@ msgstr "Kauppa"
 msgid "Total"
 msgstr "Yhteensä"
 
-#: lib/edenflowers_web/components/layouts.ex:55
+#: lib/edenflowers_web/components/layouts.ex:63
 #: lib/edenflowers_web/live/weddings_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "Weddings"
@@ -121,7 +121,7 @@ msgstr "Saat 20% alennuksen seuraavasta tilauksestasi ja satunnaisia kukkavinkke
 msgid "Fresh flowers for everyday moments."
 msgstr "Tuoreita kukkia arkipäivän hetkiin."
 
-#: lib/edenflowers_web/components/layouts.ex:134
+#: lib/edenflowers_web/components/layouts.ex:142
 #, elixir-autogen, elixir-format
 msgid "Let us know what you think of the new website! 🚀"
 msgstr "Kerro meille mitä mieltä olet uudesta verkkosivustosta! 🚀"
@@ -136,7 +136,7 @@ msgstr "Osta nyt"
 msgid "Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."
 msgstr "Valmistettu hienostuneille maistajille, kukkamme yhdistävät laadun ja tyylin ja saapuvat täydellisesti järjestettyinä ovellesi."
 
-#: lib/edenflowers_web/components/layouts.ex:120
+#: lib/edenflowers_web/components/layouts.ex:128
 #: lib/edenflowers_web/live/checkout_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Checkout"
@@ -157,320 +157,325 @@ msgstr "Puhelinnumero"
 #, elixir-autogen, elixir-format
 msgid "%{count} spot available"
 msgid_plural "%{count} spots available"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%{count} paikka vapaana"
+msgstr[1] "%{count} paikkaa vapaana"
 
 #: lib/edenflowers_web/live/courses_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "%{count} spot remaining"
 msgid_plural "%{count} spots remaining"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%{count} paikka jäljellä"
+msgstr[1] "%{count} paikkaa jäljellä"
 
-#: lib/edenflowers_web/components/layouts.ex:190
+#: lib/edenflowers_web/components/layouts.ex:198
 #, elixir-autogen, elixir-format
 msgid "Account"
-msgstr ""
+msgstr "Tili"
 
 #: lib/edenflowers_web/live/product_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Add to Cart"
-msgstr ""
+msgstr "Lisää ostoskoriin"
 
-#: lib/edenflowers_web/components/layouts.ex:268
+#: lib/edenflowers_web/components/layouts.ex:276
 #, elixir-autogen, elixir-format
 msgid "Built with "
-msgstr ""
+msgstr "Rakennettu "
 
 #: lib/edenflowers_web/live/product_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "Can I include a personal message with my order?"
-msgstr ""
+msgstr "Voinko sisällyttää henkilökohtaisen viestin tilaukseeni?"
 
 #: lib/edenflowers_web/live/courses_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "Check back soon for new workshops and courses."
-msgstr ""
+msgstr "Tarkista pian uudet työpajat ja kurssit."
 
 #: lib/edenflowers_web/magic_link_complete_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "Complete sign in"
-msgstr ""
+msgstr "Viimeistele kirjautuminen"
 
 #: lib/edenflowers_web/components/line_items_component.ex:29
 #, elixir-autogen, elixir-format
 msgid "Decrement"
-msgstr ""
+msgstr "Vähennä"
 
 #: lib/edenflowers_web/live/checkout_live.ex:190
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Delivery Date *"
-msgstr "Toimituspäivä"
+msgstr "Toimituspäivä *"
 
 #: lib/edenflowers_web/live/checkout_live.ex:142
 #: lib/edenflowers_web/live/checkout_live.ex:425
 #, elixir-autogen, elixir-format
 msgid "Delivery Information"
-msgstr ""
+msgstr "Toimitus­tiedot"
 
 #: lib/edenflowers_web/live/checkout_live.ex:150
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Delivery Method *"
-msgstr "Toimitustapa"
+msgstr "Toimitustapa *"
 
 #: lib/edenflowers_web/components/core_components.ex:48
 #, elixir-autogen, elixir-format
 msgid "Disconnected from server. Reconnecting..."
-msgstr ""
+msgstr "Yhteys palvelimeen katkennut. Yhdistetään uudelleen..."
 
 #: lib/edenflowers_web/live/product_live.ex:180
 #, elixir-autogen, elixir-format
 msgid "Do you offer subscription services?"
-msgstr ""
+msgstr "Tarjoatteko tilauspalveluita?"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:37
 #, elixir-autogen, elixir-format
 msgid "Email"
-msgstr ""
+msgstr "Sähköposti"
 
 #: lib/edenflowers_web/live/checkout_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Email *"
-msgstr ""
+msgstr "Sähköposti *"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Error sending magic link. Please try again later."
-msgstr ""
+msgstr "Virhe kirjautumislinkin lähetyksessä. Yritä myöhemmin uudelleen."
 
 #: lib/edenflowers_web/magic_link_complete_live.ex:89
 #, elixir-autogen, elixir-format
 msgid "Error signing in. Please try again later."
-msgstr ""
+msgstr "Virhe kirjautuessa. Yritä myöhemmin uudelleen."
 
 #: lib/edenflowers_web/live/home_live.ex:33
 #, elixir-autogen, elixir-format
 msgid "Featured Blooms"
-msgstr ""
+msgstr "Esittelyssä"
 
 #: lib/edenflowers_web/live/product_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Frequently Asked Questions"
-msgstr ""
+msgstr "Usein kysytyt kysymykset"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Get Magic Link"
-msgstr ""
+msgstr "Hanki kirjautumislinkki"
 
 #: lib/edenflowers_web/live/checkout_live.ex:85
 #: lib/edenflowers_web/live/checkout_live.ex:424
 #, elixir-autogen, elixir-format
 msgid "Gift Options"
-msgstr ""
+msgstr "Lahjavalinnat"
 
 #: lib/edenflowers_web/live/product_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "Home"
-msgstr ""
+msgstr "Etusivu"
 
 #: lib/edenflowers_web/live/product_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "How long will my flowers stay fresh?"
-msgstr ""
+msgstr "Kuinka kauan kukkani pysyvät tuoreina?"
 
 #: lib/edenflowers_web/components/line_items_component.ex:41
 #, elixir-autogen, elixir-format
 msgid "Increment"
-msgstr ""
+msgstr "Lisää"
 
 #: lib/edenflowers_web/live/home_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Learn more"
-msgstr ""
+msgstr "Lue lisää"
 
 #: lib/edenflowers_web/live/courses_live.ex:32
 #, elixir-autogen, elixir-format
 msgid "Learn the art of flower arranging with our hands-on workshops. Each course is designed to inspire creativity and develop your skills."
-msgstr ""
+msgstr "Opi kukka-asetelmi­en taide käytännön työpajoissa. Jokainen kurssi on suunniteltu inspiroimaan luovuutta ja kehittämään taitojasi."
 
 #: lib/edenflowers_web/live/courses_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "No upcoming courses"
-msgstr ""
+msgstr "Ei tulevia kursseja"
 
-#: lib/edenflowers_web/components/layouts.ex:148
+#: lib/edenflowers_web/components/layouts.ex:156
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
-msgstr ""
+msgstr "Avaa navigointivalikko"
 
 #: lib/edenflowers_web/live/order_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "Order #1234"
-msgstr ""
+msgstr "Tilaus #1234"
 
 #: lib/edenflowers_web/live/product_live.ex:194
 #, elixir-autogen, elixir-format
 msgid "Our delivery team will attempt to leave your flowers in a safe, shaded location. If no suitable location is available, they will leave a note with instructions for redelivery. You can also specify delivery instructions during checkout."
-msgstr ""
+msgstr "Toimitustiimimme yrittää jättää kukkasi turvalliseen varjoiseen paikkaan. Jos sopivaa paikkaa ei ole, he jättävät ohjeet uudelleen toimitusta varten. Voit myös määrittää toimitusohjeita kassalla."
 
 #: lib/edenflowers_web/live/product_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Our flowers are carefully selected and arranged to last 5-7 days with proper care. We recommend changing the water every 2-3 days, trimming the stems, and keeping them away from direct sunlight and drafts."
-msgstr ""
+msgstr "Kukkamme on huolellisesti valittu ja järjestetty kestämään 5-7 päivää oikealla hoidolla. Suosittelemme veden vaihtamista 2-3 päivän välein, varsien leikkaamista ja pitämistä poissa suorasta auringonvalosta ja vedosta."
 
-#: lib/edenflowers/store/order.ex:396
+#: lib/edenflowers/store/order.ex:459
 #, elixir-autogen, elixir-format
 msgid "Outside delivery range"
-msgstr ""
+msgstr "Toimitusalueen ulkopuolella"
 
 #: lib/edenflowers_web/live/checkout_live.ex:246
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Pay"
-msgstr "Maksu"
+msgstr "Maksa"
 
 #: lib/edenflowers_web/live/checkout_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "Pickup Date *"
-msgstr ""
+msgstr "Noutopäivä *"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:33
 #, elixir-autogen, elixir-format
 msgid "Please check your email to complete sign in."
-msgstr ""
+msgstr "Tarkista sähköpostisi viimeistelläksesi kirjautumisen."
 
 #: lib/edenflowers_web/live/product_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "Popular"
-msgstr ""
+msgstr "Suositut"
 
 #: lib/edenflowers_web/live/checkout_live.ex:272
 #, elixir-autogen, elixir-format
 msgid "Promo Code"
-msgstr ""
+msgstr "Tarjouskoodi"
 
 #: lib/edenflowers_web/live/checkout_live.ex:97
 #, elixir-autogen, elixir-format
 msgid "Recipient *"
-msgstr ""
+msgstr "Vastaanottaja *"
 
 #: lib/edenflowers_web/live/checkout_live.ex:107
 #, elixir-autogen, elixir-format
 msgid "Recipient Name *"
-msgstr ""
+msgstr "Vastaanottajan nimi *"
 
 #: lib/edenflowers_web/live/courses_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Register Now"
-msgstr ""
+msgstr "Ilmoittaudu nyt"
 
 #: lib/edenflowers_web/live/courses_live.ex:148
 #, elixir-autogen, elixir-format
 msgid "Registration Closed"
-msgstr ""
+msgstr "Ilmoittautuminen suljettu"
 
 #: lib/edenflowers_web/live/courses_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Registration closed on"
-msgstr ""
+msgstr "Ilmoittautuminen sulkeutui"
 
 #: lib/edenflowers_web/live/courses_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "Registration closes"
-msgstr ""
+msgstr "Ilmoittautuminen sulkeutuu"
 
 #: lib/edenflowers_web/components/line_items_component.ex:57
 #, elixir-autogen, elixir-format
 msgid "Remove"
-msgstr ""
+msgstr "Poista"
 
 #: lib/edenflowers_web/live/checkout_live.ex:61
 #, elixir-autogen, elixir-format
 msgid "Secure Checkout"
-msgstr ""
+msgstr "Turvallinen kassa"
 
 #: lib/edenflowers_web/live/product_live.ex:110
 #, elixir-autogen, elixir-format
 msgid "Select Size"
-msgstr ""
+msgstr "Valitse koko"
 
-#: lib/edenflowers_web/components/layouts.ex:191
+#: lib/edenflowers_web/components/layouts.ex:199
 #, elixir-autogen, elixir-format
 msgid "Sign In"
-msgstr ""
+msgstr "Kirjaudu sisään"
 
 #: lib/edenflowers_web/magic_link_complete_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Sign in"
-msgstr ""
+msgstr "Kirjaudu sisään"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:26
 #, elixir-autogen, elixir-format
 msgid "Sign in to your account"
-msgstr ""
+msgstr "Kirjaudu tilillesi"
 
-#: lib/edenflowers/store/order.ex:408
+#: lib/edenflowers/store/order.ex:471
 #, elixir-autogen, elixir-format
 msgid "There was a problem calculating delivery cost, please try again later"
-msgstr ""
+msgstr "Toimituskulujen laskemisessa tapahtui virhe, yritä myöhemmin uudelleen"
 
 #: lib/edenflowers_web/components/newsletter_signup_form.ex:26
 #, elixir-autogen, elixir-format
 msgid "There was an error subscribing to the newsletter."
-msgstr ""
+msgstr "Uutiskirjeen tilaamisessa tapahtui virhe."
 
 #: lib/edenflowers_web/live/product_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "We offer same-day delivery for orders placed before 2 PM on weekdays. For weekend deliveries, please place your order by Friday 2 PM. All our deliveries are carefully handled to ensure your flowers arrive in perfect condition."
-msgstr ""
+msgstr "Tarjoamme saman päivän toimituksen tilauksille, jotka on tehty ennen klo 14 arkisin. Viikonlopputoimituksiin, tee tilauksesi perjantaihin klo 14 mennessä. Kaikki toimituksemme käsitellään huolellisesti varmistaaksemme, että kukkasi saapuvat täydellisessä kunnossa."
 
 #: lib/edenflowers_web/live/product_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "What happens if I'm not home for delivery?"
-msgstr ""
+msgstr "Mitä tapahtuu, jos en ole kotona toimituksen aikana?"
 
 #: lib/edenflowers_web/live/product_live.ex:158
 #, elixir-autogen, elixir-format
 msgid "What is your delivery policy?"
-msgstr ""
+msgstr "Mikä on toimituspolitiikkanne?"
 
 #: lib/edenflowers_web/live/product_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Yes! You can add a personal message during checkout. We'll include it on a beautiful card with your delivery. Messages can be up to 200 characters."
-msgstr ""
+msgstr "Kyllä! Voit lisätä henkilökohtaisen viestin kassalla. Sisällytämme sen kauniiseen korttiin toimituksen mukana. Viestit voivat olla enintään 200 merkkiä."
 
 #: lib/edenflowers_web/live/product_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Yes, we offer weekly, bi-weekly, and monthly subscription services. You can customize your subscription to match your preferences and schedule. Subscribers receive a 10% discount on all orders."
-msgstr ""
+msgstr "Kyllä, tarjoamme viikottaisia, kahden viikon välein ja kuukausittaisia tilauspalveluita. Voit mukauttaa tilauksesi mieltymyksesi ja aikataulusi mukaan. Tilaajat saavat 10 % alennuksen kaikista tilauksista."
 
 #: lib/edenflowers_web/components/newsletter_signup_form.ex:22
 #, elixir-autogen, elixir-format
 msgid "You've been subscribed to the newsletter 🥳."
-msgstr ""
+msgstr "Olet tilannut uutiskirjeen 🥳."
 
 #: lib/edenflowers_web/live/checkout_live.ex:68
 #: lib/edenflowers_web/live/checkout_live.ex:423
 #, elixir-autogen, elixir-format
 msgid "Your Details"
-msgstr ""
+msgstr "Tietosi"
 
 #: lib/edenflowers_web/live/checkout_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "Your Name *"
-msgstr ""
+msgstr "Nimesi *"
 
 #: lib/edenflowers_web/components/line_items_component.ex:66
 #, elixir-autogen, elixir-format
 msgid "Your cart is empty."
-msgstr ""
+msgstr "Ostoskorisi on tyhjä."
 
 #: lib/edenflowers_web/magic_link_request_live.ex:37
 #, elixir-autogen, elixir-format
 msgid "info@edenflowers.fi"
-msgstr ""
+msgstr "info@edenflowers.fi"
 
 #: lib/edenflowers_web/magic_link_request_live.ex:31
 #, elixir-autogen, elixir-format
 msgid "🥳 A magic link was sent to %{email}."
-msgstr ""
+msgstr "🥳 Kirjautumislinkki lähetettiin osoitteeseen %{email}."
+
+#: lib/edenflowers/email.ex:19
+#, elixir-autogen, elixir-format
+msgid "Order Confirmation"
+msgstr "Tilausvahvistus"

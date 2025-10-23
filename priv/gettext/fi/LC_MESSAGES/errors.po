@@ -12,94 +12,94 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "can't be blank"
-msgstr ""
+msgstr "ei voi olla tyhjä"
 
 msgid "has already been taken"
-msgstr ""
+msgstr "on jo käytössä"
 
 msgid "is invalid"
-msgstr ""
+msgstr "on virheellinen"
 
 msgid "must be accepted"
-msgstr ""
+msgstr "on hyväksyttävä"
 
 msgid "has invalid format"
-msgstr ""
+msgstr "on väärässä muodossa"
 
 msgid "has an invalid entry"
-msgstr ""
+msgstr "sisältää virheellisen merkinnän"
 
 msgid "is reserved"
-msgstr ""
+msgstr "on varattu"
 
 msgid "does not match confirmation"
-msgstr ""
+msgstr "ei vastaa vahvistusta"
 
 msgid "is still associated with this entry"
-msgstr ""
+msgstr "on edelleen liitetty tähän merkintään"
 
 msgid "are still associated with this entry"
-msgstr ""
+msgstr "ovat edelleen liitetty tähän merkintään"
 
 msgid "should have %{count} item(s)"
 msgid_plural "should have %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla %{count} kohde"
+msgstr[1] "pitäisi olla %{count} kohdetta"
 
 msgid "should be %{count} character(s)"
 msgid_plural "should be %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla %{count} merkki"
+msgstr[1] "pitäisi olla %{count} merkkiä"
 
 msgid "should be %{count} byte(s)"
 msgid_plural "should be %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla %{count} tavu"
+msgstr[1] "pitäisi olla %{count} tavua"
 
 msgid "should have at least %{count} item(s)"
 msgid_plural "should have at least %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla vähintään %{count} kohde"
+msgstr[1] "pitäisi olla vähintään %{count} kohdetta"
 
 msgid "should be at least %{count} character(s)"
 msgid_plural "should be at least %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla vähintään %{count} merkki"
+msgstr[1] "pitäisi olla vähintään %{count} merkkiä"
 
 msgid "should be at least %{count} byte(s)"
 msgid_plural "should be at least %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla vähintään %{count} tavu"
+msgstr[1] "pitäisi olla vähintään %{count} tavua"
 
 msgid "should have at most %{count} item(s)"
 msgid_plural "should have at most %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla enintään %{count} kohde"
+msgstr[1] "pitäisi olla enintään %{count} kohdetta"
 
 msgid "should be at most %{count} character(s)"
 msgid_plural "should be at most %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla enintään %{count} merkki"
+msgstr[1] "pitäisi olla enintään %{count} merkkiä"
 
 msgid "should be at most %{count} byte(s)"
 msgid_plural "should be at most %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "pitäisi olla enintään %{count} tavu"
+msgstr[1] "pitäisi olla enintään %{count} tavua"
 
 msgid "must be less than %{number}"
-msgstr ""
+msgstr "on oltava pienempi kuin %{number}"
 
 msgid "must be greater than %{number}"
-msgstr ""
+msgstr "on oltava suurempi kuin %{number}"
 
 msgid "must be less than or equal to %{number}"
-msgstr ""
+msgstr "on oltava pienempi tai yhtä suuri kuin %{number}"
 
 msgid "must be greater than or equal to %{number}"
-msgstr ""
+msgstr "on oltava suurempi tai yhtä suuri kuin %{number}"
 
 msgid "must be equal to %{number}"
-msgstr ""
+msgstr "on oltava yhtä suuri kuin %{number}"
 
 msgid "is required"
-msgstr ""
+msgstr "on pakollinen"
