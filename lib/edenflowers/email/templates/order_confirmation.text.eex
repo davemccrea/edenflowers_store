@@ -1,7 +1,9 @@
+Hi,
+
 Thank you for your order!
 
-Order Reference: <%= order.order_reference %>
-Order Date: <%= format_datetime.(order.ordered_at || order.updated_at) %>
+Reference: <%= order.order_reference %>
+Date received: <%= format_datetime.(order.ordered_at || order.updated_at) %>
 
 CUSTOMER DETAILS
 Name: <%= order.customer_name %>
@@ -11,26 +13,18 @@ ORDER ITEMS
 <%= for item <- order.line_items do %><%= item.product_name %>
 Quantity: <%= item.quantity %>
 Unit Price: <%= format_currency.(item.unit_price) %>
-<% end %>
 
-<%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS
-<% else %>PICKUP DETAILS
-<% end %>
+<% end %><%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS<% else %>PICKUP DETAILS<% end %>
 <%= if order.fulfillment_option.fulfillment_method == :delivery do %>Delivery Method: <%= order.fulfillment_option.name %>
-<%= if order.gift do %>Recipient: <%= order.recipient_name %>
-<% else %>Recipient: <%= order.customer_name %>
-<% end %>Phone: <%= order.recipient_phone_number %>
+<%= if order.gift do %>Recipient: <%= order.recipient_name %><% else %>Recipient: <%= order.customer_name %><% end %>
+Phone: <%= order.recipient_phone_number %>
 Address: <%= order.calculated_address || order.delivery_address %>
 <%= if order.delivery_instructions do %>Instructions: <%= order.delivery_instructions %>
-<% end %>Delivery Date: <%= format_date.(order.fulfillment_date) %>
-<% else %>Pickup Method: <%= order.fulfillment_option.name %>
-Pickup Date: <%= format_date.(order.fulfillment_date) %>
-<% end %>
-<%= if order.gift and order.gift_message do %>
+<% end %>Delivery Date: <%= format_date.(order.fulfillment_date) %><% else %>Pickup Method: <%= order.fulfillment_option.name %>
+Pickup Date: <%= format_date.(order.fulfillment_date) %><% end %><%= if order.gift and order.gift_message do %>
 
 GIFT MESSAGE
-<%= order.gift_message %>
-<% end %>
+<%= order.gift_message %><% end %>
 
 <%= String.capitalize(to_string(order.fulfillment_option.fulfillment_method)) %> Fee: <%= format_currency.(order.fulfillment_amount) %>
 <%= if order.promotion_applied? do %>Discount: -<%= format_currency.(order.discount_amount) %>

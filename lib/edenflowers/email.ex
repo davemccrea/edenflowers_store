@@ -19,13 +19,10 @@ defmodule Edenflowers.Email do
   defp render_order_confirmation(order) do
     EEx.eval_file(
       Path.join([__DIR__, "email", "templates", "order_confirmation.text.eex"]),
-      [
-        order: order,
-        format_currency: &format_currency/1,
-        format_date: &format_date/1,
-        format_datetime: &format_datetime/1
-      ],
-      trim: true
+      order: order,
+      format_currency: &format_currency/1,
+      format_date: &format_date/1,
+      format_datetime: &format_datetime/1
     )
   end
 
