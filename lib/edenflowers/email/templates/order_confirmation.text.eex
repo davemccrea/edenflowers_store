@@ -1,56 +1,41 @@
-Hi <%= @order.customer_name %>,
-
 Thank you for your order!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order Reference: <%= order.order_reference %>
+Order Date: <%= format_datetime.(order.ordered_at || order.updated_at) %>
 
-ORDER CONFIRMATION
-Order Reference: <%= @order.order_reference %>
-<%= if @order.ordered_at do %>Order Date: <%= @format_datetime.(@order.ordered_at) %>
+CUSTOMER DETAILS
+Name: <%= order.customer_name %>
+Email: <%= order.customer_email %>
+
+ORDER ITEMS
+<%= for item <- order.line_items do %>
+<%= item.product_name %>
+Quantity: <%= item.quantity %>
+Unit Price: <%= format_currency.(item.unit_price) %><% end %>
+
+<%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS<% else %>PICKUP DETAILS<% end %>
+<%= if order.fulfillment_option.fulfillment_method == :delivery do %>Delivery Method: <%= order.fulfillment_option.name %>
+<%= if order.gift do %>Recipient: <%= order.recipient_name %>
+<% else %>Recipient: <%= order.customer_name %>
+<% end %>Phone: <%= order.recipient_phone_number %>
+Address: <%= order.calculated_address || order.delivery_address %>
+<%= if order.delivery_instructions do %>Instructions: <%= order.delivery_instructions %>
+<% end %>Delivery Date: <%= format_date.(order.fulfillment_date) %>
+<% else %>Pickup Method: <%= order.fulfillment_option.name %>
+Pickup Date: <%= format_date.(order.fulfillment_date) %><% end %>
+<%= if order.gift and order.gift_message do %>
+GIFT MESSAGE
+<%= order.gift_message %>
 <% end %>
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<%= String.capitalize(to_string(order.fulfillment_option.fulfillment_method)) %> Fee: <%= format_currency.(order.fulfillment_amount) %>
+<%= if order.promotion_applied? do %>Discount: -<%= format_currency.(order.discount_amount) %><% end %>
+Tax: <%= format_currency.(order.tax_amount) %>
+Total: <%= format_currency.(order.total) %>
 
-ORDER DETAILS
-
-<%= for line_item <- @order.line_items do %>  • <%= line_item.product_name %> × <%= line_item.quantity %>
-<% end %>
-
-Subtotal: <%= @format_currency.(@order.line_total) %>
-<%= if @order.discount_amount && Decimal.compare(@order.discount_amount, 0) == :gt do %>Discount: -<%= @format_currency.(@order.discount_amount) %>
-<% end %>Tax: <%= @format_currency.(@order.tax_amount) %>
-<%= if @order.fulfillment_amount do %>Fulfillment: <%= @format_currency.(@order.fulfillment_amount) %>
-<% end %>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOTAL: <%= @format_currency.(@order.total) %>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-<%= if @order.fulfillment_option do %>FULFILLMENT DETAILS
-
-Method: <%= @humanize_fulfillment_method.(@order.fulfillment_option.fulfillment_method) %>
-<%= if @order.fulfillment_date do %>Date: <%= @format_date.(@order.fulfillment_date) %>
-<% end %>
-<%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
-<%= if @order.recipient_name do %>Recipient: <%= @order.recipient_name %>
-<% end %>Delivery Address: <%= @order.calculated_address || @order.delivery_address %>
-<%= if @order.recipient_phone_number do %>Phone: <%= @order.recipient_phone_number %>
-<% end %><%= if @order.delivery_instructions do %>Instructions: <%= @order.delivery_instructions %>
-<% end %><% end %>
-
-<% end %><%= if @order.gift do %>GIFT MESSAGE
-<%= if @order.recipient_name do %>
-To: <%= @order.recipient_name %>
-<% end %><%= if @order.gift_message do %>
-<%= @order.gift_message %>
-<% end %>
-
-<% end %>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-We'll send you another email when your order is on its way.
-
-If you have any questions, please don't hesitate to contact us.
+If you have any questions or wish to make changes to your order, please reply to this email.
 
 Best regards,
-The Eden Flowers Team
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Jennie
+Eden Flowers

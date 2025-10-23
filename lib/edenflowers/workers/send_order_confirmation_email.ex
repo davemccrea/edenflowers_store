@@ -8,9 +8,8 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
   alias Edenflowers.Store.Order
 
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
-    order = Order.get_for_checkout!(order_id)
-
-    order
+    order_id
+    |> Order.get_for_confirmation_email!()
     |> Email.order_confirmation()
     |> Mailer.deliver()
   end

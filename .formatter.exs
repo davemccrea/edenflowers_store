@@ -13,6 +13,6 @@
   ],
   subdirectories: ["priv/*/migrations"],
   plugins: [Spark.Formatter, Phoenix.LiveView.HTMLFormatter, TailwindFormatter],
-  inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}", "priv/*/seeds.exs"],
+  inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,eex,ex,exs}", "priv/*/seeds.exs"],
   line_length: 120
 ]

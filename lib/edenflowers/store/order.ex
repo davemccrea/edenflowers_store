@@ -26,6 +26,8 @@ defmodule Edenflowers.Store.Order do
     # Aggregates
     :total_items_in_cart,
     :discount_amount,
+    :line_total,
+    :line_tax_amount,
 
     # Calculations
     :promotion_applied?,
@@ -44,6 +46,7 @@ defmodule Edenflowers.Store.Order do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
+    define :get_for_confirmation_email, action: :get_for_confirmation_email, args: [:id]
     define :get_all_for_user, action: :get_all_for_user, args: [:user_id]
     define :payment_received, action: :payment_received
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
@@ -70,6 +73,32 @@ defmodule Edenflowers.Store.Order do
       filter expr(id == ^arg(:id))
       get? true
       prepare build(load: @load)
+    end
+
+    read :get_for_confirmation_email do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+      prepare build(
+                load: [
+                  # Aggregates
+                  :line_total,
+                  :line_tax_amount,
+                  :discount_amount,
+
+                  # Calculations
+                  :order_reference,
+                  :promotion_applied?,
+                  :total,
+                  :tax_amount,
+                  :fulfillment_tax_amount,
+
+                  # Relationships
+                  :promotion,
+                  :fulfillment_option,
+                  line_items: [:line_total, :discount_amount]
+                ]
+              )
     end
 
     read :get_all_for_user do
