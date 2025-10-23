@@ -31,10 +31,12 @@ defmodule Edenflowers.Email do
   end
 
   defp format_date(date) do
-    Cldr.Date.to_string!(date, Edenflowers.Cldr, locale: "fi", format: :long)
+    Cldr.Date.to_string!(date, Edenflowers.Cldr, locale: "fi", format: :short)
   end
 
   defp format_datetime(datetime) do
-    Cldr.DateTime.to_string!(datetime, Edenflowers.Cldr, locale: "fi", format: :long)
+    {:ok, date_part} = Cldr.Date.to_string(datetime, Edenflowers.Cldr, locale: "fi", format: :short)
+    {:ok, time_part} = Cldr.Time.to_string(datetime, Edenflowers.Cldr, locale: "fi", format: :short)
+    "#{date_part} #{time_part}"
   end
 end

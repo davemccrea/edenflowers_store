@@ -9,12 +9,10 @@ CUSTOMER DETAILS
 Name: <%= order.customer_name %>
 Email: <%= order.customer_email %>
 
-ORDER ITEMS
-<%= for item <- order.line_items do %><%= item.product_name %>
-Quantity: <%= item.quantity %>
-Unit Price: <%= format_currency.(item.unit_price) %>
-
-<% end %><%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS<% else %>PICKUP DETAILS<% end %>
+ITEMS
+<%= for item <- order.line_items do %>- <%= item.product_name %> (<%= item.quantity %>) <%= format_currency.(item.line_total) %>
+<% end %>
+<%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS<% else %>PICKUP DETAILS<% end %>
 <%= if order.fulfillment_option.fulfillment_method == :delivery do %>Delivery Method: <%= order.fulfillment_option.name %>
 <%= if order.gift do %>Recipient: <%= order.recipient_name %><% else %>Recipient: <%= order.customer_name %><% end %>
 Phone: <%= order.recipient_phone_number %>
