@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source .env
+
 mix ecto.drop
 
 find priv/repo/migrations -type f ! -name ".formatter.exs" -delete
