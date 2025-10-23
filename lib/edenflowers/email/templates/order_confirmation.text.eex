@@ -12,14 +12,15 @@ Email: <%= order.customer_email %>
 ITEMS
 <%= for item <- order.line_items do %>- <%= item.product_name %> (<%= item.quantity %>) <%= format_currency.(item.line_total) %>
 <% end %>
-<%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY DETAILS<% else %>PICKUP DETAILS<% end %>
-<%= if order.fulfillment_option.fulfillment_method == :delivery do %>Delivery Method: <%= order.fulfillment_option.name %>
-<%= if order.gift do %>Recipient: <%= order.recipient_name %><% else %>Recipient: <%= order.customer_name %><% end %>
+<%= if order.fulfillment_option.fulfillment_method == :delivery do %>DELIVERY<% else %>PICKUP<% end %>
+<%= if order.fulfillment_option.fulfillment_method == :delivery do %><%= if order.gift do %>Recipient: <%= order.recipient_name %><% else %>Recipient: <%= order.customer_name %><% end %>
 Phone: <%= order.recipient_phone_number %>
 Address: <%= order.calculated_address || order.delivery_address %>
 <%= if order.delivery_instructions do %>Instructions: <%= order.delivery_instructions %>
-<% end %>Delivery Date: <%= format_date.(order.fulfillment_date) %><% else %>Pickup Method: <%= order.fulfillment_option.name %>
-Pickup Date: <%= format_date.(order.fulfillment_date) %><% end %><%= if order.gift and order.gift_message do %>
+<% end %>Date: <%= format_date.(order.fulfillment_date) %><% else %>Address: Minimossen
+         Myrvägen 1
+         65230 Vasa
+Date: <%= format_date.(order.fulfillment_date) %><% end %><%= if order.gift and order.gift_message do %>
 
 GIFT MESSAGE
 <%= order.gift_message %><% end %>
