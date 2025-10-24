@@ -55,8 +55,8 @@ defmodule Edenflowers.Store.Order do
     define :clear_promotion, action: :clear_promotion
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
+    define :update_locale_get_for_checkout, action: :update_locale_get_for_checkout, args: [:locale]
     define :reset, action: :reset
-    define :update_locale, action: :update_locale, args: [:locale]
   end
 
   actions do
@@ -80,6 +80,7 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
+
       prepare build(
                 load: [
                   # Aggregates
@@ -201,6 +202,12 @@ defmodule Edenflowers.Store.Order do
       change load(@load)
     end
 
+    update :update_locale_get_for_checkout do
+      argument :locale, :string, allow_nil?: false
+      change atomic_update(:locale, expr(^arg(:locale)))
+      change load(@load)
+    end
+
     update :add_payment_intent_id do
       accept [:payment_intent_id]
       change load(@load)
@@ -244,11 +251,6 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:promotion_id, nil)
       change set_attribute(:fulfillment_option_id, nil)
       change load(@load)
-    end
-
-    update :update_locale do
-      argument :locale, :string, allow_nil?: false
-      change atomic_update(:locale, expr(^arg(:locale)))
     end
   end
 
@@ -319,7 +321,7 @@ defmodule Edenflowers.Store.Order do
     # Step 4 - Payment
     attribute :payment_intent_id, :string
 
-    attribute :locale, :string
+    attribute :locale, :string, default: "sv-FI"
 
     timestamps()
   end

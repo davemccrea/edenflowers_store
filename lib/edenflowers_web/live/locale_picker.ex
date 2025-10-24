@@ -3,9 +3,9 @@ defmodule EdenflowersWeb.LocalePicker do
 
   def mount(socket) do
     locales = [
-      {"sv", "Svenska"},
+      {"sv-FI", "Svenska"},
       {"fi", "Suomi"},
-      {"en", "English"}
+      {"en-GB", "English"}
     ]
 
     {:ok,

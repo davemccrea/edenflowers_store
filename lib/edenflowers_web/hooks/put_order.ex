@@ -4,8 +4,14 @@ defmodule EdenflowersWeb.Hooks.PutOrder do
 
   def on_mount(:default, _params, %{"order_id" => order_id} = _session, socket) do
     locale = Edenflowers.Cldr.get_locale() |> Cldr.to_string()
-    Order.update_locale(order_id, locale) |> dbg()
 
-    {:cont, assign_new(socket, :order, fn -> Order.get_for_checkout!(order_id) end)}
+    case Order.update_locale_get_for_checkout(order_id, locale) do
+      {:ok, order} ->
+        {:cont, assign(socket, order: order)}
+
+      # TODO: handle error
+      {:error, _} ->
+        {:halt, socket}
+    end
   end
 end
