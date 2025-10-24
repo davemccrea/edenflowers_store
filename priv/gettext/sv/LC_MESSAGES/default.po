@@ -64,6 +64,7 @@ msgstr "Kurser"
 msgid "Delivery"
 msgstr "Leverans"
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:29
 #: lib/edenflowers_web/live/checkout_live.ex:294
 #, elixir-autogen, elixir-format
 msgid "Discount"
@@ -100,6 +101,7 @@ msgstr "Visa aktuell månad"
 msgid "Store"
 msgstr "Butik"
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:31
 #: lib/edenflowers_web/live/checkout_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Total"
@@ -228,6 +230,7 @@ msgstr "Frånkopplad från servern. Återansluter..."
 msgid "Do you offer subscription services?"
 msgstr "Erbjuder ni prenumerationstjänster?"
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:10
 #: lib/edenflowers_web/magic_link_request_live.ex:37
 #, elixir-autogen, elixir-format
 msgid "Email"
@@ -475,7 +478,105 @@ msgstr "info@edenflowers.fi"
 msgid "🥳 A magic link was sent to %{email}."
 msgstr "🥳 En inloggningslänk skickades till %{email}."
 
-#: lib/edenflowers/email.ex:19
+#: lib/edenflowers/email.ex:29
 #, elixir-autogen, elixir-format
 msgid "Order Confirmation"
 msgstr "Orderbekräftelse"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:18
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:20
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Address"
+msgstr "Adress"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:35
+#, elixir-autogen, elixir-format
+msgid "Best regards"
+msgstr "Med vänliga hälsningar"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "CUSTOMER DETAILS"
+msgstr "KUNDUPPGIFTER"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
+#, elixir-autogen, elixir-format
+msgid "DELIVERY"
+msgstr "LEVERANS"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:20
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:23
+#, elixir-autogen, elixir-format
+msgid "Date"
+msgstr "Datum"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "Date received"
+msgstr "Mottaget"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:28
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Delivery fee"
+msgstr "Leveransavgift"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:25
+#, elixir-autogen, elixir-format
+msgid "GIFT MESSAGE"
+msgstr "PRESENTMEDDELANDE"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:1
+#, elixir-autogen, elixir-format
+msgid "Hi"
+msgstr "Hej"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "ITEMS"
+msgstr "VAROR"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:33
+#, elixir-autogen, elixir-format
+msgid "If you have any questions or wish to make changes to your order, please reply to this email."
+msgstr "Om du har några frågor eller önskar göra ändringar i din beställning, vänligen svara på detta e-postmeddelande."
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:19
+#, elixir-autogen, elixir-format
+msgid "Instructions"
+msgstr "Instruktioner"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "Name"
+msgstr "Namn"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
+#, elixir-autogen, elixir-format
+msgid "PICKUP"
+msgstr "UPPHÄMTNING"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:17
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Phone"
+msgstr "Telefon"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:16
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:16
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Recipient"
+msgstr "Mottagare"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Reference"
+msgstr "Referens"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:30
+#, elixir-autogen, elixir-format
+msgid "Tax"
+msgstr "Moms"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order!"
+msgstr "Tack för din beställning!"

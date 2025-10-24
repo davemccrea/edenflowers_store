@@ -64,6 +64,7 @@ msgstr ""
 msgid "Delivery"
 msgstr ""
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:29
 #: lib/edenflowers_web/live/checkout_live.ex:294
 #, elixir-autogen, elixir-format
 msgid "Discount"
@@ -100,6 +101,7 @@ msgstr ""
 msgid "Store"
 msgstr ""
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:31
 #: lib/edenflowers_web/live/checkout_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Total"
@@ -228,6 +230,7 @@ msgstr ""
 msgid "Do you offer subscription services?"
 msgstr ""
 
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:10
 #: lib/edenflowers_web/magic_link_request_live.ex:37
 #, elixir-autogen, elixir-format
 msgid "Email"
@@ -475,7 +478,105 @@ msgstr ""
 msgid "🥳 A magic link was sent to %{email}."
 msgstr ""
 
-#: lib/edenflowers/email.ex:19
+#: lib/edenflowers/email.ex:30
 #, elixir-autogen, elixir-format
 msgid "Order Confirmation"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:18
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:20
+#, elixir-autogen, elixir-format
+msgid "Address"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:35
+#, elixir-autogen, elixir-format
+msgid "Best regards"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "CUSTOMER DETAILS"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
+#, elixir-autogen, elixir-format
+msgid "DELIVERY"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:20
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:23
+#, elixir-autogen, elixir-format
+msgid "Date"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "Date received"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:28
+#, elixir-autogen, elixir-format
+msgid "Delivery fee"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:25
+#, elixir-autogen, elixir-format
+msgid "GIFT MESSAGE"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:1
+#, elixir-autogen, elixir-format
+msgid "Hi"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "ITEMS"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:33
+#, elixir-autogen, elixir-format
+msgid "If you have any questions or wish to make changes to your order, please reply to this email."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:19
+#, elixir-autogen, elixir-format
+msgid "Instructions"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "Name"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
+#, elixir-autogen, elixir-format
+msgid "PICKUP"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:17
+#, elixir-autogen, elixir-format
+msgid "Phone"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:16
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:16
+#, elixir-autogen, elixir-format
+msgid "Recipient"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Reference"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:30
+#, elixir-autogen, elixir-format
+msgid "Tax"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order!"
 msgstr ""
