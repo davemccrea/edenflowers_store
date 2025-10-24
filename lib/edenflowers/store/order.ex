@@ -56,6 +56,7 @@ defmodule Edenflowers.Store.Order do
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
     define :reset, action: :reset
+    define :update_locale, action: :update_locale, args: [:locale]
   end
 
   actions do
@@ -244,6 +245,11 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:fulfillment_option_id, nil)
       change load(@load)
     end
+
+    update :update_locale do
+      argument :locale, :string, allow_nil?: false
+      change atomic_update(:locale, expr(^arg(:locale)))
+    end
   end
 
   pub_sub do
@@ -312,6 +318,8 @@ defmodule Edenflowers.Store.Order do
 
     # Step 4 - Payment
     attribute :payment_intent_id, :string
+
+    attribute :locale, :string
 
     timestamps()
   end
