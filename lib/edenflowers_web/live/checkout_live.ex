@@ -10,38 +10,28 @@ defmodule EdenflowersWeb.CheckoutLive do
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
-    if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
+    end
 
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
-      form = make_form(order, action_name(:save, order.step))
-      promotional_form = make_form(order, :add_promotion_with_code)
-
       {:ok,
        socket
        |> assign(:id, "checkout")
        |> assign(:page_title, gettext("Checkout"))
-       |> assign(fulfillment_options: fulfillment_options)
-       |> assign(order: order)
-       |> assign(form: form)
-       |> assign(promotional_form: promotional_form)
+       |> assign(:fulfillment_options, fulfillment_options)
+       |> assign(:order, order)
+       |> assign(:form, make_form(order, action_name(:save, order.step)))
+       |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
-        Logger.error("Cart is empty")
-
-        {:ok,
-         socket
-         |> put_flash(:error, gettext("Cart is empty"))
-         |> push_navigate(to: ~p"/")}
+        handle_mount_error(socket, "Cart is empty", gettext("Cart is empty"))
 
       error ->
         Logger.error("Error loading checkout: #{inspect(error)}")
-
-        {:ok,
-         socket
-         |> put_flash(:error, gettext("Error loading checkout"))
-         |> push_navigate(to: ~p"/")}
+        handle_mount_error(socket, "Error loading checkout", gettext("Error loading checkout"))
     end
   end
 
@@ -496,6 +486,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   # =========
   # Utilities
   # =========
+
+  defp handle_mount_error(socket, log_message, flash_message) do
+    Logger.error(log_message)
+
+    {:ok,
+     socket
+     |> put_flash(:error, flash_message)
+     |> push_navigate(to: ~p"/")}
+  end
 
   defp action_name(action, step) when is_atom(action) and is_integer(step) do
     String.to_atom("#{action}_step_#{step}")
