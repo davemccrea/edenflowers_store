@@ -29,6 +29,7 @@ defmodule EdenflowersWeb.LocalePicker do
   end
 
   def handle_event("click", %{"value" => cldr_locale}, socket) do
+    # Simply redirect to locale controller, which will use referer header to go back
     {:noreply, redirect(socket, to: ~p"/cldr_locale/#{cldr_locale}")}
   end
 end
