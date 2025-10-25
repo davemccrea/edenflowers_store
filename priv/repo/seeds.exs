@@ -91,7 +91,7 @@ Promotion
     discount_percentage: "0.15",
     minimum_cart_total: "30.00",
     start_date: nil,
-    expiration_date: ~D[2025-07-01]
+    expiration_date: ~D[2099-07-01]
   }
 )
 |> Ash.create!()
