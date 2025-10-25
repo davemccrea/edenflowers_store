@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
       </h1>
 
       <.form for={to_form(%{})} phx-submit="submit" phx-target={@myself}>
-        <input type="text" class="input input-lg w-full text-sm" placeholder="Email Address" name="email_address" />
+        <input type="text" class="input input-lg w-full text-sm" placeholder={gettext("Email Address")} name="email_address" />
       </.form>
     </section>
     """

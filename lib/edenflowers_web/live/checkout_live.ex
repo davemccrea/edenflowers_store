@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
         {:ok,
          socket
-         |> put_flash(:error, "Cart is empty")
+         |> put_flash(:error, gettext("Cart is empty"))
          |> push_navigate(to: ~p"/")}
 
       error ->
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
         {:ok,
          socket
-         |> put_flash(:error, "Error loading checkout")
+         |> put_flash(:error, gettext("Error loading checkout"))
          |> push_navigate(to: ~p"/")}
     end
   end
@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.input label={gettext("Your Name *")} field={@form[:customer_name]} type="text" />
                     <.input label={gettext("Email *")} field={@form[:customer_email]} type="text" />
 
-                    <.form_button>Next</.form_button>
+                    <.form_button>{gettext("Next")}</.form_button>
                   </.form>
                 </section>
 
@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         {msg}
                       </.error>
                     </fieldset>
-                    <.form_button>Next</.form_button>
+                    <.form_button>{gettext("Next")}</.form_button>
                   </.form>
                 </section>
 
@@ -161,23 +161,23 @@ defmodule EdenflowersWeb.CheckoutLive do
                     >
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
                         <.input
-                          placeholder="Stadsgatan 3, 65300 Vasa"
-                          label="Address *"
+                          placeholder={gettext("Stadsgatan 3, 65300 Vasa")}
+                          label={gettext("Address *")}
                           field={@form[:delivery_address]}
                           type="text"
                         />
 
                         <.input
-                          label="Delivery Instructions"
+                          label={gettext("Delivery Instructions")}
                           field={@form[:delivery_instructions]}
                           type="text"
-                          placeholder="e.g. Door code 1234, leave at the front door"
+                          placeholder={gettext("e.g. Door code 1234, leave at the front door")}
                         />
                       <% end %>
 
                       <.input
                         label={gettext("Phone Number")}
-                        placeholder="045 1505141"
+                        placeholder={gettext("045 1505141")}
                         field={@form[:recipient_phone_number]}
                         type="text"
                       />
@@ -217,7 +217,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
-                      <.form_button>Next</.form_button>
+                      <.form_button>{gettext("Next")}</.form_button>
                     </.form>
                   <% end %>
                 </section>
@@ -271,7 +271,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     field={@promotional_form[:code]}
                     type="text"
                     button_text={gettext("Apply")}
-                    placeholder="Enter promo code"
+                    placeholder={gettext("Enter promo code")}
                   />
                 </.form>
 
@@ -454,7 +454,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {render_slot(@inner_block)}
       </h1>
       <button :if={@edit_step} type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@edit_step}"}>
-        Edit
+        {gettext("Edit")}
       </button>
     </div>
     """

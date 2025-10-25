@@ -17,17 +17,17 @@ defmodule EdenflowersWeb.AccountLive do
         <p class="text-sm">{@current_user.email}</p>
 
         <section class="space-y-4">
-          <h1 class="font-serif mt-8 text-2xl">Your Orders</h1>
+          <h1 class="font-serif mt-8 text-2xl">{gettext("Your Orders")}</h1>
 
           <div class="overflow-x-auto">
             <table class="table">
               <!-- head -->
               <thead>
                 <tr>
-                  <th>Order Reference</th>
-                  <th>Date</th>
-                  <th>Total</th>
-                  <th>Status</th>
+                  <th>{gettext("Order Reference")}</th>
+                  <th>{gettext("Date")}</th>
+                  <th>{gettext("Total")}</th>
+                  <th>{gettext("Status")}</th>
                 </tr>
               </thead>
               <tbody>
