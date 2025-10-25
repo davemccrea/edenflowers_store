@@ -9,7 +9,7 @@ defmodule Edenflowers.Store.Order do
   require Ash.Resource.Change.Builtins
 
   alias Edenflowers.Store.Order.{
-    ProcessFulfillment,
+    ValidateAndCalculateFulfillment,
     MaybeRequireDeliveryAddress,
     LookupPromotionCode,
     MaybeRequireRecipientName,
@@ -22,20 +22,18 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
-  @load [
+  @checkout_loads [
     # Aggregates
     :total_items_in_cart,
     :discount_amount,
     :line_total,
     :line_tax_amount,
-
     # Calculations
     :promotion_applied?,
     :order_reference,
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
-
     # Relationships
     :promotion,
     :fulfillment_option,
@@ -55,7 +53,7 @@ defmodule Edenflowers.Store.Order do
     define :clear_promotion, action: :clear_promotion
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
-    define :update_locale_get_for_checkout, action: :update_locale_get_for_checkout, args: [:locale]
+    define :update_locale, action: :update_locale, args: [:locale]
     define :reset, action: :reset
   end
 
@@ -73,7 +71,7 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
-      prepare build(load: @load)
+      prepare build(load: @checkout_loads)
     end
 
     read :get_for_confirmation_email do
@@ -118,13 +116,13 @@ defmodule Edenflowers.Store.Order do
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     # Step-specific Update Actions
     update :edit_step_1 do
       change set_attribute(:step, 1)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :save_step_1 do
@@ -132,13 +130,13 @@ defmodule Edenflowers.Store.Order do
       require_attributes [:customer_name, :customer_email]
       change {UpsertUserAndAssignToOrder, []}
       change set_attribute(:step, 2)
-      change load(@load)
+      change load(@checkout_loads)
       require_atomic? false
     end
 
     update :edit_step_2 do
       change set_attribute(:step, 2)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :save_step_2 do
@@ -146,13 +144,13 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:step, 3)
       change {MaybeRequireRecipientName, []}
       change {ClearGiftFields, []}
-      change load(@load)
+      change load(@checkout_loads)
       require_atomic? false
     end
 
     update :edit_step_3 do
       change set_attribute(:step, 3)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :save_step_3 do
@@ -172,9 +170,9 @@ defmodule Edenflowers.Store.Order do
 
       require_attributes [:fulfillment_date]
       change {MaybeRequireDeliveryAddress, []}
-      change {ProcessFulfillment, []}
+      change {ValidateAndCalculateFulfillment, []}
       change set_attribute(:step, 4)
-      change load(@load)
+      change load(@checkout_loads)
 
       require_atomic? false
     end
@@ -194,41 +192,40 @@ defmodule Edenflowers.Store.Order do
       accept [:fulfillment_option_id]
       # When filfillment_option is updated, clear chosen fulfillment date
       change set_attribute(:fulfillment_date, nil)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :update_gift do
       accept [:gift]
-      change load(@load)
+      change load(@checkout_loads)
     end
 
-    update :update_locale_get_for_checkout do
+    update :update_locale do
       argument :locale, :string, allow_nil?: false
       change atomic_update(:locale, expr(^arg(:locale)))
-      change load(@load)
     end
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :add_promotion_with_code do
       argument :code, :string
       change {LookupPromotionCode, []}
-      change load(@load)
+      change load(@checkout_loads)
       require_atomic? false
     end
 
     update :clear_promotion do
       change set_attribute(:promotion_id, nil)
-      change load(@load)
+      change load(@checkout_loads)
     end
 
     update :reset do
@@ -250,7 +247,7 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:payment_intent_id, nil)
       change set_attribute(:promotion_id, nil)
       change set_attribute(:fulfillment_option_id, nil)
-      change load(@load)
+      change load(@checkout_loads)
     end
   end
 
@@ -429,7 +426,7 @@ defmodule Edenflowers.Store.Order.MaybeRequireDeliveryAddress do
   end
 end
 
-defmodule Edenflowers.Store.Order.ProcessFulfillment do
+defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
   use Ash.Resource.Change
   use Gettext, backend: EdenflowersWeb.Gettext
 
