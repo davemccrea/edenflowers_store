@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                           rows={5}
                         >{@form[:gift_message].value}</textarea>
                         <div class="absolute right-2 bottom-1">
-                          <span id="char-count" class="text-xs" id="gift-message-char-count" phx-update="ignore">
+                          <span id="char-count" class="text-xs" phx-update="ignore">
                             0/200
                           </span>
                         </div>
@@ -225,14 +225,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{gettext("Payment")}</.form_heading>
 
-                  <%!-- TODO: Change to production URL --%>
                   <form
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
                     phx-submit="save_form_4"
                     data-client-secret={@client_secret}
                     data-order-id={@order.id}
-                    data-return-url={"http://localhost:4000/checkout/complete/#{@order.id}"}
+                    data-return-url={url(~p"/checkout/complete/#{@order.id}")}
                     data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
                     data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
                     class="flex flex-col gap-4"
@@ -342,8 +341,14 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_4", _, socket) do
-    StripeAPI.update_payment_intent(socket.assigns.order)
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    case StripeAPI.update_payment_intent(socket.assigns.order) do
+      {:ok, _payment_intent} ->
+        {:noreply, push_event(socket, "stripe:process_payment", %{})}
+
+      {:error, error} ->
+        Logger.error("Failed to update payment intent: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, gettext("Payment processing error. Please try again."))}
+    end
   end
 
   # Step navigation
@@ -407,10 +412,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply,
      socket
      |> assign(order: order)
-     |> assign(form: make_form(order, action_name(:save, socket.assigns.order.step)))
+     |> assign(form: make_form(order, action_name(:save, order.step)))
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))}
   end
 
+  # Redirects to homepage when cart becomes empty.
+  # The HandleLineItemChanged hook updates the order, but this handler manages the redirect.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _order_id}, socket) do
     if Enum.empty?(socket.assigns.order.line_items),
       do: {:noreply, push_navigate(socket, to: ~p"/")},
