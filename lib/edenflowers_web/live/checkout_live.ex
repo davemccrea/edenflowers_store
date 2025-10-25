@@ -45,9 +45,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  # ╔════════╗
-  # ║ Markup ║
-  # ╚════════╝
+  # ======
+  # Markup
+  # ======
 
   def render(assigns) do
     ~H"""
@@ -324,18 +324,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
-  # ╔════════════════╗
-  # ║ Event Handlers ║
-  # ╚════════════════╝
+  # ==============
+  # Event Handlers
+  # ==============
 
+  # Form validation & submission
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("save_form_4", _, socket) do
-    StripeAPI.update_payment_intent(socket.assigns.order)
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
   end
 
   def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
@@ -345,6 +341,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
+  def handle_event("save_form_4", _, socket) do
+    StripeAPI.update_payment_intent(socket.assigns.order)
+    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+  end
+
+  # Step navigation
   def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
     step = String.to_integer(step)
 
@@ -356,6 +358,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order)}
   end
 
+  # Order updates
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     order = Order.update_fulfillment_option!(socket.assigns.order, id)
     {:noreply, assign(socket, order: order)}
@@ -381,18 +384,23 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order)}
   end
 
+  # Stripe events
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("#{message}: #{inspect(details)}")
     {:noreply, socket}
   end
+
+  # ===========
+  # Info Events
+  # ===========
 
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
 
-  # Important! When the order is updated, the forms need to be updated so that they contain the latest data.
-  # I am centralising this in the handle_info/2 callback to avoid having to do it in every other callback.
+  # Reloads order and rebuilds forms when order is updated via PubSub.
+  # Centralizes form synchronization to prevent stale data across all order modifications.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
     order = Order.get_for_checkout!(order_id)
 
@@ -409,9 +417,9 @@ defmodule EdenflowersWeb.CheckoutLive do
       else: {:noreply, socket}
   end
 
-  # ╔════════════╗
-  # ║ Components ║
-  # ╚════════════╝
+  # ==========
+  # Components
+  # ==========
 
   attr :step, :integer, required: true
   slot :inner_block
@@ -478,9 +486,13 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
-  # ╔═══════════╗
-  # ║ Utilities ║
-  # ╚═══════════╝
+  # =========
+  # Utilities
+  # =========
+
+  defp action_name(action, step) when is_atom(action) and is_integer(step) do
+    String.to_atom("#{action}_step_#{step}")
+  end
 
   defp make_form(order, action) do
     order
@@ -491,6 +503,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
 
+  # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
     order = Order.add_payment_intent_id!(order, payment_intent.id)
@@ -503,9 +516,5 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp setup_stripe(socket, order) do
     {:ok, payment_intent} = StripeAPI.retrieve_payment_intent(order)
     assign(socket, client_secret: payment_intent.client_secret)
-  end
-
-  defp action_name(action, step) when is_atom(action) and is_integer(step) do
-    String.to_atom("#{action}_step_#{step}")
   end
 end
