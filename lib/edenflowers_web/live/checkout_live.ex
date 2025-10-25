@@ -10,9 +10,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
-    end
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
 
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
@@ -395,11 +393,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Important! When the order is updated, the forms need to be updated so that they contain the latest data.
   # I am centralising this in the handle_info/2 callback to avoid having to do it in every other callback.
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> _order_id}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
+    order = Order.get_for_checkout!(order_id)
+
     {:noreply,
      socket
-     |> assign(form: make_form(socket.assigns.order, action_name(:save, socket.assigns.order.step)))
-     |> assign(promotional_form: make_form(socket.assigns.order, :add_promotion_with_code))}
+     |> assign(order: order)
+     |> assign(form: make_form(order, action_name(:save, socket.assigns.order.step)))
+     |> assign(promotional_form: make_form(order, :add_promotion_with_code))}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _order_id}, socket) do
