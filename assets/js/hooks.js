@@ -20,6 +20,39 @@ Hooks.CharacterCount = {
   },
 };
 
+Hooks.FocusElement = {
+  mounted() {
+    // Focus on the first form element when the page loads (step 1)
+    requestAnimationFrame(() => {
+      const firstForm = this.el.querySelector('[id$="-form-1"]');
+      if (firstForm) {
+        const firstInput = firstForm.querySelector(
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+        );
+        if (firstInput) {
+          /** @type {HTMLElement} */ (firstInput).focus();
+        }
+      }
+    });
+
+    this.handleEvent("focus-element", ({ id }) => {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          // Focus on the first focusable element within the target
+          const firstInput = element.querySelector(
+            'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          );
+          if (firstInput) {
+            /** @type {HTMLElement} */ (firstInput).focus();
+          }
+        }
+      });
+    });
+  },
+};
+
 /**
  * Navigate the calendar with the keyboard without a round trip to the server for each key press.
  * If the user tries to navigate to a date outside the visible month then the keydown event is

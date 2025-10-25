@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.CheckoutLive do
           </div>
 
           <div class="flex flex-col gap-8 md:flex-row">
-            <div id={@id} class="md:w-[60%]">
+            <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
               <.steps step={@order.step}>
                 <section :if={@order.step == 1} id={"#{@id}-section-1"} class="checkout__section">
                   <.form_heading>{gettext("Your Details")}</.form_heading>
@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{gettext("Delivery Information")}</.form_heading>
 
-                  <.form id={"#{@id}-form-fulfillment-option"} for={%{}} phx-change="update_fulfillment_option">
+                  <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
                       type="radio-card"
@@ -143,10 +143,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <%= if not is_nil(@order.fulfillment_option) do %>
                     <.form
-                      id={"#{@id}-form-3"}
+                      id={"#{@id}-form-3b"}
                       for={@form}
                       phx-change="validate_form_3"
-                      phx-submit={JS.push("save_form_3") |> JS.focus_first(to: "##{@id}-form-4")}
+                      phx-submit="save_form_3"
                       class="checkout__form"
                     >
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
@@ -323,10 +323,19 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
+  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} -> {:noreply, assign(socket, order: order)}
-      {:error, form} -> {:noreply, assign(socket, form: form)}
+      {:ok, order} ->
+        # Focus on the next form section after successful submission
+        next_section_id = get_next_section_id(socket.assigns.id, String.to_integer(step))
+
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> push_event("focus-element", %{id: next_section_id})}
+
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
     end
   end
 
@@ -508,6 +517,11 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+
+  defp get_next_section_id(id, 1), do: "#{id}-form-2"
+  defp get_next_section_id(id, 2), do: "#{id}-form-3a"
+  defp get_next_section_id(id, 3), do: "#{id}-form-4"
+  defp get_next_section_id(_, _), do: nil
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
