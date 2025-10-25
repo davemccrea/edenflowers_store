@@ -69,7 +69,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_tax_rate_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :product_category_id, :uuid, null: false
     end
@@ -89,7 +90,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "product_variants_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create table(:product_fulfillment_options, primary_key: false) do
@@ -202,7 +204,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :product_id,
           references(:products,
@@ -210,7 +213,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "line_items_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :product_variant_id,
           references(:product_variants,
@@ -218,7 +222,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "line_items_product_variant_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create unique_index(:line_items, [:order_id, :product_variant_id],
@@ -285,7 +290,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "fulfillment_options_tax_rate_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create unique_index(:fulfillment_options, [:name],
