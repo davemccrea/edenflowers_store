@@ -2,7 +2,6 @@ defmodule Edenflowers.Store.LineItem do
   use Ash.Resource,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
   postgres do
@@ -45,24 +44,6 @@ defmodule Edenflowers.Store.LineItem do
 
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
-    end
-  end
-
-  policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:super_user, true) do
-      authorize_if always()
-    end
-
-    policy action_type([:create, :read, :update, :destroy]) do
-      authorize_if expr(order.state == :checkout)
-    end
-
-    policy action_type(:read) do
-      authorize_if expr(order.state == :order and order.user_id == ^actor(:id))
     end
   end
 
