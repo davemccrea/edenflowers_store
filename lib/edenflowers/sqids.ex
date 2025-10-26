@@ -8,4 +8,13 @@ defmodule Edenflowers.Sqids do
       alphabet: "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789"
     )
   end
+
+  @doc """
+  Safely decodes a Sqids string, returning {:ok, list} or {:error, reason}.
+  """
+  def decode(string) do
+    {:ok, decode!(string)}
+  rescue
+    e -> {:error, e}
+  end
 end

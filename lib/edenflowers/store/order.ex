@@ -25,6 +25,7 @@ defmodule Edenflowers.Store.Order do
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
+    define :get_by_order_reference, action: :get_by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
     define :get_for_confirmation_email, action: :get_for_confirmation_email, args: [:id]
     define :get_all_for_user, action: :get_all_for_user, args: [:user_id]
@@ -46,6 +47,26 @@ defmodule Edenflowers.Store.Order do
     read :get_by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
+      get? true
+    end
+
+    read :get_by_order_reference do
+      argument :order_reference, :string, allow_nil?: false
+
+      prepare fn query, _context ->
+        require Ash.Query
+        order_reference = Ash.Query.get_argument(query, :order_reference)
+
+        case Edenflowers.Sqids.decode(order_reference) do
+          {:ok, [order_number]} ->
+            Ash.Query.filter(query, order_number == ^order_number)
+
+          _ ->
+            # Invalid order reference - return query that matches nothing
+            Ash.Query.filter(query, false)
+        end
+      end
+
       get? true
     end
 
@@ -104,14 +125,7 @@ defmodule Edenflowers.Store.Order do
 
     read :get_all_for_user do
       argument :user_id, :uuid, allow_nil?: false
-      filter expr(user_id == ^arg(:user_id))
-
-      prepare build(
-                load: [
-                  :total,
-                  :tax_amount
-                ]
-              )
+      filter expr(user_id == ^arg(:user_id) and state == :order)
     end
 
     # Create Actions
