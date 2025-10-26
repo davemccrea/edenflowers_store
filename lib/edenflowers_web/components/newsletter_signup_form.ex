@@ -7,28 +7,29 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
   def render(assigns) do
     ~H"""
-    <section class="space-y-4">
-      <div>
-        <h1 class="font-serif text-2xl sm:text-3xl">
-          {gettext("Sign up and enjoy 15% off your next order.")}
-        </h1>
-
-        <p class="font-sans text-sm">
-          {gettext("We don't like spam and will only send emails a few times per year.")}
-        </p>
-      </div>
+    <section class="space-y-2">
+      <h1 class="font-serif text-2xl sm:text-3xl">
+        {gettext("Register and enjoy 15% off your next order.")}
+      </h1>
 
       <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
         <div class="join w-full">
-          <.input
-            field={@form[:email_address]}
+          <input
             type="email"
-            class="input join-item"
+            name="email_address"
+            id="newsletter-form_email_address"
+            value={Phoenix.HTML.Form.input_value(@form, :email_address)}
+            class="input join-item w-full"
             placeholder={gettext("Email Address")}
           />
-          <button class="btn join-item">{gettext("Subscribe")}</button>
+
+          <button class="btn btn-primary join-item">{gettext("Register")}</button>
         </div>
       </.form>
+
+      <p class="font-sans text-xs">
+        {gettext("We send out only ocassional emails. Unsubscribe at any time.")}
+      </p>
     </section>
     """
   end
