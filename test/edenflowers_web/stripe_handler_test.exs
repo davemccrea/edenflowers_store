@@ -20,27 +20,29 @@ defmodule EdenflowersWeb.StripeHandlerTest do
 
       {:ok, user} = Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)
 
-      order = Ash.Seed.seed!(Order, %{
-        customer_name: "John Smith",
-        customer_email: "john.smith@example.com",
-        user_id: user.id,
-        fulfillment_option_id: fulfillment_option.id,
-        fulfillment_date: Date.utc_today(),
-        fulfillment_amount: fulfillment_amount
-      })
+      order =
+        Ash.Seed.seed!(Order, %{
+          customer_name: "John Smith",
+          customer_email: "john.smith@example.com",
+          user_id: user.id,
+          fulfillment_option_id: fulfillment_option.id,
+          fulfillment_date: Date.utc_today(),
+          fulfillment_amount: fulfillment_amount
+        })
 
-      _line_item = generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage,
-          quantity: 1
+      _line_item =
+        generate(
+          line_item(
+            order_id: order.id,
+            product_id: product.id,
+            product_name: product.name,
+            product_image_slug: product.image_slug,
+            product_variant_id: product_variant.id,
+            unit_price: product_variant.price,
+            tax_rate: tax_rate.percentage,
+            quantity: 1
+          )
         )
-      )
 
       assert :ok =
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{

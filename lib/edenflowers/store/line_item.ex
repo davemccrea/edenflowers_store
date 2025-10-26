@@ -48,14 +48,6 @@ defmodule Edenflowers.Store.LineItem do
     end
   end
 
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-
-    publish_all :create, ["line_item", "changed", :order_id]
-    publish_all :update, ["line_item", "changed", :order_id]
-    publish_all :destroy, ["line_item", "changed", :order_id]
-  end
-
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if always()
@@ -72,6 +64,14 @@ defmodule Edenflowers.Store.LineItem do
     policy action_type(:read) do
       authorize_if expr(order.state == :order and order.user_id == ^actor(:id))
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, ["line_item", "changed", :order_id]
+    publish_all :update, ["line_item", "changed", :order_id]
+    publish_all :destroy, ["line_item", "changed", :order_id]
   end
 
   preparations do
