@@ -38,8 +38,14 @@ defmodule Edenflowers.Accounts.User do
   end
 
   code_interface do
+    define :get_by_subject, action: :get_by_subject, args: [:subject]
+    define :get_by_email, action: :get_by_email, args: [:email]
     define :upsert, action: :upsert, args: [:email, :name]
+    define :sign_in_with_magic_link, action: :sign_in_with_magic_link, args: [:token]
+    define :request_magic_link, action: :request_magic_link, args: [:email]
     define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
+    define :update_name, action: :update_name, args: [:name]
+    define :update_newsletter_preference, action: :update_newsletter_preference, args: [:newsletter_opt_in]
   end
 
   actions do
@@ -103,15 +109,31 @@ defmodule Edenflowers.Accounts.User do
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
     end
+
+    update :update_name do
+      accept [:name]
+    end
+
+    update :update_newsletter_preference do
+      accept [:newsletter_opt_in]
+    end
   end
 
   policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if always()
+    end
+
     bypass AshAuthentication.Checks.AshAuthenticationInteraction do
       authorize_if always()
     end
 
-    policy always() do
-      forbid_if always()
+    policy action(:subscribe_to_newsletter) do
+      authorize_if always()
+    end
+
+    policy action_type([:read, :update]) do
+      authorize_if expr(id == ^actor(:id))
     end
   end
 

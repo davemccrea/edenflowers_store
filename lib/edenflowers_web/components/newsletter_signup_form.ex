@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
   def handle_event("submit", %{"email_address" => email_address} = params, socket) do
     socket = assign(socket, form: to_form(params))
 
-    case Edenflowers.Accounts.User.subscribe_to_newsletter(email_address, authorize?: false) do
+    case Edenflowers.Accounts.User.subscribe_to_newsletter(email_address) do
       {:ok, _} ->
         toast = EdenflowersWeb.LiveToast.new(:info, gettext("You've been subscribed to the newsletter 🥳."))
 

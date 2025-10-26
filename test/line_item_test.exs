@@ -30,7 +30,7 @@ defmodule Edenflowers.Store.LineItemTest do
                  unit_price: product_variant.price,
                  tax_rate: tax_rate.percentage
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "default quantity is 1", %{
@@ -50,7 +50,7 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
 
       assert line_item.quantity == 1
     end
@@ -88,9 +88,9 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
         |> Ash.Changeset.for_update(:increment_quantity)
-        |> Ash.update!()
+        |> Ash.update!(authorize?: false)
 
       assert line_item.quantity == 2
     end
@@ -108,9 +108,9 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
         |> Ash.Changeset.for_update(:decrement_quantity)
-        |> Ash.update!()
+        |> Ash.update!(authorize?: false)
 
       assert line_item.quantity == 2
     end
@@ -132,9 +132,9 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
         |> Ash.Changeset.for_update(:decrement_quantity)
-        |> Ash.update!()
+        |> Ash.update!(authorize?: false)
 
       assert line_item.quantity == 1
     end
@@ -146,7 +146,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       promotion = generate(promotion(discount_percentage: "0.20"))
       order = generate(order())
-      order = Order.add_promotion_with_id!(order, promotion.id)
+      order = Order.add_promotion_with_id!(order, promotion.id, authorize?: false)
 
       line_item =
         LineItem
@@ -159,7 +159,7 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
         |> Ash.load!(:promotion_applied?)
 
       assert line_item.promotion_applied? == true
@@ -182,7 +182,7 @@ defmodule Edenflowers.Store.LineItemTest do
           unit_price: product_variant.price,
           tax_rate: tax_rate.percentage
         })
-        |> Ash.create!()
+        |> Ash.create!(authorize?: false)
         |> Ash.load!(:promotion_applied?)
 
       assert line_item.promotion_applied? == false

@@ -75,11 +75,11 @@ defmodule Generator do
   end
 
   def order(opts \\ []) do
-    changeset_generator(Order, :create, overrides: opts)
+    changeset_generator(Order, :create, overrides: opts, authorize?: false)
   end
 
   def line_item(opts \\ []) do
-    changeset_generator(LineItem, :create, defaults: %{}, overrides: opts)
+    changeset_generator(LineItem, :create, defaults: %{}, overrides: opts, authorize?: false)
   end
 
   def fulfillment_option(opts \\ []) do

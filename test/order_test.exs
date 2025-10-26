@@ -5,7 +5,7 @@ defmodule Edenflowers.Store.OrderTest do
 
   describe "Store Resource" do
     test "creates an order for checkout" do
-      order = Order.create_for_checkout!()
+      order = Order.create_for_checkout!(authorize?: false)
       assert order.state == :checkout
       assert order.step == 1
     end
@@ -46,7 +46,7 @@ defmodule Edenflowers.Store.OrderTest do
           )
         )
 
-      order = Ash.load!(order, [:total_items_in_cart])
+      order = Ash.load!(order, [:total_items_in_cart], authorize?: false)
 
       assert order.total_items_in_cart == 3
     end
@@ -60,7 +60,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_2 = generate(product(tax_rate_id: tax_rate_2.id))
       product_2_product_variant_1 = generate(product_variant(product_id: product_2.id, price: "6.00"))
 
-      order = Order.create_for_checkout!()
+      order = Order.create_for_checkout!(authorize?: false)
 
       generate(
         line_item(
@@ -88,7 +88,7 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-      order = Ash.load!(order, [:line_total, :line_tax_amount])
+      order = Ash.load!(order, [:line_total, :line_tax_amount], authorize?: false)
 
       assert Decimal.equal?(order.line_total, "86.00")
       assert Decimal.equal?(order.line_tax_amount, "21.00")
@@ -102,8 +102,8 @@ defmodule Edenflowers.Store.OrderTest do
       promotion = generate(promotion(discount_percentage: "0.20"))
 
       order =
-        Order.create_for_checkout!()
-        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
+        Order.create_for_checkout!(authorize?: false)
+        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?], authorize?: false)
 
       generate(
         line_item(
@@ -131,7 +131,7 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-      order = Ash.load!(order, [:line_total, :line_tax_amount])
+      order = Ash.load!(order, [:line_total, :line_tax_amount], authorize?: false)
 
       assert order.line_total
              |> Decimal.round(2)
@@ -146,14 +146,14 @@ defmodule Edenflowers.Store.OrderTest do
       promotion = generate(promotion(discount_percentage: "0.20"))
 
       order =
-        Order.create_for_checkout!()
-        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?])
+        Order.create_for_checkout!(authorize?: false)
+        |> Order.add_promotion_with_id!(promotion.id, load: [:promotion_applied?], authorize?: false)
 
       assert order.promotion_applied? == true
     end
 
     test "promotion_applied? returns false if no promotion applied" do
-      order = Order.create_for_checkout!()
+      order = Order.create_for_checkout!(authorize?: false, load: [:promotion_applied?])
       assert order.promotion_applied? == false
     end
   end
@@ -196,7 +196,7 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-    order = Ash.load!(order, [:total, :tax_amount])
+    order = Ash.load!(order, [:total, :tax_amount], authorize?: false)
 
     assert order.total
            |> Decimal.round(2)
@@ -210,7 +210,7 @@ defmodule Edenflowers.Store.OrderTest do
   test "calling payment_received updates state and payment_state" do
     order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"})
 
-    assert {:ok, order} = Order.payment_received(order.id)
+    assert {:ok, order} = Order.payment_received(order.id, authorize?: false)
     assert order.state == :order
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at

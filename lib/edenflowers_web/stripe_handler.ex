@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.StripeHandler do
   @behaviour Stripe.WebhookHandler
 
   require Logger
+  import Edenflowers.Actors
 
   alias Edenflowers.Store.Order
   alias Edenflowers.Workers.SendOrderConfirmationEmail
@@ -49,7 +50,7 @@ defmodule EdenflowersWeb.StripeHandler do
 
   defp mark_payment_received(order_id) do
     order_id
-    |> Order.payment_received()
+    |> Order.payment_received(actor: system_actor())
     |> case do
       {:ok, order} -> {:ok, order}
       {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}

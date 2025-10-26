@@ -2,13 +2,15 @@ defmodule Edenflowers.Store.Order do
   use Ash.Resource,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
   use Gettext, backend: EdenflowersWeb.Gettext
 
   require Ash.Resource.Change.Builtins
+  import Edenflowers.Actors
 
-  alias Edenflowers.Store.Order.{
+  alias __MODULE__.{
     ValidateAndCalculateFulfillment,
     MaybeRequireDeliveryAddress,
     LookupPromotionCode,
@@ -27,8 +29,7 @@ defmodule Edenflowers.Store.Order do
     define :get_by_id, action: :get_by_id, args: [:id]
     define :get_by_order_reference, action: :get_by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
-    define :get_for_confirmation_email, action: :get_for_confirmation_email, args: [:id]
-    define :get_all_for_user, action: :get_all_for_user, args: [:user_id]
+    define :get_all_completed, action: :get_all_completed
     define :payment_received, action: :payment_received
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
@@ -96,36 +97,8 @@ defmodule Edenflowers.Store.Order do
               )
     end
 
-    read :get_for_confirmation_email do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-
-      prepare build(
-                load: [
-                  # Aggregates
-                  :line_total,
-                  :line_tax_amount,
-                  :discount_amount,
-
-                  # Calculations
-                  :order_reference,
-                  :promotion_applied?,
-                  :total,
-                  :tax_amount,
-                  :fulfillment_tax_amount,
-
-                  # Relationships
-                  :promotion,
-                  :fulfillment_option,
-                  line_items: [:line_total, :discount_amount]
-                ]
-              )
-    end
-
-    read :get_all_for_user do
-      argument :user_id, :uuid, allow_nil?: false
-      filter expr(user_id == ^arg(:user_id) and state == :order)
+    read :get_all_completed do
+      filter expr(state == :order)
     end
 
     # Create Actions
@@ -251,6 +224,36 @@ defmodule Edenflowers.Store.Order do
     end
   end
 
+  policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:super_user, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:guest, true) do
+      authorize_if expr(state == :checkout)
+    end
+
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    policy action_type([:read, :update]) do
+      authorize_if expr(state == :checkout)
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(state == :order and user_id == ^actor(:id))
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(state == :order and is_nil(^actor(:id)) == false and user_id == ^actor(:id))
+    end
+  end
+
   pub_sub do
     module EdenflowersWeb.Endpoint
     publish_all :update, ["order", "updated", :_pkey]
@@ -337,7 +340,13 @@ defmodule Edenflowers.Store.Order do
 
     calculate :fulfillment_tax_amount,
               :decimal,
-              expr((fulfillment_amount || 0) * fulfillment_option.tax_rate.percentage)
+              expr(
+                if is_nil(fulfillment_option_id) do
+                  0
+                else
+                  (fulfillment_amount || 0) * fulfillment_option.tax_rate.percentage
+                end
+              )
 
     calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
   end
@@ -527,6 +536,7 @@ end
 
 defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
   use Ash.Resource.Change
+  import Edenflowers.Actors
 
   alias Edenflowers.Accounts.User
 
@@ -539,7 +549,7 @@ defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
       customer_email = Ash.Changeset.get_argument_or_attribute(changeset, :customer_email)
       customer_name = Ash.Changeset.get_argument_or_attribute(changeset, :customer_name)
 
-      case User.upsert(customer_email, customer_name, authorize?: false) do
+      case User.upsert(customer_email, customer_name, actor: system_actor()) do
         {:ok, user} ->
           Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
 

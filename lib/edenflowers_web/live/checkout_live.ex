@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
   require Ash.Query
+  import Edenflowers.Actors
 
   alias Edenflowers.Store.{Order, FulfillmentOption}
   alias Edenflowers.{Fulfillments, StripeAPI}
@@ -406,7 +407,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Reloads order and rebuilds forms when order is updated via PubSub.
   # Centralizes form synchronization to prevent stale data across all order modifications.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
-    order = Order.get_for_checkout!(order_id)
+    order = Order.get_for_checkout!(order_id, actor: guest_actor())
 
     {:noreply,
      socket
