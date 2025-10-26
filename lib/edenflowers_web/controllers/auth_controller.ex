@@ -2,8 +2,6 @@ defmodule EdenflowersWeb.AuthController do
   use EdenflowersWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  import EdenflowersWeb.Gettext
-
   def success(conn, activity, user, _token) do
     return_to = get_session(conn, :return_to) || ~p"/"
 
