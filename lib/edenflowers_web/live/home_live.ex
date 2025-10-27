@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.HomeLive do
           <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
             {gettext("Fresh flowers for everyday moments.")}
           </h1>
-          <a href="#store" class="btn-primary mx-auto btn btn-lg">
+          <a href="#store" class="btn-primary btn btn-lg mx-auto">
             {gettext("Shop Now")}
           </a>
         </div>
