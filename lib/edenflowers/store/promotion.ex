@@ -1,5 +1,8 @@
 defmodule Edenflowers.Store.Promotion do
-  use Ash.Resource, domain: Edenflowers.Store, data_layer: AshPostgres.DataLayer
+  use Ash.Resource,
+    domain: Edenflowers.Store,
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "promotions"
@@ -8,6 +11,18 @@ defmodule Edenflowers.Store.Promotion do
 
   code_interface do
     define :get_by_code, args: [:code], action: :by_code, get?: true
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access (for promotion code validation)
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 
   actions do

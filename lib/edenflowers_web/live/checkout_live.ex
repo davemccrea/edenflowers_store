@@ -364,12 +364,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Order updates
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    order = Order.update_fulfillment_option!(socket.assigns.order, id)
+    actor = socket.assigns[:current_user]
+    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
   def handle_event("update_gift", %{"form" => %{"gift" => gift}}, socket) do
-    order = Order.update_gift!(socket.assigns.order, gift)
+    actor = socket.assigns[:current_user]
+    order = Order.update_gift!(socket.assigns.order, gift, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
@@ -384,7 +386,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    order = Order.clear_promotion!(socket.assigns.order)
+    actor = socket.assigns[:current_user]
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
@@ -406,7 +409,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Reloads order and rebuilds forms when order is updated via PubSub.
   # Centralizes form synchronization to prevent stale data across all order modifications.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
-    order = Order.get_for_checkout!(order_id)
+    actor = socket.assigns[:current_user]
+    order = Order.get_for_checkout!(order_id, actor: actor)
 
     {:noreply,
      socket
@@ -526,7 +530,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
-    order = Order.add_payment_intent_id!(order, payment_intent.id)
+    actor = socket.assigns[:current_user]
+    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor)
 
     socket
     |> assign(order: order)

@@ -2,6 +2,7 @@ defmodule Edenflowers.Store.Order do
   use Ash.Resource,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
   use Gettext, backend: EdenflowersWeb.Gettext
@@ -38,6 +39,27 @@ defmodule Edenflowers.Store.Order do
     define :update_gift, action: :update_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
     define :reset, action: :reset
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Allow creating orders without authentication (for checkout flow)
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    # Read/Update access:
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
+    policy action_type([:read, :update]) do
+      # Guest checkout: Anyone can access orders in checkout state (UUID security)
+      authorize_if expr(state == :checkout)
+      # Completed orders: Only the owner can access orders in order state
+      authorize_if expr(state == :order and user_id == ^actor(:id))
+    end
   end
 
   actions do

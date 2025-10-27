@@ -2,6 +2,7 @@ defmodule Edenflowers.Store.LineItem do
   use Ash.Resource,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
   postgres do
@@ -18,6 +19,27 @@ defmodule Edenflowers.Store.LineItem do
     define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Allow creating line items for any order (checkout flow)
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    # Read/Update/Destroy access:
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
+    policy action_type([:read, :update, :destroy]) do
+      # Guest checkout: Anyone can work with line items for orders in checkout state
+      authorize_if expr(order.state == :checkout)
+      # Completed orders: Only the owner can access their line items
+      authorize_if expr(order.state == :order and order.user_id == ^actor(:id))
+    end
   end
 
   actions do
