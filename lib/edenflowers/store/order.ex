@@ -41,27 +41,6 @@ defmodule Edenflowers.Store.Order do
     define :reset, action: :reset
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Allow creating orders without authentication (for checkout flow)
-    policy action_type(:create) do
-      authorize_if always()
-    end
-
-    # Read/Update access:
-    # Multiple authorize_if within one policy = OR (only one needs to pass)
-    policy action_type([:read, :update]) do
-      # Guest checkout: Anyone can access orders in checkout state (UUID security)
-      authorize_if expr(state == :checkout)
-      # Completed orders: Only the owner can access orders in order state
-      authorize_if expr(state == :order and user_id == ^actor(:id))
-    end
-  end
-
   actions do
     defaults [:create, :read, :update, :destroy]
 
@@ -270,6 +249,27 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:payment_intent_id, nil)
       change set_attribute(:promotion_id, nil)
       change set_attribute(:fulfillment_option_id, nil)
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Allow creating orders without authentication (for checkout flow)
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    # Read/Update access:
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
+    policy action_type([:read, :update]) do
+      # Guest checkout: Anyone can access orders in checkout state (UUID security)
+      authorize_if expr(state == :checkout)
+      # Completed orders: Only the owner can access orders in order state
+      authorize_if expr(state == :order and user_id == ^actor(:id))
     end
   end
 

@@ -10,6 +10,14 @@ defmodule Edenflowers.Store.ProductCategory do
     repo Edenflowers.Repo
   end
 
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      accept [:name]
+    end
+  end
+
   policies do
     # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
@@ -19,14 +27,6 @@ defmodule Edenflowers.Store.ProductCategory do
     # Public read access
     policy action_type(:read) do
       authorize_if always()
-    end
-  end
-
-  actions do
-    defaults [:read, :destroy]
-
-    create :create do
-      accept [:name]
     end
   end
 

@@ -26,6 +26,10 @@ defmodule Edenflowers.Store.FulfillmentOption do
     locales [:sv, :fi]
   end
 
+  actions do
+    defaults [:read, :destroy, create: :*, update: :*]
+  end
+
   policies do
     # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
@@ -36,10 +40,6 @@ defmodule Edenflowers.Store.FulfillmentOption do
     policy action_type(:read) do
       authorize_if always()
     end
-  end
-
-  actions do
-    defaults [:read, :destroy, create: :*, update: :*]
   end
 
   validations do

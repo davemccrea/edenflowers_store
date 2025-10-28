@@ -14,18 +14,6 @@ defmodule Edenflowers.Store.ProductVariant do
     define :get_by_id, action: :get_by_id, args: [:id]
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Public read access
-    policy action_type(:read) do
-      authorize_if always()
-    end
-  end
-
   actions do
     defaults [:read, :destroy]
 
@@ -41,6 +29,18 @@ defmodule Edenflowers.Store.ProductVariant do
 
     update :update do
       accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 

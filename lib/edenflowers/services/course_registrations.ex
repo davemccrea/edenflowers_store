@@ -15,24 +15,6 @@ defmodule Edenflowers.Services.CourseRegistration do
     define :get_registration, action: :read, get_by: [:id]
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Anyone can create registrations (for guest registration flow)
-    policy action_type(:create) do
-      authorize_if always()
-    end
-
-    # Users can read and update their own registrations
-    # For registrations without a user (guest registrations), only admins can access
-    policy action_type([:read, :update]) do
-      authorize_if expr(user_id == ^actor(:id))
-    end
-  end
-
   actions do
     defaults [:read, :destroy, update: :*]
 
@@ -49,6 +31,24 @@ defmodule Edenflowers.Services.CourseRegistration do
 
     update :confirm_payment do
       change atomic_update(:status, :confirmed)
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Anyone can create registrations (for guest registration flow)
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    # Users can read and update their own registrations
+    # For registrations without a user (guest registrations), only admins can access
+    policy action_type([:read, :update]) do
+      authorize_if expr(user_id == ^actor(:id))
     end
   end
 

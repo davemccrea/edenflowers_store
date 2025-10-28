@@ -11,6 +11,14 @@ defmodule Edenflowers.Store.TaxRate do
     repo Edenflowers.Repo
   end
 
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      accept [:name, :percentage]
+    end
+  end
+
   policies do
     # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
@@ -20,14 +28,6 @@ defmodule Edenflowers.Store.TaxRate do
     # Public read access (needed for calculations)
     policy action_type(:read) do
       authorize_if always()
-    end
-  end
-
-  actions do
-    defaults [:read, :destroy]
-
-    create :create do
-      accept [:name, :percentage]
     end
   end
 

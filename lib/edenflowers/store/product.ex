@@ -15,18 +15,6 @@ defmodule Edenflowers.Store.Product do
     define :get_by_id, action: :get_by_id, args: [:id]
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Public read access to products
-    policy action_type(:read) do
-      authorize_if always()
-    end
-  end
-
   actions do
     defaults [:read, :destroy]
 
@@ -46,6 +34,18 @@ defmodule Edenflowers.Store.Product do
       argument :fulfillment_option_ids, {:array, :uuid}
 
       change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access to products
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 

@@ -13,18 +13,6 @@ defmodule Edenflowers.Store.Promotion do
     define :get_by_code, args: [:code], action: :by_code, get?: true
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Public read access (for promotion code validation)
-    policy action_type(:read) do
-      authorize_if always()
-    end
-  end
-
   actions do
     defaults [:read, :destroy]
 
@@ -46,6 +34,18 @@ defmodule Edenflowers.Store.Promotion do
                  if(not is_nil(start_date), do: ^arg(:today) >= start_date, else: true) and
                  if(not is_nil(expiration_date), do: ^arg(:today) <= expiration_date, else: true)
              )
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access (for promotion code validation)
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 

@@ -17,18 +17,6 @@ defmodule Edenflowers.Services.Course do
     define :list_past_courses, action: :past
   end
 
-  policies do
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
-    end
-
-    # Public read access to courses
-    policy action_type(:read) do
-      authorize_if always()
-    end
-  end
-
   actions do
     defaults [:read, :update, :destroy]
 
@@ -54,6 +42,18 @@ defmodule Edenflowers.Services.Course do
 
     read :past do
       filter expr(date < today())
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access to courses
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 
