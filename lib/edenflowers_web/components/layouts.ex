@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Layouts do
       assigns
       |> assign(
         nav: [
-          {~p"/#store", gettext("Store")},
+          {~p"/products", gettext("Products")},
           {~p"/courses", gettext("Courses")},
           {~p"/weddings", gettext("Weddings")},
           {~p"/condolences", gettext("Condolences")},

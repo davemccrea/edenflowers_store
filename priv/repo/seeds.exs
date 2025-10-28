@@ -19,7 +19,7 @@ tax_rate =
     name: "Default",
     percentage: "0.255"
   })
-  |> Ash.create!()
+  |> Ash.create!(authorize?: false)
 
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
@@ -34,7 +34,7 @@ FulfillmentOption
   tax_rate_id: tax_rate.id,
   monday: false
 })
-|> Ash.create!()
+|> Ash.create!(authorize?: false)
 
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
@@ -44,12 +44,12 @@ FulfillmentOption
   base_price: "0.00",
   tax_rate_id: tax_rate.id
 })
-|> Ash.create!()
+|> Ash.create!(authorize?: false)
 
 product_category =
   ProductCategory
   |> Ash.Changeset.for_create(:create, %{name: "Bouquets"})
-  |> Ash.create!()
+  |> Ash.create!(authorize?: false)
 
 for n <- 1..6 do
   product =
@@ -58,10 +58,11 @@ for n <- 1..6 do
       tax_rate_id: tax_rate.id,
       name: "Product #{n}",
       image_slug: "https://placehold.co/400x400",
-      description: "Product #{n} description",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Donec pretium, est in ornare aliquet, dolor justo malesuada libero, vitae dignissim ipsum justo ac elit.",
       draft: false
     })
-    |> Ash.create!()
+    |> Ash.create!(authorize?: false)
 
   for size <- [:small, :medium, :large] do
     Ash.Changeset.for_create(ProductVariant, :create, %{
@@ -78,7 +79,7 @@ for n <- 1..6 do
       stock_quantity: 0,
       draft: false
     })
-    |> Ash.create!()
+    |> Ash.create!(authorize?: false)
   end
 end
 
@@ -94,4 +95,4 @@ Promotion
     expiration_date: ~D[2099-07-01]
   }
 )
-|> Ash.create!()
+|> Ash.create!(authorize?: false)
