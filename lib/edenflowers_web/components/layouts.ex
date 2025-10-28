@@ -214,9 +214,18 @@ defmodule EdenflowersWeb.Layouts do
               <button
                 phx-click={JS.exec("phx-show", to: "#cart-drawer")}
                 type="button"
-                class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
+                class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
+
+                <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
+                  <span class="absolute inset-0 -mr-6 object-right-top md:hidden">
+                    <div class="bg-primary/90 text-primary-content inline-flex items-center rounded-full border-2 border-white px-1.5 py-0.5 text-xs font-semibold">
+                      {@order.total_items_in_cart}
+                    </div>
+                  </span>
+                <% end %>
+
                 <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
                   <%= if not is_nil(@order.total_items_in_cart) do %>
                     {gettext("Cart")} ({@order.total_items_in_cart})
