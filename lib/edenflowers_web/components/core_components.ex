@@ -366,6 +366,45 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  Renders a breadcrumb navigation component using DaisyUI.
+
+  ## Examples
+
+      <.breadcrumb>
+        <:item navigate={~p"/"} label={gettext("Home")} />
+        <:item navigate={~p"/products"} label={gettext("Products")} />
+        <:item label={gettext("Product Name")} />
+      </.breadcrumb>
+
+  The last item is automatically marked as the current page with `aria-current="page"`.
+  """
+  attr :class, :string, default: "mb-8 text-sm", doc: "Additional CSS classes for the breadcrumbs wrapper"
+
+  slot :item, required: true, doc: "Individual breadcrumb items" do
+    attr :navigate, :string, doc: "Navigation path (optional for current page)"
+    attr :label, :string, required: true, doc: "The breadcrumb label text"
+  end
+
+  def breadcrumb(assigns) do
+    ~H"""
+    <div class={["breadcrumbs", @class]} role="navigation" aria-label="Breadcrumb">
+      <ul>
+        <%= for {item, index} <- Enum.with_index(@item) do %>
+          <li :if={index == length(@item) - 1} aria-current="page">
+            {item.label}
+          </li>
+          <li :if={index < length(@item) - 1}>
+            <.link navigate={item.navigate}>
+              {item.label}
+            </.link>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+    """
+  end
+
+  @doc """
   Renders a table with generic styling.
 
   ## Examples
