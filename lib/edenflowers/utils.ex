@@ -1,8 +1,5 @@
 defmodule Edenflowers.Utils do
-  @moduledoc """
-  Common utility functions for the Edenflowers application.
-  """
-
+  @spec format_money(number() | nil) :: String.t()
   def format_money(nil), do: format_money(0)
 
   def format_money(value) do
@@ -13,25 +10,21 @@ defmodule Edenflowers.Utils do
     )
   end
 
-  def format_date(nil), do: ""
+  @spec truncate(binary() | nil, non_neg_integer()) :: binary()
+  def truncate(nil, _max_length), do: ""
+  def truncate(text, max_length) when max_length <= 3, do: String.slice(to_string(text), 0, max_length)
 
-  def format_date(date) do
-    case Cldr.Date.to_string(date, Edenflowers.Cldr, locale: Cldr.get_locale(), format: :medium) do
-      {:ok, formatted} -> formatted
-      _ -> ""
-    end
-  end
+  def truncate(text, max_length) when is_binary(text) and is_integer(max_length) do
+    trimmed = String.trim(text)
 
-  def format_datetime(nil), do: ""
-
-  def format_datetime(datetime) do
-    with {:ok, date_part} <-
-           Cldr.Date.to_string(datetime, Edenflowers.Cldr, locale: Cldr.get_locale(), format: :short),
-         {:ok, time_part} <-
-           Cldr.Time.to_string(datetime, Edenflowers.Cldr, locale: Cldr.get_locale(), format: :short) do
-      "#{date_part} #{time_part}"
+    if String.length(trimmed) <= max_length do
+      trimmed
     else
-      _ -> ""
+      trimmed
+      |> String.slice(0, max_length - 3)
+      |> String.replace(~r/\s+\S*$/, "")
+      |> String.trim_trailing()
+      |> Kernel.<>("...")
     end
   end
 end

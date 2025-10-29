@@ -38,30 +38,11 @@ defmodule EdenflowersWeb.ProductLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="container my-36">
-        <%!-- Breadcrumbs --%>
-        <nav aria-label="Breadcrumb" class="mb-8 text-sm">
-          <ol class="flex items-center gap-2">
-            <li>
-              <.link navigate={~p"/"} class="text-base-content/60 hover:text-base-content">
-                {gettext("Home")}
-              </.link>
-            </li>
-            <li class="text-base-content/40">
-              <.icon name="hero-chevron-right" class="h-4 w-4" />
-            </li>
-            <li>
-              <.link navigate={~p"/#store"} class="text-base-content/60 hover:text-base-content">
-                {gettext("Store")}
-              </.link>
-            </li>
-            <li class="text-base-content/40">
-              <.icon name="hero-chevron-right" class="h-4 w-4" />
-            </li>
-            <li aria-current="page" class="text-base-content font-medium">
-              {@product.name}
-            </li>
-          </ol>
-        </nav>
+        <.breadcrumb>
+          <:item navigate={~p"/"} label={gettext("Home")} />
+          <:item navigate={~p"/#store"} label={gettext("Store")} />
+          <:item label={@product.name} />
+        </.breadcrumb>
 
         <div class="grid gap-12 md:grid-cols-2 md:items-start">
           <%!-- Product Image --%>

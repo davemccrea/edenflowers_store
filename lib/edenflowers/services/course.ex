@@ -1,7 +1,8 @@
 defmodule Edenflowers.Services.Course do
   use Ash.Resource,
     domain: Edenflowers.Services,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     repo Edenflowers.Repo
@@ -41,6 +42,18 @@ defmodule Edenflowers.Services.Course do
 
     read :past do
       filter expr(date < today())
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access to courses
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 

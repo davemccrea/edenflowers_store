@@ -75,6 +75,12 @@ defmodule Edenflowers.Accounts.User do
       upsert_identity :unique_email
     end
 
+    update :update do
+      description "Users can update their own safe fields (admin is NOT writable)"
+      # Explicitly exclude admin field - it's already writable?: false but this is defense in depth
+      accept [:name, :newsletter_opt_in]
+    end
+
     create :sign_in_with_magic_link do
       description "Sign in or register a user with magic link."
 
@@ -128,11 +134,18 @@ defmodule Edenflowers.Accounts.User do
       authorize_if always()
     end
 
-    policy action(:subscribe_to_newsletter) do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    policy action_type([:read, :update]) do
+    # Users can read their own data
+    policy action_type(:read) do
+      authorize_if expr(id == ^actor(:id))
+    end
+
+    # Users can update their own data
+    policy action_type(:update) do
       authorize_if expr(id == ^actor(:id))
     end
   end
@@ -144,6 +157,9 @@ defmodule Edenflowers.Accounts.User do
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :newsletter_opt_in, :boolean, default: false, public?: true
     attribute :promotion_claimed, :boolean, default: false, public?: true
+
+    # Admin field - readable but not writable to prevent privilege escalation
+    attribute :admin, :boolean, default: false, public?: true, writable?: false
   end
 
   identities do

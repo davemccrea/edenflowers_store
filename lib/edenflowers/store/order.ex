@@ -225,32 +225,23 @@ defmodule Edenflowers.Store.Order do
   end
 
   policies do
-    bypass actor_attribute_equals(:system, true) do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    bypass actor_attribute_equals(:super_user, true) do
-      authorize_if always()
-    end
-
-    bypass actor_attribute_equals(:guest, true) do
-      authorize_if expr(state == :checkout)
-    end
-
+    # Allow creating orders without authentication (for checkout flow)
     policy action_type(:create) do
       authorize_if always()
     end
 
+    # Read/Update access:
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
     policy action_type([:read, :update]) do
+      # Guest checkout: Anyone can access orders in checkout state (UUID security)
       authorize_if expr(state == :checkout)
-    end
-
-    policy action_type(:read) do
+      # Completed orders: Only the owner can access orders in order state
       authorize_if expr(state == :order and user_id == ^actor(:id))
-    end
-
-    policy action_type(:update) do
-      authorize_if expr(state == :order and is_nil(^actor(:id)) == false and user_id == ^actor(:id))
     end
   end
 

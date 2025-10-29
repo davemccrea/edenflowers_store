@@ -1,5 +1,8 @@
 defmodule Edenflowers.Store.Promotion do
-  use Ash.Resource, domain: Edenflowers.Store, data_layer: AshPostgres.DataLayer
+  use Ash.Resource,
+    domain: Edenflowers.Store,
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "promotions"
@@ -31,6 +34,18 @@ defmodule Edenflowers.Store.Promotion do
                  if(not is_nil(start_date), do: ^arg(:today) >= start_date, else: true) and
                  if(not is_nil(expiration_date), do: ^arg(:today) <= expiration_date, else: true)
              )
+    end
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access (for promotion code validation)
+    policy action_type(:read) do
+      authorize_if always()
     end
   end
 

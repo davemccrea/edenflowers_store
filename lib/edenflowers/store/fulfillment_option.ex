@@ -11,6 +11,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
     otp_app: :edenflowers,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTrans.Resource]
 
   postgres do
@@ -27,6 +28,18 @@ defmodule Edenflowers.Store.FulfillmentOption do
 
   actions do
     defaults [:read, :destroy, create: :*, update: :*]
+  end
+
+  policies do
+    # Admin bypass - admins can do anything
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Public read access (for checkout)
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 
   validations do
