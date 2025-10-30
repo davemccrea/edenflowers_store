@@ -3,11 +3,17 @@ defmodule Edenflowers.Store.ProductCategory do
     otp_app: :edenflowers,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshTrans.Resource]
 
   postgres do
     table "product_categories"
     repo Edenflowers.Repo
+  end
+
+  translations do
+    locales [:en, :fi, :sv]
+    fields [:name]
   end
 
   code_interface do
@@ -29,11 +35,11 @@ defmodule Edenflowers.Store.ProductCategory do
     end
 
     create :create do
-      accept [:name, :slug, :draft]
+      accept [:slug, :draft, :translations]
     end
 
     update :update do
-      accept [:name, :slug, :draft]
+      accept [:slug, :draft, :translations]
     end
   end
 
@@ -51,7 +57,7 @@ defmodule Edenflowers.Store.ProductCategory do
 
   attributes do
     uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false
+    attribute :name, :string, allow_nil?: true
     attribute :slug, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
   end
