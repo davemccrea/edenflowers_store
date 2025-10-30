@@ -1,6 +1,18 @@
 {
   "attributes": [
     {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "translations",
+      "type": "map"
+    },
+    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -13,7 +25,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,43 +45,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
+      "source": "slug",
+      "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "false",
+      "allow_nil?": false,
+      "default": "true",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "promotion_claimed",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "admin",
+      "source": "draft",
       "type": "boolean"
     }
   ],
@@ -78,19 +66,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B5F88CE66F521E46DD4EC9D7BD336FA3467C6D9A53A4F7BA2A222DBDF997041D",
+  "hash": "AD5A6DD93F68BF355F8B10B460235323F1A46B27AF42D2892AF85E7B3E25A7BA",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "product_categories_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "slug"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_slug",
       "nils_distinct?": true,
       "where": null
     }
@@ -102,5 +90,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "product_categories"
 }

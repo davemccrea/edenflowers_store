@@ -50,7 +50,7 @@ defmodule Edenflowers.MixProject do
       {:ash_postgres, "~> 2.0"},
       {:ash_phoenix, "~> 2.0"},
       {:ash_archival, "~> 1.0.4"},
-      {:ash_trans, "~> 0.1.0"},
+      {:ash_translation, "~> 0.2.0"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.4"},
       {:phoenix, "~> 1.8.1"},

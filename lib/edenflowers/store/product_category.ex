@@ -4,7 +4,7 @@ defmodule Edenflowers.Store.ProductCategory do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshTrans.Resource]
+    extensions: [AshTranslation.Resource]
 
   postgres do
     table "product_categories"
@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.ProductCategory do
   end
 
   translations do
-    locales [:en, :fi, :sv]
+    locales Edenflowers.Cldr.AshTranslation.locale_names()
     fields [:name]
   end
 
@@ -35,11 +35,11 @@ defmodule Edenflowers.Store.ProductCategory do
     end
 
     create :create do
-      accept [:slug, :draft, :translations]
+      accept [:slug, :draft, :name, :translations]
     end
 
     update :update do
-      accept [:slug, :draft, :translations]
+      accept [:slug, :draft, :name, :translations]
     end
   end
 
@@ -57,7 +57,7 @@ defmodule Edenflowers.Store.ProductCategory do
 
   attributes do
     uuid_primary_key :id
-    attribute :name, :string, allow_nil?: true
+    attribute :name, :string, allow_nil?: false
     attribute :slug, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
   end

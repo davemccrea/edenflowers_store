@@ -11,19 +11,11 @@ defmodule Edenflowers.Store.FulfillmentOption do
     otp_app: :edenflowers,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshTrans.Resource]
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
-  end
-
-  # TODO: test translations
-  translations do
-    public? true
-    fields [:name]
-    locales [:sv, :fi]
   end
 
   actions do

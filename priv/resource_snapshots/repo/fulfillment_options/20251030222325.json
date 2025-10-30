@@ -1,18 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -295,7 +283,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "E6744B4A2D060C302A2407D97203E7D244EE76857AFB36E97B690799743D6DBD",
+  "hash": "F5D635AD4B10F451E8739E1ABC69E09627215E679066A7B35749DF0F3F32BE7A",
   "identities": [
     {
       "all_tenants?": false,
