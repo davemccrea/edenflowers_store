@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.ProductLive do
       <div class="container my-36">
         <.breadcrumb>
           <:item navigate={~p"/"} label={gettext("Home")} />
-          <:item navigate={~p"/#store"} label={gettext("Store")} />
+          <:item navigate={~p"/store"} label={gettext("Store")} />
           <:item label={@product.name} />
         </.breadcrumb>
 

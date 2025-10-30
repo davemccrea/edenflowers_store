@@ -13,7 +13,7 @@ defmodule Edenflowers.Store.ProductCategory do
 
   translations do
     locales Edenflowers.Cldr.AshTranslation.locale_names()
-    fields [:name]
+    fields [:name, :description]
   end
 
   code_interface do
@@ -35,11 +35,11 @@ defmodule Edenflowers.Store.ProductCategory do
     end
 
     create :create do
-      accept [:slug, :draft, :name, :translations]
+      accept [:slug, :draft, :name, :description, :translations]
     end
 
     update :update do
-      accept [:slug, :draft, :name, :translations]
+      accept [:slug, :draft, :name, :description, :translations]
     end
   end
 
@@ -58,6 +58,7 @@ defmodule Edenflowers.Store.ProductCategory do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
+    attribute :description, :string, allow_nil?: true
     attribute :slug, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
   end

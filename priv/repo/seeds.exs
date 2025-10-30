@@ -49,17 +49,62 @@ FulfillmentOption
 # Create product categories
 bouquets_category =
   ProductCategory
-  |> Ash.Changeset.for_create(:create, %{name: "Bouquets", slug: "bouquets", draft: false})
+  |> Ash.Changeset.for_create(:create, %{
+    name: "Bouquets",
+    slug: "bouquets",
+    draft: false,
+    description: "Handcrafted floral arrangements featuring seasonal blooms in elegant compositions.",
+    translations: %{
+      sv: %{
+        name: "Buketter",
+        description: "Handgjorda blomsterarrangemang med säsongens blommor i eleganta kompositioner."
+      },
+      fi: %{
+        name: "Kukkakimput",
+        description: "Käsintehtyjä kukka-asetelmia sesongin kukista eleganteissa sommitelmissa."
+      }
+    }
+  })
   |> Ash.create!(authorize?: false)
 
 cards_category =
   ProductCategory
-  |> Ash.Changeset.for_create(:create, %{name: "Cards", slug: "cards", draft: false})
+  |> Ash.Changeset.for_create(:create, %{
+    name: "Cards",
+    slug: "cards",
+    draft: false,
+    description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
+    translations: %{
+      sv: %{
+        name: "Kort",
+        description: "Omsorgsfullt designade gratulationskort för varje tillfälle och känsla."
+      },
+      fi: %{
+        name: "Kortit",
+        description: "Huolellisesti suunniteltuja onnittelukortteja jokaiseen tilanteeseen."
+      }
+    }
+  })
   |> Ash.create!(authorize?: false)
 
 pre_loved_category =
   ProductCategory
-  |> Ash.Changeset.for_create(:create, %{name: "Pre-Loved", slug: "pre-loved", draft: false})
+  |> Ash.Changeset.for_create(:create, %{
+    name: "Pre-Loved",
+    slug: "pre-loved",
+    draft: false,
+    description: "Curated vintage and gently used items finding new homes and stories.",
+    translations: %{
+      sv: %{
+        name: "Begagnat",
+        description: "Utvalda vintage- och varsamt använda föremål som hittar nya hem och berättelser."
+      },
+      fi: %{
+        name: "Käytetty",
+        description: "Valittuja vintage- ja hellävaraisesti käytettyjä esineitä uusiin koteihin."
+      }
+    }
+  })
   |> Ash.create!(authorize?: false)
 
 # Create Bouquet products
