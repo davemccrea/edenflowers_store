@@ -3,7 +3,6 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
   require Ash.Query
-  import Edenflowers.Actors
 
   alias Edenflowers.Store.{Order, FulfillmentOption}
   alias Edenflowers.{Fulfillments, StripeAPI}

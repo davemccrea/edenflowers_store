@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   If an order becomes empty as a result of a line item change, the order is reset.
   """
   use EdenflowersWeb, :live_view
-  import Edenflowers.Actors
 
   alias Edenflowers.Store.Order
 
