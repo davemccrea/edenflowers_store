@@ -1,14 +1,38 @@
-defmodule EdenflowersWeb.ProductsLive do
+defmodule EdenflowersWeb.StoreLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Store.Product
+  alias Edenflowers.Store.{Product, ProductCategory}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  def mount(_params, _session, socket) do
-    products = Product.get_all_for_store!()
+  def mount(params, _session, socket) do
+    categories = ProductCategory.get_all!()
+    category_slug = Map.get(params, "category")
 
-    {:ok, assign(socket, products: products)}
+    # Redirect to bouquets if no category is specified
+    if is_nil(category_slug) do
+      {:ok, push_navigate(socket, to: ~p"/store/bouquets")}
+    else
+      {products, selected_category} = load_products(category_slug)
+
+      {:ok,
+       assign(socket,
+         products: products,
+         categories: categories,
+         selected_category: selected_category
+       )}
+    end
+  end
+
+  defp load_products(category_slug) do
+    case ProductCategory.get_by_slug(category_slug) do
+      {:ok, category} ->
+        {Product.get_by_category!(category.id), category}
+
+      {:error, _} ->
+        # If invalid slug, redirect to bouquets will happen on next mount
+        {[], nil}
+    end
   end
 
   def render(assigns) do
@@ -17,15 +41,32 @@ defmodule EdenflowersWeb.ProductsLive do
       <div class="container my-36">
         <.breadcrumb>
           <:item navigate={~p"/"} label={gettext("Home")} />
-          <:item label={gettext("Products")} />
+          <:item label={gettext("Store")} />
         </.breadcrumb>
 
-        <%!-- Page Header --%>
         <div class="mb-12">
-          <h1 class="font-serif text-base-content text-4xl mb-2">{gettext("All arrangements")}</h1>
+          <h1 class="font-serif text-base-content mb-2 text-4xl">
+            <%= if @selected_category do %>
+              {@selected_category.name}
+            <% else %>
+              {gettext("All arrangements")}
+            <% end %>
+          </h1>
           <p class="text-base-content/60 text-sm sm:text-base">
             {gettext("Soft palettes, precise silhouettes, and seasonal stems curated by our studio team.")}
           </p>
+        </div>
+
+        <div class="mb-8">
+          <div class="flex flex-wrap gap-3">
+            <.button
+              :for={category <- @categories}
+              navigate={~p"/store/#{category.slug}"}
+              variant={if(@selected_category && @selected_category.id == category.id, do: "primary", else: nil)}
+            >
+              {category.name}
+            </.button>
+          </div>
         </div>
 
         <%= if Enum.empty?(@products) do %>

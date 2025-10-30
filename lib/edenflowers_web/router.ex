@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
       live "/", HomeLive
-      live "/products", ProductsLive
+      live "/store/:category", StoreLive
       live "/courses", CoursesLive
       live "/weddings", WeddingsLive
       live "/condolences", CondolencesLive

@@ -46,20 +46,32 @@ FulfillmentOption
 })
 |> Ash.create!(authorize?: false)
 
-product_category =
+# Create product categories
+bouquets_category =
   ProductCategory
-  |> Ash.Changeset.for_create(:create, %{name: "Bouquets"})
+  |> Ash.Changeset.for_create(:create, %{name: "Bouquets", slug: "bouquets", draft: false})
   |> Ash.create!(authorize?: false)
 
+cards_category =
+  ProductCategory
+  |> Ash.Changeset.for_create(:create, %{name: "Cards", slug: "cards", draft: false})
+  |> Ash.create!(authorize?: false)
+
+pre_loved_category =
+  ProductCategory
+  |> Ash.Changeset.for_create(:create, %{name: "Pre-Loved", slug: "pre-loved", draft: false})
+  |> Ash.create!(authorize?: false)
+
+# Create Bouquet products
 for n <- 1..6 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: product_category.id,
+      product_category_id: bouquets_category.id,
       tax_rate_id: tax_rate.id,
-      name: "Product #{n}",
+      name: "Bouquet #{n}",
       image_slug: "https://placehold.co/400x400",
       description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Donec pretium, est in ornare aliquet, dolor justo malesuada libero, vitae dignissim ipsum justo ac elit.",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -72,6 +84,65 @@ for n <- 1..6 do
           :small -> 40
           :medium -> 50
           :large -> 60
+        end}",
+      size: size,
+      image_slug: "https://placehold.co/400x400",
+      stock_trackable: false,
+      stock_quantity: 0,
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+  end
+end
+
+# Create Card products
+for n <- 1..4 do
+  product =
+    Ash.Changeset.for_create(Product, :create, %{
+      product_category_id: cards_category.id,
+      tax_rate_id: tax_rate.id,
+      name: "Card #{n}",
+      image_slug: "https://placehold.co/400x400",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+
+  # Cards have a single variant with fixed price
+  Ash.Changeset.for_create(ProductVariant, :create, %{
+    product_id: product.id,
+    price: "5.00",
+    size: :small,
+    image_slug: "https://placehold.co/400x400",
+    stock_trackable: false,
+    stock_quantity: 0,
+    draft: false
+  })
+  |> Ash.create!(authorize?: false)
+end
+
+# Create Pre-Loved products
+for n <- 1..3 do
+  product =
+    Ash.Changeset.for_create(Product, :create, %{
+      product_category_id: pre_loved_category.id,
+      tax_rate_id: tax_rate.id,
+      name: "Pre-Loved Item #{n}",
+      image_slug: "https://placehold.co/400x400",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+
+  for size <- [:small, :medium] do
+    Ash.Changeset.for_create(ProductVariant, :create, %{
+      product_id: product.id,
+      price:
+        "#{case size do
+          :small -> 15
+          :medium -> 25
         end}",
       size: size,
       image_slug: "https://placehold.co/400x400",

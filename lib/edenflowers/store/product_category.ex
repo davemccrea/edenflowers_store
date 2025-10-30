@@ -10,11 +10,30 @@ defmodule Edenflowers.Store.ProductCategory do
     repo Edenflowers.Repo
   end
 
+  code_interface do
+    define :get_all, action: :get_all
+    define :get_by_slug, action: :get_by_slug, args: [:slug]
+  end
+
   actions do
     defaults [:read, :destroy]
 
+    read :get_all do
+      filter expr(draft == false)
+    end
+
+    read :get_by_slug do
+      argument :slug, :string, allow_nil?: false
+      filter expr(slug == ^arg(:slug) and draft == false)
+      get? true
+    end
+
     create :create do
-      accept [:name]
+      accept [:name, :slug, :draft]
+    end
+
+    update :update do
+      accept [:name, :slug, :draft]
     end
   end
 
@@ -33,9 +52,15 @@ defmodule Edenflowers.Store.ProductCategory do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
+    attribute :slug, :string, allow_nil?: false
+    attribute :draft, :boolean, allow_nil?: false, default: true
   end
 
   relationships do
     has_many :products, Edenflowers.Store.Product
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
   end
 end

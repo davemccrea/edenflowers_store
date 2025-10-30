@@ -372,7 +372,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
       <.breadcrumb>
         <:item navigate={~p"/"} label={gettext("Home")} />
-        <:item navigate={~p"/products"} label={gettext("Products")} />
+        <:item navigate={~p"/store"} label={gettext("Store")} />
         <:item label={gettext("Product Name")} />
       </.breadcrumb>
 
