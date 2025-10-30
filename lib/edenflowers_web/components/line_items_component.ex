@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
               <div class="flex flex-col gap-2">
                 <span>{line_item.product_name}</span>
 
-                <div class="flex flex-row items-center justify-center gap-2">
+                <div class="flex flex-row items-center gap-2">
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
