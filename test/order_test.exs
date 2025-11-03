@@ -268,5 +268,4 @@ defmodule Edenflowers.Store.OrderTest do
     {:ok, unchanged_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
     assert unchanged_promotion.usage == 0
   end
-
 end
