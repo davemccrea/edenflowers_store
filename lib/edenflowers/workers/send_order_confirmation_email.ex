@@ -1,12 +1,20 @@
 defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
-  @moduledoc false
-
   use Oban.Worker
   import Edenflowers.Actors
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
   alias Edenflowers.Store.Order
+
+  def enqueue(%{"order_id" => order_id} = args) do
+    args
+    |> __MODULE__.new()
+    |> Oban.insert()
+    |> case do
+      {:ok, job} -> {:ok, job}
+      {:error, changeset} -> {:error, {:enqueue_failed, order_id, changeset}}
+    end
+  end
 
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
     load =
@@ -30,6 +38,7 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
       ]
 
     order_id
+    # TODO: use system_actor here or authorize?: false ?
     |> Order.get_by_id!(load: load, actor: system_actor())
     |> Email.order_confirmation()
     |> Mailer.deliver()
