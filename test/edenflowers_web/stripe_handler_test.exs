@@ -27,7 +27,8 @@ defmodule EdenflowersWeb.StripeHandlerTest do
           user_id: user.id,
           fulfillment_option_id: fulfillment_option.id,
           fulfillment_date: Date.utc_today(),
-          fulfillment_amount: fulfillment_amount
+          fulfillment_amount: fulfillment_amount,
+          payment_intent_id: "pi_test_123456"
         })
 
       _line_item =
