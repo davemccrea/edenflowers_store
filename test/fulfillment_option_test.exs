@@ -80,4 +80,53 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
                |> Ash.create(authorize?: false)
     end
   end
+
+  describe "FulfillmentOption minimum_cart_total" do
+    test "creates fulfillment option with minimum_cart_total", %{tax_rate: tax_rate} do
+      assert {:ok, option} =
+               FulfillmentOption
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Premium Delivery",
+                 fulfillment_method: :delivery,
+                 rate_type: :fixed,
+                 base_price: "5.00",
+                 minimum_cart_total: "50.00",
+                 tax_rate_id: tax_rate.id
+               })
+               |> Ash.create(authorize?: false)
+
+      assert Decimal.equal?(option.minimum_cart_total, "50.00")
+    end
+
+    test "defaults minimum_cart_total to 0", %{tax_rate: tax_rate} do
+      assert {:ok, option} =
+               FulfillmentOption
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Standard Delivery",
+                 fulfillment_method: :delivery,
+                 rate_type: :fixed,
+                 base_price: "3.00",
+                 tax_rate_id: tax_rate.id
+               })
+               |> Ash.create(authorize?: false)
+
+      assert Decimal.equal?(option.minimum_cart_total, "0")
+    end
+
+    test "allows fulfillment option with zero minimum", %{tax_rate: tax_rate} do
+      assert {:ok, option} =
+               FulfillmentOption
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Free Delivery",
+                 fulfillment_method: :delivery,
+                 rate_type: :fixed,
+                 base_price: "0.00",
+                 minimum_cart_total: "0",
+                 tax_rate_id: tax_rate.id
+               })
+               |> Ash.create(authorize?: false)
+
+      assert Decimal.equal?(option.minimum_cart_total, "0")
+    end
+  end
 end
