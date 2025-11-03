@@ -16,7 +16,8 @@ defmodule Edenflowers.Store.Order do
     MaybeRequireRecipientName,
     ClearGiftFields,
     UpsertUserAndAssignToOrder,
-    UpdatePromotionUsageCount
+    UpdatePromotionUsageCount,
+    ValidateMinimumCartTotal
   }
 
   postgres do
@@ -191,12 +192,15 @@ defmodule Edenflowers.Store.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
+      change {ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+      require_atomic? false
     end
 
     update :add_promotion_with_code do
       argument :code, :string
       change {LookupPromotionCode, []}
+      change {ValidateMinimumCartTotal, []}
       require_atomic? false
     end
 

@@ -144,10 +144,10 @@ defmodule Edenflowers.Store.LineItemTest do
       product: product,
       product_variant: product_variant
     } do
-      promotion = generate(promotion(discount_percentage: "0.20"))
+      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
       order = generate(order())
-      order = Order.add_promotion_with_id!(order, promotion.id, authorize?: false)
 
+      # Add line item first
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:create, %{
@@ -160,7 +160,11 @@ defmodule Edenflowers.Store.LineItemTest do
           tax_rate: tax_rate.percentage
         })
         |> Ash.create!(authorize?: false)
-        |> Ash.load!(:promotion_applied?)
+
+      # Then apply promotion
+      _order = Order.add_promotion_with_id!(order, promotion.id, authorize?: false)
+
+      line_item = Ash.load!(line_item, :promotion_applied?)
 
       assert line_item.promotion_applied? == true
     end
