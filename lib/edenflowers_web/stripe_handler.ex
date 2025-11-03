@@ -8,6 +8,12 @@ defmodule EdenflowersWeb.StripeHandler do
   alias Edenflowers.Workers.SendOrderConfirmationEmail
 
   @impl true
+  def handle_event(%Stripe.Event{type: "charge.succeeded"} = _event) do
+    # Charge events are handled via payment_intent.succeeded
+    :ok
+  end
+
+  @impl true
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     with {:ok, order_id} <- fetch_order_id(event),
          {:ok, _order} <- finalise_checkout(order_id),
