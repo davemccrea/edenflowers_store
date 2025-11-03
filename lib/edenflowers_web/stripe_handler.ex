@@ -5,19 +5,20 @@ defmodule EdenflowersWeb.StripeHandler do
   import Edenflowers.Actors
 
   alias Edenflowers.Store.Order
-  alias Edenflowers.Workers.SendOrderConfirmationEmail
+  alias Edenflowers.Workers.{SendOrderConfirmationEmail, IncrementPromotionUsage}
 
   @impl true
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     with {:ok, order_id} <- fetch_order_id(event),
-         {:ok, _order} <- mark_payment_received(order_id),
-         {:ok, _job} <- enqueue_confirmation_email(order_id) do
+         {:ok, _order} <- finalise_checkout(order_id),
+         {:ok, _job} <- IncrementPromotionUsage.enqueue(%{"order_id" => order_id}),
+         {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order_id}) do
       :ok
     else
       {:error, :missing_order_id} ->
         Logger.warning("Stripe payment_intent.succeeded event #{event.id} is missing order_id metadata")
 
-        :ok
+        :error
 
       {:error, {:payment_update_failed, order_id, reason}} ->
         Logger.error(
@@ -26,9 +27,9 @@ defmodule EdenflowersWeb.StripeHandler do
 
         :error
 
-      {:error, {:enqueue_failed, order_id, reason}} ->
+      {:error, {:enqueue_failed, order_id, changeset}} ->
         Logger.error(
-          "Failed to enqueue confirmation email for order #{order_id} (Stripe payment_intent.succeeded event #{event.id}): #{inspect(reason)}"
+          "Failed to enqueue Oban job for order #{order_id} with Stripe payment_intent.succeeded event #{event.id}): #{inspect(changeset)}"
         )
 
         :error
@@ -48,22 +49,12 @@ defmodule EdenflowersWeb.StripeHandler do
 
   defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
-  defp mark_payment_received(order_id) do
+  defp finalise_checkout(order_id) do
     order_id
-    |> Order.payment_received(actor: system_actor())
+    |> Order.finalise_checkout(actor: system_actor())
     |> case do
       {:ok, order} -> {:ok, order}
       {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
-    end
-  end
-
-  defp enqueue_confirmation_email(order_id) do
-    %{"order_id" => order_id}
-    |> SendOrderConfirmationEmail.new()
-    |> Oban.insert()
-    |> case do
-      {:ok, job} -> {:ok, job}
-      {:error, reason} -> {:error, {:enqueue_failed, order_id, reason}}
     end
   end
 end

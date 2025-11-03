@@ -19,7 +19,7 @@ defmodule Edenflowers.Actors do
       iex> Edenflowers.Actors.system_actor()
       %{system: true}
 
-      iex> Order.payment_received(order, actor: Edenflowers.Actors.system_actor())
+      iex> Order.finalise_checkout(order, actor: Edenflowers.Actors.system_actor())
   """
   def system_actor do
     %{system: true}

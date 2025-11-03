@@ -207,10 +207,10 @@ defmodule Edenflowers.Store.OrderTest do
            |> Decimal.equal?("16.04")
   end
 
-  test "calling payment_received updates state and payment_state" do
+  test "calling finalise_checkout updates state and payment_state" do
     order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"})
 
-    assert {:ok, order} = Order.payment_received(order.id, authorize?: false)
+    assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
     assert order.state == :order
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
