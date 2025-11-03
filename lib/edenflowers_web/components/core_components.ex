@@ -33,6 +33,17 @@ defmodule EdenflowersWeb.CoreComponents do
   alias EdenflowersWeb.LiveToast
 
   @doc """
+  Renders a container suitable for most pages.
+  """
+  def container(assigns) do
+    ~H"""
+    <div class="container my-48">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
   Renders a component for dynamic, client-side alerts.
 
   This component is typically used for displaying alerts that are not part of
