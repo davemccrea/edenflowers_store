@@ -1,4 +1,11 @@
 defmodule Edenflowers.Store.Order.MaybeRequireRecipientName do
+  @moduledoc """
+  Conditionally requires a recipient name for gift orders.
+
+  If the order is marked as a gift (gift flag is true), this change
+  ensures that a recipient_name is provided. For non-gift orders,
+  the recipient name is optional.
+  """
   use Ash.Resource.Change
 
   @impl true

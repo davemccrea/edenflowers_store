@@ -1,4 +1,11 @@
 defmodule Edenflowers.Store.Order.ClearGiftFields do
+  @moduledoc """
+  Clears gift-related fields when the order is not a gift.
+
+  When the gift flag is set to false, this change clears the
+  recipient_name and gift_message fields to ensure no stale
+  gift data remains on the order.
+  """
   use Ash.Resource.Change
 
   @impl true

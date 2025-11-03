@@ -1,4 +1,11 @@
 defmodule Edenflowers.Store.Order.MaybeRequireDeliveryAddress do
+  @moduledoc """
+  Conditionally requires a delivery address for delivery orders.
+
+  If the selected fulfillment option has a fulfillment_method of :delivery,
+  this change ensures that a delivery_address is provided. For pickup orders,
+  the delivery address is optional.
+  """
   use Ash.Resource.Change
 
   @impl true
