@@ -22,7 +22,10 @@ defmodule Edenflowers.Store.Order.LookupPromotionCode do
           Ash.Changeset.add_error(changeset, %Ash.Error.Changes.Required{field: :code})
 
         code ->
-          case Promotion.get_by_code(code) do
+          # Trim whitespace from code
+          trimmed_code = String.trim(code)
+
+          case Promotion.get_by_code(trimmed_code) do
             {:ok, promotion} ->
               Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
 
