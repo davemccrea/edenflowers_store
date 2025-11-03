@@ -8,17 +8,27 @@ defmodule Edenflowers.Store.Order.MaybeRequireDeliveryAddress do
   """
   use Ash.Resource.Change
 
+  alias Edenflowers.Store.FulfillmentOption
+
   @impl true
   def init(opts), do: {:ok, opts}
 
   @impl true
   def change(changeset, _opts, _context) do
-    fulfillment_option = Ash.Changeset.get_argument_or_attribute(changeset, :fulfillment_option)
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      fulfillment_option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    if not is_nil(fulfillment_option) and fulfillment_option.fulfillment_method == :delivery do
-      Ash.Changeset.require_values(changeset, :update, false, [:delivery_address])
-    else
-      changeset
-    end
+      if is_nil(fulfillment_option_id) do
+        changeset
+      else
+        case FulfillmentOption.get_by_id(fulfillment_option_id, authorize?: false) do
+          {:ok, %{fulfillment_method: :delivery}} ->
+            Ash.Changeset.require_values(changeset, :update, false, [:delivery_address])
+
+          _ ->
+            changeset
+        end
+      end
+    end)
   end
 end

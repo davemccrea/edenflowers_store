@@ -22,17 +22,26 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
-      fulfillment_option = Ash.Changeset.get_argument_or_attribute(changeset, :fulfillment_option)
+      fulfillment_option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-      case fulfillment_option do
+      case fulfillment_option_id do
         nil ->
           Ash.Changeset.add_error(changeset, %Ash.Error.Changes.Required{field: :fulfillment_option})
 
-        %{fulfillment_method: :delivery} ->
-          handle_delivery(changeset, fulfillment_option)
+        id ->
+          case Ash.get(Edenflowers.Store.FulfillmentOption, id, authorize?: false) do
+            {:ok, %{fulfillment_method: :delivery} = fulfillment_option} ->
+              handle_delivery(changeset, fulfillment_option)
 
-        _ ->
-          handle_pickup(changeset, fulfillment_option)
+            {:ok, fulfillment_option} ->
+              handle_pickup(changeset, fulfillment_option)
+
+            {:error, _} ->
+              Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
+                field: :fulfillment_option_id,
+                message: "Invalid fulfillment option"
+              })
+          end
       end
     end)
   end

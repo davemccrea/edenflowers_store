@@ -18,8 +18,18 @@ defmodule Edenflowers.Store.FulfillmentOption do
     repo Edenflowers.Repo
   end
 
+  code_interface do
+    define :get_by_id, action: :get_by_id, args: [:id]
+  end
+
   actions do
     defaults [:read, :destroy, create: :*, update: :*]
+
+    read :get_by_id do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      get? true
+    end
   end
 
   policies do
