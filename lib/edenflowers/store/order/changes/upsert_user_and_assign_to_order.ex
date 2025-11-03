@@ -29,7 +29,7 @@ defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
           Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
 
         {:error, error} ->
-          Logger.error("Failed to upsert user for order: #{inspect(error)}")
+          Logger.info("Failed to upsert user for order: #{inspect(error)}")
 
           Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidChanges{
             message: "Unable to create or update user account"
