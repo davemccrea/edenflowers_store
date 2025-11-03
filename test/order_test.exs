@@ -215,4 +215,58 @@ defmodule Edenflowers.Store.OrderTest do
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
   end
+
+  test "calling finalise_checkout increments promotion usage when promotion is applied" do
+    alias Edenflowers.Store.Promotion
+
+    # Create a promotion and order with that promotion
+    promotion =
+      Ash.Seed.seed!(Promotion, %{
+        name: "Test Promotion",
+        code: "TEST20",
+        discount_percentage: Decimal.new("0.20"),
+        minimum_cart_total: Decimal.new("0"),
+        usage: 0
+      })
+
+    order =
+      Ash.Seed.seed!(Order, %{
+        payment_intent_id: "pi_test123",
+        promotion_id: promotion.id
+      })
+
+    # Verify initial usage is 0
+    assert promotion.usage == 0
+
+    # Finalize the checkout
+    assert {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
+
+    # Verify promotion usage incremented to 1
+    {:ok, updated_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
+    assert updated_promotion.usage == 1
+  end
+
+  test "calling finalise_checkout does not increment usage when no promotion is applied" do
+    alias Edenflowers.Store.Promotion
+
+    # Create a promotion but don't apply it to the order
+    promotion =
+      Ash.Seed.seed!(Promotion, %{
+        name: "Test Promotion",
+        code: "TEST20",
+        discount_percentage: Decimal.new("0.20"),
+        minimum_cart_total: Decimal.new("0"),
+        usage: 0
+      })
+
+    order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_test123"})
+
+    # Finalize the checkout without promotion
+    assert {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
+
+    # Verify promotion usage remains 0
+    {:ok, unchanged_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
+    assert unchanged_promotion.usage == 0
+  end
+
 end

@@ -5,13 +5,12 @@ defmodule EdenflowersWeb.StripeHandler do
   import Edenflowers.Actors
 
   alias Edenflowers.Store.Order
-  alias Edenflowers.Workers.{SendOrderConfirmationEmail, IncrementPromotionUsage}
+  alias Edenflowers.Workers.SendOrderConfirmationEmail
 
   @impl true
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     with {:ok, order_id} <- fetch_order_id(event),
          {:ok, _order} <- finalise_checkout(order_id),
-         {:ok, _job} <- IncrementPromotionUsage.enqueue(%{"order_id" => order_id}),
          {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order_id}) do
       :ok
     else

@@ -16,7 +16,8 @@ defmodule Edenflowers.Store.Order do
     LookupPromotionCode,
     MaybeRequireRecipientName,
     ClearGiftFields,
-    UpsertUserAndAssignToOrder
+    UpsertUserAndAssignToOrder,
+    UpdatePromotionUsageCount
   }
 
   postgres do
@@ -166,6 +167,8 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:state, :order)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
+      change {UpdatePromotionUsageCount, []}
+      require_atomic? false
     end
 
     update :update_fulfillment_option do
@@ -553,6 +556,44 @@ defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
 
         {:error, _error} ->
           changeset
+      end
+    end)
+  end
+end
+
+defmodule Edenflowers.Store.Order.UpdatePromotionUsageCount do
+  @moduledoc """
+  Updates promotion usage counter when an order is finalized.
+  This ensures atomicity - the promotion usage only increments if the order
+  successfully transitions to the completed state.
+
+  By passing the context as scope to the nested action, both the order update
+  and promotion increment happen in the same database transaction, ensuring
+  they succeed or fail together.
+  """
+  use Ash.Resource.Change
+  import Edenflowers.Actors
+
+  alias Edenflowers.Store.Promotion
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, context) do
+    Ash.Changeset.after_action(changeset, fn _changeset, order ->
+      case order.promotion_id do
+        nil ->
+          {:ok, order}
+
+        promotion_id ->
+          case Promotion.increment_usage(promotion_id, actor: system_actor(), scope: context) do
+            {:ok, _promotion} ->
+              {:ok, order}
+
+            {:error, error} ->
+              {:error, error}
+          end
       end
     end)
   end
