@@ -611,6 +611,179 @@ defmodule Edenflowers.Store.OrderTest do
     end
   end
 
+  describe "User upsert during checkout" do
+    test "creates new user when saving step 1 with new email" do
+      alias Edenflowers.Accounts.User
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      # Verify user doesn't exist yet
+      assert {:error, %Ash.Error.Invalid{}} = User.get_by_email("newcustomer@example.com", authorize?: false)
+
+      # Save step 1 with customer details
+      assert {:ok, order} =
+               order
+               |> Ash.Changeset.for_update(:save_step_1, %{
+                 customer_name: "New Customer",
+                 customer_email: "newcustomer@example.com"
+               })
+               |> Ash.update(authorize?: false)
+
+      # Verify user was created
+      assert {:ok, user} = User.get_by_email("newcustomer@example.com", authorize?: false)
+      assert user.name == "New Customer"
+      assert to_string(user.email) == "newcustomer@example.com"
+
+      # Verify order is assigned to user
+      assert order.user_id == user.id
+    end
+
+    test "updates existing user name when email already exists" do
+      alias Edenflowers.Accounts.User
+
+      # Create existing user
+      {:ok, existing_user} = User.upsert("existing@example.com", "Old Name", authorize?: false)
+      assert existing_user.name == "Old Name"
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      # Save step 1 with same email but different name
+      assert {:ok, order} =
+               order
+               |> Ash.Changeset.for_update(:save_step_1, %{
+                 customer_name: "Updated Name",
+                 customer_email: "existing@example.com"
+               })
+               |> Ash.update(authorize?: false)
+
+      # Verify user name was updated
+      {:ok, updated_user} = User.get_by_email("existing@example.com", authorize?: false)
+      assert updated_user.name == "Updated Name"
+      assert updated_user.id == existing_user.id
+
+      # Verify order is assigned to same user
+      assert order.user_id == existing_user.id
+    end
+
+    test "associates order with correct user when multiple orders for same customer" do
+      alias Edenflowers.Accounts.User
+
+      # Create first order for customer
+      order1 = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order1} =
+        order1
+        |> Ash.Changeset.for_update(:save_step_1, %{
+          customer_name: "Regular Customer",
+          customer_email: "regular@example.com"
+        })
+        |> Ash.update(authorize?: false)
+
+      # Create second order for same customer
+      order2 = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order2} =
+        order2
+        |> Ash.Changeset.for_update(:save_step_1, %{
+          customer_name: "Regular Customer",
+          customer_email: "regular@example.com"
+        })
+        |> Ash.update(authorize?: false)
+
+      # Verify both orders assigned to same user
+      assert order1.user_id == order2.user_id
+
+      # Verify only one user was created
+      {:ok, user} = User.get_by_email("regular@example.com", authorize?: false)
+      assert user.id == order1.user_id
+    end
+
+    test "handles case-insensitive email matching" do
+      alias Edenflowers.Accounts.User
+
+      # Create user with lowercase email
+      {:ok, user1} = User.upsert("customer@example.com", "Customer", authorize?: false)
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      # Save step 1 with uppercase email
+      {:ok, order} =
+        order
+        |> Ash.Changeset.for_update(:save_step_1, %{
+          customer_name: "Customer",
+          customer_email: "CUSTOMER@EXAMPLE.COM"
+        })
+        |> Ash.update(authorize?: false)
+
+      # Should match existing user (ci_string field)
+      assert order.user_id == user1.id
+
+      # Verify only one user exists with this email
+      all_users = Ash.read!(User, authorize?: false)
+      matching_users = Enum.filter(all_users, fn u -> to_string(u.email) == "customer@example.com" end)
+      assert length(matching_users) == 1
+    end
+
+    test "preserves user_id through subsequent step updates" do
+      alias Edenflowers.Accounts.User
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      # Save step 1
+      {:ok, order} =
+        order
+        |> Ash.Changeset.for_update(:save_step_1, %{
+          customer_name: "Test User",
+          customer_email: "test@example.com"
+        })
+        |> Ash.update(authorize?: false)
+
+      original_user_id = order.user_id
+      {:ok, user} = User.get_by_email("test@example.com", authorize?: false)
+      assert original_user_id == user.id
+
+      # Update step 2 (gift options)
+      {:ok, order} =
+        order
+        |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
+        |> Ash.update(authorize?: false)
+
+      # Verify user_id is unchanged
+      assert order.user_id == original_user_id
+    end
+
+    test "allows nil customer_name but requires customer_email" do
+      alias Edenflowers.Accounts.User
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      # Save step 1 with only email (name is nil)
+      assert {:ok, order} =
+               order
+               |> Ash.Changeset.for_update(:save_step_1, %{
+                 customer_email: "nametest@example.com"
+               })
+               |> Ash.update(authorize?: false)
+
+      # User should be created with nil name
+      {:ok, user} = User.get_by_email("nametest@example.com", authorize?: false)
+      assert is_nil(user.name)
+      assert order.user_id == user.id
+
+      # But customer_email is required - missing it should fail
+      order2 = Order.create_for_checkout!(authorize?: false)
+
+      assert {:error, error} =
+               order2
+               |> Ash.Changeset.for_update(:save_step_1, %{
+                 customer_name: "Test User"
+               })
+               |> Ash.update(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+  end
+
   describe "Promotion minimum cart total validation" do
     test "applies promotion when cart total meets minimum requirement" do
       tax_rate = generate(tax_rate(percentage: "0.255"))
