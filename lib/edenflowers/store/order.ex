@@ -30,7 +30,7 @@ defmodule Edenflowers.Store.Order do
     define :get_by_order_reference, action: :get_by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :get_for_checkout, args: [:id]
     define :get_all_completed, action: :get_all_completed
-    define :payment_received, action: :payment_received
+    define :finalise_checkout, action: :finalise_checkout
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
@@ -162,7 +162,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     # Other Update Actions
-    update :payment_received do
+    update :finalise_checkout do
       change set_attribute(:state, :order)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -199,6 +199,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :clear_promotion do
+      # TODO: use atomic_update here?
       change set_attribute(:promotion_id, nil)
     end
 
@@ -225,6 +226,11 @@ defmodule Edenflowers.Store.Order do
   end
 
   policies do
+    # System bypass - for webhooks and background jobs
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if always()
+    end
+
     # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
@@ -502,6 +508,7 @@ end
 
 defmodule Edenflowers.Store.Order.LookupPromotionCode do
   use Ash.Resource.Change
+  use Gettext, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Store.Promotion
 
@@ -518,7 +525,7 @@ defmodule Edenflowers.Store.Order.LookupPromotionCode do
         _ ->
           Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
             field: :code,
-            message: "Invalid code"
+            message: gettext("Invalid code")
           })
       end
     end)

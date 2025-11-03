@@ -156,7 +156,6 @@ defmodule Edenflowers.Accounts.User do
     attribute :name, :string, allow_nil?: true, public?: true
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :newsletter_opt_in, :boolean, default: false, public?: true
-    attribute :promotion_claimed, :boolean, default: false, public?: true
 
     # Admin field - readable but not writable to prevent privilege escalation
     attribute :admin, :boolean, default: false, public?: true, writable?: false
