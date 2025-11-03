@@ -19,7 +19,7 @@ defmodule Edenflowers.Store.ProductTest do
                  description: "Product 1 description",
                  product_category_id: product_category.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "creates product when tax_rate is assigned", %{tax_rate: tax_rate, product_category: product_category} do
@@ -32,7 +32,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  product_category_id: product_category.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create product if product name is not unique", %{
@@ -51,7 +51,7 @@ defmodule Edenflowers.Store.ProductTest do
                  tax_rate_id: tax_rate.id,
                  product_category_id: product_category.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
 
       assert %Ash.Error.Invalid{
                errors: [
@@ -77,7 +77,7 @@ defmodule Edenflowers.Store.ProductTest do
                  product_category_id: product_category.id,
                  fulfillment_option_ids: [fulfillment_option_id]
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to assign fulfillment option to product if fulfillment option does not exist", %{tax_rate: tax_rate} do
@@ -93,7 +93,7 @@ defmodule Edenflowers.Store.ProductTest do
                  image_slug: "image.jpg",
                  fulfillment_option_ids: [id]
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "returns nil cheapest_price when product has no variants", %{tax_rate: tax_rate} do

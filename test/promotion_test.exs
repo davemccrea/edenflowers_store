@@ -14,7 +14,7 @@ defmodule Edenflowers.Store.PromotionTest do
                  start_date: ~D[2024-12-19],
                  expiration_date: ~D[2024-12-31]
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "gets promotion using a code with mixed case" do
@@ -26,11 +26,11 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "Christmas20", today: ~D[2024-12-20]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "Christmas20", today: ~D[2024-12-20]})
                |> Ash.read_one()
     end
 
@@ -43,11 +43,11 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: " CHRISTMAS20 ", today: ~D[2024-12-20]})
+               |> Ash.Query.for_read(:get_by_code, %{code: " CHRISTMAS20 ", today: ~D[2024-12-20]})
                |> Ash.read_one()
     end
 
@@ -60,11 +60,11 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, nil} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "AUTUMN20", today: ~D[2024-12-20]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "AUTUMN20", today: ~D[2024-12-20]})
                |> Ash.read_one()
     end
 
@@ -77,11 +77,11 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, nil} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-18]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-18]})
                |> Ash.read_one()
     end
 
@@ -94,11 +94,11 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-19]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-19]})
                |> Ash.read_one()
     end
 
@@ -112,11 +112,11 @@ defmodule Edenflowers.Store.PromotionTest do
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-21]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-21]})
                |> Ash.read_one()
     end
 
@@ -130,11 +130,11 @@ defmodule Edenflowers.Store.PromotionTest do
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-22]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-22]})
                |> Ash.read_one()
     end
 
@@ -148,11 +148,11 @@ defmodule Edenflowers.Store.PromotionTest do
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, nil} =
                Promotion
-               |> Ash.Query.for_read(:by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-23]})
+               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-23]})
                |> Ash.read_one()
     end
 
@@ -165,7 +165,7 @@ defmodule Edenflowers.Store.PromotionTest do
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
-      |> Ash.create!()
+      |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} = Promotion.get_by_code("CHRISTMAS20")
     end

@@ -20,7 +20,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:ok, %ProductVariant{price: price, image_slug: image_slug, product_id: product_id}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
 
       assert price == Decimal.new("10.99")
       assert image_slug == "image.jpg"
@@ -40,7 +40,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:ok, %ProductVariant{size: size, stock_trackable: trackable, stock_quantity: quantity}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
 
       assert size == :medium
       assert trackable == true
@@ -56,7 +56,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :product_id}]}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create product variant without price", %{product: product} do
@@ -68,7 +68,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :price}]}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create product variant without image", %{product: product} do
@@ -80,7 +80,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :image_slug}]}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create product variant with negative stock_quantity", %{product: product} do
@@ -95,7 +95,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
               %Ash.Error.Invalid{errors: [%Ash.Error.Changes.InvalidAttribute{field: :stock_quantity, message: msg}]}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
 
       assert msg =~ "must be more than or equal to"
     end
@@ -108,7 +108,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:ok, %ProductVariant{price: updated_price}} =
                variant
                |> Ash.Changeset.for_update(:update, %{price: new_price})
-               |> Ash.update()
+               |> Ash.update(authorize?: false)
 
       assert updated_price == new_price
     end
@@ -121,7 +121,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert {:ok, %ProductVariant{stock_quantity: updated_quantity}} =
                variant
                |> Ash.Changeset.for_update(:update, %{stock_quantity: new_quantity})
-               |> Ash.update()
+               |> Ash.update(authorize?: false)
 
       assert updated_quantity == new_quantity
     end
@@ -135,7 +135,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
               %Ash.Error.Invalid{errors: [%Ash.Error.Changes.InvalidAttribute{field: :stock_quantity, message: msg}]}} =
                variant
                |> Ash.Changeset.for_update(:update, %{stock_quantity: new_quantity})
-               |> Ash.update()
+               |> Ash.update(authorize?: false)
 
       assert msg =~ "must be more than or equal to"
     end
@@ -143,7 +143,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "destroys product variant", %{product: product} do
       variant = generate(product_variant(product_id: product.id))
 
-      assert :ok = Ash.destroy!(variant)
+      assert :ok = Ash.destroy!(variant, authorize?: false)
       assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{}]}} = Ash.get(ProductVariant, variant.id)
     end
   end

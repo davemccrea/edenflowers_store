@@ -23,14 +23,14 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
                  max_dist_km: 20,
                  tax_rate_id: tax_rate.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create fulfillment option of rate_type :dynamic if missing fields" do
       assert {:error, result} =
                FulfillmentOption
                |> Ash.Changeset.for_create(:create, %{name: "Home delivery", rate_type: :dynamic})
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
 
       assert "price_per_km,free_dist_km,max_dist_km" =
                result
@@ -49,7 +49,7 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
                  base_price: "0.00",
                  tax_rate_id: tax_rate.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "fails to create fulfillment option when same_day is true and order_deadline is not present" do
@@ -62,7 +62,7 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
                  same_day: true,
                  order_deadline: nil
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
 
     test "creates fulfillment option when same_day is true and order_deadline is present", %{tax_rate: tax_rate} do
@@ -77,7 +77,7 @@ defmodule Edenflowers.Store.FulfillmentOptionTest do
                  order_deadline: ~T[16:00:00],
                  tax_rate_id: tax_rate.id
                })
-               |> Ash.create()
+               |> Ash.create(authorize?: false)
     end
   end
 end
