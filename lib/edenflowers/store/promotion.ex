@@ -46,7 +46,7 @@ defmodule Edenflowers.Store.Promotion do
     end
 
     create :create do
-      accept [:name, :code, :discount_percentage, :minimum_cart_total, :start_date, :expiration_date]
+      accept [:name, :code, :discount_percentage, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     end
 
     update :increment_usage do
