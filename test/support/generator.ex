@@ -17,7 +17,8 @@ defmodule Generator do
       TaxRate,
       :create,
       defaults: %{name: words()},
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 
@@ -30,7 +31,8 @@ defmodule Generator do
         code: "PROMO-#{Faker.random_between(100_000, 999_999)}",
         discount_percentage: "0.20"
       },
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 
@@ -39,7 +41,8 @@ defmodule Generator do
       defaults: %{
         name: words()
       },
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 
@@ -57,7 +60,8 @@ defmodule Generator do
         description: words(),
         image_slug: "image.png"
       },
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 
@@ -70,12 +74,24 @@ defmodule Generator do
         stock_trackable: false,
         stock_quantity: 0
       },
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 
   def order(opts \\ []) do
-    changeset_generator(Order, :create, overrides: opts, authorize?: false)
+    # For testing orders, we use seed_generator to allow setting any attribute
+    # including internal ones that wouldn't normally be accepted in actions
+    # (like fulfillment_amount, payment_intent_id, promotion_id, etc.)
+    # We provide a base struct to avoid generating random foreign keys that don't exist
+    seed_generator(
+      %Order{
+        state: :checkout,
+        step: 1
+      },
+      overrides: opts,
+      authorize?: false
+    )
   end
 
   def line_item(opts \\ []) do
@@ -108,7 +124,8 @@ defmodule Generator do
         enabled_dates: [],
         disabled_dates: []
       },
-      overrides: opts
+      overrides: opts,
+      authorize?: false
     )
   end
 

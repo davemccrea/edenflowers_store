@@ -180,7 +180,7 @@ defmodule Edenflowers.Store.OrderTest do
     {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
-      Ash.Seed.seed!(Order, %{fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount})
+      generate(order(fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount))
 
     _line_item =
       generate(
@@ -208,7 +208,7 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"})
+    order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
     assert order.state == :order
@@ -221,19 +221,22 @@ defmodule Edenflowers.Store.OrderTest do
 
     # Create a promotion and order with that promotion
     promotion =
-      Ash.Seed.seed!(Promotion, %{
-        name: "Test Promotion",
-        code: "TEST20",
-        discount_percentage: Decimal.new("0.20"),
-        minimum_cart_total: Decimal.new("0"),
-        usage: 0
-      })
+      generate(
+        promotion(
+          name: "Test Promotion",
+          code: "TEST20",
+          discount_percentage: "0.20",
+          minimum_cart_total: "0"
+        )
+      )
 
     order =
-      Ash.Seed.seed!(Order, %{
-        payment_intent_id: "pi_test123",
-        promotion_id: promotion.id
-      })
+      generate(
+        order(
+          payment_intent_id: "pi_test123",
+          promotion_id: promotion.id
+        )
+      )
 
     # Verify initial usage is 0
     assert promotion.usage == 0
@@ -251,15 +254,16 @@ defmodule Edenflowers.Store.OrderTest do
 
     # Create a promotion but don't apply it to the order
     promotion =
-      Ash.Seed.seed!(Promotion, %{
-        name: "Test Promotion",
-        code: "TEST20",
-        discount_percentage: Decimal.new("0.20"),
-        minimum_cart_total: Decimal.new("0"),
-        usage: 0
-      })
+      generate(
+        promotion(
+          name: "Test Promotion",
+          code: "TEST20",
+          discount_percentage: "0.20",
+          minimum_cart_total: "0"
+        )
+      )
 
-    order = Ash.Seed.seed!(Order, %{payment_intent_id: "pi_test123"})
+    order = generate(order(payment_intent_id: "pi_test123"))
 
     # Finalize the checkout without promotion
     assert {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
