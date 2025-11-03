@@ -17,7 +17,9 @@ defmodule Edenflowers.Store.Order do
     ClearGiftFields,
     UpsertUserAndAssignToOrder,
     UpdatePromotionUsageCount,
-    ValidateMinimumCartTotal
+    ValidateMinimumCartTotal,
+    ValidateFulfillmentDate,
+    ValidatePaymentIntent
   }
 
   postgres do
@@ -151,7 +153,7 @@ defmodule Edenflowers.Store.Order do
         :position
       ]
 
-      require_attributes [:fulfillment_date]
+      change {ValidateFulfillmentDate, []}
       change {MaybeRequireDeliveryAddress, []}
       change {ValidateAndCalculateFulfillment, []}
       change set_attribute(:step, 4)
@@ -164,6 +166,7 @@ defmodule Edenflowers.Store.Order do
 
     # Other Update Actions
     update :finalise_checkout do
+      change {ValidatePaymentIntent, []}
       change set_attribute(:state, :order)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
