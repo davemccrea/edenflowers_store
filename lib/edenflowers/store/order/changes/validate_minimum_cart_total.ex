@@ -9,6 +9,8 @@ defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
   use Ash.Resource.Change
   use Gettext, backend: EdenflowersWeb.Gettext
 
+  alias Edenflowers.Utils
+
   @impl true
   def init(opts), do: {:ok, opts}
 
@@ -26,15 +28,9 @@ defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
   end
 
   defp validate_minimum_cart_total(changeset, promotion_id) do
-    # Get the current order data
-    order = changeset.data
-
-    # Load the promotion and calculate line_total
     with {:ok, promotion} <- Edenflowers.Store.Promotion.get_by_id(promotion_id, authorize?: false),
-         {:ok, order_with_total} <- Ash.load(order, [:line_total], authorize?: false) do
-
-      # Get line_total or default to 0 if no items
-      line_total = order_with_total.line_total || Decimal.new(0)
+         {:ok, order} <- Ash.load(changeset.data, [:line_total], authorize?: false) do
+      line_total = order.line_total || Decimal.new(0)
       minimum_required = promotion.minimum_cart_total
 
       if Decimal.compare(line_total, minimum_required) in [:gt, :eq] do
@@ -44,7 +40,7 @@ defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
           field: :promotion_id,
           message:
             gettext("Cart total must be at least %{minimum} to use this promotion",
-              minimum: Edenflowers.Cldr.Number.to_string!(minimum_required, format: :currency, currency: :EUR)
+              minimum: Utils.format_money(minimum_required)
             )
         })
       end

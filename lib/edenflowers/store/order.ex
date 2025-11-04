@@ -3,7 +3,8 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub]
+    notifiers: [Ash.Notifier.PubSub],
+    extensions: [AshStateMachine]
 
   use Gettext, backend: EdenflowersWeb.Gettext
 
@@ -25,6 +26,15 @@ defmodule Edenflowers.Store.Order do
   postgres do
     repo Edenflowers.Repo
     table "orders"
+  end
+
+  state_machine do
+    initial_states [:checkout]
+    default_initial_state :checkout
+
+    transitions do
+      transition :finalise_checkout, from: :checkout, to: :order
+    end
   end
 
   code_interface do
@@ -167,7 +177,7 @@ defmodule Edenflowers.Store.Order do
     # Other Update Actions
     update :finalise_checkout do
       change {ValidatePaymentIntent, []}
-      change set_attribute(:state, :order)
+      change transition_state(:order)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {UpdatePromotionUsageCount, []}
@@ -208,8 +218,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :clear_promotion do
-      # TODO: use atomic_update here?
-      change set_attribute(:promotion_id, nil)
+      change atomic_update(:promotion_id, expr(nil))
     end
 
     update :reset do
@@ -278,9 +287,11 @@ defmodule Edenflowers.Store.Order do
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
     # When checkout is completed the state is set to :order
-    attribute :state, :atom,
-      default: :checkout,
-      constraints: [one_of: [:checkout, :order]]
+    attribute :state, :atom do
+      allow_nil? false
+      default :checkout
+      constraints one_of: [:checkout, :order]
+    end
 
     attribute :ordered_at, :utc_datetime
 

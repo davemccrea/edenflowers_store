@@ -1123,23 +1123,13 @@ defmodule Edenflowers.Store.OrderTest do
     test "cannot transition from order back to checkout" do
       order = generate(order(state: :order, payment_status: :paid))
 
-      # Try to set state back to checkout
-      result =
-        order
-        |> Ash.Changeset.for_update(:update, %{state: :checkout})
-        |> Ash.update(authorize?: false)
+      # Try to set state back to checkout - should now fail
+      assert {:error, error} =
+               order
+               |> Ash.Changeset.for_update(:update, %{state: :checkout})
+               |> Ash.update(authorize?: false)
 
-      case result do
-        {:ok, updated_order} ->
-          # If this passes, we're missing validation
-          if updated_order.state == :checkout do
-            flunk("Should not allow transitioning from :order back to :checkout")
-          end
-
-        {:error, _error} ->
-          # Expected - state transitions should be controlled
-          :ok
-      end
+      assert %Ash.Error.Invalid{} = error
     end
 
     test "finalise_checkout requires payment_intent_id" do
@@ -1180,18 +1170,111 @@ defmodule Edenflowers.Store.OrderTest do
     test "cannot finalize order already in :order state" do
       order = generate(order(state: :order, payment_status: :paid, payment_intent_id: "pi_test"))
 
-      result = Order.finalise_checkout(order.id, authorize?: false)
+      # Should now fail with clear error message
+      assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)
+      assert %Ash.Error.Invalid{} = error
+    end
+  end
 
-      case result do
-        {:ok, _order} ->
-          # Finalizing an already-finalized order should be idempotent or fail
-          # Document the actual behavior
-          :ok
+  describe "Order reset action" do
+    test "reset clears all checkout fields and returns to step 1" do
+      tax_rate = generate(tax_rate())
 
-        {:error, _error} ->
-          # Expected - cannot finalize twice
-          :ok
-      end
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Pickup",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00"
+          )
+        )
+
+      promotion = generate(promotion(minimum_cart_total: "0"))
+
+      # Create an order with all fields filled
+      order =
+        generate(
+          order(
+            step: 4,
+            customer_name: "Test Customer",
+            customer_email: "test@example.com",
+            gift: true,
+            gift_message: "Happy Birthday!",
+            recipient_name: "Recipient",
+            recipient_phone_number: "+358401234567",
+            delivery_address: "Test Address",
+            delivery_instructions: "Ring twice",
+            fulfillment_date: Date.add(Date.utc_today(), 1),
+            fulfillment_amount: "5.00",
+            calculated_address: "Calculated Address",
+            here_id: "here123",
+            distance: 5000,
+            position: "60.1699,24.9384",
+            payment_intent_id: "pi_test123",
+            promotion_id: promotion.id,
+            fulfillment_option_id: fulfillment_option.id
+          )
+        )
+
+      # Reset the order
+      assert {:ok, reset_order} = Order.reset(order, authorize?: false)
+
+      # Verify all fields are cleared
+      assert reset_order.step == 1
+      assert is_nil(reset_order.customer_name)
+      assert is_nil(reset_order.customer_email)
+      assert reset_order.gift == false
+      assert is_nil(reset_order.gift_message)
+      assert is_nil(reset_order.recipient_name)
+      assert is_nil(reset_order.recipient_phone_number)
+      assert is_nil(reset_order.delivery_address)
+      assert is_nil(reset_order.delivery_instructions)
+      assert is_nil(reset_order.fulfillment_date)
+      assert is_nil(reset_order.fulfillment_amount)
+      assert is_nil(reset_order.calculated_address)
+      assert is_nil(reset_order.here_id)
+      assert is_nil(reset_order.distance)
+      assert is_nil(reset_order.position)
+      assert is_nil(reset_order.payment_intent_id)
+      assert is_nil(reset_order.promotion_id)
+      assert is_nil(reset_order.fulfillment_option_id)
+    end
+
+    test "reset preserves order id and state" do
+      order = generate(order(step: 3, customer_name: "Test", customer_email: "test@example.com"))
+      original_id = order.id
+      original_state = order.state
+
+      assert {:ok, reset_order} = Order.reset(order, authorize?: false)
+
+      # ID and state should remain unchanged
+      assert reset_order.id == original_id
+      assert reset_order.state == original_state
+    end
+  end
+
+  describe "Order update_locale action" do
+    test "updates locale successfully" do
+      order = Order.create_for_checkout!(authorize?: false)
+      assert order.locale == "sv-FI"
+
+      assert {:ok, updated_order} = Order.update_locale(order, "en-US", authorize?: false)
+      assert updated_order.locale == "en-US"
+    end
+
+    test "allows changing locale multiple times" do
+      order = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order} = Order.update_locale(order, "fi-FI", authorize?: false)
+      assert order.locale == "fi-FI"
+
+      {:ok, order} = Order.update_locale(order, "en-GB", authorize?: false)
+      assert order.locale == "en-GB"
+
+      {:ok, order} = Order.update_locale(order, "sv-FI", authorize?: false)
+      assert order.locale == "sv-FI"
     end
   end
 end
