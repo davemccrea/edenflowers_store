@@ -29,7 +29,11 @@ defmodule Generator do
       defaults: %{
         name: words(),
         code: "PROMO-#{Faker.random_between(100_000, 999_999)}",
-        discount_percentage: "0.20"
+        discount_percentage: "0.20",
+        minimum_cart_total: "0",
+        start_date: nil,
+        expiration_date: nil,
+        usage_limit: nil
       },
       overrides: opts,
       authorize?: false
@@ -95,7 +99,13 @@ defmodule Generator do
   end
 
   def line_item(opts \\ []) do
-    changeset_generator(LineItem, :create, defaults: %{}, overrides: opts, authorize?: false)
+    changeset_generator(LineItem, :create,
+      defaults: %{
+        quantity: 1
+      },
+      overrides: opts,
+      authorize?: false
+    )
   end
 
   def fulfillment_option(opts \\ []) do
