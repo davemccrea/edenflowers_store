@@ -20,6 +20,8 @@ if System.get_env("PHX_SERVER") do
   config :edenflowers, EdenflowersWeb.Endpoint, server: true
 end
 
+config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+
 config :edenflowers,
        :here_api_key,
        System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
@@ -62,7 +64,6 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :edenflowers, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -73,8 +74,7 @@ if config_env() == :prod do
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
       # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
-      port: port
+      ip: {0, 0, 0, 0, 0, 0, 0, 0}
     ],
     secret_key_base: secret_key_base
 

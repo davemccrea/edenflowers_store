@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :string
+  attr :class, :any
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
@@ -147,13 +147,27 @@ defmodule EdenflowersWeb.CoreComponents do
     * For live file uploads, see `Phoenix.Component.live_file_input/1`
 
   See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as hidden and radio,
-  are best written directly in your templates.
+  for more information. Unsupported types, such as radio, are best
+  written directly in your templates.
 
   ## Examples
 
-      <.input field={@form[:email]} type="email" />
-      <.input name="my-input" errors={["oh no!"]} />
+  ```heex
+  <.input field={@form[:email]} type="email" />
+  <.input name="my-input" errors={["oh no!"]} />
+  ```
+
+  ## Select type
+
+  When using `type="select"`, you must pass the `options` and optionally
+  a `value` to mark which option should be preselected.
+
+  ```heex
+  <.input field={@form[:user_type]} type="select" options={["Admin": "admin", "User": "user"]} />
+  ```
+
+  For more information on what kind of data can be passed to `options` see
+  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
   """
   attr :id, :any, default: nil
   attr :name, :any
@@ -178,8 +192,8 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
-  attr :class, :string, default: nil, doc: "the input class to use over defaults"
-  attr :error_class, :string, default: nil, doc: "the input error class to use over defaults"
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
@@ -195,6 +209,12 @@ defmodule EdenflowersWeb.CoreComponents do
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
+  end
+
+  def input(%{type: "hidden"} = assigns) do
+    ~H"""
+    <input type="hidden" id={@id} name={@name} value={@value} {@rest} />
+    """
   end
 
   def input(%{type: "checkbox"} = assigns) do

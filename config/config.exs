@@ -65,7 +65,7 @@ config :edenflowers,
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services]
 
-# Configures the endpoint
+# Configure the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -76,7 +76,7 @@ config :edenflowers, EdenflowersWeb.Endpoint,
   pubsub_server: Edenflowers.PubSub,
   live_view: [signing_salt: "fZLlI7wP"]
 
-# Configures the mailer
+# Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
 # locally. You can see the emails in your browser, at "/dev/mailbox".
@@ -97,7 +97,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "4.1.7",
+  version: "4.1.12",
   edenflowers: [
     args: ~w(
 
@@ -107,7 +107,7 @@ config :tailwind,
     cd: Path.expand("..", __DIR__)
   ]
 
-# Configures Elixir's Logger
+# Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]

@@ -54,7 +54,7 @@ defmodule Edenflowers.MixProject do
       {:ash_state_machine, "~> 0.2.12"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.4"},
-      {:phoenix, "~> 1.8.1"},
+      {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
@@ -71,7 +71,7 @@ defmodule Edenflowers.MixProject do
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.26"},
+      {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
@@ -113,7 +113,7 @@ defmodule Edenflowers.MixProject do
         "esbuild edenflowers --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
   end
 end

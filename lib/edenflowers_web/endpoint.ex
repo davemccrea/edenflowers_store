@@ -27,7 +27,8 @@ defmodule EdenflowersWeb.Endpoint do
     at: "/",
     from: :edenflowers,
     gzip: not code_reloading?,
-    only: EdenflowersWeb.static_paths()
+    only: EdenflowersWeb.static_paths(),
+    raise_on_missing_only: code_reloading?
 
   if Code.ensure_loaded?(Tidewave) do
     plug Tidewave
