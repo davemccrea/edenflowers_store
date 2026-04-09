@@ -5,9 +5,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Ash.Query
 
   alias Edenflowers.Store.{Order, FulfillmentOption}
-  alias Edenflowers.{Fulfillments, StripeAPI}
+  alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+
+  @stripe_api Application.compile_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
@@ -52,7 +54,12 @@ defmodule EdenflowersWeb.CheckoutLive do
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
               <.steps step={@order.step}>
-                <section :if={@order.step == 1} id={"#{@id}-section-1"} class="checkout__section">
+                <section
+                  :if={@order.step == 1}
+                  id={"#{@id}-section-1"}
+                  class="checkout__section"
+                  data-testid="checkout-step-1"
+                >
                   <.form_heading>{gettext("Your Details")}</.form_heading>
 
                   <.form
@@ -61,15 +68,31 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-change="validate_form_1"
                     phx-submit="save_form_1"
                     class="checkout__form"
+                    data-testid="checkout-form-1"
                   >
-                    <.input label={gettext("Your Name *")} field={@form[:customer_name]} type="text" />
-                    <.input label={gettext("Email *")} field={@form[:customer_email]} type="text" />
+                    <.input
+                      label={gettext("Your Name *")}
+                      field={@form[:customer_name]}
+                      type="text"
+                      data-testid="customer-name-input"
+                    />
+                    <.input
+                      label={gettext("Email *")}
+                      field={@form[:customer_email]}
+                      type="text"
+                      data-testid="customer-email-input"
+                    />
 
-                    <.form_button>{gettext("Next")}</.form_button>
+                    <.form_button data-testid="step-1-next-button">{gettext("Next")}</.form_button>
                   </.form>
                 </section>
 
-                <section :if={@order.step == 2} id={"#{@id}-section-2"} class="checkout__section">
+                <section
+                  :if={@order.step == 2}
+                  id={"#{@id}-section-2"}
+                  class="checkout__section"
+                  data-testid="checkout-step-2"
+                >
                   <.form_heading>{gettext("Gift Options")}</.form_heading>
 
                   <.form
@@ -78,6 +101,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-change="validate_form_2"
                     phx-submit="save_form_2"
                     class="checkout__form"
+                    data-testid="checkout-form-2"
                   >
                     <.input
                       :let={option}
@@ -86,6 +110,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       field={@form[:gift]}
                       options={[%{name: "❤️ For me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
                       phx-change="update_gift"
+                      data-testid="gift-recipient-selector"
                     >
                       {option.name}
                     </.input>
@@ -95,12 +120,14 @@ defmodule EdenflowersWeb.CheckoutLive do
                       label={gettext("Recipient Name *")}
                       field={@form[:recipient_name]}
                       type="text"
+                      data-testid="recipient-name-input"
                     />
 
                     <fieldset
                       class={[not @order.gift && "hidden"]}
                       id={"#{@id}-field-gift-message"}
                       phx-hook="CharacterCount"
+                      data-testid="gift-message-field"
                     >
                       <label class="relative flex flex-col">
                         <span class="mb-1">{gettext("Gift Message")}</span>
@@ -110,6 +137,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                           class="textarea textarea-lg w-full resize-none"
                           maxlength={200}
                           rows={5}
+                          data-testid="gift-message-textarea"
                         >{@form[:gift_message].value}</textarea>
                         <div class="absolute right-2 bottom-1">
                           <span id="char-count" class="text-xs" phx-update="ignore">
@@ -240,8 +268,8 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div class="md:border-neutral/10 md:border-r" />
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
-              <section class="flex flex-col gap-4 p-1">
-                <h2 class="font-serif text-xl">
+              <section class="flex flex-col gap-4 p-1" data-testid="cart-section">
+                <h2 class="font-serif text-xl" data-testid="cart-heading">
                   {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
@@ -253,6 +281,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   for={@promotional_form}
                   phx-submit="update_promotional"
                   class="space-y-2"
+                  data-testid="promo-code-form"
                 >
                   <.input
                     style="button-addon"
@@ -261,13 +290,14 @@ defmodule EdenflowersWeb.CheckoutLive do
                     type="text"
                     button_text={gettext("Apply")}
                     placeholder={gettext("Enter promo code")}
+                    data-testid="promo-code-input"
                   />
                 </.form>
 
                 <div class="border-neutral/5 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-sm">
-                  <div class="flex justify-between">
+                  <div class="flex justify-between" data-testid="delivery-cost">
                     <span>{gettext("Delivery")}</span>
                     <%= if Decimal.eq?(@order.fulfillment_amount || 0, 0) do %>
                       {gettext("Free")}
@@ -276,22 +306,25 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <% end %>
                   </div>
 
-                  <div class="flex justify-between">
+                  <div class="flex justify-between" data-testid="discount-section">
                     <div class="flex flex-row gap-2">
                       <span>{gettext("Discount")}</span>
                       <button
                         :if={@order.promotion_applied?}
                         phx-click="clear_promo"
                         class="badge badge-dash badge-neutral badge-sm flex cursor-pointer items-center gap-1"
+                        data-testid="promo-code-badge"
                       >
                         {@order.promotion.code} <span><.icon name="hero-x-mark" class="flex h-4 w-4" /></span>
                       </button>
                     </div>
 
                     <%= if @order.promotion_applied? do %>
-                      <span class="text-success">- {Edenflowers.Utils.format_money(@order.discount_amount)}</span>
+                      <span class="text-success" data-testid="discount-amount">
+                        - {Edenflowers.Utils.format_money(@order.discount_amount)}
+                      </span>
                     <% else %>
-                      <span>- {Edenflowers.Utils.format_money(0)}</span>
+                      <span data-testid="discount-amount">- {Edenflowers.Utils.format_money(0)}</span>
                     <% end %>
                   </div>
                 </div>
@@ -299,9 +332,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <div class="flex flex-col gap-2">
                   <div class="border-neutral/5 border-t"></div>
 
-                  <div class="flex justify-between font-semibold">
+                  <div class="flex justify-between font-semibold" data-testid="order-total">
                     <span>{gettext("Total")}</span>
-                    <span>{Edenflowers.Utils.format_money(@order.total)}</span>
+                    <span data-testid="total-amount">{Edenflowers.Utils.format_money(@order.total)}</span>
                   </div>
                 </div>
               </section>
@@ -340,7 +373,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_4", _, socket) do
-    case StripeAPI.update_payment_intent(socket.assigns.order) do
+    case @stripe_api.update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
@@ -529,7 +562,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    {:ok, payment_intent} = StripeAPI.create_payment_intent(order)
+    {:ok, payment_intent} = @stripe_api.create_payment_intent(order)
     actor = socket.assigns[:current_user]
     order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor)
 
@@ -539,7 +572,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   defp setup_stripe(socket, order) do
-    {:ok, payment_intent} = StripeAPI.retrieve_payment_intent(order)
+    {:ok, payment_intent} = @stripe_api.retrieve_payment_intent(order)
     assign(socket, client_secret: payment_intent.client_secret)
   end
 end

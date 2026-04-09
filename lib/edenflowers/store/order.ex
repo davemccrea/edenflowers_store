@@ -28,15 +28,6 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
-  state_machine do
-    initial_states [:checkout]
-    default_initial_state :checkout
-
-    transitions do
-      transition :finalise_checkout, from: :checkout, to: :order
-    end
-  end
-
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :get_by_id, args: [:id]
@@ -52,6 +43,15 @@ defmodule Edenflowers.Store.Order do
     define :update_gift, action: :update_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
     define :reset, action: :reset
+  end
+
+  state_machine do
+    initial_states([:checkout])
+    default_initial_state(:checkout)
+
+    transitions do
+      transition(:finalise_checkout, from: :checkout, to: :order)
+    end
   end
 
   actions do

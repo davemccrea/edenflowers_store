@@ -48,6 +48,7 @@ defmodule EdenflowersWeb.ProductLive do
           <%!-- Product Image --%>
           <figure class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md">
             <img
+              data-testid="product-image"
               src={@selected_variant.image_slug}
               alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
               class="h-full w-full object-cover"
@@ -63,42 +64,56 @@ defmodule EdenflowersWeb.ProductLive do
           <section aria-labelledby="product-details-heading" class="flex flex-col gap-8">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <h1 id="product-details-heading" class="font-serif text-4xl tracking-wide">{@product.name}</h1>
+                <h1 id="product-details-heading" data-testid="product-name" class="font-serif text-4xl tracking-wide">
+                  {@product.name}
+                </h1>
               </div>
-              <p class="text-2xl">
+              <p data-testid="product-price" class="text-2xl">
                 {Edenflowers.Utils.format_money(@selected_variant.price)}
               </p>
             </div>
 
             <div class="text-base-content/80 prose max-w-none">
-              <p class="leading-relaxed">{@product.description}</p>
+              <p data-testid="product-description" class="leading-relaxed">{@product.description}</p>
             </div>
 
             <div class="flex flex-col gap-6">
               <%!-- Size Selection --%>
-              <.form for={%{}} phx-submit="submit" phx-change="change" class="flex flex-col gap-4">
+              <.form
+                for={%{}}
+                phx-submit="submit"
+                phx-change="change"
+                class="flex flex-col gap-4"
+                data-testid="product-form"
+              >
                 <.input
                   :let={option}
                   type="radio-card"
                   options={
                     Enum.map(
                       @product_variants,
-                      &%{name: String.capitalize(to_string(&1.size)), value: &1.id, price: &1.price}
+                      &%{name: String.capitalize(to_string(&1.size)), value: &1.id, price: &1.price, size: &1.size}
                     )
                   }
                   name="product_variant_id"
                   value={@selected_variant.id}
                   label={gettext("Select Size")}
+                  data-testid="variant-selector"
                 >
                   <div class="flex flex-col">
-                    <span class="font-medium">{option.name}</span>
+                    <span class="font-medium" data-testid={"variant-option-#{option.size}"}>{option.name}</span>
                     <span class="text-base-content/60 text-sm">
                       {Edenflowers.Utils.format_money(option.price)}
                     </span>
                   </div>
                 </.input>
 
-                <button type="submit" phx-click={JS.exec("phx-show", to: "#cart-drawer")} class="btn btn-primary btn-lg">
+                <button
+                  type="submit"
+                  phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+                  class="btn btn-primary btn-lg"
+                  data-testid="add-to-cart-button"
+                >
                   <span class="flex items-center gap-2">
                     <.icon name="hero-shopping-bag" class="h-5 w-5" />
                     {gettext("Add to Cart")}

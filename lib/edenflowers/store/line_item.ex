@@ -74,7 +74,7 @@ defmodule Edenflowers.Store.LineItem do
 
     publish_all :create, ["line_item", "changed", :order_id]
     publish_all :update, ["line_item", "changed", :order_id]
-    publish_all :destroy, ["line_item", "changed", :order_id]
+    publish_all :destroy, ["line_item", "changed", :order_id], previous_values?: true
   end
 
   preparations do

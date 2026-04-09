@@ -418,14 +418,14 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def breadcrumb(assigns) do
     ~H"""
-    <div class={["breadcrumbs", @class]} role="navigation" aria-label="Breadcrumb">
+    <div class={["breadcrumbs", @class]} role="navigation" aria-label="Breadcrumb" data-testid="breadcrumb">
       <ul>
         <%= for {item, index} <- Enum.with_index(@item) do %>
-          <li :if={index == length(@item) - 1} aria-current="page">
+          <li :if={index == length(@item) - 1} aria-current="page" data-testid="breadcrumb-current">
             {item.label}
           </li>
           <li :if={index < length(@item) - 1}>
-            <.link navigate={item.navigate}>
+            <.link navigate={item.navigate} data-testid={"breadcrumb-link-#{index}"}>
               {item.label}
             </.link>
           </li>
