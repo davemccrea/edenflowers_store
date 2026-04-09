@@ -42,7 +42,7 @@ defmodule Edenflowers.MixProject do
   defp deps do
     [
       {:usage_rules, "~> 0.1"},
-      {:ash_authentication_phoenix, "~> 2.0 and < 2.11.0"},
+      {:ash_authentication_phoenix, "~> 2.16.0"},
       {:simple_sat, "~> 0.1"},
       {:ash_authentication, "~> 4.0"},
       {:oban, "~> 2.0"},
@@ -76,6 +76,7 @@ defmodule Edenflowers.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:faker, "~> 0.18", only: :test},
+      {:mox, "~> 1.0", only: :test},
       # Waiting for https://github.com/randycoulman/mix_test_interactive/pull/138
       # {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
       {:phoenix_test, "~> 0.8", only: :test, runtime: false},
