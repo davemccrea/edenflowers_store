@@ -921,44 +921,47 @@ defmodule Edenflowers.Store.OrderTest do
     setup do
       tax_rate = generate(tax_rate())
 
-      pickup_option = generate(
-        fulfillment_option(
-          tax_rate_id: tax_rate.id,
-          name: "Store Pickup",
-          fulfillment_method: :pickup,
-          rate_type: :fixed,
-          base_price: "5.00",
-          same_day: true,
-          order_deadline: ~T[15:00:00]
+      pickup_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Store Pickup",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00",
+            same_day: true,
+            order_deadline: ~T[15:00:00]
+          )
         )
-      )
 
-      delivery_fixed = generate(
-        fulfillment_option(
-          tax_rate_id: tax_rate.id,
-          name: "Delivery - Fixed",
-          fulfillment_method: :delivery,
-          rate_type: :fixed,
-          base_price: "10.00",
-          same_day: false,
-          order_deadline: ~T[12:00:00]
+      delivery_fixed =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Delivery - Fixed",
+            fulfillment_method: :delivery,
+            rate_type: :fixed,
+            base_price: "10.00",
+            same_day: false,
+            order_deadline: ~T[12:00:00]
+          )
         )
-      )
 
-      delivery_dynamic = generate(
-        fulfillment_option(
-          tax_rate_id: tax_rate.id,
-          name: "Delivery - Dynamic",
-          fulfillment_method: :delivery,
-          rate_type: :dynamic,
-          base_price: "5.00",
-          price_per_km: "2.00",
-          free_dist_km: 3,
-          max_dist_km: 15,
-          same_day: true,
-          order_deadline: ~T[14:00:00]
+      delivery_dynamic =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Delivery - Dynamic",
+            fulfillment_method: :delivery,
+            rate_type: :dynamic,
+            base_price: "5.00",
+            price_per_km: "2.00",
+            free_dist_km: 3,
+            max_dist_km: 15,
+            same_day: true,
+            order_deadline: ~T[14:00:00]
+          )
         )
-      )
 
       %{
         tax_rate: tax_rate,
