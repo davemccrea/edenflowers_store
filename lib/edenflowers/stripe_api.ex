@@ -1,4 +1,22 @@
+defmodule Edenflowers.StripeAPI.Behaviour do
+  @moduledoc """
+  Behaviour for Stripe API interactions.
+  This allows us to mock Stripe API calls in tests.
+  """
+
+  @callback create_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+end
+
 defmodule Edenflowers.StripeAPI do
+  @moduledoc """
+  Real implementation of Stripe API interactions.
+  """
+
+  @behaviour Edenflowers.StripeAPI.Behaviour
+
+  @impl true
   def create_payment_intent(%{total: total, id: id}) do
     amount = convert_to_stripe_amount(total)
 
@@ -12,10 +30,12 @@ defmodule Edenflowers.StripeAPI do
     })
   end
 
+  @impl true
   def retrieve_payment_intent(%{payment_intent_id: payment_intent_id}) do
     Stripe.PaymentIntent.retrieve(payment_intent_id)
   end
 
+  @impl true
   def update_payment_intent(%{payment_intent_id: payment_intent_id, total: total}) do
     amount = convert_to_stripe_amount(total)
 

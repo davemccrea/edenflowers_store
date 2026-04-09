@@ -52,3 +52,6 @@ config :edenflowers, Oban, testing: :manual
 config :ash, disable_async?: true
 
 config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
+
+# Use mock StripeAPI in tests
+config :edenflowers, :stripe_api, Edenflowers.StripeAPI.Mock
