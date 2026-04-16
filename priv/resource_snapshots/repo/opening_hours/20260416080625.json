@@ -15,10 +15,11 @@
   ],
   "base_filter": null,
   "check_constraints": [],
+  "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": false,
-  "hash": "8867468C33A693F666BA14E587EB049B433CA8964D19F7A633B73A929C8643CF",
+  "hash": "F38C029290715E35135EDB01A931C2960BE859A346172946C938C7F6EF195C8C",
   "identities": [],
   "multitenancy": {
     "attribute": null,

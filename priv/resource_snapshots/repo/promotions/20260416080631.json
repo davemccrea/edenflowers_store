@@ -33,8 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "image_slug",
-      "type": "text"
+      "source": "code",
+      "type": "citext"
     },
     {
       "allow_nil?": false,
@@ -45,102 +45,89 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "description",
-      "type": "text"
+      "source": "discount_percentage",
+      "type": "decimal"
     },
     {
       "allow_nil?": false,
-      "default": "true",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "draft",
-      "type": "boolean"
+      "source": "minimum_cart_total",
+      "type": "decimal"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "products_tax_rate_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "tax_rates"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "tax_rate_id",
-      "type": "uuid"
+      "source": "start_date",
+      "type": "date"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "products_product_category_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "product_categories"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "product_category_id",
-      "type": "uuid"
+      "source": "expiration_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "usage",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "usage_limit",
+      "type": "bigint"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
+  "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9F6FA43C43556BA6D588BE2049E3413B212D3391A99842D6E4772EE4C7AFD453",
+  "hash": "493084BA528385E08E8B3B08861C5A515B710314217F438216FB305A07192E05",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "products_unique_name_index",
+      "index_name": "promotions_unique_code_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "code"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_code",
       "nils_distinct?": true,
       "where": null
     }
@@ -152,5 +139,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "products"
+  "table": "promotions"
 }

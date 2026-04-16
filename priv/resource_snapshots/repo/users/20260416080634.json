@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,40 +33,53 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "percentage",
-      "type": "decimal"
+      "source": "email",
+      "type": "citext"
     },
     {
       "allow_nil?": true,
-      "default": "nil",
+      "default": "false",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "archived_at",
-      "type": "utc_datetime_usec"
+      "source": "newsletter_opt_in",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "admin",
+      "type": "boolean"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
+  "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9FCDC16C1AEE094CB9980C46155BB9A1F2696681326588E2BE7CB509C3F0FC66",
+  "hash": "EA8F4B12B0D85133C1C8192EDE6E507B3415D46B93F480D56CA189E3656C382D",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "tax_rates_unique_name_index",
+      "index_name": "users_unique_email_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "email"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_email",
       "nils_distinct?": true,
       "where": null
     }
@@ -78,5 +91,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "tax_rates"
+  "table": "users"
 }

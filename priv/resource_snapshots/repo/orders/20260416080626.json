@@ -37,7 +37,7 @@
       "type": "bigint"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "\"checkout\"",
       "generated?": false,
       "precision": null,
@@ -396,10 +396,11 @@
   ],
   "base_filter": null,
   "check_constraints": [],
+  "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "7389B4CD86B895AF6FB19613BAB1CDA97AAE998A9CEBB040F131145793963479",
+  "hash": "64B7F31727267C088E170A2B0EAFFF0EB023AA21F657D31273D8CF13DAADDAB7",
   "identities": [],
   "multitenancy": {
     "attribute": null,
