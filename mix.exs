@@ -11,6 +11,7 @@ defmodule Edenflowers.MixProject do
       consolidate_protocols: Mix.env() != :dev,
       aliases: aliases(),
       deps: deps(),
+      releases: [edenflowers: [strip_beams: true]],
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader]
     ]
