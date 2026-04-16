@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   REGISTRY: ghcr.io
@@ -68,7 +68,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            cd /opt/edenflowers
+            cd /opt/edenflowers_store
 
             # Pull latest image
             docker compose pull
