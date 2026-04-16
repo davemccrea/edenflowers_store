@@ -8,6 +8,7 @@ find priv/repo/migrations -type f ! -name ".formatter.exs" -delete
 rm -rf priv/resource_snapshots
 
 mix ash_postgres.generate_migrations initial
+sleep 1
 mix oban.install
 
 mix ash.setup
