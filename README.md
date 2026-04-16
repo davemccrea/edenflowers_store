@@ -1,4 +1,4 @@
-# Edenflowers
+# Eden Flowers
 
 ## Deploying to Production
 
