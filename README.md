@@ -9,6 +9,12 @@
 
 GitHub Actions will build the Docker image and deploy it to the server automatically.
 
+## Syncing images to server
+
+```bash
+rsync -avz images david@edenflowers-server:/opt/edenflowers_store/
+```
+
 ## Regenerating migrations
 
 During development, when making breaking schema changes it's often easier to regenerate all migrations from scratch rather than layering new ones. `regen.sh` automates this:
