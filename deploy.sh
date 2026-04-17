@@ -25,6 +25,18 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+if [[ -f .env ]]; then
+  set -a
+  source .env
+  set +a
+fi
+
+echo "Compiling..."
+mix compile --warnings-as-errors
+
+echo "Running tests..."
+mix test
+
 sed -i '' "s/version: \"[0-9]*\.[0-9]*\.[0-9]*\"/version: \"$VERSION\"/" mix.exs
 
 echo "Updated mix.exs to version $VERSION"
