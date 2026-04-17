@@ -4,10 +4,19 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    if maintenance_mode?() and not bypassed?(conn) do
-      conn
-      |> Phoenix.Controller.redirect(to: "/closed")
-      |> halt()
+    if maintenance_mode?() do
+      case bypass_action(conn) do
+        :block ->
+          conn
+          |> Phoenix.Controller.redirect(to: "/closed")
+          |> halt()
+
+        :allow ->
+          conn
+
+        {:set_session_and_allow, secret} ->
+          put_session(conn, :maintenance_bypass, secret)
+      end
     else
       conn
     end
@@ -17,22 +26,21 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
     Application.get_env(:edenflowers, :maintenance_mode, false)
   end
 
-  defp bypassed?(conn) do
+  defp bypass_action(conn) do
     secret = Application.get_env(:edenflowers, :maintenance_bypass_secret)
 
     cond do
       conn.request_path == "/closed" ->
-        true
+        :allow
 
       secret != nil and conn.params["preview"] == secret ->
-        put_session(conn, :maintenance_bypass, secret)
-        true
+        {:set_session_and_allow, secret}
 
       secret != nil and get_session(conn, :maintenance_bypass) == secret ->
-        true
+        :allow
 
       true ->
-        false
+        :block
     end
   end
 end
