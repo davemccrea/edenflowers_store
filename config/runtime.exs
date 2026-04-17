@@ -38,13 +38,15 @@ config :edenflowers,
        :stripe_webhook_secret,
        System.get_env("STRIPE_WEBHOOK_SECRET") || raise("environment variable STRIPE_WEBHOOK_SECRET is missing.")
 
-if config_env() == :prod do
+if config_env() != :test do
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,
          :maintenance_bypass_secret,
          System.get_env("MAINTENANCE_BYPASS_SECRET")
+end
 
+if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
