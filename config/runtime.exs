@@ -26,6 +26,11 @@ config :edenflowers,
        :here_api_key,
        System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+config :imgproxy,
+  prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
+  key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),
+  salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
+
 config :stripity_stripe,
   api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
 
