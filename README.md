@@ -27,7 +27,7 @@ It drops the database, deletes all existing migrations and resource snapshots, r
 
 ## Maintenance mode
 
-The site can be put into maintenance mode, which redirects all visitors to `/closed`. It is configured via environment variables.
+The site can be put into maintenance mode, which redirects all visitors to `/maternity`. It is configured via environment variables.
 
 Set `MAINTENANCE_MODE=true` to enable. Set `MAINTENANCE_BYPASS_SECRET` to a secret value to allow previewing the site while maintenance mode is active.
 

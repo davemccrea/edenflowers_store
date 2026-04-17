@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
       case bypass_action(conn) do
         :block ->
           conn
-          |> Phoenix.Controller.redirect(to: "/closed")
+          |> Phoenix.Controller.redirect(to: "/maternity")
           |> halt()
 
         :allow ->
@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
     secret = Application.get_env(:edenflowers, :maintenance_bypass_secret)
 
     cond do
-      conn.request_path == "/closed" ->
+      conn.request_path == "/maternity" ->
         :allow
 
       secret != nil and conn.params["preview"] == secret ->
