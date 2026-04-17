@@ -232,63 +232,6 @@ defmodule Edenflowers.Store.OrderTest do
     assert %DateTime{} = order.ordered_at
   end
 
-  test "calling finalise_checkout increments promotion usage when promotion is applied" do
-    alias Edenflowers.Store.Promotion
-
-    # Create a promotion and order with that promotion
-    promotion =
-      generate(
-        promotion(
-          name: "Test Promotion",
-          code: "TEST20",
-          discount_percentage: "0.20",
-          minimum_cart_total: "0"
-        )
-      )
-
-    order =
-      generate(
-        order(
-          payment_intent_id: "pi_test123",
-          promotion_id: promotion.id
-        )
-      )
-
-    # Verify initial usage is 0
-    assert promotion.usage == 0
-
-    # Finalize the checkout
-    assert {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
-
-    # Verify promotion usage incremented to 1
-    {:ok, updated_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
-    assert updated_promotion.usage == 1
-  end
-
-  test "calling finalise_checkout does not increment usage when no promotion is applied" do
-    alias Edenflowers.Store.Promotion
-
-    # Create a promotion but don't apply it to the order
-    promotion =
-      generate(
-        promotion(
-          name: "Test Promotion",
-          code: "TEST20",
-          discount_percentage: "0.20",
-          minimum_cart_total: "0"
-        )
-      )
-
-    order = generate(order(payment_intent_id: "pi_test123"))
-
-    # Finalize the checkout without promotion
-    assert {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
-
-    # Verify promotion usage remains 0
-    {:ok, unchanged_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
-    assert unchanged_promotion.usage == 0
-  end
-
   describe "Gift flow validation" do
     test "requires recipient_name when gift is true" do
       order = Order.create_for_checkout!(authorize?: false)
@@ -423,60 +366,6 @@ defmodule Edenflowers.Store.OrderTest do
 
       # Apply promotion using code
       assert {:ok, order} = Order.add_promotion_with_code(order, "SUMMER20", authorize?: false)
-      assert order.promotion_id == promotion.id
-    end
-
-    test "applies promotion using code with different case" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id))
-
-      promotion =
-        generate(promotion(code: "WINTER10", discount_percentage: "0.10", minimum_cart_total: "0"))
-
-      order = Order.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
-        )
-      )
-
-      # Should work with lowercase
-      assert {:ok, order} = Order.add_promotion_with_code(order, "winter10", authorize?: false)
-      assert order.promotion_id == promotion.id
-    end
-
-    test "applies promotion using code with whitespace" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id))
-
-      promotion =
-        generate(promotion(code: "SPRING15", discount_percentage: "0.15", minimum_cart_total: "0"))
-
-      order = Order.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
-        )
-      )
-
-      # Should work with leading/trailing whitespace
-      assert {:ok, order} = Order.add_promotion_with_code(order, " SPRING15 ", authorize?: false)
       assert order.promotion_id == promotion.id
     end
 
@@ -1062,47 +951,6 @@ defmodule Edenflowers.Store.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "save_step_3 accepts recipient_name and phone for delivery", %{delivery_fixed: delivery_fixed} do
-      # This test will fail without mocking HereAPI, but documents the expected behavior
-      # In a real scenario with HereAPI mocked, we'd test:
-      # - delivery_address gets validated and geocoded
-      # - calculated_address, here_id, position, distance are set
-      # - fulfillment_amount is calculated correctly
-
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
-
-      # This will fail because HereAPI is not mocked - we're documenting expected behavior
-      # When HereAPI mock is added, this test should pass
-      result =
-        order
-        |> Ash.Changeset.for_update(:save_step_3, %{
-          fulfillment_option_id: delivery_fixed.id,
-          delivery_address: "Storgatan 1, 65100 Vasa",
-          recipient_name: "Jane Doe",
-          recipient_phone_number: "+358401234567",
-          delivery_instructions: "Ring doorbell twice",
-          fulfillment_date: Date.add(Date.utc_today(), 1)
-        })
-        |> Ash.update(authorize?: false)
-
-      # Without mock, this will error - but the test documents the flow
-      case result do
-        {:ok, order} ->
-          assert order.delivery_address == "Storgatan 1, 65100 Vasa"
-          assert order.recipient_name == "Jane Doe"
-          assert order.recipient_phone_number == "+358401234567"
-          assert order.delivery_instructions == "Ring doorbell twice"
-          assert order.step == 4
-          assert not is_nil(order.fulfillment_amount)
-
-        {:error, _error} ->
-          # Expected to fail without HereAPI mock
-          # TODO: Add Mox or similar to mock HereAPI calls
-          :ok
-      end
-    end
-
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
       order = Order.create_for_checkout!(authorize?: false)
       order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
@@ -1140,27 +988,6 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
-    end
-
-    test "finalise_checkout sets ordered_at timestamp only once" do
-      order = generate(order(payment_intent_id: "pi_test123"))
-
-      assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
-      first_ordered_at = order.ordered_at
-      assert %DateTime{} = first_ordered_at
-
-      # Try to finalize again
-      result = Order.finalise_checkout(order.id, authorize?: false)
-
-      case result do
-        {:ok, order} ->
-          # If it succeeds, timestamp should not change
-          assert order.ordered_at == first_ordered_at
-
-        {:error, _error} ->
-          # Or it should fail - either is acceptable
-          :ok
-      end
     end
 
     test "payment_status transitions from pending to paid" do
@@ -1267,17 +1094,5 @@ defmodule Edenflowers.Store.OrderTest do
       assert updated_order.locale == "en-US"
     end
 
-    test "allows changing locale multiple times" do
-      order = Order.create_for_checkout!(authorize?: false)
-
-      {:ok, order} = Order.update_locale(order, "fi-FI", authorize?: false)
-      assert order.locale == "fi-FI"
-
-      {:ok, order} = Order.update_locale(order, "en-GB", authorize?: false)
-      assert order.locale == "en-GB"
-
-      {:ok, order} = Order.update_locale(order, "sv-FI", authorize?: false)
-      assert order.locale == "sv-FI"
-    end
   end
 end

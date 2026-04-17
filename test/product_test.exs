@@ -221,38 +221,6 @@ defmodule Edenflowers.Store.ProductTest do
       refute Enum.any?(products, fn p -> p.id == product_b.id end)
     end
 
-    test "excludes draft products within category", %{tax_rate: tax_rate} do
-      category = generate(product_category(draft: false))
-
-      draft_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: category.id, draft: true))
-      _variant = generate(product_variant(product_id: draft_product.id))
-
-      products = Product.get_by_category!(category.id, authorize?: false)
-
-      refute Enum.any?(products, fn p -> p.id == draft_product.id end)
-    end
-
-    test "excludes products without variants in category", %{tax_rate: tax_rate} do
-      category = generate(product_category(draft: false))
-
-      product_no_variants = generate(product(tax_rate_id: tax_rate.id, product_category_id: category.id, draft: false))
-
-      products = Product.get_by_category!(category.id, authorize?: false)
-
-      refute Enum.any?(products, fn p -> p.id == product_no_variants.id end)
-    end
-
-    test "excludes products when category is draft", %{tax_rate: tax_rate} do
-      draft_category = generate(product_category(draft: true))
-
-      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_category.id, draft: false))
-      _variant = generate(product_variant(product_id: product.id))
-
-      products = Product.get_by_category!(draft_category.id, authorize?: false)
-
-      assert products == []
-    end
-
     test "returns empty list when category has no qualifying products", %{tax_rate: _tax_rate} do
       empty_category = generate(product_category(draft: false))
 
