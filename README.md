@@ -25,6 +25,14 @@ During development, when making breaking schema changes it's often easier to reg
 
 It drops the database, deletes all existing migrations and resource snapshots, regenerates them fresh from the current Ash resource definitions, and re-seeds the database.
 
+## Maintenance mode
+
+The site can be put into maintenance mode, which redirects all visitors to `/closed`. It is configured via environment variables.
+
+Set `MAINTENANCE_MODE=true` to enable. Set `MAINTENANCE_BYPASS_SECRET` to a secret value to allow previewing the site while maintenance mode is active.
+
+To preview the site while maintenance mode is active, append `?preview=<secret>` to any URL. This sets a session cookie so subsequent requests also bypass the maintenance page.
+
 ## Common commands
 
 - `mix ash_postgres.generate_migrations NAME` to generate migrations
