@@ -9,9 +9,24 @@ defmodule EdenflowersWeb.ClosedLive do
     ~H"""
     <div class="bg-base-200 flex min-h-screen flex-col">
       <header class="flex justify-center py-8">
-        <span class="text-primary font-sans text-2xl font-bold uppercase tracking-widest sm:text-2xl">
-          Eden Flowers
-        </span>
+        <img
+          src={
+            "local:///Eden_flowers-logo1_green_web.svg"
+            |> Imgproxy.new()
+            |> to_string()
+          }
+          class="w-40 md:hidden"
+          alt="Eden Flowers"
+        />
+        <img
+          src={
+            "local:///Eden_flowers-logo2_green_web.svg"
+            |> Imgproxy.new()
+            |> to_string()
+          }
+          class="hidden w-64 md:block"
+          alt="Eden Flowers"
+        />
       </header>
 
       <main class="flex flex-grow items-center justify-center px-6 py-8 md:-mt-24">
@@ -22,6 +37,7 @@ defmodule EdenflowersWeb.ClosedLive do
                 "local:///jennie_pregnant.jpg"
                 |> Imgproxy.new()
                 |> Imgproxy.resize(800, 1000, type: "fill")
+                |> Imgproxy.set_extension("webp")
                 |> to_string()
               }
               class="w-full rounded-md object-cover shadow-md"
