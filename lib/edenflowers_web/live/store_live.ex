@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.StoreLive do
               >
                 <figure class="aspect-square relative overflow-hidden">
                   <img
-                    src={product.image_slug}
+                    src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
                     alt={product.name}
                     class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.05]"
                     width="1"
