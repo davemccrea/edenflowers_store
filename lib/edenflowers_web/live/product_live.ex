@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.ProductLive do
           <figure class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md">
             <img
               data-testid="product-image"
-              src={@selected_variant.image_slug}
+              src={@selected_variant.image_slug |> Imgproxy.new() |> Imgproxy.resize(800, 800, type: "fill") |> to_string()}
               alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
               class="h-full w-full object-cover"
               width="1"
