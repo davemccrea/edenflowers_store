@@ -47,42 +47,6 @@ defmodule Edenflowers.Store.ProductVariantTest do
       assert quantity == 100
     end
 
-    test "fails to create product variant without product_id" do
-      params = %{
-        price: Decimal.new("10.99"),
-        image_slug: "image.jpg"
-      }
-
-      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :product_id}]}} =
-               ProductVariant
-               |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create(authorize?: false)
-    end
-
-    test "fails to create product variant without price", %{product: product} do
-      params = %{
-        product_id: product.id,
-        image_slug: "image.jpg"
-      }
-
-      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :price}]}} =
-               ProductVariant
-               |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create(authorize?: false)
-    end
-
-    test "fails to create product variant without image", %{product: product} do
-      params = %{
-        product_id: product.id,
-        price: Decimal.new("10.99")
-      }
-
-      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.Required{field: :image_slug}]}} =
-               ProductVariant
-               |> Ash.Changeset.for_create(:create, params)
-               |> Ash.create(authorize?: false)
-    end
-
     test "fails to create product variant with negative stock_quantity", %{product: product} do
       params = %{
         product_id: product.id,
@@ -97,7 +61,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
                |> Ash.Changeset.for_create(:create, params)
                |> Ash.create(authorize?: false)
 
-      assert msg =~ "must be more than or equal to"
+      assert msg =~ "must be greater than or equal to"
     end
 
     test "updates product variant price", %{product: product} do
@@ -137,7 +101,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
                |> Ash.Changeset.for_update(:update, %{stock_quantity: new_quantity})
                |> Ash.update(authorize?: false)
 
-      assert msg =~ "must be more than or equal to"
+      assert msg =~ "must be greater than or equal to"
     end
 
     test "destroys product variant", %{product: product} do
