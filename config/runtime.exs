@@ -26,6 +26,12 @@ config :edenflowers,
        :here_api_key,
        System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
+
+config :edenflowers,
+       :maintenance_bypass_secret,
+       System.get_env("MAINTENANCE_BYPASS_SECRET")
+
 config :imgproxy,
   prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
   key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),

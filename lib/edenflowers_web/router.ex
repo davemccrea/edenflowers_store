@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug EdenflowersWeb.Plugs.InitStore
+    plug EdenflowersWeb.Plugs.Maintenance
 
     plug Cldr.Plug.PutLocale,
       apps: [:cldr, :gettext],
@@ -39,6 +40,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
+      live "/closed", ClosedLive
       live "/", HomeLive
       live "/store", StoreLive
       live "/store/:category", StoreLive
