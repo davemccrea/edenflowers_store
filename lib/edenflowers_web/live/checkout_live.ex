@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  @stripe_api Application.compile_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
+  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
@@ -373,7 +373,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_4", _, socket) do
-    case @stripe_api.update_payment_intent(socket.assigns.order) do
+    case stripe_api().update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
@@ -562,7 +562,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    {:ok, payment_intent} = @stripe_api.create_payment_intent(order)
+    {:ok, payment_intent} = stripe_api().create_payment_intent(order)
     actor = socket.assigns[:current_user]
     order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor)
 
@@ -572,7 +572,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   defp setup_stripe(socket, order) do
-    {:ok, payment_intent} = @stripe_api.retrieve_payment_intent(order)
+    {:ok, payment_intent} = stripe_api().retrieve_payment_intent(order)
     assign(socket, client_secret: payment_intent.client_secret)
   end
 end
