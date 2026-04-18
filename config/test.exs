@@ -12,13 +12,20 @@ System.put_env("STRIPE_WEBHOOK_SECRET", "whsec_test_dummy_secret")
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
-config :edenflowers, Edenflowers.Repo,
-  username: "david",
-  password: nil,
-  hostname: "localhost",
-  database: "edenflowers_test#{System.get_env("MIX_TEST_PARTITION")}",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+if url = System.get_env("DATABASE_URL") do
+  config :edenflowers, Edenflowers.Repo,
+    url: url,
+    pool: Ecto.Adapters.SQL.Sandbox,
+    pool_size: System.schedulers_online() * 2
+else
+  config :edenflowers, Edenflowers.Repo,
+    username: "david",
+    password: nil,
+    hostname: "localhost",
+    database: "edenflowers_test#{System.get_env("MIX_TEST_PARTITION")}",
+    pool: Ecto.Adapters.SQL.Sandbox,
+    pool_size: System.schedulers_online() * 2
+end
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
