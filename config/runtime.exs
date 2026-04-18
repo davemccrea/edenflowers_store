@@ -16,29 +16,29 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
-if System.get_env("PHX_SERVER") do
-  config :edenflowers, EdenflowersWeb.Endpoint, server: true
-end
+if config_env() in [:prod, :dev] do
+  if System.get_env("PHX_SERVER") do
+    config :edenflowers, EdenflowersWeb.Endpoint, server: true
+  end
 
-config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-config :edenflowers,
-       :here_api_key,
-       System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
+  config :edenflowers,
+         :here_api_key,
+         System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
-config :imgproxy,
-  prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
-  key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),
-  salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
+  config :imgproxy,
+    prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
+    key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),
+    salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
 
-config :stripity_stripe,
-  api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
+  config :stripity_stripe,
+    api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
 
-config :edenflowers,
-       :stripe_webhook_secret,
-       System.get_env("STRIPE_WEBHOOK_SECRET") || raise("environment variable STRIPE_WEBHOOK_SECRET is missing.")
+  config :edenflowers,
+         :stripe_webhook_secret,
+         System.get_env("STRIPE_WEBHOOK_SECRET") || raise("environment variable STRIPE_WEBHOOK_SECRET is missing.")
 
-if config_env() != :test do
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,
