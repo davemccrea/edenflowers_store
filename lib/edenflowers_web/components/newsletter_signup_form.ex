@@ -18,6 +18,9 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
       <% else %>
         <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
           <div class="join w-full">
+            <label for="newsletter-form_email_address" class="sr-only">
+              {gettext("Email Address")}
+            </label>
             <input
               type="email"
               name="email_address"
