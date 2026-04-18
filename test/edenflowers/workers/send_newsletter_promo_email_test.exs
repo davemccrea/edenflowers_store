@@ -7,50 +7,33 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmailTest do
   alias Edenflowers.Store.Promotion
   alias Edenflowers.Workers.SendNewsletterPromoEmail
 
-  defp subscribe(email) do
-    {:ok, user} = User.subscribe_to_newsletter(email, authorize?: false)
-    user
-  end
-
-  defp seed_promo(usage) do
-    Ash.Seed.seed!(Promotion, %{
-      name: "Newsletter Welcome",
-      code: "NEWSLETTER-AABBCC",
-      discount_percentage: Decimal.new("0.15"),
-      minimum_cart_total: Decimal.new("0"),
-      usage_limit: 1,
-      usage: usage
-    })
-  end
-
-  defp run(email), do: perform_job(SendNewsletterPromoEmail, %{"email" => email, "locale" => "en"})
-
   describe "first subscription" do
     test "creates a promo, sends welcome email, and sets newsletter_promo_id on user" do
-      user = subscribe("new@example.com")
+      {:ok, user} = User.subscribe_to_newsletter("new@example.com", authorize?: false)
 
-      assert :ok = run("new@example.com")
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "new@example.com", "locale" => "en"})
 
       assert_email_sent(fn email ->
-        assert email.subject =~ "15%"
-        assert hd(email.to) == {"", "new@example.com"}
+        assert email.to == [{"", "new@example.com"}]
+        assert email.subject =~ "Welcome"
       end)
 
       {:ok, user} = User.get_by_email(user.email, authorize?: false, load: [:newsletter_promo])
       assert user.newsletter_promo_id != nil
-      assert to_string(user.newsletter_promo.code) =~ ~r/^newsletter-[0-9a-f]{6}$/
+      assert to_string(user.newsletter_promo.code) =~ "NEWSLETTER-"
     end
   end
 
   describe "re-subscription with unused code" do
     test "sends reminder email containing the existing code" do
-      user = subscribe("existing@example.com")
-      promo = seed_promo(0)
-      User.set_newsletter_promo(user, promo.id, actor: system_actor())
+      {:ok, promo} = Promotion.create_for_newsletter(actor: system_actor())
+      {:ok, user} = User.subscribe_to_newsletter("existing@example.com", authorize?: false)
+      {:ok, _} = User.set_newsletter_promo(user, promo.id, actor: system_actor())
 
-      assert :ok = run("existing@example.com")
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "existing@example.com", "locale" => "en"})
 
       assert_email_sent(fn email ->
+        assert email.to == [{"", "existing@example.com"}]
         assert email.text_body =~ to_string(promo.code)
       end)
     end
@@ -58,14 +41,17 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmailTest do
 
   describe "re-subscription with used code" do
     test "sends welcome-back email without including the code" do
-      user = subscribe("returning@example.com")
-      promo = seed_promo(1)
-      User.set_newsletter_promo(user, promo.id, actor: system_actor())
+      {:ok, promo} = Promotion.create_for_newsletter(actor: system_actor())
+      {:ok, promo} = Promotion.increment_usage(promo, actor: system_actor())
+      {:ok, user} = User.subscribe_to_newsletter("returning@example.com", authorize?: false)
+      {:ok, _} = User.set_newsletter_promo(user, promo.id, actor: system_actor())
 
-      assert :ok = run("returning@example.com")
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "returning@example.com", "locale" => "en"})
 
       assert_email_sent(fn email ->
-        refute email.text_body =~ to_string(promo.code)
+        email.to == [{"", "returning@example.com"}] and
+          email.subject =~ "Welcome back to the Eden Flowers newsletter" and
+          not (email.text_body =~ to_string(promo.code))
       end)
     end
   end

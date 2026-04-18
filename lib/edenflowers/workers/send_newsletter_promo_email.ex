@@ -23,13 +23,16 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmail do
       {:ok, %{newsletter_promo: nil} = user} ->
         {:ok, promo} = Promotion.create_for_newsletter(actor: system_actor())
         Email.newsletter_promo(email, promo.code) |> Mailer.deliver()
-        User.set_newsletter_promo(user, promo.id, actor: system_actor())
+        {:ok, _} = User.set_newsletter_promo(user, promo.id, actor: system_actor())
+        :ok
 
       {:ok, %{newsletter_promo: %{usage: 0, code: code}}} ->
         Email.newsletter_already_subscribed(email, code) |> Mailer.deliver()
+        :ok
 
       {:ok, %{newsletter_promo: _used}} ->
         Email.newsletter_resubscribed(email) |> Mailer.deliver()
+        :ok
 
       {:error, reason} ->
         {:error, reason}
