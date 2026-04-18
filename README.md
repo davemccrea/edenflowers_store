@@ -35,7 +35,11 @@ git checkout -b feature/my-feature
 
 # Push and create a PR
 git push -u origin feature/my-feature
-gh pr create
+gh pr create --title "My feature title" --body ""
+
+# To open a PR with no real commits yet, use an empty commit
+git commit --allow-empty -m "Start my feature"
+git push
 
 # After PR is merged, clean up
 git checkout main
