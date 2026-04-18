@@ -13,6 +13,7 @@ defmodule Edenflowers.Store.Promotion do
     define :get_by_id, args: [:id], action: :get_by_id, get?: true
     define :get_by_code, args: [:code], action: :get_by_code, get?: true
     define :increment_usage, action: :increment_usage
+    define :create_for_newsletter, action: :create_for_newsletter
   end
 
   actions do
@@ -42,7 +43,12 @@ defmodule Edenflowers.Store.Promotion do
     end
 
     create :create_for_newsletter do
-      # TODO: generate a promotion with random code
+      accept [:name, :discount_percentage, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+
+      change fn changeset, _context ->
+        code = :crypto.strong_rand_bytes(4) |> Base.encode16()
+        Ash.Changeset.force_change_attribute(changeset, :code, "NEWSLETTER-#{code}")
+      end
     end
 
     create :create do
