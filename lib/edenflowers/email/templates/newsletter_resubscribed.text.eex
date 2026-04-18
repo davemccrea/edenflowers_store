@@ -1,0 +1,9 @@
+<%= gettext("Hi") %>,
+
+<%= gettext("Welcome back to the Eden Flowers newsletter!") %>
+
+<%= gettext("Thank you for resubscribing.") %>
+
+<%= gettext("Best regards") %>,
+
+Eden Flowers

@@ -1,0 +1,13 @@
+<%= gettext("Hi") %>,
+
+<%= gettext("Thank you for subscribing to the Eden Flowers newsletter!") %>
+
+<%= gettext("As a welcome gift, here is your 15% off promo code for your first order:") %>
+
+    <%= @promo_code %>
+
+<%= gettext("The code is valid for 30 days and can be used once at checkout.") %>
+
+<%= gettext("Best regards") %>,
+
+Eden Flowers

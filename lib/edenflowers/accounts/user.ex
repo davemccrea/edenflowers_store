@@ -46,6 +46,7 @@ defmodule Edenflowers.Accounts.User do
     define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
     define :update_name, action: :update_name, args: [:name]
     define :update_newsletter_preference, action: :update_newsletter_preference, args: [:newsletter_opt_in]
+    define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
   end
 
   actions do
@@ -123,6 +124,11 @@ defmodule Edenflowers.Accounts.User do
     update :update_newsletter_preference do
       accept [:newsletter_opt_in]
     end
+
+    update :set_newsletter_promo do
+      argument :newsletter_promo_id, :uuid, allow_nil?: false
+      change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
+    end
   end
 
   policies do
@@ -148,6 +154,11 @@ defmodule Edenflowers.Accounts.User do
     policy action_type(:update) do
       authorize_if expr(id == ^actor(:id))
     end
+
+    # Anyone can subscribe to the newsletter (no actor required)
+    policy action(:subscribe_to_newsletter) do
+      authorize_if always()
+    end
   end
 
   attributes do
@@ -159,6 +170,10 @@ defmodule Edenflowers.Accounts.User do
 
     # Admin field - readable but not writable to prevent privilege escalation
     attribute :admin, :boolean, default: false, public?: true, writable?: false
+  end
+
+  relationships do
+    belongs_to :newsletter_promo, Edenflowers.Store.Promotion
   end
 
   identities do
