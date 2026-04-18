@@ -37,7 +37,9 @@ defmodule Edenflowers.Store.LineItem do
       ]
     end
 
-    destroy :remove_item
+    destroy :remove_item do
+      require_atomic? false
+    end
 
     update :increment_quantity do
       change atomic_update(:quantity, expr(quantity + 1))
