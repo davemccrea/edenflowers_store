@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
   use EdenflowersWeb, :live_component
 
   def mount(socket) do
-    {:ok, assign(socket, form: to_form(%{"email_address" => ""}))}
+    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false)}
   end
 
   def render(assigns) do
@@ -12,24 +12,28 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
         {gettext("Register and enjoy 15% off your next order.")}
       </h1>
 
-      <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
-        <div class="join w-full">
-          <input
-            type="email"
-            name="email_address"
-            id="newsletter-form_email_address"
-            value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-            class="input join-item w-full"
-            placeholder={gettext("Email Address")}
-          />
+      <%= if @submitted do %>
+        <p>{gettext("Thanks! We've sent your 15% off code to your inbox.")}</p>
+      <% else %>
+        <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
+          <div class="join w-full">
+            <input
+              type="email"
+              name="email_address"
+              id="newsletter-form_email_address"
+              value={Phoenix.HTML.Form.input_value(@form, :email_address)}
+              class="input join-item w-full"
+              placeholder={gettext("Email Address")}
+            />
 
-          <button class="btn btn-primary join-item">{gettext("Register")}</button>
-        </div>
-      </.form>
+            <button class="btn btn-primary join-item">{gettext("Register")}</button>
+          </div>
+        </.form>
 
-      <p class="font-sans text-xs">
-        {gettext("We send out only ocassional emails. Unsubscribe at any time.")}
-      </p>
+        <p class="font-sans text-xs">
+          {gettext("We send out only ocassional emails. Unsubscribe at any time.")}
+        </p>
+      <% end %>
     </section>
     """
   end
@@ -39,12 +43,9 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
     case Edenflowers.Accounts.User.subscribe_to_newsletter(email_address) do
       {:ok, _} ->
-        toast = EdenflowersWeb.LiveToast.new(:info, gettext("You've been subscribed to the newsletter 🥳."))
-
-        {:noreply,
-         socket
-         |> assign(form: to_form(%{"email_address" => ""}))
-         |> push_event("toast:show", toast)}
+        locale = Gettext.get_locale(EdenflowersWeb.Gettext)
+        Edenflowers.Workers.SendNewsletterPromoEmail.enqueue(%{"email" => email_address, "locale" => locale})
+        {:noreply, assign(socket, submitted: true)}
 
       {:error, _} ->
         toast = EdenflowersWeb.LiveToast.new(:error, gettext("There was an error subscribing to the newsletter."))

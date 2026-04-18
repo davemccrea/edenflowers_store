@@ -16,6 +16,21 @@ defmodule Edenflowers.Email do
     [:assigns]
   )
 
+  EEx.function_from_file(:defp, :render_newsletter_promo_template,
+    Path.join([__DIR__, "email", "templates", "newsletter_promo.text.eex"]),
+    [:assigns]
+  )
+
+  EEx.function_from_file(:defp, :render_newsletter_already_subscribed_template,
+    Path.join([__DIR__, "email", "templates", "newsletter_already_subscribed.text.eex"]),
+    [:assigns]
+  )
+
+  EEx.function_from_file(:defp, :render_newsletter_resubscribed_template,
+    Path.join([__DIR__, "email", "templates", "newsletter_resubscribed.text.eex"]),
+    [:assigns]
+  )
+
   @doc """
   Builds an order confirmation email
   """
@@ -38,6 +53,30 @@ defmodule Edenflowers.Email do
     }
 
     render_order_confirmation_template(assigns)
+  end
+
+  def newsletter_promo(email_address, promo_code) do
+    new()
+    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> to(email_address)
+    |> subject(gettext("Welcome to Eden Flowers — your 15% off code inside"))
+    |> text_body(render_newsletter_promo_template(%{promo_code: promo_code}))
+  end
+
+  def newsletter_already_subscribed(email_address, promo_code) do
+    new()
+    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> to(email_address)
+    |> subject(gettext("Your Eden Flowers promo code"))
+    |> text_body(render_newsletter_already_subscribed_template(%{promo_code: promo_code}))
+  end
+
+  def newsletter_resubscribed(email_address) do
+    new()
+    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> to(email_address)
+    |> subject(gettext("Welcome back to the Eden Flowers newsletter"))
+    |> text_body(render_newsletter_resubscribed_template(%{}))
   end
 
   defp format_currency(amount, locale) do
