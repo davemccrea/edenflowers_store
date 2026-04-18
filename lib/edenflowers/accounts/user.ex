@@ -154,6 +154,11 @@ defmodule Edenflowers.Accounts.User do
     policy action_type(:update) do
       authorize_if expr(id == ^actor(:id))
     end
+
+    # Anyone can subscribe to the newsletter (no actor required)
+    policy action(:subscribe_to_newsletter) do
+      authorize_if always()
+    end
   end
 
   attributes do

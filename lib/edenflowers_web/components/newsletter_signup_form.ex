@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.NewsletterSignupForm do
   use EdenflowersWeb, :live_component
+  require Logger
 
   def mount(socket) do
     {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false)}
@@ -47,7 +48,8 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
         Edenflowers.Workers.SendNewsletterPromoEmail.enqueue(%{"email" => email_address, "locale" => locale})
         {:noreply, assign(socket, submitted: true)}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error(inspect(error))
         toast = EdenflowersWeb.LiveToast.new(:error, gettext("There was an error subscribing to the newsletter."))
         {:noreply, push_event(socket, "toast:show", toast)}
     end
