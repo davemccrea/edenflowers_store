@@ -28,7 +28,7 @@ defmodule Edenflowers.Email do
 
   EEx.function_from_file(:defp, :render_newsletter_resubscribed_template,
     Path.join([__DIR__, "email", "templates", "newsletter_resubscribed.text.eex"]),
-    [:assigns]
+    [:_assigns]
   )
 
   @doc """
