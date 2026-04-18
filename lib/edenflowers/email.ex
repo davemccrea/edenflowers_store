@@ -8,6 +8,8 @@ defmodule Edenflowers.Email do
 
   require EEx
 
+  @from_address {"Eden Flowers", "info@edenflowers.fi"}
+
   # Compile the template at compile-time so gettext extraction works
   EEx.function_from_file(
     :defp,
@@ -38,7 +40,7 @@ defmodule Edenflowers.Email do
     Gettext.put_locale(EdenflowersWeb.Gettext, order.locale)
 
     new()
-    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> from(@from_address)
     |> to(order.customer_email)
     |> subject("#{gettext("Order Confirmation")} - #{order.order_reference}")
     |> text_body(render_order_confirmation(order, order.locale))
