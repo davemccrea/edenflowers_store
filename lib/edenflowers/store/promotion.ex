@@ -44,7 +44,7 @@ defmodule Edenflowers.Store.Promotion do
 
     create :create_for_newsletter do
       change fn changeset, _context ->
-        code = :crypto.strong_rand_bytes(4) |> Base.encode16()
+        code = :crypto.strong_rand_bytes(3) |> Base.encode16()
         today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
         changeset
