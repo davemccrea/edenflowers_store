@@ -20,7 +20,7 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmailTest do
 
       {:ok, user} = User.get_by_email(user.email, authorize?: false, load: [:newsletter_promo])
       assert user.newsletter_promo_id != nil
-      assert to_string(user.newsletter_promo.code) =~ "NEWSLETTER-"
+      assert to_string(user.newsletter_promo.code) =~ ~r/^[0-9A-F]{6}$/
     end
   end
 
