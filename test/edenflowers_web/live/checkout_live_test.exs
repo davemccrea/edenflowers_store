@@ -109,6 +109,92 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> click_button("Next")
       |> assert_has("h1", text: "Delivery Information")
     end
+
+    test "does not show 'Select a card' button when gift is false", %{session: session} do
+      session
+      |> refute_has("[data-testid='select-card-button']")
+    end
+  end
+
+  describe "Card selection" do
+    setup %{order: order} do
+      # Create a "cards" category with a card product (with a variant)
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      tax_rate_ = generate(tax_rate())
+
+      card_product =
+        generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate_.id, draft: false))
+
+      card_variant =
+        generate(product_variant(product_id: card_product.id, size: :small, draft: false))
+
+      %{
+        order: order,
+        card_product: card_product,
+        card_variant: card_variant,
+        cards_category: cards_category
+      }
+    end
+
+    test "LineItem.add_card succeeds for gift orders", %{order: order, card_product: card_product, card_variant: card_variant} do
+      order
+      |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+      |> Ash.update!(authorize?: false)
+
+      assert {:ok, card_line_item} =
+               LineItem.add_card(%{
+                 order_id: order.id,
+                 product_id: card_product.id,
+                 product_variant_id: card_variant.id,
+                 product_name: card_product.name,
+                 product_image_slug: card_variant.image_slug,
+                 quantity: 1,
+                 unit_price: card_variant.price,
+                 tax_rate: Decimal.new("0.24")
+               })
+
+      assert card_line_item.is_card == true
+    end
+
+    test "LineItem.add_card returns an error for non-gift orders", %{order: order, card_product: card_product, card_variant: card_variant} do
+      assert {:error, _} =
+               LineItem.add_card(%{
+                 order_id: order.id,
+                 product_id: card_product.id,
+                 product_variant_id: card_variant.id,
+                 product_name: card_product.name,
+                 product_image_slug: card_variant.image_slug,
+                 quantity: 1,
+                 unit_price: card_variant.price,
+                 tax_rate: Decimal.new("0.24")
+               })
+    end
+
+    test "saving step 2 with gift=false removes card line items", %{order: order, card_product: card_product, card_variant: card_variant} do
+      order =
+        order
+        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.update!(authorize?: false)
+
+      {:ok, _card} =
+        LineItem.add_card(%{
+          order_id: order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        })
+
+      order
+      |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
+      |> Ash.update!(authorize?: false)
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      refute Enum.any?(reloaded.line_items, & &1.is_card)
+    end
   end
 
   describe "Cart Management During Checkout" do

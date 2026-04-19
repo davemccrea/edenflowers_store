@@ -16,9 +16,11 @@ defmodule Edenflowers.Store.LineItem do
 
   code_interface do
     define :add_item, action: :create
+    define :add_card, action: :add_card
     define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
+    define :update_card_message, action: :update_card_message, args: [:card_message]
   end
 
   actions do
@@ -37,6 +39,21 @@ defmodule Edenflowers.Store.LineItem do
       ]
     end
 
+    create :add_card do
+      accept [
+        :order_id,
+        :product_id,
+        :product_variant_id,
+        :product_name,
+        :product_image_slug,
+        :quantity,
+        :unit_price,
+        :tax_rate
+      ]
+
+      change set_attribute(:is_card, true)
+    end
+
     destroy :remove_item do
       require_atomic? false
     end
@@ -47,6 +64,10 @@ defmodule Edenflowers.Store.LineItem do
 
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
+    end
+
+    update :update_card_message do
+      accept [:card_message]
     end
   end
 
@@ -59,6 +80,13 @@ defmodule Edenflowers.Store.LineItem do
     # Allow creating line items for any order (checkout flow)
     policy action_type(:create) do
       authorize_if always()
+    end
+
+    # Cards can only be added to gift orders in checkout state.
+    # A custom check is used because filter expressions can't reference
+    # relationships on create actions (no data exists yet).
+    policy action(:add_card) do
+      authorize_if {Edenflowers.Store.LineItem.Checks.OrderIsGiftInCheckout, []}
     end
 
     # Read/Update/Destroy access:
@@ -90,6 +118,8 @@ defmodule Edenflowers.Store.LineItem do
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false
+    attribute :card_message, :string
+    attribute :is_card, :boolean, default: false, allow_nil?: false
     timestamps()
   end
 
