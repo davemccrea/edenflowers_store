@@ -25,10 +25,27 @@ defmodule EdenflowersWeb.Router do
     plug :load_from_session
   end
 
+  pipeline :maternity_browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {EdenflowersWeb.Layouts, :maternity_root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :load_from_bearer
     plug :set_actor, :user
+  end
+
+  scope "/", EdenflowersWeb do
+    pipe_through :maternity_browser
+
+    live_session :maternity, root_layout: {EdenflowersWeb.Layouts, :maternity_root} do
+      live "/maternity", MaternityLive
+    end
   end
 
   scope "/", EdenflowersWeb do
@@ -40,7 +57,6 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
-      live "/maternity", MaternityLive
       live "/", HomeLive
       live "/store", StoreLive
       live "/store/:category", StoreLive
