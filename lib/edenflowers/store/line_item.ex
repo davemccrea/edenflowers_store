@@ -83,9 +83,10 @@ defmodule Edenflowers.Store.LineItem do
     end
 
     # Cards can only be added to gift orders in checkout state.
-    # Policies are AND-combined, so this narrows :add_card without affecting :create.
+    # A custom check is used because filter expressions can't reference
+    # relationships on create actions (no data exists yet).
     policy action(:add_card) do
-      authorize_if expr(order.gift == true and order.state == :checkout)
+      authorize_if {Edenflowers.Store.LineItem.Checks.OrderIsGiftInCheckout, []}
     end
 
     # Read/Update/Destroy access:
