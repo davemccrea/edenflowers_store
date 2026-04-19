@@ -168,7 +168,7 @@ defmodule Edenflowers.Store.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:ok, nil} = Promotion.get_by_code("EXPIRED")
+      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("EXPIRED")
     end
 
     test "gets promotion using code_interface" do
