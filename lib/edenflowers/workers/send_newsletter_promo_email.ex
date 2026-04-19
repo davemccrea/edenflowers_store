@@ -1,7 +1,7 @@
 defmodule Edenflowers.Workers.SendNewsletterPromoEmail do
   use Oban.Worker,
     queue: :default,
-    unique: [fields: [:args], keys: [:email], period: 300, states: [:available, :scheduled, :executing]]
+    unique: [fields: [:args], keys: [:email], period: 300, states: [:available, :scheduled, :executing, :completed]]
 
   import Edenflowers.Actors
 
@@ -11,9 +11,7 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmail do
   alias Edenflowers.Store.Promotion
 
   def enqueue(%{"email" => _email} = args) do
-    args
-    |> __MODULE__.new()
-    |> Oban.insert()
+    args |> __MODULE__.new() |> Oban.insert()
   end
 
   def perform(%Oban.Job{args: %{"email" => email, "locale" => locale}}) do

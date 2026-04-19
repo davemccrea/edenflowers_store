@@ -48,6 +48,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
     case Edenflowers.Accounts.User.subscribe_to_newsletter(email_address) do
       {:ok, _} ->
         locale = Gettext.get_locale(EdenflowersWeb.Gettext)
+
         Edenflowers.Workers.SendNewsletterPromoEmail.enqueue(%{"email" => email_address, "locale" => locale})
         {:noreply, assign(socket, submitted: true)}
 
