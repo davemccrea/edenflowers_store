@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.LocalePicker do
         <select
           name="cldr_locale"
           aria-label={gettext("Language")}
-          class="text-base-content group-hover:text-base-content/60 cursor-pointer bg-transparent text-sm focus:outline-none"
+          class="text-base-content group-hover:text-base-content/60 cursor-pointer appearance-none bg-transparent text-sm focus:outline-none"
         >
           <option
             :for={{cldr_locale, name} <- @locales}
