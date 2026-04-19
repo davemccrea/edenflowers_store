@@ -156,6 +156,21 @@ defmodule Edenflowers.Store.PromotionTest do
                |> Ash.read_one()
     end
 
+    test "rejects expired promotion code" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "EXPIRED",
+        discount_percentage: "0.20",
+        minimum_cart_total: "0",
+        start_date: Date.add(Date.utc_today(), -10),
+        expiration_date: Date.add(Date.utc_today(), -1)
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, nil} = Promotion.get_by_code("EXPIRED")
+    end
+
     test "gets promotion using code_interface" do
       Promotion
       |> Ash.Changeset.for_create(:create, %{
