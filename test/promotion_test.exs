@@ -434,38 +434,26 @@ defmodule Edenflowers.Store.PromotionTest do
   end
 
   describe "Promotion unique code constraint" do
-    import Generator
+    defp create_promotion(attrs) do
+      Promotion
+      |> Ash.Changeset.for_create(:create, Map.merge(%{
+        name: "Promo",
+        discount_percentage: "0.15",
+        minimum_cart_total: "0"
+      }, attrs))
+      |> Ash.create(authorize?: false)
+    end
 
     test "prevents duplicate promotion codes" do
-      generate(promotion(code: "DUPLICATE"))
+      {:ok, _} = create_promotion(%{code: "DUPLICATE"})
 
-      assert {:error, error} =
-               Promotion
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "Second Promo",
-                 code: "DUPLICATE",
-                 discount_percentage: "0.15",
-                 minimum_cart_total: "0"
-               })
-               |> Ash.create(authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{}} = create_promotion(%{code: "DUPLICATE"})
     end
 
     test "enforces case-insensitive uniqueness for codes" do
-      generate(promotion(code: "CaseTest"))
+      {:ok, _} = create_promotion(%{code: "CaseTest"})
 
-      assert {:error, error} =
-               Promotion
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "Second Promo",
-                 code: "CASETEST",
-                 discount_percentage: "0.15",
-                 minimum_cart_total: "0"
-               })
-               |> Ash.create(authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{}} = create_promotion(%{code: "CASETEST"})
     end
   end
 end
