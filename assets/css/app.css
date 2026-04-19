@@ -70,17 +70,6 @@ body.ready {
   touch-action: manipulation;
 }
 
-sl-dropdown {
-  --sl-panel-background-color: var(--color-base-100);
-  --sl-border-radius-medium: 0px;
-  --sl-color-primary-600: var(--color-base-300);
-  --sl-color-neutral-0: var(--color-base-content);
-}
-
-sl-dropdown::part(panel) {
-  @apply border-1;
-}
-
 @utility container {
   @apply mx-auto px-4 sm:px-8;
 }
