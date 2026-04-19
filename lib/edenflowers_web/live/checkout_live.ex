@@ -397,7 +397,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       <.drawer
         id="card-drawer"
         placement="right"
-        class="bg-base-100 min-w-96 overflow-y-auto p-6"
+        class="bg-base-100 flex h-full w-[80vw] flex-col overflow-y-auto p-6 sm:w-[25rem]"
       >
         <div class="flex flex-col gap-6" data-testid="card-drawer">
           <div class="flex flex-row items-center justify-between">
