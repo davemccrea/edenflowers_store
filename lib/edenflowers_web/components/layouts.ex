@@ -33,13 +33,16 @@ defmodule EdenflowersWeb.Layouts do
       </main>
 
       <footer class="py-8 text-center">
-        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
-          <button class="group cursor-pointer">
-            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@current_locale}
-            </span>
-          </button>
+        <.live_component
+          id="locale-picker-footer"
+          module={EdenflowersWeb.LocalePicker}
+          dropdown_class="dropdown dropdown-top dropdown-center"
+          trigger_class="group cursor-pointer"
+        >
+          <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+          <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+            {@current_locale}
+          </span>
         </.live_component>
       </footer>
     </div>
@@ -201,13 +204,16 @@ defmodule EdenflowersWeb.Layouts do
               </.link>
 
               <%!-- Locale picker button --%>
-              <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker}>
-                <button class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2">
-                  <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-                  <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
-                    {@current_locale}
-                  </span>
-                </button>
+              <.live_component
+                id="locale-picker-header"
+                module={EdenflowersWeb.LocalePicker}
+                dropdown_class="dropdown dropdown-end"
+                trigger_class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
+              >
+                <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
+                  {@current_locale}
+                </span>
               </.live_component>
 
               <%!-- Cart button --%>
@@ -267,13 +273,16 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="flex flex-col items-center gap-4 py-8">
-        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
-          <button class="group cursor-pointer">
-            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@current_locale}
-            </span>
-          </button>
+        <.live_component
+          id="locale-picker-footer"
+          module={EdenflowersWeb.LocalePicker}
+          dropdown_class="dropdown dropdown-top dropdown-center"
+          trigger_class="group cursor-pointer"
+        >
+          <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+          <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+            {@current_locale}
+          </span>
         </.live_component>
 
         <span class="text-xs">
