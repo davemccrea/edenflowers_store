@@ -13,6 +13,7 @@ defmodule Edenflowers.Store.Product do
   code_interface do
     define :get_all_for_store, action: :get_all_for_store
     define :get_by_category, action: :get_by_category, args: [:category_id]
+    define :get_by_category_slug, action: :get_by_category_slug, args: [:slug]
     define :get_by_id, action: :get_by_id, args: [:id]
   end
 
@@ -40,6 +41,19 @@ defmodule Edenflowers.Store.Product do
              )
 
       prepare build(load: [:cheapest_price, :product_variants, :product_category])
+    end
+
+    read :get_by_category_slug do
+      argument :slug, :string, allow_nil?: false
+
+      filter expr(
+               draft == false and
+                 exists(product_variants) and
+                 product_category.slug == ^arg(:slug) and
+                 product_category.draft == false
+             )
+
+      prepare build(load: [:cheapest_price, :product_variants, :product_category, :tax_rate])
     end
 
     read :get_by_id do

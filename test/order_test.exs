@@ -272,17 +272,15 @@ defmodule Edenflowers.Store.OrderTest do
                order
                |> Ash.Changeset.for_update(:save_step_2, %{
                  gift: true,
-                 recipient_name: "Jane Doe",
-                 gift_message: "Happy Birthday!"
+                 recipient_name: "Jane Doe"
                })
                |> Ash.update(authorize?: false)
 
       assert order.gift == true
       assert order.recipient_name == "Jane Doe"
-      assert order.gift_message == "Happy Birthday!"
     end
 
-    test "clears recipient_name and gift_message when switching from gift=true to gift=false" do
+    test "clears recipient_name when switching from gift=true to gift=false" do
       order = Order.create_for_checkout!(authorize?: false)
 
       # First set gift=true with recipient info
@@ -290,13 +288,11 @@ defmodule Edenflowers.Store.OrderTest do
         order
         |> Ash.Changeset.for_update(:save_step_2, %{
           gift: true,
-          recipient_name: "John Smith",
-          gift_message: "Congratulations!"
+          recipient_name: "John Smith"
         })
         |> Ash.update(authorize?: false)
 
       assert order.recipient_name == "John Smith"
-      assert order.gift_message == "Congratulations!"
 
       # Now change to gift=false - should clear fields
       {:ok, order} =
@@ -308,10 +304,9 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert order.gift == false
       assert is_nil(order.recipient_name)
-      assert is_nil(order.gift_message)
     end
 
-    test "retains recipient_name and gift_message when gift remains true" do
+    test "retains recipient_name when gift remains true" do
       order = Order.create_for_checkout!(authorize?: false)
 
       # First set gift=true with recipient info
@@ -319,8 +314,7 @@ defmodule Edenflowers.Store.OrderTest do
         order
         |> Ash.Changeset.for_update(:save_step_2, %{
           gift: true,
-          recipient_name: "Alice Johnson",
-          gift_message: "Get well soon"
+          recipient_name: "Alice Johnson"
         })
         |> Ash.update(authorize?: false)
 
@@ -329,14 +323,12 @@ defmodule Edenflowers.Store.OrderTest do
         order
         |> Ash.Changeset.for_update(:save_step_2, %{
           gift: true,
-          recipient_name: "Alice Johnson",
-          gift_message: "Get well soon - updated"
+          recipient_name: "Alice Johnson"
         })
         |> Ash.update(authorize?: false)
 
       assert order.gift == true
       assert order.recipient_name == "Alice Johnson"
-      assert order.gift_message == "Get well soon - updated"
     end
   end
 
@@ -1031,7 +1023,6 @@ defmodule Edenflowers.Store.OrderTest do
             customer_name: "Test Customer",
             customer_email: "test@example.com",
             gift: true,
-            gift_message: "Happy Birthday!",
             recipient_name: "Recipient",
             recipient_phone_number: "+358401234567",
             delivery_address: "Test Address",
@@ -1056,7 +1047,6 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.customer_name)
       assert is_nil(reset_order.customer_email)
       assert reset_order.gift == false
-      assert is_nil(reset_order.gift_message)
       assert is_nil(reset_order.recipient_name)
       assert is_nil(reset_order.recipient_phone_number)
       assert is_nil(reset_order.delivery_address)
