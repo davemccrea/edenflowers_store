@@ -14,34 +14,40 @@ defmodule EdenflowersWeb.LocalePicker do
   end
 
   attr :id, :string, required: true
-  attr :dropdown_class, :string, default: "dropdown"
-  attr :trigger_class, :string, default: nil
-  slot :inner_block, required: true
+  attr :class, :string, default: nil
 
   def render(assigns) do
+    current_locale = Cldr.get_locale() |> Cldr.to_string()
+    assigns = assign(assigns, :current_locale, current_locale)
+
     ~H"""
-    <details
+    <form
       id={@id}
-      class={@dropdown_class}
-      phx-click-away={JS.remove_attribute("open", to: "##{@id}")}
-      phx-window-keydown={JS.remove_attribute("open", to: "##{@id}")}
-      phx-key="Escape"
+      phx-change="change"
+      phx-target={@myself}
+      class={["group inline-flex items-center gap-1", @class]}
     >
-      <summary class={["inline-flex list-none items-center gap-1", @trigger_class]}>
-        {render_slot(@inner_block)}
-      </summary>
-      <ul class="menu dropdown-content bg-base-100 border-base-300 z-50 w-40 rounded-none border p-1 shadow">
-        <li :for={{cldr_locale, name} <- @locales}>
-          <button type="button" phx-target={@myself} phx-click="click" value={cldr_locale}>
+      <label class="inline-flex cursor-pointer items-center gap-1">
+        <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+        <select
+          name="cldr_locale"
+          aria-label={gettext("Language")}
+          class="text-base-content group-hover:text-base-content/60 cursor-pointer bg-transparent text-sm focus:outline-none"
+        >
+          <option
+            :for={{cldr_locale, name} <- @locales}
+            value={cldr_locale}
+            selected={cldr_locale == @current_locale}
+          >
             {name}
-          </button>
-        </li>
-      </ul>
-    </details>
+          </option>
+        </select>
+      </label>
+    </form>
     """
   end
 
-  def handle_event("click", %{"value" => cldr_locale}, socket) do
+  def handle_event("change", %{"cldr_locale" => cldr_locale}, socket) do
     # Redirect to locale controller, which uses the referer header to navigate back
     {:noreply, redirect(socket, to: ~p"/cldr_locale/#{cldr_locale}")}
   end

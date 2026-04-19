@@ -12,12 +12,6 @@ defmodule EdenflowersWeb.Layouts do
   embed_templates "layouts/*"
 
   def auth(assigns) do
-    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
-
-    assigns =
-      assigns
-      |> assign(current_locale: String.capitalize(current_locale))
-
     ~H"""
     <div class="auth-background-pattern flex min-h-screen flex-col">
       <header class="py-8 text-center">
@@ -36,14 +30,8 @@ defmodule EdenflowersWeb.Layouts do
         <.live_component
           id="locale-picker-footer"
           module={EdenflowersWeb.LocalePicker}
-          dropdown_class="dropdown dropdown-top dropdown-center"
-          trigger_class="group cursor-pointer"
-        >
-          <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-          <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-            {@current_locale}
-          </span>
-        </.live_component>
+          class="justify-center"
+        />
       </footer>
     </div>
     """
@@ -55,8 +43,6 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
-
     assigns =
       assigns
       |> assign(
@@ -69,7 +55,6 @@ defmodule EdenflowersWeb.Layouts do
           {~p"/contact", gettext("Contact")}
         ]
       )
-      |> assign(current_locale: String.capitalize(current_locale))
 
     ~H"""
     <.drawer id="nav-drawer" placement="left" class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
@@ -203,18 +188,8 @@ defmodule EdenflowersWeb.Layouts do
                 </span>
               </.link>
 
-              <%!-- Locale picker button --%>
-              <.live_component
-                id="locale-picker-header"
-                module={EdenflowersWeb.LocalePicker}
-                dropdown_class="dropdown dropdown-end"
-                trigger_class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 md:h-auto md:w-auto md:gap-2"
-              >
-                <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 md:inline-flex">
-                  {@current_locale}
-                </span>
-              </.live_component>
+              <%!-- Locale picker --%>
+              <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker} />
 
               <%!-- Cart button --%>
               <button
@@ -273,17 +248,7 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="flex flex-col items-center gap-4 py-8">
-        <.live_component
-          id="locale-picker-footer"
-          module={EdenflowersWeb.LocalePicker}
-          dropdown_class="dropdown dropdown-top dropdown-center"
-          trigger_class="group cursor-pointer"
-        >
-          <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-          <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-            {@current_locale}
-          </span>
-        </.live_component>
+        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker} />
 
         <span class="text-xs">
           © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
