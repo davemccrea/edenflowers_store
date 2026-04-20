@@ -1093,6 +1093,5 @@ defmodule Edenflowers.Store.OrderTest do
       assert {:ok, updated_order} = Order.update_locale(order, "en-US", authorize?: false)
       assert updated_order.locale == "en-US"
     end
-
   end
 end

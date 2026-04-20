@@ -15,7 +15,11 @@ defmodule EdenflowersWeb.HomeLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <section class="relative not-last:border-b">
-        <img src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()} class="h-[100vh] w-full object-cover" alt="" />
+        <img
+          src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
+          class="h-[100vh] w-full object-cover"
+          alt=""
+        />
 
         <div class="container absolute inset-0 flex flex-col items-center justify-center gap-8 text-center">
           <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
@@ -44,7 +48,11 @@ defmodule EdenflowersWeb.HomeLive do
                   class="flex flex-col transition duration-100 hover:opacity-90"
                 >
                   <div class="mb-2 overflow-hidden rounded-lg">
-                    <img src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()} alt={product.name} class="aspect-square w-full object-cover" />
+                    <img
+                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
+                      alt={product.name}
+                      class="aspect-square w-full object-cover"
+                    />
                   </div>
                   <div class="text-base-content flex flex-col items-center">
                     <h3 id={product.name} class="font-serif text-xl">{product.name}</h3>
