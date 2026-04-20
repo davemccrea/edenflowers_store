@@ -32,7 +32,7 @@ FulfillmentOption
   free_dist_km: 5,
   max_dist_km: 20,
   tax_rate_id: tax_rate.id,
-  monday: false
+  available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 })
 |> Ash.create!(authorize?: false)
 
