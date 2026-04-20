@@ -7,7 +7,7 @@ defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
   an error is added to the changeset.
   """
   use Ash.Resource.Change
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Utils
 
@@ -38,17 +38,14 @@ defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
       else
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :promotion_id,
-          message:
-            gettext("Cart total must be at least %{minimum} to use this promotion",
-              minimum: Utils.format_money(minimum_required)
-            )
+          message: ~t"Cart total must be at least #{Utils.format_money(minimum_required)} to use this promotion"
         })
       end
     else
       {:error, _} ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :promotion_id,
-          message: gettext("Invalid promotion")
+          message: ~t"Invalid promotion"
         })
     end
   end

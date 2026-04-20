@@ -63,14 +63,14 @@ defmodule EdenflowersWeb.CalendarComponent do
           type="button"
           class={previous_month_button_class(@view_date, @today_date)}
         >
-          <span class="sr-only">{gettext("Previous month")}</span>
+          <span class="sr-only">{~t"Previous month"}</span>
           <.icon name="hero-chevron-left" class="h-5 w-5" />
         </button>
         <button
           id={"#{@id}-current-month"}
           phx-target={@myself}
           phx-click="current-month"
-          aria-label={gettext("Show current month")}
+          aria-label={~t"Show current month"}
           type="button"
           class="cursor-pointer"
         >
@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           type="button"
           class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
         >
-          <span class="sr-only">{gettext("Next month")}</span>
+          <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
         </button>
       </div>

@@ -7,7 +7,7 @@ defmodule Edenflowers.Store.Order.LookupPromotionCode do
   inactive/expired, an error is added to the changeset.
   """
   use Ash.Resource.Change
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Store.Promotion
 
@@ -32,7 +32,7 @@ defmodule Edenflowers.Store.Order.LookupPromotionCode do
             {:error, _error} ->
               Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
                 field: :code,
-                message: gettext("Invalid code")
+                message: ~t"Invalid code"
               })
           end
       end

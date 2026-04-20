@@ -5,7 +5,7 @@ defmodule Edenflowers.Store.Order.ValidatePaymentIntent do
   This ensures an order cannot be finalized without a valid Stripe payment intent.
   """
   use Ash.Resource.Change
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @impl true
   def init(opts), do: {:ok, opts}

@@ -23,21 +23,21 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
     <Layouts.auth flash={@flash}>
       <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-4 p-8 shadow-lg">
         <h2 class="text-center text-lg font-bold">
-          {gettext("Sign in to your account")}
+          {~t"Sign in to your account"}
         </h2>
 
         <%= if @email do %>
           <p class="text-center text-sm">
-            {gettext("🥳 A magic link was sent to %{email}.", email: @email)}
+            {~t"🥳 A magic link was sent to #{@email}."}
             <br />
-            {gettext("Please check your email to complete sign in.")}
+            {~t"Please check your email to complete sign in."}
           </p>
         <% else %>
           <.form class="flex w-full flex-col space-y-4" for={@form} phx-change="change" phx-submit="submit" method="POST">
-            <.input autofocus field={@form[:email]} label={gettext("Email")} placeholder={gettext("info@edenflowers.fi")} />
+            <.input autofocus field={@form[:email]} label={~t"Email"} placeholder={~t"info@edenflowers.fi"} />
 
             <button type="submit" class="btn btn-primary btn-lg">
-              {gettext("Get Magic Link")}
+              {~t"Get Magic Link"}
               <.icon name="hero-arrow-right" />
             </button>
           </.form>
@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
     toast =
       EdenflowersWeb.LiveToast.new(
         :warning,
-        gettext("Error sending magic link. Please try again later.")
+        ~t"Error sending magic link. Please try again later."
       )
 
     push_event(socket, "toast:show", toast)

@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.OrderLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="container my-36">
-        <h1>{gettext("Order #1234")}</h1>
+        <h1>{~t"Order #1234"}</h1>
       </div>
     </Layouts.app>
     """

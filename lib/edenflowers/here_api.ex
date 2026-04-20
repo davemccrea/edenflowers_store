@@ -1,5 +1,5 @@
 defmodule Edenflowers.HereAPI do
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger
 

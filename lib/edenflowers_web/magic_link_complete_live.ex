@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
     <Layouts.auth flash={@flash}>
       <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-8 p-8 shadow-lg">
         <h2 class="text-center text-lg font-bold">
-          {gettext("Complete sign in")}
+          {~t"Complete sign in"}
         </h2>
 
         <.form
@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
           <input type="hidden" name="token" value={@token} />
 
           <button type="submit" class="btn btn-primary btn-lg">
-            {gettext("Sign in")}
+            {~t"Sign in"}
             <.icon name="hero-arrow-right" />
           </button>
         </.form>
@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
         error_toast =
           EdenflowersWeb.LiveToast.new(
             :warning,
-            gettext("Error signing in. Please try again later.")
+            ~t"Error signing in. Please try again later."
           )
 
         socket

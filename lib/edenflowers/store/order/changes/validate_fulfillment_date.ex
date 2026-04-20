@@ -7,7 +7,7 @@ defmodule Edenflowers.Store.Order.ValidateFulfillmentDate do
   2. fulfillment_date is today or in the future
   """
   use Ash.Resource.Change
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @impl true
   def init(opts), do: {:ok, opts}
@@ -26,7 +26,7 @@ defmodule Edenflowers.Store.Order.ValidateFulfillmentDate do
       Date.compare(fulfillment_date, Date.utc_today()) == :lt ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :fulfillment_date,
-          message: gettext("Fulfillment date cannot be in the past")
+          message: ~t"Fulfillment date cannot be in the past"
         })
 
       true ->

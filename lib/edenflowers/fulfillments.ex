@@ -2,7 +2,7 @@ defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
   import Decimal, only: [is_decimal: 1]
 
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))
