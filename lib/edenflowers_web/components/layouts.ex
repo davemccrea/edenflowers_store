@@ -175,7 +175,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <%!-- Centre --%>
-            <div class="flex flex-1 flex-col items-center">
+            <div class="flex flex-1 items-center justify-center">
               <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
@@ -251,16 +251,12 @@ defmodule EdenflowersWeb.Layouts do
       <div class="border-t border-b bg-pink-100">
         <div class="container py-12 md:py-24">
           <div class="flex flex-col gap-8 md:flex-row">
-            <div class="m-auto flex-1">
-              <div class="m-auto max-w-lg space-y-4">
-                <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
-              </div>
+            <div class="m-auto max-w-lg flex-1 space-y-4">
+              <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
             </div>
 
-            <div class="flex-1">
-              <section class="m-auto max-w-lg">
-                <.social_media_links size={6} />
-              </section>
+            <div class="m-auto max-w-lg flex-1">
+              <.social_media_links size={6} />
             </div>
           </div>
         </div>
