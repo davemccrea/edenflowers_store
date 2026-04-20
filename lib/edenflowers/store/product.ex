@@ -12,6 +12,7 @@ defmodule Edenflowers.Store.Product do
 
   code_interface do
     define :get_all_for_store, action: :get_all_for_store
+    define :get_featured, action: :get_featured
     define :get_by_category, action: :get_by_category, args: [:category_id]
     define :get_by_id, action: :get_by_id, args: [:id]
   end
@@ -22,6 +23,17 @@ defmodule Edenflowers.Store.Product do
     read :get_all_for_store do
       filter expr(
                draft == false and
+                 exists(product_variants) and
+                 product_category.draft == false
+             )
+
+      prepare build(load: [:cheapest_price, :product_variants, :product_category])
+    end
+
+    read :get_featured do
+      filter expr(
+               featured == true and
+                 draft == false and
                  exists(product_variants) and
                  product_category.draft == false
              )
@@ -49,7 +61,7 @@ defmodule Edenflowers.Store.Product do
     end
 
     create :create do
-      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft]
+      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured]
       argument :fulfillment_option_ids, {:array, :uuid}
 
       change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
@@ -74,6 +86,7 @@ defmodule Edenflowers.Store.Product do
     attribute :image_slug, :string, allow_nil?: false
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
+    attribute :featured, :boolean, allow_nil?: false, default: false
   end
 
   relationships do
