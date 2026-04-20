@@ -58,6 +58,7 @@ defmodule Edenflowers.Store.Product do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
+      prepare build(load: [:product_category])
     end
 
     create :create do
