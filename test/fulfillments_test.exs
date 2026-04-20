@@ -58,7 +58,13 @@ defmodule Edenflowers.FulfillmentsTest do
     end
 
     test "returns :day_of_week_disabled when day of week is disabled", %{tax_rate_id: tax_rate_id} do
-      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id, sunday: false))
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
 
       now = DateTime.from_naive!(~N[2023-09-09 20:15:00], "Europe/Helsinki")
 

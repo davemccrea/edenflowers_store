@@ -82,13 +82,9 @@ defmodule Edenflowers.Fulfillments do
     Enum.member?(enabled_dates, date)
   end
 
-  defp weekday_enabled?({fulfillment_option, date, _now}) do
-    day =
-      date
-      |> Date.day_of_week()
-      |> day_of_week_to_atom()
-
-    Map.get(fulfillment_option, day)
+  defp weekday_enabled?({%{available_days: available_days}, date, _now}) do
+    day = date |> Date.day_of_week() |> day_of_week_to_atom()
+    day in available_days
   end
 
   defp fulfill_today?({%{same_day: false, order_deadline: _order_deadline}, date, now}) do
@@ -105,17 +101,13 @@ defmodule Edenflowers.Fulfillments do
 
   defp date_today?(date, now), do: Date.compare(date, now) == :eq
 
-  defp day_of_week_to_atom(n) do
-    case n do
-      1 -> :monday
-      2 -> :tuesday
-      3 -> :wednesday
-      4 -> :thursday
-      5 -> :friday
-      6 -> :saturday
-      7 -> :sunday
-    end
-  end
+  defp day_of_week_to_atom(1), do: :monday
+  defp day_of_week_to_atom(2), do: :tuesday
+  defp day_of_week_to_atom(3), do: :wednesday
+  defp day_of_week_to_atom(4), do: :thursday
+  defp day_of_week_to_atom(5), do: :friday
+  defp day_of_week_to_atom(6), do: :saturday
+  defp day_of_week_to_atom(7), do: :sunday
 
   defp now(), do: DateTime.now!("Europe/Helsinki")
 end

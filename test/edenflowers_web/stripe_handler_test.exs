@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                })
 
       order = Order.get_by_id!(order.id, authorize?: false)
-      assert order.state == :order
+      assert order.state == :placed
       assert order.payment_status == :paid
 
       assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
