@@ -4,4 +4,6 @@ defmodule EdenflowersWeb.Hooks.PutLocale do
     Edenflowers.Cldr.put_gettext_locale(language_tag)
     {:cont, socket}
   end
+
+  def on_mount(:default, _params, _session, socket), do: {:cont, socket}
 end

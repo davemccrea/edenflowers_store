@@ -344,7 +344,7 @@ msgstr ""
 
 #: lib/edenflowers_web/live/product_live.ex:77
 #, elixir-autogen, elixir-format
-msgid "Popular"
+msgid "Featured"
 msgstr ""
 
 #: lib/edenflowers_web/live/checkout_live.ex:272

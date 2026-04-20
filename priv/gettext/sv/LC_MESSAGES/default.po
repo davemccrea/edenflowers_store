@@ -344,8 +344,8 @@ msgstr "Kontrollera din e-post för att slutföra inloggningen."
 
 #: lib/edenflowers_web/live/product_live.ex:77
 #, elixir-autogen, elixir-format
-msgid "Popular"
-msgstr "Populära"
+msgid "Featured"
+msgstr "Featured"
 
 #: lib/edenflowers_web/live/checkout_live.ex:272
 #, elixir-autogen, elixir-format

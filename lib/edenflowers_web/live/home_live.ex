@@ -6,8 +6,7 @@ defmodule EdenflowersWeb.HomeLive do
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
-    # TODO: get only featured products
-    products = Product.get_all_for_store!()
+    products = Product.get_featured!()
 
     {:ok, socket |> assign(products: products)}
   end
