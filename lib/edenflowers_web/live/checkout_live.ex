@@ -129,64 +129,73 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
 
                     <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
-                      <div
-                        :if={card_line_item}
-                        class="border-base-300 flex items-center gap-3 border p-3"
-                        data-testid="card-preview"
-                      >
-                        <img
-                          src={
-                            card_line_item.product_image_slug
-                            |> Imgproxy.new()
-                            |> Imgproxy.resize(100, 100, type: "fill")
-                            |> to_string()
-                          }
-                          alt={card_line_item.product_name}
-                          class="h-16 w-16 object-cover"
-                        />
-                        <span class="flex-1">{card_line_item.product_name}</span>
-                        <button
-                          type="button"
-                          phx-click="remove_card"
-                          class="btn btn-ghost btn-sm"
-                          data-testid="remove-card-button"
+                      <div :if={card_line_item} data-testid="card-preview">
+                        <fieldset
+                          id={"#{@id}-field-card-message"}
+                          phx-hook="CharacterCount"
+                          data-testid="card-message-field"
+                          class="flex flex-col"
                         >
-                          {gettext("Remove")}
-                        </button>
+                          <span class="mb-1">{gettext("Card Message")}</span>
+                          <div class="textarea textarea-lg relative w-full">
+                            <div class="relative w-full">
+                              <textarea
+                                id={"#{@id}-card-message"}
+                                name="card_message"
+                                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
+                                maxlength={200}
+                                rows={5}
+                                data-testid="card-message-textarea"
+                              >{card_line_item.card_message}</textarea>
+                              <div class="absolute top-2 right-2">
+                                <div class="relative">
+                                  <button
+                                    type="button"
+                                    phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                                    class="block shrink-0 cursor-pointer"
+                                    data-testid="card-image-button"
+                                    title={gettext("Change card")}
+                                  >
+                                    <img
+                                      src={
+                                        card_line_item.product_image_slug
+                                        |> Imgproxy.new()
+                                        |> Imgproxy.resize(160, 160, type: "fill")
+                                        |> to_string()
+                                      }
+                                      alt={card_line_item.product_name}
+                                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
+                                    />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    phx-click="remove_card"
+                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-1.5 -right-1.5 h-5 min-h-0 w-5"
+                                    data-testid="remove-card-button"
+                                    title={gettext("Remove card")}
+                                  >
+                                    <.icon name="hero-x-mark" class="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="flex justify-end">
+                              <span id="char-count" class="text-base-content/40 text-xs" phx-update="ignore">0/200</span>
+                            </div>
+                          </div>
+                        </fieldset>
                       </div>
 
                       <button
+                        :if={is_nil(card_line_item)}
                         type="button"
                         phx-click={JS.exec("phx-show", to: "#card-drawer")}
-                        class="btn btn-outline"
+                        class="btn btn-dash w-full"
                         data-testid="select-card-button"
                       >
-                        {if card_line_item, do: gettext("Change card"), else: gettext("Select a card")}
+                        <.icon name="hero-gift" class="h-4 w-4" />
+                        {gettext("Add a card")}
                       </button>
-
-                      <fieldset
-                        :if={card_line_item}
-                        id={"#{@id}-field-card-message"}
-                        phx-hook="CharacterCount"
-                        data-testid="card-message-field"
-                      >
-                        <label class="relative flex flex-col">
-                          <span class="mb-1">{gettext("Card Message")}</span>
-                          <textarea
-                            id={"#{@id}-card-message"}
-                            name="card_message"
-                            class="textarea textarea-lg w-full resize-none"
-                            maxlength={200}
-                            rows={5}
-                            data-testid="card-message-textarea"
-                          >{card_line_item.card_message}</textarea>
-                          <div class="absolute right-2 bottom-1">
-                            <span id="char-count" class="text-xs" phx-update="ignore">
-                              0/200
-                            </span>
-                          </div>
-                        </label>
-                      </fieldset>
                     </div>
 
                     <.form_button>{gettext("Next")}</.form_button>
@@ -385,7 +394,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       <.drawer
         id="card-drawer"
         placement="right"
-        class="bg-base-100 flex h-full w-[80vw] flex-col overflow-y-auto p-6 sm:w-[25rem]"
+        class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
       >
         <div class="flex flex-col gap-6" data-testid="card-drawer">
           <div class="flex flex-row items-center justify-between">
@@ -412,7 +421,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   JS.push("select_card", value: %{"variant-id" => variant.id})
                   |> JS.exec("phx-hide", to: "#card-drawer")
                 }
-                class="border-base-300 hover:bg-base-200 flex flex-col items-center gap-1 border p-2"
+                class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
                 data-testid={"card-option-#{variant.id}"}
               >
                 <img
