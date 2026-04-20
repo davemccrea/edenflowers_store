@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Layouts do
       <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
           navigate={~p"/"}
-          class="text-primary font-sans whitespace-nowrap font-bold uppercase tracking-widest sm:text-2xl"
+          class="text-primary font-sans whitespace-nowrap text-xl font-bold uppercase tracking-widest sm:text-2xl"
         >
           Eden Flowers
         </.link>
@@ -87,7 +87,11 @@ defmodule EdenflowersWeb.Layouts do
         </nav>
       </div>
 
-      <footer class="bg-base-300 flex flex-col px-8 py-8">
+      <div class="px-8 py-4">
+        <.live_component id="locale-picker-nav-drawer" module={EdenflowersWeb.LocalePicker} />
+      </div>
+
+      <footer class="bg-base-300 flex flex-col p-8">
         <.social_media_links size={6} />
       </footer>
     </.drawer>
@@ -187,9 +191,6 @@ defmodule EdenflowersWeb.Layouts do
                     else: gettext("Sign In")}
                 </span>
               </.link>
-
-              <%!-- Locale picker --%>
-              <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker} />
 
               <%!-- Cart button --%>
               <button

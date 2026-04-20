@@ -82,6 +82,7 @@ body.ready {
         color: inherit;
     }
 
+
     select.locale-picker option::checkmark {
         display: none;
     }
