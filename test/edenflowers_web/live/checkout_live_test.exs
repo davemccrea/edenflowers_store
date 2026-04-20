@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       {:ok, mock_payment_intent}
     end)
 
-    %{order: order}
+    %{order: order, product: product, variant: variant}
   end
 
   describe "Step 1: Your Details" do
