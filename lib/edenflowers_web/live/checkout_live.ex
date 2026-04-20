@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.Store.{Order, FulfillmentOption}
+  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -17,11 +17,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
+      card_variants = ProductVariant.for_card_drawer!()
+
       {:ok,
        socket
        |> assign(:id, "checkout")
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
+       |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
@@ -117,34 +120,80 @@ defmodule EdenflowersWeb.CheckoutLive do
                       data-testid="recipient-name-input"
                     />
 
-                    <fieldset
-                      class={[not @order.gift && "hidden"]}
-                      id={"#{@id}-field-gift-message"}
-                      phx-hook="CharacterCount"
-                      data-testid="gift-message-field"
-                    >
-                      <label class="relative flex flex-col">
-                        <span class="mb-1">{~t"Gift Message"}</span>
-                        <textarea
-                          id={@form[:gift_message].id}
-                          name={@form[:gift_message].name}
-                          class="textarea textarea-lg w-full resize-none"
-                          maxlength={200}
-                          rows={5}
-                          data-testid="gift-message-textarea"
-                        >{@form[:gift_message].value}</textarea>
-                        <div class="absolute right-2 bottom-1">
-                          <span id="char-count" class="text-xs" phx-update="ignore">
-                            0/200
-                          </span>
-                        </div>
-                      </label>
+                    <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
 
-                      <.error :for={msg <- Enum.map(@form[:gift_message].errors, &translate_error(&1))}>
-                        {msg}
-                      </.error>
-                    </fieldset>
-                    <.form_button>{~t"Next"}</.form_button>
+                    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
+                      <div :if={card_line_item} data-testid="card-preview">
+                        <fieldset
+                          id={"#{@id}-field-card-message"}
+                          phx-hook="CharacterCount"
+                          data-testid="card-message-field"
+                          class="flex flex-col"
+                        >
+                          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
+                          <div class="textarea textarea-lg relative w-full">
+                            <div class="relative w-full">
+                              <textarea
+                                id={"#{@id}-card-message"}
+                                name="card_message"
+                                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
+                                maxlength={200}
+                                rows={5}
+                                data-testid="card-message-textarea"
+                              >{card_line_item.card_message}</textarea>
+                              <div class="absolute top-2 right-2">
+                                <div class="relative">
+                                  <button
+                                    type="button"
+                                    phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                                    class="block shrink-0 cursor-pointer"
+                                    data-testid="card-image-button"
+                                    title={gettext("Change card")}
+                                  >
+                                    <img
+                                      src={
+                                        card_line_item.product_image_slug
+                                        |> Imgproxy.new()
+                                        |> Imgproxy.resize(160, 160, type: "fill")
+                                        |> to_string()
+                                      }
+                                      alt={card_line_item.product_name}
+                                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
+                                    />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    phx-click="remove_card"
+                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-1.5 -right-1.5 h-5 min-h-0 w-5"
+                                    data-testid="remove-card-button"
+                                    title={gettext("Remove card")}
+                                  >
+                                    <.icon name="hero-x-mark" class="h-3 w-3" />
+                                    <span class="sr-only">{gettext("Remove card")}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="flex justify-end">
+                              <span id="char-count" class="text-base-content/40 text-xs" phx-update="ignore">0/200</span>
+                            </div>
+                          </div>
+                        </fieldset>
+                      </div>
+
+                      <button
+                        :if={is_nil(card_line_item)}
+                        type="button"
+                        phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                        class="btn btn-dash w-full"
+                        data-testid="select-card-button"
+                      >
+                        <.icon name="hero-gift" class="h-4 w-4" />
+                        {gettext("Add a card")}
+                      </button>
+                    </div>
+
+                    <.form_button>{gettext("Next")}</.form_button>
                   </.form>
                 </section>
 
@@ -336,6 +385,59 @@ defmodule EdenflowersWeb.CheckoutLive do
           </div>
         </div>
       </div>
+
+      <.drawer
+        id="card-drawer"
+        placement="right"
+        class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
+      >
+        <div class="flex flex-col gap-6" data-testid="card-drawer">
+          <div class="flex flex-row items-center justify-between">
+            <h2 class="font-serif text-2xl">{gettext("Select a Card")}</h2>
+            <button
+              type="button"
+              phx-click={JS.exec("phx-hide", to: "#card-drawer")}
+              class="h-10 w-10 cursor-pointer"
+            >
+              <.icon name="hero-x-mark" class="h-6 w-6" />
+            </button>
+          </div>
+
+          <div
+            :for={{size, variants} <- Enum.group_by(@card_variants, & &1.size)}
+            class="flex flex-col gap-3"
+          >
+            <h3 class="font-semibold">{size_label(size)}</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                :for={variant <- variants}
+                type="button"
+                phx-click={
+                  JS.push("select_card", value: %{"variant-id" => variant.id})
+                  |> JS.exec("phx-hide", to: "#card-drawer")
+                }
+                class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
+                data-testid={"card-option-#{variant.id}"}
+              >
+                <img
+                  src={
+                    variant.image_slug
+                    |> Imgproxy.new()
+                    |> Imgproxy.resize(200, 200, type: "fill")
+                    |> to_string()
+                  }
+                  alt={variant.product.name}
+                  class="h-24 w-24 object-cover"
+                />
+                <span class="text-sm">{variant.product.name}</span>
+                <span class="text-base-content/60 text-xs">
+                  {Edenflowers.Utils.format_money(variant.price)}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </.drawer>
     </Layouts.app>
     """
   end
@@ -348,6 +450,39 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
+  end
+
+  # Step 2 carries card_message as a top-level param (not under "form[...]") and must
+  # persist it on the card line item after the order is saved. Must precede the generic
+  # save_form_<step> clause.
+  def handle_event("save_form_2", %{"form" => params} = all_params, socket) do
+    actor = socket.assigns[:current_user]
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, _order} ->
+        # Reload: save_step_2 returns a bare order without :line_items loaded,
+        # and ClearGiftFields may have destroyed card line items in its after_action.
+        order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+
+        case Enum.find(order.line_items, & &1.is_card) do
+          nil ->
+            :ok
+
+          card_line_item ->
+            card_message = Map.get(all_params, "card_message", "")
+            LineItem.update_card_message(card_line_item, card_message)
+        end
+
+        next_section_id = get_next_section_id(socket.assigns.id, 2)
+
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> push_event("focus-element", %{id: next_section_id})}
+
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
+    end
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do
@@ -402,6 +537,42 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order)}
   end
 
+  # Card selection
+  def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
+    actor = socket.assigns[:current_user]
+
+    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
+      LineItem.remove_item(existing)
+    end
+
+    variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
+
+    LineItem.add_card(%{
+      order_id: socket.assigns.order.id,
+      product_id: variant.product.id,
+      product_variant_id: variant.id,
+      product_name: variant.product.name,
+      product_image_slug: variant.image_slug,
+      quantity: 1,
+      unit_price: variant.price,
+      tax_rate: variant.product.tax_rate.percentage
+    })
+
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+    {:noreply, assign(socket, order: order)}
+  end
+
+  def handle_event("remove_card", _, socket) do
+    actor = socket.assigns[:current_user]
+
+    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
+      LineItem.remove_item(existing)
+    end
+
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+    {:noreply, assign(socket, order: order)}
+  end
+
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promotional_form, params: params) do
       {:ok, order} ->
@@ -446,12 +617,14 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))}
   end
 
-  # Redirects to homepage when cart becomes empty.
-  # The HandleLineItemChanged hook updates the order, but this handler manages the redirect.
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _order_id}, socket) do
-    if Enum.empty?(socket.assigns.order.line_items),
+  # Reloads order on line item changes. Redirects to homepage when the cart becomes empty.
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
+    actor = socket.assigns[:current_user]
+    order = Order.get_for_checkout!(order_id, actor: actor)
+
+    if Enum.empty?(order.line_items),
       do: {:noreply, push_navigate(socket, to: ~p"/")},
-      else: {:noreply, socket}
+      else: {:noreply, assign(socket, order: order)}
   end
 
   # ==========
@@ -553,6 +726,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp get_next_section_id(id, 2), do: "#{id}-form-3a"
   defp get_next_section_id(id, 3), do: "#{id}-form-4"
   defp get_next_section_id(_, _), do: nil
+
+  defp size_label(:small), do: gettext("Small")
+  defp size_label(:medium), do: gettext("Medium")
+  defp size_label(:large), do: gettext("Large")
+  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
+  defp size_label(_), do: ""
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
