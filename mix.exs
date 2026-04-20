@@ -15,7 +15,7 @@ defmodule Edenflowers.MixProject do
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
       usage_rules: [
-        file: "AGENTS.md",
+        file: "CLAUDE.md",
         usage_rules: [:ash, ~r/^ash_/, :phoenix, ~r/^phoenix_/, :igniter, :elixir, :otp],
         skills: [
           location: ".claude/skills",
