@@ -10,8 +10,8 @@ defmodule Edenflowers.Store.Promotion do
   end
 
   code_interface do
-    define :get_by_id, args: [:id], action: :get_by_id, get?: true
-    define :get_by_code, args: [:code], action: :get_by_code, get?: true
+    define :get_by_id, args: [:id], action: :by_id, get?: true
+    define :get_by_code, args: [:code, {:optional, :today}], action: :by_code, get?: true
     define :increment_usage, action: :increment_usage
     define :create_for_newsletter, action: :create_for_newsletter
   end
@@ -19,13 +19,13 @@ defmodule Edenflowers.Store.Promotion do
   actions do
     defaults [:read, :destroy]
 
-    read :get_by_id do
+    read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
     end
 
-    read :get_by_code do
+    read :by_code do
       argument :code, :string, allow_nil?: false
 
       argument :today, :date, default: fn -> "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() end
@@ -39,19 +39,7 @@ defmodule Edenflowers.Store.Promotion do
     end
 
     create :create_for_newsletter do
-      change fn changeset, _context ->
-        code = :crypto.strong_rand_bytes(3) |> Base.encode16()
-        today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
-
-        changeset
-        |> Ash.Changeset.force_change_attribute(:code, code)
-        |> Ash.Changeset.force_change_attribute(:name, "Newsletter Welcome")
-        |> Ash.Changeset.force_change_attribute(:discount_percentage, Decimal.new("0.15"))
-        |> Ash.Changeset.force_change_attribute(:minimum_cart_total, Decimal.new("0"))
-        |> Ash.Changeset.force_change_attribute(:start_date, today)
-        |> Ash.Changeset.force_change_attribute(:expiration_date, Date.add(today, 30))
-        |> Ash.Changeset.force_change_attribute(:usage_limit, 1)
-      end
+      change {Edenflowers.Store.Promotion.Changes.SetNewsletterDefaults, []}
     end
 
     create :create do

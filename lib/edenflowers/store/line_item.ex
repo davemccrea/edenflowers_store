@@ -15,7 +15,7 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   code_interface do
-    define :add_item, action: :create
+    define :add_item, action: :add_to_cart
     define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
@@ -24,7 +24,7 @@ defmodule Edenflowers.Store.LineItem do
   actions do
     defaults [:read]
 
-    create :create do
+    create :add_to_cart do
       accept [
         :order_id,
         :product_id,
@@ -66,8 +66,8 @@ defmodule Edenflowers.Store.LineItem do
     policy action_type([:read, :update, :destroy]) do
       # Guest checkout: Anyone can work with line items for orders in checkout state
       authorize_if expr(order.state == :checkout)
-      # Completed orders: Only the owner can access their line items
-      authorize_if expr(order.state == :order and order.user_id == ^actor(:id))
+      # Placed orders: Only the owner can access their line items
+      authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
     end
   end
 

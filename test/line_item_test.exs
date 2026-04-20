@@ -21,7 +21,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       assert {:ok, _} =
                LineItem
-               |> Ash.Changeset.for_create(:create, %{
+               |> Ash.Changeset.for_create(:add_to_cart, %{
                  order_id: order.id,
                  product_id: product.id,
                  product_name: product.name,
@@ -41,7 +41,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,
@@ -63,7 +63,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       assert {:error, _} =
                LineItem
-               |> Ash.Changeset.for_create(:create, %{
+               |> Ash.Changeset.for_create(:add_to_cart, %{
                  order_id: order.id,
                  product_id: product.id,
                  product_name: product.name,
@@ -79,7 +79,7 @@ defmodule Edenflowers.Store.LineItemTest do
     test "increments quantity", %{order: order, tax_rate: tax_rate, product: product, product_variant: product_variant} do
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,
@@ -98,7 +98,7 @@ defmodule Edenflowers.Store.LineItemTest do
     test "decrements quantity", %{order: order, tax_rate: tax_rate, product: product, product_variant: product_variant} do
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,
@@ -123,7 +123,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,
@@ -150,7 +150,7 @@ defmodule Edenflowers.Store.LineItemTest do
       # Add line item first
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,
@@ -177,7 +177,7 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       line_item =
         LineItem
-        |> Ash.Changeset.for_create(:create, %{
+        |> Ash.Changeset.for_create(:add_to_cart, %{
           order_id: order.id,
           product_id: product.id,
           product_name: product.name,

@@ -2,7 +2,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   use EdenflowersWeb, :live_view
 
   require Logger
-  require Ash.Query
 
   alias Edenflowers.Store.{Order, FulfillmentOption}
   alias Edenflowers.Fulfillments
@@ -17,7 +16,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
 
     with {:ok, _line_items} <- cart_has_items?(order),
-         {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
+         {:ok, fulfillment_options} <- FulfillmentOption.list() do
       {:ok,
        socket
        |> assign(:id, "checkout")

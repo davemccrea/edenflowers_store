@@ -11,22 +11,16 @@ defmodule Edenflowers.Services.CourseRegistration do
 
   code_interface do
     define :list_registrations, action: :read
-    define :register_for_course, action: :create
+    define :register_for_course, action: :register
     define :get_registration, action: :read, get_by: [:id]
   end
 
   actions do
     defaults [:read, :destroy, update: :*]
 
-    create :create do
+    create :register do
       accept [:name, :email, :course_id, :status]
-      # Automatically set user_id from actor if authenticated
-      change fn changeset, _context ->
-        case changeset.context[:actor] do
-          %{id: user_id} -> Ash.Changeset.force_change_attribute(changeset, :user_id, user_id)
-          _ -> changeset
-        end
-      end
+      change {Edenflowers.Services.CourseRegistration.Changes.SetUserFromActor, []}
     end
 
     update :confirm_payment do

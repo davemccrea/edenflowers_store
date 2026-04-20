@@ -30,10 +30,10 @@ defmodule Edenflowers.Store.Order do
 
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
-    define :get_by_id, action: :get_by_id, args: [:id]
-    define :get_by_order_reference, action: :get_by_order_reference, args: [:order_reference]
-    define :get_for_checkout, action: :get_for_checkout, args: [:id]
-    define :get_all_completed, action: :get_all_completed
+    define :get_by_id, action: :by_id, args: [:id]
+    define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
+    define :get_for_checkout, action: :for_checkout, args: [:id]
+    define :get_all_completed, action: :completed
     define :finalise_checkout, action: :finalise_checkout
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
@@ -42,7 +42,7 @@ defmodule Edenflowers.Store.Order do
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
-    define :reset, action: :reset
+    define :reset, action: :restart_checkout
   end
 
   state_machine do
@@ -50,7 +50,7 @@ defmodule Edenflowers.Store.Order do
     default_initial_state(:checkout)
 
     transitions do
-      transition(:finalise_checkout, from: :checkout, to: :order)
+      transition(:finalise_checkout, from: :checkout, to: :placed)
     end
   end
 
@@ -58,13 +58,13 @@ defmodule Edenflowers.Store.Order do
     defaults [:create, :read, :update, :destroy]
 
     # Read Actions
-    read :get_by_id do
+    read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
     end
 
-    read :get_by_order_reference do
+    read :by_order_reference do
       argument :order_reference, :string, allow_nil?: false
 
       prepare fn query, _context ->
@@ -84,7 +84,7 @@ defmodule Edenflowers.Store.Order do
       get? true
     end
 
-    read :get_for_checkout do
+    read :for_checkout do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
@@ -110,8 +110,8 @@ defmodule Edenflowers.Store.Order do
               )
     end
 
-    read :get_all_completed do
-      filter expr(state == :order)
+    read :completed do
+      filter expr(state == :placed)
     end
 
     # Create Actions
@@ -177,7 +177,7 @@ defmodule Edenflowers.Store.Order do
     # Other Update Actions
     update :finalise_checkout do
       change {ValidatePaymentIntent, []}
-      change transition_state(:order)
+      change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {UpdatePromotionUsageCount, []}
@@ -221,7 +221,7 @@ defmodule Edenflowers.Store.Order do
       change atomic_update(:promotion_id, expr(nil))
     end
 
-    update :reset do
+    update :restart_checkout do
       change set_attribute(:step, 1)
       change set_attribute(:customer_name, nil)
       change set_attribute(:customer_email, nil)
@@ -264,8 +264,8 @@ defmodule Edenflowers.Store.Order do
     policy action_type([:read, :update]) do
       # Guest checkout: Anyone can access orders in checkout state (UUID security)
       authorize_if expr(state == :checkout)
-      # Completed orders: Only the owner can access orders in order state
-      authorize_if expr(state == :order and user_id == ^actor(:id))
+      # Completed orders: Only the owner can access placed orders
+      authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
   end
 
@@ -286,11 +286,10 @@ defmodule Edenflowers.Store.Order do
 
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
-    # When checkout is completed the state is set to :order
     attribute :state, :atom do
       allow_nil? false
       default :checkout
-      constraints one_of: [:checkout, :order]
+      constraints one_of: [:checkout, :placed]
     end
 
     attribute :ordered_at, :utc_datetime
