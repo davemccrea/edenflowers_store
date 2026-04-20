@@ -554,10 +554,28 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div class="flex flex-row gap-4">
       <a href="#">
-        <img class={"h-#{@size} w-#{@size}"} src={"local:///facebook_logo_bw_128px.png" |> Imgproxy.new() |> Imgproxy.resize(128, 128, type: "fill") |> to_string()} alt="Facebook logo" />
+        <img
+          class={"h-#{@size} w-#{@size}"}
+          src={
+            "local:///facebook_logo_bw_128px.png"
+            |> Imgproxy.new()
+            |> Imgproxy.resize(128, 128, type: "fill")
+            |> to_string()
+          }
+          alt="Facebook logo"
+        />
       </a>
       <a href="#">
-        <img class={"h-#{@size} w-#{@size}"} src={"local:///instagram_logo_bw_128px.png" |> Imgproxy.new() |> Imgproxy.resize(128, 128, type: "fill") |> to_string()} alt="Instagram logo" />
+        <img
+          class={"h-#{@size} w-#{@size}"}
+          src={
+            "local:///instagram_logo_bw_128px.png"
+            |> Imgproxy.new()
+            |> Imgproxy.resize(128, 128, type: "fill")
+            |> to_string()
+          }
+          alt="Instagram logo"
+        />
       </a>
     </div>
     """

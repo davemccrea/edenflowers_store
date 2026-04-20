@@ -18,17 +18,23 @@ defmodule Edenflowers.Email do
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_promo_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_promo_template,
     Path.join([__DIR__, "email", "templates", "newsletter_promo.text.eex"]),
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_already_subscribed_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_already_subscribed_template,
     Path.join([__DIR__, "email", "templates", "newsletter_already_subscribed.text.eex"]),
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_resubscribed_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_resubscribed_template,
     Path.join([__DIR__, "email", "templates", "newsletter_resubscribed.text.eex"]),
     [:_assigns]
   )
