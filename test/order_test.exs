@@ -392,7 +392,6 @@ defmodule Edenflowers.Store.OrderTest do
       assert {:error, error} = Order.add_promotion_with_code(order, "INVALID", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
-
   end
 
   describe "User upsert during checkout" do
