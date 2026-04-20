@@ -10,16 +10,16 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
     ~H"""
     <section class="space-y-2">
       <h1 class="font-serif text-2xl sm:text-3xl">
-        {gettext("Register and enjoy 15% off your next order.")}
+        {~t"Register and enjoy 15% off your next order."}
       </h1>
 
       <%= if @submitted do %>
-        <p>{gettext("Thanks! We've sent your 15% off code to your inbox.")}</p>
+        <p>{~t"Thanks! We've sent your 15% off code to your inbox."}</p>
       <% else %>
         <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
           <div class="join w-full">
             <label for="newsletter-form_email_address" class="sr-only">
-              {gettext("Email Address")}
+              {~t"Email Address"}
             </label>
             <input
               type="email"
@@ -27,15 +27,15 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
               class="input join-item w-full"
-              placeholder={gettext("Email Address")}
+              placeholder={~t"Email Address"}
             />
 
-            <button class="btn btn-primary join-item">{gettext("Register")}</button>
+            <button class="btn btn-primary join-item">{~t"Register"}</button>
           </div>
         </.form>
 
         <p class="font-sans text-xs">
-          {gettext("We send out only ocassional emails. Unsubscribe at any time.")}
+          {~t"We send out only ocassional emails. Unsubscribe at any time."}
         </p>
       <% end %>
     </section>
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
       {:error, error} ->
         Logger.error(inspect(error))
-        toast = EdenflowersWeb.LiveToast.new(:error, gettext("There was an error subscribing to the newsletter."))
+        toast = EdenflowersWeb.LiveToast.new(:error, ~t"There was an error subscribing to the newsletter.")
         {:noreply, push_event(socket, "toast:show", toast)}
     end
   end

@@ -15,21 +15,25 @@ defmodule EdenflowersWeb.HomeLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <section class="relative not-last:border-b">
-        <img src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()} class="h-[100vh] w-full object-cover" alt="" />
+        <img
+          src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
+          class="h-[100vh] w-full object-cover"
+          alt=""
+        />
 
         <div class="container absolute inset-0 flex flex-col items-center justify-center gap-8 text-center">
           <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
-            {gettext("Fresh flowers for everyday moments.")}
+            {~t"Fresh flowers for everyday moments."}
           </h1>
           <a href="#store" class="btn-primary btn btn-lg mx-auto">
-            {gettext("Shop Now")}
+            {~t"Shop Now"}
           </a>
         </div>
       </section>
 
       <section id="store" class="not-last:border-b">
         <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="font-serif mb-4 px-2 text-3xl">{gettext("Featured Blooms")}</h2>
+          <h2 class="font-serif mb-4 px-2 text-3xl">{~t"Featured Blooms"}</h2>
 
           <div
             id="product-slider"
@@ -44,7 +48,11 @@ defmodule EdenflowersWeb.HomeLive do
                   class="flex flex-col transition duration-100 hover:opacity-90"
                 >
                   <div class="mb-2 overflow-hidden rounded-lg">
-                    <img src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()} alt={product.name} class="aspect-square w-full object-cover" />
+                    <img
+                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
+                      alt={product.name}
+                      class="aspect-square w-full object-cover"
+                    />
                   </div>
                   <div class="text-base-content flex flex-col items-center">
                     <h3 id={product.name} class="font-serif text-xl">{product.name}</h3>
@@ -60,12 +68,10 @@ defmodule EdenflowersWeb.HomeLive do
       <section class="not-last:border-b">
         <div class="container flex flex-col items-center gap-12 py-24">
           <h1 class="font-serif max-w-4xl text-center text-3xl font-light leading-10 sm:leading-14 md:text-4xl">
-            {gettext(
-              "Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."
-            )}
+            {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </h1>
           <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
-            {gettext("Learn more")}
+            {~t"Learn more"}
           </a>
         </div>
       </section>

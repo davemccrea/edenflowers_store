@@ -12,7 +12,11 @@ defmodule EdenflowersWeb.LineItemsComponent do
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-2">
           <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
-            <img class="h-18 w-18 rounded" src={line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(144, 144, type: "fill") |> to_string()} alt={"Image of #{line_item.product_name}"} />
+            <img
+              class="h-18 w-18 rounded"
+              src={line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(144, 144, type: "fill") |> to_string()}
+              alt={"Image of #{line_item.product_name}"}
+            />
 
             <div class="flex flex-1 flex-row justify-between">
               <div class="flex flex-col gap-2">
@@ -26,7 +30,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={gettext("Decrement")}
+                    aria-label={~t"Decrement"}
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
                   </button>
@@ -38,7 +42,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={gettext("Increment")}
+                    aria-label={~t"Increment"}
                   >
                     <.icon class="h-4 w-4" name="hero-plus-mini" />
                   </button>
@@ -54,7 +58,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
-                  aria-label={gettext("Remove")}
+                  aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="text-error h-4 w-4" />
                 </button>
@@ -63,7 +67,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
           </li>
         </ul>
       <% else %>
-        <p>{gettext("Your cart is empty.")}</p>
+        <p>{~t"Your cart is empty."}</p>
       <% end %>
     </div>
     """

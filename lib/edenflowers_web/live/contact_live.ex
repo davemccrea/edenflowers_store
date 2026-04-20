@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.ContactLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <.container>
-        <h1 class="font-serif text-4xl">{gettext("Contact")}</h1>
+        <h1 class="font-serif text-4xl">{~t"Contact"}</h1>
       </.container>
     </Layouts.app>
     """

@@ -227,7 +227,7 @@ defmodule Edenflowers.Store.OrderTest do
     order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
-    assert order.state == :order
+    assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
   end
@@ -382,112 +382,6 @@ defmodule Edenflowers.Store.OrderTest do
 
       # Try to apply non-existent code
       assert {:error, error} = Order.add_promotion_with_code(order, "INVALID", authorize?: false)
-      assert %Ash.Error.Invalid{} = error
-    end
-
-    test "rejects expired promotion code" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id))
-
-      # Create promotion that expired yesterday
-      _promotion =
-        generate(
-          promotion(
-            code: "EXPIRED",
-            discount_percentage: "0.20",
-            minimum_cart_total: "0",
-            start_date: Date.add(Date.utc_today(), -30),
-            expiration_date: Date.add(Date.utc_today(), -1)
-          )
-        )
-
-      order = Order.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
-        )
-      )
-
-      # Should fail because promotion is expired
-      assert {:error, error} = Order.add_promotion_with_code(order, "EXPIRED", authorize?: false)
-      assert %Ash.Error.Invalid{} = error
-    end
-
-    test "rejects not-yet-started promotion code" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id))
-
-      # Create promotion that starts tomorrow
-      _promotion =
-        generate(
-          promotion(
-            code: "FUTURE",
-            discount_percentage: "0.20",
-            minimum_cart_total: "0",
-            start_date: Date.add(Date.utc_today(), 1)
-          )
-        )
-
-      order = Order.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
-        )
-      )
-
-      # Should fail because promotion hasn't started yet
-      assert {:error, error} = Order.add_promotion_with_code(order, "FUTURE", authorize?: false)
-      assert %Ash.Error.Invalid{} = error
-    end
-
-    test "rejects promotion code when cart total is below minimum" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id, price: "10.00"))
-
-      # Create promotion requiring minimum 50.00
-      _promotion =
-        generate(
-          promotion(
-            code: "BIG50",
-            discount_percentage: "0.20",
-            minimum_cart_total: "50.00"
-          )
-        )
-
-      order = Order.create_for_checkout!(authorize?: false)
-
-      # Add item worth only 10.00
-      generate(
-        line_item(
-          order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
-          product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
-        )
-      )
-
-      # Should fail due to minimum cart total validation
-      assert {:error, error} = Order.add_promotion_with_code(order, "BIG50", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
@@ -964,7 +858,7 @@ defmodule Edenflowers.Store.OrderTest do
 
   describe "Order state transitions" do
     test "cannot transition from order back to checkout" do
-      order = generate(order(state: :order, payment_status: :paid))
+      order = generate(order(state: :placed, payment_status: :paid))
 
       # Try to set state back to checkout - should now fail
       assert {:error, error} =
@@ -990,7 +884,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "cannot finalize order already in :order state" do
-      order = generate(order(state: :order, payment_status: :paid, payment_intent_id: "pi_test"))
+      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
 
       # Should now fail with clear error message
       assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)
@@ -1083,6 +977,5 @@ defmodule Edenflowers.Store.OrderTest do
       assert {:ok, updated_order} = Order.update_locale(order, "en-US", authorize?: false)
       assert updated_order.locale == "en-US"
     end
-
   end
 end

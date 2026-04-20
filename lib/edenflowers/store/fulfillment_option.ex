@@ -19,13 +19,14 @@ defmodule Edenflowers.Store.FulfillmentOption do
   end
 
   code_interface do
-    define :get_by_id, action: :get_by_id, args: [:id]
+    define :list, action: :read
+    define :get_by_id, action: :by_id, args: [:id]
   end
 
   actions do
     defaults [:read, :destroy, create: :*, update: :*]
 
-    read :get_by_id do
+    read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
@@ -73,13 +74,9 @@ defmodule Edenflowers.Store.FulfillmentOption do
     attribute :same_day, :boolean, default: false, public?: true
     attribute :order_deadline, :time, public?: true
 
-    attribute :monday, :boolean, default: true, public?: true
-    attribute :tuesday, :boolean, default: true, public?: true
-    attribute :wednesday, :boolean, default: true, public?: true
-    attribute :thursday, :boolean, default: true, public?: true
-    attribute :friday, :boolean, default: true, public?: true
-    attribute :saturday, :boolean, default: true, public?: true
-    attribute :sunday, :boolean, default: false, public?: true
+    attribute :available_days, {:array, :atom},
+      default: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+      public?: true
 
     attribute :enabled_dates, {:array, :date}, default: [], public?: true
     attribute :disabled_dates, {:array, :date}, default: [], public?: true

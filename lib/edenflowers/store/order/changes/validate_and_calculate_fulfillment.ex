@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
   - Clears delivery-related fields
   """
   use Ash.Resource.Change
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.{HereAPI, Fulfillments}
 
@@ -66,19 +66,19 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
       {:error, :out_of_delivery_range} ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,
-          message: gettext("Outside delivery range")
+          message: ~t"Outside delivery range"
         })
 
       {:error, :address_not_found} ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,
-          message: gettext("Address not found")
+          message: ~t"Address not found"
         })
 
       _ ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,
-          message: gettext("There was a problem calculating delivery cost, please try again later")
+          message: ~t"There was a problem calculating delivery cost, please try again later"
         })
     end
   end
@@ -99,7 +99,7 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
       {:error, _reason} ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :fulfillment_option_id,
-          message: gettext("Unable to calculate fulfillment cost")
+          message: ~t"Unable to calculate fulfillment cost"
         })
     end
   end

@@ -4,7 +4,7 @@ defmodule Edenflowers.Email do
   """
 
   import Swoosh.Email
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require EEx
 
@@ -18,17 +18,23 @@ defmodule Edenflowers.Email do
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_promo_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_promo_template,
     Path.join([__DIR__, "email", "templates", "newsletter_promo.text.eex"]),
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_already_subscribed_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_already_subscribed_template,
     Path.join([__DIR__, "email", "templates", "newsletter_already_subscribed.text.eex"]),
     [:assigns]
   )
 
-  EEx.function_from_file(:defp, :render_newsletter_resubscribed_template,
+  EEx.function_from_file(
+    :defp,
+    :render_newsletter_resubscribed_template,
     Path.join([__DIR__, "email", "templates", "newsletter_resubscribed.text.eex"]),
     [:_assigns]
   )
@@ -42,7 +48,7 @@ defmodule Edenflowers.Email do
     new()
     |> from(@from_address)
     |> to(order.customer_email)
-    |> subject("#{gettext("Order Confirmation")} - #{order.order_reference}")
+    |> subject("#{~t"Order Confirmation"} - #{order.order_reference}")
     |> text_body(render_order_confirmation(order, order.locale))
   end
 
@@ -61,7 +67,7 @@ defmodule Edenflowers.Email do
     new()
     |> from({"Eden Flowers", "orders@edenflowers.com"})
     |> to(email_address)
-    |> subject(gettext("Welcome to Eden Flowers — your 15% off code inside"))
+    |> subject(~t"Welcome to Eden Flowers — your 15% off code inside")
     |> text_body(render_newsletter_promo_template(%{promo_code: promo_code}))
   end
 
@@ -69,7 +75,7 @@ defmodule Edenflowers.Email do
     new()
     |> from({"Eden Flowers", "orders@edenflowers.com"})
     |> to(email_address)
-    |> subject(gettext("Your Eden Flowers promo code"))
+    |> subject(~t"Your Eden Flowers promo code")
     |> text_body(render_newsletter_already_subscribed_template(%{promo_code: promo_code}))
   end
 
@@ -77,7 +83,7 @@ defmodule Edenflowers.Email do
     new()
     |> from({"Eden Flowers", "orders@edenflowers.com"})
     |> to(email_address)
-    |> subject(gettext("Welcome back to the Eden Flowers newsletter"))
+    |> subject(~t"Welcome back to the Eden Flowers newsletter")
     |> text_body(render_newsletter_resubscribed_template(%{}))
   end
 

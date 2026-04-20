@@ -11,17 +11,17 @@ defmodule Edenflowers.Store.Product do
   end
 
   code_interface do
-    define :get_all_for_store, action: :get_all_for_store
-    define :get_featured, action: :get_featured
-    define :get_by_category, action: :get_by_category, args: [:category_id]
+    define :get_all_for_store, action: :for_store
+    define :get_featured, action: :featured
+    define :get_by_category, action: :by_category, args: [:category_id]
     define :get_by_category_slug, action: :get_by_category_slug, args: [:slug]
-    define :get_by_id, action: :get_by_id, args: [:id]
+    define :get_by_id, action: :by_id, args: [:id]
   end
 
   actions do
     defaults [:read, :destroy]
 
-    read :get_all_for_store do
+    read :for_store do
       filter expr(
                draft == false and
                  exists(product_variants) and
@@ -31,7 +31,7 @@ defmodule Edenflowers.Store.Product do
       prepare build(load: [:cheapest_price, :product_variants, :product_category])
     end
 
-    read :get_featured do
+    read :featured do
       filter expr(
                featured == true and
                  draft == false and
@@ -42,7 +42,7 @@ defmodule Edenflowers.Store.Product do
       prepare build(load: [:cheapest_price, :product_variants, :product_category])
     end
 
-    read :get_by_category do
+    read :by_category do
       argument :category_id, :uuid, allow_nil?: false
 
       filter expr(
@@ -68,7 +68,7 @@ defmodule Edenflowers.Store.Product do
       prepare build(load: [:cheapest_price, :product_variants, :product_category, :tax_rate])
     end
 
-    read :get_by_id do
+    read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true

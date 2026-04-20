@@ -16,7 +16,7 @@ defmodule Generator do
     changeset_generator(
       TaxRate,
       :create,
-      defaults: %{name: words()},
+      defaults: %{name: sequence(:tax_rate_name, &"Tax Rate #{&1}")},
       overrides: opts,
       authorize?: false
     )
@@ -28,7 +28,7 @@ defmodule Generator do
       :create,
       defaults: %{
         name: words(),
-        code: "PROMO-#{Faker.random_between(100_000, 999_999)}",
+        code: sequence(:promotion_code, &"PROMO-#{&1}"),
         discount_percentage: "0.20",
         minimum_cart_total: "0",
         start_date: nil,
@@ -60,7 +60,7 @@ defmodule Generator do
       defaults: %{
         product_category_id: product_category_id,
         tax_rate_id: tax_rate_id,
-        name: words(),
+        name: sequence(:product_name, &"Product #{&1}"),
         description: words(),
         image_slug: "image.png"
       },
@@ -99,7 +99,7 @@ defmodule Generator do
   end
 
   def line_item(opts \\ []) do
-    changeset_generator(LineItem, :create,
+    changeset_generator(LineItem, :add_to_cart,
       defaults: %{
         quantity: 1
       },
@@ -114,7 +114,7 @@ defmodule Generator do
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
         tax_rate_id: tax_rate_id,
-        name: words(),
+        name: sequence(:fulfillment_option_name, &"Fulfillment Option #{&1}"),
         fulfillment_method: :pickup,
         rate_type: :fixed,
         minimum_cart_total: 0,
@@ -124,13 +124,7 @@ defmodule Generator do
         max_dist_km: 20,
         same_day: true,
         order_deadline: ~T[14:00:00],
-        monday: true,
-        tuesday: true,
-        wednesday: true,
-        thursday: true,
-        friday: true,
-        saturday: true,
-        sunday: true,
+        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
         enabled_dates: [],
         disabled_dates: []
       },

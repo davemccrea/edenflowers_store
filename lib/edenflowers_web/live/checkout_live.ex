@@ -2,7 +2,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   use EdenflowersWeb, :live_view
 
   require Logger
-  require Ash.Query
 
   alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
   alias Edenflowers.Fulfillments
@@ -17,13 +16,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
 
     with {:ok, _line_items} <- cart_has_items?(order),
-         {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
+         {:ok, fulfillment_options} <- FulfillmentOption.list() do
       card_variants = ProductVariant.for_card_drawer!()
+
 
       {:ok,
        socket
        |> assign(:id, "checkout")
-       |> assign(:page_title, gettext("Checkout"))
+       |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
@@ -32,11 +32,11 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
-        handle_mount_error(socket, "Cart is empty", gettext("Cart is empty"))
+        handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
       error ->
         Logger.error("Error loading checkout: #{inspect(error)}")
-        handle_mount_error(socket, "Error loading checkout", gettext("Error loading checkout"))
+        handle_mount_error(socket, "Error loading checkout", ~t"Error loading checkout")
     end
   end
 
@@ -49,11 +49,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
-          <div class="text-neutral/60 flex flex-row gap-2">
-            <.icon name="hero-lock-closed" class="h-4 w-4" />
-            <span class="items-center text-xs uppercase">{gettext("Secure Checkout")}</span>
-          </div>
-
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
               <.steps step={@order.step}>
@@ -63,7 +58,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   class="checkout__section"
                   data-testid="checkout-step-1"
                 >
-                  <.form_heading>{gettext("Your Details")}</.form_heading>
+                  <.form_heading>{~t"Your Details"}</.form_heading>
 
                   <.form
                     id={"#{@id}-form-1"}
@@ -74,19 +69,19 @@ defmodule EdenflowersWeb.CheckoutLive do
                     data-testid="checkout-form-1"
                   >
                     <.input
-                      label={gettext("Your Name *")}
+                      label={~t"Your Name *"}
                       field={@form[:customer_name]}
                       type="text"
                       data-testid="customer-name-input"
                     />
                     <.input
-                      label={gettext("Email *")}
+                      label={~t"Email *"}
                       field={@form[:customer_email]}
                       type="text"
                       data-testid="customer-email-input"
                     />
 
-                    <.form_button data-testid="step-1-next-button">{gettext("Next")}</.form_button>
+                    <.form_button data-testid="step-1-next-button">{~t"Next"}</.form_button>
                   </.form>
                 </section>
 
@@ -96,7 +91,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   class="checkout__section"
                   data-testid="checkout-step-2"
                 >
-                  <.form_heading>{gettext("Gift Options")}</.form_heading>
+                  <.form_heading>{~t"Gift Options"}</.form_heading>
 
                   <.form
                     id={"#{@id}-form-2"}
@@ -109,7 +104,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.input
                       :let={option}
                       type="radio-card"
-                      label={gettext("Recipient *")}
+                      label={~t"Recipient *"}
                       field={@form[:gift]}
                       options={[%{name: "❤️ For me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
                       phx-change="update_gift"
@@ -120,7 +115,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                     <.input
                       hidden={not @order.gift}
-                      label={gettext("Recipient Name *")}
+                      label={~t"Recipient Name *"}
                       field={@form[:recipient_name]}
                       type="text"
                       data-testid="recipient-name-input"
@@ -204,7 +199,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
-                  <.form_heading>{gettext("Delivery Information")}</.form_heading>
+                  <.form_heading>{~t"Delivery Information"}</.form_heading>
 
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
@@ -212,7 +207,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       type="radio-card"
                       field={@form[:fulfillment_option_id]}
                       options={Enum.map(@fulfillment_options, fn %{id: id, name: name} -> %{name: name, value: id} end)}
-                      label={gettext("Delivery Method *")}
+                      label={~t"Delivery Method *"}
                     >
                       {option.name}
                     </.input>
@@ -228,23 +223,23 @@ defmodule EdenflowersWeb.CheckoutLive do
                     >
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
                         <.input
-                          placeholder={gettext("Stadsgatan 3, 65300 Vasa")}
-                          label={gettext("Address *")}
+                          placeholder={~t"Stadsgatan 3, 65300 Vasa"}
+                          label={~t"Address *"}
                           field={@form[:delivery_address]}
                           type="text"
                         />
 
                         <.input
-                          label={gettext("Delivery Instructions")}
+                          label={~t"Delivery Instructions"}
                           field={@form[:delivery_instructions]}
                           type="text"
-                          placeholder={gettext("e.g. Door code 1234, leave at the front door")}
+                          placeholder={~t"e.g. Door code 1234, leave at the front door"}
                         />
                       <% end %>
 
                       <.input
-                        label={gettext("Phone Number")}
-                        placeholder={gettext("045 1505141")}
+                        label={~t"Phone Number"}
+                        placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
                         type="text"
                       />
@@ -252,9 +247,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <fieldset class="flex flex-col">
                         <label class="mb-1">
                           <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
-                            {gettext("Delivery Date *")}
+                            {~t"Delivery Date *"}
                           <% else %>
-                            {gettext("Pickup Date *")}
+                            {~t"Pickup Date *"}
                           <% end %>
                         </label>
                         <.live_component
@@ -284,13 +279,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
-                      <.form_button>{gettext("Next")}</.form_button>
+                      <.form_button>{~t"Next"}</.form_button>
                     </.form>
                   <% end %>
                 </section>
 
                 <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
-                  <.form_heading>{gettext("Payment")}</.form_heading>
+                  <.form_heading>{~t"Payment"}</.form_heading>
 
                   <form
                     id={"#{@id}-form-4"}
@@ -307,7 +302,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
                     <.form_button disabled={true} id="payment-button">
-                      {gettext("Pay")} {Edenflowers.Utils.format_money(@order.total)}
+                      {~t"Pay"} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </form>
                 </section>
@@ -319,7 +314,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <section class="flex flex-col gap-4 p-1" data-testid="cart-section">
                 <h2 class="font-serif text-xl" data-testid="cart-heading">
-                  {gettext("Cart")} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
+                  {~t"Cart"} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
@@ -334,11 +329,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                 >
                   <.input
                     style="button-addon"
-                    label={gettext("Promo Code")}
+                    label={~t"Promo Code"}
                     field={@promotional_form[:code]}
                     type="text"
-                    button_text={gettext("Apply")}
-                    placeholder={gettext("Enter promo code")}
+                    button_text={~t"Apply"}
+                    placeholder={~t"Enter promo code"}
                     data-testid="promo-code-input"
                   />
                 </.form>
@@ -347,9 +342,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <div class="flex flex-col gap-2 text-sm">
                   <div class="flex justify-between" data-testid="delivery-cost">
-                    <span>{gettext("Delivery")}</span>
+                    <span>{~t"Delivery"}</span>
                     <%= if Decimal.eq?(@order.fulfillment_amount || 0, 0) do %>
-                      {gettext("Free")}
+                      {~t"Free"}
                     <% else %>
                       <span>{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                     <% end %>
@@ -357,7 +352,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <div class="flex justify-between" data-testid="discount-section">
                     <div class="flex flex-row gap-2">
-                      <span>{gettext("Discount")}</span>
+                      <span>{~t"Discount"}</span>
                       <button
                         :if={@order.promotion_applied?}
                         phx-click="clear_promo"
@@ -382,7 +377,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <div class="border-neutral/5 border-t"></div>
 
                   <div class="flex justify-between font-semibold" data-testid="order-total">
-                    <span>{gettext("Total")}</span>
+                    <span>{~t"Total"}</span>
                     <span data-testid="total-amount">{Edenflowers.Utils.format_money(@order.total)}</span>
                   </div>
                 </div>
@@ -514,7 +509,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       {:error, error} ->
         Logger.error("Failed to update payment intent: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, gettext("Payment processing error. Please try again."))}
+        {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
     end
   end
 
@@ -645,10 +640,10 @@ defmodule EdenflowersWeb.CheckoutLive do
       assign(assigns,
         step_title: fn n ->
           case n do
-            1 -> gettext("Your Details")
-            2 -> gettext("Gift Options")
-            3 -> gettext("Delivery Information")
-            4 -> gettext("Payment")
+            1 -> ~t"Your Details"
+            2 -> ~t"Gift Options"
+            3 -> ~t"Delivery Information"
+            4 -> ~t"Payment"
           end
         end
       )
@@ -678,7 +673,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {render_slot(@inner_block)}
       </h1>
       <button :if={@edit_step} type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@edit_step}"}>
-        {gettext("Edit")}
+        {~t"Edit"}
       </button>
     </div>
     """

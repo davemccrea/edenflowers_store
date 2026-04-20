@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   """
   use Phoenix.Component
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Phoenix.LiveView.JS
   alias EdenflowersWeb.LiveToast
@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.CoreComponents do
     <div
       id="alert-group"
       phx-hook="AlertHandler"
-      data-disconnected-message={gettext("Disconnected from server. Reconnecting...")}
+      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
     />
     """
   end
@@ -402,9 +402,9 @@ defmodule EdenflowersWeb.CoreComponents do
   ## Examples
 
       <.breadcrumb>
-        <:item navigate={~p"/"} label={gettext("Home")} />
-        <:item navigate={~p"/store"} label={gettext("Store")} />
-        <:item label={gettext("Product Name")} />
+        <:item navigate={~p"/"} label={~t"Home"} />
+        <:item navigate={~p"/store"} label={~t"Store"} />
+        <:item label={~t"Product Name"} />
       </.breadcrumb>
 
   The last item is automatically marked as the current page with `aria-current="page"`.
@@ -472,7 +472,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
           <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
+            <span class="sr-only">{~t"Actions"}</span>
           </th>
         </tr>
       </thead>
@@ -554,10 +554,28 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div class="flex flex-row gap-4">
       <a href="#">
-        <img class={"h-#{@size} w-#{@size}"} src={"local:///facebook_logo_bw_128px.png" |> Imgproxy.new() |> Imgproxy.resize(128, 128, type: "fill") |> to_string()} alt="Facebook logo" />
+        <img
+          class={"h-#{@size} w-#{@size}"}
+          src={
+            "local:///facebook_logo_bw_128px.png"
+            |> Imgproxy.new()
+            |> Imgproxy.resize(128, 128, type: "fill")
+            |> to_string()
+          }
+          alt="Facebook logo"
+        />
       </a>
       <a href="#">
-        <img class={"h-#{@size} w-#{@size}"} src={"local:///instagram_logo_bw_128px.png" |> Imgproxy.new() |> Imgproxy.resize(128, 128, type: "fill") |> to_string()} alt="Instagram logo" />
+        <img
+          class={"h-#{@size} w-#{@size}"}
+          src={
+            "local:///instagram_logo_bw_128px.png"
+            |> Imgproxy.new()
+            |> Imgproxy.resize(128, 128, type: "fill")
+            |> to_string()
+          }
+          alt="Instagram logo"
+        />
       </a>
     </div>
     """

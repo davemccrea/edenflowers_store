@@ -58,12 +58,12 @@ defmodule EdenflowersWeb.Layouts do
       assigns
       |> assign(
         nav: [
-          {~p"/store/bouquets", gettext("Store")},
-          {~p"/courses", gettext("Courses")},
-          {~p"/weddings", gettext("Weddings")},
-          {~p"/condolences", gettext("Condolences")},
-          {~p"/about", gettext("About")},
-          {~p"/contact", gettext("Contact")}
+          {~p"/store/bouquets", ~t"Store"},
+          {~p"/courses", ~t"Courses"},
+          {~p"/weddings", ~t"Weddings"},
+          {~p"/condolences", ~t"Condolences"},
+          {~p"/about", ~t"About"},
+          {~p"/contact", ~t"Contact"}
         ]
       )
       |> assign(current_locale: String.capitalize(current_locale))
@@ -108,9 +108,9 @@ defmodule EdenflowersWeb.Layouts do
       <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <h1 class="font-serif text-3xl">
           <%= if not is_nil(@order.total_items_in_cart) do %>
-            {gettext("Cart")} ({@order.total_items_in_cart})
+            {~t"Cart"} ({@order.total_items_in_cart})
           <% else %>
-            {gettext("Cart")}
+            {~t"Cart"}
           <% end %>
         </h1>
 
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <footer :if={Enum.any?(@order.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
         <.link navigate={~p"/checkout"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")} class="btn btn-primary">
-          {gettext("Checkout")}
+          {~t"Checkout"}
         </.link>
       </footer>
     </.drawer>
@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Layouts do
       <header class="w-full">
         <%!-- Banner --%>
         <section class="border-b bg-sky-100 py-2 text-center">
-          <span class="text-accent-content text-sm">{gettext("Let us know what you think of the new website! 🚀")}</span>
+          <span class="text-accent-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
         </section>
 
         <%!-- Main header --%>
@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Layouts do
                   phx-click={JS.exec("phx-show", to: "#nav-drawer")}
                   type="button"
                   class="h-12 w-12 cursor-pointer"
-                  aria-label={gettext("Open navigation menu")}
+                  aria-label={~t"Open navigation menu"}
                 >
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
                 </button>
@@ -190,13 +190,13 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Sign in --%>
               <.link
                 navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
-                class="group flex shrink-0 h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+                class="group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
-                <span class="text-base-content hidden text-sm whitespace-nowrap group-hover:text-base-content/60 lg:inline-flex">
+                <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 lg:inline-flex">
                   {if @current_user,
-                    do: gettext("Account"),
-                    else: gettext("Sign In")}
+                    do: ~t"Account",
+                    else: ~t"Sign In"}
                 </span>
               </.link>
 
@@ -228,9 +228,9 @@ defmodule EdenflowersWeb.Layouts do
 
                 <span class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex">
                   <%= if not is_nil(@order.total_items_in_cart) do %>
-                    {gettext("Cart")} ({@order.total_items_in_cart})
+                    {~t"Cart"} ({@order.total_items_in_cart})
                   <% else %>
-                    {gettext("Cart")}
+                    {~t"Cart"}
                   <% end %>
                 </span>
               </button>
@@ -278,7 +278,7 @@ defmodule EdenflowersWeb.Layouts do
             class="text-base-content whitespace-nowrap hover:underline hover:underline-offset-2"
             href="https://github.com/davemccrea/edenflowers_store"
           >
-            {gettext("Built with ")} <span>❤️</span>
+            {~t"Built with "} <span>❤️</span>
           </a>
         </span>
       </div>
