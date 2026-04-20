@@ -344,8 +344,8 @@ msgstr "Tarkista sähköpostisi viimeistelläksesi kirjautumisen."
 
 #: lib/edenflowers_web/live/product_live.ex:77
 #, elixir-autogen, elixir-format
-msgid "Popular"
-msgstr "Suositut"
+msgid "Featured"
+msgstr "Featured"
 
 #: lib/edenflowers_web/live/checkout_live.ex:272
 #, elixir-autogen, elixir-format

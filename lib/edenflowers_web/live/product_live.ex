@@ -41,6 +41,7 @@ defmodule EdenflowersWeb.ProductLive do
         <.breadcrumb>
           <:item navigate={~p"/"} label={gettext("Home")} />
           <:item navigate={~p"/store"} label={gettext("Store")} />
+          <:item navigate={~p"/store/#{@product.product_category.slug}"} label={@product.product_category.name} />
           <:item label={@product.name} />
         </.breadcrumb>
 
@@ -56,7 +57,7 @@ defmodule EdenflowersWeb.ProductLive do
               height="1"
               loading="lazy"
             />
-            <div class="badge badge-primary badge-outline absolute top-4 right-4">{gettext("Popular")}</div>
+            <div :if={@product.featured} class="badge badge-primary badge-outline absolute top-4 right-4">{gettext("Featured")}</div>
             <%!-- Optionally add figcaption here if needed --%>
           </figure>
 
