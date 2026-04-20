@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                           data-testid="card-message-field"
                           class="flex flex-col"
                         >
-                          <span class="mb-1">{gettext("Card Message")}</span>
+                          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
                           <div class="textarea textarea-lg relative w-full">
                             <div class="relative w-full">
                               <textarea
@@ -175,6 +175,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                                     title={gettext("Remove card")}
                                   >
                                     <.icon name="hero-x-mark" class="h-3 w-3" />
+                                    <span class="sr-only">{gettext("Remove card")}</span>
                                   </button>
                                 </div>
                               </div>

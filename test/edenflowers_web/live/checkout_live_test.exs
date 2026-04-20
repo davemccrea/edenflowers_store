@@ -272,7 +272,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
-      |> click_button("[data-testid='card-option-#{card_variant.id}']")
+      |> click_button("[data-testid='card-option-#{card_variant.id}']", card_product.name)
       |> assert_has("[data-testid='card-message-textarea']")
       |> refute_has("[data-testid='select-card-button']")
     end
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='card-message-textarea']")
-      |> click_button("[data-testid='remove-card-button']")
+      |> click_button("[data-testid='remove-card-button']", "Remove card")
       |> assert_has("[data-testid='select-card-button']")
       |> refute_has("[data-testid='card-message-textarea']")
     end
@@ -348,7 +348,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      |> fill_in("card_message", with: "Happy birthday!")
+      |> fill_in("Card Message", with: "Happy birthday!")
       |> click_button("Next")
 
       reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)

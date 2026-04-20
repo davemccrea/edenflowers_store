@@ -116,6 +116,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     setup do
       tax_rate = generate(tax_rate())
       cards_category = generate(product_category(slug: "cards", draft: false))
+      draft_cards_category = generate(product_category(slug: "cards-draft", draft: true))
       other_category = generate(product_category(draft: false))
 
       card_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
@@ -124,6 +125,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       %{
         tax_rate: tax_rate,
         cards_category: cards_category,
+        draft_cards_category: draft_cards_category,
         other_category: other_category,
         card_product: card_product,
         other_product: other_product
@@ -165,8 +167,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       refute Enum.any?(variants, fn v -> v.id == variant.id end)
     end
 
-    test "excludes variants whose product category is draft", %{tax_rate: tax_rate} do
-      draft_cards_category = generate(product_category(slug: "cards", draft: true))
+    test "excludes variants whose product category is draft", %{tax_rate: tax_rate, draft_cards_category: draft_cards_category} do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_cards_category.id, draft: false))
       variant = generate(product_variant(product_id: product.id, draft: false))
 
