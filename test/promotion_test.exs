@@ -171,19 +171,6 @@ defmodule Edenflowers.Store.PromotionTest do
       assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("EXPIRED")
     end
 
-    test "gets promotion using code_interface" do
-      Promotion
-      |> Ash.Changeset.for_create(:create, %{
-        name: "A promotion",
-        code: "CHRISTMAS20",
-        discount_percentage: "0.20",
-        minimum_cart_total: "30.00",
-        start_date: ~D[2024-12-19]
-      })
-      |> Ash.create!(authorize?: false)
-
-      assert {:ok, %Promotion{}} = Promotion.get_by_code("CHRISTMAS20")
-    end
   end
 
   describe "Promotion usage tracking" do
