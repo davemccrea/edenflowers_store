@@ -13,7 +13,24 @@ defmodule Edenflowers.MixProject do
       deps: deps(),
       releases: [edenflowers: [strip_beams: true]],
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      usage_rules: [
+        file: "AGENTS.md",
+        usage_rules: [:ash, ~r/^ash_/, :phoenix, ~r/^phoenix_/, :igniter, :elixir, :otp],
+        skills: [
+          location: ".claude/skills",
+          build: [
+            "ash-framework": [
+              description: "Use when working with Ash Framework resources, domains, or extensions.",
+              usage_rules: [:ash, ~r/^ash_/]
+            ],
+            "phoenix-framework": [
+              description: "Use when working with Phoenix controllers, LiveViews, or web layer.",
+              usage_rules: [:phoenix, ~r/^phoenix_/]
+            ]
+          ]
+        ]
+      ]
     ]
   end
 
@@ -42,7 +59,7 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:usage_rules, "~> 0.1"},
+      {:usage_rules, "~> 1.1", only: [:dev]},
       {:ash_authentication_phoenix, "~> 2.16.0"},
       {:simple_sat, "~> 0.1"},
       {:ash_authentication, "~> 4.0"},
