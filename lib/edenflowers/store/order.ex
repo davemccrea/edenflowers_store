@@ -137,7 +137,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :save_step_2 do
-      accept [:gift, :recipient_name, :gift_message]
+      accept [:gift, :recipient_name]
       change set_attribute(:step, 3)
       change {MaybeRequireRecipientName, []}
       change {ClearGiftFields, []}
@@ -226,7 +226,6 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:customer_name, nil)
       change set_attribute(:customer_email, nil)
       change set_attribute(:gift, false)
-      change set_attribute(:gift_message, nil)
       change set_attribute(:recipient_name, nil)
       change set_attribute(:recipient_phone_number, nil)
       change set_attribute(:delivery_address, nil)
@@ -320,7 +319,6 @@ defmodule Edenflowers.Store.Order do
 
     # Step 2 - Gift Options
     attribute :gift, :boolean, default: false
-    attribute :gift_message, :string
 
     # Step 3 - Delivery Information
     attribute :recipient_name, :string

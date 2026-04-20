@@ -229,4 +229,78 @@ defmodule Edenflowers.Store.ProductTest do
       assert products == []
     end
   end
+
+  describe "Product.get_by_category_slug filtering" do
+    test "returns products matching the slug", %{tax_rate: tax_rate} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
+      _variant = generate(product_variant(product_id: product.id))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+
+      assert Enum.any?(products, fn p -> p.id == product.id end)
+    end
+
+    test "excludes products from a different category slug", %{tax_rate: tax_rate} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      other_category = generate(product_category(draft: false))
+
+      card_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
+      _card_variant = generate(product_variant(product_id: card_product.id))
+
+      other_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: other_category.id, draft: false))
+      _other_variant = generate(product_variant(product_id: other_product.id))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+
+      assert Enum.any?(products, fn p -> p.id == card_product.id end)
+      refute Enum.any?(products, fn p -> p.id == other_product.id end)
+    end
+
+    test "excludes draft products", %{tax_rate: tax_rate} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      draft_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: true))
+      _variant = generate(product_variant(product_id: draft_product.id))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+
+      refute Enum.any?(products, fn p -> p.id == draft_product.id end)
+    end
+
+    test "excludes products without variants", %{tax_rate: tax_rate} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+
+      product_no_variants =
+        generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+
+      refute Enum.any?(products, fn p -> p.id == product_no_variants.id end)
+    end
+
+    test "excludes products in a draft category", %{tax_rate: tax_rate} do
+      draft_cards_category = generate(product_category(slug: "cards", draft: true))
+      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_cards_category.id, draft: false))
+      _variant = generate(product_variant(product_id: product.id))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+
+      refute Enum.any?(products, fn p -> p.id == product.id end)
+    end
+
+    test "loads cheapest_price, product_variants, product_category, and tax_rate", %{tax_rate: tax_rate} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
+      _variant = generate(product_variant(product_id: product.id, price: "7.50"))
+
+      products = Product.get_by_category_slug!("cards", authorize?: false)
+      found = Enum.find(products, fn p -> p.id == product.id end)
+
+      assert found != nil
+      assert Decimal.equal?(found.cheapest_price, "7.50")
+      assert length(found.product_variants) == 1
+      assert found.product_category.id == cards_category.id
+      assert found.tax_rate.id == tax_rate.id
+    end
+  end
 end
