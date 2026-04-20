@@ -27,22 +27,23 @@ defmodule EdenflowersWeb.LocalePicker do
       phx-target={@myself}
       class={["group inline-flex items-center gap-1", @class]}
     >
-      <label class="inline-flex cursor-pointer items-center gap-1">
-        <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-        <select
-          name="cldr_locale"
-          aria-label={gettext("Language")}
-          class="text-base-content group-hover:text-base-content/60 cursor-pointer bg-transparent text-sm focus:outline-none"
+      <select
+        name="cldr_locale"
+        aria-label={gettext("Language")}
+        class="locale-picker text-base-content cursor-pointer bg-transparent text-sm group-hover:text-base-content/60"
+      >
+        <button>
+          <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+          <selectedcontent></selectedcontent>
+        </button>
+        <option
+          :for={{cldr_locale, name} <- @locales}
+          value={cldr_locale}
+          selected={cldr_locale == @current_locale}
         >
-          <option
-            :for={{cldr_locale, name} <- @locales}
-            value={cldr_locale}
-            selected={cldr_locale == @current_locale}
-          >
-            {name}
-          </option>
-        </select>
-      </label>
+          {name}
+        </option>
+      </select>
     </form>
     """
   end

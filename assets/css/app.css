@@ -10,10 +10,10 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 @theme {
-  --font-sans: "Open Sans", sans-serif;
-  --font-serif: "Crimson Text", serif;
-  --header-height: 8rem;
-  --color-image: white;
+    --font-sans: "Open Sans", sans-serif;
+    --font-serif: "Crimson Text", serif;
+    --header-height: 8rem;
+    --color-image: white;
 }
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
@@ -24,74 +24,103 @@
    curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
-  themes: false;
+    themes: false;
 }
 
 @plugin "../vendor/daisyui-theme" {
-  name: "light";
-  default: true;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
-  --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
-  --color-accent: var(--color-pink-100);
-  --color-accent-alt: oklch(0.81 0.15 93); /* a mustardy yellow */
-  --color-accent-content: var(--color-base-content);
-  --color-secondary: oklch(0.83 0.0222 158.49); /* brand secondary */
-  --color-base-100: white;
-  --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
-  --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
+    name: "light";
+    default: true;
+    prefersdark: false;
+    color-scheme: "light";
+    --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
+    --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
+    --color-accent: var(--color-pink-100);
+    --color-accent-alt: oklch(0.81 0.15 93); /* a mustardy yellow */
+    --color-accent-content: var(--color-base-content);
+    --color-secondary: oklch(0.83 0.0222 158.49); /* brand secondary */
+    --color-base-100: white;
+    --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
+    --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
 }
 
 /* Use the data attribute for dark mode  */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* Make LiveView wrapper divs transparent for layout */
-[data-phx-session], [data-phx-teleported-src] { display: contents }
+[data-phx-session],
+[data-phx-teleported-src] {
+    display: contents;
+}
 
 /* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
-  opacity: 0;
+    opacity: 0;
 }
 body.ready {
-  transition: 0.25s opacity;
-  opacity: 1;
+    transition: 0.25s opacity;
+    opacity: 1;
+}
+
+@supports (appearance: base-select) {
+    select.locale-picker {
+        appearance: base-select;
+    }
+
+    select.locale-picker::picker-icon {
+        display: none;
+    }
+
+    select.locale-picker button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 0.875rem;
+        color: inherit;
+    }
+
+    select.locale-picker option::checkmark {
+        display: none;
+    }
 }
 
 .checkout__section {
-  @apply flex flex-col gap-8 mb-12;
+    @apply flex flex-col gap-8 mb-12;
 }
 
 .checkout__form {
-  @apply flex flex-col space-y-6;
+    @apply flex flex-col space-y-6;
 }
 
 .disable-dbl-tap-zoom {
-  touch-action: manipulation;
+    touch-action: manipulation;
 }
 
 @utility container {
-  @apply mx-auto px-4 sm:px-8;
+    @apply mx-auto px-4 sm:px-8;
 }
 
 @utility hero-heading {
-  @apply text-5xl sm:text-6xl md:text-7xl;
+    @apply text-5xl sm:text-6xl md:text-7xl;
 }
 
 #hotfx-shy-header {
-  display: flex;
-  position: fixed;
-  top: 0;
-  z-index: 50;
-  width: 100vw;
-  transition: transform 0.2s ease-out;
+    display: flex;
+    position: fixed;
+    top: 0;
+    z-index: 50;
+    width: 100vw;
+    transition: transform 0.2s ease-out;
 }
 
 #hotfx-shy-header.hidden {
-  transform: translateY(-100%);
+    transform: translateY(-100%);
 }
 
 .auth-background-pattern {
-  background-color: #fafaf9;
-  background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-color: #fafaf9;
+    background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
