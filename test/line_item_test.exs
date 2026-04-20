@@ -250,7 +250,7 @@ defmodule Edenflowers.Store.LineItemTest do
     test "add_card is rejected when order is not in checkout state",
          %{card_product: card_product, card_variant: card_variant} do
       completed_order =
-        generate(order(state: :order))
+        generate(order(state: :placed))
         |> Ash.Changeset.for_update(:update_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
