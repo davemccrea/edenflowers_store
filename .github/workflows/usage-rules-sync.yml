@@ -28,7 +28,7 @@ jobs:
       - run: mix deps.get
       - run: mix usage_rules.sync --yes
       - name: Open PR if changed
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/usage-rules-sync
           commit-message: "chore: sync usage rules"
