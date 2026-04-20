@@ -287,6 +287,17 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   @doc """
+  Bare layout for printable invoice pages — no site chrome.
+  """
+  def invoice(assigns) do
+    ~H"""
+    <div id="invoice-print-root" class="bg-white">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
   Provides dark vs light theme toggle based on themes defined in app.css.
 
   See <head> in root.html.heex which applies the theme before page load.

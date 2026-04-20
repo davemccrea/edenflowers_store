@@ -55,6 +55,8 @@ defmodule EdenflowersWeb.Router do
       live "/account", AccountLive
     end
 
+    live "/invoices/sample", InvoiceLive
+
     get "/checkout/complete/:id", CheckoutCompleteController, :index
     get "/cldr_locale/:cldr_locale", LocaleController, :index
 

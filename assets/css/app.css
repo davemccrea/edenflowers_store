@@ -66,6 +66,36 @@ body.ready {
   @apply flex flex-col space-y-6;
 }
 
+/* ── Invoice print styles ─────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 20mm 15mm;
+  }
+
+  /* Reset body styles set for the web app */
+  body {
+    opacity: 1 !important;
+    background: white !important;
+  }
+
+  /* Hide everything except the invoice */
+  body > *:not(#invoice-print-root) {
+    display: none !important;
+  }
+
+  /* Prevent awkward breaks inside key invoice sections */
+  .invoice-section {
+    break-inside: avoid;
+  }
+
+  /* The payment slip should ideally stay together */
+  .invoice-payment-slip {
+    break-inside: avoid;
+    break-before: avoid;
+  }
+}
+
 .disable-dbl-tap-zoom {
   touch-action: manipulation;
 }
