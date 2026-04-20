@@ -154,17 +154,23 @@ for n <- 1..4 do
     })
     |> Ash.create!(authorize?: false)
 
-  # Cards have a single variant with fixed price
-  Ash.Changeset.for_create(ProductVariant, :create, %{
-    product_id: product.id,
-    price: "5.00",
-    size: :small,
-    image_slug: "https://placehold.co/400x400",
-    stock_trackable: false,
-    stock_quantity: 0,
-    draft: false
-  })
-  |> Ash.create!(authorize?: false)
+  for size <- [:small, :medium, :large] do
+    Ash.Changeset.for_create(ProductVariant, :create, %{
+      product_id: product.id,
+      price:
+        "#{case size do
+          :small -> 5
+          :medium -> 7
+          :large -> 10
+        end}",
+      size: size,
+      image_slug: "https://placehold.co/400x400",
+      stock_trackable: false,
+      stock_quantity: 0,
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+  end
 end
 
 # Create Pre-Loved products

@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
   require Ash.Query
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, Product}
+  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -18,26 +18,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- Ash.read(FulfillmentOption) do
-      cards = Product.get_by_category_slug!("cards")
-
-      cards_by_size =
-        cards
-        |> Enum.group_by(fn card -> hd(card.product_variants).size end)
-        |> Enum.sort_by(fn {size, _} ->
-          case size do
-            :small -> 0
-            :medium -> 1
-            :large -> 2
-            _ -> 99
-          end
-        end)
+      card_variants = ProductVariant.for_card_drawer!()
 
       {:ok,
        socket
        |> assign(:id, "checkout")
        |> assign(:page_title, gettext("Checkout"))
        |> assign(:fulfillment_options, fulfillment_options)
-       |> assign(:cards_by_size, cards_by_size)
+       |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
@@ -411,34 +399,35 @@ defmodule EdenflowersWeb.CheckoutLive do
             </button>
           </div>
 
-          <div :for={{size, cards} <- @cards_by_size} class="flex flex-col gap-3">
+          <div
+            :for={{size, variants} <- Enum.group_by(@card_variants, & &1.size)}
+            class="flex flex-col gap-3"
+          >
             <h3 class="font-semibold">{size_label(size)}</h3>
             <div class="grid grid-cols-2 gap-3">
               <button
-                :for={card <- cards}
+                :for={variant <- variants}
                 type="button"
                 phx-click={
-                  JS.push("select_card",
-                    value: %{"product-id" => card.id, "variant-id" => hd(card.product_variants).id}
-                  )
+                  JS.push("select_card", value: %{"variant-id" => variant.id})
                   |> JS.exec("phx-hide", to: "#card-drawer")
                 }
                 class="border-base-300 hover:bg-base-200 flex flex-col items-center gap-1 border p-2"
-                data-testid={"card-option-#{card.id}"}
+                data-testid={"card-option-#{variant.id}"}
               >
                 <img
                   src={
-                    card.image_slug
+                    variant.image_slug
                     |> Imgproxy.new()
                     |> Imgproxy.resize(200, 200, type: "fill")
                     |> to_string()
                   }
-                  alt={card.name}
+                  alt={variant.product.name}
                   class="h-24 w-24 object-cover"
                 />
-                <span class="text-sm">{card.name}</span>
+                <span class="text-sm">{variant.product.name}</span>
                 <span class="text-base-content/60 text-xs">
-                  {Edenflowers.Utils.format_money(card.cheapest_price)}
+                  {Edenflowers.Utils.format_money(variant.price)}
                 </span>
               </button>
             </div>
@@ -545,29 +534,24 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   # Card selection
-  def handle_event("select_card", %{"product-id" => product_id, "variant-id" => variant_id}, socket) do
+  def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
     actor = socket.assigns[:current_user]
 
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
 
-    card =
-      Enum.find_value(socket.assigns.cards_by_size, fn {_size, cards} ->
-        Enum.find(cards, &(&1.id == product_id))
-      end)
-
-    variant = Enum.find(card.product_variants, &(&1.id == variant_id))
+    variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
 
     LineItem.add_card(%{
       order_id: socket.assigns.order.id,
-      product_id: card.id,
+      product_id: variant.product.id,
       product_variant_id: variant.id,
-      product_name: card.name,
+      product_name: variant.product.name,
       product_image_slug: variant.image_slug,
       quantity: 1,
       unit_price: variant.price,
-      tax_rate: card.tax_rate.percentage
+      tax_rate: variant.product.tax_rate.percentage
     })
 
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
