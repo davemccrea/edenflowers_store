@@ -42,7 +42,7 @@ defmodule EdenflowersWeb do
 
       import Plug.Conn
 
-      use Gettext,
+      use GettextSigils,
         backend: EdenflowersWeb.Gettext
 
       unquote(verified_routes())
@@ -81,7 +81,7 @@ defmodule EdenflowersWeb do
   defp html_helpers do
     quote do
       # Translation
-      use Gettext, backend: EdenflowersWeb.Gettext
+      use GettextSigils, backend: EdenflowersWeb.Gettext
 
       # HTML escaping functionality
       import Phoenix.HTML

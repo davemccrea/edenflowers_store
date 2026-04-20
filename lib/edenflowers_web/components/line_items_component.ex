@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={gettext("Decrement")}
+                    aria-label={~t"Decrement"}
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
                   </button>
@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={gettext("Increment")}
+                    aria-label={~t"Increment"}
                   >
                     <.icon class="h-4 w-4" name="hero-plus-mini" />
                   </button>
@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
-                  aria-label={gettext("Remove")}
+                  aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="text-error h-4 w-4" />
                 </button>
@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
           </li>
         </ul>
       <% else %>
-        <p>{gettext("Your cart is empty.")}</p>
+        <p>{~t"Your cart is empty."}</p>
       <% end %>
     </div>
     """

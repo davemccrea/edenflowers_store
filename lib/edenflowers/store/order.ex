@@ -6,7 +6,7 @@ defmodule Edenflowers.Store.Order do
     notifiers: [Ash.Notifier.PubSub],
     extensions: [AshStateMachine]
 
-  use Gettext, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Ash.Resource.Change.Builtins
 

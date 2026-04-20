@@ -23,17 +23,17 @@ defmodule EdenflowersWeb.HomeLive do
 
         <div class="container absolute inset-0 flex flex-col items-center justify-center gap-8 text-center">
           <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
-            {gettext("Fresh flowers for everyday moments.")}
+            {~t"Fresh flowers for everyday moments."}
           </h1>
           <a href="#store" class="btn-primary btn btn-lg mx-auto">
-            {gettext("Shop Now")}
+            {~t"Shop Now"}
           </a>
         </div>
       </section>
 
       <section id="store" class="not-last:border-b">
         <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="font-serif mb-4 px-2 text-3xl">{gettext("Featured Blooms")}</h2>
+          <h2 class="font-serif mb-4 px-2 text-3xl">{~t"Featured Blooms"}</h2>
 
           <div
             id="product-slider"
@@ -68,12 +68,10 @@ defmodule EdenflowersWeb.HomeLive do
       <section class="not-last:border-b">
         <div class="container flex flex-col items-center gap-12 py-24">
           <h1 class="font-serif max-w-4xl text-center text-3xl font-light leading-10 sm:leading-14 md:text-4xl">
-            {gettext(
-              "Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."
-            )}
+            {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </h1>
           <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
-            {gettext("Learn more")}
+            {~t"Learn more"}
           </a>
         </div>
       </section>

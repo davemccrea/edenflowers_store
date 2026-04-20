@@ -46,8 +46,8 @@ defmodule EdenflowersWeb.StoreLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="container my-36">
         <.breadcrumb>
-          <:item navigate={~p"/"} label={gettext("Home")} />
-          <:item navigate={~p"/store"} label={gettext("Store")} />
+          <:item navigate={~p"/"} label={~t"Home"} />
+          <:item navigate={~p"/store"} label={~t"Store"} />
         </.breadcrumb>
 
         <div class="mb-12">
@@ -74,9 +74,9 @@ defmodule EdenflowersWeb.StoreLive do
         <%= if Enum.empty?(@products) do %>
           <div class="border-primary/40 bg-base-100 flex flex-col items-center gap-4 border border-dashed px-8 py-16 text-center">
             <.icon name="hero-sparkles" class="text-primary h-12 w-12" />
-            <h3 class="font-serif text-2xl">{gettext("Fresh stems loading soon")}</h3>
+            <h3 class="font-serif text-2xl">{~t"Fresh stems loading soon"}</h3>
             <p class="text-base-content/70 max-w-md text-sm sm:text-base">
-              {gettext("We're refreshing our collection. Check back shortly for newly arranged bouquets ready to ship.")}
+              {~t"We're refreshing our collection. Check back shortly for newly arranged bouquets ready to ship."}
             </p>
           </div>
         <% else %>
@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.StoreLive do
                       {Edenflowers.Utils.format_money(product.cheapest_price)}
                     </span>
                     <span class="text-base-content/60 flex items-center gap-1 text-xs uppercase tracking-wider transition duration-200 group-hover:text-primary sm:text-sm">
-                      {gettext("View")}
+                      {~t"View"}
                       <.icon
                         name="hero-arrow-right"
                         class="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1"

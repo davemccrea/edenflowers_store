@@ -7,9 +7,9 @@ defmodule EdenflowersWeb.AuthController do
 
     message =
       case activity do
-        {:confirm_new_user, :confirm} -> gettext("Your email address has now been confirmed")
-        {:password, :reset} -> gettext("Your password has successfully been reset")
-        _ -> gettext("You are now signed in")
+        {:confirm_new_user, :confirm} -> ~t"Your email address has now been confirmed"
+        {:password, :reset} -> ~t"Your password has successfully been reset"
+        _ -> ~t"You are now signed in"
       end
 
     conn
@@ -30,13 +30,10 @@ defmodule EdenflowersWeb.AuthController do
              errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
            }
          }} ->
-          gettext("""
-          You have already signed in another way, but have not confirmed your account.
-          You can confirm your account using the link we sent to you, or by resetting your password.
-          """)
+          ~t"You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 
         _ ->
-          gettext("Incorrect email or password")
+          ~t"Incorrect email or password"
       end
 
     conn
@@ -49,7 +46,7 @@ defmodule EdenflowersWeb.AuthController do
 
     conn
     |> clear_session(:edenflowers)
-    |> put_flash(:info, gettext("You are now signed out"))
+    |> put_flash(:info, ~t"You are now signed out")
     |> redirect(to: return_to)
   end
 end
