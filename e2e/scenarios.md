@@ -1,8 +1,8 @@
 # E2E Test Scenarios (Playwright)
 
 Full browser tests covering the customer journey from store to confirmation email.
-Stripe is exercised via test mode with real test cards. Here API is stubbed at
-the server level (returns a fixed coordinate + distance for any input address).
+Stripe is exercised via test mode with real test cards. Here API is called for
+real using a fixed, well-known Helsinki address to keep results stable.
 
 ---
 
@@ -39,8 +39,7 @@ the server level (returns a fixed coordinate + distance for any input address).
 2. Select a variant, add to cart
 3. Enter name and email (step 1)
 4. Skip gift options (step 2)
-5. Select delivery, enter an address, choose a date (step 3)
-   - Here API stub returns a distance within the free delivery threshold
+5. Select delivery, enter a fixed test address (e.g. Esplanadi, Helsinki), choose a date (step 3)
 6. Pay with test card
 7. Assert: confirmation page shows the delivery address and correct fulfillment cost
 
@@ -59,8 +58,8 @@ the server level (returns a fixed coordinate + distance for any input address).
 ## Infrastructure notes
 
 - **Stripe**: use test mode API keys; interact with Stripe Elements directly in the browser
-- **Here API**: stub responses at the server level via a test configuration flag;
-  no network calls to Here during E2E runs
+- **Here API**: use the real API with a fixed test address; geocoding results for
+  well-known Helsinki addresses are stable enough for E2E purposes
 - **Email**: capture via [MailHog](https://github.com/mailhog/MailHog) or
   [Mailpit](https://github.com/axllent/mailpit) running alongside the test server;
   assert on subject, recipient, and key content
