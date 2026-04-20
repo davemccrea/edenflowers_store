@@ -46,11 +46,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
-          <div class="text-neutral/60 flex flex-row gap-2">
-            <.icon name="hero-lock-closed" class="h-4 w-4" />
-            <span class="items-center text-xs uppercase">{gettext("Secure Checkout")}</span>
-          </div>
-
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
               <.steps step={@order.step}>
