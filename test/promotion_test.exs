@@ -170,7 +170,6 @@ defmodule Edenflowers.Store.PromotionTest do
 
       assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("EXPIRED")
     end
-
   end
 
   describe "Promotion usage tracking" do
