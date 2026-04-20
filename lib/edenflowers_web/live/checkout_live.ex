@@ -19,7 +19,6 @@ defmodule EdenflowersWeb.CheckoutLive do
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       card_variants = ProductVariant.for_card_drawer!()
 
-
       {:ok,
        socket
        |> assign(:id, "checkout")

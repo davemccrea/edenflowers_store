@@ -128,7 +128,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       }
     end
 
-    test "LineItem.add_card succeeds for gift orders", %{order: order, card_product: card_product, card_variant: card_variant} do
+    test "LineItem.add_card succeeds for gift orders", %{
+      order: order,
+      card_product: card_product,
+      card_variant: card_variant
+    } do
       order
       |> Ash.Changeset.for_update(:update_gift, %{gift: true})
       |> Ash.update!(authorize?: false)
@@ -148,7 +152,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert card_line_item.is_card == true
     end
 
-    test "LineItem.add_card returns an error for non-gift orders", %{order: order, card_product: card_product, card_variant: card_variant} do
+    test "LineItem.add_card returns an error for non-gift orders", %{
+      order: order,
+      card_product: card_product,
+      card_variant: card_variant
+    } do
       assert {:error, _} =
                LineItem.add_card(%{
                  order_id: order.id,
@@ -162,7 +170,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
                })
     end
 
-    test "saving step 2 with gift=false removes card line items", %{order: order, card_product: card_product, card_variant: card_variant} do
+    test "saving step 2 with gift=false removes card line items", %{
+      order: order,
+      card_product: card_product,
+      card_variant: card_variant
+    } do
       order =
         order
         |> Ash.Changeset.for_update(:update_gift, %{gift: true})

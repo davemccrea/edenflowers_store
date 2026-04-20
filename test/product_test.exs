@@ -269,7 +269,9 @@ defmodule Edenflowers.Store.ProductTest do
 
     test "excludes products without variants", %{tax_rate: tax_rate} do
       cards_category = generate(product_category(slug: "cards", draft: false))
-      product_no_variants = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
+
+      product_no_variants =
+        generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
 
       products = Product.get_by_category_slug!("cards", authorize?: false)
 
