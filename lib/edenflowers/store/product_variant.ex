@@ -11,13 +11,13 @@ defmodule Edenflowers.Store.ProductVariant do
   end
 
   code_interface do
-    define :get_by_id, action: :get_by_id, args: [:id]
+    define :get_by_id, action: :by_id, args: [:id]
   end
 
   actions do
     defaults [:read, :destroy]
 
-    read :get_by_id do
+    read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true

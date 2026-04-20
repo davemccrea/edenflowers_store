@@ -227,7 +227,7 @@ defmodule Edenflowers.Store.OrderTest do
     order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
-    assert order.state == :order
+    assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
   end
@@ -867,7 +867,7 @@ defmodule Edenflowers.Store.OrderTest do
 
   describe "Order state transitions" do
     test "cannot transition from order back to checkout" do
-      order = generate(order(state: :order, payment_status: :paid))
+      order = generate(order(state: :placed, payment_status: :paid))
 
       # Try to set state back to checkout - should now fail
       assert {:error, error} =
@@ -893,7 +893,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "cannot finalize order already in :order state" do
-      order = generate(order(state: :order, payment_status: :paid, payment_intent_id: "pi_test"))
+      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
 
       # Should now fail with clear error message
       assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)

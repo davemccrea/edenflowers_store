@@ -29,9 +29,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "Christmas20", today: ~D[2024-12-20]})
-               |> Ash.read_one()
+               Promotion.get_by_code("Christmas20", ~D[2024-12-20])
     end
 
     test "gets promotion using a code with leading and trailing whitespace" do
@@ -46,9 +44,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: " CHRISTMAS20 ", today: ~D[2024-12-20]})
-               |> Ash.read_one()
+               Promotion.get_by_code(" CHRISTMAS20 ", ~D[2024-12-20])
     end
 
     test "fails to get promotion if code doesn't match" do
@@ -62,10 +58,7 @@ defmodule Edenflowers.Store.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:ok, nil} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "AUTUMN20", today: ~D[2024-12-20]})
-               |> Ash.read_one()
+      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("AUTUMN20", ~D[2024-12-20])
     end
 
     test "fails to get promotion if current date is before start date" do
@@ -79,10 +72,7 @@ defmodule Edenflowers.Store.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:ok, nil} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-18]})
-               |> Ash.read_one()
+      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-18])
     end
 
     test "gets promotion if current date is same as start date" do
@@ -97,9 +87,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-19]})
-               |> Ash.read_one()
+               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-19])
     end
 
     test "gets promotion if current date is after start date and before expiration date" do
@@ -115,9 +103,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-21]})
-               |> Ash.read_one()
+               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-21])
     end
 
     test "gets promotion if current date is after start date and on expiration date" do
@@ -133,9 +119,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-22]})
-               |> Ash.read_one()
+               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-22])
     end
 
     test "fails to get promotion if current date is after expiration date" do
@@ -150,10 +134,7 @@ defmodule Edenflowers.Store.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:ok, nil} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "CHRISTMAS20", today: ~D[2024-12-23]})
-               |> Ash.read_one()
+      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-23])
     end
 
     test "rejects expired promotion code" do
@@ -254,10 +235,7 @@ defmodule Edenflowers.Store.PromotionTest do
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
 
       # Should not be found because usage >= usage_limit
-      assert {:ok, nil} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "LIMITED", today: Date.utc_today()})
-               |> Ash.read_one()
+      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("LIMITED", Date.utc_today())
     end
 
     test "allows promotion code when usage is below usage_limit" do
@@ -281,9 +259,7 @@ defmodule Edenflowers.Store.PromotionTest do
 
       # Should be found because usage < usage_limit
       assert {:ok, %Promotion{id: id}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "LIMITED10", today: Date.utc_today()})
-               |> Ash.read_one()
+               Promotion.get_by_code("LIMITED10", Date.utc_today())
 
       assert id == promotion.id
     end
@@ -311,9 +287,7 @@ defmodule Edenflowers.Store.PromotionTest do
 
       # Should be found even with high usage because there's no limit
       assert {:ok, %Promotion{id: id}} =
-               Promotion
-               |> Ash.Query.for_read(:get_by_code, %{code: "UNLIMITED", today: Date.utc_today()})
-               |> Ash.read_one()
+               Promotion.get_by_code("UNLIMITED", Date.utc_today())
 
       assert id == promotion.id
     end

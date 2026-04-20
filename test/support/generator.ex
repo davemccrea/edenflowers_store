@@ -99,7 +99,7 @@ defmodule Generator do
   end
 
   def line_item(opts \\ []) do
-    changeset_generator(LineItem, :create,
+    changeset_generator(LineItem, :add_to_cart,
       defaults: %{
         quantity: 1
       },
@@ -124,13 +124,7 @@ defmodule Generator do
         max_dist_km: 20,
         same_day: true,
         order_deadline: ~T[14:00:00],
-        monday: true,
-        tuesday: true,
-        wednesday: true,
-        thursday: true,
-        friday: true,
-        saturday: true,
-        sunday: true,
+        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
         enabled_dates: [],
         disabled_dates: []
       },
