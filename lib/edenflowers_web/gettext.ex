@@ -21,5 +21,5 @@ defmodule EdenflowersWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext.Backend, otp_app: :edenflowers, default_locale: "sv", locales: ~w(en sv fi)
+  use Gettext.Backend, otp_app: :edenflowers, default_locale: "en", locales: ~w(en sv fi)
 end
