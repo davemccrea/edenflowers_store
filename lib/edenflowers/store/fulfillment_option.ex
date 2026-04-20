@@ -75,7 +75,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
     attribute :order_deadline, :time, public?: true
 
     attribute :available_days, {:array, :atom},
-      default: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+      default: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
       public?: true
 
     attribute :enabled_dates, {:array, :date}, default: [], public?: true

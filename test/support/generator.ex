@@ -124,7 +124,7 @@ defmodule Generator do
         max_dist_km: 20,
         same_day: true,
         order_deadline: ~T[14:00:00],
-        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
         enabled_dates: [],
         disabled_dates: []
       },
