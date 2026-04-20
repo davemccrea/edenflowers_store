@@ -57,7 +57,9 @@ defmodule EdenflowersWeb.ProductLive do
               height="1"
               loading="lazy"
             />
-            <div :if={@product.featured} class="badge badge-primary badge-outline absolute top-4 right-4">{gettext("Featured")}</div>
+            <div :if={@product.featured} class="badge badge-primary badge-outline absolute top-4 right-4">
+              {gettext("Featured")}
+            </div>
             <%!-- Optionally add figcaption here if needed --%>
           </figure>
 

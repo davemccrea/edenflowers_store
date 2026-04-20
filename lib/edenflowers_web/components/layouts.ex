@@ -190,10 +190,10 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Sign in --%>
               <.link
                 navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
-                class="group flex shrink-0 h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+                class="group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
-                <span class="text-base-content hidden text-sm whitespace-nowrap group-hover:text-base-content/60 lg:inline-flex">
+                <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 lg:inline-flex">
                   {if @current_user,
                     do: gettext("Account"),
                     else: gettext("Sign In")}

@@ -28,8 +28,7 @@ defmodule Edenflowers.Store.Promotion do
     read :get_by_code do
       argument :code, :string, allow_nil?: false
 
-      argument :today, :date,
-        default: fn -> "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() end
+      argument :today, :date, default: fn -> "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() end
 
       filter expr(
                code == ^arg(:code) and
