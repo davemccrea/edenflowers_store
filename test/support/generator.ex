@@ -16,7 +16,7 @@ defmodule Generator do
     changeset_generator(
       TaxRate,
       :create,
-      defaults: %{name: words()},
+      defaults: %{name: sequence(:tax_rate_name, &"Tax Rate #{&1}")},
       overrides: opts,
       authorize?: false
     )
@@ -28,7 +28,7 @@ defmodule Generator do
       :create,
       defaults: %{
         name: words(),
-        code: "PROMO-#{Faker.random_between(100_000, 999_999)}",
+        code: sequence(:promotion_code, &"PROMO-#{&1}"),
         discount_percentage: "0.20",
         minimum_cart_total: "0",
         start_date: nil,
@@ -60,7 +60,7 @@ defmodule Generator do
       defaults: %{
         product_category_id: product_category_id,
         tax_rate_id: tax_rate_id,
-        name: words(),
+        name: sequence(:product_name, &"Product #{&1}"),
         description: words(),
         image_slug: "image.png"
       },
@@ -114,7 +114,7 @@ defmodule Generator do
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
         tax_rate_id: tax_rate_id,
-        name: words(),
+        name: sequence(:fulfillment_option_name, &"Fulfillment Option #{&1}"),
         fulfillment_method: :pickup,
         rate_type: :fixed,
         minimum_cart_total: 0,
