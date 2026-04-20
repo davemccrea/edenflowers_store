@@ -192,4 +192,100 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.promotion_applied? == false
     end
   end
+
+  describe "Card line items" do
+    setup do
+      order = generate(order())
+
+      gift_order =
+        order
+        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.update!(authorize?: false)
+
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      card_tax_rate = generate(tax_rate())
+
+      card_product =
+        generate(product(product_category_id: cards_category.id, tax_rate_id: card_tax_rate.id, draft: false))
+
+      card_variant = generate(product_variant(product_id: card_product.id, draft: false))
+
+      %{gift_order: gift_order, card_product: card_product, card_variant: card_variant}
+    end
+
+    test "add_card creates a line item with is_card set to true",
+         %{gift_order: gift_order, card_product: card_product, card_variant: card_variant} do
+      assert {:ok, line_item} =
+               LineItem.add_card(%{
+                 order_id: gift_order.id,
+                 product_id: card_product.id,
+                 product_variant_id: card_variant.id,
+                 product_name: card_product.name,
+                 product_image_slug: card_variant.image_slug,
+                 quantity: 1,
+                 unit_price: card_variant.price,
+                 tax_rate: Decimal.new("0.24")
+               })
+
+      assert line_item.is_card == true
+    end
+
+    test "add_card is rejected for non-gift orders",
+         %{card_product: card_product, card_variant: card_variant} do
+      non_gift_order = generate(order())
+
+      assert {:error, _} =
+               LineItem.add_card(%{
+                 order_id: non_gift_order.id,
+                 product_id: card_product.id,
+                 product_variant_id: card_variant.id,
+                 product_name: card_product.name,
+                 product_image_slug: card_variant.image_slug,
+                 quantity: 1,
+                 unit_price: card_variant.price,
+                 tax_rate: Decimal.new("0.24")
+               })
+    end
+
+    test "add_card is rejected when order is not in checkout state",
+         %{card_product: card_product, card_variant: card_variant} do
+      completed_order =
+        generate(order(state: :order))
+        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.update!(authorize?: false)
+
+      assert {:error, _} =
+               LineItem.add_card(%{
+                 order_id: completed_order.id,
+                 product_id: card_product.id,
+                 product_variant_id: card_variant.id,
+                 product_name: card_product.name,
+                 product_image_slug: card_variant.image_slug,
+                 quantity: 1,
+                 unit_price: card_variant.price,
+                 tax_rate: Decimal.new("0.24")
+               })
+    end
+
+    test "update_card_message persists the card message",
+         %{gift_order: gift_order, card_product: card_product, card_variant: card_variant} do
+      {:ok, card_item} =
+        LineItem.add_card(
+          %{
+            order_id: gift_order.id,
+            product_id: card_product.id,
+            product_variant_id: card_variant.id,
+            product_name: card_product.name,
+            product_image_slug: card_variant.image_slug,
+            quantity: 1,
+            unit_price: card_variant.price,
+            tax_rate: Decimal.new("0.24")
+          },
+          authorize?: false
+        )
+
+      assert {:ok, updated} = LineItem.update_card_message(card_item, "Happy birthday!", authorize?: false)
+      assert updated.card_message == "Happy birthday!"
+    end
+  end
 end

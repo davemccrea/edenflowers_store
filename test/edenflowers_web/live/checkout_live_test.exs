@@ -114,6 +114,27 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       session
       |> refute_has("[data-testid='select-card-button']")
     end
+
+    test "shows 'Add a card' button when order is a gift",
+         %{conn: conn, product: product, variant: variant} do
+      gift_order = generate(order(step: 2, gift: true))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='select-card-button']")
+    end
   end
 
   describe "Card selection" do
@@ -194,6 +215,145 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       refute Enum.any?(reloaded.line_items, & &1.is_card)
+    end
+
+    test "shows card message textarea when a card line item exists",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='card-message-textarea']")
+      |> assert_has("[data-testid='remove-card-button']")
+    end
+
+    test "select_card event adds a card line item to the order",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='select-card-button']")
+      |> click_button("[data-testid='card-option-#{card_variant.id}']")
+      |> assert_has("[data-testid='card-message-textarea']")
+      |> refute_has("[data-testid='select-card-button']")
+    end
+
+    test "remove_card event removes the card from the order",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='card-message-textarea']")
+      |> click_button("[data-testid='remove-card-button']")
+      |> assert_has("[data-testid='select-card-button']")
+      |> refute_has("[data-testid='card-message-textarea']")
+    end
+
+    test "save_form_2 persists card_message on the card line item",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      # recipient_name is required when gift=true, so seed it on the order directly
+      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test Recipient"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> fill_in("card_message", with: "Happy birthday!")
+      |> click_button("Next")
+
+      reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)
+      card_item = Enum.find(reloaded.line_items, & &1.is_card)
+      assert card_item.card_message == "Happy birthday!"
     end
   end
 
