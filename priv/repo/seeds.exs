@@ -117,7 +117,8 @@ for n <- 1..6 do
       image_slug: "https://placehold.co/400x400",
       description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      draft: false
+      draft: false,
+      featured: n <= 3
     })
     |> Ash.create!(authorize?: false)
 
