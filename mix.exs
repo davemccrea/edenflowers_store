@@ -110,7 +110,6 @@ defmodule Edenflowers.MixProject do
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
       {:mdex, "~> 0.6"},
-      {:sqids, "~> 0.2.0"},
       {:imgproxy, "~> 3.1"}
     ]
   end
