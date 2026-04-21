@@ -266,6 +266,5 @@ defmodule Edenflowers.Store.LineItemTest do
                  tax_rate: Decimal.new("0.24")
                })
     end
-
   end
 end
