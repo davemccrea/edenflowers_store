@@ -321,6 +321,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                             />
                           </:day_decoration>
                         </.live_component>
+                        <.error :for={
+                          msg <-
+                            if(Phoenix.Component.used_input?(@form[:fulfillment_date]),
+                              do: Enum.map(@form[:fulfillment_date].errors, &translate_error(&1)),
+                              else: []
+                            )
+                        }>
+                          {msg}
+                        </.error>
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
