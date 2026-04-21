@@ -267,7 +267,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                             {msg}
                           </.error>
                           <p :if={@address_state == :confirmed} class="text-success mt-1.5 flex items-center gap-2 text-sm">
-                            <.icon name="hero-check-circle-mini" class="size-5 shrink-0" />
                             <span>
                               {@order.calculated_address}
                               <span class="text-base-content/50 ml-1">
@@ -275,8 +274,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                               </span>
                             </span>
                           </p>
-                          <p :if={@address_state == :error} class="text-error mt-1.5 flex items-center gap-2 text-sm">
-                            <.icon name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
+                          <p :if={@address_state == :error} class="text-error mt-1.5 text-sm">
                             {@address_error}
                           </p>
                         </fieldset>
