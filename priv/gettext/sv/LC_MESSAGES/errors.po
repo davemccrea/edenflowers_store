@@ -12,28 +12,28 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "can't be blank"
-msgstr "får inte vara tom"
+msgstr "Det här fältet är obligatoriskt"
 
 msgid "has already been taken"
-msgstr "är redan tagen"
+msgstr "Det här värdet är redan taget"
 
 msgid "is invalid"
-msgstr "är ogiltig"
+msgstr "Ange ett giltigt värde"
 
 msgid "must be accepted"
-msgstr "måste accepteras"
+msgstr "Vänligen acceptera detta för att fortsätta"
 
 msgid "has invalid format"
-msgstr "har ogiltigt format"
+msgstr "Ange ett giltigt format"
 
 msgid "has an invalid entry"
-msgstr "har en ogiltig post"
+msgstr "Innehåller en ogiltig post"
 
 msgid "is reserved"
-msgstr "är reserverad"
+msgstr "Det här värdet är reserverat"
 
 msgid "does not match confirmation"
-msgstr "matchar inte bekräftelsen"
+msgstr "Matchar inte bekräftelsen"
 
 msgid "is still associated with this entry"
 msgstr "är fortfarande associerad med denna post"
@@ -102,4 +102,4 @@ msgid "must be equal to %{number}"
 msgstr "måste vara lika med %{number}"
 
 msgid "is required"
-msgstr "är obligatorisk"
+msgstr "Det här fältet är obligatoriskt"
