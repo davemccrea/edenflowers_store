@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.AboutLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
       <div class="container my-36">
-        <h1 class="font-serif text-4xl">{~t"About"}</h1>
+        <h1 class="page-title">{~t"About"}</h1>
       </div>
     </Layouts.app>
     """

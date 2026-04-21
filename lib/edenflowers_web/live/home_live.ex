@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.HomeLive do
         />
 
         <div class="container absolute inset-0 flex flex-col items-center justify-center gap-8 text-center">
-          <h1 class="hero-heading text-image font-serif max-w-[20ch] tracking-wide">
+          <h1 class="hero-heading font-serif max-w-[20ch] tracking-wide text-white">
             {~t"Fresh flowers for everyday moments."}
           </h1>
           <a href="#store" class="btn-primary btn btn-lg mx-auto">
@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.HomeLive do
 
       <section id="store" class="not-last:border-b">
         <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="font-serif mb-4 px-2 text-3xl">{~t"Featured Blooms"}</h2>
+          <h2 class="section-title mb-4 px-2">{~t"Featured Blooms"}</h2>
 
           <div
             id="product-slider"
@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.HomeLive do
                     />
                   </div>
                   <div class="text-base-content flex flex-col items-center">
-                    <h3 id={product.name} class="font-serif text-xl">{product.name}</h3>
+                    <h3 id={product.name} class="card-title">{product.name}</h3>
                     <p class="text-sm">{Edenflowers.Utils.format_money(product.cheapest_price)}</p>
                   </div>
                 </.link>

@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
   def render(assigns) do
     ~H"""
     <section class="space-y-2">
-      <h1 class="font-serif text-2xl sm:text-3xl">
+      <h1 class="section-title">
         {~t"Register and enjoy 15% off your next order."}
       </h1>
 
@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
           </div>
         </.form>
 
-        <p class="font-sans text-xs">
+        <p class="text-xs">
           {~t"We send out only ocassional emails. Unsubscribe at any time."}
         </p>
       <% end %>

@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.StoreLive do
         </.breadcrumb>
 
         <div class="mb-12">
-          <h1 class="font-serif text-base-content mb-2 text-4xl">
+          <h1 class="page-title text-base-content mb-2">
             {@selected_category.name}
           </h1>
           <p class="text-base-content/60 text-sm sm:text-base">
@@ -74,8 +74,8 @@ defmodule EdenflowersWeb.StoreLive do
         <%= if Enum.empty?(@products) do %>
           <div class="border-primary/40 bg-base-100 flex flex-col items-center gap-4 border border-dashed px-8 py-16 text-center">
             <.icon name="hero-sparkles" class="text-primary h-12 w-12" />
-            <h3 class="font-serif text-2xl">{~t"Fresh stems loading soon"}</h3>
-            <p class="text-base-content/70 max-w-md text-sm sm:text-base">
+            <h3 class="section-title">{~t"Fresh stems loading soon"}</h3>
+            <p class="text-base-content/80 max-w-md text-sm sm:text-base">
               {~t"We're refreshing our collection. Check back shortly for newly arranged bouquets ready to ship."}
             </p>
           </div>
@@ -104,13 +104,13 @@ defmodule EdenflowersWeb.StoreLive do
                 <div class="flex flex-1 flex-col justify-between gap-2 px-5 pt-5 pb-5 sm:px-6 sm:pb-6">
                   <h3
                     id={"product-#{product.id}"}
-                    class="font-serif text-base-content text-xl tracking-wide sm:text-2xl"
+                    class="card-title text-base-content tracking-wide"
                   >
                     {product.name}
                   </h3>
 
                   <div class="text-base-content flex items-center justify-between">
-                    <span class="text-base-content/70 text-sm sm:text-base">
+                    <span class="text-base-content/80 text-sm sm:text-base">
                       {Edenflowers.Utils.format_money(product.cheapest_price)}
                     </span>
                     <span class="text-base-content/60 flex items-center gap-1 text-xs uppercase tracking-wider transition duration-200 group-hover:text-primary sm:text-sm">

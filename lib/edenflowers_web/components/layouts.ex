@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <div class="auth-background-pattern flex min-h-screen flex-col">
       <header class="py-8 text-center">
-        <.link navigate={~p"/"} class="text-primary font-sans text-xl font-bold uppercase tracking-widest sm:text-2xl">
+        <.link navigate={~p"/"} class="text-primary logo-wordmark text-xl sm:text-2xl">
           Eden Flowers
         </.link>
       </header>
@@ -73,7 +73,7 @@ defmodule EdenflowersWeb.Layouts do
       <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
           navigate={~p"/"}
-          class="text-primary font-sans whitespace-nowrap font-bold uppercase tracking-widest sm:text-2xl"
+          class="text-primary logo-wordmark whitespace-nowrap sm:text-2xl"
         >
           Eden Flowers
         </.link>
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Layouts do
           <ul class="space-y-4">
             <li :for={{url, name} <- @nav}>
               <.link
-                class="font-serif text-base-content text-2xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4 sm:text-3xl"
+                class="text-base-content text-lg hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={url}
               >
@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="w-full">
         <%!-- Banner --%>
-        <section class="border-b bg-sky-100 py-2 text-center">
+        <section class="bg-pastel-1 border-b py-2 text-center">
           <span class="text-accent-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
         </section>
 
@@ -179,7 +179,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
-                class="text-primary font-sans whitespace-nowrap text-xl font-bold uppercase tracking-widest sm:text-2xl"
+                class="text-primary logo-wordmark whitespace-nowrap text-xl sm:text-2xl"
               >
                 Eden Flowers
               </.link>
@@ -248,7 +248,7 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="border-t border-b bg-pink-100">
+      <div class="bg-accent border-t border-b">
         <div class="container py-12 md:py-24">
           <div class="flex flex-col gap-8 md:flex-row">
             <div class="m-auto max-w-lg flex-1 space-y-4">

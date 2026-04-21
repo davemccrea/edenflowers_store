@@ -13,7 +13,17 @@
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
   --header-height: 8rem;
-  --color-image: white;
+}
+
+/* Pastel palette — soft surfaces for banners, callouts, section backgrounds.
+   Use these for decorative backgrounds; use semantic tokens (primary, accent)
+   for brand-meaningful colors. `inline` lets us reference Tailwind's default
+   palette vars without CSS-variable scoping issues. */
+@theme inline {
+  --color-pastel-1: var(--color-sky-100);    /* cool blue   — announcements, info */
+  --color-pastel-2: var(--color-pink-100);   /* soft pink   — footer, romance */
+  --color-pastel-3: var(--color-amber-100);  /* warm cream  — highlights, quotes */
+  --color-pastel-4: var(--color-green-100);  /* fresh green — nature, success-adjacent */
 }
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
@@ -34,10 +44,9 @@
   color-scheme: "light";
   --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
   --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
-  --color-accent: var(--color-pink-100);
-  --color-accent-alt: oklch(0.81 0.15 93); /* a mustardy yellow */
+  --color-accent: var(--color-pink-100); /* same as --color-pastel-2 */
+  --color-accent-alt: oklch(0.81 0.15 93); /* mustardy yellow — link underline on serif headings */
   --color-accent-content: var(--color-base-content);
-  --color-secondary: oklch(0.83 0.0222 158.49); /* brand secondary */
   --color-base-100: white;
   --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
   --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
@@ -87,6 +96,22 @@ sl-dropdown::part(panel) {
 
 @utility hero-heading {
   @apply text-5xl sm:text-6xl md:text-7xl;
+}
+
+@utility page-title {
+  @apply font-serif text-4xl;
+}
+
+@utility section-title {
+  @apply font-serif text-2xl sm:text-3xl;
+}
+
+@utility card-title {
+  @apply font-serif text-xl;
+}
+
+@utility logo-wordmark {
+  @apply font-sans font-bold uppercase tracking-widest;
 }
 
 #hotfx-shy-header {
