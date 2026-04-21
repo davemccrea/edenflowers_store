@@ -21,13 +21,22 @@ defmodule EdenflowersWeb.HomeLive do
           alt=""
         />
 
-        <div class="container absolute inset-0 flex flex-col items-center justify-center gap-8 text-center">
-          <h1 class="hero-heading font-serif max-w-[20ch] tracking-wide text-white">
-            {~t"Fresh flowers for everyday moments."}
+        <div class="from-black/50 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+
+        <div class="container absolute inset-0 flex flex-col justify-center gap-5">
+          <img
+            src={"local:///Eden_flowers-logo1_white_web.svg" |> Imgproxy.new() |> to_string()}
+            class="w-24 sm:w-36"
+            alt="Eden Flowers"
+          />
+          <h1 class="font-serif max-w-[16ch] text-5xl font-light leading-tight text-white sm:text-6xl">
+            {~t"Fresh flowers for everyday moments"}
           </h1>
-          <a href="#store" class="btn-primary btn btn-lg mx-auto">
-            {~t"Shop Now"}
-          </a>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="#store" class="btn-primary btn btn-lg gap-2">
+              {~t"Shop Now"} <span aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -65,14 +74,77 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <section class="not-last:border-b">
+      <%!-- Pull quote --%>
+      <section class="bg-amber-50 not-last:border-b">
         <div class="container flex flex-col items-center gap-12 py-24">
           <h1 class="font-serif max-w-4xl text-center text-3xl font-light leading-10 sm:leading-14 md:text-4xl">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </h1>
-          <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/#about"}>
+          <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/about"}>
             {~t"Learn more"}
           </a>
+        </div>
+      </section>
+
+      <%!-- Category tiles --%>
+      <section class="bg-base-200 not-last:border-b">
+        <div class="container py-20 md:py-28">
+          <h2 class="font-serif mb-10 text-3xl">{~t"Our Services"}</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <.link navigate={~p"/weddings"} class="group relative overflow-hidden">
+              <img
+                src={
+                  "local:///image_2.jpg"
+                  |> Imgproxy.new()
+                  |> Imgproxy.resize(800, 600, type: "fill")
+                  |> Imgproxy.set_extension("webp")
+                  |> to_string()
+                }
+                class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+                alt={~t"Weddings"}
+              />
+              <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+              <div class="absolute inset-0 flex items-end p-6">
+                <h3 class="font-serif text-2xl tracking-wide text-white">{~t"Weddings"}</h3>
+              </div>
+            </.link>
+
+            <.link navigate={~p"/courses"} class="group relative overflow-hidden">
+              <img
+                src={
+                  "local:///image_3.jpg"
+                  |> Imgproxy.new()
+                  |> Imgproxy.resize(800, 600, type: "fill")
+                  |> Imgproxy.set_extension("webp")
+                  |> to_string()
+                }
+                class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+                alt={~t"Courses"}
+              />
+              <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+              <div class="absolute inset-0 flex items-end p-6">
+                <h3 class="font-serif text-2xl tracking-wide text-white">{~t"Courses"}</h3>
+              </div>
+            </.link>
+
+            <.link navigate={~p"/condolences"} class="group relative overflow-hidden">
+              <img
+                src={
+                  "local:///image_5.jpg"
+                  |> Imgproxy.new()
+                  |> Imgproxy.resize(800, 600, type: "fill")
+                  |> Imgproxy.set_extension("webp")
+                  |> to_string()
+                }
+                class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+                alt={~t"Condolences"}
+              />
+              <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+              <div class="absolute inset-0 flex items-end p-6">
+                <h3 class="font-serif text-2xl tracking-wide text-white">{~t"Condolences"}</h3>
+              </div>
+            </.link>
+          </div>
         </div>
       </section>
     </Layouts.app>

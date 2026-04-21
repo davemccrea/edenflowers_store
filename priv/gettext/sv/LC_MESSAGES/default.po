@@ -110,8 +110,8 @@ msgstr "Bröllop"
 
 #: lib/edenflowers_web/live/home_live.ex:26
 #, elixir-autogen, elixir-format
-msgid "Fresh flowers for everyday moments."
-msgstr "Färska blommor för vardagliga stunder."
+msgid "Fresh flowers for everyday moments"
+msgstr "Färska blommor för vardagliga stunder"
 
 #: lib/edenflowers_web/components/layouts.ex:142
 #, elixir-autogen, elixir-format

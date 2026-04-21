@@ -61,6 +61,9 @@
 /* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
   opacity: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 body.ready {
   transition: 0.25s opacity;
