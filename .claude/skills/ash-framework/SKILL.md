@@ -1,6 +1,6 @@
 ---
 name: ash-framework
-description: "Use when working with Ash Framework resources, domains, or extensions."
+description: "Expert on the Ash Framework ecosystem."
 metadata:
   managed-by: usage-rules
 ---

@@ -15,27 +15,25 @@ defmodule Edenflowers.MixProject do
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
       usage_rules: [
-        file: "CLAUDE.md",
-        usage_rules: [
-          {:ash, link: :markdown},
-          {~r/^ash_/, link: :markdown},
-          {:phoenix, link: :markdown},
-          {~r/^phoenix_/, link: :markdown},
-          {:igniter, link: :markdown},
-          {:elixir, link: :markdown},
-          {:otp, link: :markdown},
-          {:gettext_sigils, link: :markdown}
-        ],
         skills: [
           location: ".claude/skills",
+          package_skills: [:gettext_sigils],
           build: [
             "ash-framework": [
-              description: "Use when working with Ash Framework resources, domains, or extensions.",
+              description: "Expert on the Ash Framework ecosystem.",
               usage_rules: [:ash, ~r/^ash_/]
             ],
             "phoenix-framework": [
-              description: "Use when working with Phoenix controllers, LiveViews, or web layer.",
+              description: "Expert on the Phoenix Framework.",
               usage_rules: [:phoenix, ~r/^phoenix_/]
+            ],
+            "elixir-otp": [
+              description: "Expert on Elixir and OTP.",
+              usage_rules: [:elixir, :otp]
+            ],
+            igniter: [
+              description: "Expert on Igniter.",
+              usage_rules: [:igniter]
             ]
           ]
         ]
