@@ -14,25 +14,24 @@ defmodule Edenflowers.Store.Order.ClearGiftFields do
 
   @impl true
   def change(changeset, _opts, _context) do
-    changeset
-    |> Ash.Changeset.before_action(fn changeset ->
+    Ash.Changeset.before_action(changeset, fn changeset ->
       gift = Ash.Changeset.get_argument_or_attribute(changeset, :gift)
 
       if not gift do
-        Ash.Changeset.force_change_attributes(changeset, %{recipient_name: nil, card_message: nil})
+        changeset = Ash.Changeset.force_change_attributes(changeset, %{recipient_name: nil, card_message: nil})
+
+        Ash.Changeset.after_action(changeset, fn _changeset, result ->
+          Edenflowers.Store.LineItem
+          |> Ash.Query.filter(order_id == ^result.id and is_card == true)
+          |> Ash.bulk_destroy(:remove_item, %{}, authorize?: false, return_errors?: true)
+          |> case do
+            %Ash.BulkResult{status: :success} -> {:ok, result}
+            %Ash.BulkResult{errors: errors} -> {:error, errors}
+          end
+        end)
       else
         changeset
       end
-    end)
-    |> Ash.Changeset.after_action(fn _changeset, result ->
-      if not result.gift do
-        Edenflowers.Store.LineItem
-        |> Ash.Query.filter(order_id == ^result.id and is_card == true)
-        |> Ash.read!(authorize?: false)
-        |> Enum.each(&Ash.destroy!(&1, action: :remove_item, authorize?: false))
-      end
-
-      {:ok, result}
     end)
   end
 end
