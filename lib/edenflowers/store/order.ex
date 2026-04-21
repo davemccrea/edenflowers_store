@@ -42,6 +42,8 @@ defmodule Edenflowers.Store.Order do
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
+    define :preview_delivery, action: :preview_delivery
+    define :reset_delivery_address, action: :reset_delivery_address
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
@@ -171,6 +173,20 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {UpdatePromotionUsageCount, []}
       require_atomic? false
+    end
+
+    update :preview_delivery do
+      accept [:delivery_address, :calculated_address, :position, :here_id, :distance, :fulfillment_amount]
+      require_atomic? false
+    end
+
+    update :reset_delivery_address do
+      change set_attribute(:delivery_address, nil)
+      change set_attribute(:calculated_address, nil)
+      change set_attribute(:position, nil)
+      change set_attribute(:here_id, nil)
+      change set_attribute(:distance, nil)
+      change set_attribute(:fulfillment_amount, nil)
     end
 
     update :update_fulfillment_option do
