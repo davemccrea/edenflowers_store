@@ -16,7 +16,7 @@ defmodule Edenflowers.MixProject do
       listeners: [Phoenix.CodeReloader],
       usage_rules: [
         file: "CLAUDE.md",
-        usage_rules: [:ash, ~r/^ash_/, :phoenix, ~r/^phoenix_/, :igniter, :elixir, :otp, :gettext_sigils],
+        usage_rules: [{:ash, link: :markdown}, {~r/^ash_/, link: :markdown}, {:phoenix, link: :markdown}, {~r/^phoenix_/, link: :markdown}, {:igniter, link: :markdown}, {:elixir, link: :markdown}, {:otp, link: :markdown}, {:gettext_sigils, link: :markdown}],
         skills: [
           location: ".claude/skills",
           build: [
