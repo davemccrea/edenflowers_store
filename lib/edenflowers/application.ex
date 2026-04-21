@@ -19,8 +19,7 @@ defmodule Edenflowers.Application do
       # {Edenflowers.Worker, arg},
       # Start to serve requests, typically the last entry
       EdenflowersWeb.Endpoint,
-      {AshAuthentication.Supervisor, [otp_app: :edenflowers]},
-      Edenflowers.Sqids.child_spec()
+      {AshAuthentication.Supervisor, [otp_app: :edenflowers]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
