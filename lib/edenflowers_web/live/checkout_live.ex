@@ -813,15 +813,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp recipient_label(%{customer_name: name}, field) when is_binary(name) and name != "" do
-    first_name = name |> String.split() |> List.first()
-
-    case field do
-      "address" -> gettext("%{name}'s Address *", name: first_name)
-      "phone" -> gettext("%{name}'s Phone Number", name: first_name)
-    end
-  end
-
   defp recipient_label(_order, field) do
     case field do
       "address" -> gettext("Address *")
