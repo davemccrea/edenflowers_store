@@ -503,6 +503,16 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ==============
 
   # Form validation & submission
+  def handle_event("validate_form_3", %{"form" => params}, socket) do
+    form = AshPhoenix.Form.validate(socket.assigns.form, params)
+    socket = assign(socket, form: form)
+
+    case String.trim(params["delivery_address"] || "") do
+      "" -> maybe_reset_delivery_address(socket)
+      _ -> {:noreply, socket}
+    end
+  end
+
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
@@ -812,6 +822,18 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp get_next_section_id(id, 2), do: "#{id}-form-3a"
   defp get_next_section_id(id, 3), do: "#{id}-form-4"
   defp get_next_section_id(_, _), do: nil
+
+  # Clears calculated delivery fields when the address input is emptied.
+  # No-op if nothing has been calculated yet (calculated_address is nil).
+  defp maybe_reset_delivery_address(%{assigns: %{order: %{calculated_address: nil}}} = socket) do
+    {:noreply, socket}
+  end
+
+  defp maybe_reset_delivery_address(socket) do
+    actor = socket.assigns[:current_user]
+    order = Order.reset_delivery_address!(socket.assigns.order, actor: actor)
+    {:noreply, assign(socket, order: order, address_state: :idle)}
+  end
 
   defp format_distance(nil), do: ""
 
