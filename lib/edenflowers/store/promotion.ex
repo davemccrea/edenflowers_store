@@ -91,6 +91,6 @@ defmodule Edenflowers.Store.Promotion do
   end
 
   identities do
-    identity :unique_code, :code
+    identity :unique_code, [:code]
   end
 end
