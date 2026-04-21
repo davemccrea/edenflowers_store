@@ -12,7 +12,6 @@ defmodule Edenflowers.Store.Order do
 
   alias __MODULE__.{
     ValidateAndCalculateFulfillment,
-    MaybeRequireDeliveryAddress,
     LookupPromotionCode,
     MaybeRequireRecipientName,
     ClearGiftFields,
@@ -21,7 +20,8 @@ defmodule Edenflowers.Store.Order do
     ValidateMinimumCartTotal,
     ValidateFulfillmentDate,
     ValidatePaymentIntent,
-    Changes
+    Changes,
+    Validations
   }
 
   alias Changes.ResetCheckout
@@ -155,7 +155,7 @@ defmodule Edenflowers.Store.Order do
       ]
 
       change {ValidateFulfillmentDate, []}
-      change {MaybeRequireDeliveryAddress, []}
+      validate {Validations.MaybeRequireDeliveryAddress, []}
       change {ValidateAndCalculateFulfillment, []}
       change set_attribute(:step, 4)
       require_atomic? false
@@ -191,8 +191,13 @@ defmodule Edenflowers.Store.Order do
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
-      # When filfillment_option is updated, clear chosen fulfillment date
       change set_attribute(:fulfillment_date, nil)
+      change set_attribute(:delivery_address, nil)
+      change set_attribute(:calculated_address, nil)
+      change set_attribute(:position, nil)
+      change set_attribute(:here_id, nil)
+      change set_attribute(:distance, nil)
+      change set_attribute(:fulfillment_amount, nil)
     end
 
     update :update_gift do
