@@ -30,11 +30,15 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
                 class="input input-lg w-full pr-12"
                 placeholder={~t"Your email"}
               />
-              <button type="submit" class="absolute inset-y-0 right-3 z-10 flex items-center text-base-content/50 hover:text-base-content transition cursor-pointer" aria-label={~t"Register"}>
+              <button
+                type="submit"
+                class="text-base-content/50 absolute inset-y-0 right-3 z-10 flex cursor-pointer items-center transition hover:text-base-content"
+                aria-label={~t"Register"}
+              >
                 <.icon name="hero-paper-airplane" class="h-5 w-5" />
               </button>
             </div>
-            <p class="font-sans text-xs text-base-content/60">
+            <p class="font-sans text-base-content/60 text-xs">
               {~t"We send out only ocassional emails. Unsubscribe at any time."}
             </p>
           </div>

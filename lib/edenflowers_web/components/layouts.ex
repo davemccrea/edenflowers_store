@@ -256,14 +256,16 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-1">
-              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">Minimosen</h3>
-              <p class="font-serif text-lg whitespace-nowrap">Kauppapuistikko 21</p>
-              <p class="font-serif text-lg whitespace-nowrap">65100 Vaasa</p>
+              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">Minimosen</h3>
+              <p class="font-serif whitespace-nowrap text-lg">Kauppapuistikko 21</p>
+              <p class="font-serif whitespace-nowrap text-lg">65100 Vaasa</p>
             </div>
 
             <div class="footer-grid__hours space-y-1">
-              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">{~t"Opening hours"}</h3>
-              <div class="font-serif text-lg space-y-0.5">
+              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">
+                {~t"Opening hours"}
+              </h3>
+              <div class="font-serif space-y-0.5 text-lg">
                 <p class="whitespace-nowrap">Ma–Pe: 09:00–17:00</p>
                 <p class="whitespace-nowrap">La: 10:00–15:00</p>
                 <p class="whitespace-nowrap">Su: suljettu</p>
@@ -271,7 +273,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__socials space-y-2">
-              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">{~t"Socials"}</h3>
+              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">{~t"Socials"}</h3>
               <.social_media_links size={6} />
             </div>
           </div>

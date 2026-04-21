@@ -22,9 +22,9 @@ defmodule EdenflowersWeb.AboutLive do
           class="h-64 w-full object-cover sm:h-80 md:h-96"
           alt=""
         />
-        <div class="absolute inset-0 bg-black/30 flex items-end">
+        <div class="bg-black/30 absolute inset-0 flex items-end">
           <div class="container pb-10">
-            <h1 class="font-serif text-white text-4xl sm:text-5xl md:text-6xl tracking-wide">
+            <h1 class="font-serif text-4xl tracking-wide text-white sm:text-5xl md:text-6xl">
               {~t"About"}
             </h1>
           </div>
@@ -53,12 +53,12 @@ defmodule EdenflowersWeb.AboutLive do
             </div>
 
             <%!-- Text --%>
-            <div class="flex max-w-2xl flex-col gap-6 text-base-content">
+            <div class="text-base-content flex max-w-2xl flex-col gap-6">
               <h2 class="font-serif text-3xl sm:text-4xl">{~t"Hello, I'm Jennie"}</h2>
-              <p class="text-lg leading-relaxed text-base-content/80">
+              <p class="text-base-content/80 text-lg leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
               </p>
-              <p class="text-lg leading-relaxed text-base-content/80">
+              <p class="text-base-content/80 text-lg leading-relaxed">
                 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
               </p>
             </div>
@@ -84,11 +84,11 @@ defmodule EdenflowersWeb.AboutLive do
       <%!-- Second text block --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <div class="mx-auto max-w-2xl flex flex-col gap-6 text-base-content">
-            <p class="text-lg leading-relaxed text-base-content/80">
+          <div class="text-base-content mx-auto flex max-w-2xl flex-col gap-6">
+            <p class="text-base-content/80 text-lg leading-relaxed">
               Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
             </p>
-            <p class="text-lg leading-relaxed text-base-content/80">
+            <p class="text-base-content/80 text-lg leading-relaxed">
               Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
             </p>
             <div class="pt-2">
