@@ -28,7 +28,6 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
         :discount_amount,
 
         # Calculations
-        :order_reference,
         :promotion_applied?,
         :total,
         :tax_amount,

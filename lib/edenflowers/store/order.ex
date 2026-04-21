@@ -20,7 +20,8 @@ defmodule Edenflowers.Store.Order do
     UpdatePromotionUsageCount,
     ValidateMinimumCartTotal,
     ValidateFulfillmentDate,
-    ValidatePaymentIntent
+    ValidatePaymentIntent,
+    Changes
   }
 
   postgres do
@@ -66,21 +67,7 @@ defmodule Edenflowers.Store.Order do
 
     read :by_order_reference do
       argument :order_reference, :string, allow_nil?: false
-
-      prepare fn query, _context ->
-        require Ash.Query
-        order_reference = Ash.Query.get_argument(query, :order_reference)
-
-        case Edenflowers.Sqids.decode(order_reference) do
-          {:ok, [order_number]} ->
-            Ash.Query.filter(query, order_number == ^order_number)
-
-          _ ->
-            # Invalid order reference - return query that matches nothing
-            Ash.Query.filter(query, false)
-        end
-      end
-
+      filter expr(order_reference == ^arg(:order_reference))
       get? true
     end
 
@@ -98,7 +85,6 @@ defmodule Edenflowers.Store.Order do
                   :line_tax_amount,
                   # Calculations
                   :promotion_applied?,
-                  :order_reference,
                   :total,
                   :tax_amount,
                   :fulfillment_tax_amount,
@@ -117,6 +103,7 @@ defmodule Edenflowers.Store.Order do
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
+      change {Changes.GenerateOrderReference, []}
     end
 
     # Step-specific Update Actions
@@ -277,11 +264,8 @@ defmodule Edenflowers.Store.Order do
   attributes do
     uuid_primary_key :id
 
-    attribute :order_number, :integer do
-      writable? false
-      generated? true
-      primary_key? false
-      allow_nil? false
+    attribute :order_reference, :string do
+      allow_nil? true
     end
 
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
@@ -350,7 +334,6 @@ defmodule Edenflowers.Store.Order do
   end
 
   calculations do
-    calculate :order_reference, :string, {Edenflowers.Store.Order.EncodeOrderReference, []}
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
 
@@ -372,5 +355,9 @@ defmodule Edenflowers.Store.Order do
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
     sum :discount_amount, :line_items, :discount_amount
+  end
+
+  identities do
+    identity :unique_order_reference, [:order_reference]
   end
 end
