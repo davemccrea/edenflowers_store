@@ -20,11 +20,10 @@ defmodule Edenflowers.Store.Order do
     ValidateMinimumCartTotal,
     ValidateFulfillmentDate,
     ValidatePaymentIntent,
-    Changes,
     Validations
   }
 
-  alias Changes.ResetCheckout
+  alias __MODULE__.Changes.{ResetCheckout, GenerateOrderReference}
 
   postgres do
     repo Edenflowers.Repo
@@ -107,7 +106,7 @@ defmodule Edenflowers.Store.Order do
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
-      change {Changes.GenerateOrderReference, []}
+      change {GenerateOrderReference, []}
     end
 
     # Step-specific Update Actions
