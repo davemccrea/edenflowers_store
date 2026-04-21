@@ -24,6 +24,8 @@ defmodule Edenflowers.Store.Order do
     Changes
   }
 
+  alias Changes.ResetCheckout
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -209,24 +211,8 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :restart_checkout do
-      change set_attribute(:step, 1)
-      change set_attribute(:customer_name, nil)
-      change set_attribute(:customer_email, nil)
-      change set_attribute(:gift, false)
-      change set_attribute(:recipient_name, nil)
-      change set_attribute(:card_message, nil)
-      change set_attribute(:recipient_phone_number, nil)
-      change set_attribute(:delivery_address, nil)
-      change set_attribute(:delivery_instructions, nil)
-      change set_attribute(:fulfillment_date, nil)
-      change set_attribute(:fulfillment_amount, nil)
-      change set_attribute(:calculated_address, nil)
-      change set_attribute(:here_id, nil)
-      change set_attribute(:distance, nil)
-      change set_attribute(:position, nil)
-      change set_attribute(:payment_intent_id, nil)
-      change set_attribute(:promotion_id, nil)
-      change set_attribute(:fulfillment_option_id, nil)
+      require_atomic? false
+      change {ResetCheckout, []}
     end
   end
 
@@ -264,9 +250,7 @@ defmodule Edenflowers.Store.Order do
   attributes do
     uuid_primary_key :id
 
-    attribute :order_reference, :string do
-      allow_nil? true
-    end
+    attribute :order_reference, :string, allow_nil?: false
 
     attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
 
