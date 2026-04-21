@@ -847,7 +847,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp format_delivery_amount(%{fulfillment_amount: nil}), do: ""
 
   defp format_delivery_amount(%{fulfillment_amount: amount}) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery!", else: Edenflowers.Utils.format_money(amount)
+    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Utils.format_money(amount)
   end
 
   defp size_label(:small), do: gettext("Small")
