@@ -24,7 +24,7 @@ defmodule Edenflowers.Store.Order do
     Validations
   }
 
-  alias Changes.ResetCheckout
+  alias __MODULE__.Changes.{ResetCheckout, GenerateOrderReference, ConfirmDeliveryAddress}
 
   postgres do
     repo Edenflowers.Repo
@@ -42,7 +42,7 @@ defmodule Edenflowers.Store.Order do
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
-    define :preview_delivery, action: :preview_delivery
+    define :confirm_delivery_address, action: :confirm_delivery_address, args: [:address]
     define :reset_delivery_address, action: :reset_delivery_address
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :update_gift, action: :update_gift, args: [:gift]
@@ -146,12 +146,7 @@ defmodule Edenflowers.Store.Order do
         :recipient_phone_number,
         :delivery_address,
         :delivery_instructions,
-        :fulfillment_date,
-        :fulfillment_amount,
-        :calculated_address,
-        :here_id,
-        :distance,
-        :position
+        :fulfillment_date
       ]
 
       change {ValidateFulfillmentDate, []}
@@ -175,8 +170,9 @@ defmodule Edenflowers.Store.Order do
       require_atomic? false
     end
 
-    update :preview_delivery do
-      accept [:delivery_address, :calculated_address, :position, :here_id, :distance, :fulfillment_amount]
+    update :confirm_delivery_address do
+      argument :address, :string, allow_nil?: false
+      change {ConfirmDeliveryAddress, []}
       require_atomic? false
     end
 
