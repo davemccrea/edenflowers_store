@@ -28,6 +28,11 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
+       # address_lookup tracks transient geocoding state not representable by order data:
+       # nil = idle or confirmed (check order.calculated_address to distinguish)
+       # :loading = geocode request in flight
+       # :cleared = user emptied the field; stale geocode data still on order but should be hidden
+       # {:error, msg} = geocode failed
        |> assign(:address_lookup, nil)
        |> setup_stripe(order)}
     else
@@ -491,6 +496,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ==============
 
   # Form validation & submission
+
+  # Clears address confirmation indicators immediately as the user empties the field,
+  # rather than waiting for blur. check_delivery_address handles the blur case.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     socket = assign(socket, form: form)
@@ -569,10 +577,14 @@ defmodule EdenflowersWeb.CheckoutLive do
       String.trim(address) == "" ->
         {:noreply, assign(socket, address_lookup: :cleared)}
 
+      # Skip re-geocoding if the address hasn't changed since the last confirmed lookup.
+      # The :cleared guard ensures re-entering the same address after clearing still triggers
+      # a fresh lookup, since the stale geocode data is still on the order at that point.
       address == socket.assigns.order.delivery_address and socket.assigns.address_lookup != :cleared ->
         {:noreply, socket}
 
       true ->
+        # Deferred via send/2 so the :loading state renders before the blocking geocode call.
         send(self(), {:confirm_delivery_address, address})
         {:noreply, assign(socket, address_lookup: :loading)}
     end
@@ -677,6 +689,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Reloads order and rebuilds forms when order is updated via PubSub.
   # Centralizes form synchronization to prevent stale data across all order modifications.
+  # Reloads order and rebuilds forms when order is updated via PubSub.
+  # Resets address_lookup to nil so confirmed state is re-derived from order.calculated_address.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.get_for_checkout!(order_id, actor: actor)
