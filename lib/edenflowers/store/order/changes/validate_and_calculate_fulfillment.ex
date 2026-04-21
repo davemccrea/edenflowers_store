@@ -47,10 +47,26 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
   end
 
   defp handle_delivery(changeset) do
+    delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
     calculated_address = Ash.Changeset.get_attribute(changeset, :calculated_address)
     fulfillment_amount = Ash.Changeset.get_attribute(changeset, :fulfillment_amount)
 
-    if is_nil(calculated_address) or is_nil(fulfillment_amount) do
+    address_blank? = is_nil(delivery_address) or String.trim(delivery_address) == ""
+
+    changeset =
+      if address_blank? do
+        Ash.Changeset.force_change_attributes(changeset,
+          calculated_address: nil,
+          position: nil,
+          here_id: nil,
+          distance: nil,
+          fulfillment_amount: nil
+        )
+      else
+        changeset
+      end
+
+    if address_blank? or is_nil(calculated_address) or is_nil(fulfillment_amount) do
       Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
         field: :delivery_address,
         message: ~t"Please enter and confirm a delivery address"
