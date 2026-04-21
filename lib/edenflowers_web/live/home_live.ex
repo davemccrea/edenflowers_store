@@ -89,17 +89,23 @@ defmodule EdenflowersWeb.HomeLive do
       <%!-- Category tiles --%>
       <section class="bg-base-200 not-last:border-b">
         <div class="container py-20 md:py-28">
-          <h2 class="font-serif mb-10 text-3xl">{~t"Our Services"}</h2>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <h2 class="font-serif mb-10 text-3xl">{~t"Start Here"}</h2>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <.link navigate={~p"/store"} class="group relative overflow-hidden">
+              <img
+                src="https://placehold.co/800x600/e8e0d8/888?text=Store"
+                class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+                alt={~t"Store"}
+              />
+              <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+              <div class="absolute inset-0 flex items-end p-6">
+                <h3 class="font-serif text-2xl tracking-wide text-white">{~t"Store"}</h3>
+              </div>
+            </.link>
+
             <.link navigate={~p"/weddings"} class="group relative overflow-hidden">
               <img
-                src={
-                  "local:///image_2.jpg"
-                  |> Imgproxy.new()
-                  |> Imgproxy.resize(800, 600, type: "fill")
-                  |> Imgproxy.set_extension("webp")
-                  |> to_string()
-                }
+                src="https://placehold.co/800x600/e8e0d8/888?text=Weddings"
                 class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
                 alt={~t"Weddings"}
               />
@@ -111,13 +117,7 @@ defmodule EdenflowersWeb.HomeLive do
 
             <.link navigate={~p"/courses"} class="group relative overflow-hidden">
               <img
-                src={
-                  "local:///image_3.jpg"
-                  |> Imgproxy.new()
-                  |> Imgproxy.resize(800, 600, type: "fill")
-                  |> Imgproxy.set_extension("webp")
-                  |> to_string()
-                }
+                src="https://placehold.co/800x600/e8e0d8/888?text=Courses"
                 class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
                 alt={~t"Courses"}
               />
@@ -129,13 +129,7 @@ defmodule EdenflowersWeb.HomeLive do
 
             <.link navigate={~p"/condolences"} class="group relative overflow-hidden">
               <img
-                src={
-                  "local:///image_5.jpg"
-                  |> Imgproxy.new()
-                  |> Imgproxy.resize(800, 600, type: "fill")
-                  |> Imgproxy.set_extension("webp")
-                  |> to_string()
-                }
+                src="https://placehold.co/800x600/e8e0d8/888?text=Condolences"
                 class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
                 alt={~t"Condolences"}
               />
