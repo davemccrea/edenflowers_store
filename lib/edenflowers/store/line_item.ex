@@ -20,7 +20,6 @@ defmodule Edenflowers.Store.LineItem do
     define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
-    define :update_card_message, action: :update_card_message, args: [:card_message]
   end
 
   actions do
@@ -64,10 +63,6 @@ defmodule Edenflowers.Store.LineItem do
 
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
-    end
-
-    update :update_card_message do
-      accept [:card_message]
     end
   end
 
@@ -118,7 +113,6 @@ defmodule Edenflowers.Store.LineItem do
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false
-    attribute :card_message, :string
     attribute :is_card, :boolean, default: false, allow_nil?: false
     timestamps()
   end

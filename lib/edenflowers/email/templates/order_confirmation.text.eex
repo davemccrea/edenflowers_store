@@ -20,10 +20,10 @@
 <% end %><%= gettext("Date") %>: <%= @format_date.(@order.fulfillment_date) %><% else %><%= gettext("Address") %>: Minimossen
          Myrvägen 1
          65230 Vasa
-<%= gettext("Date") %>: <%= @format_date.(@order.fulfillment_date) %><% end %><% card_line_item = Enum.find(@order.line_items, & &1.is_card) %><%= if @order.gift and card_line_item && card_line_item.card_message do %>
+<%= gettext("Date") %>: <%= @format_date.(@order.fulfillment_date) %><% end %><%= if @order.gift and @order.card_message do %>
 
 <%= gettext("CARD MESSAGE") %>
-<%= card_line_item.card_message %><% end %>
+<%= @order.card_message %><% end %>
 
 <%= gettext("Delivery fee") %>: <%= @format_currency.(@order.fulfillment_amount) %>
 <%= if @order.promotion_applied? do %><%= gettext("Discount") %>: -<%= @format_currency.(@order.discount_amount) %>
