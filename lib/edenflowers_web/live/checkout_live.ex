@@ -239,17 +239,21 @@ defmodule EdenflowersWeb.CheckoutLive do
                                 class={["input input-lg w-full pr-10", @form[:delivery_address].errors != [] && Phoenix.Component.used_input?(@form[:delivery_address]) && "input-error"]}
                                 phx-blur="check_delivery_address"
                               />
-                              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                              <div class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center">
                                 <span
                                   :if={@address_state == :loading}
                                   class="loading loading-spinner loading-sm text-base-content/40"
                                 />
                                 <.icon
                                   :if={@address_state == :confirmed}
-                                  name="hero-check-circle"
-                                  class="text-success h-5 w-5"
+                                  name="hero-check-circle-mini"
+                                  class="text-success size-5"
                                 />
-                                <.icon :if={@address_state == :error} name="hero-x-circle" class="text-error h-5 w-5" />
+                                <.icon
+                                  :if={@address_state == :error}
+                                  name="hero-exclamation-circle-mini"
+                                  class="text-error size-5"
+                                />
                               </div>
                             </div>
                           </label>
@@ -262,19 +266,19 @@ defmodule EdenflowersWeb.CheckoutLive do
                           }>
                             {msg}
                           </.error>
-                          <div :if={@address_state == :confirmed} class="alert alert-success mt-2 py-2 text-sm">
-                            <.icon name="hero-map-pin" class="h-4 w-4 shrink-0" />
+                          <p :if={@address_state == :confirmed} class="text-success mt-1.5 flex items-center gap-2 text-sm">
+                            <.icon name="hero-check-circle-mini" class="size-5 shrink-0" />
                             <span>
                               {@order.calculated_address}
-                              <span class="ml-1 opacity-70">
+                              <span class="text-base-content/50 ml-1">
                                 · {format_distance(@order.distance)} · {format_delivery_amount(@order)}
                               </span>
                             </span>
-                          </div>
-                          <div :if={@address_state == :error} class="alert alert-error mt-2 py-2 text-sm">
-                            <.icon name="hero-x-circle" class="h-4 w-4 shrink-0" />
+                          </p>
+                          <p :if={@address_state == :error} class="text-error mt-1.5 flex items-center gap-2 text-sm">
+                            <.icon name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
                             {@address_error}
-                          </div>
+                          </p>
                         </fieldset>
 
                         <.input
