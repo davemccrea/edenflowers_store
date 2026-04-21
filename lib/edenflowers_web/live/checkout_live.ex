@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
 
   alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
-  alias Edenflowers.{Fulfillments}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
@@ -511,7 +510,12 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     case String.trim(params["delivery_address"] || "") do
       "" -> maybe_reset_delivery_address(socket)
-      _ -> {:noreply, socket}
+      address ->
+        if address != (socket.assigns.order.delivery_address || "") do
+          maybe_reset_delivery_address(socket)
+        else
+          {:noreply, socket}
+        end
     end
   end
 
@@ -594,7 +598,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {:noreply, socket}
 
       true ->
-        send(self(), {:calculate_delivery, address})
+        send(self(), {:confirm_delivery_address, address})
         {:noreply, assign(socket, address_state: :loading)}
     end
   end
@@ -672,26 +676,21 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_info({:calculate_delivery, address}, socket) do
-    fulfillment_option = socket.assigns.order.fulfillment_option
+  def handle_info({:confirm_delivery_address, address}, socket) do
     actor = socket.assigns[:current_user]
 
-    case Fulfillments.calculate_delivery(address, fulfillment_option) do
-      {:ok, result} ->
-        order =
-          Order.preview_delivery!(
-            socket.assigns.order,
-            Map.put(result, :delivery_address, address),
-            actor: actor
-          )
-
+    case Order.confirm_delivery_address(socket.assigns.order, address, actor: actor) do
+      {:ok, order} ->
         {:noreply, assign(socket, order: order, address_state: :confirmed, address_error: nil)}
 
-      {:error, :address_not_found} ->
-        {:noreply, assign(socket, address_state: :error, address_error: ~t"Address not found")}
+      {:error, %Ash.Error.Invalid{errors: errors}} ->
+        message =
+          case Enum.find(errors, &match?(%{field: :delivery_address}, &1)) do
+            %{message: msg} -> msg
+            _ -> ~t"There was a problem calculating delivery cost, please try again later"
+          end
 
-      {:error, :out_of_delivery_range} ->
-        {:noreply, assign(socket, address_state: :error, address_error: ~t"Outside delivery range")}
+        {:noreply, assign(socket, address_state: :error, address_error: message)}
 
       {:error, _} ->
         {:noreply,
