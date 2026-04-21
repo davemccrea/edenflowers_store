@@ -269,7 +269,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                           <p :if={@address_state == :confirmed} class="text-success mt-1.5 flex items-center gap-2 text-sm">
                             <span>
                               {@order.calculated_address}
-                              <span class="text-base-content/50 ml-1">
+                              <span class="ml-1">
                                 · {format_distance(@order.distance)} · {format_delivery_amount(@order)}
                               </span>
                             </span>
@@ -395,7 +395,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_amount) -> %>
-                        <span class="text-base-content/40">—</span>
+                        <span>—</span>
                       <% Decimal.eq?(@order.fulfillment_amount, 0) -> %>
                         {~t"Free"}
                       <% true -> %>
