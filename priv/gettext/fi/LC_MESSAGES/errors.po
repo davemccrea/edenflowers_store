@@ -12,28 +12,28 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "can't be blank"
-msgstr "ei voi olla tyhjä"
+msgstr "Tämä kenttä on pakollinen"
 
 msgid "has already been taken"
-msgstr "on jo käytössä"
+msgstr "Tämä arvo on jo käytössä"
 
 msgid "is invalid"
-msgstr "on virheellinen"
+msgstr "Anna kelvollinen arvo"
 
 msgid "must be accepted"
-msgstr "on hyväksyttävä"
+msgstr "Hyväksy tämä jatkaaksesi"
 
 msgid "has invalid format"
-msgstr "on väärässä muodossa"
+msgstr "Anna kelvollinen muoto"
 
 msgid "has an invalid entry"
-msgstr "sisältää virheellisen merkinnän"
+msgstr "Sisältää virheellisen merkinnän"
 
 msgid "is reserved"
-msgstr "on varattu"
+msgstr "Tämä arvo on varattu"
 
 msgid "does not match confirmation"
-msgstr "ei vastaa vahvistusta"
+msgstr "Ei vastaa vahvistusta"
 
 msgid "is still associated with this entry"
 msgstr "on edelleen liitetty tähän merkintään"
@@ -102,4 +102,4 @@ msgid "must be equal to %{number}"
 msgstr "on oltava yhtä suuri kuin %{number}"
 
 msgid "is required"
-msgstr "on pakollinen"
+msgstr "Tämä kenttä on pakollinen"
