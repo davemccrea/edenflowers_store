@@ -270,7 +270,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             <span>
                               {@order.calculated_address}
                               <span class="ml-1">
-                                · {format_distance(@order.distance)} · {format_delivery_amount(@order)}
+                                • {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                               </span>
                             </span>
                           </p>
