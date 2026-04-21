@@ -250,26 +250,29 @@ defmodule EdenflowersWeb.Layouts do
     <footer>
       <div class="bg-accent border-t border-b">
         <div class="container py-20 md:py-36">
-          <div class="flex flex-col gap-16 md:flex-row md:gap-24">
-            <div class="flex-1 space-y-4">
+          <div class="footer-grid">
+            <div class="footer-grid__newsletter space-y-4">
               <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
             </div>
 
-            <div class="flex-1 space-y-6">
-              <div class="space-y-1">
-                <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">Minimosen</h3>
-                <p class="font-serif text-lg">Kauppapuistikko 21</p>
-                <p class="font-serif text-lg">65100 Vaasa</p>
-              </div>
+            <div class="footer-grid__location space-y-1">
+              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">Minimosen</h3>
+              <p class="font-serif text-lg whitespace-nowrap">Kauppapuistikko 21</p>
+              <p class="font-serif text-lg whitespace-nowrap">65100 Vaasa</p>
+            </div>
 
-              <div class="space-y-1">
-                <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">{~t"Opening hours"}</h3>
-                <div class="font-serif text-lg space-y-0.5">
-                  <p>Ma–Pe: 09:00–17:00</p>
-                  <p>La: 10:00–15:00</p>
-                  <p>Su: suljettu</p>
-                </div>
+            <div class="footer-grid__hours space-y-1">
+              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">{~t"Opening hours"}</h3>
+              <div class="font-serif text-lg space-y-0.5">
+                <p class="whitespace-nowrap">Ma–Pe: 09:00–17:00</p>
+                <p class="whitespace-nowrap">La: 10:00–15:00</p>
+                <p class="whitespace-nowrap">Su: suljettu</p>
               </div>
+            </div>
+
+            <div class="footer-grid__socials space-y-2">
+              <h3 class="font-sans text-xs font-bold uppercase tracking-widest text-base-content/50">{~t"Socials"}</h3>
+              <.social_media_links size={6} />
             </div>
           </div>
         </div>

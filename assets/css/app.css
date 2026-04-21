@@ -70,6 +70,54 @@ body.ready {
   opacity: 1;
 }
 
+/*
+  Footer grid layout — "draw" the layout per breakpoint:
+
+  mobile:         sm:                   lg:
+  ┌────────────┐  ┌──────────┬────────┐  ┌────────────┬──────────┬────────┐
+  │ newsletter │  │newsletter│location│  │ newsletter │ location │socials │
+  ├────────────┤  │          ├────────┤  │            ├──────────┴────────┤
+  │  location  │  │          │ hours  │  │            │       hours       │
+  ├────────────┤  ├──────────┴────────┤  └────────────┴───────────────────┘
+  │   hours    │  │      socials      │
+  ├────────────┤  └───────────────────┘
+  │  socials   │
+  └────────────┘
+*/
+.footer-grid {
+  display: grid;
+  gap: 3rem;
+  grid-template-areas:
+    "newsletter"
+    "location"
+    "hours"
+    "socials";
+}
+
+.footer-grid__newsletter { grid-area: newsletter; }
+.footer-grid__location   { grid-area: location; }
+.footer-grid__hours      { grid-area: hours; }
+.footer-grid__socials    { grid-area: socials; }
+
+@media (width >= theme(--breakpoint-sm)) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location"
+      "newsletter  hours"
+      "socials     socials";
+  }
+}
+
+@media (width >= theme(--breakpoint-lg)) {
+  .footer-grid {
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location  socials"
+      "newsletter  hours     socials";
+  }
+}
+
 .checkout__section {
   @apply flex flex-col gap-8 mb-12;
 }
