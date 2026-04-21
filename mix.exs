@@ -67,7 +67,7 @@ defmodule Edenflowers.MixProject do
       {:oban_web, "~> 2.11"},
       {:ash_postgres, "~> 2.0"},
       {:ash_phoenix, "~> 2.0"},
-      {:ash_archival, "~> 1.0.4"},
+      {:ash_archival, "~> 2.0.3"},
       {:ash_translation, "~> 0.2.0"},
       {:ash_state_machine, "~> 0.2.12"},
       {:ash, "~> 3.0"},
