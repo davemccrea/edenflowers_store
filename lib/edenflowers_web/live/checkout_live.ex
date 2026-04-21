@@ -135,12 +135,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                             <div class="relative w-full">
                               <textarea
                                 id={"#{@id}-card-message"}
-                                name="card_message"
+                                name={@form[:card_message].name}
                                 class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
                                 maxlength={200}
                                 rows={5}
                                 data-testid="card-message-textarea"
-                              >{card_line_item.card_message}</textarea>
+                              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
                               <div class="absolute top-2 right-2">
                                 <div class="relative">
                                   <button
@@ -450,39 +450,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
-  end
-
-  # Step 2 carries card_message as a top-level param (not under "form[...]") and must
-  # persist it on the card line item after the order is saved. Must precede the generic
-  # save_form_<step> clause.
-  def handle_event("save_form_2", %{"form" => params} = all_params, socket) do
-    actor = socket.assigns[:current_user]
-
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _order} ->
-        # Reload: save_step_2 returns a bare order without :line_items loaded,
-        # and ClearGiftFields may have destroyed card line items in its after_action.
-        order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-
-        case Enum.find(order.line_items, & &1.is_card) do
-          nil ->
-            :ok
-
-          card_line_item ->
-            card_message = Map.get(all_params, "card_message", "")
-            LineItem.update_card_message(card_line_item, card_message)
-        end
-
-        next_section_id = get_next_section_id(socket.assigns.id, 2)
-
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> push_event("focus-element", %{id: next_section_id})}
-
-      {:error, form} ->
-        {:noreply, assign(socket, form: form)}
-    end
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do

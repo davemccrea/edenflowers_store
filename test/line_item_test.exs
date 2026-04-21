@@ -266,26 +266,5 @@ defmodule Edenflowers.Store.LineItemTest do
                  tax_rate: Decimal.new("0.24")
                })
     end
-
-    test "update_card_message persists the card message",
-         %{gift_order: gift_order, card_product: card_product, card_variant: card_variant} do
-      {:ok, card_item} =
-        LineItem.add_card(
-          %{
-            order_id: gift_order.id,
-            product_id: card_product.id,
-            product_variant_id: card_variant.id,
-            product_name: card_product.name,
-            product_image_slug: card_variant.image_slug,
-            quantity: 1,
-            unit_price: card_variant.price,
-            tax_rate: Decimal.new("0.24")
-          },
-          authorize?: false
-        )
-
-      assert {:ok, updated} = LineItem.update_card_message(card_item, "Happy birthday!", authorize?: false)
-      assert updated.card_message == "Happy birthday!"
-    end
   end
 end

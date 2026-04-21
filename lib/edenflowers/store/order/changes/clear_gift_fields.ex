@@ -2,8 +2,8 @@ defmodule Edenflowers.Store.Order.ClearGiftFields do
   @moduledoc """
   Clears gift-related fields and removes card line items when the order is not a gift.
 
-  When the gift flag is set to false, this change clears the recipient_name field
-  and destroys any card line items attached to the order.
+  When the gift flag is set to false, this change clears the recipient_name and
+  card_message fields and destroys any card line items attached to the order.
   """
   use Ash.Resource.Change
 
@@ -19,7 +19,7 @@ defmodule Edenflowers.Store.Order.ClearGiftFields do
       gift = Ash.Changeset.get_argument_or_attribute(changeset, :gift)
 
       if not gift do
-        Ash.Changeset.force_change_attributes(changeset, %{recipient_name: nil})
+        Ash.Changeset.force_change_attributes(changeset, %{recipient_name: nil, card_message: nil})
       else
         changeset
       end
