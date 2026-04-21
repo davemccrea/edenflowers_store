@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.StoreLive do
           <ul class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6" role="list">
             <li
               :for={product <- @products}
-              class="group border-base-300/80 bg-base-100 relative flex flex-col overflow-hidden border transition duration-200 hover:border-primary/60 hover:shadow-lg"
+              class="group border-base-300/80 bg-base-100 relative flex flex-col overflow-hidden border transition duration-200 hover:border-primary/60 hover:shadow-md"
             >
               <.link
                 class="flex h-full flex-col"
@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.StoreLive do
                   <img
                     src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
                     alt={product.name}
-                    class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.05]"
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-102"
                     width="1"
                     height="1"
                     loading="lazy"
@@ -109,17 +109,8 @@ defmodule EdenflowersWeb.StoreLive do
                     {product.name}
                   </h3>
 
-                  <div class="text-base-content flex items-center justify-between">
-                    <span class="text-base-content/80 text-sm sm:text-base">
-                      {Edenflowers.Utils.format_money(product.cheapest_price)}
-                    </span>
-                    <span class="text-base-content/60 flex items-center gap-1 text-xs uppercase tracking-wider transition duration-200 group-hover:text-primary sm:text-sm">
-                      {~t"View"}
-                      <.icon
-                        name="hero-arrow-right"
-                        class="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1"
-                      />
-                    </span>
+                  <div class="text-base-content/70 text-sm sm:text-base">
+                    {Edenflowers.Utils.format_money(product.cheapest_price)}
                   </div>
                 </div>
               </.link>
