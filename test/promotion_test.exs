@@ -204,6 +204,9 @@ defmodule Edenflowers.Store.PromotionTest do
       # Finalize checkout
       {:ok, _order} = Order.finalise_checkout(order.id, authorize?: false)
 
+      # Drain Oban queue so the IncrementPromotionUsage job runs synchronously
+      Oban.drain_queue(queue: :default)
+
       # Check usage was incremented
       {:ok, updated_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
       assert updated_promotion.usage == 1

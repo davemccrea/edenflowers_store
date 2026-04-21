@@ -23,7 +23,7 @@ defmodule Edenflowers.Store.Order.ClearGiftFields do
         Ash.Changeset.after_action(changeset, fn _changeset, result ->
           Edenflowers.Store.LineItem
           |> Ash.Query.filter(order_id == ^result.id and is_card == true)
-          |> Ash.bulk_destroy(:remove_item, %{}, authorize?: false, return_errors?: true)
+          |> Ash.bulk_destroy(:remove_item, %{}, authorize?: false, return_errors?: true, strategy: [:stream])
           |> case do
             %Ash.BulkResult{status: :success} -> {:ok, result}
             %Ash.BulkResult{errors: errors} -> {:error, errors}
