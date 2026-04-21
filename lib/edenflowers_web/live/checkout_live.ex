@@ -266,14 +266,13 @@ defmodule EdenflowersWeb.CheckoutLive do
                           }>
                             {msg}
                           </.error>
-                          <p :if={@address_state == :confirmed} class="text-success mt-1.5 flex items-center gap-2 text-sm">
-                            <span>
-                              {@order.calculated_address}
-                              <span class="ml-1">
-                                • {format_distance(@order.distance)} • {format_delivery_amount(@order)}
-                              </span>
-                            </span>
-                          </p>
+                          <div
+                            :if={@address_state == :confirmed}
+                            class="border-base-300 bg-base-300 mt-2 border p-3 text-sm"
+                          >
+                            <div>{@order.calculated_address}</div>
+                            <div>{format_distance(@order.distance)} • {format_delivery_amount(@order)}</div>
+                          </div>
                           <p :if={@address_state == :error} class="text-error mt-1.5 text-sm">
                             {@address_error}
                           </p>
