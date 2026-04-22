@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.CalendarComponent do
         </button>
       </div>
 
-      <div class="border-base-content/10 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
+      <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
         <%= for week_day <- List.first(@week_rows) do %>
           <span>
             {Cldr.DateTime.to_string!(week_day, format: "EEEEEE")}
@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     base_class = "flex flex-none items-center justify-center p-1.5"
 
     if is_disabled do
-      "#{base_class} text-gray-300 opacity-50"
+      "#{base_class} text-base-content/20"
     else
       "#{base_class} cursor-pointer text-base-content hover:text-base-content/60"
     end

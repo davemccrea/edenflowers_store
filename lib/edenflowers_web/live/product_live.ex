@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.ProductLive do
           <section aria-labelledby="product-details-heading" class="flex flex-col gap-8">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <h1 id="product-details-heading" data-testid="product-name" class="font-serif text-4xl tracking-wide">
+                <h1 id="product-details-heading" data-testid="product-name" class="page-title tracking-wide">
                   {@product.name}
                 </h1>
               </div>
@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.ProductLive do
 
         <%!-- FAQs Section --%>
         <section aria-labelledby="faq-heading" class="m-auto max-w-4xl">
-          <h2 id="faq-heading" class="font-serif mb-12 text-center text-3xl">{~t"Frequently Asked Questions"}</h2>
+          <h2 id="faq-heading" class="section-title mb-12 text-center">{~t"Frequently Asked Questions"}</h2>
 
           <div class="space-y-4">
             <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
