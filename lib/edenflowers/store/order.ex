@@ -13,7 +13,6 @@ defmodule Edenflowers.Store.Order do
   alias __MODULE__.{
     ValidateAndCalculateFulfillment,
     LookupPromotionCode,
-    MaybeRequireRecipientName,
     ClearGiftFields,
     UpsertUserAndAssignToOrder,
     UpdatePromotionUsageCount,
@@ -132,7 +131,7 @@ defmodule Edenflowers.Store.Order do
     update :save_step_2 do
       accept [:gift, :recipient_name, :card_message]
       change set_attribute(:step, 3)
-      change {MaybeRequireRecipientName, []}
+      validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       change {ClearGiftFields, []}
       require_atomic? false
     end
@@ -167,7 +166,7 @@ defmodule Edenflowers.Store.Order do
 
     # Other Update Actions
     update :finalise_checkout do
-      change {ValidatePaymentIntent, []}
+      validate {ValidatePaymentIntent, []}
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -206,7 +205,7 @@ defmodule Edenflowers.Store.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
-      change {ValidateMinimumCartTotal, []}
+      validate {ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       require_atomic? false
     end
@@ -214,7 +213,7 @@ defmodule Edenflowers.Store.Order do
     update :add_promotion_with_code do
       argument :code, :string
       change {LookupPromotionCode, []}
-      change {ValidateMinimumCartTotal, []}
+      validate {ValidateMinimumCartTotal, []}
       require_atomic? false
     end
 
