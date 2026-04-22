@@ -28,9 +28,10 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
-       # Transient address-lookup state. Three values: :idle, :loading, {:error, msg}.
-       # "Confirmed" is not a state here — it's derived as :idle && order.calculated_address.
+       # Transient address-lookup state. Two values: :idle, :loading.
+       # "Confirmed" is derived as :idle && order.calculated_address matches the form value.
        |> assign(:address_lookup, :idle)
+       |> assign(:pending_address, nil)
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -233,30 +234,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                             field={@form[:delivery_address]}
                             type="text"
                             phx-blur="check_delivery_address"
-                          >
-                            <:trailing>
-                              <span
-                                :if={@address_lookup == :loading}
-                                class="loading loading-spinner loading-sm text-base-content/40"
-                              />
-                              <.icon
-                                :if={@address_lookup != :loading and address_confirmed?}
-                                name="hero-check-circle-mini"
-                                class="text-success size-5"
-                              />
-                              <.icon
-                                :if={match?({:error, _}, @address_lookup)}
-                                name="hero-exclamation-circle-mini"
-                                class="text-error size-5"
-                              />
-                            </:trailing>
-                          </.input>
+                            loading={@address_lookup == :loading}
+                            confirmed={address_confirmed?}
+                          />
                           <p :if={address_confirmed?} class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
-                          <.error :if={match?({:error, _}, @address_lookup)}>
-                            {elem(@address_lookup, 1)}
-                          </.error>
                         </div>
 
                         <.input
@@ -585,7 +568,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         # blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(address_lookup: :loading)
+         |> assign(address_lookup: :loading, pending_address: address)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
@@ -705,16 +688,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order, form: form, address_lookup: :idle)}
   end
 
-  def handle_async(
-        :confirm_delivery_address,
-        {:ok, {:error, %Ash.Error.Invalid{errors: [%{message: message} | _]}}},
-        socket
-      ) do
-    {:noreply, fail_address_lookup(socket, message)}
+  def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
+    {:noreply, fail_address_lookup(socket, error)}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
-    {:noreply, fail_address_lookup(socket, ~t"There was a problem calculating delivery cost, please try again later")}
+    {:noreply, fail_address_lookup(socket, [field: :delivery_address, message: ~t"There was a problem calculating delivery cost, please try again later"])}
   end
 
   # Cancelled by a newer start_async with the same name — ignore, the new task
@@ -725,11 +704,16 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_async(:confirm_delivery_address, {:exit, reason}, socket) do
     Logger.error("confirm_delivery_address task exited: #{inspect(reason)}")
-    {:noreply, fail_address_lookup(socket, ~t"There was a problem calculating delivery cost, please try again later")}
+    {:noreply, fail_address_lookup(socket, [field: :delivery_address, message: ~t"There was a problem calculating delivery cost, please try again later"])}
   end
 
-  defp fail_address_lookup(socket, message) do
-    assign(socket, address_lookup: {:error, message})
+  defp fail_address_lookup(socket, error) do
+    form =
+      socket.assigns.form
+      |> AshPhoenix.Form.update_params(&Map.put(&1, "delivery_address", socket.assigns.pending_address))
+      |> AshPhoenix.Form.add_error(error)
+
+    assign(socket, address_lookup: :idle, form: form)
   end
 
   # ==========

@@ -194,6 +194,8 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :class, :any, default: nil, doc: "the input class to use over defaults"
   attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
+  attr :loading, :boolean, default: false, doc: "shows a loading spinner in the trailing slot (default text-like inputs only)"
+  attr :confirmed, :boolean, default: false, doc: "shows a success check icon in the trailing slot (default text-like inputs only)"
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
@@ -360,13 +362,20 @@ defmodule EdenflowersWeb.CoreComponents do
             name={@name}
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-            class={[@class || "input input-lg w-full", @trailing != [] && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            class={[
+              @class || "input input-lg w-full",
+              (@loading or @confirmed or @errors != [] or @trailing != []) && "pr-10",
+              @errors != [] && (@error_class || "input-error")
+            ]}
             {@rest}
           />
           <div
-            :if={@trailing != []}
+            :if={@loading or @confirmed or @errors != [] or @trailing != []}
             class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
           >
+            <span :if={@loading} class="loading loading-spinner loading-sm text-base-content/40" />
+            <.icon :if={not @loading and @confirmed} name="hero-check-circle-mini" class="text-success size-5" />
+            <.icon :if={not @loading and not @confirmed and @errors != []} name="hero-exclamation-circle-mini" class="text-error size-5" />
             {render_slot(@trailing)}
           </div>
         </div>
