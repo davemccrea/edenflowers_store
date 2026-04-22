@@ -103,11 +103,15 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :any
-  attr :variant, :string, values: ~w(primary)
+  attr :variant, :string, values: ~w(primary secondary)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{
+      "primary" => "btn-primary",
+      "secondary" => "btn-primary btn-soft",
+      nil => "btn-primary btn-soft"
+    }
 
     assigns =
       assign_new(assigns, :class, fn ->
@@ -387,7 +391,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <h1 class="text-lg font-semibold leading-8">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-base-content/70 text-sm">
+        <p :if={@subtitle != []} class="text-base-content/80 text-sm">
           {render_slot(@subtitle)}
         </p>
       </div>
@@ -606,7 +610,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
-  attr :class, :string, default: "bg-white min-w-96"
+  attr :class, :string, default: "bg-base-100 min-w-96"
   slot :inner_block, required: true
 
   def drawer(%{placement: placement} = assigns) do

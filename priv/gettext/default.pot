@@ -110,7 +110,7 @@ msgstr ""
 
 #: lib/edenflowers_web/live/home_live.ex:26
 #, elixir-autogen, elixir-format
-msgid "Fresh flowers for everyday moments."
+msgid "Fresh flowers for everyday moments"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:142

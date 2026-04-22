@@ -317,7 +317,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             <.icon
                               :if={day == ~D[2025-05-07]}
                               name="hero-heart-solid"
-                              class="absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5 text-red-400"
+                              class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
                             />
                           </:day_decoration>
                         </.live_component>
@@ -363,7 +363,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.steps>
             </div>
 
-            <div class="md:border-neutral/10 md:border-r" />
+            <div class="md:border-neutral/20 md:border-r" />
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <section class="flex flex-col gap-4 p-1" data-testid="cart-section">

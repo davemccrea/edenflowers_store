@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.NewsletterSignupFormTest do
       conn
       |> visit("/")
       |> fill_in("Email Address", with: "test@example.com")
-      |> click_button("Register")
+      |> submit()
       |> assert_has("p", text: "Thanks! We've sent your 15% off code to your inbox.")
     end
   end
