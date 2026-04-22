@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   def update(assigns, socket) do
-    selected_date = assigns.selected_date
+    selected_date = parse_date(assigns.selected_date)
     today_date = socket.assigns.today_date
     view_date = if selected_date, do: selected_date, else: today_date
 
@@ -308,4 +308,8 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> DateTime.now!()
     |> DateTime.to_date()
   end
+
+  defp parse_date(%Date{} = date), do: date
+  defp parse_date(str) when is_binary(str), do: Date.from_iso8601!(str)
+  defp parse_date(_), do: nil
 end

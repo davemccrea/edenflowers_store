@@ -30,8 +30,8 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
        # Transient address-lookup state. Two values: :idle, :loading.
        # "Confirmed" is derived as :idle && order.calculated_address matches the form value.
-       |> assign(:address_lookup, :idle)
-       |> assign(:pending_address, nil)
+       |> assign(:address_loading, false)
+       |> assign(:address_confirmed, false)
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -231,10 +231,10 @@ defmodule EdenflowersWeb.CheckoutLive do
                             field={@form[:delivery_address]}
                             type="text"
                             phx-blur="check_delivery_address"
-                            loading={@address_lookup == :loading}
-                            confirmed={address_confirmed?(@address_lookup, @form, @order)}
+                            loading={@address_loading}
+                            confirmed={@address_confirmed}
                           />
-                          <p :if={address_confirmed?(@address_lookup, @form, @order)} data-testid="address-distance" class="mt-1.5 text-sm">
+                          <p :if={@address_confirmed} data-testid="address-distance" class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
                         </div>
@@ -462,11 +462,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  # Resets the lookup state while the user edits the address so a stale error icon
-  # or confirmation indicator doesn't linger over text the user is still changing.
-  # The :idle + value-matches-persisted check in the template hides the green check.
-  # Also wipes the persisted geocode the moment the user empties the field, so a
-  # subsequent submit can't sneak through using the old confirmed address.
+  # Clears address_confirmed while the user edits the field, and wipes the persisted
+  # geocode the moment the user empties the field so a submit can't sneak through
+  # using an old confirmed address.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     typed = params["delivery_address"] || ""
@@ -477,12 +475,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         do: Order.reset_delivery_address!(socket.assigns.order, actor: actor),
         else: socket.assigns.order
 
-    address_lookup =
-      if typed != order.delivery_address,
-        do: :idle,
-        else: socket.assigns.address_lookup
-
-    {:noreply, assign(socket, form: form, order: order, address_lookup: address_lookup)}
+    {:noreply, assign(socket, form: form, order: order, address_confirmed: false)}
   end
 
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
@@ -526,7 +519,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Ash.update!()
 
     order = Order.get_for_checkout!(order.id, actor: actor)
-    {:noreply, assign(socket, order: order, address_lookup: :idle)}
+    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: false)}
   end
 
   def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
@@ -540,11 +533,10 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order)}
   end
 
-  # Order updates
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
-    {:noreply, assign(socket, order: order, address_lookup: :idle)}
+    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: false)}
   end
 
   def handle_event("check_delivery_address", %{"value" => address}, socket) do
@@ -553,19 +545,23 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     cond do
       String.trim(address) == "" ->
-        {:noreply, assign(socket, address_lookup: :idle)}
+        {:noreply, socket}
 
       # Address unchanged and already confirmed — nothing to do.
-      address == order.delivery_address and socket.assigns.address_lookup == :idle and
-          not is_nil(order.calculated_address) ->
+      socket.assigns.address_confirmed and address == order.delivery_address ->
         {:noreply, socket}
 
       true ->
+        # Sync the address into form params now so that errors from the async result
+        # render on the field regardless of whether phx-change fired before this blur.
+        form =
+          AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "delivery_address", address))
+
         # start_async with the same name cancels any in-flight geocode so the final
         # blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(address_lookup: :loading, pending_address: address)
+         |> assign(form: form, address_loading: true, address_confirmed: false)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
@@ -660,7 +656,7 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(order: order)
      |> assign(form: form)
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_lookup: :idle)}
+     |> assign(address_loading: false, address_confirmed: false)}
   end
 
   # ============
@@ -668,15 +664,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ============
 
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    # Sync the form's delivery_address with the persisted value so address_confirmed?
-    # in the template (which compares form value to order.delivery_address) renders
-    # correctly even when phx-change didn't run before blur (e.g. paste + tab).
-    form =
-      AshPhoenix.Form.update_params(socket.assigns.form, fn params ->
-        Map.put(params, "delivery_address", order.delivery_address)
-      end)
-
-    {:noreply, assign(socket, order: order, form: form, address_lookup: :idle)}
+    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: true)}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
@@ -709,19 +697,13 @@ defmodule EdenflowersWeb.CheckoutLive do
      )}
   end
 
-  defp address_confirmed?(address_lookup, form, order) do
-    address_lookup == :idle and
-      not is_nil(order.calculated_address) and
-      to_string(form[:delivery_address].value || "") == order.delivery_address
-  end
-
   defp fail_address_lookup(socket, error) do
     form =
       socket.assigns.form
-      |> AshPhoenix.Form.update_params(&Map.put(&1, "delivery_address", socket.assigns.pending_address))
+      |> AshPhoenix.Form.validate(AshPhoenix.Form.params(socket.assigns.form))
       |> AshPhoenix.Form.add_error(error)
 
-    assign(socket, address_lookup: :idle, form: form)
+    assign(socket, address_loading: false, address_confirmed: false, form: form)
   end
 
   # ==========
