@@ -534,7 +534,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: false)}
+    form = make_form(order, action_name(:save, order.step))
+    {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
   end
 
   def handle_event("check_delivery_address", %{"value" => address}, socket) do

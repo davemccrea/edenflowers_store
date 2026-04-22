@@ -206,6 +206,29 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       refute render(view) =~ "form_delivery_address"
     end
 
+    test "switching from pickup back to delivery clears the address field",
+         %{conn: conn, delivery_option: delivery_option} do
+      pickup_option = generate(fulfillment_option(fulfillment_method: :pickup, rate_type: :fixed, base_price: "0.00"))
+
+      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view)
+
+      select_delivery_option(view, pickup_option.id)
+      select_delivery_option(view, delivery_option.id)
+
+      refute render(view) =~ "Stadsgatan 3, 65300 Vasa"
+      refute render(view) =~ ~s(data-testid="input-confirmed")
+    end
+
     test "all geocode fields are persisted to the database after confirmation",
          %{conn: conn, order: order, delivery_option: delivery_option} do
       stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
