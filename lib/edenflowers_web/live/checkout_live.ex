@@ -11,10 +11,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
-    end
-
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       card_variants = ProductVariant.for_card_drawer!()
@@ -491,14 +487,18 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do
+    actor = socket.assigns[:current_user]
+
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
-        # Focus on the next form section after successful submission
+        order = load_for_checkout(order, actor)
         next_section_id = get_next_section_id(socket.assigns.id, String.to_integer(step))
 
         {:noreply,
          socket
          |> assign(order: order)
+         |> assign(form: make_form(order, action_name(:save, order.step)))
+         |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
@@ -521,10 +521,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Step navigation
   def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-
-    Order.edit_step_3!(order, actor: actor)
-
-    order = Order.get_for_checkout!(order.id, actor: actor)
+    order = Order.edit_step_3!(order, actor: actor) |> load_for_checkout(actor)
 
     {:noreply,
      assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
@@ -594,7 +591,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
 
-    LineItem.add_card(%{
+    LineItem.add_card!(%{
       order_id: socket.assigns.order.id,
       product_id: variant.product.id,
       product_variant_id: variant.id,
@@ -649,24 +646,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.get_for_checkout!(order_id, actor: actor)
-    existing_params = AshPhoenix.Form.params(socket.assigns.form)
-
-    form =
-      order
-      |> make_form(action_name(:save, order.step))
-      |> AshPhoenix.Form.validate(existing_params)
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> assign(form: form)
-     |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
   end
 
   # ============
@@ -850,6 +829,22 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp size_label(:large), do: gettext("Large")
   defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
   defp size_label(_), do: ""
+
+  defp load_for_checkout(order, actor) do
+    Ash.load!(order, [
+      :total_items_in_cart,
+      :discount_amount,
+      :line_total,
+      :line_tax_amount,
+      :promotion_applied?,
+      :total,
+      :tax_amount,
+      :fulfillment_tax_amount,
+      :promotion,
+      :fulfillment_option,
+      :line_items
+    ], actor: actor)
+  end
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do

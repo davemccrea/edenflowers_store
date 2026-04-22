@@ -1,9 +1,7 @@
 defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   @moduledoc """
   A LiveView hook that subscribes to line item change events for a given order
-  and updates the socket with the latest order state.
-
-  If the cart becomes empty, the order is reset and the user is navigated home.
+  and redirects home if the cart becomes empty.
   """
   use Phoenix.Component
   import Phoenix.LiveView
