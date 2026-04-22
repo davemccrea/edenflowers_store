@@ -512,22 +512,21 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
 
-    order
-    |> Ash.Changeset.for_update(:edit_step_3)
-    |> Ash.update!()
+    Order.edit_step_3!(order, actor: actor)
 
     order = Order.get_for_checkout!(order.id, actor: actor)
     {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.calculated_address))}
   end
 
-  def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
-    step = String.to_integer(step)
+  def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
+    actor = socket.assigns[:current_user]
+    order = Order.edit_step_1!(order, actor: actor)
+    {:noreply, assign(socket, order: order)}
+  end
 
-    order =
-      order
-      |> Ash.Changeset.for_update(action_name(:edit, step))
-      |> Ash.update!()
-
+  def handle_event("edit_step_2", _params, %{assigns: %{order: order}} = socket) do
+    actor = socket.assigns[:current_user]
+    order = Order.edit_step_2!(order, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
