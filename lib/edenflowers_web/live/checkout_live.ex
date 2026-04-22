@@ -577,10 +577,10 @@ defmodule EdenflowersWeb.CheckoutLive do
       String.trim(address) == "" ->
         {:noreply, assign(socket, address_lookup: :cleared)}
 
-      # Skip re-geocoding if the address hasn't changed since the last confirmed lookup.
-      # The :cleared guard ensures re-entering the same address after clearing still triggers
-      # a fresh lookup, since the stale geocode data is still on the order at that point.
-      address == socket.assigns.order.delivery_address and socket.assigns.address_lookup != :cleared ->
+      # Skip re-geocoding only when the address matches the persisted one AND the lookup is
+      # already settled on "confirmed" (nil). If the lookup is :cleared or {:error, _}, we
+      # need a fresh geocode so the indicator reflects the current input.
+      address == socket.assigns.order.delivery_address and is_nil(socket.assigns.address_lookup) ->
         {:noreply, socket}
 
       true ->
@@ -670,13 +670,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       {:ok, order} ->
         {:noreply, assign(socket, order: order, address_lookup: nil)}
 
-      {:error, %Ash.Error.Invalid{errors: errors}} ->
-        message =
-          case Enum.find(errors, &match?(%{field: :delivery_address}, &1)) do
-            %{message: msg} -> msg
-            _ -> ~t"There was a problem calculating delivery cost, please try again later"
-          end
-
+      {:error, %Ash.Error.Invalid{errors: [%{message: message} | _]}} ->
         {:noreply, assign(socket, address_lookup: {:error, message})}
 
       {:error, _} ->
@@ -688,9 +682,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   # Reloads order and rebuilds forms when order is updated via PubSub.
-  # Centralizes form synchronization to prevent stale data across all order modifications.
-  # Reloads order and rebuilds forms when order is updated via PubSub.
-  # Resets address_lookup to nil so confirmed state is re-derived from order.calculated_address.
+  # Resets address_lookup so confirmed state is re-derived from order.calculated_address.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.get_for_checkout!(order_id, actor: actor)

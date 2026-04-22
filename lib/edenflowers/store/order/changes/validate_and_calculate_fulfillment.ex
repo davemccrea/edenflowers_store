@@ -53,8 +53,16 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
 
     address_blank? = is_nil(delivery_address) or String.trim(delivery_address) == ""
 
+    # ConfirmDeliveryAddress writes delivery_address alongside its geocode data atomically,
+    # so the persisted delivery_address always matches the persisted geocode. On save_step_3
+    # submit, the incoming delivery_address param can differ from the persisted value — that
+    # means the user edited the field without blurring to confirm, so the geocode is stale.
+    geocode_stale? =
+      not address_blank? and
+        delivery_address != changeset.data.delivery_address
+
     changeset =
-      if address_blank? do
+      if address_blank? or geocode_stale? do
         Ash.Changeset.force_change_attributes(changeset,
           calculated_address: nil,
           position: nil,
@@ -66,7 +74,7 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
         changeset
       end
 
-    if address_blank? or is_nil(calculated_address) or is_nil(fulfillment_amount) do
+    if address_blank? or geocode_stale? or is_nil(calculated_address) or is_nil(fulfillment_amount) do
       Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
         field: :delivery_address,
         message: ~t"Please enter and confirm a delivery address"
