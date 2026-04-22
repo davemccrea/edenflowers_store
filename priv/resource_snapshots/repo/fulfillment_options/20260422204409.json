@@ -13,19 +13,91 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
-      "default": "1",
+      "allow_nil?": false,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "quantity",
+      "source": "name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "\"0\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "minimum_cart_total",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fulfillment_method",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "rate_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "base_price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "price_per_km",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "free_dist_km",
       "type": "bigint"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,47 +105,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "unit_price",
-      "type": "decimal"
+      "source": "max_dist_km",
+      "type": "bigint"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "tax_rate",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "product_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "product_image_slug",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "false",
       "generated?": false,
       "precision": null,
@@ -81,63 +117,65 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_card",
+      "source": "same_day",
       "type": "boolean"
     },
     {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "allow_nil?": true,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "inserted_at",
-      "type": "utc_datetime_usec"
+      "source": "order_deadline",
+      "type": "time"
     },
     {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "allow_nil?": true,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "updated_at",
-      "type": "utc_datetime_usec"
+      "source": "available_days",
+      "type": [
+        "array",
+        "text"
+      ]
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
+      "allow_nil?": true,
+      "default": "[]",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "line_items_order_id_fkey",
-        "on_delete": "delete",
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "orders"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "order_id",
-      "type": "uuid"
+      "source": "enabled_dates",
+      "type": [
+        "array",
+        "date"
+      ]
+    },
+    {
+      "allow_nil?": true,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "disabled_dates",
+      "type": [
+        "array",
+        "date"
+      ]
     },
     {
       "allow_nil?": false,
@@ -158,47 +196,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "line_items_product_id_fkey",
+        "name": "fulfillment_options_tax_rate_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "products"
+        "table": "tax_rates"
       },
       "scale": null,
       "size": null,
-      "source": "product_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "line_items_product_variant_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "product_variants"
-      },
-      "scale": null,
-      "size": null,
-      "source": "product_variant_id",
+      "source": "tax_rate_id",
       "type": "uuid"
     }
   ],
@@ -208,23 +215,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "8340EEFE29D75A191CA257C4DDBE4B57C8401B492898FC9541A674AF2D913146",
+  "hash": "F5D635AD4B10F451E8739E1ABC69E09627215E679066A7B35749DF0F3F32BE7A",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "line_items_unique_product_variant_index",
+      "index_name": "fulfillment_options_unique_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "order_id"
-        },
-        {
-          "type": "atom",
-          "value": "product_variant_id"
+          "value": "name"
         }
       ],
-      "name": "unique_product_variant",
+      "name": "unique_name",
       "nils_distinct?": true,
       "where": null
     }
@@ -236,5 +239,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "line_items"
+  "table": "fulfillment_options"
 }

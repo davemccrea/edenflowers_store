@@ -11,19 +11,18 @@ defmodule Edenflowers.Store.Order do
   require Ash.Resource.Change.Builtins
 
   alias __MODULE__.{
-    ValidateAndCalculateFulfillment,
+    RequireGeocodedAddress,
+    CalculatePickupCost,
     LookupPromotionCode,
-    MaybeRequireRecipientName,
     ClearGiftFields,
     UpsertUserAndAssignToOrder,
     UpdatePromotionUsageCount,
     ValidateMinimumCartTotal,
-    ValidateFulfillmentDate,
     ValidatePaymentIntent,
     Validations
   }
 
-  alias __MODULE__.Changes.{ResetCheckout, GenerateOrderReference, ConfirmDeliveryAddress}
+  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields, GenerateOrderReference}
 
   postgres do
     repo Edenflowers.Repo
@@ -36,17 +35,20 @@ defmodule Edenflowers.Store.Order do
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
     define :get_all_completed, action: :completed
-    define :finalise_checkout, action: :finalise_checkout
+    define :finalize_checkout, action: :finalize_checkout
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
     define :confirm_delivery_address, action: :confirm_delivery_address, args: [:address]
-    define :reset_delivery_address, action: :reset_delivery_address
+    define :clear_delivery_fields, action: :clear_delivery_fields
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
-    define :update_gift, action: :update_gift, args: [:gift]
+    define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
-    define :reset, action: :restart_checkout
+    define :restart_checkout, action: :restart_checkout
+    define :edit_step_1, action: :edit_step_1
+    define :edit_step_2, action: :edit_step_2
+    define :edit_step_3, action: :edit_step_3
   end
 
   state_machine do
@@ -54,7 +56,7 @@ defmodule Edenflowers.Store.Order do
     default_initial_state(:checkout)
 
     transitions do
-      transition(:finalise_checkout, from: :checkout, to: :placed)
+      transition(:finalize_checkout, from: :checkout, to: :placed)
     end
   end
 
@@ -129,7 +131,7 @@ defmodule Edenflowers.Store.Order do
     update :save_step_2 do
       accept [:gift, :recipient_name, :card_message]
       change set_attribute(:step, 3)
-      change {MaybeRequireRecipientName, []}
+      validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       change {ClearGiftFields, []}
       require_atomic? false
     end
@@ -143,14 +145,18 @@ defmodule Edenflowers.Store.Order do
         :fulfillment_option_id,
         :recipient_name,
         :recipient_phone_number,
-        :delivery_address,
         :delivery_instructions,
         :fulfillment_date
       ]
 
-      change {ValidateFulfillmentDate, []}
-      validate {Validations.MaybeRequireDeliveryAddress, []}
-      change {ValidateAndCalculateFulfillment, []}
+      # Argument, not attribute — used only for required-field validation.
+      # The persisted delivery_address is owned by confirm_delivery_address.
+      argument :delivery_address, :string
+
+      validate {Validations.ValidateFulfillmentDate, []}
+      validate {Validations.RequireDeliveryAddress, []}
+      change {RequireGeocodedAddress, []}
+      change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
       require_atomic? false
     end
@@ -160,8 +166,8 @@ defmodule Edenflowers.Store.Order do
     end
 
     # Other Update Actions
-    update :finalise_checkout do
-      change {ValidatePaymentIntent, []}
+    update :finalize_checkout do
+      validate {ValidatePaymentIntent, []}
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -175,27 +181,17 @@ defmodule Edenflowers.Store.Order do
       require_atomic? false
     end
 
-    update :reset_delivery_address do
-      change set_attribute(:delivery_address, nil)
-      change set_attribute(:calculated_address, nil)
-      change set_attribute(:position, nil)
-      change set_attribute(:here_id, nil)
-      change set_attribute(:distance, nil)
-      change set_attribute(:fulfillment_amount, nil)
+    update :clear_delivery_fields do
+      change {ClearDeliveryFields, []}
     end
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
       change set_attribute(:fulfillment_date, nil)
-      change set_attribute(:delivery_address, nil)
-      change set_attribute(:calculated_address, nil)
-      change set_attribute(:position, nil)
-      change set_attribute(:here_id, nil)
-      change set_attribute(:distance, nil)
-      change set_attribute(:fulfillment_amount, nil)
+      change {ClearDeliveryFields, []}
     end
 
-    update :update_gift do
+    update :set_gift do
       accept [:gift]
     end
 
@@ -210,7 +206,7 @@ defmodule Edenflowers.Store.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
-      change {ValidateMinimumCartTotal, []}
+      validate {ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       require_atomic? false
     end
@@ -218,7 +214,7 @@ defmodule Edenflowers.Store.Order do
     update :add_promotion_with_code do
       argument :code, :string
       change {LookupPromotionCode, []}
-      change {ValidateMinimumCartTotal, []}
+      validate {ValidateMinimumCartTotal, []}
       require_atomic? false
     end
 
@@ -313,7 +309,7 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
     attribute :fulfillment_amount, :decimal
-    attribute :calculated_address, :string
+    attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
     attribute :position, :string

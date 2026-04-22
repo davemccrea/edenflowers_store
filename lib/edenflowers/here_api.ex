@@ -1,4 +1,12 @@
+defmodule Edenflowers.HereAPI.Behaviour do
+  @callback get_address(query :: String.t()) ::
+              {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
+  @callback get_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
+end
+
 defmodule Edenflowers.HereAPI do
+  @behaviour Edenflowers.HereAPI.Behaviour
+
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger
@@ -11,7 +19,7 @@ defmodule Edenflowers.HereAPI do
     url =
       "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
 
-    with {:ok, %{body: body}} <- Req.get(url),
+    with {:ok, %{status: 200, body: body}} <- Req.get(url),
          %{
            "items" => [
              %{
@@ -32,7 +40,12 @@ defmodule Edenflowers.HereAPI do
 
       {:ok, {address, position, here_id}}
     else
-      _ -> {:error, :address_not_found}
+      {:ok, %{status: status}} ->
+        Logger.error("HereAPI geocode returned status #{status}")
+        {:error, :address_not_found}
+
+      _ ->
+        {:error, :address_not_found}
     end
   end
 

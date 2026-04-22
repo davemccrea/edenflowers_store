@@ -199,10 +199,23 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :class, :any, default: nil, doc: "the input class to use over defaults"
   attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
 
+  attr :loading, :boolean,
+    default: false,
+    doc: "shows a loading spinner in the trailing slot (default text-like inputs only)"
+
+  attr :confirmed, :boolean,
+    default: false,
+    doc: "shows a success check icon in the trailing slot (default text-like inputs only)"
+
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-                multiple pattern placeholder readonly required rows size step)
+                multiple pattern placeholder readonly required rows size step
+                phx-blur phx-focus phx-change)
 
   slot :inner_block
+
+  slot :trailing,
+    doc:
+      "Adornment rendered inside the text input on the right (e.g. spinner, icon). Only supported by the default (text-like) input."
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -353,14 +366,35 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
         <span :if={@label} class="mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[@class || "input input-lg w-full", @errors != [] && (@error_class || "input-error")]}
-          {@rest}
-        />
+        <div class="relative">
+          <input
+            type={@type}
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={[@class || "input input-lg w-full", (@loading or @confirmed or @errors != [] or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            {@rest}
+          />
+          <div
+            :if={@loading or @confirmed or @errors != [] or @trailing != []}
+            class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
+          >
+            <span
+              :if={@loading}
+              data-testid="input-loading"
+              class="loading loading-spinner loading-sm text-base-content/40"
+            />
+            <span :if={not @loading and @confirmed} data-testid="input-confirmed">
+              <.icon name="hero-check-circle-mini" class="text-success size-5" />
+            </span>
+            <.icon
+              :if={not @loading and not @confirmed and @errors != []}
+              name="hero-exclamation-circle-mini"
+              class="text-error size-5"
+            />
+            {render_slot(@trailing)}
+          </div>
+        </div>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </fieldset>

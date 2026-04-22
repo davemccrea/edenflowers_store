@@ -134,7 +134,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       card_variant: card_variant
     } do
       order
-      |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+      |> Ash.Changeset.for_update(:set_gift, %{gift: true})
       |> Ash.update!(authorize?: false)
 
       assert {:ok, card_line_item} =
@@ -177,7 +177,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     } do
       order =
         order
-        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
       {:ok, _card} =

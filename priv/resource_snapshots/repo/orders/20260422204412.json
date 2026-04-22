@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -129,6 +129,18 @@
       "references": null,
       "scale": null,
       "size": null,
+      "source": "card_message",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
       "source": "recipient_name",
       "type": "text"
     },
@@ -201,7 +213,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "calculated_address",
+      "source": "geocoded_address",
       "type": "text"
     },
     {
@@ -388,8 +400,23 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "4489C055B649A5F1522BCFA2F674F70B486588E8FF59619EF07AD1FDA6AD5240",
-  "identities": [],
+  "hash": "B346E973F901926347496E8AAB63A5999DF66475FFA536897A1CFED129113C41",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "orders_unique_order_reference_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "order_reference"
+        }
+      ],
+      "name": "unique_order_reference",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,

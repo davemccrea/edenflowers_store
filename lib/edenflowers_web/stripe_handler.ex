@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.StripeHandler do
   @impl true
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     with {:ok, order_id} <- fetch_order_id(event),
-         {:ok, _order} <- finalise_checkout(order_id),
+         {:ok, _order} <- finalize_checkout(order_id),
          {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order_id}) do
       :ok
     else
@@ -54,9 +54,9 @@ defmodule EdenflowersWeb.StripeHandler do
 
   defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
-  defp finalise_checkout(order_id) do
+  defp finalize_checkout(order_id) do
     order_id
-    |> Order.finalise_checkout(actor: system_actor())
+    |> Order.finalize_checkout(actor: system_actor())
     |> case do
       {:ok, order} -> {:ok, order}
       {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
