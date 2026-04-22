@@ -1,7 +1,8 @@
 defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
-  alias Edenflowers.HereAPI
   import Decimal, only: [is_decimal: 1]
+
+  defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -16,8 +17,8 @@ defmodule Edenflowers.Fulfillments do
   @spec calculate_delivery(String.t(), FulfillmentOption.t()) ::
           {:ok, delivery_result()} | {:error, atom()}
   def calculate_delivery(delivery_address, fulfillment_option) do
-    with {:ok, {calculated_address, position, here_id}} <- HereAPI.get_address(delivery_address),
-         {:ok, distance} <- HereAPI.get_distance(position),
+    with {:ok, {calculated_address, position, here_id}} <- here_api().get_address(delivery_address),
+         {:ok, distance} <- here_api().get_distance(position),
          {:ok, fulfillment_amount} <- calculate_price(fulfillment_option, distance) do
       {:ok,
        %{
