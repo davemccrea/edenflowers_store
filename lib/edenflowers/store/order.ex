@@ -19,7 +19,6 @@ defmodule Edenflowers.Store.Order do
     UpdatePromotionUsageCount,
     ValidateMinimumCartTotal,
     ValidatePaymentIntent,
-    Changes,
     Validations
   }
 
