@@ -375,8 +375,10 @@ defmodule EdenflowersWeb.CoreComponents do
             :if={@loading or @confirmed or @errors != [] or @trailing != []}
             class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
           >
-            <span :if={@loading} class="loading loading-spinner loading-sm text-base-content/40" />
-            <.icon :if={not @loading and @confirmed} name="hero-check-circle-mini" class="text-success size-5" />
+            <span :if={@loading} data-testid="input-loading" class="loading loading-spinner loading-sm text-base-content/40" />
+            <span :if={not @loading and @confirmed} data-testid="input-confirmed">
+              <.icon name="hero-check-circle-mini" class="text-success size-5" />
+            </span>
             <.icon
               :if={not @loading and not @confirmed and @errors != []}
               name="hero-exclamation-circle-mini"

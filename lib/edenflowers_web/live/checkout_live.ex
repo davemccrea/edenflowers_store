@@ -234,7 +234,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             loading={@address_lookup == :loading}
                             confirmed={address_confirmed?(@address_lookup, @form, @order)}
                           />
-                          <p :if={address_confirmed?(@address_lookup, @form, @order)} class="mt-1.5 text-sm">
+                          <p :if={address_confirmed?(@address_lookup, @form, @order)} data-testid="address-distance" class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
                         </div>
@@ -648,11 +648,17 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.get_for_checkout!(order_id, actor: actor)
+    existing_params = AshPhoenix.Form.params(socket.assigns.form)
+
+    form =
+      order
+      |> make_form(action_name(:save, order.step))
+      |> AshPhoenix.Form.validate(existing_params)
 
     {:noreply,
      socket
      |> assign(order: order)
-     |> assign(form: make_form(order, action_name(:save, order.step)))
+     |> assign(form: form)
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))
      |> assign(address_lookup: :idle)}
   end
