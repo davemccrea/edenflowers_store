@@ -693,7 +693,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
-    {:noreply, fail_address_lookup(socket, [field: :delivery_address, message: ~t"There was a problem calculating delivery cost, please try again later"])}
+    {:noreply,
+     fail_address_lookup(socket,
+       field: :delivery_address,
+       message: ~t"There was a problem calculating delivery cost, please try again later"
+     )}
   end
 
   # Cancelled by a newer start_async with the same name — ignore, the new task
@@ -704,7 +708,12 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_async(:confirm_delivery_address, {:exit, reason}, socket) do
     Logger.error("confirm_delivery_address task exited: #{inspect(reason)}")
-    {:noreply, fail_address_lookup(socket, [field: :delivery_address, message: ~t"There was a problem calculating delivery cost, please try again later"])}
+
+    {:noreply,
+     fail_address_lookup(socket,
+       field: :delivery_address,
+       message: ~t"There was a problem calculating delivery cost, please try again later"
+     )}
   end
 
   defp fail_address_lookup(socket, error) do
