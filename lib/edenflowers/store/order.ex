@@ -109,7 +109,7 @@ defmodule Edenflowers.Store.Order do
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
-      change {Changes.GenerateOrderReference, []}
+      change {GenerateOrderReference, []}
     end
 
     # Step-specific Update Actions

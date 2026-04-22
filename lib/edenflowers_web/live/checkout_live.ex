@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
 
   alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.{Fulfillments}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
@@ -284,6 +284,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                             />
                           </:day_decoration>
                         </.live_component>
+                        <.error :for={
+                          msg <-
+                            if(Phoenix.Component.used_input?(@form[:fulfillment_date]),
+                              do: Enum.map(@form[:fulfillment_date].errors, &translate_error(&1)),
+                              else: []
+                            )
+                        }>
+                          {msg}
+                        </.error>
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
@@ -817,7 +826,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp format_delivery_amount(%{fulfillment_amount: nil}), do: ""
 
   defp format_delivery_amount(%{fulfillment_amount: amount}) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery!", else: Edenflowers.Utils.format_money(amount)
+    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Utils.format_money(amount)
   end
 
   defp size_label(:small), do: gettext("Small")
