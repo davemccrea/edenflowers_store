@@ -3,7 +3,6 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshStateMachine]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -252,11 +251,6 @@ defmodule Edenflowers.Store.Order do
       # Completed orders: Only the owner can access placed orders
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
-  end
-
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-    publish_all :update, ["order", "updated", :_pkey]
   end
 
   attributes do
