@@ -27,9 +27,9 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
-       |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
+       |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> assign(:address_loading, false)
-       |> assign(:address_confirmed, not is_nil(order.calculated_address))
+       |> assign(:address_confirmed, not is_nil(order.geocoded_address))
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       label={~t"Recipient *"}
                       field={@form[:gift]}
                       options={[%{name: "❤️ For me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
-                      phx-change="update_gift"
+                      phx-change="set_gift"
                       data-testid="gift-recipient-selector"
                     >
                       {option.name}
@@ -228,7 +228,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             label={~t"Address *"}
                             field={@form[:delivery_address]}
                             type="text"
-                            phx-blur="check_delivery_address"
+                            phx-blur="geocode_address"
                             loading={@address_loading}
                             confirmed={@address_confirmed}
                           />
@@ -330,7 +330,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <.form
                   :if={not @order.promotion_applied?}
                   id={"#{@id}-form-promotional"}
-                  for={@promotional_form}
+                  for={@promo_code_form}
                   phx-submit="update_promotional"
                   class="space-y-2"
                   data-testid="promo-code-form"
@@ -338,7 +338,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <.input
                     style="button-addon"
                     label={~t"Promo Code"}
-                    field={@promotional_form[:code]}
+                    field={@promo_code_form[:code]}
                     type="text"
                     button_text={~t"Apply"}
                     placeholder={~t"Enter promo code"}
@@ -470,7 +470,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     order =
       if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address),
-        do: Order.reset_delivery_address!(socket.assigns.order, actor: actor),
+        do: Order.clear_delivery_fields!(socket.assigns.order, actor: actor),
         else: socket.assigns.order
 
     {:noreply, assign(socket, form: form, order: order, address_confirmed: false)}
@@ -497,6 +497,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
+  # Step 4 does not save form data — it triggers Stripe payment processing directly.
   def handle_event("save_form_4", _, socket) do
     case stripe_api().update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
@@ -515,7 +516,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     Order.edit_step_3!(order, actor: actor)
 
     order = Order.get_for_checkout!(order.id, actor: actor)
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.calculated_address))}
+    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
   end
 
   def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
@@ -537,7 +538,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
   end
 
-  def handle_event("check_delivery_address", %{"value" => address}, socket) do
+  def handle_event("geocode_address", %{"value" => address}, socket) do
     actor = socket.assigns[:current_user]
     order = socket.assigns.order
 
@@ -566,9 +567,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("update_gift", %{"form" => %{"gift" => gift}}, socket) do
+  def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.update_gift!(socket.assigns.order, gift, actor: actor)
+    order = Order.set_gift!(socket.assigns.order, gift, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
@@ -609,12 +610,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.promotional_form, params: params) do
+    case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
       {:ok, order} ->
         {:noreply, assign(socket, order: order)}
 
-      {:error, promotional_form} ->
-        {:noreply, assign(socket, promotional_form: promotional_form)}
+      {:error, promo_code_form} ->
+        {:noreply, assign(socket, promo_code_form: promo_code_form)}
     end
   end
 
@@ -653,8 +654,8 @@ defmodule EdenflowersWeb.CheckoutLive do
      socket
      |> assign(order: order)
      |> assign(form: form)
-     |> assign(promotional_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_loading: false, address_confirmed: not is_nil(order.calculated_address))}
+     |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+     |> assign(address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
   end
 
   # ============

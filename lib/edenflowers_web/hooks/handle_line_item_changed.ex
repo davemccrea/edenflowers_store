@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
     order = Order.get_for_checkout!(order_id, actor: actor)
 
     if Enum.empty?(order.line_items) do
-      Order.reset!(order, actor: actor)
+      Order.restart_checkout!(order, actor: actor)
       {:halt, push_navigate(socket, to: "/")}
     else
       {:halt, assign(socket, order: order)}

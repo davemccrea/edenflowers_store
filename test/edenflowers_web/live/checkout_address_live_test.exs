@@ -179,7 +179,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
       reloaded = Edenflowers.Store.Order.get_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
-      assert is_nil(reloaded.calculated_address)
+      assert is_nil(reloaded.geocoded_address)
       assert is_nil(reloaded.distance)
       assert is_nil(reloaded.fulfillment_amount)
     end
@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
       reloaded = Edenflowers.Store.Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
-      assert reloaded.calculated_address == "Stadsgatan 3, 65300 Vasa"
+      assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.position == "63.0951,21.6165"
       assert reloaded.here_id == "here-id-123"
       assert reloaded.distance == 3000
@@ -284,7 +284,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
       # Confirmed address survives the submit
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
-      assert reloaded.calculated_address == "Stadsgatan 3, 65300 Vasa"
+      assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.distance == 3000
     end
 
@@ -427,7 +427,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     |> Ash.Changeset.force_change_attributes(%{
       fulfillment_option_id: delivery_option.id,
       delivery_address: "Stadsgatan 3, 65300 Vasa",
-      calculated_address: "Stadsgatan 3, 65300 Vasa",
+      geocoded_address: "Stadsgatan 3, 65300 Vasa",
       here_id: "here-id-123",
       position: "63.0951,21.6165",
       distance: 3000,

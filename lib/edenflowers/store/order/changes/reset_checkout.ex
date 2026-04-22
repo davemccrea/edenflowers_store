@@ -18,7 +18,7 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
       delivery_instructions: nil,
       fulfillment_date: nil,
       fulfillment_amount: nil,
-      calculated_address: nil,
+      geocoded_address: nil,
       here_id: nil,
       distance: nil,
       position: nil,

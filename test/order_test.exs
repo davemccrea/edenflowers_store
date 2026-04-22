@@ -226,7 +226,7 @@ defmodule Edenflowers.Store.OrderTest do
   test "calling finalise_checkout updates state and payment_state" do
     order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
-    assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
+    assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
     assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
@@ -801,7 +801,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       # Delivery fields should be cleared
       assert is_nil(order.delivery_address)
-      assert is_nil(order.calculated_address)
+      assert is_nil(order.geocoded_address)
       assert is_nil(order.here_id)
       assert is_nil(order.distance)
       assert is_nil(order.position)
@@ -887,17 +887,17 @@ defmodule Edenflowers.Store.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "finalise_checkout requires payment_intent_id" do
+    test "finalize_checkout requires payment_intent_id" do
       order = generate(order(payment_intent_id: nil))
 
-      assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)
+      assert {:error, error} = Order.finalize_checkout(order.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
     test "payment_status transitions from pending to paid" do
       order = generate(order(payment_status: :pending, payment_intent_id: "pi_test"))
 
-      assert {:ok, order} = Order.finalise_checkout(order.id, authorize?: false)
+      assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
       assert order.payment_status == :paid
     end
 
@@ -905,7 +905,7 @@ defmodule Edenflowers.Store.OrderTest do
       order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
 
       # Should now fail with clear error message
-      assert {:error, error} = Order.finalise_checkout(order.id, authorize?: false)
+      assert {:error, error} = Order.finalize_checkout(order.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
@@ -942,7 +942,7 @@ defmodule Edenflowers.Store.OrderTest do
             delivery_instructions: "Ring twice",
             fulfillment_date: Date.add(Date.utc_today(), 1),
             fulfillment_amount: "5.00",
-            calculated_address: "Calculated Address",
+            geocoded_address: "Calculated Address",
             here_id: "here123",
             distance: 5000,
             position: "60.1699,24.9384",
@@ -953,7 +953,7 @@ defmodule Edenflowers.Store.OrderTest do
         )
 
       # Reset the order
-      assert {:ok, reset_order} = Order.reset(order, authorize?: false)
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
       # Verify all fields are cleared
       assert reset_order.step == 1
@@ -967,7 +967,7 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.delivery_instructions)
       assert is_nil(reset_order.fulfillment_date)
       assert is_nil(reset_order.fulfillment_amount)
-      assert is_nil(reset_order.calculated_address)
+      assert is_nil(reset_order.geocoded_address)
       assert is_nil(reset_order.here_id)
       assert is_nil(reset_order.distance)
       assert is_nil(reset_order.position)
@@ -981,7 +981,7 @@ defmodule Edenflowers.Store.OrderTest do
       original_id = order.id
       original_state = order.state
 
-      assert {:ok, reset_order} = Order.reset(order, authorize?: false)
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
       # ID and state should remain unchanged
       assert reset_order.id == original_id

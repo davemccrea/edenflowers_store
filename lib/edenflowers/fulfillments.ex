@@ -7,7 +7,7 @@ defmodule Edenflowers.Fulfillments do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @type delivery_result :: %{
-          calculated_address: String.t(),
+          geocoded_address: String.t(),
           position: String.t(),
           here_id: String.t(),
           distance: integer(),
@@ -17,12 +17,12 @@ defmodule Edenflowers.Fulfillments do
   @spec calculate_delivery(String.t(), FulfillmentOption.t()) ::
           {:ok, delivery_result()} | {:error, atom()}
   def calculate_delivery(delivery_address, fulfillment_option) do
-    with {:ok, {calculated_address, position, here_id}} <- here_api().get_address(delivery_address),
+    with {:ok, {geocoded_address, position, here_id}} <- here_api().get_address(delivery_address),
          {:ok, distance} <- here_api().get_distance(position),
          {:ok, fulfillment_amount} <- calculate_price(fulfillment_option, distance) do
       {:ok,
        %{
-         calculated_address: calculated_address,
+         geocoded_address: geocoded_address,
          position: position,
          here_id: here_id,
          distance: distance,
