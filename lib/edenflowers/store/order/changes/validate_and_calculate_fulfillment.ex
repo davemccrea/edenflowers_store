@@ -68,7 +68,7 @@ defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
     if address_blank? or is_nil(calculated_address) or is_nil(fulfillment_amount) do
       Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
         field: :delivery_address,
-        message: ~t"Please enter and confirm a delivery address"
+        message: ~t"Delivery address required"
       })
     else
       changeset

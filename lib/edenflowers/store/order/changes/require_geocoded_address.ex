@@ -18,7 +18,7 @@ defmodule Edenflowers.Store.Order.RequireGeocodedAddress do
         if is_nil(geocoded_address) or is_nil(fulfillment_amount) do
           Ash.Changeset.add_error(changeset,
             field: :delivery_address,
-            message: ~t"Please enter and confirm a delivery address"
+            message: ~t"Delivery address required"
           )
         else
           changeset

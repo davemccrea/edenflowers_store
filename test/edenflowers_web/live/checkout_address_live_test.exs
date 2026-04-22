@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       |> element("#checkout-form-3b")
       |> render_change(%{"form" => %{"delivery_address" => "Stadsgatan"}})
 
-      refute render(view) =~ "Please enter and confirm a delivery address"
+      refute render(view) =~ "Delivery address required"
     end
 
     test "blurring an empty address field does nothing", %{conn: conn, delivery_option: delivery_option} do
@@ -313,7 +313,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       |> element("#checkout-form-3b")
       |> render_submit(%{"form" => %{"delivery_address" => ""}})
 
-      assert render(view) =~ "Please enter and confirm a delivery address"
+      assert render(view) =~ "Delivery address required"
     end
 
     test "reloading the page with a previously confirmed address shows the check icon",
