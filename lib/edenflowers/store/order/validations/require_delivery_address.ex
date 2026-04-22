@@ -15,7 +15,7 @@ defmodule Edenflowers.Store.Order.Validations.RequireDeliveryAddress do
 
     if delivery?(changeset, fulfillment_option_id) and
          (is_nil(delivery_address) or String.trim(delivery_address) == "") do
-      {:error, field: :delivery_address, message: ~t"Please enter and confirm a delivery address"}
+      {:error, field: :delivery_address, message: ~t"Delivery address required"}
     else
       :ok
     end
