@@ -22,7 +22,7 @@ defmodule Edenflowers.Store.Order do
     Validations
   }
 
-  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields}
+  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields, GenerateOrderReference}
 
   postgres do
     repo Edenflowers.Repo
