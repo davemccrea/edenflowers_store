@@ -517,7 +517,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Ash.update!()
 
     order = Order.get_for_checkout!(order.id, actor: actor)
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: false)}
+    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.calculated_address))}
   end
 
   def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
@@ -654,7 +654,7 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(order: order)
      |> assign(form: form)
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_loading: false, address_confirmed: false)}
+     |> assign(address_loading: false, address_confirmed: not is_nil(order.calculated_address))}
   end
 
   # ============

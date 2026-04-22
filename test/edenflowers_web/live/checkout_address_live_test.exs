@@ -282,23 +282,51 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
          %{conn: conn, order: order, delivery_option: delivery_option} do
       expect(Edenflowers.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
 
-      order
-      |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
-      |> Ash.Changeset.force_change_attributes(%{
-        fulfillment_option_id: delivery_option.id,
-        delivery_address: "Stadsgatan 3, 65300 Vasa",
-        calculated_address: "Stadsgatan 3, 65300 Vasa",
-        here_id: "here-id-123",
-        position: "63.0951,21.6165",
-        distance: 3000,
-        fulfillment_amount: Decimal.new("5.00")
-      })
-      |> Ash.update!(authorize?: false)
+      seed_confirmed_address(order, delivery_option)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
       assert html =~ ~s(data-testid="input-confirmed")
+    end
+
+    test "navigating back to step 3 from step 4 shows the check icon for a confirmed address",
+         %{conn: conn, order: order, delivery_option: delivery_option} do
+      expect(Edenflowers.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
+
+      seed_confirmed_address(order, delivery_option)
+
+      order
+      |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
+      |> Ash.Changeset.force_change_attributes(%{step: 4})
+      |> Ash.update!(authorize?: false)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      view |> element("[phx-click='edit_step_3']") |> render_click()
+
+      assert render(view) =~ ~s(data-testid="input-confirmed")
+    end
+
+    test "advancing from step 2 to step 3 shows the check icon for a confirmed address",
+         %{conn: conn, order: order, delivery_option: delivery_option} do
+      expect(Edenflowers.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
+
+      seed_confirmed_address(order, delivery_option)
+
+      # Roll back to step 2 so we can advance forward
+      order
+      |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
+      |> Ash.Changeset.force_change_attributes(%{step: 2})
+      |> Ash.update!(authorize?: false)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      view |> element("#checkout-form-2") |> render_submit(%{"form" => %{}})
+
+      assert render(view) =~ ~s(data-testid="input-confirmed")
     end
   end
 
@@ -368,5 +396,20 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     view
     |> element("#form_delivery_address")
     |> render_blur(%{"value" => address})
+  end
+
+  defp seed_confirmed_address(order, delivery_option) do
+    order
+    |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
+    |> Ash.Changeset.force_change_attributes(%{
+      fulfillment_option_id: delivery_option.id,
+      delivery_address: "Stadsgatan 3, 65300 Vasa",
+      calculated_address: "Stadsgatan 3, 65300 Vasa",
+      here_id: "here-id-123",
+      position: "63.0951,21.6165",
+      distance: 3000,
+      fulfillment_amount: Decimal.new("5.00")
+    })
+    |> Ash.update!(authorize?: false)
   end
 end
