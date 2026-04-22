@@ -648,8 +648,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # Reloads order and rebuilds forms when order is updated via PubSub.
-  # Resets address_lookup so confirmed state is re-derived from order.calculated_address.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.get_for_checkout!(order_id, actor: actor)
@@ -660,16 +658,6 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(form: make_form(order, action_name(:save, order.step)))
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))
      |> assign(address_lookup: :idle)}
-  end
-
-  # Reloads order on line item changes. Redirects to homepage when the cart becomes empty.
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.get_for_checkout!(order_id, actor: actor)
-
-    if Enum.empty?(order.line_items),
-      do: {:noreply, push_navigate(socket, to: ~p"/")},
-      else: {:noreply, assign(socket, order: order)}
   end
 
   # ============
