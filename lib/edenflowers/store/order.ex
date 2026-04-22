@@ -156,7 +156,7 @@ defmodule Edenflowers.Store.Order do
 
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.RequireDeliveryAddress, []}
-      validate {RequireGeocodedAddress, []}
+      change {RequireGeocodedAddress, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
       require_atomic? false

@@ -105,6 +105,18 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       refute html =~ ~s(data-testid="input-confirmed")
     end
 
+    test "typing a partial address does not show a premature validation error", %{conn: conn, delivery_option: delivery_option} do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_change(%{"form" => %{"delivery_address" => "Stadsgatan"}})
+
+      refute render(view) =~ "Please enter and confirm a delivery address"
+    end
+
     test "blurring an empty address field does nothing", %{conn: conn, delivery_option: delivery_option} do
       expect(Edenflowers.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
 
