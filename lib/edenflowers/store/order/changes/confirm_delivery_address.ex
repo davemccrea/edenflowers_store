@@ -15,7 +15,7 @@ defmodule Edenflowers.Store.Order.Changes.ConfirmDeliveryAddress do
            {:ok, result} <- Fulfillments.calculate_delivery(address, fulfillment_option) do
         Ash.Changeset.force_change_attributes(changeset,
           delivery_address: address,
-          calculated_address: result.calculated_address,
+          geocoded_address: result.geocoded_address,
           position: result.position,
           here_id: result.here_id,
           distance: result.distance,

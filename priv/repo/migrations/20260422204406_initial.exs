@@ -14,6 +14,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :email, :citext, null: false
       add :newsletter_opt_in, :boolean, default: false
       add :admin, :boolean, default: false
+      add :newsletter_promo_id, :uuid
     end
 
     create unique_index(:users, [:email], name: "users_unique_email_index")
@@ -45,6 +46,19 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:promotions, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+    end
+
+    alter table(:users) do
+      modify :newsletter_promo_id,
+             references(:promotions,
+               column: :id,
+               name: "users_newsletter_promo_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
+    end
+
+    alter table(:promotions) do
       add :name, :text, null: false
       add :code, :citext, null: false
       add :discount_percentage, :decimal, null: false
@@ -63,6 +77,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :image_slug, :text, null: false
       add :description, :text, null: false
       add :draft, :boolean, null: false, default: true
+      add :featured, :boolean, null: false, default: false
 
       add :tax_rate_id,
           references(:tax_rates,
@@ -75,6 +90,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
       add :product_category_id, :uuid, null: false
     end
+
+    create unique_index(:products, [:name], name: "products_unique_name_index")
 
     create table(:product_variants, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -128,8 +145,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              )
     end
 
-    create unique_index(:products, [:name], name: "products_unique_name_index")
-
     alter table(:product_categories) do
       add :name, :text, null: false
       add :description, :text
@@ -143,7 +158,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :order_number, :bigserial, null: false
+      add :order_reference, :text, null: false
       add :step, :bigint, default: 1
       add :state, :text, null: false, default: "checkout"
       add :ordered_at, :utc_datetime
@@ -152,14 +167,14 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :customer_name, :text
       add :customer_email, :text
       add :gift, :boolean, default: false
-      add :gift_message, :text
+      add :card_message, :text
       add :recipient_name, :text
       add :recipient_phone_number, :text
       add :delivery_address, :text
       add :delivery_instructions, :text
       add :fulfillment_date, :date
       add :fulfillment_amount, :decimal
-      add :calculated_address, :text
+      add :geocoded_address, :text
       add :here_id, :text
       add :distance, :bigint
       add :position, :text
@@ -186,6 +201,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :promotion_id, :uuid
     end
 
+    create unique_index(:orders, [:order_reference], name: "orders_unique_order_reference_index")
+
     create table(:opening_hours, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
     end
@@ -197,6 +214,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :tax_rate, :decimal, null: false
       add :product_name, :text, null: false
       add :product_image_slug, :text, null: false
+      add :is_card, :boolean, null: false, default: false
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -282,13 +300,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :max_dist_km, :bigint
       add :same_day, :boolean, default: false
       add :order_deadline, :time
-      add :monday, :boolean, default: true
-      add :tuesday, :boolean, default: true
-      add :wednesday, :boolean, default: true
-      add :thursday, :boolean, default: true
-      add :friday, :boolean, default: true
-      add :saturday, :boolean, default: true
-      add :sunday, :boolean, default: false
+      add :available_days, {:array, :text}
       add :enabled_dates, {:array, :date}, default: []
       add :disabled_dates, {:array, :date}, default: []
 
@@ -370,23 +382,17 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:courses)
 
+    drop constraint(:fulfillment_options, "fulfillment_options_tax_rate_id_fkey")
+
     drop_if_exists unique_index(:fulfillment_options, [:name],
                      name: "fulfillment_options_unique_name_index"
                    )
-
-    drop constraint(:fulfillment_options, "fulfillment_options_tax_rate_id_fkey")
 
     alter table(:fulfillment_options) do
       remove :tax_rate_id
       remove :disabled_dates
       remove :enabled_dates
-      remove :sunday
-      remove :saturday
-      remove :friday
-      remove :thursday
-      remove :wednesday
-      remove :tuesday
-      remove :monday
+      remove :available_days
       remove :order_deadline
       remove :same_day
       remove :max_dist_km
@@ -419,21 +425,25 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:fulfillment_options)
 
-    drop_if_exists unique_index(:line_items, [:order_id, :product_variant_id],
-                     name: "line_items_unique_product_variant_index"
-                   )
-
     drop constraint(:line_items, "line_items_order_id_fkey")
 
     drop constraint(:line_items, "line_items_product_id_fkey")
 
     drop constraint(:line_items, "line_items_product_variant_id_fkey")
 
+    drop_if_exists unique_index(:line_items, [:order_id, :product_variant_id],
+                     name: "line_items_unique_product_variant_index"
+                   )
+
     drop table(:line_items)
 
     drop table(:opening_hours)
 
     drop constraint(:orders, "orders_user_id_fkey")
+
+    drop_if_exists unique_index(:orders, [:order_reference],
+                     name: "orders_unique_order_reference_index"
+                   )
 
     drop table(:orders)
 
@@ -447,8 +457,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :description
       remove :name
     end
-
-    drop_if_exists unique_index(:products, [:name], name: "products_unique_name_index")
 
     drop constraint(:products, "products_product_category_id_fkey")
 
@@ -472,9 +480,28 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop constraint(:products, "products_tax_rate_id_fkey")
 
+    drop_if_exists unique_index(:products, [:name], name: "products_unique_name_index")
+
     drop table(:products)
 
     drop_if_exists unique_index(:promotions, [:code], name: "promotions_unique_code_index")
+
+    alter table(:promotions) do
+      remove :usage_limit
+      remove :usage
+      remove :expiration_date
+      remove :start_date
+      remove :minimum_cart_total
+      remove :discount_percentage
+      remove :code
+      remove :name
+    end
+
+    drop constraint(:users, "users_newsletter_promo_id_fkey")
+
+    alter table(:users) do
+      modify :newsletter_promo_id, :uuid
+    end
 
     drop table(:promotions)
 

@@ -199,7 +199,7 @@ defmodule Edenflowers.Store.LineItemTest do
 
       gift_order =
         order
-        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
       cards_category = generate(product_category(slug: "cards", draft: false))
@@ -251,7 +251,7 @@ defmodule Edenflowers.Store.LineItemTest do
          %{card_product: card_product, card_variant: card_variant} do
       completed_order =
         generate(order(state: :placed))
-        |> Ash.Changeset.for_update(:update_gift, %{gift: true})
+        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
       assert {:error, _} =

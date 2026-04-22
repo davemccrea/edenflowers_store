@@ -73,18 +73,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "card_message",
-      "type": "text"
-    },
-    {
       "allow_nil?": false,
       "default": "false",
       "generated?": false,
@@ -220,7 +208,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B2B633F1311F83BA67F888CCA1D3F51A5BDF70AEEB4F8EB57E1A9ACC663FBDA6",
+  "hash": "E9044ACF58C6931D3D6736FCCBFDBFD9D64BF126867C69E80BAA776CA42E0E08",
   "identities": [
     {
       "all_tenants?": false,

@@ -21,7 +21,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "size",
       "type": "text"
     },
     {
@@ -37,7 +49,19 @@
       "type": "text"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "stock_trackable",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -45,8 +69,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "description",
-      "type": "text"
+      "source": "stock_quantity",
+      "type": "bigint"
     },
     {
       "allow_nil?": false,
@@ -79,47 +103,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "products_tax_rate_id_fkey",
+        "name": "product_variants_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "tax_rates"
+        "table": "products"
       },
       "scale": null,
       "size": null,
-      "source": "tax_rate_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "products_product_category_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "product_categories"
-      },
-      "scale": null,
-      "size": null,
-      "source": "product_category_id",
+      "source": "product_id",
       "type": "uuid"
     }
   ],
@@ -129,23 +122,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9F6FA43C43556BA6D588BE2049E3413B212D3391A99842D6E4772EE4C7AFD453",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "products_unique_name_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "name"
-        }
-      ],
-      "name": "unique_name",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "E1829ADFD6A2B5BB37C1122504FE5F3753FD9A06BFCA08E7F1792F74BE5AA71C",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -153,5 +131,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "products"
+  "table": "product_variants"
 }
