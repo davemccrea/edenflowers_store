@@ -47,6 +47,9 @@ defmodule Edenflowers.Store.Order do
     define :update_gift, action: :update_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
     define :reset, action: :restart_checkout
+    define :edit_step_1, action: :edit_step_1
+    define :edit_step_2, action: :edit_step_2
+    define :edit_step_3, action: :edit_step_3
   end
 
   state_machine do
