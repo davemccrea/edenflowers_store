@@ -277,6 +277,29 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
       assert render(view) =~ "Please enter and confirm a delivery address"
     end
+
+    test "reloading the page with a previously confirmed address shows the check icon",
+         %{conn: conn, order: order, delivery_option: delivery_option} do
+      expect(Edenflowers.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
+
+      order
+      |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
+      |> Ash.Changeset.force_change_attributes(%{
+        fulfillment_option_id: delivery_option.id,
+        delivery_address: "Stadsgatan 3, 65300 Vasa",
+        calculated_address: "Stadsgatan 3, 65300 Vasa",
+        here_id: "here-id-123",
+        position: "63.0951,21.6165",
+        distance: 3000,
+        fulfillment_amount: Decimal.new("5.00")
+      })
+      |> Ash.update!(authorize?: false)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, _view, html} = live(conn, ~p"/checkout")
+
+      assert html =~ ~s(data-testid="input-confirmed")
+    end
   end
 
   describe "address lookup does not affect other form fields" do

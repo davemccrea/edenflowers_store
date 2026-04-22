@@ -28,10 +28,8 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
-       # Transient address-lookup state. Two values: :idle, :loading.
-       # "Confirmed" is derived as :idle && order.calculated_address matches the form value.
        |> assign(:address_loading, false)
-       |> assign(:address_confirmed, false)
+       |> assign(:address_confirmed, not is_nil(order.calculated_address))
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
