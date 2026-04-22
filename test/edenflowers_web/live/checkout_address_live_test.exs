@@ -105,7 +105,10 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       refute html =~ ~s(data-testid="input-confirmed")
     end
 
-    test "typing a partial address does not show a premature validation error", %{conn: conn, delivery_option: delivery_option} do
+    test "typing a partial address does not show a premature validation error", %{
+      conn: conn,
+      delivery_option: delivery_option
+    } do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
@@ -382,7 +385,12 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     test "delivery instructions are preserved after address confirmation", %{view: view} do
       view
       |> element("#checkout-form-3b")
-      |> render_change(%{"form" => %{"delivery_address" => "Stadsgatan 3, 65300 Vasa", "delivery_instructions" => "Leave at back door 99B"}})
+      |> render_change(%{
+        "form" => %{
+          "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+          "delivery_instructions" => "Leave at back door 99B"
+        }
+      })
 
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
 
@@ -411,7 +419,9 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
       view
       |> element("#checkout-form-3b")
-      |> render_change(%{"form" => %{"recipient_phone_number" => "045 1234567", "delivery_instructions" => "Leave at back door 99B"}})
+      |> render_change(%{
+        "form" => %{"recipient_phone_number" => "045 1234567", "delivery_instructions" => "Leave at back door 99B"}
+      })
 
       blur_address(view, "Nonsense 999")
       html = render_async(view)

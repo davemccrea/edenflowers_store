@@ -516,7 +516,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     Order.edit_step_3!(order, actor: actor)
 
     order = Order.get_for_checkout!(order.id, actor: actor)
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
+
+    {:noreply,
+     assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
   end
 
   def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
