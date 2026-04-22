@@ -196,9 +196,14 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
 
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-                multiple pattern placeholder readonly required rows size step)
+                multiple pattern placeholder readonly required rows size step
+                phx-blur phx-focus phx-change)
 
   slot :inner_block
+
+  slot :trailing,
+    doc:
+      "Adornment rendered inside the text input on the right (e.g. spinner, icon). Only supported by the default (text-like) input."
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -349,14 +354,22 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
         <span :if={@label} class="mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[@class || "input input-lg w-full", @errors != [] && (@error_class || "input-error")]}
-          {@rest}
-        />
+        <div class="relative">
+          <input
+            type={@type}
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={[@class || "input input-lg w-full", @trailing != [] && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            {@rest}
+          />
+          <div
+            :if={@trailing != []}
+            class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
+          >
+            {render_slot(@trailing)}
+          </div>
+        </div>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </fieldset>

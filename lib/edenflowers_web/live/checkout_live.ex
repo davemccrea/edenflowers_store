@@ -28,12 +28,9 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promotional_form, make_form(order, :add_promotion_with_code))
-       # address_lookup tracks transient geocoding state not representable by order data:
-       # nil = idle or confirmed (check order.calculated_address to distinguish)
-       # :loading = geocode request in flight
-       # :cleared = user emptied the field; stale geocode data still on order but should be hidden
-       # {:error, msg} = geocode failed
-       |> assign(:address_lookup, nil)
+       # Transient address-lookup state. Three values: :idle, :loading, {:error, msg}.
+       # "Confirmed" is not a state here — it's derived as :idle && order.calculated_address.
+       |> assign(:address_lookup, :idle)
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -227,52 +224,40 @@ defmodule EdenflowersWeb.CheckoutLive do
                       class="checkout__form"
                     >
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
-                        <fieldset>
-                          <label class="flex flex-col">
-                            <span class="mb-1">{~t"Address *"}</span>
-                            <div class="relative">
-                              <input
-                                type="text"
-                                id={@form[:delivery_address].id}
-                                name={@form[:delivery_address].name}
-                                value={Phoenix.HTML.Form.normalize_value("text", @form[:delivery_address].value)}
-                                class={["input input-lg w-full pr-10", @form[:delivery_address].errors != [] && Phoenix.Component.used_input?(@form[:delivery_address]) && "input-error"]}
-                                phx-blur="check_delivery_address"
+                        <% address_confirmed? =
+                          @address_lookup == :idle and not is_nil(@order.calculated_address) and
+                            to_string(@form[:delivery_address].value || "") == @order.delivery_address %>
+                        <div>
+                          <.input
+                            label={~t"Address *"}
+                            field={@form[:delivery_address]}
+                            type="text"
+                            phx-blur="check_delivery_address"
+                          >
+                            <:trailing>
+                              <span
+                                :if={@address_lookup == :loading}
+                                class="loading loading-spinner loading-sm text-base-content/40"
                               />
-                              <div class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center">
-                                <span
-                                  :if={@address_lookup == :loading}
-                                  class="loading loading-spinner loading-sm text-base-content/40"
-                                />
-                                <.icon
-                                  :if={@address_lookup == nil and not is_nil(@order.calculated_address)}
-                                  name="hero-check-circle-mini"
-                                  class="text-success size-5"
-                                />
-                                <.icon
-                                  :if={match?({:error, _}, @address_lookup)}
-                                  name="hero-exclamation-circle-mini"
-                                  class="text-error size-5"
-                                />
-                              </div>
-                            </div>
-                          </label>
-                          <.error :for={
-                            msg <-
-                              if(Phoenix.Component.used_input?(@form[:delivery_address]),
-                                do: Enum.map(@form[:delivery_address].errors, &translate_error(&1)),
-                                else: []
-                              )
-                          }>
-                            {msg}
-                          </.error>
-                          <p :if={@address_lookup == nil and not is_nil(@order.calculated_address)} class="mt-1.5 text-sm">
+                              <.icon
+                                :if={@address_lookup != :loading and address_confirmed?}
+                                name="hero-check-circle-mini"
+                                class="text-success size-5"
+                              />
+                              <.icon
+                                :if={match?({:error, _}, @address_lookup)}
+                                name="hero-exclamation-circle-mini"
+                                class="text-error size-5"
+                              />
+                            </:trailing>
+                          </.input>
+                          <p :if={address_confirmed?} class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
-                          <p :if={match?({:error, _}, @address_lookup)} class="text-error mt-1.5 text-sm">
+                          <.error :if={match?({:error, _}, @address_lookup)}>
                             {elem(@address_lookup, 1)}
-                          </p>
-                        </fieldset>
+                          </.error>
+                        </div>
 
                         <.input
                           label={~t"Delivery Instructions"}
@@ -497,17 +482,27 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  # Clears address confirmation indicators immediately as the user empties the field,
-  # rather than waiting for blur. check_delivery_address handles the blur case.
+  # Resets the lookup state while the user edits the address so a stale error icon
+  # or confirmation indicator doesn't linger over text the user is still changing.
+  # The :idle + value-matches-persisted check in the template hides the green check.
+  # Also wipes the persisted geocode the moment the user empties the field, so a
+  # subsequent submit can't sneak through using the old confirmed address.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    socket = assign(socket, form: form)
+    typed = params["delivery_address"] || ""
+    actor = socket.assigns[:current_user]
 
-    if String.trim(params["delivery_address"] || "") == "" do
-      {:noreply, assign(socket, address_lookup: :cleared)}
-    else
-      {:noreply, socket}
-    end
+    order =
+      if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address),
+        do: Order.reset_delivery_address!(socket.assigns.order, actor: actor),
+        else: socket.assigns.order
+
+    address_lookup =
+      if typed != order.delivery_address,
+        do: :idle,
+        else: socket.assigns.address_lookup
+
+    {:noreply, assign(socket, form: form, order: order, address_lookup: address_lookup)}
   end
 
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
@@ -551,7 +546,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> Ash.update!()
 
     order = Order.get_for_checkout!(order.id, actor: actor)
-    {:noreply, assign(socket, order: order, address_lookup: nil)}
+    {:noreply, assign(socket, order: order, address_lookup: :idle)}
   end
 
   def handle_event("edit_step_" <> step, _params, %{assigns: %{order: order}} = socket) do
@@ -569,24 +564,31 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     actor = socket.assigns[:current_user]
     order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
-    {:noreply, assign(socket, order: order, address_lookup: nil)}
+    {:noreply, assign(socket, order: order, address_lookup: :idle)}
   end
 
   def handle_event("check_delivery_address", %{"value" => address}, socket) do
+    actor = socket.assigns[:current_user]
+    order = socket.assigns.order
+
     cond do
       String.trim(address) == "" ->
-        {:noreply, assign(socket, address_lookup: :cleared)}
+        {:noreply, assign(socket, address_lookup: :idle)}
 
-      # Skip re-geocoding only when the address matches the persisted one AND the lookup is
-      # already settled on "confirmed" (nil). If the lookup is :cleared or {:error, _}, we
-      # need a fresh geocode so the indicator reflects the current input.
-      address == socket.assigns.order.delivery_address and is_nil(socket.assigns.address_lookup) ->
+      # Address unchanged and already confirmed — nothing to do.
+      address == order.delivery_address and socket.assigns.address_lookup == :idle and
+          not is_nil(order.calculated_address) ->
         {:noreply, socket}
 
       true ->
-        # Deferred via send/2 so the :loading state renders before the blocking geocode call.
-        send(self(), {:confirm_delivery_address, address})
-        {:noreply, assign(socket, address_lookup: :loading)}
+        # start_async with the same name cancels any in-flight geocode so the final
+        # blur wins when the user types fast.
+        {:noreply,
+         socket
+         |> assign(address_lookup: :loading)
+         |> start_async(:confirm_delivery_address, fn ->
+           Order.confirm_delivery_address(order, address, actor: actor)
+         end)}
     end
   end
 
@@ -663,24 +665,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_info({:confirm_delivery_address, address}, socket) do
-    actor = socket.assigns[:current_user]
-
-    case Order.confirm_delivery_address(socket.assigns.order, address, actor: actor) do
-      {:ok, order} ->
-        {:noreply, assign(socket, order: order, address_lookup: nil)}
-
-      {:error, %Ash.Error.Invalid{errors: [%{message: message} | _]}} ->
-        {:noreply, assign(socket, address_lookup: {:error, message})}
-
-      {:error, _} ->
-        {:noreply,
-         assign(socket,
-           address_lookup: {:error, ~t"There was a problem calculating delivery cost, please try again later"}
-         )}
-    end
-  end
-
   # Reloads order and rebuilds forms when order is updated via PubSub.
   # Resets address_lookup so confirmed state is re-derived from order.calculated_address.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
@@ -692,7 +676,7 @@ defmodule EdenflowersWeb.CheckoutLive do
      |> assign(order: order)
      |> assign(form: make_form(order, action_name(:save, order.step)))
      |> assign(promotional_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_lookup: nil)}
+     |> assign(address_lookup: :idle)}
   end
 
   # Reloads order on line item changes. Redirects to homepage when the cart becomes empty.
@@ -703,6 +687,49 @@ defmodule EdenflowersWeb.CheckoutLive do
     if Enum.empty?(order.line_items),
       do: {:noreply, push_navigate(socket, to: ~p"/")},
       else: {:noreply, assign(socket, order: order)}
+  end
+
+  # ============
+  # Async Events
+  # ============
+
+  def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
+    # Sync the form's delivery_address with the persisted value so address_confirmed?
+    # in the template (which compares form value to order.delivery_address) renders
+    # correctly even when phx-change didn't run before blur (e.g. paste + tab).
+    form =
+      AshPhoenix.Form.update_params(socket.assigns.form, fn params ->
+        Map.put(params, "delivery_address", order.delivery_address)
+      end)
+
+    {:noreply, assign(socket, order: order, form: form, address_lookup: :idle)}
+  end
+
+  def handle_async(
+        :confirm_delivery_address,
+        {:ok, {:error, %Ash.Error.Invalid{errors: [%{message: message} | _]}}},
+        socket
+      ) do
+    {:noreply, fail_address_lookup(socket, message)}
+  end
+
+  def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
+    {:noreply, fail_address_lookup(socket, ~t"There was a problem calculating delivery cost, please try again later")}
+  end
+
+  # Cancelled by a newer start_async with the same name — ignore, the new task
+  # will deliver the user-facing result.
+  def handle_async(:confirm_delivery_address, {:exit, {:shutdown, :cancel}}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_async(:confirm_delivery_address, {:exit, reason}, socket) do
+    Logger.error("confirm_delivery_address task exited: #{inspect(reason)}")
+    {:noreply, fail_address_lookup(socket, ~t"There was a problem calculating delivery cost, please try again later")}
+  end
+
+  defp fail_address_lookup(socket, message) do
+    assign(socket, address_lookup: {:error, message})
   end
 
   # ==========

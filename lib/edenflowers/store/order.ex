@@ -18,13 +18,12 @@ defmodule Edenflowers.Store.Order do
     UpsertUserAndAssignToOrder,
     UpdatePromotionUsageCount,
     ValidateMinimumCartTotal,
-    ValidateFulfillmentDate,
     ValidatePaymentIntent,
     Changes,
     Validations
   }
 
-  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress}
+  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields}
 
   postgres do
     repo Edenflowers.Repo
@@ -144,13 +143,16 @@ defmodule Edenflowers.Store.Order do
         :fulfillment_option_id,
         :recipient_name,
         :recipient_phone_number,
-        :delivery_address,
         :delivery_instructions,
         :fulfillment_date
       ]
 
-      change {ValidateFulfillmentDate, []}
-      validate {Validations.MaybeRequireDeliveryAddress, []}
+      # Argument, not attribute — used only for required-field validation.
+      # The persisted delivery_address is owned by confirm_delivery_address.
+      argument :delivery_address, :string
+
+      validate {Validations.ValidateFulfillmentDate, []}
+      validate {Validations.RequireDeliveryAddress, []}
       change {ValidateAndCalculateFulfillment, []}
       change set_attribute(:step, 4)
       require_atomic? false
@@ -177,23 +179,13 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :reset_delivery_address do
-      change set_attribute(:delivery_address, nil)
-      change set_attribute(:calculated_address, nil)
-      change set_attribute(:position, nil)
-      change set_attribute(:here_id, nil)
-      change set_attribute(:distance, nil)
-      change set_attribute(:fulfillment_amount, nil)
+      change {ClearDeliveryFields, []}
     end
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
       change set_attribute(:fulfillment_date, nil)
-      change set_attribute(:delivery_address, nil)
-      change set_attribute(:calculated_address, nil)
-      change set_attribute(:position, nil)
-      change set_attribute(:here_id, nil)
-      change set_attribute(:distance, nil)
-      change set_attribute(:fulfillment_amount, nil)
+      change {ClearDeliveryFields, []}
     end
 
     update :update_gift do
