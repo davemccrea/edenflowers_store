@@ -8,8 +8,8 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
   def render(assigns) do
     ~H"""
-    <section class="space-y-2">
-      <h1 class="font-serif text-2xl sm:text-3xl">
+    <section class="space-y-4">
+      <h1 class="section-title">
         {~t"Register and enjoy 15% off your next order."}
       </h1>
 
@@ -17,26 +17,32 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
         <p>{~t"Thanks! We've sent your 15% off code to your inbox."}</p>
       <% else %>
         <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
-          <div class="join w-full">
-            <label for="newsletter-form_email_address" class="sr-only">
-              {~t"Email Address"}
-            </label>
-            <input
-              type="email"
-              name="email_address"
-              id="newsletter-form_email_address"
-              value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="input join-item w-full"
-              placeholder={~t"Email Address"}
-            />
-
-            <button class="btn btn-primary join-item">{~t"Register"}</button>
+          <label for="newsletter-form_email_address" class="sr-only">
+            {~t"Email Address"}
+          </label>
+          <div class="space-y-2">
+            <div class="relative max-w-sm">
+              <input
+                type="email"
+                name="email_address"
+                id="newsletter-form_email_address"
+                value={Phoenix.HTML.Form.input_value(@form, :email_address)}
+                class="input input-lg w-full pr-12"
+                placeholder={~t"Your email"}
+              />
+              <button
+                type="submit"
+                class="text-base-content/50 absolute inset-y-0 right-3 z-10 flex cursor-pointer items-center transition hover:text-base-content"
+                aria-label={~t"Register"}
+              >
+                <.icon name="hero-paper-airplane" class="h-5 w-5" />
+              </button>
+            </div>
+            <p class="font-sans text-base-content/60 text-xs">
+              {~t"We send out only ocassional emails. Unsubscribe at any time."}
+            </p>
           </div>
         </.form>
-
-        <p class="font-sans text-xs">
-          {~t"We send out only ocassional emails. Unsubscribe at any time."}
-        </p>
       <% end %>
     </section>
     """
