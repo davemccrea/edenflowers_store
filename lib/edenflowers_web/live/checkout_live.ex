@@ -225,9 +225,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                       class="checkout__form"
                     >
                       <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
-                        <% address_confirmed? =
-                          @address_lookup == :idle and not is_nil(@order.calculated_address) and
-                            to_string(@form[:delivery_address].value || "") == @order.delivery_address %>
                         <div>
                           <.input
                             label={~t"Address *"}
@@ -235,9 +232,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                             type="text"
                             phx-blur="check_delivery_address"
                             loading={@address_lookup == :loading}
-                            confirmed={address_confirmed?}
+                            confirmed={address_confirmed?(@address_lookup, @form, @order)}
                           />
-                          <p :if={address_confirmed?} class="mt-1.5 text-sm">
+                          <p :if={address_confirmed?(@address_lookup, @form, @order)} class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
                         </div>
@@ -680,6 +677,8 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, fail_address_lookup(socket, error)}
   end
 
+  # Only reachable if the async function returns a non-Ash error — ConfirmDeliveryAddress
+  # wraps all its errors as Ash.Error.Invalid, caught by the clause above.
   def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
     {:noreply,
      fail_address_lookup(socket,
@@ -702,6 +701,12 @@ defmodule EdenflowersWeb.CheckoutLive do
        field: :delivery_address,
        message: ~t"There was a problem calculating delivery cost, please try again later"
      )}
+  end
+
+  defp address_confirmed?(address_lookup, form, order) do
+    address_lookup == :idle and
+      not is_nil(order.calculated_address) and
+      to_string(form[:delivery_address].value || "") == order.delivery_address
   end
 
   defp fail_address_lookup(socket, error) do

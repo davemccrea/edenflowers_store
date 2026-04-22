@@ -1,11 +1,10 @@
 defmodule Edenflowers.Store.Order.ValidateAndCalculateFulfillment do
   @moduledoc """
-  Validates fulfillment options and calculates delivery costs.
+  Validates fulfillment options and calculates fulfillment costs on submit.
 
   For delivery orders:
-  - Validates and geocodes delivery address using HereAPI
-  - Calculates distance from store to delivery location
-  - Computes delivery cost based on distance
+  - Verifies the address was already geocoded (by ConfirmDeliveryAddress on blur)
+  - Rejects submission if calculated_address or fulfillment_amount is missing
 
   For pickup orders:
   - Calculates fixed pickup price

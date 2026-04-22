@@ -11,7 +11,7 @@ defmodule Edenflowers.HereAPI do
     url =
       "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
 
-    with {:ok, %{body: body}} <- Req.get(url),
+    with {:ok, %{status: 200, body: body}} <- Req.get(url),
          %{
            "items" => [
              %{
@@ -32,7 +32,12 @@ defmodule Edenflowers.HereAPI do
 
       {:ok, {address, position, here_id}}
     else
-      _ -> {:error, :address_not_found}
+      {:ok, %{status: status}} ->
+        Logger.error("HereAPI geocode returned status #{status}")
+        {:error, :address_not_found}
+
+      _ ->
+        {:error, :address_not_found}
     end
   end
 
