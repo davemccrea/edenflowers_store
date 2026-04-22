@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
 
   alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
-  alias Edenflowers.{Fulfillments}
+  alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
@@ -246,7 +246,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <% end %>
 
                       <.input
-                        label={~t"Phone Number"}
+                        label={recipient_label(@order, "phone")}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
                         type="text"
@@ -796,6 +796,22 @@ defmodule EdenflowersWeb.CheckoutLive do
      socket
      |> put_flash(:error, flash_message)
      |> push_navigate(to: ~p"/")}
+  end
+
+  defp recipient_label(%{gift: true, recipient_name: name}, field) when is_binary(name) and name != "" do
+    first_name = name |> String.split() |> List.first()
+
+    case field do
+      "address" -> gettext("%{name}'s Address *", name: first_name)
+      "phone" -> gettext("%{name}'s Phone Number", name: first_name)
+    end
+  end
+
+  defp recipient_label(_order, field) do
+    case field do
+      "address" -> gettext("Address *")
+      "phone" -> gettext("Phone Number")
+    end
   end
 
   defp action_name(action, step) when is_atom(action) and is_integer(step) do
