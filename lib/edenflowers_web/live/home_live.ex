@@ -42,15 +42,21 @@ defmodule EdenflowersWeb.HomeLive do
 
       <section id="store" class="not-last:border-b">
         <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="section-title mb-4 px-2">{~t"Featured Blooms"}</h2>
+          <div class="mb-4 flex items-center justify-between px-2">
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
+            <div class="flex gap-2">
+              <button data-carousel-prev class="btn btn-circle btn-sm btn-ghost border border-base-300" aria-label={~t"Previous"}>‹</button>
+              <button data-carousel-next class="btn btn-circle btn-sm btn-ghost border border-base-300" aria-label={~t"Next"}>›</button>
+            </div>
+          </div>
 
           <div
             id="product-slider"
-            style="scrollbar-width: thin;"
-            class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
+            phx-hook="EmblaCarousel"
+            class="px-2 pb-6"
           >
             <ul class="flex space-x-2 py-2">
-              <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
+              <li :for={product <- @products} class="w-3/8 flex-none xs:w-1/2 sm:w-72">
                 <.link
                   navigate={~p"/product/#{product}"}
                   aria-labelledby={product.name}

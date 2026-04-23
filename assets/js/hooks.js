@@ -517,4 +517,22 @@ Hooks.HotFxShyHeader = {
   },
 };
 
+Hooks.EmblaCarousel = {
+  async mounted() {
+    const { default: EmblaCarousel } = await import(
+      "/vendor/embla-carousel.esm.js"
+    );
+    this.embla = EmblaCarousel(this.el, { loop: true });
+
+    const prev = this.el.parentElement.querySelector("[data-carousel-prev]");
+    const next = this.el.parentElement.querySelector("[data-carousel-next]");
+    prev?.addEventListener("click", () => this.embla.scrollPrev());
+    next?.addEventListener("click", () => this.embla.scrollNext());
+  },
+
+  destroyed() {
+    this.embla?.destroy();
+  },
+};
+
 export default Hooks;
