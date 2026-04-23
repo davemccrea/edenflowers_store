@@ -23,6 +23,20 @@ defmodule Edenflowers.Store.Order do
 
   alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields, GenerateOrderReference}
 
+  @checkout_load [
+    :total_items_in_cart,
+    :discount_amount,
+    :line_total,
+    :line_tax_amount,
+    :promotion_applied?,
+    :total,
+    :tax_amount,
+    :fulfillment_tax_amount,
+    :promotion,
+    :fulfillment_option,
+    :line_items
+  ]
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -79,25 +93,7 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
-
-      prepare build(
-                load: [
-                  # Aggregates
-                  :total_items_in_cart,
-                  :discount_amount,
-                  :line_total,
-                  :line_tax_amount,
-                  # Calculations
-                  :promotion_applied?,
-                  :total,
-                  :tax_amount,
-                  :fulfillment_tax_amount,
-                  # Relationships
-                  :promotion,
-                  :fulfillment_option,
-                  :line_items
-                ]
-              )
+      prepare build(load: @checkout_load)
     end
 
     read :completed do
@@ -113,6 +109,7 @@ defmodule Edenflowers.Store.Order do
     # Step-specific Update Actions
     update :edit_step_1 do
       change set_attribute(:step, 1)
+      change load(@checkout_load)
     end
 
     update :save_step_1 do
@@ -120,11 +117,13 @@ defmodule Edenflowers.Store.Order do
       require_attributes [:customer_name, :customer_email]
       change {UpsertUserAndAssignToOrder, []}
       change set_attribute(:step, 2)
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :edit_step_2 do
       change set_attribute(:step, 2)
+      change load(@checkout_load)
     end
 
     update :save_step_2 do
@@ -132,11 +131,13 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:step, 3)
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       change {ClearGiftFields, []}
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :edit_step_3 do
       change set_attribute(:step, 3)
+      change load(@checkout_load)
     end
 
     update :save_step_3 do
@@ -157,6 +158,7 @@ defmodule Edenflowers.Store.Order do
       change {RequireGeocodedAddress, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
+      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -177,21 +179,25 @@ defmodule Edenflowers.Store.Order do
     update :confirm_delivery_address do
       argument :address, :string, allow_nil?: false
       change {ConfirmDeliveryAddress, []}
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :clear_delivery_fields do
       change {ClearDeliveryFields, []}
+      change load(@checkout_load)
     end
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
       change set_attribute(:fulfillment_date, nil)
       change {ClearDeliveryFields, []}
+      change load(@checkout_load)
     end
 
     update :set_gift do
       accept [:gift]
+      change load(@checkout_load)
     end
 
     update :update_locale do
@@ -207,6 +213,7 @@ defmodule Edenflowers.Store.Order do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -214,11 +221,13 @@ defmodule Edenflowers.Store.Order do
       argument :code, :string
       change {LookupPromotionCode, []}
       validate {ValidateMinimumCartTotal, []}
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :clear_promotion do
       change atomic_update(:promotion_id, expr(nil))
+      change load(@checkout_load)
     end
 
     update :restart_checkout do
