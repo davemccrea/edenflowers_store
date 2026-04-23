@@ -469,6 +469,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
     |> Ash.Changeset.force_change_attributes(%{
       fulfillment_option_id: delivery_option.id,
+      fulfillment_method: delivery_option.fulfillment_method,
       delivery_address: "Stadsgatan 3, 65300 Vasa",
       geocoded_address: "Stadsgatan 3, 65300 Vasa",
       here_id: "here-id-123",

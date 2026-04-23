@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.UpdatePromotionUsageCount do
+defmodule Edenflowers.Store.Order.Changes.UpdatePromotionUsageCount do
   @moduledoc """
   Updates promotion usage counter after an order is successfully finalized.
 
