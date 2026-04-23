@@ -529,19 +529,19 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-    order = Order.edit_step_1!(order, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    order = Order.edit_step_1!(order, actor: actor) |> load_for_checkout(actor)
+    {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
   end
 
   def handle_event("edit_step_2", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-    order = Order.edit_step_2!(order, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    order = Order.edit_step_2!(order, actor: actor) |> load_for_checkout(actor)
+    {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
+    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor) |> load_for_checkout(actor)
     form = make_form(order, action_name(:save, order.step))
     {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
   end
@@ -618,9 +618,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
+    actor = socket.assigns[:current_user]
+
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
       {:ok, order} ->
-        {:noreply, assign(socket, order: order)}
+        {:noreply, assign(socket, order: load_for_checkout(order, actor))}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -629,7 +631,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("clear_promo", _, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor)
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor) |> load_for_checkout(actor)
     {:noreply, assign(socket, order: order)}
   end
 
@@ -653,7 +655,14 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ============
 
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: true)}
+    existing_params = AshPhoenix.Form.params(socket.assigns.form)
+
+    form =
+      order
+      |> make_form(action_name(:save, order.step))
+      |> AshPhoenix.Form.validate(existing_params)
+
+    {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: true)}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
@@ -831,19 +840,21 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp size_label(_), do: ""
 
   defp load_for_checkout(order, actor) do
-    Ash.load!(order, [
-      :total_items_in_cart,
-      :discount_amount,
-      :line_total,
-      :line_tax_amount,
-      :promotion_applied?,
-      :total,
-      :tax_amount,
-      :fulfillment_tax_amount,
-      :promotion,
-      :fulfillment_option,
-      :line_items
-    ], actor: actor)
+    Ash.load!(
+      order,
+      [
+        :total_items_in_cart,
+        :discount_amount,
+        :line_total,
+        :line_tax_amount,
+        :promotion_applied?,
+        :total,
+        :tax_amount,
+        :fulfillment_tax_amount,
+        :promotion,
+        :fulfillment_option,
+        :line_items
+      ], actor: actor)
   end
 
   # Stripe utilities
