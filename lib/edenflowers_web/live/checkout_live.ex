@@ -461,23 +461,18 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  # Wipes the persisted geocode whenever the user edits the address field away from
-  # the confirmed value, so a submit can't sneak through using a stale geocode.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
-    typed = params["delivery_address"] || ""
     actor = socket.assigns[:current_user]
     order = socket.assigns.order
+    synced = Order.sync_typed_delivery_address!(order, params["delivery_address"] || "", actor: actor)
 
-    {order, base_form} =
-      if order.address_confirmed? and String.trim(typed) != order.delivery_address do
-        cleared = Order.clear_delivery_fields!(order, actor: actor)
-        {cleared, make_form(cleared, action_name(:save, cleared.step))}
-      else
-        {order, socket.assigns.form}
-      end
+    base_form =
+      if synced.geocoded_address == order.geocoded_address,
+        do: socket.assigns.form,
+        else: make_form(synced, action_name(:save, synced.step))
 
     form = AshPhoenix.Form.validate(base_form, params)
-    {:noreply, assign(socket, form: form, order: order)}
+    {:noreply, assign(socket, form: form, order: synced)}
   end
 
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
@@ -625,36 +620,26 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # Sent by AddressInputComponent on blur so errors from the async result
-  # render on the field regardless of whether phx-change fired before blur.
-  def handle_info({:address_typed, address}, socket) do
-    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "delivery_address", address))
-    {:noreply, assign(socket, form: form)}
-  end
-
-  # Sent by AddressInputComponent after a successful geocode. The order has
-  # already been mutated server-side; we rebuild the form against the new
-  # order while replaying the user's current typed params so that fields
-  # like phone / instructions survive the async boundary.
-  def handle_info({:address_changed, order}, socket) do
-    existing_params = AshPhoenix.Form.params(socket.assigns.form)
+  # Sent by AddressInputComponent after every geocode attempt. On success
+  # (error == nil), the order has been mutated server-side; we rebuild the
+  # form so it reflects the new persisted state while replaying existing
+  # typed params to preserve sibling fields (phone, instructions, …). On
+  # failure we do the same rebuild and then attach the returned error so it
+  # renders on the field. typed_address is replayed into params so a failure
+  # error shows against the value the user blurred away from, even if
+  # phx-change didn't land first.
+  def handle_info({:address_result, %{order: order, typed_address: typed, error: error}}, socket) do
+    params =
+      socket.assigns.form
+      |> AshPhoenix.Form.params()
+      |> Map.put("delivery_address", typed)
 
     form =
       order
       |> make_form(action_name(:save, order.step))
-      |> AshPhoenix.Form.validate(existing_params)
+      |> AshPhoenix.Form.validate(params)
 
-    {:noreply, assign(socket, order: order, form: form)}
-  end
-
-  # Sent by AddressInputComponent when a geocode fails. The component has
-  # already cleared the persisted geocode; we re-validate the form with the
-  # user's current params and surface the returned error on the field.
-  def handle_info({:address_geocode_failed, order, error}, socket) do
-    form =
-      socket.assigns.form
-      |> AshPhoenix.Form.validate(AshPhoenix.Form.params(socket.assigns.form))
-      |> AshPhoenix.Form.add_error(error)
+    form = if error, do: AshPhoenix.Form.add_error(form, error), else: form
 
     {:noreply, assign(socket, order: order, form: form)}
   end
