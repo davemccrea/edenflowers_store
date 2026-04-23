@@ -11,6 +11,10 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
+    end
+
     with {:ok, _line_items} <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       card_variants = ProductVariant.for_card_drawer!()
@@ -469,15 +473,18 @@ defmodule EdenflowersWeb.CheckoutLive do
   # geocode the moment the user empties the field so a submit can't sneak through
   # using an old confirmed address.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
-    form = AshPhoenix.Form.validate(socket.assigns.form, params)
     typed = params["delivery_address"] || ""
     actor = socket.assigns[:current_user]
 
-    order =
-      if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address),
-        do: Order.clear_delivery_fields!(socket.assigns.order, actor: actor),
-        else: socket.assigns.order
+    {order, base_form} =
+      if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address) do
+        cleared = Order.clear_delivery_fields!(socket.assigns.order, actor: actor)
+        {cleared, make_form(cleared, action_name(:save, cleared.step))}
+      else
+        {socket.assigns.order, socket.assigns.form}
+      end
 
+    form = AshPhoenix.Form.validate(base_form, params)
     {:noreply, assign(socket, form: form, order: order, address_confirmed: false)}
   end
 
@@ -487,11 +494,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do
-    actor = socket.assigns[:current_user]
-
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
-        order = load_for_checkout(order, actor)
         next_section_id = get_next_section_id(socket.assigns.id, String.to_integer(step))
 
         {:noreply,
@@ -521,7 +525,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Step navigation
   def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-    order = Order.edit_step_3!(order, actor: actor) |> load_for_checkout(actor)
+    order = Order.edit_step_3!(order, actor: actor)
 
     {:noreply,
      assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
@@ -529,19 +533,19 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-    order = Order.edit_step_1!(order, actor: actor) |> load_for_checkout(actor)
+    order = Order.edit_step_1!(order, actor: actor)
     {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
   end
 
   def handle_event("edit_step_2", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
-    order = Order.edit_step_2!(order, actor: actor) |> load_for_checkout(actor)
+    order = Order.edit_step_2!(order, actor: actor)
     {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor) |> load_for_checkout(actor)
+    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
     form = make_form(order, action_name(:save, order.step))
     {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
   end
@@ -618,11 +622,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
-    actor = socket.assigns[:current_user]
-
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
       {:ok, order} ->
-        {:noreply, assign(socket, order: load_for_checkout(order, actor))}
+        {:noreply, assign(socket, order: order)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -631,7 +633,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("clear_promo", _, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor) |> load_for_checkout(actor)
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor)
     {:noreply, assign(socket, order: order)}
   end
 
@@ -644,6 +646,18 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ===========
   # Info Events
   # ===========
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
+    actor = socket.assigns[:current_user]
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+
+    if Enum.empty?(order.line_items) do
+      Order.restart_checkout!(order, actor: actor)
+      {:noreply, push_navigate(socket, to: ~p"/")}
+    else
+      {:noreply, assign(socket, order: order)}
+    end
+  end
 
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
@@ -838,24 +852,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp size_label(:large), do: gettext("Large")
   defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
   defp size_label(_), do: ""
-
-  defp load_for_checkout(order, actor) do
-    Ash.load!(
-      order,
-      [
-        :total_items_in_cart,
-        :discount_amount,
-        :line_total,
-        :line_tax_amount,
-        :promotion_applied?,
-        :total,
-        :tax_amount,
-        :fulfillment_tax_amount,
-        :promotion,
-        :fulfillment_option,
-        :line_items
-      ], actor: actor)
-  end
 
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do

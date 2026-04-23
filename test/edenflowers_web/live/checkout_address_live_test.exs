@@ -152,6 +152,27 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       render_async(view)
     end
 
+    test "clearing the address field after confirmation shows a validation error",
+         %{conn: conn, delivery_option: delivery_option} do
+      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_change(%{"form" => %{"delivery_address" => ""}})
+
+      assert render(view) =~ "Delivery address required"
+    end
+
     test "re-typing the address after confirmation clears the check icon",
          %{conn: conn, delivery_option: delivery_option} do
       stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
