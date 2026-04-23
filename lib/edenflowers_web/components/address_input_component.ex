@@ -2,27 +2,28 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Owns the full lifecycle of the address confirmation flow: the blur event,
-  the async HERE API call, the 5 possible async outcomes, and field-error
-  surfacing. The parent LiveView passes in the order + parent form and
-  receives `{:address_changed, order}` messages back whenever the persisted
-  order is mutated.
+  Owns the blur event, the async HERE API call, and the loading/confirmed
+  visual feedback. The field itself is rendered inside the parent's `<.form>`,
+  so submitting step 3 carries the delivery_address value along with the
+  other step-3 fields.
 
-  The address field is still rendered inside the parent's `<.form>`, so that
-  submitting step 3 carries the delivery_address value along with the other
-  step-3 fields. What the component owns is the feedback loop around the
-  field — loading spinner, success check, inline errors — not the form
-  submission.
+  After every geocode attempt (success or failure) the component sends a
+  single `{:address_result, %{order: order, typed_address: typed, error:
+  error_or_nil}}` message to the parent LiveView, which is responsible for
+  reconciling the form. `typed_address` is the value the user blurred away
+  from — the parent replays it into form params so a failure error renders
+  on the correct field regardless of whether phx-change landed first.
   """
   use EdenflowersWeb, :live_component
 
+  require Logger
   import EdenflowersWeb.CoreComponents
 
   alias Edenflowers.Store.Order
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false)}
+    {:ok, assign(socket, loading: false, typed_address: nil)}
   end
 
   @impl true
@@ -67,18 +68,13 @@ defmodule EdenflowersWeb.AddressInputComponent do
         {:noreply, socket}
 
       true ->
-        # Sync the typed address into the parent form's params so that errors
-        # from the async result render on the field even if phx-change hasn't
-        # fired yet.
-        send(self(), {:address_typed, address})
-
         actor = socket.assigns.actor
 
         # start_async with the same name cancels any in-flight geocode, so the
         # final blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(loading: true)
+         |> assign(loading: true, typed_address: address)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
@@ -87,18 +83,12 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    send(self(), {:address_changed, order})
+    send(self(), {:address_result, %{order: order, typed_address: socket.assigns.typed_address, error: nil}})
     {:noreply, assign(socket, loading: false, order: order)}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
     {:noreply, fail(socket, error)}
-  end
-
-  # Only reachable if the async function returns a non-Ash error —
-  # ConfirmDeliveryAddress wraps all its errors as Ash.Error.Invalid.
-  def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
-    {:noreply, fail(socket, generic_error())}
   end
 
   # Cancelled by a newer start_async with the same name — ignore, the new
@@ -107,9 +97,12 @@ defmodule EdenflowersWeb.AddressInputComponent do
     {:noreply, socket}
   end
 
-  def handle_async(:confirm_delivery_address, {:exit, reason}, socket) do
-    require Logger
-    Logger.error("confirm_delivery_address task exited: #{inspect(reason)}")
+  # Catch-all for any unexpected shape (non-Ash-error returns, task exits).
+  # ConfirmDeliveryAddress is contracted to return {:ok, order} or
+  # {:error, %Ash.Error.Invalid{}}; anything else is a bug we want to log
+  # without crashing the checkout.
+  def handle_async(:confirm_delivery_address, result, socket) do
+    Logger.error("confirm_delivery_address unexpected result: #{inspect(result)}")
     {:noreply, fail(socket, generic_error())}
   end
 
@@ -123,7 +116,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         order
       end
 
-    send(self(), {:address_geocode_failed, order, error})
+    send(self(), {:address_result, %{order: order, typed_address: socket.assigns.typed_address, error: error}})
     assign(socket, loading: false, order: order)
   end
 
