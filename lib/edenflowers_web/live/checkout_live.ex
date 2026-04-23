@@ -29,7 +29,6 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> assign(:address_loading, false)
-       |> assign(:address_confirmed, not is_nil(order.geocoded_address))
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -230,9 +229,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                             type="text"
                             phx-blur="geocode_address"
                             loading={@address_loading}
-                            confirmed={@address_confirmed}
+                            confirmed={not is_nil(@order.geocoded_address) and not @address_loading}
                           />
-                          <p :if={@address_confirmed} data-testid="address-distance" class="mt-1.5 text-sm">
+                          <p :if={not is_nil(@order.geocoded_address) and not @address_loading} data-testid="address-distance" class="mt-1.5 text-sm">
                             {format_distance(@order.distance)} • {format_delivery_amount(@order)}
                           </p>
                         </div>
@@ -469,23 +468,23 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  # Clears address_confirmed while the user edits the field, and wipes the persisted
-  # geocode the moment the user empties the field so a submit can't sneak through
-  # using an old confirmed address.
+  # Wipes the persisted geocode whenever the user edits the address field away from
+  # the confirmed value, so a submit can't sneak through using a stale geocode.
   def handle_event("validate_form_3", %{"form" => params}, socket) do
     typed = params["delivery_address"] || ""
     actor = socket.assigns[:current_user]
+    order = socket.assigns.order
 
     {order, base_form} =
-      if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address) do
-        cleared = Order.clear_delivery_fields!(socket.assigns.order, actor: actor)
+      if not is_nil(order.geocoded_address) and String.trim(typed) != order.delivery_address do
+        cleared = Order.clear_delivery_fields!(order, actor: actor)
         {cleared, make_form(cleared, action_name(:save, cleared.step))}
       else
-        {socket.assigns.order, socket.assigns.form}
+        {order, socket.assigns.form}
       end
 
     form = AshPhoenix.Form.validate(base_form, params)
-    {:noreply, assign(socket, form: form, order: order, address_confirmed: false)}
+    {:noreply, assign(socket, form: form, order: order)}
   end
 
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
@@ -526,9 +525,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
     actor = socket.assigns[:current_user]
     order = Order.edit_step_3!(order, actor: actor)
-
-    {:noreply,
-     assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
+    {:noreply, assign(socket, order: order, address_loading: false)}
   end
 
   def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
@@ -547,7 +544,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     actor = socket.assigns[:current_user]
     order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
     form = make_form(order, action_name(:save, order.step))
-    {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
+    {:noreply, assign(socket, order: order, form: form, address_loading: false)}
   end
 
   def handle_event("geocode_address", %{"value" => address}, socket) do
@@ -559,7 +556,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {:noreply, socket}
 
       # Address unchanged and already confirmed — nothing to do.
-      socket.assigns.address_confirmed and address == order.delivery_address ->
+      not is_nil(order.geocoded_address) and address == order.delivery_address ->
         {:noreply, socket}
 
       true ->
@@ -572,7 +569,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         # blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(form: form, address_loading: true, address_confirmed: false)
+         |> assign(form: form, address_loading: true)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
@@ -676,7 +673,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       |> make_form(action_name(:save, order.step))
       |> AshPhoenix.Form.validate(existing_params)
 
-    {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: true)}
+    {:noreply, assign(socket, order: order, form: form, address_loading: false)}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
@@ -687,7 +684,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   # wraps all its errors as Ash.Error.Invalid, caught by the clause above.
   def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
     {:noreply,
-     fail_address_lookup(socket,
+     fail_address_lookup(
+       socket,
        field: :delivery_address,
        message: ~t"There was a problem calculating delivery cost, please try again later"
      )}
@@ -710,12 +708,22 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   defp fail_address_lookup(socket, error) do
+    actor = socket.assigns[:current_user]
+    order = socket.assigns.order
+
+    order =
+      if not is_nil(order.geocoded_address) do
+        Order.clear_delivery_fields!(order, actor: actor)
+      else
+        order
+      end
+
     form =
       socket.assigns.form
       |> AshPhoenix.Form.validate(AshPhoenix.Form.params(socket.assigns.form))
       |> AshPhoenix.Form.add_error(error)
 
-    assign(socket, address_loading: false, address_confirmed: false, form: form)
+    assign(socket, address_loading: false, order: order, form: form)
   end
 
   # ==========
