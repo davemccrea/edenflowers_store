@@ -28,6 +28,15 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
+  state_machine do
+    initial_states([:checkout])
+    default_initial_state(:checkout)
+
+    transitions do
+      transition(:finalize_checkout, from: :checkout, to: :placed)
+    end
+  end
+
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
@@ -48,15 +57,6 @@ defmodule Edenflowers.Store.Order do
     define :edit_step_1, action: :edit_step_1
     define :edit_step_2, action: :edit_step_2
     define :edit_step_3, action: :edit_step_3
-  end
-
-  state_machine do
-    initial_states([:checkout])
-    default_initial_state(:checkout)
-
-    transitions do
-      transition(:finalize_checkout, from: :checkout, to: :placed)
-    end
   end
 
   actions do
