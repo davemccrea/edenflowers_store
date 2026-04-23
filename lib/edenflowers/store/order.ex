@@ -9,19 +9,28 @@ defmodule Edenflowers.Store.Order do
 
   require Ash.Resource.Change.Builtins
 
-  alias __MODULE__.{
-    RequireGeocodedAddress,
+  alias __MODULE__.Changes.{
     CalculatePickupCost,
-    LookupPromotionCode,
+    ClearDeliveryFields,
     ClearGiftFields,
-    UpsertUserAndAssignToOrder,
+    ConfirmDeliveryAddress,
+    CopyFulfillmentMethod,
+    GenerateOrderReference,
+    LookupPromotionCode,
+    RequireGeocodedAddress,
+    ResetCheckout,
     UpdatePromotionUsageCount,
-    ValidateMinimumCartTotal,
-    ValidatePaymentIntent,
-    Validations
+    UpsertUserAndAssignToOrder
   }
 
-  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields, GenerateOrderReference}
+  alias __MODULE__.Validations.{
+    RequireDeliveryAddress,
+    ValidateFulfillmentDate,
+    ValidateMinimumCartTotal,
+    ValidatePaymentIntent
+  }
+
+  alias Edenflowers.Store.FulfillmentOption
 
   @checkout_load [
     :total_items_in_cart,
@@ -29,6 +38,7 @@ defmodule Edenflowers.Store.Order do
     :line_total,
     :line_tax_amount,
     :promotion_applied?,
+    :address_confirmed?,
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
@@ -153,8 +163,9 @@ defmodule Edenflowers.Store.Order do
       # The persisted delivery_address is owned by confirm_delivery_address.
       argument :delivery_address, :string
 
-      validate {Validations.ValidateFulfillmentDate, []}
-      validate {Validations.RequireDeliveryAddress, []}
+      change {CopyFulfillmentMethod, []}
+      validate {ValidateFulfillmentDate, []}
+      validate {RequireDeliveryAddress, []}
       change {RequireGeocodedAddress, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
@@ -190,9 +201,11 @@ defmodule Edenflowers.Store.Order do
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
+      change {CopyFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
       change {ClearDeliveryFields, []}
       change load(@checkout_load)
+      require_atomic? false
     end
 
     update :set_gift do
@@ -312,6 +325,10 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
     attribute :fulfillment_amount, :decimal
+    # Denormalized from fulfillment_option. Kept in sync by CopyFulfillmentMethod
+    # so validations and templates can branch on a plain attribute instead of
+    # traversing the relationship.
+    attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
     attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
@@ -335,6 +352,7 @@ defmodule Edenflowers.Store.Order do
   calculations do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
+    calculate :address_confirmed?, :boolean, expr(not is_nil(geocoded_address))
 
     calculate :fulfillment_tax_amount,
               :decimal,

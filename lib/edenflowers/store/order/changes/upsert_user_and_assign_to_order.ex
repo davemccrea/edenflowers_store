@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.UpsertUserAndAssignToOrder do
+defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
   @moduledoc """
   Creates or updates a user and assigns them to the order.
 

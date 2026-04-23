@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.ValidateMinimumCartTotal do
+defmodule Edenflowers.Store.Order.Validations.ValidateMinimumCartTotal do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
