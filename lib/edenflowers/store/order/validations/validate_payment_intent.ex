@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.ValidatePaymentIntent do
+defmodule Edenflowers.Store.Order.Validations.ValidatePaymentIntent do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
