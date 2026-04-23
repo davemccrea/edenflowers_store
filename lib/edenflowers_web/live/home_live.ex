@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.HomeLive do
                 >
                   <div class="mb-2 overflow-hidden rounded-lg">
                     <img
-                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
+                      data-src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
                       alt={product.name}
                       class="aspect-square w-full object-cover"
                     />

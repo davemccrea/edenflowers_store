@@ -528,10 +528,28 @@ Hooks.EmblaCarousel = {
     const next = this.el.parentElement.querySelector("[data-carousel-next]");
     prev?.addEventListener("click", () => this.embla.scrollPrev());
     next?.addEventListener("click", () => this.embla.scrollNext());
+
+    const slides = Array.from(this.el.firstElementChild?.children ?? []);
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const img = entry.target.querySelector("img[data-src]");
+          if (img) {
+            img.src = img.dataset.src;
+            img.removeAttribute("data-src");
+          }
+          this.observer.unobserve(entry.target);
+        }
+      },
+      { root: this.el, threshold: 0 }
+    );
+    slides.forEach((slide) => this.observer.observe(slide));
   },
 
   destroyed() {
     this.embla?.destroy();
+    this.observer?.disconnect();
   },
 };
 
