@@ -612,8 +612,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Sent by AddressInputComponent after a successful geocode. We hold the
   # result in socket state and merge it into the form params at submit
   # time — nothing is written to the order until the user clicks Next.
-  def handle_info({:address_geocoded, address, geocode}, socket) do
-    {:noreply, assign(socket, pending_geocode: %{address: address, geocode: geocode})}
+  def handle_info({:address_geocoded, address, result}, socket) do
+    {:noreply, assign(socket, pending_geocode: %{address: address, result: result})}
   end
 
   # Sent by AddressInputComponent when the cached geocode is no longer
@@ -733,11 +733,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp geocode_params(pending) do
     %{
       "delivery_address" => pending.address,
-      "geocoded_address" => pending.geocode.geocoded_address,
-      "position" => pending.geocode.position,
-      "here_id" => pending.geocode.here_id,
-      "distance" => pending.geocode.distance,
-      "fulfillment_amount" => pending.geocode.fulfillment_amount
+      "geocoded_address" => pending.result.geocoded_address,
+      "position" => pending.result.position,
+      "here_id" => pending.result.here_id,
+      "distance" => pending.result.distance,
+      "fulfillment_amount" => pending.result.fulfillment_amount
     }
   end
 

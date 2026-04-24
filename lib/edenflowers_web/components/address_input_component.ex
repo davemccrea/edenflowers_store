@@ -9,11 +9,11 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   The component notifies the parent of geocode state via two messages:
 
-    * `{:address_geocoded, address, geocode}` — a successful geocode.
-      The parent stashes the geocode and merges it into submit params.
+    * `{:address_geocoded, address, result}` — a successful geocode.
+      The parent stashes the result and merges it into submit params.
     * `:address_cleared` — the previously-geocoded address is no longer
       valid (field cleared, edited, fulfillment option switched, or
-      geocode failed). The parent drops any stashed geocode.
+      geocode failed). The parent drops any stashed result.
 
   Error display is component-owned. `{:required, _}` is raised the
   instant the user empties the field. On submit, `ValidateGeocodedAddress`
@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         type="text"
         errors={errors(@error, @touched)}
         phx-change="typing"
-        phx-blur="geocode"
+        phx-blur="lookup_address"
         phx-target={@myself}
         loading={@loading}
         confirmed={confirmed?(@typed, @confirmed, @loading)}
@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         data-testid="address-distance"
         class="mt-1.5 text-sm"
       >
-        {format_distance(@confirmed.geocode.distance)} • {format_delivery_amount(@confirmed.geocode.fulfillment_amount)}
+        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_amount)}
       </p>
     </div>
     """
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
     confirmed = socket.assigns.confirmed
 
     # When the user diverges from a previously confirmed address, drop the
-    # cached geocode so submit can't sneak through on a stale result.
+    # cached result so submit can't sneak through on a stale result.
     socket =
       if confirmed && value != confirmed.address do
         send(self(), :address_cleared)
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
     {:noreply, assign(socket, typed: value, touched: true, error: error)}
   end
 
-  def handle_event("geocode", %{"value" => address}, socket) do
+  def handle_event("lookup_address", %{"value" => address}, socket) do
     confirmed = socket.assigns.confirmed
 
     cond do
@@ -117,40 +117,40 @@ defmodule EdenflowersWeb.AddressInputComponent do
       true ->
         fulfillment_option = socket.assigns.order.fulfillment_option
 
-        # start_async with the same name cancels any in-flight geocode, so the
+        # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
         {:noreply,
          socket
          |> assign(loading: true, typed: address, error: nil)
-         |> start_async(:geocode, fn ->
+         |> start_async(:lookup_address, fn ->
            Fulfillments.calculate_delivery(address, fulfillment_option)
          end)}
     end
   end
 
   @impl true
-  def handle_async(:geocode, {:ok, {:ok, geocode}}, socket) do
+  def handle_async(:lookup_address, {:ok, {:ok, result}}, socket) do
     address = socket.assigns.typed
-    send(self(), {:address_geocoded, address, geocode})
+    send(self(), {:address_geocoded, address, result})
 
     {:noreply,
      assign(socket,
        loading: false,
-       confirmed: %{address: address, geocode: geocode},
+       confirmed: %{address: address, result: result},
        error: nil
      )}
   end
 
-  def handle_async(:geocode, {:ok, {:error, reason}}, socket) do
+  def handle_async(:lookup_address, {:ok, {:error, reason}}, socket) do
     {:noreply, fail(socket, message_for(reason))}
   end
 
-  def handle_async(:geocode, {:exit, {:shutdown, :cancel}}, socket) do
+  def handle_async(:lookup_address, {:exit, {:shutdown, :cancel}}, socket) do
     {:noreply, socket}
   end
 
-  def handle_async(:geocode, result, socket) do
-    Logger.error("geocode unexpected result: #{inspect(result)}")
+  def handle_async(:lookup_address, result, socket) do
+    Logger.error("lookup_address unexpected result: #{inspect(result)}")
     {:noreply, fail(socket, ~t"There was a problem calculating delivery cost, please try again later")}
   end
 
@@ -170,7 +170,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
        when is_binary(address) and is_binary(geocoded) do
     %{
       address: address,
-      geocode: %{
+      result: %{
         geocoded_address: geocoded,
         position: order.position,
         here_id: order.here_id,
