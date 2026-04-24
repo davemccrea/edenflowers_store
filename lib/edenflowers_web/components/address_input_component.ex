@@ -2,19 +2,23 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Self-contained: renders its own `<input>` inside a component-scoped
-  `<.form>`, separate from the parent's step-3 form. The persisted
+  Rendered inside the step-3 form in `CheckoutLive`. The parent form
+  owns Enter, tab order, and submit; the component owns the address
+  field's keystrokes via per-input `phx-change="typing"` so the parent's
+  `validate_form_3` never sees the address value. The persisted
   `order.delivery_address` / `order.geocoded_address` are the source of
   truth — form params never carry an address. On every mutation the
-  component sends `{:order_updated, order}` so the parent can refresh
+  component sends `{:address_changed, order}` so the parent can refresh
   its assigns.
 
-  The server-side rule "delivery orders must have a geocoded address"
-  lives on the `save_step_3` action (see `ValidateGeocodedAddress`).
-  When submit fails for that reason, the parent mirrors the error into
-  the component with `send_update(__MODULE__, id: "address-input",
-  required_error: true)` so the message renders where the user is
-  looking.
+  Error display is entirely component-owned. The component raises an
+  immediate `{:required, _}` error the instant the user clears a
+  previously confirmed address. On submit, `ValidateGeocodedAddress` on
+  `save_step_3` enforces the server-side rule; when that fails the
+  parent calls `send_update(__MODULE__, id: "address-input",
+  required_error: true)` so the component shows the same message where
+  the user is looking. The component is otherwise unaware of the parent
+  form.
   """
   use EdenflowersWeb, :live_component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -47,26 +51,19 @@ defmodule EdenflowersWeb.AddressInputComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.form
-        for={%{}}
-        as={:address}
+      <.input
+        id="address-input-field"
+        name="delivery_address"
+        value={@typed}
+        label={~t"Address *"}
+        type="text"
+        errors={errors(@error)}
         phx-change="typing"
-        phx-submit="noop"
+        phx-blur="geocode"
         phx-target={@myself}
-      >
-        <.input
-          id="address-input-field"
-          name="delivery_address"
-          value={@typed}
-          label={~t"Address *"}
-          type="text"
-          errors={errors(@error)}
-          phx-blur="geocode"
-          phx-target={@myself}
-          loading={@loading}
-          confirmed={@order.address_confirmed? and not @loading}
-        />
-      </.form>
+        loading={@loading}
+        confirmed={@order.address_confirmed? and not @loading}
+      />
       <p
         :if={@order.address_confirmed? and not @loading}
         data-testid="address-distance"
@@ -90,7 +87,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         # geocode and surface the required error.
         was_confirmed? and became_blank? ->
           order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-          send(self(), {:order_updated, order})
+          send(self(), {:address_changed, order})
           assign(socket, order: order, typed: value, error: {:required, ~t"Delivery address required"})
 
         # User is editing a confirmed address into something different —
@@ -98,7 +95,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         # empty-confirmed case.
         was_confirmed? and value != order.delivery_address ->
           order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-          send(self(), {:order_updated, order})
+          send(self(), {:address_changed, order})
           assign(socket, order: order, typed: value, error: nil)
 
         true ->
@@ -132,11 +129,9 @@ defmodule EdenflowersWeb.AddressInputComponent do
     end
   end
 
-  def handle_event("noop", _, socket), do: {:noreply, socket}
-
   @impl true
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    send(self(), {:order_updated, order})
+    send(self(), {:address_changed, order})
 
     {:noreply,
      assign(socket,
@@ -166,7 +161,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
     order =
       if order.address_confirmed? do
         cleared = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-        send(self(), {:order_updated, cleared})
+        send(self(), {:address_changed, cleared})
         cleared
       else
         order
