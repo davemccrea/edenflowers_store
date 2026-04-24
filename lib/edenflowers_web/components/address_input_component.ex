@@ -2,19 +2,18 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Owns the blur event, the async HERE API call, and the loading/confirmed
-  visual feedback. The field itself is rendered inside the parent's `<.form>`,
-  so submitting step 3 carries the delivery_address value along with the
-  other step-3 fields.
+  Self-contained: renders its own `<input>` outside the parent form. The
+  persisted `order.delivery_address` / `order.geocoded_address` are the
+  source of truth — form params never carry an address. On every mutation
+  the component sends `{:order_updated, order}` so the parent can refresh
+  its assigns.
 
-  After every geocode attempt (success or failure) the component sends a
-  single `{:address_result, %{order: order, typed_address: typed, error:
-  error_or_nil}}` message to the parent LiveView, which is responsible for
-  reconciling the form. `typed_address` is the value the user blurred away
-  from — the parent replays it into form params so a failure error renders
-  on the correct field regardless of whether phx-change landed first.
+  The parent calls `send_update(__MODULE__, id: "address-input",
+  required_error: true)` to force-display the "Delivery address required"
+  message when a user tries to submit step 3 without a geocoded address.
   """
   use EdenflowersWeb, :live_component
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger
   import EdenflowersWeb.CoreComponents
@@ -23,12 +22,22 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, typed_address: nil)}
+    {:ok, assign(socket, loading: false, typed: nil, required_error: false, api_error: nil)}
   end
 
   @impl true
+  def update(%{required_error: true}, socket) do
+    # Submit-time signal from the parent.
+    {:ok, assign(socket, required_error: true)}
+  end
+
   def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign_new(:typed, fn -> assigns.order.delivery_address end)
+
+    {:ok, socket}
   end
 
   @impl true
@@ -36,9 +45,13 @@ defmodule EdenflowersWeb.AddressInputComponent do
     ~H"""
     <div>
       <.input
+        id="address-input-field"
+        name="delivery_address"
+        value={@typed}
         label={~t"Address *"}
-        field={@form[:delivery_address]}
         type="text"
+        errors={errors(@required_error, @api_error)}
+        phx-change="typing"
         phx-blur="geocode"
         phx-target={@myself}
         loading={@loading}
@@ -56,6 +69,35 @@ defmodule EdenflowersWeb.AddressInputComponent do
   end
 
   @impl true
+  def handle_event("typing", %{"value" => value}, socket) do
+    order = socket.assigns.order
+    was_confirmed? = order.address_confirmed?
+    became_blank? = String.trim(value) == ""
+
+    socket =
+      cond do
+        # User emptied a previously confirmed address — clear server-side
+        # geocode and surface the required error.
+        was_confirmed? and became_blank? ->
+          order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
+          send(self(), {:order_updated, order})
+          assign(socket, order: order, typed: value, required_error: true, api_error: nil)
+
+        # User is editing a confirmed address into something different —
+        # drop the stale geocode; required_error only applies to the
+        # empty-confirmed case.
+        was_confirmed? and value != order.delivery_address ->
+          order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
+          send(self(), {:order_updated, order})
+          assign(socket, order: order, typed: value, required_error: false, api_error: nil)
+
+        true ->
+          assign(socket, typed: value, required_error: false, api_error: nil)
+      end
+
+    {:noreply, socket}
+  end
+
   def handle_event("geocode", %{"value" => address}, socket) do
     order = socket.assigns.order
 
@@ -63,7 +105,6 @@ defmodule EdenflowersWeb.AddressInputComponent do
       String.trim(address) == "" ->
         {:noreply, socket}
 
-      # Address unchanged and already confirmed — nothing to do.
       order.address_confirmed? and address == order.delivery_address ->
         {:noreply, socket}
 
@@ -74,7 +115,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         # final blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(loading: true, typed_address: address)
+         |> assign(loading: true, typed: address, api_error: nil, required_error: false)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
@@ -83,45 +124,59 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    send(self(), {:address_result, %{order: order, typed_address: socket.assigns.typed_address, error: nil}})
-    {:noreply, assign(socket, loading: false, order: order)}
+    send(self(), {:order_updated, order})
+
+    {:noreply,
+     assign(socket,
+       loading: false,
+       order: order,
+       typed: order.delivery_address,
+       required_error: false,
+       api_error: nil
+     )}
   end
 
   def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
-    {:noreply, fail(socket, error)}
+    {:noreply, fail(socket, extract_message(error))}
   end
 
-  # Cancelled by a newer start_async with the same name — ignore, the new
-  # task will deliver the user-facing result.
   def handle_async(:confirm_delivery_address, {:exit, {:shutdown, :cancel}}, socket) do
     {:noreply, socket}
   end
 
-  # Catch-all for any unexpected shape (non-Ash-error returns, task exits).
-  # ConfirmDeliveryAddress is contracted to return {:ok, order} or
-  # {:error, %Ash.Error.Invalid{}}; anything else is a bug we want to log
-  # without crashing the checkout.
   def handle_async(:confirm_delivery_address, result, socket) do
     Logger.error("confirm_delivery_address unexpected result: #{inspect(result)}")
-    {:noreply, fail(socket, generic_error())}
+    {:noreply, fail(socket, ~t"There was a problem calculating delivery cost, please try again later")}
   end
 
-  defp fail(socket, error) do
+  defp fail(socket, message) do
     order = socket.assigns.order
 
     order =
       if order.address_confirmed? do
-        Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
+        cleared = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
+        send(self(), {:order_updated, cleared})
+        cleared
       else
         order
       end
 
-    send(self(), {:address_result, %{order: order, typed_address: socket.assigns.typed_address, error: error}})
-    assign(socket, loading: false, order: order)
+    assign(socket, loading: false, order: order, api_error: message, required_error: false)
   end
 
-  defp generic_error do
-    [field: :delivery_address, message: ~t"There was a problem calculating delivery cost, please try again later"]
+  defp extract_message(%Ash.Error.Invalid{errors: errors}) do
+    case Enum.find(errors, &match?(%{field: :delivery_address}, &1)) do
+      %{message: message} -> message
+      _ -> ~t"There was a problem calculating delivery cost, please try again later"
+    end
+  end
+
+  defp errors(required_error, api_error) do
+    cond do
+      api_error -> [api_error]
+      required_error -> [~t"Delivery address required"]
+      true -> []
+    end
   end
 
   defp format_distance(nil), do: ""
