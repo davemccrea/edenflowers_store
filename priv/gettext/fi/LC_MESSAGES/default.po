@@ -22,7 +22,7 @@ msgstr "Toiminnot"
 msgid "About"
 msgstr "Tietoa meistä"
 
-#: lib/edenflowers/store/order/changes/confirm_delivery_address.ex:26
+#: lib/edenflowers_web/components/address_input_component.ex:162
 #, elixir-autogen, elixir-format
 msgid "Address not found"
 msgstr "Osoitetta ei löytynyt"
@@ -292,7 +292,7 @@ msgstr "Toimitustiimimme yrittää jättää kukkasi turvalliseen varjoiseen pai
 msgid "Our flowers are carefully selected and arranged to last 5-7 days with proper care. We recommend changing the water every 2-3 days, trimming the stems, and keeping them away from direct sunlight and drafts."
 msgstr "Kukkamme on huolellisesti valittu ja järjestetty kestämään 5-7 päivää oikealla hoidolla. Suosittelemme veden vaihtamista 2-3 päivän välein, varsien leikkaamista ja pitämistä poissa suorasta auringonvalosta ja vedosta."
 
-#: lib/edenflowers/store/order/changes/confirm_delivery_address.ex:29
+#: lib/edenflowers_web/components/address_input_component.ex:163
 #, elixir-autogen, elixir-format
 msgid "Outside delivery range"
 msgstr "Toimitusalueen ulkopuolella"
@@ -357,9 +357,8 @@ msgstr "Kirjaudu sisään"
 msgid "Sign in to your account"
 msgstr "Kirjaudu tilillesi"
 
-#: lib/edenflowers/store/order/changes/confirm_delivery_address.ex:34
-#: lib/edenflowers_web/live/checkout_live.ex:690
-#: lib/edenflowers_web/live/checkout_live.ex:706
+#: lib/edenflowers_web/components/address_input_component.ex:154
+#: lib/edenflowers_web/components/address_input_component.ex:164
 #, elixir-autogen, elixir-format
 msgid "There was a problem calculating delivery cost, please try again later"
 msgstr "Toimituskulujen laskemisessa tapahtui virhe, yritä myöhemmin uudelleen"
@@ -693,8 +692,7 @@ msgstr ""
 msgid "The code is valid for 30 days and can be used once at checkout."
 msgstr ""
 
-#: lib/edenflowers/store/order/changes/calculate_pickup_cost.ex:29
-#: lib/edenflowers/store/order/changes/validate_and_calculate_fulfillment.ex:94
+#: lib/edenflowers/store/order/changes/calculate_pickup_cost.ex:37
 #, elixir-autogen, elixir-format
 msgid "Unable to calculate fulfillment cost"
 msgstr ""
@@ -774,9 +772,9 @@ msgstr ""
 msgid "%{name}'s Phone Number"
 msgstr ""
 
-#: lib/edenflowers/store/order/changes/require_geocoded_address.ex:21
-#: lib/edenflowers/store/order/changes/validate_and_calculate_fulfillment.ex:71
-#: lib/edenflowers/store/order/validations/require_delivery_address.ex:18
+#: lib/edenflowers/store/order/validations/validate_geocoded_address.ex:11
+#: lib/edenflowers_web/components/address_input_component.ex:42
+#: lib/edenflowers_web/components/address_input_component.ex:101
 #, elixir-autogen, elixir-format
 msgid "Delivery address required"
 msgstr "Toimitusosoite vaaditaan"
