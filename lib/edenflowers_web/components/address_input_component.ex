@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, touched: false, error: nil, confirmed: nil)}
+    {:ok, assign(socket, loading: false, touched: false, error: nil)}
   end
 
   @impl true
