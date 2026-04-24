@@ -2,15 +2,19 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Self-contained: renders its own `<input>` outside the parent form. The
-  persisted `order.delivery_address` / `order.geocoded_address` are the
-  source of truth — form params never carry an address. On every mutation
-  the component sends `{:order_updated, order}` so the parent can refresh
+  Self-contained: renders its own `<input>` inside a component-scoped
+  `<.form>`, separate from the parent's step-3 form. The persisted
+  `order.delivery_address` / `order.geocoded_address` are the source of
+  truth — form params never carry an address. On every mutation the
+  component sends `{:order_updated, order}` so the parent can refresh
   its assigns.
 
-  The parent calls `send_update(__MODULE__, id: "address-input",
-  required_error: true)` to force-display the "Delivery address required"
-  message when a user tries to submit step 3 without a geocoded address.
+  The server-side rule "delivery orders must have a geocoded address"
+  lives on the `save_step_3` action (see `ValidateGeocodedAddress`).
+  When submit fails for that reason, the parent mirrors the error into
+  the component with `send_update(__MODULE__, id: "address-input",
+  required_error: true)` so the message renders where the user is
+  looking.
   """
   use EdenflowersWeb, :live_component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -22,13 +26,12 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, typed: nil, required_error: false, api_error: nil)}
+    {:ok, assign(socket, loading: false, typed: nil, error: nil)}
   end
 
   @impl true
   def update(%{required_error: true}, socket) do
-    # Submit-time signal from the parent.
-    {:ok, assign(socket, required_error: true)}
+    {:ok, assign(socket, error: {:required, ~t"Delivery address required"})}
   end
 
   def update(assigns, socket) do
@@ -44,19 +47,26 @@ defmodule EdenflowersWeb.AddressInputComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.input
-        id="address-input-field"
-        name="delivery_address"
-        value={@typed}
-        label={~t"Address *"}
-        type="text"
-        errors={errors(@required_error, @api_error)}
+      <.form
+        for={%{}}
+        as={:address}
         phx-change="typing"
-        phx-blur="geocode"
+        phx-submit="noop"
         phx-target={@myself}
-        loading={@loading}
-        confirmed={@order.address_confirmed? and not @loading}
-      />
+      >
+        <.input
+          id="address-input-field"
+          name="delivery_address"
+          value={@typed}
+          label={~t"Address *"}
+          type="text"
+          errors={errors(@error)}
+          phx-blur="geocode"
+          phx-target={@myself}
+          loading={@loading}
+          confirmed={@order.address_confirmed? and not @loading}
+        />
+      </.form>
       <p
         :if={@order.address_confirmed? and not @loading}
         data-testid="address-distance"
@@ -69,7 +79,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
   end
 
   @impl true
-  def handle_event("typing", %{"value" => value}, socket) do
+  def handle_event("typing", %{"delivery_address" => value}, socket) do
     order = socket.assigns.order
     was_confirmed? = order.address_confirmed?
     became_blank? = String.trim(value) == ""
@@ -81,18 +91,18 @@ defmodule EdenflowersWeb.AddressInputComponent do
         was_confirmed? and became_blank? ->
           order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
           send(self(), {:order_updated, order})
-          assign(socket, order: order, typed: value, required_error: true, api_error: nil)
+          assign(socket, order: order, typed: value, error: {:required, ~t"Delivery address required"})
 
         # User is editing a confirmed address into something different —
-        # drop the stale geocode; required_error only applies to the
+        # drop the stale geocode; the required error only applies to the
         # empty-confirmed case.
         was_confirmed? and value != order.delivery_address ->
           order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
           send(self(), {:order_updated, order})
-          assign(socket, order: order, typed: value, required_error: false, api_error: nil)
+          assign(socket, order: order, typed: value, error: nil)
 
         true ->
-          assign(socket, typed: value, required_error: false, api_error: nil)
+          assign(socket, typed: value, error: nil)
       end
 
     {:noreply, socket}
@@ -115,12 +125,14 @@ defmodule EdenflowersWeb.AddressInputComponent do
         # final blur wins when the user types fast.
         {:noreply,
          socket
-         |> assign(loading: true, typed: address, api_error: nil, required_error: false)
+         |> assign(loading: true, typed: address, error: nil)
          |> start_async(:confirm_delivery_address, fn ->
            Order.confirm_delivery_address(order, address, actor: actor)
          end)}
     end
   end
+
+  def handle_event("noop", _, socket), do: {:noreply, socket}
 
   @impl true
   def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
@@ -131,8 +143,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
        loading: false,
        order: order,
        typed: order.delivery_address,
-       required_error: false,
-       api_error: nil
+       error: nil
      )}
   end
 
@@ -161,7 +172,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         order
       end
 
-    assign(socket, loading: false, order: order, api_error: message, required_error: false)
+    assign(socket, loading: false, order: order, error: {:api, message})
   end
 
   defp extract_message(%Ash.Error.Invalid{errors: errors}) do
@@ -171,13 +182,8 @@ defmodule EdenflowersWeb.AddressInputComponent do
     end
   end
 
-  defp errors(required_error, api_error) do
-    cond do
-      api_error -> [api_error]
-      required_error -> [~t"Delivery address required"]
-      true -> []
-    end
-  end
+  defp errors({_kind, message}), do: [message]
+  defp errors(nil), do: []
 
   defp format_distance(nil), do: ""
 

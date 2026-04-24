@@ -466,13 +466,28 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_3", %{"form" => params}, socket) do
-    order = socket.assigns.order
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, order} ->
+        next_section_id = get_next_section_id(socket.assigns.id, 3)
 
-    if order.fulfillment_method == :delivery and is_nil(order.geocoded_address) do
-      send_update(EdenflowersWeb.AddressInputComponent, id: "address-input", required_error: true)
-      {:noreply, socket}
-    else
-      submit_form(socket, 3, params)
+        {:noreply,
+         socket
+         |> assign(order: order)
+         |> assign(form: make_form(order, action_name(:save, order.step)))
+         |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+         |> push_event("focus-element", %{id: next_section_id})}
+
+      {:error, form} ->
+        order = socket.assigns.order
+
+        if order.fulfillment_method == :delivery and is_nil(order.geocoded_address) do
+          send_update(EdenflowersWeb.AddressInputComponent,
+            id: "address-input",
+            required_error: true
+          )
+        end
+
+        {:noreply, assign(socket, form: form)}
     end
   end
 
