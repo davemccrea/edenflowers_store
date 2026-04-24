@@ -13,7 +13,6 @@ defmodule Edenflowers.Store.Order do
     CalculatePickupCost,
     ClearDeliveryFields,
     ClearGiftFields,
-    ConfirmDeliveryAddress,
     CopyFulfillmentMethod,
     GenerateOrderReference,
     LookupPromotionCode,
@@ -71,8 +70,6 @@ defmodule Edenflowers.Store.Order do
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
-    define :confirm_delivery_address, action: :confirm_delivery_address, args: [:address]
-    define :clear_delivery_fields, action: :clear_delivery_fields
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
@@ -155,7 +152,13 @@ defmodule Edenflowers.Store.Order do
         :recipient_name,
         :recipient_phone_number,
         :delivery_instructions,
-        :fulfillment_date
+        :fulfillment_date,
+        :delivery_address,
+        :geocoded_address,
+        :position,
+        :here_id,
+        :distance,
+        :fulfillment_amount
       ]
 
       change {CopyFulfillmentMethod, []}
@@ -179,18 +182,6 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {UpdatePromotionUsageCount, []}
       require_atomic? false
-    end
-
-    update :confirm_delivery_address do
-      argument :address, :string, allow_nil?: false
-      change {ConfirmDeliveryAddress, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :clear_delivery_fields do
-      change {ClearDeliveryFields, []}
-      change load(@checkout_load)
     end
 
     update :update_fulfillment_option do

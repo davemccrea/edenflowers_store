@@ -26,6 +26,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
+       |> assign(:pending_geocode, nil)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> setup_stripe(order)}
@@ -225,7 +226,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                         id="address-input"
                         module={EdenflowersWeb.AddressInputComponent}
                         order={@order}
-                        actor={@current_user}
                       />
 
                       <.input
@@ -349,7 +349,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <div class="border-neutral/5 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-sm">
-                  <div class="flex justify-between" data-testid="delivery-cost">
+                  <div :if={@order.step >= 4} class="flex justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_amount) -> %>
@@ -479,15 +479,19 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("save_form_3", %{"form" => params}, socket) do
     order = socket.assigns.order
+    pending = socket.assigns.pending_geocode
 
-    if order.fulfillment_method == :delivery and is_nil(order.geocoded_address) do
-      send_update(EdenflowersWeb.AddressInputComponent,
-        id: "address-input",
-        required_error: true
-      )
+    cond do
+      order.fulfillment_method == :delivery and pending ->
+        submit_form(socket, 3, Map.merge(params, geocode_params(pending)))
+
+      order.fulfillment_method == :delivery and is_nil(order.geocoded_address) ->
+        send_update(EdenflowersWeb.AddressInputComponent, id: "address-input", required_error: true)
+        submit_form(socket, 3, params)
+
+      true ->
+        submit_form(socket, 3, params)
     end
-
-    submit_form(socket, 3, params)
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do
@@ -517,7 +521,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     actor = socket.assigns[:current_user]
     order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
     form = make_form(order, action_name(:save, order.step))
-    {:noreply, assign(socket, order: order, form: form)}
+    {:noreply, assign(socket, order: order, form: form, pending_geocode: nil)}
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
@@ -605,20 +609,17 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # Sent by AddressInputComponent on confirm / clear / failed-and-cleared.
-  # Rebuild the form so its bound record reflects the new geocode (otherwise
-  # submit sees a stale `geocoded_address: nil` and ValidateGeocodedAddress
-  # rejects it); replay current params so sibling fields like phone stay
-  # filled.
-  def handle_info({:address_changed, order}, socket) do
-    params = AshPhoenix.Form.params(socket.assigns.form)
+  # Sent by AddressInputComponent after a successful geocode. We hold the
+  # result in socket state and merge it into the form params at submit
+  # time — nothing is written to the order until the user clicks Next.
+  def handle_info({:address_geocoded, address, geocode}, socket) do
+    {:noreply, assign(socket, pending_geocode: %{address: address, geocode: geocode})}
+  end
 
-    new_form =
-      order
-      |> make_form(action_name(:save, order.step))
-      |> AshPhoenix.Form.validate(params)
-
-    {:noreply, assign(socket, order: order, form: new_form)}
+  # Sent by AddressInputComponent when the cached geocode is no longer
+  # valid (field cleared, edited, or geocode failed).
+  def handle_info(:address_cleared, socket) do
+    {:noreply, assign(socket, pending_geocode: nil)}
   end
 
   # ==========
@@ -729,6 +730,17 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> to_form()
   end
 
+  defp geocode_params(pending) do
+    %{
+      "delivery_address" => pending.address,
+      "geocoded_address" => pending.geocode.geocoded_address,
+      "position" => pending.geocode.position,
+      "here_id" => pending.geocode.here_id,
+      "distance" => pending.geocode.distance,
+      "fulfillment_amount" => pending.geocode.fulfillment_amount
+    }
+  end
+
   defp submit_form(socket, step, params) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
@@ -737,6 +749,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         {:noreply,
          socket
          |> assign(order: order)
+         |> assign(pending_geocode: nil)
          |> assign(form: make_form(order, action_name(:save, order.step)))
          |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
          |> push_event("focus-element", %{id: next_section_id})}
