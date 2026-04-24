@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.LookupPromotionCode do
+defmodule Edenflowers.Store.Order.Changes.LookupPromotionCode do
   @moduledoc """
   Looks up a promotion by its code and assigns it to the order.
 

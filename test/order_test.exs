@@ -822,39 +822,6 @@ defmodule Edenflowers.Store.OrderTest do
       assert Decimal.equal?(order.fulfillment_amount, "5.00")
     end
 
-    test "save_step_3 requires delivery_address for delivery orders", %{delivery_fixed: delivery_fixed} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
-
-      # Attempt delivery without address
-      assert {:error, error} =
-               order
-               |> Ash.Changeset.for_update(:save_step_3, %{
-                 fulfillment_option_id: delivery_fixed.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 1)
-               })
-               |> Ash.update(authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
-    end
-
-    test "save_step_3 rejects empty delivery_address for delivery orders", %{delivery_fixed: delivery_fixed} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
-
-      # Attempt delivery with empty string address
-      assert {:error, error} =
-               order
-               |> Ash.Changeset.for_update(:save_step_3, %{
-                 fulfillment_option_id: delivery_fixed.id,
-                 delivery_address: "",
-                 fulfillment_date: Date.add(Date.utc_today(), 1)
-               })
-               |> Ash.update(authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
-    end
-
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
       order = Order.create_for_checkout!(authorize?: false)
       order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)

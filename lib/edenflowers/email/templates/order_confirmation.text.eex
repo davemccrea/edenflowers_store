@@ -12,10 +12,10 @@
 <%= gettext("ITEMS") %>
 <%= for item <- @order.line_items do %>- <%= item.product_name %> (<%= item.quantity %>) <%= @format_currency.(item.line_total) %>
 <% end %>
-<%= if @order.fulfillment_option.fulfillment_method == :delivery do %><%= gettext("DELIVERY") %><% else %><%= gettext("PICKUP") %><% end %>
-<%= if @order.fulfillment_option.fulfillment_method == :delivery do %><%= if @order.gift do %><%= gettext("Recipient") %>: <%= @order.recipient_name %><% else %><%= gettext("Recipient") %>: <%= @order.customer_name %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("DELIVERY") %><% else %><%= gettext("PICKUP") %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= if @order.gift do %><%= gettext("Recipient") %>: <%= @order.recipient_name %><% else %><%= gettext("Recipient") %>: <%= @order.customer_name %><% end %>
 <%= gettext("Phone") %>: <%= @order.recipient_phone_number %>
-<%= gettext("Address") %>: <%= @order.calculated_address || @order.delivery_address %>
+<%= gettext("Address") %>: <%= @order.geocoded_address || @order.delivery_address %>
 <%= if @order.delivery_instructions do %><%= gettext("Instructions") %>: <%= @order.delivery_instructions %>
 <% end %><%= gettext("Date") %>: <%= @format_date.(@order.fulfillment_date) %><% else %><%= gettext("Address") %>: Minimossen
          Myrvägen 1

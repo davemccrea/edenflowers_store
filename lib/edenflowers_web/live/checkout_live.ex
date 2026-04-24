@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:updated:#{order.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
     end
 
     with {:ok, _line_items} <- cart_has_items?(order),
@@ -26,10 +26,9 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
+       |> assign(:pending_geocode, nil)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
-       |> assign(:address_loading, false)
-       |> assign(:address_confirmed, not is_nil(order.geocoded_address))
        |> setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -222,28 +221,20 @@ defmodule EdenflowersWeb.CheckoutLive do
                       phx-submit="save_form_3"
                       class="checkout__form"
                     >
-                      <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
-                        <div>
-                          <.input
-                            label={~t"Address *"}
-                            field={@form[:delivery_address]}
-                            type="text"
-                            phx-blur="geocode_address"
-                            loading={@address_loading}
-                            confirmed={@address_confirmed}
-                          />
-                          <p :if={@address_confirmed} data-testid="address-distance" class="mt-1.5 text-sm">
-                            {format_distance(@order.distance)} • {format_delivery_amount(@order)}
-                          </p>
-                        </div>
+                      <.live_component
+                        :if={@order.fulfillment_method == :delivery}
+                        id="address-input"
+                        module={EdenflowersWeb.AddressInputComponent}
+                        order={@order}
+                      />
 
-                        <.input
-                          label={~t"Delivery Instructions"}
-                          field={@form[:delivery_instructions]}
-                          type="text"
-                          placeholder={~t"e.g. Door code 1234, leave at the front door"}
-                        />
-                      <% end %>
+                      <.input
+                        :if={@order.fulfillment_method == :delivery}
+                        label={~t"Delivery Instructions"}
+                        field={@form[:delivery_instructions]}
+                        type="text"
+                        placeholder={~t"e.g. Door code 1234, leave at the front door"}
+                      />
 
                       <.input
                         label={recipient_label(@order, "phone")}
@@ -254,7 +245,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                       <fieldset class="flex flex-col">
                         <label class="mb-1">
-                          <%= if @order.fulfillment_option.fulfillment_method == :delivery do %>
+                          <%= if @order.fulfillment_method == :delivery do %>
                             {~t"Delivery Date *"}
                           <% else %>
                             {~t"Pickup Date *"}
@@ -358,7 +349,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <div class="border-neutral/5 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-sm">
-                  <div class="flex justify-between" data-testid="delivery-cost">
+                  <div :if={@order.step >= 4} class="flex justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_amount) -> %>
@@ -469,41 +460,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  # Clears address_confirmed while the user edits the field, and wipes the persisted
-  # geocode the moment the user empties the field so a submit can't sneak through
-  # using an old confirmed address.
-  def handle_event("validate_form_3", %{"form" => params}, socket) do
-    form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    typed = params["delivery_address"] || ""
-    actor = socket.assigns[:current_user]
-
-    order =
-      if String.trim(typed) == "" and not is_nil(socket.assigns.order.delivery_address),
-        do: Order.clear_delivery_fields!(socket.assigns.order, actor: actor),
-        else: socket.assigns.order
-
-    {:noreply, assign(socket, form: form, order: order, address_confirmed: false)}
-  end
-
   def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        # Focus on the next form section after successful submission
-        next_section_id = get_next_section_id(socket.assigns.id, String.to_integer(step))
-
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> push_event("focus-element", %{id: next_section_id})}
-
-      {:error, form} ->
-        {:noreply, assign(socket, form: form)}
-    end
   end
 
   # Step 4 does not save form data — it triggers Stripe payment processing directly.
@@ -518,83 +477,62 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  # Step navigation
-  def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-
-    Order.edit_step_3!(order, actor: actor)
-
-    order = Order.get_for_checkout!(order.id, actor: actor)
-
-    {:noreply,
-     assign(socket, order: order, address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
-  end
-
-  def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.edit_step_1!(order, actor: actor)
-    {:noreply, assign(socket, order: order)}
-  end
-
-  def handle_event("edit_step_2", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.edit_step_2!(order, actor: actor)
-    {:noreply, assign(socket, order: order)}
-  end
-
-  def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
-    form = make_form(order, action_name(:save, order.step))
-    {:noreply, assign(socket, order: order, form: form, address_loading: false, address_confirmed: false)}
-  end
-
-  def handle_event("geocode_address", %{"value" => address}, socket) do
-    actor = socket.assigns[:current_user]
+  def handle_event("save_form_3", %{"form" => params}, socket) do
     order = socket.assigns.order
+    pending = socket.assigns.pending_geocode
 
     cond do
-      String.trim(address) == "" ->
-        {:noreply, socket}
+      order.fulfillment_method == :delivery and pending ->
+        submit_form(socket, 3, Map.merge(params, geocode_params(pending)))
 
-      # Address unchanged and already confirmed — nothing to do.
-      socket.assigns.address_confirmed and address == order.delivery_address ->
-        {:noreply, socket}
+      order.fulfillment_method == :delivery and is_nil(order.geocoded_address) ->
+        send_update(EdenflowersWeb.AddressInputComponent, id: "address-input", required_error: true)
+        submit_form(socket, 3, params)
 
       true ->
-        # Sync the address into form params now so that errors from the async result
-        # render on the field regardless of whether phx-change fired before this blur.
-        form =
-          AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "delivery_address", address))
-
-        # start_async with the same name cancels any in-flight geocode so the final
-        # blur wins when the user types fast.
-        {:noreply,
-         socket
-         |> assign(form: form, address_loading: true, address_confirmed: false)
-         |> start_async(:confirm_delivery_address, fn ->
-           Order.confirm_delivery_address(order, address, actor: actor)
-         end)}
+        submit_form(socket, 3, params)
     end
   end
 
+  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
+    submit_form(socket, String.to_integer(step), params)
+  end
+
+  # Step navigation
+  def handle_event("edit_step_3", _params, socket) do
+    Order.edit_step_3!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
+  end
+
+  def handle_event("edit_step_1", _params, socket) do
+    Order.edit_step_1!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
+  end
+
+  def handle_event("edit_step_2", _params, socket) do
+    Order.edit_step_2!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
+  end
+
+  def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
+    Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
+    {:noreply, socket |> reload_order() |> assign(pending_geocode: nil)}
+  end
+
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.set_gift!(socket.assigns.order, gift, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    Order.set_gift!(socket.assigns.order, gift, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    actor = socket.assigns[:current_user]
-
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
 
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
 
-    LineItem.add_card(%{
+    LineItem.add_card!(%{
       order_id: socket.assigns.order.id,
       product_id: variant.product.id,
       product_variant_id: variant.id,
@@ -605,25 +543,21 @@ defmodule EdenflowersWeb.CheckoutLive do
       tax_rate: variant.product.tax_rate.percentage
     })
 
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("remove_card", _, socket) do
-    actor = socket.assigns[:current_user]
-
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
 
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, order} ->
-        {:noreply, assign(socket, order: order)}
+      {:ok, _order} ->
+        {:noreply, reload_order(socket)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -631,9 +565,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   # Stripe events
@@ -646,74 +579,34 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Info Events
   # ===========
 
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
+    actor = actor(socket)
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+
+    if Enum.empty?(order.line_items) do
+      Order.restart_checkout!(order, actor: actor)
+      {:noreply, push_navigate(socket, to: ~p"/")}
+    else
+      {:noreply, assign(socket, order: order)}
+    end
+  end
+
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:updated:" <> order_id}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.get_for_checkout!(order_id, actor: actor)
-    existing_params = AshPhoenix.Form.params(socket.assigns.form)
-
-    form =
-      order
-      |> make_form(action_name(:save, order.step))
-      |> AshPhoenix.Form.validate(existing_params)
-
-    {:noreply,
-     socket
-     |> assign(order: order)
-     |> assign(form: form)
-     |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
-     |> assign(address_loading: false, address_confirmed: not is_nil(order.geocoded_address))}
+  # Sent by AddressInputComponent after a successful geocode. We hold the
+  # result in socket state and merge it into the form params at submit
+  # time — nothing is written to the order until the user clicks Next.
+  def handle_info({:address_geocoded, address, result}, socket) do
+    {:noreply, assign(socket, pending_geocode: %{address: address, result: result})}
   end
 
-  # ============
-  # Async Events
-  # ============
-
-  def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    {:noreply, assign(socket, order: order, address_loading: false, address_confirmed: true)}
-  end
-
-  def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
-    {:noreply, fail_address_lookup(socket, error)}
-  end
-
-  # Only reachable if the async function returns a non-Ash error — ConfirmDeliveryAddress
-  # wraps all its errors as Ash.Error.Invalid, caught by the clause above.
-  def handle_async(:confirm_delivery_address, {:ok, {:error, _}}, socket) do
-    {:noreply,
-     fail_address_lookup(socket,
-       field: :delivery_address,
-       message: ~t"There was a problem calculating delivery cost, please try again later"
-     )}
-  end
-
-  # Cancelled by a newer start_async with the same name — ignore, the new task
-  # will deliver the user-facing result.
-  def handle_async(:confirm_delivery_address, {:exit, {:shutdown, :cancel}}, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_async(:confirm_delivery_address, {:exit, reason}, socket) do
-    Logger.error("confirm_delivery_address task exited: #{inspect(reason)}")
-
-    {:noreply,
-     fail_address_lookup(socket,
-       field: :delivery_address,
-       message: ~t"There was a problem calculating delivery cost, please try again later"
-     )}
-  end
-
-  defp fail_address_lookup(socket, error) do
-    form =
-      socket.assigns.form
-      |> AshPhoenix.Form.validate(AshPhoenix.Form.params(socket.assigns.form))
-      |> AshPhoenix.Form.add_error(error)
-
-    assign(socket, address_loading: false, address_confirmed: false, form: form)
+  # Sent by AddressInputComponent when the cached geocode is no longer
+  # valid (field cleared, edited, or geocode failed).
+  def handle_info(:address_cleared, socket) do
+    {:noreply, assign(socket, pending_geocode: nil)}
   end
 
   # ==========
@@ -824,6 +717,47 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> to_form()
   end
 
+  defp assign_forms(socket, order) do
+    socket
+    |> assign(order: order)
+    |> assign(form: make_form(order, action_name(:save, order.step)))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+  end
+
+  defp geocode_params(pending) do
+    %{
+      "delivery_address" => pending.address,
+      "geocoded_address" => pending.result.geocoded_address,
+      "position" => pending.result.position,
+      "here_id" => pending.result.here_id,
+      "distance" => pending.result.distance,
+      "fulfillment_amount" => pending.result.fulfillment_amount
+    }
+  end
+
+  defp submit_form(socket, step, params) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, _order} ->
+        next_section_id = get_next_section_id(socket.assigns.id, step)
+
+        {:noreply,
+         socket
+         |> reload_order()
+         |> assign(pending_geocode: nil)
+         |> push_event("focus-element", %{id: next_section_id})}
+
+      {:error, form} ->
+        {:noreply, assign(socket, form: form)}
+    end
+  end
+
+  defp actor(socket), do: socket.assigns[:current_user]
+
+  defp reload_order(socket) do
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    assign_forms(socket, order)
+  end
+
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
 
@@ -831,19 +765,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp get_next_section_id(id, 2), do: "#{id}-form-3a"
   defp get_next_section_id(id, 3), do: "#{id}-form-4"
   defp get_next_section_id(_, _), do: nil
-
-  defp format_distance(nil), do: ""
-
-  defp format_distance(meters) when is_integer(meters) do
-    km = meters / 1000
-    if km < 1, do: "#{meters} m", else: "#{:erlang.float_to_binary(km, decimals: 1)} km"
-  end
-
-  defp format_delivery_amount(%{fulfillment_amount: nil}), do: ""
-
-  defp format_delivery_amount(%{fulfillment_amount: amount}) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Utils.format_money(amount)
-  end
 
   defp size_label(:small), do: gettext("Small")
   defp size_label(:medium), do: gettext("Medium")
@@ -854,8 +775,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     {:ok, payment_intent} = stripe_api().create_payment_intent(order)
-    actor = socket.assigns[:current_user]
-    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor)
+    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor(socket))
 
     socket
     |> assign(order: order)
