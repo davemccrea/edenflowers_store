@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.ClearGiftFields do
+defmodule Edenflowers.Store.Order.Changes.ClearGiftFields do
   @moduledoc """
   Clears gift-related fields and removes card line items when the order is not a gift.
 

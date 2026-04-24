@@ -34,7 +34,7 @@ defmodule Edenflowers.Store.TaxRate do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
-    attribute :percentage, :decimal, allow_nil?: false, constraints: [min: 0, max: 100]
+    attribute :percentage, :decimal, allow_nil?: false, constraints: [min: 0, max: 1]
   end
 
   relationships do

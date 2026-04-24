@@ -3,30 +3,59 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshStateMachine]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Ash.Resource.Change.Builtins
 
-  alias __MODULE__.{
-    RequireGeocodedAddress,
+  alias __MODULE__.Changes.{
     CalculatePickupCost,
-    LookupPromotionCode,
+    ClearDeliveryFields,
     ClearGiftFields,
-    UpsertUserAndAssignToOrder,
+    CopyFulfillmentMethod,
+    GenerateOrderReference,
+    LookupPromotionCode,
+    ResetCheckout,
     UpdatePromotionUsageCount,
-    ValidateMinimumCartTotal,
-    ValidatePaymentIntent,
-    Validations
+    UpsertUserAndAssignToOrder
   }
 
-  alias __MODULE__.Changes.{ResetCheckout, ConfirmDeliveryAddress, ClearDeliveryFields, GenerateOrderReference}
+  alias __MODULE__.Validations.{
+    ValidateFulfillmentDate,
+    ValidateGeocodedAddress,
+    ValidateMinimumCartTotal,
+    ValidatePaymentIntent
+  }
+
+  alias Edenflowers.Store.FulfillmentOption
+
+  @checkout_load [
+    :total_items_in_cart,
+    :discount_amount,
+    :line_total,
+    :line_tax_amount,
+    :promotion_applied?,
+    :total,
+    :tax_amount,
+    :fulfillment_tax_amount,
+    :promotion,
+    :fulfillment_option,
+    :line_items
+  ]
 
   postgres do
     repo Edenflowers.Repo
     table "orders"
+  end
+
+  state_machine do
+    initial_states([:checkout])
+    default_initial_state(:checkout)
+
+    transitions do
+      transition(:finalize_checkout, from: :checkout, to: :placed)
+    end
   end
 
   code_interface do
@@ -40,8 +69,6 @@ defmodule Edenflowers.Store.Order do
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
-    define :confirm_delivery_address, action: :confirm_delivery_address, args: [:address]
-    define :clear_delivery_fields, action: :clear_delivery_fields
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
@@ -49,15 +76,6 @@ defmodule Edenflowers.Store.Order do
     define :edit_step_1, action: :edit_step_1
     define :edit_step_2, action: :edit_step_2
     define :edit_step_3, action: :edit_step_3
-  end
-
-  state_machine do
-    initial_states([:checkout])
-    default_initial_state(:checkout)
-
-    transitions do
-      transition(:finalize_checkout, from: :checkout, to: :placed)
-    end
   end
 
   actions do
@@ -80,25 +98,7 @@ defmodule Edenflowers.Store.Order do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
-
-      prepare build(
-                load: [
-                  # Aggregates
-                  :total_items_in_cart,
-                  :discount_amount,
-                  :line_total,
-                  :line_tax_amount,
-                  # Calculations
-                  :promotion_applied?,
-                  :total,
-                  :tax_amount,
-                  :fulfillment_tax_amount,
-                  # Relationships
-                  :promotion,
-                  :fulfillment_option,
-                  :line_items
-                ]
-              )
+      prepare build(load: @checkout_load)
     end
 
     read :completed do
@@ -114,6 +114,7 @@ defmodule Edenflowers.Store.Order do
     # Step-specific Update Actions
     update :edit_step_1 do
       change set_attribute(:step, 1)
+      change load(@checkout_load)
     end
 
     update :save_step_1 do
@@ -121,11 +122,13 @@ defmodule Edenflowers.Store.Order do
       require_attributes [:customer_name, :customer_email]
       change {UpsertUserAndAssignToOrder, []}
       change set_attribute(:step, 2)
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :edit_step_2 do
       change set_attribute(:step, 2)
+      change load(@checkout_load)
     end
 
     update :save_step_2 do
@@ -133,11 +136,13 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:step, 3)
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       change {ClearGiftFields, []}
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :edit_step_3 do
       change set_attribute(:step, 3)
+      change load(@checkout_load)
     end
 
     update :save_step_3 do
@@ -146,18 +151,21 @@ defmodule Edenflowers.Store.Order do
         :recipient_name,
         :recipient_phone_number,
         :delivery_instructions,
-        :fulfillment_date
+        :fulfillment_date,
+        :delivery_address,
+        :geocoded_address,
+        :position,
+        :here_id,
+        :distance,
+        :fulfillment_amount
       ]
 
-      # Argument, not attribute — used only for required-field validation.
-      # The persisted delivery_address is owned by confirm_delivery_address.
-      argument :delivery_address, :string
-
-      validate {Validations.ValidateFulfillmentDate, []}
-      validate {Validations.RequireDeliveryAddress, []}
-      change {RequireGeocodedAddress, []}
+      change {CopyFulfillmentMethod, []}
+      validate {ValidateFulfillmentDate, []}
+      validate {ValidateGeocodedAddress, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
+      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -175,24 +183,18 @@ defmodule Edenflowers.Store.Order do
       require_atomic? false
     end
 
-    update :confirm_delivery_address do
-      argument :address, :string, allow_nil?: false
-      change {ConfirmDeliveryAddress, []}
-      require_atomic? false
-    end
-
-    update :clear_delivery_fields do
-      change {ClearDeliveryFields, []}
-    end
-
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
+      change {CopyFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
       change {ClearDeliveryFields, []}
+      change load(@checkout_load)
+      require_atomic? false
     end
 
     update :set_gift do
       accept [:gift]
+      change load(@checkout_load)
     end
 
     update :update_locale do
@@ -208,6 +210,7 @@ defmodule Edenflowers.Store.Order do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -215,11 +218,13 @@ defmodule Edenflowers.Store.Order do
       argument :code, :string
       change {LookupPromotionCode, []}
       validate {ValidateMinimumCartTotal, []}
+      change load(@checkout_load)
       require_atomic? false
     end
 
     update :clear_promotion do
       change atomic_update(:promotion_id, expr(nil))
+      change load(@checkout_load)
     end
 
     update :restart_checkout do
@@ -251,11 +256,6 @@ defmodule Edenflowers.Store.Order do
       # Completed orders: Only the owner can access placed orders
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
-  end
-
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-    publish_all :update, ["order", "updated", :_pkey]
   end
 
   attributes do
@@ -308,6 +308,10 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
     attribute :fulfillment_amount, :decimal
+    # Denormalized from fulfillment_option. Kept in sync by CopyFulfillmentMethod
+    # so validations and templates can branch on a plain attribute instead of
+    # traversing the relationship.
+    attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
     attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
