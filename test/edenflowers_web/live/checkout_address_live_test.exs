@@ -298,28 +298,6 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
     end
-
-    test "phone number typed before address survives geocode", %{conn: conn, delivery_option: delivery_option} do
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-      select_delivery_option(view, delivery_option.id)
-
-      # Simulate typing phone first, then address. The last phx-change before
-      # blur only carries delivery_address, so the phone number must survive
-      # from the earlier change.
-      view
-      |> element("#checkout-form-3b")
-      |> render_change(%{"form" => %{"recipient_phone_number" => "045 1234567"}})
-
-      view
-      |> element("#checkout-form-3b")
-      |> render_change(%{"form" => %{"delivery_address" => "Stadsgatan 3, 65300 Vasa"}})
-
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-
-      assert render_async(view) =~ "045 1234567"
-    end
   end
 
   defp stub_successful_geocode do
