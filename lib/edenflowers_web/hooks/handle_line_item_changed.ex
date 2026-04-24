@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   alias Edenflowers.Store.Order
 
   def on_mount(:default, _params, _session, socket) do
-    if connected?(socket) && socket.private.root_view != EdenflowersWeb.CheckoutLive do
+    if connected?(socket) && socket.view != EdenflowersWeb.CheckoutLive do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
       {:cont, attach_hook(socket, :handle_line_item_changed, :handle_info, &handle_line_item_changed/2)}
     else
