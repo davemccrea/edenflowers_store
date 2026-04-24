@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   import Generator
   import Mox
   import Swoosh.TestAssertions
+  import ExUnit.CaptureLog
 
   alias Edenflowers.Store.{LineItem, Order}
 
@@ -118,7 +119,6 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
-      dbg(email)
       assert email.to == [{"", "jane@example.com"}]
       assert email.subject =~ "Order Confirmation"
       assert email.subject =~ finalized.order_reference
@@ -444,12 +444,15 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       }
     })
 
-    html =
-      view
-      |> element("#checkout-form-4")
-      |> render_submit()
+    {html, log} =
+      with_log(fn ->
+        view
+        |> element("#checkout-form-4")
+        |> render_submit()
+      end)
 
     assert html =~ "Payment processing error"
+    assert log =~ "Failed to update payment intent"
 
     stalled = Order.get_by_id!(order.id, authorize?: false)
     assert stalled.state == :checkout
