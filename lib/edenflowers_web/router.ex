@@ -15,13 +15,11 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.InitStore
     plug EdenflowersWeb.Plugs.Maintenance
 
-    plug Cldr.Plug.PutLocale,
-      apps: [:cldr, :gettext],
+    plug Localize.Plug.PutLocale,
       from: [:session, :accept_language],
-      gettext: EdenflowersWeb.Gettext,
-      cldr: Edenflowers.Cldr
+      gettext: EdenflowersWeb.Gettext
 
-    plug Cldr.Plug.PutSession, as: :string
+    plug Localize.Plug.PutSession
     plug :load_from_session
   end
 

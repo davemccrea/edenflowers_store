@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.ProductCategory do
   end
 
   translations do
-    locales Edenflowers.Cldr.AshTranslation.locale_names()
+    locales [:"sv-FI", :fi]
     fields [:name, :description]
   end
 

@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Hooks.PutOrder do
   alias Edenflowers.Store.Order
 
   def on_mount(:default, _params, %{"order_id" => order_id} = _session, socket) do
-    locale = Edenflowers.Cldr.get_locale() |> Cldr.to_string()
+    locale = Localize.get_locale() |> to_string()
     actor = socket.assigns[:current_user]
 
     Order.update_locale(order_id, locale, actor: actor)

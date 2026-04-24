@@ -22,8 +22,8 @@ defmodule EdenflowersWeb.LocaleControllerTest do
           {"en-US", "en"}
         ] do
       test "Accept-Language: #{header} resolves to #{expected_cldr_locale}" do
-        {:ok, locale} = Edenflowers.Cldr.validate_locale(unquote(header))
-        assert to_string(locale.cldr_locale_name) == unquote(expected_cldr_locale)
+        {:ok, locale} = Localize.validate_locale(unquote(header))
+        assert to_string(locale.cldr_locale_id) == unquote(expected_cldr_locale)
       end
     end
   end

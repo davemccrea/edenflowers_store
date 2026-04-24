@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.Layouts do
   embed_templates "layouts/*"
 
   def auth(assigns) do
-    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
+    {:ok, current_locale} = Localize.Language.display_name(Localize.get_locale())
 
     assigns =
       assigns
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    {:ok, current_locale} = Edenflowers.Cldr.Language.to_string(Cldr.get_locale())
+    {:ok, current_locale} = Localize.Language.display_name(Localize.get_locale())
 
     assigns =
       assigns

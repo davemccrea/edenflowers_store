@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.StoreLive do
     categories =
       ProductCategory.get_all!()
       |> Ash.load!(:translations)
-      |> Enum.map(&Edenflowers.Cldr.AshTranslation.translate/1)
+      |> Enum.map(&AshTranslation.translate(&1, Localize.get_locale().cldr_locale_id))
 
     category_slug = Map.get(params, "category")
 
@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.StoreLive do
   defp load_products(category_slug) do
     case ProductCategory.get_by_slug(category_slug) do
       {:ok, category} ->
-        translated_category = Edenflowers.Cldr.AshTranslation.translate(category)
+        translated_category = AshTranslation.translate(category, Localize.get_locale().cldr_locale_id)
 
         {Product.get_by_category!(category.id), translated_category}
 
