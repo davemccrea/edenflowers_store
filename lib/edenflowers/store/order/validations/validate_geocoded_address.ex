@@ -5,9 +5,9 @@ defmodule Edenflowers.Store.Order.Validations.ValidateGeocodedAddress do
   @impl true
   def validate(changeset, _opts, _context) do
     method = Ash.Changeset.get_attribute(changeset, :fulfillment_method)
-    geocoded = Ash.Changeset.get_attribute(changeset, :geocoded_address)
+    geocoded_address = Ash.Changeset.get_attribute(changeset, :geocoded_address)
 
-    if method == :delivery and is_nil(geocoded) do
+    if method == :delivery and is_nil(geocoded_address) do
       {:error, field: :delivery_address, message: ~t"Delivery address required"}
     else
       :ok
