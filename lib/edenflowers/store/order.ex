@@ -24,6 +24,7 @@ defmodule Edenflowers.Store.Order do
 
   alias __MODULE__.Validations.{
     ValidateFulfillmentDate,
+    ValidateGeocodedAddress,
     ValidateMinimumCartTotal,
     ValidatePaymentIntent
   }
@@ -159,6 +160,7 @@ defmodule Edenflowers.Store.Order do
 
       change {CopyFulfillmentMethod, []}
       validate {ValidateFulfillmentDate, []}
+      validate {ValidateGeocodedAddress, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
       change load(@checkout_load)
