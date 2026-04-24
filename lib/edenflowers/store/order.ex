@@ -12,7 +12,6 @@ defmodule Edenflowers.Store.Order do
   alias __MODULE__.Changes.{
     CalculatePickupCost,
     ClearDeliveryFields,
-    ClearGeocodeIfDiverged,
     ClearGiftFields,
     ConfirmDeliveryAddress,
     CopyFulfillmentMethod,
@@ -22,8 +21,6 @@ defmodule Edenflowers.Store.Order do
     UpdatePromotionUsageCount,
     UpsertUserAndAssignToOrder
   }
-
-  alias __MODULE__.DeliveryAddressGuards
 
   alias __MODULE__.Validations.{
     ValidateFulfillmentDate,
@@ -75,7 +72,6 @@ defmodule Edenflowers.Store.Order do
     define :clear_promotion, action: :clear_promotion
     define :confirm_delivery_address, action: :confirm_delivery_address, args: [:address]
     define :clear_delivery_fields, action: :clear_delivery_fields
-    define :sync_typed_delivery_address, action: :sync_typed_delivery_address, args: [:typed_address]
     define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
     define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
@@ -161,14 +157,8 @@ defmodule Edenflowers.Store.Order do
         :fulfillment_date
       ]
 
-      # Argument, not attribute — used only for required-field validation.
-      # The persisted delivery_address is owned by confirm_delivery_address.
-      argument :delivery_address, :string
-
       change {CopyFulfillmentMethod, []}
       validate {ValidateFulfillmentDate, []}
-      validate {DeliveryAddressGuards.Validate, []}
-      change {DeliveryAddressGuards.ChangeGeocoded, []}
       change {CalculatePickupCost, []}
       change set_attribute(:step, 4)
       change load(@checkout_load)
@@ -199,17 +189,6 @@ defmodule Edenflowers.Store.Order do
     update :clear_delivery_fields do
       change {ClearDeliveryFields, []}
       change load(@checkout_load)
-    end
-
-    # Called from phx-change on the step-3 form. Wipes the persisted geocode
-    # whenever the user edits the address away from the confirmed value so a
-    # submit can't sneak through using a stale geocode. No-op if the typed
-    # value still matches (or nothing was confirmed yet).
-    update :sync_typed_delivery_address do
-      argument :typed_address, :string
-      change {ClearGeocodeIfDiverged, []}
-      change load(@checkout_load)
-      require_atomic? false
     end
 
     update :update_fulfillment_option do
