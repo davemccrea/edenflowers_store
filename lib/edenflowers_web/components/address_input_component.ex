@@ -30,12 +30,16 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, typed: nil, error: nil)}
+    {:ok, assign(socket, loading: false, touched: false, error: nil)}
   end
 
   @impl true
   def update(%{required_error: true}, socket) do
-    {:ok, assign(socket, error: {:required, ~t"Delivery address required"})}
+    {:ok,
+     assign(socket,
+       error: {:required, ~t"Delivery address required"},
+       touched: true
+     )}
   end
 
   def update(assigns, socket) do
@@ -57,7 +61,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         value={@typed}
         label={~t"Address *"}
         type="text"
-        errors={errors(@error)}
+        errors={errors(@error, @touched)}
         phx-change="typing"
         phx-blur="geocode"
         phx-target={@myself}
@@ -78,31 +82,25 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @impl true
   def handle_event("typing", %{"delivery_address" => value}, socket) do
     order = socket.assigns.order
-    was_confirmed? = order.address_confirmed?
-    became_blank? = String.trim(value) == ""
 
-    socket =
-      cond do
-        # User emptied a previously confirmed address — clear server-side
-        # geocode and surface the required error.
-        was_confirmed? and became_blank? ->
-          order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-          send(self(), {:address_changed, order})
-          assign(socket, order: order, typed: value, error: {:required, ~t"Delivery address required"})
-
-        # User is editing a confirmed address into something different —
-        # drop the stale geocode; the required error only applies to the
-        # empty-confirmed case.
-        was_confirmed? and value != order.delivery_address ->
-          order = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-          send(self(), {:address_changed, order})
-          assign(socket, order: order, typed: value, error: nil)
-
-        true ->
-          assign(socket, typed: value, error: nil)
+    # When the user diverges from a previously confirmed address (either by
+    # emptying it or editing it into something different), drop the stale
+    # geocode so submit can't sneak through on an old confirmation.
+    order =
+      if order.address_confirmed? and value != order.delivery_address do
+        cleared = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
+        send(self(), {:address_changed, cleared})
+        cleared
+      else
+        order
       end
 
-    {:noreply, socket}
+    error =
+      if String.trim(value) == "",
+        do: {:required, ~t"Delivery address required"},
+        else: nil
+
+    {:noreply, assign(socket, order: order, typed: value, touched: true, error: error)}
   end
 
   def handle_event("geocode", %{"value" => address}, socket) do
@@ -177,8 +175,13 @@ defmodule EdenflowersWeb.AddressInputComponent do
     end
   end
 
-  defp errors({_kind, message}), do: [message]
-  defp errors(nil), do: []
+  # Matches Phoenix's used_input? semantics: an untouched field shows no
+  # error even if it's invalid. {:required, _} only shows after the user
+  # has interacted; {:api, _} always shows (the user just triggered the
+  # API call, so the field is implicitly touched).
+  defp errors({:required, _}, false), do: []
+  defp errors({_kind, message}, _touched), do: [message]
+  defp errors(nil, _touched), do: []
 
   defp format_distance(nil), do: ""
 
