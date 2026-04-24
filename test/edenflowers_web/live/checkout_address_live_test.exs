@@ -195,7 +195,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       refute render(view) =~ ~s(data-testid="input-confirmed")
     end
 
-    test "emptying a confirmed address clears the persisted geocode from the database",
+    test "blur does not persist the geocode to the database",
          %{conn: conn, order: order, delivery_option: delivery_option} do
       stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
         {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
@@ -209,14 +209,9 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
       render_async(view)
 
-      view
-      |> element("#checkout-form-3b")
-      |> render_change(%{"form" => %{"delivery_address" => ""}})
-
       reloaded = Edenflowers.Store.Order.get_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
       assert is_nil(reloaded.geocoded_address)
-      assert is_nil(reloaded.distance)
       assert is_nil(reloaded.fulfillment_amount)
     end
 
@@ -265,7 +260,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       refute render(view) =~ ~s(data-testid="input-confirmed")
     end
 
-    test "all geocode fields are persisted to the database after confirmation",
+    test "all geocode fields are persisted to the database after step 3 submit",
          %{conn: conn, order: order, delivery_option: delivery_option} do
       stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
         {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
@@ -278,6 +273,15 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
       render_async(view)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_submit(%{
+        "form" => %{
+          "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+        }
+      })
 
       reloaded = Edenflowers.Store.Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
@@ -452,6 +456,49 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     end
   end
 
+  describe "sidebar delivery row" do
+    test "is hidden on step 3 even after geocode succeeds", %{conn: conn, delivery_option: delivery_option} do
+      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view)
+
+      refute render(view) =~ ~s(data-testid="delivery-cost")
+    end
+
+    test "appears once step 3 is submitted", %{conn: conn, delivery_option: delivery_option} do
+      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_submit(%{
+        "form" => %{
+          "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+        }
+      })
+
+      assert render(view) =~ ~s(data-testid="delivery-cost")
+    end
+  end
+
   defp select_delivery_option(view, option_id) do
     view
     |> element("#checkout-form-3a")
@@ -460,7 +507,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
   defp blur_address(view, address) do
     view
-    |> element("#form_delivery_address")
+    |> element("#address-input-field")
     |> render_blur(%{"value" => address})
   end
 

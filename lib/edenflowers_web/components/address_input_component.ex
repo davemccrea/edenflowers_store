@@ -2,23 +2,25 @@ defmodule EdenflowersWeb.AddressInputComponent do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Rendered inside the step-3 form in `CheckoutLive`. The parent form
-  owns Enter, tab order, and submit; the component owns the address
-  field's keystrokes via per-input `phx-change="typing"` so the parent's
-  `validate_form_3` never sees the address value. The persisted
-  `order.delivery_address` / `order.geocoded_address` are the source of
-  truth — form params never carry an address. On every mutation the
-  component sends `{:address_changed, order}` so the parent can refresh
-  its assigns.
+  Geocoding runs on blur but its result lives in this component's socket
+  assigns until the parent form is submitted — the address and geocode
+  attributes on `order` are only written when the user clicks Next, like
+  every other checkout field.
 
-  Error display is entirely component-owned. The component raises an
-  immediate `{:required, _}` error the instant the user clears a
-  previously confirmed address. On submit, `ValidateGeocodedAddress` on
-  `save_step_3` enforces the server-side rule; when that fails the
+  The component notifies the parent of geocode state via two messages:
+
+    * `{:address_geocoded, address, geocode}` — a successful geocode.
+      The parent stashes the geocode and merges it into submit params.
+    * `:address_cleared` — the previously-geocoded address is no longer
+      valid (field cleared, edited, fulfillment option switched, or
+      geocode failed). The parent drops any stashed geocode.
+
+  Error display is component-owned. `{:required, _}` is raised the
+  instant the user empties the field. On submit, `ValidateGeocodedAddress`
+  on `save_step_3` enforces the server-side rule; when that fails the
   parent calls `send_update(__MODULE__, id: "address-input",
   required_error: true)` so the component shows the same message where
-  the user is looking. The component is otherwise unaware of the parent
-  form.
+  the user is looking.
   """
   use EdenflowersWeb, :live_component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -26,11 +28,11 @@ defmodule EdenflowersWeb.AddressInputComponent do
   require Logger
   import EdenflowersWeb.CoreComponents
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Fulfillments
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, touched: false, error: nil)}
+    {:ok, assign(socket, loading: false, touched: false, error: nil, confirmed: nil)}
   end
 
   @impl true
@@ -47,6 +49,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
       socket
       |> assign(assigns)
       |> assign_new(:typed, fn -> assigns.order.delivery_address end)
+      |> assign_new(:confirmed, fn -> confirmed_from_order(assigns.order) end)
 
     {:ok, socket}
   end
@@ -66,14 +69,14 @@ defmodule EdenflowersWeb.AddressInputComponent do
         phx-blur="geocode"
         phx-target={@myself}
         loading={@loading}
-        confirmed={@order.address_confirmed? and not @loading}
+        confirmed={confirmed?(@typed, @confirmed, @loading)}
       />
       <p
-        :if={@order.address_confirmed? and not @loading}
+        :if={confirmed?(@typed, @confirmed, @loading)}
         data-testid="address-distance"
         class="mt-1.5 text-sm"
       >
-        {format_distance(@order.distance)} • {format_delivery_amount(@order)}
+        {format_distance(@confirmed.geocode.distance)} • {format_delivery_amount(@confirmed.geocode.fulfillment_amount)}
       </p>
     </div>
     """
@@ -81,18 +84,16 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   @impl true
   def handle_event("typing", %{"delivery_address" => value}, socket) do
-    order = socket.assigns.order
+    confirmed = socket.assigns.confirmed
 
-    # When the user diverges from a previously confirmed address (either by
-    # emptying it or editing it into something different), drop the stale
-    # geocode so submit can't sneak through on an old confirmation.
-    order =
-      if order.address_confirmed? and value != order.delivery_address do
-        cleared = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-        send(self(), {:address_changed, cleared})
-        cleared
+    # When the user diverges from a previously confirmed address, drop the
+    # cached geocode so submit can't sneak through on a stale result.
+    socket =
+      if confirmed && value != confirmed.address do
+        send(self(), :address_cleared)
+        assign(socket, confirmed: nil)
       else
-        order
+        socket
       end
 
     error =
@@ -100,79 +101,89 @@ defmodule EdenflowersWeb.AddressInputComponent do
         do: {:required, ~t"Delivery address required"},
         else: nil
 
-    {:noreply, assign(socket, order: order, typed: value, touched: true, error: error)}
+    {:noreply, assign(socket, typed: value, touched: true, error: error)}
   end
 
   def handle_event("geocode", %{"value" => address}, socket) do
-    order = socket.assigns.order
+    confirmed = socket.assigns.confirmed
 
     cond do
       String.trim(address) == "" ->
         {:noreply, socket}
 
-      order.address_confirmed? and address == order.delivery_address ->
+      confirmed && address == confirmed.address ->
         {:noreply, socket}
 
       true ->
-        actor = socket.assigns.actor
+        fulfillment_option = socket.assigns.order.fulfillment_option
 
         # start_async with the same name cancels any in-flight geocode, so the
         # final blur wins when the user types fast.
         {:noreply,
          socket
          |> assign(loading: true, typed: address, error: nil)
-         |> start_async(:confirm_delivery_address, fn ->
-           Order.confirm_delivery_address(order, address, actor: actor)
+         |> start_async(:geocode, fn ->
+           Fulfillments.calculate_delivery(address, fulfillment_option)
          end)}
     end
   end
 
   @impl true
-  def handle_async(:confirm_delivery_address, {:ok, {:ok, order}}, socket) do
-    send(self(), {:address_changed, order})
+  def handle_async(:geocode, {:ok, {:ok, geocode}}, socket) do
+    address = socket.assigns.typed
+    send(self(), {:address_geocoded, address, geocode})
 
     {:noreply,
      assign(socket,
        loading: false,
-       order: order,
-       typed: order.delivery_address,
+       confirmed: %{address: address, geocode: geocode},
        error: nil
      )}
   end
 
-  def handle_async(:confirm_delivery_address, {:ok, {:error, %Ash.Error.Invalid{} = error}}, socket) do
-    {:noreply, fail(socket, extract_message(error))}
+  def handle_async(:geocode, {:ok, {:error, reason}}, socket) do
+    {:noreply, fail(socket, message_for(reason))}
   end
 
-  def handle_async(:confirm_delivery_address, {:exit, {:shutdown, :cancel}}, socket) do
+  def handle_async(:geocode, {:exit, {:shutdown, :cancel}}, socket) do
     {:noreply, socket}
   end
 
-  def handle_async(:confirm_delivery_address, result, socket) do
-    Logger.error("confirm_delivery_address unexpected result: #{inspect(result)}")
+  def handle_async(:geocode, result, socket) do
+    Logger.error("geocode unexpected result: #{inspect(result)}")
     {:noreply, fail(socket, ~t"There was a problem calculating delivery cost, please try again later")}
   end
 
   defp fail(socket, message) do
-    order = socket.assigns.order
-
-    order =
-      if order.address_confirmed? do
-        cleared = Order.clear_delivery_fields!(order, actor: socket.assigns.actor)
-        send(self(), {:address_changed, cleared})
-        cleared
-      else
-        order
-      end
-
-    assign(socket, loading: false, order: order, error: {:api, message})
+    if socket.assigns.confirmed, do: send(self(), :address_cleared)
+    assign(socket, loading: false, confirmed: nil, error: {:api, message})
   end
 
-  defp extract_message(%Ash.Error.Invalid{errors: errors}) do
-    case Enum.find(errors, &match?(%{field: :delivery_address}, &1)) do
-      %{message: message} -> message
-      _ -> ~t"There was a problem calculating delivery cost, please try again later"
-    end
+  defp message_for(:address_not_found), do: ~t"Address not found"
+  defp message_for(:out_of_delivery_range), do: ~t"Outside delivery range"
+  defp message_for(_), do: ~t"There was a problem calculating delivery cost, please try again later"
+
+  # If the order already has a persisted geocode (e.g. user navigated back
+  # from step 4), reflect it as confirmed so the check icon and delivery
+  # summary render without re-geocoding.
+  defp confirmed_from_order(%{delivery_address: address, geocoded_address: geocoded} = order)
+       when is_binary(address) and is_binary(geocoded) do
+    %{
+      address: address,
+      geocode: %{
+        geocoded_address: geocoded,
+        position: order.position,
+        here_id: order.here_id,
+        distance: order.distance,
+        fulfillment_amount: order.fulfillment_amount
+      }
+    }
+  end
+
+  defp confirmed_from_order(_), do: nil
+
+  defp confirmed?(typed, confirmed, loading) do
+    not loading and not is_nil(confirmed) and typed == confirmed.address
   end
 
   # Matches Phoenix's used_input? semantics: an untouched field shows no
@@ -190,9 +201,9 @@ defmodule EdenflowersWeb.AddressInputComponent do
     if km < 1, do: "#{meters} m", else: "#{:erlang.float_to_binary(km, decimals: 1)} km"
   end
 
-  defp format_delivery_amount(%{fulfillment_amount: nil}), do: ""
+  defp format_delivery_amount(nil), do: ""
 
-  defp format_delivery_amount(%{fulfillment_amount: amount}) do
+  defp format_delivery_amount(amount) do
     if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Utils.format_money(amount)
   end
 end
