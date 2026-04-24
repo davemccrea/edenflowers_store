@@ -16,7 +16,10 @@ defmodule Generator do
     changeset_generator(
       TaxRate,
       :create,
-      defaults: %{name: sequence(:tax_rate_name, &"Tax Rate #{&1}")},
+      defaults: %{
+        name: sequence(:tax_rate_name, &"Tax Rate #{&1}"),
+        percentage: "0.255"
+      },
       overrides: opts,
       authorize?: false
     )
