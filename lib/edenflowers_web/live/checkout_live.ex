@@ -213,14 +213,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
 
                   <%= if not is_nil(@order.fulfillment_option) do %>
-                    <.live_component
-                      :if={@order.fulfillment_method == :delivery}
-                      id="address-input"
-                      module={EdenflowersWeb.AddressInputComponent}
-                      order={@order}
-                      actor={@current_user}
-                    />
-
                     <.form
                       id={"#{@id}-form-3b"}
                       for={@form}
@@ -228,6 +220,14 @@ defmodule EdenflowersWeb.CheckoutLive do
                       phx-submit="save_form_3"
                       class="checkout__form"
                     >
+                      <.live_component
+                        :if={@order.fulfillment_method == :delivery}
+                        id="address-input"
+                        module={EdenflowersWeb.AddressInputComponent}
+                        order={@order}
+                        actor={@current_user}
+                      />
+
                       <.input
                         :if={@order.fulfillment_method == :delivery}
                         label={~t"Delivery Instructions"}
@@ -465,32 +465,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  def handle_event("save_form_3", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        next_section_id = get_next_section_id(socket.assigns.id, 3)
-
-        {:noreply,
-         socket
-         |> assign(order: order)
-         |> assign(form: make_form(order, action_name(:save, order.step)))
-         |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
-         |> push_event("focus-element", %{id: next_section_id})}
-
-      {:error, form} ->
-        order = socket.assigns.order
-
-        if order.fulfillment_method == :delivery and is_nil(order.geocoded_address) do
-          send_update(EdenflowersWeb.AddressInputComponent,
-            id: "address-input",
-            required_error: true
-          )
-        end
-
-        {:noreply, assign(socket, form: form)}
-    end
-  end
-
   # Step 4 does not save form data — it triggers Stripe payment processing directly.
   def handle_event("save_form_4", _, socket) do
     case stripe_api().update_payment_intent(socket.assigns.order) do
@@ -501,6 +475,19 @@ defmodule EdenflowersWeb.CheckoutLive do
         Logger.error("Failed to update payment intent: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
     end
+  end
+
+  def handle_event("save_form_3", %{"form" => params}, socket) do
+    order = socket.assigns.order
+
+    if order.fulfillment_method == :delivery and is_nil(order.geocoded_address) do
+      send_update(EdenflowersWeb.AddressInputComponent,
+        id: "address-input",
+        required_error: true
+      )
+    end
+
+    submit_form(socket, 3, params)
   end
 
   def handle_event("save_form_" <> step, %{"form" => params}, socket) do
@@ -618,11 +605,20 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # Sent by AddressInputComponent whenever it mutates the order server-side.
-  # The component owns its own input; we just refresh the order so other
-  # parts of the page (cart totals, distance) reflect the change.
-  def handle_info({:order_updated, order}, socket) do
-    {:noreply, assign(socket, order: order)}
+  # Sent by AddressInputComponent on confirm / clear / failed-and-cleared.
+  # Rebuild the form so its bound record reflects the new geocode (otherwise
+  # submit sees a stale `geocoded_address: nil` and ValidateGeocodedAddress
+  # rejects it); replay current params so sibling fields like phone stay
+  # filled.
+  def handle_info({:address_changed, order}, socket) do
+    params = AshPhoenix.Form.params(socket.assigns.form)
+
+    new_form =
+      order
+      |> make_form(action_name(:save, order.step))
+      |> AshPhoenix.Form.validate(params)
+
+    {:noreply, assign(socket, order: order, form: new_form)}
   end
 
   # ==========
