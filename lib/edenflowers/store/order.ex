@@ -36,7 +36,6 @@ defmodule Edenflowers.Store.Order do
     :line_total,
     :line_tax_amount,
     :promotion_applied?,
-    :address_confirmed?,
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
@@ -337,7 +336,6 @@ defmodule Edenflowers.Store.Order do
   calculations do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
-    calculate :address_confirmed?, :boolean, expr(not is_nil(geocoded_address))
 
     calculate :fulfillment_tax_amount,
               :decimal,
