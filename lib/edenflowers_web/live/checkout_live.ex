@@ -499,41 +499,33 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   # Step navigation
-  def handle_event("edit_step_3", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.edit_step_3!(order, actor: actor)
-    {:noreply, assign(socket, order: order)}
+  def handle_event("edit_step_3", _params, socket) do
+    Order.edit_step_3!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
-  def handle_event("edit_step_1", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.edit_step_1!(order, actor: actor)
-    {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
+  def handle_event("edit_step_1", _params, socket) do
+    Order.edit_step_1!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
-  def handle_event("edit_step_2", _params, %{assigns: %{order: order}} = socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.edit_step_2!(order, actor: actor)
-    {:noreply, assign(socket, order: order, form: make_form(order, action_name(:save, order.step)))}
+  def handle_event("edit_step_2", _params, socket) do
+    Order.edit_step_2!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor)
-    form = make_form(order, action_name(:save, order.step))
-    {:noreply, assign(socket, order: order, form: form, pending_geocode: nil)}
+    Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
+    {:noreply, socket |> reload_order() |> assign(pending_geocode: nil)}
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.set_gift!(socket.assigns.order, gift, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    Order.set_gift!(socket.assigns.order, gift, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    actor = socket.assigns[:current_user]
-
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
@@ -551,25 +543,21 @@ defmodule EdenflowersWeb.CheckoutLive do
       tax_rate: variant.product.tax_rate.percentage
     })
 
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("remove_card", _, socket) do
-    actor = socket.assigns[:current_user]
-
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
 
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, order} ->
-        {:noreply, assign(socket, order: order)}
+      {:ok, _order} ->
+        {:noreply, reload_order(socket)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -577,9 +565,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    actor = socket.assigns[:current_user]
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor)
-    {:noreply, assign(socket, order: order)}
+    Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   # Stripe events
@@ -593,7 +580,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ===========
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    actor = socket.assigns[:current_user]
+    actor = actor(socket)
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
     if Enum.empty?(order.line_items) do
@@ -730,6 +717,13 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> to_form()
   end
 
+  defp assign_forms(socket, order) do
+    socket
+    |> assign(order: order)
+    |> assign(form: make_form(order, action_name(:save, order.step)))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+  end
+
   defp geocode_params(pending) do
     %{
       "delivery_address" => pending.address,
@@ -743,20 +737,25 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp submit_form(socket, step, params) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
+      {:ok, _order} ->
         next_section_id = get_next_section_id(socket.assigns.id, step)
 
         {:noreply,
          socket
-         |> assign(order: order)
+         |> reload_order()
          |> assign(pending_geocode: nil)
-         |> assign(form: make_form(order, action_name(:save, order.step)))
-         |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
         {:noreply, assign(socket, form: form)}
     end
+  end
+
+  defp actor(socket), do: socket.assigns[:current_user]
+
+  defp reload_order(socket) do
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    assign_forms(socket, order)
   end
 
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
@@ -776,8 +775,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Stripe utilities
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     {:ok, payment_intent} = stripe_api().create_payment_intent(order)
-    actor = socket.assigns[:current_user]
-    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor)
+    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor(socket))
 
     socket
     |> assign(order: order)
