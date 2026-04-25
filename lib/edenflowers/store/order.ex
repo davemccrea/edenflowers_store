@@ -26,8 +26,7 @@ defmodule Edenflowers.Store.Order do
     ValidateCardMessageLength,
     ValidateFulfillmentDate,
     ValidateGeocodedAddress,
-    ValidateMinimumCartTotal,
-    ValidatePaymentIntent
+    ValidateMinimumCartTotal
   }
 
   alias Edenflowers.Store.FulfillmentOption
@@ -180,7 +179,7 @@ defmodule Edenflowers.Store.Order do
 
     # Other Update Actions
     update :finalize_checkout do
-      validate {ValidatePaymentIntent, []}
+      validate present(:payment_intent_id)
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
