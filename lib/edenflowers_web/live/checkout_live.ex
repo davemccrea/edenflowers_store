@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant}
+  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -122,6 +122,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                     />
 
                     <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
+                    <% card_message_max =
+                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.card_size) %>
 
                     <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
                       <div :if={card_line_item} data-testid="card-preview">
@@ -138,7 +140,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                                 id={"#{@id}-card-message"}
                                 name={@form[:card_message].name}
                                 class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
-                                maxlength={200}
+                                maxlength={card_message_max}
                                 rows={5}
                                 data-testid="card-message-textarea"
                               >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
@@ -175,10 +177,18 @@ defmodule EdenflowersWeb.CheckoutLive do
                                 </div>
                               </div>
                             </div>
-                            <div class="flex justify-end">
-                              <span id="char-count" class="text-base-content/40 text-xs" phx-update="ignore">0/200</span>
+                            <div class="text-base-content/40 flex justify-end text-xs">
+                              <span id="char-count" phx-update="ignore">0</span>/{card_message_max}
                             </div>
                           </div>
+                          <.error :for={
+                            msg <-
+                              if Phoenix.Component.used_input?(@form[:card_message]),
+                                do: Enum.map(@form[:card_message].errors, &translate_error/1),
+                                else: []
+                          }>
+                            {msg}
+                          </.error>
                         </fieldset>
                       </div>
 
@@ -538,6 +548,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       product_variant_id: variant.id,
       product_name: variant.product.name,
       product_image_slug: variant.image_slug,
+      card_size: variant.size,
       quantity: 1,
       unit_price: variant.price,
       tax_rate: variant.product.tax_rate.percentage
@@ -549,6 +560,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_event("remove_card", _, socket) do
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
+      Order.clear_card_message!(socket.assigns.order, actor: actor(socket))
     end
 
     {:noreply, reload_order(socket)}

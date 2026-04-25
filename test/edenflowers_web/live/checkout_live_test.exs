@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import PhoenixTest
+  import Phoenix.LiveViewTest, only: [live: 2, render_click: 3]
   import Generator
   import Mox
 
@@ -144,6 +145,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
                  product_variant_id: card_variant.id,
                  product_name: card_product.name,
                  product_image_slug: card_variant.image_slug,
+                 card_size: card_variant.size,
                  quantity: 1,
                  unit_price: card_variant.price,
                  tax_rate: Decimal.new("0.24")
@@ -164,6 +166,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
                  product_variant_id: card_variant.id,
                  product_name: card_product.name,
                  product_image_slug: card_variant.image_slug,
+                 card_size: card_variant.size,
                  quantity: 1,
                  unit_price: card_variant.price,
                  tax_rate: Decimal.new("0.24")
@@ -187,6 +190,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           product_variant_id: card_variant.id,
           product_name: card_product.name,
           product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
           quantity: 1,
           unit_price: card_variant.price,
           tax_rate: Decimal.new("0.24")
@@ -222,6 +226,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           product_variant_id: card_variant.id,
           product_name: card_product.name,
           product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
           quantity: 1,
           unit_price: card_variant.price,
           tax_rate: Decimal.new("0.24")
@@ -282,6 +287,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           product_variant_id: card_variant.id,
           product_name: card_product.name,
           product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
           quantity: 1,
           unit_price: card_variant.price,
           tax_rate: Decimal.new("0.24")
@@ -321,6 +327,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           product_variant_id: card_variant.id,
           product_name: card_product.name,
           product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
           quantity: 1,
           unit_price: card_variant.price,
           tax_rate: Decimal.new("0.24")
@@ -360,6 +367,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           product_variant_id: card_variant.id,
           product_name: card_product.name,
           product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
           quantity: 1,
           unit_price: card_variant.price,
           tax_rate: Decimal.new("0.24")
@@ -373,6 +381,169 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> fill_in("Card Message", with: "Happy birthday!")
       |> fill_in("Recipient Name *", with: "Updated Recipient")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
+    end
+
+    test "renders maxlength matching the selected card's size limit",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      {:ok, _view, html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      assert html =~ ~s(maxlength="80")
+    end
+
+    test "switching from small to large card updates the rendered limit",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      large_variant =
+        generate(product_variant(product_id: card_product.id, size: :large, draft: false))
+
+      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      {:ok, view, html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      assert html =~ ~s(maxlength="80")
+
+      html = render_click(view, "select_card", %{"variant-id" => large_variant.id})
+
+      assert html =~ ~s(maxlength="200")
+    end
+
+    test "submitting an oversize message renders the inline error",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      oversize = String.duplicate("a", 81)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> fill_in("Card Message", with: oversize)
+      |> click_button("Next")
+      |> assert_has("p", text: "at most")
+    end
+
+    test "remove_card clears card_message on the order",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order =
+        generate(order(step: 2, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> click_button("[data-testid='remove-card-button']", "Remove card")
+
+      reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)
+      assert is_nil(reloaded.card_message)
     end
   end
 end

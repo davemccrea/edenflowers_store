@@ -45,6 +45,7 @@ defmodule Edenflowers.Store.LineItem do
         :product_variant_id,
         :product_name,
         :product_image_slug,
+        :card_size,
         :quantity,
         :unit_price,
         :tax_rate
@@ -114,6 +115,7 @@ defmodule Edenflowers.Store.LineItem do
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false
     attribute :is_card, :boolean, default: false, allow_nil?: false
+    attribute :card_size, Edenflowers.Store.ProductVariantSize
     timestamps()
   end
 
