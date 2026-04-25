@@ -17,24 +17,17 @@ defmodule Edenflowers.Store.Order.Changes.LookupPromotionCode do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :code) do
-        nil ->
-          Ash.Changeset.add_error(changeset, %Ash.Error.Changes.Required{field: :code})
+      code = Ash.Changeset.get_argument(changeset, :code)
 
-        code ->
-          # Trim whitespace from code
-          trimmed_code = String.trim(code)
+      case Promotion.get_by_code(code) do
+        {:ok, promotion} ->
+          Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
 
-          case Promotion.get_by_code(trimmed_code) do
-            {:ok, promotion} ->
-              Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
-
-            {:error, _error} ->
-              Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
-                field: :code,
-                message: ~t"Invalid code"
-              })
-          end
+        {:error, _error} ->
+          Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
+            field: :code,
+            message: ~t"Invalid code"
+          })
       end
     end)
   end

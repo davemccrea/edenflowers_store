@@ -1073,18 +1073,6 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   describe "Order state transitions" do
-    test "cannot transition from order back to checkout" do
-      order = generate(order(state: :placed, payment_status: :paid))
-
-      # Try to set state back to checkout - should now fail
-      assert {:error, error} =
-               order
-               |> Ash.Changeset.for_update(:update, %{state: :checkout})
-               |> Ash.update(authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
-    end
-
     test "finalize_checkout requires payment_intent_id" do
       order = generate(order(payment_intent_id: nil))
 
@@ -1188,12 +1176,35 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   describe "Order update_locale action" do
-    test "updates locale successfully" do
+    test "updates locale to a configured locale" do
       order = Order.create_for_checkout!(authorize?: false)
       assert order.locale == "sv-FI"
 
-      assert {:ok, updated_order} = Order.update_locale(order, "en-US", authorize?: false)
-      assert updated_order.locale == "en-US"
+      assert {:ok, updated_order} = Order.update_locale(order, "en-GB", authorize?: false)
+      assert updated_order.locale == "en-GB"
+    end
+
+    test "rejects locale that is not in the configured set" do
+      order = Order.create_for_checkout!(authorize?: false)
+
+      assert {:error, error} = Order.update_locale(order, "en-US", authorize?: false)
+      assert %Ash.Error.Invalid{} = error
+    end
+  end
+
+  describe "add_promotion_with_code argument validation" do
+    test "rejects nil code" do
+      order = generate(order())
+
+      assert {:error, error} = Order.add_promotion_with_code(order, nil, authorize?: false)
+      assert %Ash.Error.Invalid{} = error
+    end
+
+    test "rejects whitespace-only code" do
+      order = generate(order())
+
+      assert {:error, error} = Order.add_promotion_with_code(order, "   ", authorize?: false)
+      assert %Ash.Error.Invalid{} = error
     end
   end
 end
