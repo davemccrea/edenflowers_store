@@ -1,9 +1,9 @@
 defmodule Edenflowers.Store.Order.Changes.ClearGiftFields do
   @moduledoc """
-  Clears gift-related fields and removes card line items when the order is not a gift.
+  Clears gift-related fields and removes the card line item when the order is not a gift.
 
   When the gift flag is set to false, this change clears the recipient_name and
-  card_message fields and destroys any card line items attached to the order.
+  card_message fields and destroys the card line item attached to the order, if any.
   """
   use Ash.Resource.Change
 
@@ -20,10 +20,19 @@ defmodule Edenflowers.Store.Order.Changes.ClearGiftFields do
         Ash.Changeset.after_action(changeset, fn _changeset, result ->
           Edenflowers.Store.LineItem
           |> Ash.Query.filter(order_id == ^result.id and is_card == true)
-          |> Ash.bulk_destroy(:remove_item, %{}, authorize?: false, return_errors?: true, strategy: [:stream])
+          |> Ash.read_one(authorize?: false)
           |> case do
-            %Ash.BulkResult{status: :success} -> {:ok, result}
-            %Ash.BulkResult{errors: errors} -> {:error, errors}
+            {:ok, nil} ->
+              {:ok, result}
+
+            {:ok, line_item} ->
+              case Ash.destroy(line_item, action: :remove_item, authorize?: false) do
+                :ok -> {:ok, result}
+                {:error, error} -> {:error, error}
+              end
+
+            {:error, error} ->
+              {:error, error}
           end
         end)
       else
