@@ -466,6 +466,50 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert html =~ ~s(maxlength="200")
     end
 
+    test "card_message is preserved when switching to a different card",
+         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+      large_variant =
+        generate(product_variant(product_id: card_product.id, size: :large, draft: false))
+
+      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_id: product.id,
+        product_variant_id: variant.id,
+        product_name: product.name,
+        product_image_slug: variant.image_slug,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      })
+
+      LineItem.add_card!(
+        %{
+          order_id: gift_order.id,
+          product_id: card_product.id,
+          product_variant_id: card_variant.id,
+          product_name: card_product.name,
+          product_image_slug: card_variant.image_slug,
+          card_size: card_variant.size,
+          quantity: 1,
+          unit_price: card_variant.price,
+          tax_rate: Decimal.new("0.24")
+        },
+        authorize?: false
+      )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> fill_in("Card Message", with: "Happy birthday!")
+      |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
+      |> unwrap(fn view ->
+        render_click(view, "select_card", %{"variant-id" => large_variant.id})
+      end)
+      |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
+    end
+
     test "submitting an oversize message renders the inline error",
          %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
