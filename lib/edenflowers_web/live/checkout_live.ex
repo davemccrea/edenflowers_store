@@ -536,6 +536,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
+    pending_card_message = socket.assigns.form.params["card_message"]
+
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
     end
@@ -554,7 +556,17 @@ defmodule EdenflowersWeb.CheckoutLive do
       tax_rate: variant.product.tax_rate.percentage
     })
 
-    {:noreply, reload_order(socket)}
+    socket = reload_order(socket)
+
+    socket =
+      if is_binary(pending_card_message) do
+        form = AshPhoenix.Form.validate(socket.assigns.form, %{"card_message" => pending_card_message})
+        assign(socket, form: form)
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   def handle_event("remove_card", _, socket) do
