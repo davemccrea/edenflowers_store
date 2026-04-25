@@ -95,7 +95,7 @@ defmodule Generator do
       %Order{
         state: :checkout,
         step: 1,
-        order_reference: :crypto.strong_rand_bytes(4) |> Base.encode16()
+        order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16()
       },
       overrides: opts,
       authorize?: false

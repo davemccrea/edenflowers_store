@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
 
       order =
         Ash.Seed.seed!(Order, %{
-          order_reference: :crypto.strong_rand_bytes(4) |> Base.encode16(),
+          order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
           customer_name: "John Smith",
           customer_email: "john.smith@example.com",
           user_id: user.id,
