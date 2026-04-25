@@ -32,6 +32,8 @@ defmodule Edenflowers.Store.Order do
 
   alias Edenflowers.Store.FulfillmentOption
 
+  @locales Edenflowers.Cldr.configured_locales()
+
   @checkout_load [
     :total_items_in_cart,
     :discount_amount,
@@ -82,7 +84,7 @@ defmodule Edenflowers.Store.Order do
   end
 
   actions do
-    defaults [:create, :read, :update, :destroy]
+    defaults [:read]
 
     # Read Actions
     read :by_id do
@@ -209,6 +211,7 @@ defmodule Edenflowers.Store.Order do
 
     update :update_locale do
       argument :locale, :string, allow_nil?: false
+      validate argument_in(:locale, @locales)
       change atomic_update(:locale, expr(^arg(:locale)))
     end
 
@@ -225,7 +228,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :add_promotion_with_code do
-      argument :code, :string
+      argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
       change {LookupPromotionCode, []}
       validate {ValidateMinimumCartTotal, []}
       change load(@checkout_load)
@@ -259,13 +262,13 @@ defmodule Edenflowers.Store.Order do
       authorize_if always()
     end
 
-    # Read/Update access:
-    # Multiple authorize_if within one policy = OR (only one needs to pass)
-    policy action_type([:read, :update]) do
-      # Guest checkout: Anyone can access orders in checkout state (UUID security)
+    policy action_type(:read) do
       authorize_if expr(state == :checkout)
-      # Completed orders: Only the owner can access placed orders
       authorize_if expr(state == :placed and user_id == ^actor(:id))
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(state == :checkout)
     end
   end
 
