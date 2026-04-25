@@ -16,10 +16,11 @@ defmodule Edenflowers.Services.CourseRegistration do
   end
 
   actions do
-    defaults [:read, :destroy, update: :*]
+    defaults [:read, :destroy]
 
     create :register do
-      accept [:name, :email, :course_id, :status]
+      accept [:name, :email, :course_id]
+      change set_attribute(:status, :pending)
       change {Edenflowers.Services.CourseRegistration.Changes.SetUserFromActor, []}
     end
 
@@ -50,7 +51,11 @@ defmodule Edenflowers.Services.CourseRegistration do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
     attribute :email, :string, allow_nil?: false
-    attribute :status, :atom, default: :pending
+
+    attribute :status, :atom,
+      default: :pending,
+      constraints: [one_of: [:pending, :confirmed, :cancelled]]
+
     timestamps()
   end
 
