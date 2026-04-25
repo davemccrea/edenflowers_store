@@ -1196,4 +1196,29 @@ defmodule Edenflowers.Store.OrderTest do
       assert updated_order.locale == "en-US"
     end
   end
+
+  describe "add_payment_intent_id policy" do
+    test "guest can attach payment intent during checkout" do
+      order = generate(order(state: :checkout))
+
+      assert {:ok, updated} = Order.add_payment_intent_id(order, "pi_guest_test", actor: nil)
+      assert updated.payment_intent_id == "pi_guest_test"
+    end
+
+    test "system actor can attach payment intent during checkout" do
+      order = generate(order(state: :checkout))
+
+      assert {:ok, updated} =
+               Order.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})
+
+      assert updated.payment_intent_id == "pi_system_test"
+    end
+
+    test "cannot attach payment intent to a placed order" do
+      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_old"))
+
+      assert {:error, error} = Order.add_payment_intent_id(order, "pi_new", actor: nil)
+      assert %Ash.Error.Forbidden{} = error
+    end
+  end
 end
