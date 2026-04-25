@@ -213,7 +213,7 @@ defmodule Edenflowers.Store.LineItemTest do
       %{gift_order: gift_order, card_product: card_product, card_variant: card_variant}
     end
 
-    test "add_card creates a line item with is_card set to true",
+    test "add_card creates a line item with is_card set to true and copies card_size",
          %{gift_order: gift_order, card_product: card_product, card_variant: card_variant} do
       assert {:ok, line_item} =
                LineItem.add_card(%{
@@ -222,12 +222,14 @@ defmodule Edenflowers.Store.LineItemTest do
                  product_variant_id: card_variant.id,
                  product_name: card_product.name,
                  product_image_slug: card_variant.image_slug,
+                 card_size: card_variant.size,
                  quantity: 1,
                  unit_price: card_variant.price,
                  tax_rate: Decimal.new("0.24")
                })
 
       assert line_item.is_card == true
+      assert line_item.card_size == card_variant.size
     end
 
     test "add_card is rejected for non-gift orders",

@@ -17,11 +17,13 @@ defmodule Edenflowers.Store.Order do
     GenerateOrderReference,
     LookupPromotionCode,
     ResetCheckout,
+    TrimCardMessage,
     UpdatePromotionUsageCount,
     UpsertUserAndAssignToOrder
   }
 
   alias __MODULE__.Validations.{
+    ValidateCardMessageLength,
     ValidateFulfillmentDate,
     ValidateGeocodedAddress,
     ValidateMinimumCartTotal,
@@ -76,6 +78,7 @@ defmodule Edenflowers.Store.Order do
     define :edit_step_1, action: :edit_step_1
     define :edit_step_2, action: :edit_step_2
     define :edit_step_3, action: :edit_step_3
+    define :clear_card_message, action: :clear_card_message
   end
 
   actions do
@@ -134,7 +137,9 @@ defmodule Edenflowers.Store.Order do
     update :save_step_2 do
       accept [:gift, :recipient_name, :card_message]
       change set_attribute(:step, 3)
+      change {TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
+      validate {ValidateCardMessageLength, []}
       change {ClearGiftFields, []}
       change load(@checkout_load)
       require_atomic? false
@@ -194,6 +199,11 @@ defmodule Edenflowers.Store.Order do
 
     update :set_gift do
       accept [:gift]
+      change load(@checkout_load)
+    end
+
+    update :clear_card_message do
+      change set_attribute(:card_message, nil)
       change load(@checkout_load)
     end
 

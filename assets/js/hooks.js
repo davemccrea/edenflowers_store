@@ -7,15 +7,12 @@ Hooks.CharacterCount = {
     const textarea = this.el.querySelector("textarea");
     const charCountDisplay = this.el.querySelector("#char-count");
 
-    // Update character count on page load (in case there's initial text)
     updateCharCount();
 
-    // Add event listeners for input events
     textarea.addEventListener("input", updateCharCount);
 
     function updateCharCount() {
-      const count = textarea.value.length;
-      charCountDisplay.textContent = `${count}/${textarea.maxLength}`;
+      charCountDisplay.textContent = textarea.value.length;
     }
   },
 };
