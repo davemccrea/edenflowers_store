@@ -1,7 +1,7 @@
 defmodule Edenflowers.Store.OrderTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Store.{LineItem, Order}
 
   describe "Store Resource" do
     test "creates an order for checkout" do
@@ -281,9 +281,11 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "clears recipient_name and card_message when switching from gift=true to gift=false" do
-      order = Order.create_for_checkout!(authorize?: false)
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+      order = gift_order_with_card(card_product, :medium)
 
-      # First set gift=true with recipient info and card message
       {:ok, order} =
         order
         |> Ash.Changeset.for_update(:save_step_2, %{
@@ -296,7 +298,6 @@ defmodule Edenflowers.Store.OrderTest do
       assert order.recipient_name == "John Smith"
       assert order.card_message == "Happy birthday!"
 
-      # Now change to gift=false - should clear fields
       {:ok, order} =
         order
         |> Ash.Changeset.for_update(:save_step_2, %{
@@ -310,7 +311,10 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "accepts card_message when gift is true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+      order = gift_order_with_card(card_product, :medium)
 
       assert {:ok, order} =
                order
@@ -347,6 +351,233 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert order.gift == true
       assert order.recipient_name == "Alice Johnson"
+    end
+  end
+
+  defp gift_order_with_card(card_product, size) do
+    variant = generate(product_variant(product_id: card_product.id, size: size))
+
+    order =
+      Order.create_for_checkout!(authorize?: false)
+      |> Ash.Changeset.for_update(:set_gift, %{gift: true})
+      |> Ash.update!(authorize?: false)
+
+    LineItem.add_card!(
+      %{
+        order_id: order.id,
+        product_id: card_product.id,
+        product_variant_id: variant.id,
+        product_name: card_product.name,
+        product_image_slug: variant.image_slug,
+        card_size: size,
+        quantity: 1,
+        unit_price: variant.price,
+        tax_rate: Decimal.new("0.24")
+      },
+      authorize?: false
+    )
+
+    Order.get_for_checkout!(order.id, actor: nil)
+  end
+
+  describe "Card message length validation" do
+    setup do
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+      %{card_product: card_product}
+    end
+
+    test "accepts message at exactly the small card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+      message = String.duplicate("a", 80)
+
+      assert {:ok, updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+
+      assert updated.card_message == message
+    end
+
+    test "rejects message one character over the small card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+      message = String.duplicate("a", 81)
+
+      assert {:error, %Ash.Error.Invalid{} = error} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
+    end
+
+    test "accepts message at exactly the medium card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :medium)
+      message = String.duplicate("a", 120)
+
+      assert {:ok, _updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "rejects message one character over the medium card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :medium)
+      message = String.duplicate("a", 121)
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "accepts message at exactly the large card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :large)
+      message = String.duplicate("a", 200)
+
+      assert {:ok, _updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "rejects message one character over the large card limit", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :large)
+      message = String.duplicate("a", 201)
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "trims leading and trailing whitespace before validation", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+      message = "   " <> String.duplicate("a", 80) <> "   "
+
+      assert {:ok, updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+
+      assert updated.card_message == String.duplicate("a", 80)
+    end
+
+    test "treats whitespace-only messages as empty", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+
+      assert {:ok, updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: "       "
+               })
+               |> Ash.update(authorize?: false)
+
+      assert is_nil(updated.card_message)
+    end
+
+    test "rejects non-empty card_message when no card line item exists" do
+      order =
+        Order.create_for_checkout!(authorize?: false)
+        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
+        |> Ash.update!(authorize?: false)
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+
+      assert {:error, %Ash.Error.Invalid{} = error} =
+               reloaded
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: "Hello"
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
+    end
+
+    test "accepts empty card_message when card is selected", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+
+      assert {:ok, _updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: ""
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "counts graphemes not bytes", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+      message = String.duplicate("🌸", 80)
+
+      assert {:ok, _updated} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: message
+               })
+               |> Ash.update(authorize?: false)
+
+      over_limit = String.duplicate("🌸", 81)
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               order
+               |> Ash.Changeset.for_update(:save_step_2, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: over_limit
+               })
+               |> Ash.update(authorize?: false)
+    end
+
+    test "raises when line_items is not loaded on the order", %{card_product: card_product} do
+      order = gift_order_with_card(card_product, :small)
+      stripped = %{order | line_items: %Ash.NotLoaded{}}
+
+      assert_raise Ash.Error.Unknown, ~r/line_items to be loaded/, fn ->
+        stripped
+        |> Ash.Changeset.for_update(:save_step_2, %{
+          gift: true,
+          recipient_name: "Jane",
+          card_message: "Hello"
+        })
+        |> Ash.update(authorize?: false)
+      end
     end
   end
 
