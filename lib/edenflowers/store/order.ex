@@ -267,6 +267,11 @@ defmodule Edenflowers.Store.Order do
       # Completed orders: Only the owner can access placed orders
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
+
+    policy action(:add_payment_intent_id) do
+      forbid_unless expr(state == :checkout)
+      authorize_if always()
+    end
   end
 
   attributes do
