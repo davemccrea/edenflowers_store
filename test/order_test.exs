@@ -22,12 +22,7 @@ defmodule Edenflowers.Store.OrderTest do
         generate(
           line_item(
             order_id: order.id,
-            product_id: product_1.id,
-            product_name: product_1.name,
-            product_image_slug: product_1.image_slug,
             product_variant_id: product_1_product_variant_1.id,
-            unit_price: product_1_product_variant_1.price,
-            tax_rate: tax_rate.percentage,
             quantity: 2
           )
         )
@@ -36,12 +31,7 @@ defmodule Edenflowers.Store.OrderTest do
         generate(
           line_item(
             order_id: order.id,
-            product_id: product_2.id,
-            product_name: product_2.name,
-            product_image_slug: product_2.image_slug,
             product_variant_id: product_2_product_variant_1.id,
-            unit_price: product_2_product_variant_1.price,
-            tax_rate: tax_rate.percentage,
             quantity: 1
           )
         )
@@ -65,12 +55,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product_1.id,
-          product_name: product_1.name,
-          product_image_slug: product_1.image_slug,
           product_variant_id: product_1_product_variant_1.id,
-          unit_price: product_1_product_variant_1.price,
-          tax_rate: tax_rate_1.percentage,
           quantity: 2
         )
       )
@@ -78,12 +63,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product_2.id,
-          product_name: product_2.name,
-          product_image_slug: product_2.image_slug,
           product_variant_id: product_2_product_variant_1.id,
-          unit_price: product_2_product_variant_1.price,
-          tax_rate: tax_rate_2.percentage,
           quantity: 1
         )
       )
@@ -106,12 +86,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant_1.id,
-          unit_price: product_variant_1.price,
-          tax_rate: tax_rate.percentage,
           quantity: 1
         )
       )
@@ -119,12 +94,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant_2.id,
-          unit_price: product_variant_2.price,
-          tax_rate: tax_rate.percentage,
           quantity: 2
         )
       )
@@ -154,12 +124,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
         )
       )
 
@@ -202,12 +167,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate_2.percentage,
           quantity: 2
         )
       )
@@ -365,14 +325,8 @@ defmodule Edenflowers.Store.OrderTest do
     LineItem.add_card!(
       %{
         order_id: order.id,
-        product_id: card_product.id,
         product_variant_id: variant.id,
-        product_name: card_product.name,
-        product_image_slug: variant.image_slug,
-        card_size: size,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       },
       authorize?: false
     )
@@ -596,12 +550,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
         )
       )
 
@@ -620,12 +569,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage
         )
       )
 
@@ -823,12 +767,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage,
           quantity: 2
         )
       )
@@ -854,12 +793,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage,
           quantity: 2
         )
       )
@@ -883,12 +817,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage,
           quantity: 1
         )
       )
@@ -925,12 +854,7 @@ defmodule Edenflowers.Store.OrderTest do
       generate(
         line_item(
           order_id: order.id,
-          product_id: product.id,
-          product_name: product.name,
-          product_image_slug: product.image_slug,
           product_variant_id: product_variant.id,
-          unit_price: product_variant.price,
-          tax_rate: tax_rate.percentage,
           quantity: 1
         )
       )
@@ -988,7 +912,6 @@ defmodule Edenflowers.Store.OrderTest do
         )
 
       %{
-        tax_rate: tax_rate,
         pickup_option: pickup_option,
         delivery_fixed: delivery_fixed,
         delivery_dynamic: delivery_dynamic

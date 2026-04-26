@@ -17,13 +17,8 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
     LineItem.add_item!(%{
       order_id: order.id,
-      product_id: product.id,
       product_variant_id: variant.id,
-      product_name: product.name,
-      product_image_slug: variant.image_slug,
       quantity: 1,
-      unit_price: variant.price,
-      tax_rate: Decimal.new("0.24")
     })
 
     stub(Edenflowers.StripeAPI.Mock, :create_payment_intent, fn _order ->

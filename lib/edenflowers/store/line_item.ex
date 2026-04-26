@@ -26,31 +26,15 @@ defmodule Edenflowers.Store.LineItem do
     defaults [:read]
 
     create :add_to_cart do
-      accept [
-        :order_id,
-        :product_id,
-        :product_variant_id,
-        :product_name,
-        :product_image_slug,
-        :quantity,
-        :unit_price,
-        :tax_rate
-      ]
+      accept [:order_id, :product_variant_id, :quantity]
+
+      change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
     end
 
     create :add_card do
-      accept [
-        :order_id,
-        :product_id,
-        :product_variant_id,
-        :product_name,
-        :product_image_slug,
-        :card_size,
-        :quantity,
-        :unit_price,
-        :tax_rate
-      ]
+      accept [:order_id, :product_variant_id, :quantity]
 
+      change {Edenflowers.Store.LineItem.Changes.PopulateFromVariant, card_size?: true}
       change set_attribute(:is_card, true)
     end
 

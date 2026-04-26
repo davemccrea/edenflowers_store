@@ -20,13 +20,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     {:ok, _line_item} =
       LineItem.add_item(%{
         order_id: order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
     order = Order.get_for_checkout!(order.id, actor: nil)
@@ -93,13 +88,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       conn
@@ -141,14 +131,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert {:ok, card_line_item} =
                LineItem.add_card(%{
                  order_id: order.id,
-                 product_id: card_product.id,
                  product_variant_id: card_variant.id,
-                 product_name: card_product.name,
-                 product_image_slug: card_variant.image_slug,
-                 card_size: card_variant.size,
                  quantity: 1,
-                 unit_price: card_variant.price,
-                 tax_rate: Decimal.new("0.24")
                })
 
       assert card_line_item.is_card == true
@@ -162,14 +146,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert {:error, _} =
                LineItem.add_card(%{
                  order_id: order.id,
-                 product_id: card_product.id,
                  product_variant_id: card_variant.id,
-                 product_name: card_product.name,
-                 product_image_slug: card_variant.image_slug,
-                 card_size: card_variant.size,
                  quantity: 1,
-                 unit_price: card_variant.price,
-                 tax_rate: Decimal.new("0.24")
                })
     end
 
@@ -186,14 +164,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       {:ok, _card} =
         LineItem.add_card(%{
           order_id: order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         })
 
       order
@@ -210,26 +182,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -247,13 +208,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       conn
@@ -271,26 +227,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -311,26 +256,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -351,26 +285,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -389,26 +312,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -430,26 +342,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -475,26 +376,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -516,26 +406,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )
@@ -557,26 +436,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
-        product_id: product.id,
         product_variant_id: variant.id,
-        product_name: product.name,
-        product_image_slug: variant.image_slug,
         quantity: 1,
-        unit_price: variant.price,
-        tax_rate: Decimal.new("0.24")
       })
 
       LineItem.add_card!(
         %{
           order_id: gift_order.id,
-          product_id: card_product.id,
           product_variant_id: card_variant.id,
-          product_name: card_product.name,
-          product_image_slug: card_variant.image_slug,
-          card_size: card_variant.size,
           quantity: 1,
-          unit_price: card_variant.price,
-          tax_rate: Decimal.new("0.24")
         },
         authorize?: false
       )

@@ -30,13 +30,8 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     LineItem.add_item!(%{
       order_id: order.id,
-      product_id: product.id,
       product_variant_id: variant.id,
-      product_name: product.name,
-      product_image_slug: variant.image_slug,
       quantity: 1,
-      unit_price: variant.price,
-      tax_rate: tax_rate.percentage
     })
 
     payment_intent = %{
