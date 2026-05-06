@@ -9,26 +9,7 @@ defmodule Edenflowers.Store.Order do
 
   require Ash.Resource.Change.Builtins
 
-  alias __MODULE__.Changes.{
-    CalculatePickupCost,
-    ClearDeliveryFields,
-    ClearGiftFields,
-    CopyFulfillmentMethod,
-    GenerateOrderReference,
-    LookupPromotionCode,
-    ResetCheckout,
-    TrimCardMessage,
-    UpdatePromotionUsageCount,
-    UpsertUserAndAssignToOrder
-  }
-
-  alias __MODULE__.Validations.{
-    ValidateCardMessageLength,
-    ValidateFulfillmentDate,
-    ValidateGeocodedAddress,
-    ValidateMinimumCartTotal
-  }
-
+  alias __MODULE__.{Changes, Validations}
   alias Edenflowers.Store.FulfillmentOption
 
   @locales Edenflowers.Cldr.configured_locales()
@@ -112,7 +93,7 @@ defmodule Edenflowers.Store.Order do
     # Create Actions
     create :create_for_checkout do
       change set_attribute(:step, 1)
-      change {GenerateOrderReference, []}
+      change {Changes.GenerateOrderReference, []}
     end
 
     # Step-specific Update Actions
@@ -124,7 +105,7 @@ defmodule Edenflowers.Store.Order do
     update :save_step_1 do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
-      change {UpsertUserAndAssignToOrder, []}
+      change {Changes.UpsertUserAndAssignToOrder, []}
       change set_attribute(:step, 2)
       change load(@checkout_load)
       require_atomic? false
@@ -138,10 +119,10 @@ defmodule Edenflowers.Store.Order do
     update :save_step_2 do
       accept [:gift, :recipient_name, :card_message]
       change set_attribute(:step, 3)
-      change {TrimCardMessage, []}
+      change {Changes.TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
-      validate {ValidateCardMessageLength, []}
-      change {ClearGiftFields, []}
+      validate {Validations.ValidateCardMessageLength, []}
+      change {Changes.ClearGiftFields, []}
       change load(@checkout_load)
       require_atomic? false
     end
@@ -166,10 +147,10 @@ defmodule Edenflowers.Store.Order do
         :fulfillment_amount
       ]
 
-      change {CopyFulfillmentMethod, []}
-      validate {ValidateFulfillmentDate, []}
-      validate {ValidateGeocodedAddress, []}
-      change {CalculatePickupCost, []}
+      change {Changes.CopyFulfillmentMethod, []}
+      validate {Validations.ValidateFulfillmentDate, []}
+      validate {Validations.ValidateGeocodedAddress, []}
+      change {Changes.CalculatePickupCost, []}
       change set_attribute(:step, 4)
       change load(@checkout_load)
       require_atomic? false
@@ -185,15 +166,15 @@ defmodule Edenflowers.Store.Order do
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
-      change {UpdatePromotionUsageCount, []}
+      change {Changes.UpdatePromotionUsageCount, []}
       require_atomic? false
     end
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
-      change {CopyFulfillmentMethod, []}
+      change {Changes.CopyFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
-      change {ClearDeliveryFields, []}
+      change {Changes.ClearDeliveryFields, []}
       change load(@checkout_load)
       require_atomic? false
     end
@@ -220,7 +201,7 @@ defmodule Edenflowers.Store.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
-      validate {ValidateMinimumCartTotal, []}
+      validate {Validations.ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       change load(@checkout_load)
       require_atomic? false
@@ -228,8 +209,8 @@ defmodule Edenflowers.Store.Order do
 
     update :add_promotion_with_code do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
-      change {LookupPromotionCode, []}
-      validate {ValidateMinimumCartTotal, []}
+      change {Changes.LookupPromotionCode, []}
+      validate {Validations.ValidateMinimumCartTotal, []}
       change load(@checkout_load)
       require_atomic? false
     end
@@ -241,7 +222,7 @@ defmodule Edenflowers.Store.Order do
 
     update :restart_checkout do
       require_atomic? false
-      change {ResetCheckout, []}
+      change {Changes.ResetCheckout, []}
     end
   end
 

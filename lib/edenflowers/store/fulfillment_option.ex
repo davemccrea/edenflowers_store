@@ -24,7 +24,42 @@ defmodule Edenflowers.Store.FulfillmentOption do
   end
 
   actions do
-    defaults [:read, :destroy, create: :*, update: :*]
+    defaults [
+      :read,
+      :destroy,
+      create: [
+        :name,
+        :minimum_cart_total,
+        :fulfillment_method,
+        :rate_type,
+        :base_price,
+        :price_per_km,
+        :free_dist_km,
+        :max_dist_km,
+        :same_day,
+        :order_deadline,
+        :available_days,
+        :enabled_dates,
+        :disabled_dates,
+        :tax_rate_id
+      ],
+      update: [
+        :name,
+        :minimum_cart_total,
+        :fulfillment_method,
+        :rate_type,
+        :base_price,
+        :price_per_km,
+        :free_dist_km,
+        :max_dist_km,
+        :same_day,
+        :order_deadline,
+        :available_days,
+        :enabled_dates,
+        :disabled_dates,
+        :tax_rate_id
+      ]
+    ]
 
     read :by_id do
       argument :id, :uuid, allow_nil?: false
