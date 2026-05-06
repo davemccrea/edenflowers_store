@@ -201,13 +201,8 @@ defmodule EdenflowersWeb.ProductLive do
   def handle_event("submit", _params, socket) do
     LineItem.add_item(%{
       order_id: socket.assigns.order_id,
-      product_id: socket.assigns.product.id,
       product_variant_id: socket.assigns.selected_variant.id,
-      product_name: socket.assigns.product.name,
-      product_image_slug: socket.assigns.selected_variant.image_slug,
-      quantity: 1,
-      unit_price: socket.assigns.selected_variant.price,
-      tax_rate: socket.assigns.product.tax_rate.percentage
+      quantity: 1
     })
 
     {:noreply, socket}
