@@ -546,14 +546,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     LineItem.add_card!(%{
       order_id: socket.assigns.order.id,
-      product_id: variant.product.id,
       product_variant_id: variant.id,
-      product_name: variant.product.name,
-      product_image_slug: variant.image_slug,
-      card_size: variant.size,
-      quantity: 1,
-      unit_price: variant.price,
-      tax_rate: variant.product.tax_rate.percentage
+      quantity: 1
     })
 
     socket = reload_order(socket)
