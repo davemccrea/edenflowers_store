@@ -63,9 +63,7 @@ defmodule Edenflowers.Accounts.User do
       description "Looks up a user by their email"
       get? true
 
-      argument :email, :ci_string do
-        allow_nil? false
-      end
+      argument :email, :ci_string, allow_nil?: false
 
       filter expr(email == ^arg(:email))
     end
@@ -77,8 +75,6 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :update do
-      description "Users can update their own safe fields (admin is NOT writable)"
-      # Explicitly exclude admin field - it's already writable?: false but this is defense in depth
       accept [:name, :newsletter_opt_in]
     end
 
@@ -103,9 +99,7 @@ defmodule Edenflowers.Accounts.User do
     end
 
     action :request_magic_link do
-      argument :email, :ci_string do
-        allow_nil? false
-      end
+      argument :email, :ci_string, allow_nil?: false
 
       run AshAuthentication.Strategy.MagicLink.Request
     end
@@ -168,7 +162,6 @@ defmodule Edenflowers.Accounts.User do
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :newsletter_opt_in, :boolean, default: false, public?: true
 
-    # Admin field - readable but not writable to prevent privilege escalation
     attribute :admin, :boolean, default: false, public?: true, writable?: false
   end
 
