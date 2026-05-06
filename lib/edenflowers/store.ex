@@ -1,5 +1,6 @@
 defmodule Edenflowers.Store do
-  use Ash.Domain
+  use Ash.Domain,
+    otp_app: :edenflowers
 
   resources do
     resource Edenflowers.Store.Product
