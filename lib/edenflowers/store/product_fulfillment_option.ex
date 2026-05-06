@@ -18,7 +18,12 @@ defmodule Edenflowers.Store.ProductFulfillmentOption do
   end
 
   actions do
-    defaults [:read, :destroy, create: :*, update: :*]
+    defaults [
+      :read,
+      :destroy,
+      create: [:product_id, :fulfillment_option_id],
+      update: [:product_id, :fulfillment_option_id]
+    ]
   end
 
   attributes do
