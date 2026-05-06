@@ -327,9 +327,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
   end
 
   defp seed_confirmed_address(order, delivery_option) do
-    order
-    |> Ash.Changeset.for_update(:update, %{}, authorize?: false)
-    |> Ash.Changeset.force_change_attributes(%{
+    Ash.Seed.update!(order, %{
       fulfillment_option_id: delivery_option.id,
       fulfillment_method: delivery_option.fulfillment_method,
       delivery_address: "Stadsgatan 3, 65300 Vasa",
@@ -339,6 +337,5 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       distance: 3000,
       fulfillment_amount: Decimal.new("5.00")
     })
-    |> Ash.update!(authorize?: false)
   end
 end
