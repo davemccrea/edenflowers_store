@@ -36,12 +36,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
         generate(
           line_item(
             order_id: order.id,
-            product_id: product.id,
-            product_name: product.name,
-            product_image_slug: product.image_slug,
             product_variant_id: product_variant.id,
-            unit_price: product_variant.price,
-            tax_rate: tax_rate.percentage,
             quantity: 1
           )
         )
