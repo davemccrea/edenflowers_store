@@ -335,6 +335,14 @@ Hooks.Stripe = {
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
         appearance: this.buildAppearance(),
+        // Stripe runs in a cross-origin iframe and can't see the host's
+        // @font-face rules, so Open Sans must be loaded inside the iframe.
+        fonts: [
+          {
+            cssSrc:
+              "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap",
+          },
+        ],
       });
 
       const paymentElement = elements.create("payment", {});
@@ -398,9 +406,16 @@ Hooks.Stripe = {
 
   /**
    * Build a Stripe Elements `appearance` config from the live daisyUI theme
-   * tokens on `:root`, so the Payment Element matches our `<input class="input">`
-   * styling. Stripe Elements run in an iframe and can't be styled with CSS, so
-   * we resolve the values up-front and pass them in.
+   * tokens on `:root`, so the Payment Element matches our `<input class="input
+   * input-lg">` styling. Stripe Elements run in an iframe and can't be styled
+   * with CSS, so we resolve the values up-front and pass them in.
+   *
+   * daisyUI input model (mirrored here):
+   *   - rest: border-color = color-mix(base-content 20%, transparent)
+   *   - focus / focus-within: border-color flips to full base-content;
+   *                           outline 2px solid base-content with 2px offset
+   *   - invalid: border-color and focus outline flip to --color-error
+   *   - input-lg: 48px tall, 18px font, 12px horizontal padding
    */
   buildAppearance() {
     const css = getComputedStyle(document.documentElement);
@@ -408,13 +423,9 @@ Hooks.Stripe = {
 
     const baseContent = v("--color-base-content", "#1f2937");
     const primary = v("--color-primary", "#0570de");
+    const error = v("--color-error", "#dc2626");
 
-    // daisyUI's default input border is a 20%-mixed base-content. Stripe's
-    // appearance API accepts modern CSS color functions inside `rules`.
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
-    // daisyUI's `.input:focus-within` uses `outline: 2px solid` in a muted
-    // neutral with `outline-offset: 2px` — not a primary-colored ring.
-    const focusOutline = `color-mix(in oklab, ${baseContent} 40%, transparent)`;
 
     return {
       theme: "flat",
@@ -422,8 +433,10 @@ Hooks.Stripe = {
         colorPrimary: primary,
         colorBackground: v("--color-base-100", "#ffffff"),
         colorText: baseContent,
-        colorDanger: v("--color-error", "#dc2626"),
+        colorDanger: error,
         fontFamily: v("--font-sans", "system-ui, sans-serif"),
+        // 16px is the host body baseline; per-element sizes are set in `rules`.
+        fontSizeBase: "16px",
         borderRadius: v("--radius-field", "0.25rem"),
         spacingUnit: "4px",
       },
@@ -431,19 +444,42 @@ Hooks.Stripe = {
         ".Input": {
           border: `1px solid ${subtleBorder}`,
           boxShadow: "none",
-          padding: "0.75rem",
+          fontSize: "18px",
+          fontWeight: "400",
+          lineHeight: "27px",
+          // 10.5px vertical + 18px font + 27px line-height ≈ 48px (input-lg).
+          padding: "10.5px 12px",
         },
         ".Input:focus": {
-          outline: `2px solid ${focusOutline}`,
+          border: `1px solid ${baseContent}`,
+          outline: `2px solid ${baseContent}`,
           outlineOffset: "2px",
           boxShadow: "none",
         },
         ".Input--invalid": {
-          border: `1px solid ${v("--color-error", "#dc2626")}`,
+          border: `1px solid ${error}`,
+          boxShadow: "none",
+        },
+        ".Input--invalid:focus": {
+          border: `1px solid ${error}`,
+          outline: `2px solid ${error}`,
+          outlineOffset: "2px",
+          boxShadow: "none",
         },
         ".Label": {
           color: baseContent,
-          fontWeight: "500",
+          fontFamily: v("--font-sans", "system-ui, sans-serif"),
+          fontSize: "16px",
+          fontWeight: "400",
+          lineHeight: "24px",
+        },
+        ".Error": {
+          color: error,
+          fontFamily: v("--font-sans", "system-ui, sans-serif"),
+          fontSize: "14px",
+          fontWeight: "400",
+          lineHeight: "20px",
+          marginTop: "6px",
         },
       },
     };
