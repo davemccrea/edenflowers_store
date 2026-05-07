@@ -88,16 +88,16 @@ defmodule Edenflowers.Email do
   end
 
   defp format_currency(amount, locale) do
-    Cldr.Number.to_string!(amount, Edenflowers.Cldr, locale: locale, currency: :EUR)
+    Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
   end
 
   defp format_date(date, locale) do
-    Cldr.Date.to_string!(date, Edenflowers.Cldr, locale: locale, format: :short)
+    Localize.Date.to_string!(date, locale: locale, format: :short)
   end
 
   defp format_datetime(datetime, locale) do
-    {:ok, date_part} = Cldr.Date.to_string(datetime, Edenflowers.Cldr, locale: locale, format: :short)
-    {:ok, time_part} = Cldr.Time.to_string(datetime, Edenflowers.Cldr, locale: locale, format: :short)
+    {:ok, date_part} = Localize.Date.to_string(datetime, locale: locale, format: :short)
+    {:ok, time_part} = Localize.Time.to_string(datetime, locale: locale, format: :short)
     "#{date_part} #{time_part}"
   end
 end

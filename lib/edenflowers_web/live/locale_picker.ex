@@ -8,9 +8,7 @@ defmodule EdenflowersWeb.LocalePicker do
       {"en-GB", "English"}
     ]
 
-    {:ok,
-     socket
-     |> assign(locales: locales)}
+    {:ok, assign(socket, locales: locales)}
   end
 
   def render(assigns) do
@@ -20,7 +18,7 @@ defmodule EdenflowersWeb.LocalePicker do
         {render_slot(@inner_block)}
       </div>
       <sl-menu>
-        <sl-menu-item :for={{cldr_locale, name} <- @locales} phx-target={@myself} phx-click="click" value={cldr_locale}>
+        <sl-menu-item :for={{locale, name} <- @locales} phx-target={@myself} phx-click="click" value={locale}>
           {name}
         </sl-menu-item>
       </sl-menu>
@@ -28,8 +26,8 @@ defmodule EdenflowersWeb.LocalePicker do
     """
   end
 
-  def handle_event("click", %{"value" => cldr_locale}, socket) do
+  def handle_event("click", %{"value" => locale}, socket) do
     # Simply redirect to locale controller, which will use referer header to go back
-    {:noreply, redirect(socket, to: ~p"/cldr_locale/#{cldr_locale}")}
+    {:noreply, redirect(socket, to: ~p"/locale/#{locale}")}
   end
 end

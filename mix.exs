@@ -5,7 +5,7 @@ defmodule Edenflowers.MixProject do
     [
       app: :edenflowers,
       version: "0.2.8",
-      elixir: "~> 1.15",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :dev,
@@ -108,12 +108,8 @@ defmodule Edenflowers.MixProject do
       {:phoenix_test, "~> 0.8", only: :test, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
-      {:ex_cldr, "~> 2.40"},
-      {:ex_cldr_calendars, "~> 2.0"},
-      {:ex_cldr_dates_times, "~> 2.0"},
-      {:ex_cldr_plugs, "~> 1.3"},
-      {:ex_cldr_languages, "~> 0.3"},
-      {:cldr_html, "~> 1.6"},
+      {:localize, "~> 0.27.0"},
+      {:localize_web, "~> 0.5.1"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
       {:mdex, "~> 0.6"},
@@ -129,7 +125,7 @@ defmodule Edenflowers.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ash.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "localize.download_locales", "ash.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],

@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.Order do
   alias __MODULE__.{Changes, Validations}
   alias Edenflowers.Store.FulfillmentOption
 
-  @locales Edenflowers.Cldr.configured_locales()
+  @locales Edenflowers.Locales.all()
 
   @checkout_load [
     :total_items_in_cart,

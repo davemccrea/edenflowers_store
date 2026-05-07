@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           type="button"
           class="cursor-pointer"
         >
-          {Cldr.DateTime.to_string!(@view_date, format: "MMMM y")}
+          {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
         </button>
         <button
           id={"#{@id}-next-month"}
@@ -91,7 +91,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
         <%= for week_day <- List.first(@week_rows) do %>
           <span>
-            {Cldr.DateTime.to_string!(week_day, format: "EEEEEE")}
+            {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
           </span>
         <% end %>
       </div>
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.CalendarComponent do
             class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
           >
             <time datetime={day}>
-              {Cldr.DateTime.to_string!(day, format: "d")}
+              {Localize.DateTime.to_string!(day, format: "d")}
             </time>
             {render_slot(@day_decoration, day)}
           </button>
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("previous-month", _, socket) do
     date =
       socket.assigns.view_date
-      |> Cldr.Calendar.minus(:months, 1)
+      |> Date.shift(month: -1)
 
     {:noreply, update_calendar_view(socket, date)}
   end
@@ -151,7 +151,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("next-month", _, socket) do
     date =
       socket.assigns.view_date
-      |> Cldr.Calendar.plus(:months, 1)
+      |> Date.shift(month: 1)
 
     {:noreply, update_calendar_view(socket, date)}
   end
@@ -247,10 +247,10 @@ defmodule EdenflowersWeb.CalendarComponent do
           Date.add(date, 1)
 
         "PageUp" ->
-          Cldr.Calendar.plus(date, :months, 1)
+          Date.shift(date, month: 1)
 
         "PageDown" ->
-          Cldr.Calendar.minus(date, :months, 1)
+          Date.shift(date, month: -1)
 
         "Home" ->
           Date.beginning_of_week(date, @week_begins)

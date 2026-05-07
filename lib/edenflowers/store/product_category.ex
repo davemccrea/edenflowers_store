@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.ProductCategory do
   end
 
   translations do
-    locales Edenflowers.Cldr.AshTranslation.locale_names()
+    locales Edenflowers.Locales.translatable_atoms()
     fields [:name, :description]
   end
 

@@ -15,13 +15,12 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.InitStore
     plug EdenflowersWeb.Plugs.Maintenance
 
-    plug Cldr.Plug.PutLocale,
-      apps: [:cldr, :gettext],
+    plug Localize.Plug.PutLocale,
       from: [:session, :accept_language],
       gettext: EdenflowersWeb.Gettext,
-      cldr: Edenflowers.Cldr
+      default: "en-GB"
 
-    plug Cldr.Plug.PutSession, as: :string
+    plug EdenflowersWeb.Plugs.PutLocaleSession
     plug :load_from_session
   end
 
@@ -56,7 +55,7 @@ defmodule EdenflowersWeb.Router do
     end
 
     get "/checkout/complete/:id", CheckoutCompleteController, :index
-    get "/cldr_locale/:cldr_locale", LocaleController, :index
+    get "/locale/:locale", LocaleController, :index
 
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
