@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "shows 'Add a card' button when order is a gift",
-         %{conn: conn, product: product, variant: variant} do
+         %{conn: conn, variant: variant} do
       gift_order = generate(order(step: 2, gift: true))
 
       LineItem.add_item!(%{
@@ -240,7 +240,6 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "LineItem.add_card succeeds for gift orders", %{
       order: order,
-      card_product: card_product,
       card_variant: card_variant
     } do
       order
@@ -259,7 +258,6 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "LineItem.add_card returns an error for non-gift orders", %{
       order: order,
-      card_product: card_product,
       card_variant: card_variant
     } do
       assert {:error, _} =
@@ -272,7 +270,6 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "saving step 2 with gift=false removes card line items", %{
       order: order,
-      card_product: card_product,
       card_variant: card_variant
     } do
       order =
@@ -296,7 +293,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "shows card message textarea when a card line item exists",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true))
 
       LineItem.add_item!(%{
@@ -322,7 +319,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "select_card event adds a card line item to the order",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true))
 
       LineItem.add_item!(%{
@@ -341,7 +338,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "remove_card event removes the card from the order",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true))
 
       LineItem.add_item!(%{
@@ -369,7 +366,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "save_form_2 persists card_message on the order",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       # recipient_name is required when gift=true, so seed it on the order directly
       gift_order = generate(order(step: 2, gift: true, recipient_name: "Test Recipient"))
 
@@ -399,7 +396,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "card_message is preserved across re-renders while on step 2",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true, recipient_name: "Original"))
 
       LineItem.add_item!(%{
@@ -426,7 +423,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "renders maxlength matching the selected card's size limit",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
@@ -453,7 +450,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "switching from small to large card updates the rendered limit",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
@@ -487,7 +484,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "card_message is preserved when switching to a different card",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
@@ -520,7 +517,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "submitting an oversize message renders the inline error",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
@@ -549,7 +546,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "remove_card clears card_message on the order",
-         %{conn: conn, product: product, variant: variant, card_product: card_product, card_variant: card_variant} do
+         %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order =
         generate(order(step: 2, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
 
