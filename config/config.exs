@@ -24,9 +24,10 @@ config :edenflowers, Oban,
     #  ]}
   ]
 
-config :ex_cldr,
-  default_locale: "en",
-  default_backend: Edenflowers.Cldr
+config :localize,
+  supported_locales: ["en-GB", "sv-FI", "fi"],
+  default_locale: "en-GB",
+  gettext: EdenflowersWeb.Gettext
 
 config :ash,
   include_embedded_source_by_default?: false,
