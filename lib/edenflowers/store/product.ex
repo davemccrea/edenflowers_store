@@ -22,50 +22,27 @@ defmodule Edenflowers.Store.Product do
     defaults [:read, :destroy]
 
     read :for_store do
-      filter expr(
-               draft == false and
-                 exists(product_variants) and
-                 product_category.draft == false
-             )
-
-      prepare build(load: [:cheapest_price, :product_variants, :product_category])
+      prepare Edenflowers.Store.Product.Preparations.VisibleInStore
     end
 
     read :featured do
-      filter expr(
-               featured == true and
-                 draft == false and
-                 exists(product_variants) and
-                 product_category.draft == false
-             )
-
-      prepare build(load: [:cheapest_price, :product_variants, :product_category])
+      filter expr(featured == true)
+      prepare Edenflowers.Store.Product.Preparations.VisibleInStore
     end
 
     read :by_category do
       argument :category_id, :uuid, allow_nil?: false
 
-      filter expr(
-               draft == false and
-                 exists(product_variants) and
-                 product_category_id == ^arg(:category_id) and
-                 product_category.draft == false
-             )
-
-      prepare build(load: [:cheapest_price, :product_variants, :product_category])
+      filter expr(product_category_id == ^arg(:category_id))
+      prepare Edenflowers.Store.Product.Preparations.VisibleInStore
     end
 
     read :get_by_category_slug do
       argument :slug, :string, allow_nil?: false
 
-      filter expr(
-               draft == false and
-                 exists(product_variants) and
-                 product_category.slug == ^arg(:slug) and
-                 product_category.draft == false
-             )
-
-      prepare build(load: [:cheapest_price, :product_variants, :product_category, :tax_rate])
+      filter expr(product_category.slug == ^arg(:slug))
+      prepare Edenflowers.Store.Product.Preparations.VisibleInStore
+      prepare build(load: [:tax_rate])
     end
 
     read :by_id do
