@@ -1,5 +1,8 @@
 defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
-  use Oban.Worker
+  # Webhook deliveries are at-least-once. The unique key on `order_id` makes
+  # repeated `enqueue/1` calls for the same order collapse to a single job.
+  use Oban.Worker, unique: [keys: [:order_id], period: :infinity]
+
   import Edenflowers.Actors
 
   alias Edenflowers.Email

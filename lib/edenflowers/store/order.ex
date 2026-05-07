@@ -49,6 +49,7 @@ defmodule Edenflowers.Store.Order do
     define :get_for_checkout, action: :for_checkout, args: [:id]
     define :get_all_completed, action: :completed
     define :finalize_checkout, action: :finalize_checkout
+    define :mark_payment_failed, action: :mark_payment_failed
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
@@ -192,6 +193,11 @@ defmodule Edenflowers.Store.Order do
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
+    end
+
+    update :mark_payment_failed do
+      validate attribute_does_not_equal(:payment_status, :paid)
+      change set_attribute(:payment_status, :failed)
     end
 
     update :add_promotion_with_id do
