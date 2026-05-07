@@ -9,7 +9,7 @@ defmodule Edenflowers.Store.Order.Changes.CopyFulfillmentMethod do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Store.Order.Changes.FulfillmentOptionCache
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -26,8 +26,8 @@ defmodule Edenflowers.Store.Order.Changes.CopyFulfillmentMethod do
         Ash.Changeset.force_change_attribute(changeset, :fulfillment_method, nil)
 
       id ->
-        case Ash.get(FulfillmentOption, id, authorize?: false) do
-          {:ok, %{fulfillment_method: method}} ->
+        case FulfillmentOptionCache.fetch(changeset, id) do
+          {:ok, %{fulfillment_method: method}, changeset} ->
             Ash.Changeset.force_change_attribute(changeset, :fulfillment_method, method)
 
           {:error, _} ->

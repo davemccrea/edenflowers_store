@@ -31,6 +31,18 @@ defmodule Edenflowers.Fulfillments do
     end
   end
 
+  @doc """
+  Single source of truth for user-facing delivery-related error messages.
+  Used by the address input component (blur-time errors), the
+  `CalculateDeliveryCost` change (submit-time errors), and the
+  `ValidateDeliveryAddress` validation (missing address).
+  """
+  @spec delivery_error_message(atom()) :: String.t()
+  def delivery_error_message(:address_required), do: ~t"Delivery address required"
+  def delivery_error_message(:address_not_found), do: ~t"Address not found"
+  def delivery_error_message(:out_of_delivery_range), do: ~t"Outside delivery range"
+  def delivery_error_message(_), do: ~t"There was a problem calculating delivery cost, please try again later"
+
   @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))
 

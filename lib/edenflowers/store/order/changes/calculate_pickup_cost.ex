@@ -1,9 +1,8 @@
 defmodule Edenflowers.Store.Order.Changes.CalculatePickupCost do
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Fulfillments
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Store.Order.Changes.FulfillmentOptionCache
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -19,7 +18,7 @@ defmodule Edenflowers.Store.Order.Changes.CalculatePickupCost do
   defp apply_price(changeset) do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
+    with {:ok, option, changeset} <- FulfillmentOptionCache.fetch(changeset, id),
          {:ok, amount} <- Fulfillments.calculate_price(option) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_amount: amount,
@@ -34,7 +33,7 @@ defmodule Edenflowers.Store.Order.Changes.CalculatePickupCost do
       _ ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :fulfillment_option_id,
-          message: ~t"Unable to calculate fulfillment cost"
+          message: Fulfillments.delivery_error_message(:unknown)
         })
     end
   end
