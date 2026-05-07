@@ -70,6 +70,11 @@ defmodule Edenflowers.Store.Product do
     policy action_type(:read) do
       authorize_if always()
     end
+
+    # Only admin via bypass — all others forbidden
+    policy action_type([:create, :update, :destroy]) do
+      forbid_if always()
+    end
   end
 
   attributes do
