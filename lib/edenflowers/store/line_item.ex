@@ -110,15 +110,7 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   calculations do
-    calculate :promotion_applied?,
-              :boolean,
-              expr(
-                if(
-                  is_nil(order.promotion),
-                  do: false,
-                  else: true
-                )
-              )
+    calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
     # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
     calculate :line_subtotal, :decimal, expr(unit_price * quantity)
