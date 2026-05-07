@@ -36,14 +36,20 @@ Hooks.FocusElement = {
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         const element = document.getElementById(id);
-        if (element) {
-          // Focus on the first focusable element within the target
-          const firstInput = element.querySelector(
-            'input:not([type="hidden"]), textarea, select, button[type="submit"]'
-          );
-          if (firstInput) {
-            /** @type {HTMLElement} */ (firstInput).focus();
-          }
+        if (!element) return;
+
+        // Scroll the section heading to the top of the viewport. The section's
+        // scroll-margin-top accounts for the fixed page header so the heading
+        // doesn't land underneath it.
+        element.scrollIntoView({ block: "start", behavior: "smooth" });
+
+        // preventScroll keeps keyboard focus working without overriding the
+        // scroll position we just set above.
+        const firstInput = element.querySelector(
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+        );
+        if (firstInput) {
+          /** @type {HTMLElement} */ (firstInput).focus({ preventScroll: true });
         }
       });
     });
