@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.StoreLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
-      <div class="container my-36">
+      <.container>
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
           <:item navigate={~p"/store"} label={~t"Store"} />
@@ -121,7 +121,7 @@ defmodule EdenflowersWeb.StoreLive do
             </li>
           </ul>
         <% end %>
-      </div>
+      </.container>
     </Layouts.app>
     """
   end

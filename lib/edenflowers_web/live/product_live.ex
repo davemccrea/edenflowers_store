@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.ProductLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
-      <div class="container my-36">
+      <.container>
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
           <:item navigate={~p"/store"} label={~t"Store"} />
@@ -111,17 +111,18 @@ defmodule EdenflowersWeb.ProductLive do
                   </div>
                 </.input>
 
-                <button
+                <.button
                   type="submit"
+                  variant="primary"
+                  size="lg"
                   phx-click={JS.exec("phx-show", to: "#cart-drawer")}
-                  class="btn btn-primary btn-lg"
                   data-testid="add-to-cart-button"
                 >
                   <span class="flex items-center gap-2">
                     <.icon name="hero-shopping-bag" class="h-5 w-5" />
                     {~t"Add to Cart"}
                   </span>
-                </button>
+                </.button>
               </.form>
             </div>
           </section>
@@ -188,7 +189,7 @@ defmodule EdenflowersWeb.ProductLive do
             </div>
           </div>
         </section>
-      </div>
+      </.container>
     </Layouts.app>
     """
   end

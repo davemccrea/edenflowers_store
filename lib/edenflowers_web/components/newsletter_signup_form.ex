@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
                 <.icon name="hero-paper-airplane" class="h-5 w-5" />
               </button>
             </div>
-            <p class="font-sans text-base-content/60 text-xs">
+            <p class="text-base-content/60 text-xs">
               {~t"We send out only ocassional emails. Unsubscribe at any time."}
             </p>
           </div>

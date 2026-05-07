@@ -211,7 +211,7 @@ defmodule EdenflowersWeb.CalendarComponent do
         {"relative aspect-square", true},
         {"underline", is_today},
         {"cursor-pointer", !is_disabled},
-        {"bg-primary rounded-sm text-neutral-content hover:bg-primary/90", is_selected and !is_disabled},
+        {"bg-primary rounded-sm text-primary-content hover:bg-primary/90", is_selected and !is_disabled},
         {"hover:bg-base-content/20 rounded-sm", !is_selected and !is_disabled},
         {"cursor-not-allowed text-base-content/20", is_disabled}
       ]
