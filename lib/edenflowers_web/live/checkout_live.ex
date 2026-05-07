@@ -28,7 +28,6 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
-       |> assign(:pending_geocode, nil)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> setup_stripe(order)}
@@ -489,20 +488,28 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("save_form_3", %{"form" => params}, socket) do
-    order = socket.assigns.order
-    pending = socket.assigns.pending_geocode
+  # AddressInputComponent owns the address field's lifecycle independently
+  # of the parent form, so submit is the only moment the parent learns the
+  # typed value — bridge it into the form params here.
+  def handle_event("save_form_3", %{"form" => params} = all_params, socket) do
+    params =
+      case all_params do
+        %{"delivery_address" => address} -> Map.put(params, "delivery_address", address)
+        _ -> params
+      end
 
-    cond do
-      order.fulfillment_method == :delivery and pending ->
-        submit_form(socket, 3, Map.merge(params, geocode_params(pending)))
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, _order} ->
+        next_section_id = get_next_section_id(socket.assigns.id, 3)
 
-      order.fulfillment_method == :delivery and is_nil(order.geocoded_address) ->
-        send_update(EdenflowersWeb.AddressInputComponent, id: "address-input", required_error: true)
-        submit_form(socket, 3, params)
+        {:noreply,
+         socket
+         |> reload_order()
+         |> push_event("focus-element", %{id: next_section_id})}
 
-      true ->
-        submit_form(socket, 3, params)
+      {:error, form} ->
+        forward_delivery_address_error(form)
+        {:noreply, assign(socket, form: form)}
     end
   end
 
@@ -528,7 +535,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    {:noreply, socket |> reload_order() |> assign(pending_geocode: nil)}
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
@@ -614,19 +621,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
-  end
-
-  # Sent by AddressInputComponent after a successful geocode. We hold the
-  # result in socket state and merge it into the form params at submit
-  # time — nothing is written to the order until the user clicks Next.
-  def handle_info({:address_geocoded, address, result}, socket) do
-    {:noreply, assign(socket, pending_geocode: %{address: address, result: result})}
-  end
-
-  # Sent by AddressInputComponent when the cached geocode is no longer
-  # valid (field cleared, edited, or geocode failed).
-  def handle_info(:address_cleared, socket) do
-    {:noreply, assign(socket, pending_geocode: nil)}
   end
 
   # ==========
@@ -744,17 +738,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
   end
 
-  defp geocode_params(pending) do
-    %{
-      "delivery_address" => pending.address,
-      "geocoded_address" => pending.result.geocoded_address,
-      "position" => pending.result.position,
-      "here_id" => pending.result.here_id,
-      "distance" => pending.result.distance,
-      "fulfillment_amount" => pending.result.fulfillment_amount
-    }
-  end
-
   defp submit_form(socket, step, params) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, _order} ->
@@ -763,11 +746,26 @@ defmodule EdenflowersWeb.CheckoutLive do
         {:noreply,
          socket
          |> reload_order()
-         |> assign(pending_geocode: nil)
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
         {:noreply, assign(socket, form: form)}
+    end
+  end
+
+  # When `save_step_3` fails on the delivery_address field, surface the
+  # error inside the address input component so the user sees it next to
+  # the field instead of at the form root.
+  defp forward_delivery_address_error(form) do
+    case form[:delivery_address].errors do
+      [error | _] ->
+        send_update(EdenflowersWeb.AddressInputComponent,
+          id: "address-input",
+          error_message: translate_error(error)
+        )
+
+      _ ->
+        :ok
     end
   end
 

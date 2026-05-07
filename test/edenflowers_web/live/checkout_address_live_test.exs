@@ -293,6 +293,39 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
     end
+
+    # Regression: AddressInputComponent renders <input name="delivery_address">
+    # (no form[...] prefix), so the browser submits the address at the top
+    # level of the params, not under "form". save_form_3 must bridge it back
+    # in or save_step_3 fails with "Delivery address required".
+    test "submit succeeds when delivery_address arrives at the top level of params", %{
+      conn: conn,
+      order: order,
+      delivery_option: delivery_option
+    } do
+      stub_successful_geocode()
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_submit(%{
+        "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+        "form" => %{
+          "recipient_phone_number" => "045 1234567",
+          "delivery_instructions" => "",
+          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+        }
+      })
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      assert reloaded.step == 4
+      assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
+    end
   end
 
   defp stub_successful_geocode do
