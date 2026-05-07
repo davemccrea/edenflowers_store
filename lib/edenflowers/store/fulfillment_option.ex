@@ -78,6 +78,12 @@ defmodule Edenflowers.Store.FulfillmentOption do
     policy action_type(:read) do
       authorize_if always()
     end
+
+    # Only admin via bypass — all others forbidden
+    policy action_type([:create, :update, :destroy]) do
+      description "All mutations require admin actor (covered by bypass above)."
+      forbid_if always()
+    end
   end
 
   validations do
