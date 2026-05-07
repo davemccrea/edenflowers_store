@@ -139,18 +139,13 @@ defmodule Edenflowers.Store.Order do
         :recipient_phone_number,
         :delivery_instructions,
         :fulfillment_date,
-        :delivery_address,
-        :geocoded_address,
-        :position,
-        :here_id,
-        :distance,
-        :fulfillment_amount
+        :delivery_address
       ]
 
       change {Changes.CopyFulfillmentMethod, []}
       validate {Validations.ValidateFulfillmentDate, []}
-      validate {Validations.ValidateGeocodedAddress, []}
-      change {Changes.CalculatePickupCost, []}
+      validate {Validations.ValidateDeliveryAddress, []}
+      change {Changes.CalculateFulfillmentCost, []}
       change set_attribute(:step, 4)
       change load(@checkout_load)
       require_atomic? false
