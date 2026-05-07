@@ -412,7 +412,9 @@ Hooks.Stripe = {
     // daisyUI's default input border is a 20%-mixed base-content. Stripe's
     // appearance API accepts modern CSS color functions inside `rules`.
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
-    const focusRing = `color-mix(in oklab, ${primary} 25%, transparent)`;
+    // daisyUI's `.input:focus-within` uses `outline: 2px solid` in a muted
+    // neutral with `outline-offset: 2px` — not a primary-colored ring.
+    const focusOutline = `color-mix(in oklab, ${baseContent} 40%, transparent)`;
 
     return {
       theme: "flat",
@@ -432,9 +434,9 @@ Hooks.Stripe = {
           padding: "0.75rem",
         },
         ".Input:focus": {
-          border: `1px solid ${primary}`,
-          boxShadow: `0 0 0 2px ${focusRing}`,
-          outline: "none",
+          outline: `2px solid ${focusOutline}`,
+          outlineOffset: "2px",
+          boxShadow: "none",
         },
         ".Input--invalid": {
           border: `1px solid ${v("--color-error", "#dc2626")}`,
@@ -442,17 +444,6 @@ Hooks.Stripe = {
         ".Label": {
           color: baseContent,
           fontWeight: "500",
-        },
-        ".Tab": {
-          border: `1px solid ${subtleBorder}`,
-          boxShadow: "none",
-        },
-        ".Tab:hover": {
-          color: primary,
-        },
-        ".Tab--selected": {
-          border: `1px solid ${primary}`,
-          color: primary,
         },
       },
     };
