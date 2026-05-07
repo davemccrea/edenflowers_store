@@ -41,3 +41,5 @@ npm-debug.log
 images
 
 .DS_Store
+
+.playwright-mcp
