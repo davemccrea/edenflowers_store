@@ -5,10 +5,7 @@ defmodule Edenflowers.Store.Order.Changes.CopyFulfillmentMethod do
   method as a direct attribute instead of traversing the relationship.
 
   Applied synchronously during the `change` phase (not `before_action`) so
-  validations running in the same action see the updated method. Stashes
-  the fetched `FulfillmentOption` in changeset context so downstream
-  changes (notably `CalculateFulfillmentCost`) can reuse it without a
-  second query.
+  validations running in the same action see the updated method.
   """
   use Ash.Resource.Change
 
@@ -30,10 +27,8 @@ defmodule Edenflowers.Store.Order.Changes.CopyFulfillmentMethod do
 
       id ->
         case Ash.get(FulfillmentOption, id, authorize?: false) do
-          {:ok, option} ->
-            changeset
-            |> Ash.Changeset.put_context(:fulfillment_option, option)
-            |> Ash.Changeset.force_change_attribute(:fulfillment_method, option.fulfillment_method)
+          {:ok, %{fulfillment_method: method}} ->
+            Ash.Changeset.force_change_attribute(changeset, :fulfillment_method, method)
 
           {:error, _} ->
             Ash.Changeset.add_error(changeset,

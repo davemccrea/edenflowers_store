@@ -5,10 +5,6 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   attributes are not in the action's `accept` list, so this change is the
   only path that can set them — closing the trust-the-client gap on
   delivery cost.
-
-  Reuses the option stashed in the changeset context by
-  `CopyFulfillmentMethod` when present; otherwise fetches directly. A
-  single submit performs at most one `Ash.get/2` for the option.
   """
   use Ash.Resource.Change
 
@@ -29,7 +25,9 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   end
 
   defp apply_pickup(changeset) do
-    with {:ok, option} <- get_option(changeset),
+    id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
+
+    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
          {:ok, amount} <- Fulfillments.calculate_price(option) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_amount: amount,
@@ -50,9 +48,10 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   end
 
   defp apply_delivery(changeset) do
+    id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    with {:ok, option} <- get_option(changeset),
+    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
          {:ok, result} <- Fulfillments.calculate_delivery(delivery_address, option) do
       Ash.Changeset.force_change_attributes(changeset,
         geocoded_address: result.geocoded_address,
@@ -73,15 +72,6 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
           field: :delivery_address,
           message: Fulfillments.delivery_error_message(:unknown)
         })
-    end
-  end
-
-  defp get_option(changeset) do
-    id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
-
-    case changeset.context[:fulfillment_option] do
-      %{id: ^id} = option -> {:ok, option}
-      _ -> Ash.get(FulfillmentOption, id, authorize?: false)
     end
   end
 end
