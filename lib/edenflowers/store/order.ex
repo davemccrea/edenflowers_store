@@ -145,8 +145,7 @@ defmodule Edenflowers.Store.Order do
       change {Changes.CopyFulfillmentMethod, []}
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
-      change {Changes.CalculatePickupCost, []}
-      change {Changes.CalculateDeliveryCost, []}
+      change {Changes.CalculateFulfillmentCost, []}
       change set_attribute(:step, 4)
       change load(@checkout_load)
       require_atomic? false

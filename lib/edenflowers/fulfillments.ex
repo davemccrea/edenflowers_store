@@ -34,7 +34,7 @@ defmodule Edenflowers.Fulfillments do
   @doc """
   Single source of truth for user-facing delivery-related error messages.
   Used by the address input component (blur-time errors), the
-  `CalculateDeliveryCost` change (submit-time errors), and the
+  `CalculateFulfillmentCost` change (submit-time errors), and the
   `ValidateDeliveryAddress` validation (missing address).
   """
   @spec delivery_error_message(atom()) :: String.t()

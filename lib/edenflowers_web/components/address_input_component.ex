@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
   Geocoding runs on blur for the visual feedback ("3.0 km • 5.00") but
   the result is *not* trusted by the server. On submit, `save_step_3`
   re-derives `geocoded_address`, `position`, `here_id`, `distance`, and
-  `fulfillment_amount` server-side via `CalculateDeliveryCost`, so a
+  `fulfillment_amount` server-side via `CalculateFulfillmentCost`, so a
   client cannot inject those values.
 
   Error display is component-owned. `{:required, _}` is raised the
