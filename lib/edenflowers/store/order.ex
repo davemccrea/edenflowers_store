@@ -221,7 +221,6 @@ defmodule Edenflowers.Store.Order do
     end
 
     update :restart_checkout do
-      require_atomic? false
       change {Changes.ResetCheckout, []}
     end
   end
