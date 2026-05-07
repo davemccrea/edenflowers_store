@@ -485,8 +485,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Step 4 does not save form data — it triggers Stripe payment processing directly.
   def handle_event("save_form_4", _, %{assigns: %{client_secret: nil}} = socket) do
-    {:noreply,
-     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
+    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
   end
 
   def handle_event("save_form_4", _, socket) do
@@ -886,9 +885,7 @@ defmodule EdenflowersWeb.CheckoutLive do
             # doesn't linger in the dashboard. Best-effort; surface a flash either way.
             stripe_api().cancel_payment_intent(payment_intent)
 
-            Logger.error(
-              "Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}"
-            )
+            Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
 
             stripe_unavailable(socket)
         end
@@ -919,9 +916,7 @@ defmodule EdenflowersWeb.CheckoutLive do
         socket
 
       {:error, reason} ->
-        Logger.error(
-          "Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}"
-        )
+        Logger.error("Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}")
 
         put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
     end

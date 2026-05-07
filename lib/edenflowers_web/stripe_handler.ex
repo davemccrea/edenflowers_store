@@ -55,9 +55,7 @@ defmodule EdenflowersWeb.StripeHandler do
           :ok
 
         _order ->
-          Logger.info(
-            "Marked order #{order_id} payment as failed for Stripe #{type} event #{event.id}"
-          )
+          Logger.info("Marked order #{order_id} payment as failed for Stripe #{type} event #{event.id}")
 
           :ok
       end
