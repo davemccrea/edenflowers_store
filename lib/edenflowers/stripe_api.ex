@@ -7,6 +7,7 @@ defmodule Edenflowers.StripeAPI.Behaviour do
   @callback create_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
 end
 
 defmodule Edenflowers.StripeAPI do
@@ -44,8 +45,14 @@ defmodule Edenflowers.StripeAPI do
     })
   end
 
+  @impl true
+  def cancel_payment_intent(%{id: payment_intent_id}) do
+    Stripe.PaymentIntent.cancel(payment_intent_id)
+  end
+
   defp convert_to_stripe_amount(value) do
     value
+    |> Decimal.round(2)
     |> Decimal.mult(100)
     |> Decimal.to_integer()
   end

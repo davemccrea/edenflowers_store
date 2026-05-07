@@ -299,6 +299,11 @@ Hooks.Stripe = {
       return this.logAndPushError("data-client-secret attribute is missing.");
     }
 
+    this.publishableKey = this.el.getAttribute("data-publishable-key");
+    if (!this.publishableKey) {
+      return this.logAndPushError("data-publishable-key attribute is missing.");
+    }
+
     this.stripeReadyJS = this.el.getAttribute("data-stripe-ready");
     if (!this.stripeReadyJS) {
       return this.logAndPushError("data-stripe-ready attribute is missing.");
@@ -326,7 +331,7 @@ Hooks.Stripe = {
 
     try {
       // @ts-ignore
-      const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
+      const stripe = Stripe(this.publishableKey);
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
         appearance: {},

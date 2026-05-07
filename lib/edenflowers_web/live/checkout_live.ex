@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
+  defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
@@ -30,7 +31,8 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, make_form(order, action_name(:save, order.step)))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
-       |> setup_stripe(order)}
+       |> assign(:client_secret, nil)
+       |> maybe_setup_stripe(order)}
     else
       {:error, :empty_cart} ->
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
@@ -307,11 +309,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <.form_heading>{~t"Payment"}</.form_heading>
 
                   <form
+                    :if={@client_secret}
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
                     phx-submit="save_form_4"
                     data-client-secret={@client_secret}
-                    data-order-id={@order.id}
+                    data-publishable-key={stripe_publishable_key()}
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
                     data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
                     data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
@@ -324,6 +327,10 @@ defmodule EdenflowersWeb.CheckoutLive do
                       {~t"Pay"} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </form>
+
+                  <p :if={!@client_secret} class="text-error" data-testid="stripe-unavailable">
+                    {~t"Payment is temporarily unavailable. Please try again in a moment."}
+                  </p>
                 </section>
               </.steps>
             </div>
@@ -477,6 +484,11 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   # Step 4 does not save form data — it triggers Stripe payment processing directly.
+  def handle_event("save_form_4", _, %{assigns: %{client_secret: nil}} = socket) do
+    {:noreply,
+     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
+  end
+
   def handle_event("save_form_4", _, socket) do
     case stripe_api().update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
@@ -599,7 +611,13 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Stripe events
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("#{message}: #{inspect(details)}")
-    {:noreply, socket}
+
+    {:noreply,
+     put_flash(
+       socket,
+       :error,
+       ~t"Payment is temporarily unavailable. Please refresh the page and try again."
+     )}
   end
 
   # ===========
@@ -610,11 +628,19 @@ defmodule EdenflowersWeb.CheckoutLive do
     actor = actor(socket)
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
-    if Enum.empty?(order.line_items) do
-      Order.restart_checkout!(order, actor: actor)
-      {:noreply, push_navigate(socket, to: ~p"/")}
-    else
-      {:noreply, assign(socket, order: order)}
+    cond do
+      Enum.empty?(order.line_items) ->
+        Order.restart_checkout!(order, actor: actor)
+        {:noreply, push_navigate(socket, to: ~p"/")}
+
+      # Cart changed while the customer is on the payment step. The PaymentIntent's
+      # amount must follow the new total, otherwise `confirmPayment` would charge
+      # the previous amount.
+      order.step == 4 and not is_nil(order.payment_intent_id) ->
+        {:noreply, sync_payment_intent(assign(socket, order: order), order)}
+
+      true ->
+        {:noreply, assign(socket, order: order)}
     end
   end
 
@@ -774,8 +800,25 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp reload_order(socket) do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
-    assign_forms(socket, order)
+
+    socket
+    |> assign_forms(order)
+    |> ensure_stripe_for_step(order)
   end
+
+  # If the customer just reached step 4, lazily create or retrieve the
+  # PaymentIntent. Skip if `client_secret` is already cached for the current
+  # session — re-running on every reload would burn a Stripe API call per
+  # event.
+  defp ensure_stripe_for_step(socket, %{step: 4} = order) do
+    if socket.assigns[:client_secret] do
+      socket
+    else
+      setup_stripe(socket, order)
+    end
+  end
+
+  defp ensure_stripe_for_step(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
   # value flows through on submit. Keys off fulfillment_method so the default
@@ -822,17 +865,71 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp size_label(_), do: ""
 
   # Stripe utilities
-  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    {:ok, payment_intent} = stripe_api().create_payment_intent(order)
-    order = Order.add_payment_intent_id!(order, payment_intent.id, actor: actor(socket))
+  #
+  # We only touch Stripe once the customer is on step 4. Earlier mounts (or
+  # mounts where the LiveView reconnects on a non-payment step) skip the round
+  # trip entirely.
+  defp maybe_setup_stripe(socket, %{step: 4} = order), do: setup_stripe(socket, order)
+  defp maybe_setup_stripe(socket, _order), do: socket
 
-    socket
-    |> assign(order: order)
-    |> assign(client_secret: payment_intent.client_secret)
+  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
+    case stripe_api().create_payment_intent(order) do
+      {:ok, payment_intent} ->
+        case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
+          {:ok, order} ->
+            socket
+            |> assign(order: order)
+            |> assign(client_secret: payment_intent.client_secret)
+
+          {:error, reason} ->
+            # Persisting the id failed — cancel the orphan intent on Stripe so it
+            # doesn't linger in the dashboard. Best-effort; surface a flash either way.
+            stripe_api().cancel_payment_intent(payment_intent)
+
+            Logger.error(
+              "Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}"
+            )
+
+            stripe_unavailable(socket)
+        end
+
+      {:error, reason} ->
+        Logger.error("Failed to create payment intent for order #{order.id}: #{inspect(reason)}")
+        stripe_unavailable(socket)
+    end
   end
 
   defp setup_stripe(socket, order) do
-    {:ok, payment_intent} = stripe_api().retrieve_payment_intent(order)
-    assign(socket, client_secret: payment_intent.client_secret)
+    case stripe_api().retrieve_payment_intent(order) do
+      {:ok, payment_intent} ->
+        assign(socket, client_secret: payment_intent.client_secret)
+
+      {:error, reason} ->
+        Logger.error("Failed to retrieve payment intent for order #{order.id}: #{inspect(reason)}")
+        stripe_unavailable(socket)
+    end
+  end
+
+  # Re-sync the existing PaymentIntent's amount with the current order total
+  # without changing the client_secret (so the already-mounted Elements UI keeps
+  # working).
+  defp sync_payment_intent(socket, order) do
+    case stripe_api().update_payment_intent(order) do
+      {:ok, _payment_intent} ->
+        socket
+
+      {:error, reason} ->
+        Logger.error(
+          "Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}"
+        )
+
+        put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
+    end
+  end
+
+  defp stripe_unavailable(socket) do
+    socket
+    |> assign(client_secret: nil)
+    |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
   end
 end
