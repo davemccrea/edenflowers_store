@@ -120,6 +120,7 @@ body.ready {
 
 .checkout__section {
   @apply flex flex-col gap-8 mb-12;
+  scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
 }
 
 .checkout__form {
