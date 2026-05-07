@@ -2,7 +2,10 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import PhoenixTest
-  import Phoenix.LiveViewTest, only: [live: 2, render_click: 3]
+
+  import Phoenix.LiveViewTest,
+    only: [live: 2, render_click: 3, element: 2, render_blur: 2, render_submit: 2, render_async: 1]
+
   import Generator
   import Mox
 
@@ -96,6 +99,122 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
+    end
+  end
+
+  describe "Step 3: Delivery Information" do
+    setup %{conn: conn, variant: variant} do
+      # The shared setup already created one pickup option (insertion order: pickup
+      # first). Add a delivery option afterwards so we can verify that delivery
+      # still wins the default and renders first regardless of insertion order.
+      delivery_option =
+        generate(
+          fulfillment_option(
+            fulfillment_method: :delivery,
+            rate_type: :fixed,
+            base_price: "5.00",
+            name: "Home delivery"
+          )
+        )
+
+      step_3_order = generate(order(step: 3, customer_name: "Jane", customer_email: "jane@example.com"))
+
+      LineItem.add_item!(%{
+        order_id: step_3_order.id,
+        product_variant_id: variant.id,
+        quantity: 1
+      })
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: step_3_order.id})
+
+      %{conn: conn, step_3_order: step_3_order, delivery_option: delivery_option}
+    end
+
+    test "fresh order at step 3 defaults the radio to home delivery", %{
+      conn: conn,
+      step_3_order: step_3_order,
+      delivery_option: delivery_option
+    } do
+      {:ok, _view, html} = live(conn, ~p"/checkout")
+
+      pickup_option =
+        Edenflowers.Store.FulfillmentOption.list!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      assert html =~ ~s(value="#{delivery_option.id}" checked)
+      refute html =~ ~s(value="#{pickup_option.id}" checked)
+
+      reloaded = Order.get_for_checkout!(step_3_order.id, actor: nil)
+      assert reloaded.fulfillment_option_id == delivery_option.id
+      assert reloaded.fulfillment_method == :delivery
+    end
+
+    test "existing pickup choice is preserved on revisit", %{
+      conn: conn,
+      step_3_order: step_3_order,
+      delivery_option: delivery_option
+    } do
+      pickup_option =
+        Edenflowers.Store.FulfillmentOption.list!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      Order.update_fulfillment_option!(step_3_order, pickup_option.id, actor: nil)
+
+      {:ok, _view, html} = live(conn, ~p"/checkout")
+
+      assert html =~ ~s(value="#{pickup_option.id}" checked)
+      refute html =~ ~s(value="#{delivery_option.id}" checked)
+
+      reloaded = Order.get_for_checkout!(step_3_order.id, actor: nil)
+      assert reloaded.fulfillment_option_id == pickup_option.id
+    end
+
+    test "submitting step 3 without changing the radio persists the delivery option", %{
+      conn: conn,
+      step_3_order: step_3_order,
+      delivery_option: delivery_option
+    } do
+      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      view
+      |> element("#address-input-field")
+      |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
+
+      render_async(view)
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_submit(%{
+        "form" => %{
+          "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+          "recipient_phone_number" => "045 1234567",
+          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+        }
+      })
+
+      reloaded = Order.get_for_checkout!(step_3_order.id, actor: nil)
+      assert reloaded.fulfillment_option_id == delivery_option.id
+      assert reloaded.fulfillment_method == :delivery
+      assert reloaded.step == 4
+    end
+
+    test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/checkout")
+
+      options = Edenflowers.Store.FulfillmentOption.list!()
+      delivery_id = Enum.find(options, &(&1.fulfillment_method == :delivery)).id
+      pickup_id = Enum.find(options, &(&1.fulfillment_method == :pickup)).id
+
+      {delivery_pos, _} = :binary.match(html, delivery_id)
+      {pickup_pos, _} = :binary.match(html, pickup_id)
+
+      assert delivery_pos < pickup_pos
     end
   end
 
