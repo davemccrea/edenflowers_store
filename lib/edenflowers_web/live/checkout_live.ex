@@ -531,17 +531,17 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Step navigation
   def handle_event("edit_step_3", _params, socket) do
     Order.edit_step_3!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    {:noreply, scroll_to_step(reload_order(socket), 3)}
   end
 
   def handle_event("edit_step_1", _params, socket) do
     Order.edit_step_1!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    {:noreply, scroll_to_step(reload_order(socket), 1)}
   end
 
   def handle_event("edit_step_2", _params, socket) do
     Order.edit_step_2!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    {:noreply, scroll_to_step(reload_order(socket), 2)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
@@ -857,10 +857,14 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
   defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
 
-  defp get_next_section_id(id, 1), do: "#{id}-form-2"
-  defp get_next_section_id(id, 2), do: "#{id}-form-3a"
-  defp get_next_section_id(id, 3), do: "#{id}-form-4"
+  defp get_next_section_id(id, 1), do: "#{id}-section-2"
+  defp get_next_section_id(id, 2), do: "#{id}-section-3"
+  defp get_next_section_id(id, 3), do: "#{id}-section-4"
   defp get_next_section_id(_, _), do: nil
+
+  defp scroll_to_step(socket, step) do
+    push_event(socket, "focus-element", %{id: "#{socket.assigns.id}-section-#{step}"})
+  end
 
   defp size_label(:small), do: gettext("Small")
   defp size_label(:medium), do: gettext("Medium")
