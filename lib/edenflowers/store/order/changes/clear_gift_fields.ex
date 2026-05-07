@@ -40,4 +40,15 @@ defmodule Edenflowers.Store.Order.Changes.ClearGiftFields do
       end
     end)
   end
+
+  # Atomic counterpart for the attribute-set portion only. The after_action
+  # card-cleanup is intentionally not atomic and continues to run via change/3
+  # whenever the host action is non-atomic.
+  @impl true
+  def atomic(changeset, _opts, _context) do
+    case Ash.Changeset.get_argument_or_attribute(changeset, :gift) do
+      false -> {:atomic, %{recipient_name: nil, card_message: nil}}
+      _ -> {:atomic, %{}}
+    end
+  end
 end
