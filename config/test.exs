@@ -57,6 +57,7 @@ config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
 
 # Use mock StripeAPI in tests
 config :edenflowers, :stripe_api, Edenflowers.StripeAPI.Mock
+config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 
 # Use mock HereAPI in tests
 config :edenflowers, :here_api, Edenflowers.HereAPI.Mock

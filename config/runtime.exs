@@ -39,6 +39,11 @@ if config_env() in [:prod, :dev] do
          :stripe_webhook_secret,
          System.get_env("STRIPE_WEBHOOK_SECRET") || raise("environment variable STRIPE_WEBHOOK_SECRET is missing.")
 
+  config :edenflowers,
+         :stripe_publishable_key,
+         System.get_env("STRIPE_PUBLISHABLE_KEY") ||
+           raise("environment variable STRIPE_PUBLISHABLE_KEY is missing.")
+
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,

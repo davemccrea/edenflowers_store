@@ -299,6 +299,11 @@ Hooks.Stripe = {
       return this.logAndPushError("data-client-secret attribute is missing.");
     }
 
+    this.publishableKey = this.el.getAttribute("data-publishable-key");
+    if (!this.publishableKey) {
+      return this.logAndPushError("data-publishable-key attribute is missing.");
+    }
+
     this.stripeReadyJS = this.el.getAttribute("data-stripe-ready");
     if (!this.stripeReadyJS) {
       return this.logAndPushError("data-stripe-ready attribute is missing.");
@@ -326,10 +331,18 @@ Hooks.Stripe = {
 
     try {
       // @ts-ignore
-      const stripe = Stripe("pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM");
+      const stripe = Stripe(this.publishableKey);
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
-        appearance: {},
+        appearance: this.buildAppearance(),
+        // Stripe runs in a cross-origin iframe and can't see the host's
+        // @font-face rules, so Open Sans must be loaded inside the iframe.
+        fonts: [
+          {
+            cssSrc:
+              "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap",
+          },
+        ],
       });
 
       const paymentElement = elements.create("payment", {});
@@ -389,6 +402,87 @@ Hooks.Stripe = {
 
   stripeLoading() {
     this.liveSocket.execJS(this.el, this.stripeLoadingJS);
+  },
+
+  /**
+   * Build a Stripe Elements `appearance` config from the live daisyUI theme
+   * tokens on `:root`, so the Payment Element matches our `<input class="input
+   * input-lg">` styling. Stripe Elements run in an iframe and can't be styled
+   * with CSS, so we resolve the values up-front and pass them in.
+   *
+   * daisyUI input model (mirrored here):
+   *   - rest: border-color = color-mix(base-content 20%, transparent)
+   *   - focus / focus-within: border-color flips to full base-content;
+   *                           outline 2px solid base-content with 2px offset
+   *   - invalid: border-color and focus outline flip to --color-error
+   *   - input-lg: 48px tall, 18px font, 12px horizontal padding
+   */
+  buildAppearance() {
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback = "") => css.getPropertyValue(name).trim() || fallback;
+
+    const baseContent = v("--color-base-content", "#1f2937");
+    const primary = v("--color-primary", "#0570de");
+    const error = v("--color-error", "#dc2626");
+
+    const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
+
+    return {
+      theme: "flat",
+      variables: {
+        colorPrimary: primary,
+        colorBackground: v("--color-base-100", "#ffffff"),
+        colorText: baseContent,
+        colorDanger: error,
+        fontFamily: v("--font-sans", "system-ui, sans-serif"),
+        // 16px is the host body baseline; per-element sizes are set in `rules`.
+        fontSizeBase: "16px",
+        borderRadius: v("--radius-field", "0.25rem"),
+        spacingUnit: "4px",
+      },
+      rules: {
+        ".Input": {
+          border: `1px solid ${subtleBorder}`,
+          boxShadow: "none",
+          fontSize: "18px",
+          fontWeight: "400",
+          lineHeight: "27px",
+          // 10.5px vertical + 18px font + 27px line-height ≈ 48px (input-lg).
+          padding: "10.5px 12px",
+        },
+        ".Input:focus": {
+          border: `1px solid ${baseContent}`,
+          outline: `2px solid ${baseContent}`,
+          outlineOffset: "2px",
+          boxShadow: "none",
+        },
+        ".Input--invalid": {
+          border: `1px solid ${error}`,
+          boxShadow: "none",
+        },
+        ".Input--invalid:focus": {
+          border: `1px solid ${error}`,
+          outline: `2px solid ${error}`,
+          outlineOffset: "2px",
+          boxShadow: "none",
+        },
+        ".Label": {
+          color: baseContent,
+          fontFamily: v("--font-sans", "system-ui, sans-serif"),
+          fontSize: "16px",
+          fontWeight: "400",
+          lineHeight: "24px",
+        },
+        ".Error": {
+          color: error,
+          fontFamily: v("--font-sans", "system-ui, sans-serif"),
+          fontSize: "14px",
+          fontWeight: "400",
+          lineHeight: "20px",
+          marginTop: "6px",
+        },
+      },
+    };
   },
 };
 

@@ -70,6 +70,13 @@ config :edenflowers, EdenflowersWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :edenflowers, dev_routes: true, token_signing_secret: "gfVwyABSNkPTnaZdjgjlMpEoNPEvxcgQ"
 
+# Stripe publishable key for the in-browser Elements integration. In dev we
+# default to the public Stripe-provided test key so the app boots without
+# requiring STRIPE_PUBLISHABLE_KEY to be set; production requires it via runtime.exs.
+config :edenflowers,
+       :stripe_publishable_key,
+       System.get_env("STRIPE_PUBLISHABLE_KEY") || "pk_test_3gvP7KfmcinLf52LVqP6JstL00Rr9tIeXM"
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
