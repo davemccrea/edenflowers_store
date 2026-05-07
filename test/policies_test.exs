@@ -63,7 +63,7 @@ defmodule Edenflowers.PoliciesTest do
                Product
                |> Ash.Changeset.for_create(:create, %{
                  name: "Test product",
-                 description: "",
+                 description: "Test description",
                  image_slug: "x.png",
                  tax_rate_id: tax_rate.id,
                  product_category_id: pc.id
