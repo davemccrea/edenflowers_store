@@ -486,7 +486,16 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("save_form_3", %{"form" => params}, socket) do
+  # AddressInputComponent owns the address field's lifecycle independently
+  # of the parent form, so submit is the only moment the parent learns the
+  # typed value — bridge it into the form params here.
+  def handle_event("save_form_3", %{"form" => params} = all_params, socket) do
+    params =
+      case all_params do
+        %{"delivery_address" => address} -> Map.put(params, "delivery_address", address)
+        _ -> params
+      end
+
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, _order} ->
         next_section_id = get_next_section_id(socket.assigns.id, 3)
