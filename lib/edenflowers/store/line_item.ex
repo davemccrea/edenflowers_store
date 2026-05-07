@@ -26,32 +26,16 @@ defmodule Edenflowers.Store.LineItem do
     defaults [:read]
 
     create :add_to_cart do
-      accept [
-        :order_id,
-        :product_id,
-        :product_variant_id,
-        :product_name,
-        :product_image_slug,
-        :quantity,
-        :unit_price,
-        :tax_rate
-      ]
+      accept [:order_id, :product_variant_id, :quantity]
+
+      change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
     end
 
     create :add_card do
-      accept [
-        :order_id,
-        :product_id,
-        :product_variant_id,
-        :product_name,
-        :product_image_slug,
-        :card_size,
-        :quantity,
-        :unit_price,
-        :tax_rate
-      ]
+      accept [:order_id, :product_variant_id, :quantity]
 
       change set_attribute(:is_card, true)
+      change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
     end
 
     destroy :remove_item do
@@ -126,15 +110,7 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   calculations do
-    calculate :promotion_applied?,
-              :boolean,
-              expr(
-                if(
-                  is_nil(order.promotion),
-                  do: false,
-                  else: true
-                )
-              )
+    calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
     # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
     calculate :line_subtotal, :decimal, expr(unit_price * quantity)
