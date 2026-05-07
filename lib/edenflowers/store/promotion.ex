@@ -69,6 +69,7 @@ defmodule Edenflowers.Store.Promotion do
 
     # Only system/admin via bypass — all others forbidden
     policy action_type([:create, :update, :destroy]) do
+      description "All mutations require admin or system actor (covered by bypass above)."
       forbid_if always()
     end
   end
