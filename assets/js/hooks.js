@@ -334,7 +334,7 @@ Hooks.Stripe = {
       const stripe = Stripe(this.publishableKey);
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
-        appearance: {},
+        appearance: this.buildAppearance(),
       });
 
       const paymentElement = elements.create("payment", {});
@@ -394,6 +394,68 @@ Hooks.Stripe = {
 
   stripeLoading() {
     this.liveSocket.execJS(this.el, this.stripeLoadingJS);
+  },
+
+  /**
+   * Build a Stripe Elements `appearance` config from the live daisyUI theme
+   * tokens on `:root`, so the Payment Element matches our `<input class="input">`
+   * styling. Stripe Elements run in an iframe and can't be styled with CSS, so
+   * we resolve the values up-front and pass them in.
+   */
+  buildAppearance() {
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback = "") => css.getPropertyValue(name).trim() || fallback;
+
+    const baseContent = v("--color-base-content", "#1f2937");
+    const primary = v("--color-primary", "#0570de");
+
+    // daisyUI's default input border is a 20%-mixed base-content. Stripe's
+    // appearance API accepts modern CSS color functions inside `rules`.
+    const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
+    const focusRing = `color-mix(in oklab, ${primary} 25%, transparent)`;
+
+    return {
+      theme: "flat",
+      variables: {
+        colorPrimary: primary,
+        colorBackground: v("--color-base-100", "#ffffff"),
+        colorText: baseContent,
+        colorDanger: v("--color-error", "#dc2626"),
+        fontFamily: v("--font-sans", "system-ui, sans-serif"),
+        borderRadius: v("--radius-field", "0.25rem"),
+        spacingUnit: "4px",
+      },
+      rules: {
+        ".Input": {
+          border: `1px solid ${subtleBorder}`,
+          boxShadow: "none",
+          padding: "0.75rem",
+        },
+        ".Input:focus": {
+          border: `1px solid ${primary}`,
+          boxShadow: `0 0 0 2px ${focusRing}`,
+          outline: "none",
+        },
+        ".Input--invalid": {
+          border: `1px solid ${v("--color-error", "#dc2626")}`,
+        },
+        ".Label": {
+          color: baseContent,
+          fontWeight: "500",
+        },
+        ".Tab": {
+          border: `1px solid ${subtleBorder}`,
+          boxShadow: "none",
+        },
+        ".Tab:hover": {
+          color: primary,
+        },
+        ".Tab--selected": {
+          border: `1px solid ${primary}`,
+          color: primary,
+        },
+      },
+    };
   },
 };
 
