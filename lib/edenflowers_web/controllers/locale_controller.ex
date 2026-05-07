@@ -2,13 +2,12 @@ defmodule EdenflowersWeb.LocaleController do
   use EdenflowersWeb, :controller
 
   def index(conn, %{"locale" => locale} = params) do
-    with true <- Edenflowers.Locales.supported?(locale),
-         {:ok, tag} <- Localize.validate_locale(locale) do
+    if Edenflowers.Locales.supported?(locale) do
       conn
-      |> put_session(Localize.Plug.PutLocale.session_key(), tag)
+      |> put_session(Localize.Plug.PutLocale.session_key(), locale)
       |> redirect(to: get_redirect_path(conn, params))
     else
-      _ -> redirect(conn, to: ~p"/")
+      redirect(conn, to: ~p"/")
     end
   end
 

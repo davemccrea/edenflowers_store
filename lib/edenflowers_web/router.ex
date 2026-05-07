@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Router do
       gettext: EdenflowersWeb.Gettext,
       default: "en-GB"
 
-    plug Localize.Plug.PutSession, as: :language_tag
+    plug EdenflowersWeb.Plugs.PutLocaleSession
     plug :load_from_session
   end
 

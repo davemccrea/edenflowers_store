@@ -3,14 +3,6 @@ defmodule EdenflowersWeb.LocaleControllerTest do
 
   @session_key Localize.Plug.PutLocale.session_key()
 
-  defp session_locale(conn) do
-    case get_session(conn, @session_key) do
-      %Localize.LanguageTag{cldr_locale_id: id} -> to_string(id)
-      str when is_binary(str) -> str
-      other -> other
-    end
-  end
-
   describe "GET /locale/:locale" do
     for locale <- ~w(sv-FI fi en-GB) do
       test "accepts #{locale} and stores it in the session" do
@@ -18,7 +10,7 @@ defmodule EdenflowersWeb.LocaleControllerTest do
           build_conn()
           |> get("/locale/#{unquote(locale)}")
 
-        assert session_locale(conn) == unquote(locale)
+        assert get_session(conn, @session_key) == unquote(locale)
       end
     end
 
@@ -28,7 +20,7 @@ defmodule EdenflowersWeb.LocaleControllerTest do
         |> get("/locale/de-DE")
 
       assert redirected_to(conn) == "/"
-      refute session_locale(conn) == "de-DE"
+      refute get_session(conn, @session_key) == "de-DE"
     end
   end
 
@@ -44,7 +36,7 @@ defmodule EdenflowersWeb.LocaleControllerTest do
           |> put_req_header("accept-language", unquote(header))
           |> get("/")
 
-        assert session_locale(conn) == unquote(expected)
+        assert get_session(conn, @session_key) == unquote(expected)
       end
     end
 
@@ -54,7 +46,7 @@ defmodule EdenflowersWeb.LocaleControllerTest do
         |> put_req_header("accept-language", "de-DE")
         |> get("/")
 
-      assert session_locale(conn) == Edenflowers.Locales.default()
+      assert get_session(conn, @session_key) == Edenflowers.Locales.default()
     end
   end
 end
