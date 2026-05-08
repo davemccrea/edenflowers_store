@@ -60,6 +60,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div
       id="alert-group"
+      class="toast toast-top toast-end z-[100]"
       phx-hook="AlertHandler"
       data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
     />
@@ -81,18 +82,15 @@ defmodule EdenflowersWeb.CoreComponents do
     assigns = assign(assigns, :flash, flash)
 
     ~H"""
-    <div id="flash-group" phx-hook="FlashHandler">
-      <sl-alert
+    <div id="flash-group" class="hidden" phx-hook="FlashHandler">
+      <div
         :for={f <- @flash}
         id={"flash-#{f.id}"}
-        variant={f.variant}
-        duration={f.duration}
-        closable={f.closable}
-        countdown={f.countdown}
-      >
-        <sl-icon slot="icon" name={f.icon} />
-        {f.message}
-      </sl-alert>
+        data-variant={f.variant}
+        data-message={f.message}
+        data-duration={f.duration}
+        data-closable={to_string(f.closable)}
+      />
     </div>
     """
   end

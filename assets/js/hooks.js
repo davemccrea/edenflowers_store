@@ -492,94 +492,117 @@ Hooks.Stripe = {
   },
 };
 
+function daisyAlertVariantClass(variant) {
+  const map = {
+    info: "alert-info",
+    primary: "alert-info",
+    success: "alert-success",
+    warning: "alert-warning",
+    error: "alert-error",
+    danger: "alert-error",
+  };
+  return map[variant] || "";
+}
+
+function daisyAlertIconSvg(variant) {
+  switch (variant) {
+    case "success":
+      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    case "warning":
+      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+    case "error":
+    case "danger":
+      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+    default:
+      return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-6 w-6 shrink-0 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+  }
+}
+
+function createDaisyAlert({ id, variant, message, duration, closable }) {
+  const div = document.createElement("div");
+  if (id) div.id = id;
+  div.className = `alert ${daisyAlertVariantClass(variant)} w-full max-w-sm shadow-lg`;
+  div.setAttribute("role", "alert");
+
+  const iconWrapper = document.createElement("span");
+  iconWrapper.innerHTML = daisyAlertIconSvg(variant);
+  if (iconWrapper.firstChild) div.appendChild(iconWrapper.firstChild);
+
+  const messageSpan = document.createElement("span");
+  messageSpan.textContent = message;
+  div.appendChild(messageSpan);
+
+  if (closable) {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-ghost btn-xs btn-circle ml-auto";
+    btn.textContent = "✕";
+    btn.addEventListener("click", () => dismissDaisyAlert(div));
+    div.appendChild(btn);
+  }
+
+  if (duration > 0) {
+    setTimeout(() => dismissDaisyAlert(div), duration);
+  }
+
+  return div;
+}
+
+function dismissDaisyAlert(el) {
+  el.style.transition = "opacity 0.3s";
+  el.style.opacity = "0";
+  setTimeout(() => el.remove(), 300);
+}
+
 Hooks.AlertHandler = {
-  createDisconnectedAlert() {
-    this.disconnectedMessage = this.el.getAttribute(
-      "data-disconnected-message",
-    );
-
-    const disconnectedAlert = `
-      <sl-alert
-        id="alert-disconnected"
-        variant="warning"
-        closable="false"
-      >
-        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-         ${this.disconnectedMessage}
-      </sl-alert>
-      `;
-
-    this.el.insertAdjacentHTML("beforeend", disconnectedAlert);
-  },
-
   mounted() {
-    this.createDisconnectedAlert();
-
-    // Toasts are triggered by the server and inserted into the DOM when event is received.
-    this.handleEvent("toast:show", (alert) => {
-      const html = `
-      <sl-alert
-        id="alert-${alert.id}"
-        variant="${alert.variant}"
-        duration="${alert.duration}"
-        ${alert.closable ? "closable" : ""}
-        ${
-          alert.countdown == "rtl" || alert.countdown == "ltr"
-            ? `countdown="${alert.countdown}"`
-            : ""
-        }
-      >
-        <sl-icon slot="icon" name="${alert.icon}"></sl-icon>
-        ${alert.message}
-      </sl-alert>
-      `;
-
-      // Insert the toast into the DOM.
-      this.el.insertAdjacentHTML("beforeend", html);
-
-      const alertEl = this.el.querySelector(`#alert-${alert.id}`);
-      customElements.whenDefined("sl-alert").then(() => {
-        alertEl.toast();
+    this.handleEvent("toast:show", (toast) => {
+      const alertEl = createDaisyAlert({
+        id: `alert-${toast.id}`,
+        variant: toast.variant,
+        message: toast.message,
+        duration: parseInt(toast.duration || "5000", 10),
+        closable: toast.closable,
       });
+      this.el.appendChild(alertEl);
     });
   },
 
   disconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      customElements.whenDefined("sl-alert").then(() => {
-        /** @type {any} */ (disconnectedAlert).toast();
-      });
-    }
+    if (document.getElementById("alert-disconnected")) return;
+    const alertEl = createDaisyAlert({
+      id: "alert-disconnected",
+      variant: "warning",
+      message: this.el.getAttribute("data-disconnected-message"),
+      duration: 0,
+      closable: false,
+    });
+    this.el.appendChild(alertEl);
   },
 
   reconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      /** @type {any} */ (disconnectedAlert).hide();
-    }
-
-    this.createDisconnectedAlert();
+    const alertEl = document.getElementById("alert-disconnected");
+    if (alertEl) dismissDaisyAlert(alertEl);
   },
 };
 
 Hooks.FlashHandler = {
   mounted() {
-    customElements.whenDefined("sl-alert").then(() => {
-      for (const flashEl of Array.from(this.el.children)) {
-        flashEl.toast();
-      }
-
-      this.pushEvent("lv:clear-flash", {});
-    });
-  },
-  disconnected() {
-    // TODO: Is it necessary to check for this.el?
-    if (this.el) {
-      for (const flashEl of this.el.children) {
-        flashEl.remove();
-      }
+    const container = document.getElementById("alert-group") || this.el;
+    for (const flashEl of Array.from(this.el.querySelectorAll("[data-variant]"))) {
+      const alertEl = createDaisyAlert({
+        id: flashEl.id,
+        variant: flashEl.dataset.variant,
+        message: flashEl.dataset.message,
+        duration: parseInt(flashEl.dataset.duration || "5000", 10),
+        closable: flashEl.dataset.closable === "true",
+      });
+      container.appendChild(alertEl);
     }
+    this.pushEvent("lv:clear-flash", {});
+  },
+
+  disconnected() {
+    // Alerts already moved to #alert-group; nothing to clean up
   },
 };
 
