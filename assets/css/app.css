@@ -145,8 +145,14 @@ sl-dropdown::part(panel) {
   @apply mx-auto px-4 sm:px-8;
 }
 
+/* Typography scale — keep all font-serif headings on these utilities so the
+   visual rhythm stays in one place. */
 @utility hero-heading {
-  @apply text-5xl sm:text-6xl md:text-7xl;
+  @apply font-serif text-5xl font-light leading-tight sm:text-6xl;
+}
+
+@utility hero-heading-overlay {
+  @apply font-serif text-4xl tracking-wide text-white sm:text-5xl md:text-6xl;
 }
 
 @utility page-title {
@@ -157,8 +163,16 @@ sl-dropdown::part(panel) {
   @apply font-serif text-2xl sm:text-3xl;
 }
 
+@utility tile-title {
+  @apply font-serif text-2xl tracking-wide;
+}
+
 @utility card-title {
   @apply font-serif text-xl;
+}
+
+@utility eyebrow {
+  @apply font-sans text-xs font-bold uppercase tracking-widest;
 }
 
 @utility logo-wordmark {

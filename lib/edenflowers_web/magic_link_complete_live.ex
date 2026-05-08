@@ -64,10 +64,10 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
         >
           <input type="hidden" name="token" value={@token} />
 
-          <button type="submit" class="btn btn-primary btn-lg">
+          <.button type="submit" variant="primary" size="lg">
             {~t"Sign in"}
             <.icon name="hero-arrow-right" />
-          </button>
+          </.button>
         </.form>
       </section>
     </Layouts.auth>

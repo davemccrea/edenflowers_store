@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="btn btn-square btn-ghost btn-xs hphx-click-loading:btn-disabled"
+                  class="btn btn-square btn-ghost btn-xs phx-click-loading:btn-disabled"
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}

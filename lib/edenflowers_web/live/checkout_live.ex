@@ -339,7 +339,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <section class="flex flex-col gap-4 p-1" data-testid="cart-section">
-                <h2 class="font-serif text-xl" data-testid="cart-heading">
+                <h2 class="card-title" data-testid="cart-heading">
                   {~t"Cart"} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
@@ -423,7 +423,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       >
         <div class="flex flex-col gap-6" data-testid="card-drawer">
           <div class="flex flex-row items-center justify-between">
-            <h2 class="font-serif text-2xl">{gettext("Select a Card")}</h2>
+            <h2 class="section-title">{gettext("Select a Card")}</h2>
             <button
               type="button"
               phx-click={JS.exec("phx-hide", to: "#card-drawer")}
@@ -689,10 +689,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row items-center justify-between">
-      <h1 class={"#{if @active, do: "text-neutral", else: "text-neutral/40"} font-serif text-3xl"} {@rest}>
+      <h1 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
         {render_slot(@inner_block)}
       </h1>
-      <button :if={@edit_step} type="button" class="btn btn-ghost text-neutral/40" phx-click={"edit_step_#{@edit_step}"}>
+      <button
+        :if={@edit_step}
+        type="button"
+        class="btn btn-ghost text-base-content/40"
+        phx-click={"edit_step_#{@edit_step}"}
+      >
         {~t"Edit"}
       </button>
     </div>

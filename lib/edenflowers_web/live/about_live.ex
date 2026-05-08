@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.AboutLive do
         />
         <div class="bg-black/30 absolute inset-0 flex items-end">
           <div class="container pb-10">
-            <h1 class="font-serif text-4xl tracking-wide text-white sm:text-5xl md:text-6xl">
+            <h1 class="hero-heading-overlay">
               {~t"About"}
             </h1>
           </div>
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.AboutLive do
 
             <%!-- Text --%>
             <div class="text-base-content flex max-w-2xl flex-col gap-6">
-              <h2 class="font-serif text-3xl sm:text-4xl">{~t"Hello, I'm Jennie"}</h2>
+              <h2 class="section-title sm:text-4xl">{~t"Hello, I'm Jennie"}</h2>
               <p class="text-base-content/80 text-lg leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
               </p>
@@ -92,9 +92,9 @@ defmodule EdenflowersWeb.AboutLive do
               Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
             </p>
             <div class="pt-2">
-              <.link navigate={~p"/contact"} class="btn btn-primary">
+              <.button navigate={~p"/contact"} variant="primary">
                 {~t"Get in touch"}
-              </.link>
+              </.button>
             </div>
           </div>
         </div>
