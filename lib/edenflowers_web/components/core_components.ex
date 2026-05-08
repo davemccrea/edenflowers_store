@@ -56,47 +56,36 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div
       id="flash-group"
-      class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end"
+      class="z-[100] fixed top-6 right-6 flex flex-col items-end gap-3"
       phx-hook="FlashHandler"
       data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
     >
       <div
         :for={{key, msg} <- @flash}
         id={"flash-#{key}"}
-        class={[
-          "toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs",
-          flash_border_class(key)
-        ]}
+        class="toast-item"
         data-key={key}
         data-duration="5000"
         role="alert"
       >
-        <.icon name={flash_icon(key)} class={["size-4 shrink-0 mt-0.5", flash_icon_class(key)]} />
-        <p class="text-sm text-base-content flex-1">{msg}</p>
-        <button
-          class="text-base-content/30 hover:text-base-content/60 ml-auto -mr-1 -mt-0.5 text-lg leading-none cursor-pointer"
-          aria-label={~t"Dismiss"}
-          data-dismiss
-        >×</button>
+        <div class="toast-item__head">
+          <p class="toast-item__eyebrow">{flash_label(key)}</p>
+          <button class="toast-item__dismiss" aria-label={~t"Dismiss"} data-dismiss>
+            <.icon name="hero-x-mark" />
+          </button>
+        </div>
+        <p class="toast-item__body">{msg}</p>
       </div>
     </div>
     """
   end
 
-  defp flash_border_class("error"), do: "border-rose-500"
-  defp flash_border_class("warning"), do: "border-amber-500"
-  defp flash_border_class("success"), do: "border-primary"
-  defp flash_border_class(_), do: "border-sky-400"
-
-  defp flash_icon_class("error"), do: "text-rose-500"
-  defp flash_icon_class("warning"), do: "text-amber-600"
-  defp flash_icon_class("success"), do: "text-primary"
-  defp flash_icon_class(_), do: "text-sky-500"
-
-  defp flash_icon("error"), do: "hero-x-circle-mini"
-  defp flash_icon("warning"), do: "hero-exclamation-triangle-mini"
-  defp flash_icon("success"), do: "hero-check-circle-mini"
-  defp flash_icon(_), do: "hero-information-circle-mini"
+  # Severity → eyebrow label. Restrained, conventional words — the message
+  # itself does the heavy lifting; the eyebrow just orients the reader.
+  defp flash_label("error"), do: ~t"Couldn't complete"
+  defp flash_label("warning"), do: ~t"Notice"
+  defp flash_label("success"), do: ~t"Confirmed"
+  defp flash_label(_), do: ~t"Note"
 
   @doc """
   Renders a button with navigation support.
@@ -579,7 +568,7 @@ defmodule EdenflowersWeb.CoreComponents do
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: "size-4"
+  attr :class, :any, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""

@@ -511,13 +511,10 @@ Hooks.FlashHandler = {
   dismiss(el, key) {
     if (el.dataset.dismissing) return;
     el.dataset.dismissing = "true";
-    el.style.transition = "opacity 0.2s, transform 0.2s";
-    el.style.opacity = "0";
-    el.style.transform = "translateX(0.5rem)";
     setTimeout(() => {
       if (key) this.pushEvent("lv:clear-flash", { key });
       else el.remove();
-    }, 200);
+    }, 240);
   },
 
   disconnected() {
@@ -525,16 +522,17 @@ Hooks.FlashHandler = {
     const msg = this.el.getAttribute("data-disconnected-message");
     const div = document.createElement("div");
     div.id = "flash-disconnected";
-    div.className = "toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 border-amber-500 rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs";
+    div.className = "toast-item";
+    div.dataset.key = "warning";
     div.setAttribute("role", "alert");
-    const icon = document.createElement("span");
-    icon.className = "shrink-0 mt-0.5 text-amber-600";
-    icon.innerHTML = `<svg class="size-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>`;
-    const p = document.createElement("p");
-    p.className = "text-sm text-base-content";
-    p.textContent = msg;
-    div.appendChild(icon);
-    div.appendChild(p);
+    div.innerHTML = `
+      <div class="toast-item__head">
+        <p class="toast-item__eyebrow">Notice</p>
+      </div>
+      <p class="toast-item__body"></p>`;
+    // Note: the disconnected banner has no dismiss button — it's auto-removed
+    // when the socket reconnects (see reconnected() below).
+    div.querySelector(".toast-item__body").textContent = msg;
     this.el.appendChild(div);
   },
 
