@@ -126,4 +126,115 @@ defmodule Edenflowers.Store.LineItemTest do
       assert line_item.promotion_applied? == false
     end
   end
+
+  describe "duplicate-variant upsert" do
+    test "adding the same variant twice produces one row with quantity 2", %{
+      order: order,
+      product_variant: product_variant
+    } do
+      first =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: product_variant.id
+        })
+        |> Ash.create!(authorize?: false)
+
+      second =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: product_variant.id
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert first.id == second.id
+      assert second.quantity == 2
+
+      line_items = Ash.read!(LineItem, authorize?: false)
+      assert length(line_items) == 1
+    end
+
+    test "adding with explicit quantities sums the existing and incoming values", %{
+      order: order,
+      product_variant: product_variant
+    } do
+      LineItem
+      |> Ash.Changeset.for_create(:add_to_cart, %{
+        order_id: order.id,
+        product_variant_id: product_variant.id,
+        quantity: 3
+      })
+      |> Ash.create!(authorize?: false)
+
+      line_item =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: product_variant.id,
+          quantity: 1
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert line_item.quantity == 4
+    end
+
+    test "adding different variants produces separate rows", %{
+      order: order,
+      product: product,
+      product_variant: first_variant
+    } do
+      second_variant = generate(product_variant(product_id: product.id))
+
+      LineItem
+      |> Ash.Changeset.for_create(:add_to_cart, %{
+        order_id: order.id,
+        product_variant_id: first_variant.id
+      })
+      |> Ash.create!(authorize?: false)
+
+      LineItem
+      |> Ash.Changeset.for_create(:add_to_cart, %{
+        order_id: order.id,
+        product_variant_id: second_variant.id
+      })
+      |> Ash.create!(authorize?: false)
+
+      line_items = Ash.read!(LineItem, authorize?: false)
+      assert length(line_items) == 2
+      assert Enum.all?(line_items, &(&1.quantity == 1))
+    end
+
+    test "duplicate add preserves the original price snapshot", %{
+      order: order,
+      product_variant: product_variant
+    } do
+      original_price = product_variant.price
+
+      first =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: product_variant.id
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert Decimal.equal?(first.unit_price, original_price)
+
+      product_variant
+      |> Ash.Changeset.for_update(:update, %{price: Decimal.add(original_price, 99)})
+      |> Ash.update!(authorize?: false)
+
+      second =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: product_variant.id
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert Decimal.equal?(second.unit_price, original_price)
+      assert second.quantity == 2
+    end
+  end
 end
