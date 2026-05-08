@@ -325,6 +325,10 @@ defmodule EdenflowersWeb.CheckoutLive do
                     data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
                     class="flex flex-col gap-4"
                   >
+                    <div phx-update="ignore" id="express-checkout-container" class="flex flex-col gap-4">
+                      <div id="express-checkout-element"></div>
+                      <div id="express-checkout-divider" class="divider">{~t"Or pay with card"}</div>
+                    </div>
                     <div phx-update="ignore" id="payment-element"></div>
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 

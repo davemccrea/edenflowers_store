@@ -18,6 +18,14 @@ defmodule EdenflowersWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
+  # Serve Apple Pay domain association file for wallet payment verification.
+  # Replace priv/static/.well-known/apple-developer-merchantid-domain-association
+  # with the file downloaded from Stripe Dashboard > Settings > Payment methods > Apple Pay.
+  plug Plug.Static,
+    at: "/.well-known",
+    from: {:edenflowers, "priv/static/.well-known"},
+    gzip: false
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),
