@@ -372,11 +372,11 @@ defmodule EdenflowersWeb.CoreComponents do
             name={@name}
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-            class={[@class || "input input-lg w-full", (@loading or @confirmed or @errors != [] or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             {@rest}
           />
           <div
-            :if={@loading or @confirmed or @errors != [] or @trailing != []}
+            :if={@loading or @confirmed or @trailing != []}
             class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
           >
             <span
@@ -387,11 +387,6 @@ defmodule EdenflowersWeb.CoreComponents do
             <span :if={not @loading and @confirmed} data-testid="input-confirmed">
               <.icon name="hero-check-circle-mini" class="text-success size-5" />
             </span>
-            <.icon
-              :if={not @loading and not @confirmed and @errors != []}
-              name="hero-exclamation-circle-mini"
-              class="text-error size-5"
-            />
             {render_slot(@trailing)}
           </div>
         </div>
