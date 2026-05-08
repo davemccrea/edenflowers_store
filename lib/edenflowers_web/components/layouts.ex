@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Layouts do
 
     ~H"""
     <.drawer id="nav-drawer" placement="left" class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
-      <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+      <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
           navigate={~p"/"}
           class="text-primary logo-wordmark whitespace-nowrap sm:text-2xl"
@@ -105,8 +105,8 @@ defmodule EdenflowersWeb.Layouts do
     </.drawer>
 
     <.drawer id="cart-drawer" placement="right" class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
-      <header class="bg-accent-2 flex flex-row items-center justify-between pt-8 pr-4 pl-8">
-        <h1 class="font-serif text-3xl">
+      <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+        <h1 class="section-title">
           <%= if not is_nil(@order.total_items_in_cart) do %>
             {~t"Cart"} ({@order.total_items_in_cart})
           <% else %>
@@ -124,9 +124,9 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <footer :if={Enum.any?(@order.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
-        <.link navigate={~p"/checkout"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")} class="btn btn-primary">
+        <.button navigate={~p"/checkout"} variant="primary" phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
           {~t"Checkout"}
-        </.link>
+        </.button>
       </footer>
     </.drawer>
 
@@ -256,13 +256,13 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-1">
-              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">Minimosen</h3>
+              <h3 class="eyebrow text-base-content/50">Minimosen</h3>
               <p class="font-serif whitespace-nowrap text-lg">Kauppapuistikko 21</p>
               <p class="font-serif whitespace-nowrap text-lg">65100 Vaasa</p>
             </div>
 
             <div class="footer-grid__hours space-y-1">
-              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">
+              <h3 class="eyebrow text-base-content/50">
                 {~t"Opening hours"}
               </h3>
               <div class="font-serif space-y-0.5 text-lg">
@@ -273,7 +273,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__socials space-y-2">
-              <h3 class="font-sans text-base-content/50 text-xs font-bold uppercase tracking-widest">{~t"Socials"}</h3>
+              <h3 class="eyebrow text-base-content/50">{~t"Socials"}</h3>
               <.social_media_links size={6} />
             </div>
           </div>

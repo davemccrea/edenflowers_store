@@ -33,11 +33,16 @@ defmodule EdenflowersWeb.CoreComponents do
   alias EdenflowersWeb.LiveToast
 
   @doc """
-  Renders a container suitable for most pages.
+  Renders the standard page wrapper: a width-bounded container with the
+  default top/bottom rhythm. Use for every page that doesn't need
+  full-bleed sections.
   """
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
+
   def container(assigns) do
     ~H"""
-    <div class="container my-48">
+    <div class={["container my-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -101,22 +106,28 @@ defmodule EdenflowersWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :any
-  attr :variant, :string, values: ~w(primary secondary)
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type)
+  attr :class, :any, default: nil
+  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost)
+  attr :size, :string, default: "md", values: ~w(sm md lg)
   slot :inner_block, required: true
 
-  def button(%{rest: rest} = assigns) do
-    variants = %{
-      "primary" => "btn-primary",
-      "secondary" => "btn-primary btn-soft",
-      nil => "btn-primary btn-soft"
-    }
+  @button_variants %{
+    "primary" => "btn-primary",
+    "secondary" => "btn-primary btn-soft",
+    "ghost" => "btn-ghost"
+  }
 
-    assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+  @button_sizes %{
+    "sm" => "btn-sm",
+    "md" => "",
+    "lg" => "btn-lg"
+  }
+
+  def button(%{rest: rest} = assigns) do
+    classes = ["btn", @button_variants[assigns.variant], @button_sizes[assigns.size], assigns[:class]]
+
+    assigns = assign(assigns, :class, classes)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
@@ -354,12 +365,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  def input(%{type: "hidden"} = assigns) do
-    ~H"""
-    <input type="hidden" name={@name} id={@id} value={Phoenix.HTML.Form.normalize_value(@type, @value)} {@rest} />
-    """
-  end
-
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
@@ -578,6 +583,33 @@ defmodule EdenflowersWeb.CoreComponents do
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  @doc """
+  Renders a category tile: a clickable image card with an overlaid label.
+
+  ## Examples
+
+      <.category_tile navigate={~p"/store"} label="Store" image_src="..." />
+  """
+  attr :navigate, :string, required: true
+  attr :label, :string, required: true
+  attr :image_src, :string, required: true
+
+  def category_tile(assigns) do
+    ~H"""
+    <.link navigate={@navigate} class="group relative overflow-hidden">
+      <img
+        src={@image_src}
+        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+        alt={@label}
+      />
+      <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+      <div class="absolute inset-0 flex items-end p-6">
+        <h3 class="tile-title text-white">{@label}</h3>
+      </div>
+    </.link>
     """
   end
 
