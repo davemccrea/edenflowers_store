@@ -238,36 +238,6 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       }
     end
 
-    test "LineItem.add_card succeeds for gift orders", %{
-      order: order,
-      card_variant: card_variant
-    } do
-      order
-      |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-      |> Ash.update!(authorize?: false)
-
-      assert {:ok, card_line_item} =
-               LineItem.add_card(%{
-                 order_id: order.id,
-                 product_variant_id: card_variant.id,
-                 quantity: 1
-               })
-
-      assert card_line_item.is_card == true
-    end
-
-    test "LineItem.add_card returns an error for non-gift orders", %{
-      order: order,
-      card_variant: card_variant
-    } do
-      assert {:error, _} =
-               LineItem.add_card(%{
-                 order_id: order.id,
-                 product_variant_id: card_variant.id,
-                 quantity: 1
-               })
-    end
-
     test "saving step 2 with gift=false removes card line items", %{
       order: order,
       card_variant: card_variant
@@ -277,12 +247,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         |> Ash.Changeset.for_update(:set_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
-      {:ok, _card} =
-        LineItem.add_card(%{
-          order_id: order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        })
+      Order.add_card!(order, card_variant.id, authorize?: false)
 
       order
       |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
@@ -302,14 +267,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -347,14 +305,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -376,14 +327,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -405,14 +349,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -432,14 +369,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       {:ok, _view, html} =
         conn
@@ -462,14 +392,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       {:ok, view, html} =
         conn
@@ -496,14 +419,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -526,14 +442,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       oversize = String.duplicate("a", 81)
 
@@ -556,14 +465,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         quantity: 1
       })
 
-      LineItem.add_card!(
-        %{
-          order_id: gift_order.id,
-          product_variant_id: card_variant.id,
-          quantity: 1
-        },
-        authorize?: false
-      )
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
