@@ -1088,6 +1088,60 @@ defmodule Edenflowers.Store.OrderTest do
       assert reset_order.id == original_id
       assert reset_order.state == original_state
     end
+
+    test "reset destroys all line items, including any leftover card" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+
+      order = gift_order_with_card(card_product, :medium)
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
+
+      order = Ash.load!(order, [:line_items], authorize?: false)
+      assert length(order.line_items) == 2
+
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
+      reset_order = Ash.load!(reset_order, [:line_items, :cart_effectively_empty?], authorize?: false)
+
+      assert reset_order.line_items == []
+      assert reset_order.cart_effectively_empty? == true
+    end
+  end
+
+  describe "cart_effectively_empty? calculation" do
+    test "true when the order has no line items" do
+      order = Order.create_for_checkout!(authorize?: false)
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == true
+    end
+
+    test "true when the only remaining line item is a card" do
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+
+      order = gift_order_with_card(card_product, :medium)
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == true
+    end
+
+    test "false when at least one non-card line item remains" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      order = generate(order())
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == false
+    end
   end
 
   describe "Order update_locale action" do

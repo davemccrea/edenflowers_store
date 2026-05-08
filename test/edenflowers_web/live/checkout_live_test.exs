@@ -4,7 +4,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   import PhoenixTest
 
   import Phoenix.LiveViewTest,
-    only: [live: 2, render_click: 3, element: 2, render_blur: 2, render_submit: 2, render_async: 1]
+    only: [
+      live: 2,
+      render_click: 3,
+      element: 2,
+      render_blur: 2,
+      render_submit: 2,
+      render_async: 1,
+      assert_redirect: 2
+    ]
 
   import Generator
   import Mox
@@ -502,6 +510,61 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)
       assert is_nil(reloaded.card_message)
+    end
+  end
+
+  describe "Cart-empty reset" do
+    setup %{order: order} do
+      cards_category = generate(product_category(slug: "cards", draft: false))
+      tax_rate_ = generate(tax_rate())
+
+      card_product =
+        generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate_.id, draft: false))
+
+      card_variant =
+        generate(product_variant(product_id: card_product.id, size: :small, draft: false))
+
+      %{order: order, card_variant: card_variant}
+    end
+
+    test "mounting with a card-only cart resets the order and redirects to home",
+         %{conn: conn, order: order, card_variant: card_variant} do
+      # Set up a stale checkout: customer made it to step 3 with all their
+      # details filled in, then removed every product, leaving only a card.
+      Order.add_card!(order, card_variant.id, authorize?: false)
+      [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
+      LineItem.remove_item!(non_card_line_item)
+
+      stale =
+        order
+        |> Ash.Changeset.for_update(:save_step_1, %{
+          customer_name: "Stale Customer",
+          customer_email: "stale@example.com"
+        })
+        |> Ash.update!(authorize?: false)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
+      assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+
+      reloaded = Order.get_for_checkout!(stale.id, actor: nil)
+      assert reloaded.line_items == []
+      assert is_nil(reloaded.customer_name)
+      assert reloaded.step == 1
+    end
+
+    test "removing the last non-card line item mid-checkout resets the order and redirects",
+         %{conn: conn, order: order, card_variant: card_variant} do
+      Order.add_card!(order, card_variant.id, authorize?: false)
+      [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, view, _html} = live(conn, "/checkout")
+
+      LineItem.remove_item!(non_card_line_item)
+      assert_redirect(view, "/")
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      assert reloaded.line_items == []
     end
   end
 end
