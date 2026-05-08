@@ -55,22 +55,5 @@
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
       })();
     </script>
-
-    <script type="module">
-      // https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/
-      async function ensureCustomElementDefined(elementName) {
-        const elementExists = document.querySelector(elementName);
-        if (elementExists) {
-          await customElements.whenDefined(elementName);
-        }
-      }
-
-      await Promise.allSettled([
-        ensureCustomElementDefined("sl-alert"),
-        ensureCustomElementDefined("sl-icon"),
-      ]);
-
-      document.body.classList.add('ready');
-    </script>
   </body>
 </html>

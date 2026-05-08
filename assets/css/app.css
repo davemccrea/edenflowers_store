@@ -58,16 +58,10 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
-/* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
-  opacity: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-body.ready {
-  transition: 0.25s opacity;
-  opacity: 1;
 }
 
 /*
