@@ -14,26 +14,31 @@ defmodule EdenflowersWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
-      <section class="relative not-last:border-b">
+      <section class="relative overflow-hidden not-last:border-b">
         <img
           src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
           class="h-[100vh] w-full object-cover"
           alt=""
         />
 
-        <div class="from-black/50 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+        <%!-- Localised legibility wash: a soft radial darkens the area behind
+             the headline block (mobile bottom-left, desktop centre-left),
+             leaving the rest of the photo bright. --%>
+        <div
+          class="pointer-events-none absolute inset-0 md:hidden"
+          style="background: radial-gradient(closest-corner at 28% 78%, rgba(0,0,0,0.55), rgba(0,0,0,0) 65%);"
+        />
+        <div
+          class="pointer-events-none absolute inset-0 hidden md:block"
+          style="background: radial-gradient(closest-corner at 25% 55%, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);"
+        />
 
-        <div class="container absolute inset-0 flex flex-col justify-center gap-5">
-          <img
-            src={"local:///Eden_flowers-logo1_white_web.svg" |> Imgproxy.new() |> to_string()}
-            class="w-24 sm:w-36"
-            alt="Eden Flowers"
-          />
-          <h1 class="hero-heading max-w-[16ch] text-white">
+        <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
+          <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="flex flex-wrap items-center gap-4">
-            <.button href="#store" variant="primary" size="lg" class="gap-2">
+          <div class="hero-reveal" style="--reveal-delay: 280ms;">
+            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
               {~t"Shop Now"} <span aria-hidden="true">→</span>
             </.button>
           </div>
@@ -54,18 +59,25 @@ defmodule EdenflowersWeb.HomeLive do
                 <.link
                   navigate={~p"/product/#{product}"}
                   aria-labelledby={product.name}
-                  class="flex flex-col transition duration-100 hover:opacity-90"
+                  class="group flex flex-col"
                 >
-                  <div class="mb-2 overflow-hidden rounded-lg">
+                  <div class="mb-3 overflow-hidden rounded-lg">
                     <img
                       src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
                       alt={product.name}
-                      class="aspect-square w-full object-cover"
+                      class="aspect-square w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
                     />
                   </div>
-                  <div class="text-base-content flex flex-col items-center">
-                    <h3 id={product.name} class="card-title">{product.name}</h3>
-                    <p class="text-sm">{Edenflowers.Utils.format_money(product.cheapest_price)}</p>
+                  <div class="text-base-content flex flex-col items-center gap-1">
+                    <h3
+                      id={product.name}
+                      class="card-title underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
+                    >
+                      {product.name}
+                    </h3>
+                    <p class="text-base-content/70 text-sm">
+                      {Edenflowers.Utils.format_money(product.cheapest_price)}
+                    </p>
                   </div>
                 </.link>
               </li>
@@ -76,13 +88,16 @@ defmodule EdenflowersWeb.HomeLive do
 
       <%!-- Pull quote --%>
       <section class="bg-pastel-3 not-last:border-b">
-        <div class="container flex flex-col items-center gap-12 py-24">
-          <p class="font-serif max-w-4xl text-center text-3xl font-light leading-10 sm:leading-14 md:text-4xl">
+        <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
+          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
-          </p>
-          <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/about"}>
+          </blockquote>
+          <.link
+            navigate={~p"/about"}
+            class="eyebrow text-base-content underline-offset-[6px] hover:decoration-(--color-accent-alt) hover:underline"
+          >
             {~t"Learn more"}
-          </a>
+          </.link>
         </div>
       </section>
 

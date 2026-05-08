@@ -58,6 +58,28 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
+/* LiveView lifecycle feedback. The .phx-* classes are toggled by Phoenix:
+     phx-connected      — socket is connected (steady state)
+     phx-loading         — initial connect or reconnect in progress
+     phx-click-loading   — a phx-click handler is in flight
+     phx-submit-loading  — a form is submitting
+     phx-change-loading  — a phx-change handler is in flight
+   Subtle opacity drops give the user a "something's happening" cue without
+   blocking interaction. Respects prefers-reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  main {
+    transition: opacity 200ms ease-out;
+  }
+  .phx-loading main,
+  .phx-click-loading main {
+    opacity: 0.7;
+  }
+  .phx-submit-loading [type="submit"],
+  .phx-submit-loading button[phx-click] {
+    cursor: progress;
+  }
+}
+
 /* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
   opacity: 0;
@@ -68,6 +90,18 @@ body {
 body.ready {
   transition: 0.25s opacity;
   opacity: 1;
+}
+
+/* Default smooth color & opacity transitions for header/nav links and icon
+   buttons. Keeps hover states from snapping while staying respectful of
+   motion-reduce users. Anything that opts out can override with
+   `transition-none`. */
+@media (prefers-reduced-motion: no-preference) {
+  a, button, .btn, [role="button"] {
+    transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 /*
@@ -147,37 +181,54 @@ sl-dropdown::part(panel) {
 }
 
 /* Typography scale — keep all font-serif headings on these utilities so the
-   visual rhythm stays in one place. */
+   visual rhythm stays in one place. Crimson Text needs slightly tighter
+   tracking and leading at display sizes; tile/card titles get `tracking-wide`
+   for a calmer, more "boutique" feel at smaller sizes. */
 @utility hero-heading {
-  @apply font-serif text-5xl font-light leading-tight sm:text-6xl;
+  @apply font-serif text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl md:text-7xl;
 }
 
 @utility hero-heading-overlay {
-  @apply font-serif text-4xl tracking-wide text-white sm:text-5xl md:text-6xl;
+  @apply font-serif text-4xl font-light leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl;
+}
+
+/* Editorial display size — used for marquee headlines (e.g. the home hero).
+   Sized for a confident two-line wrap at desktop without crowding the photo
+   subject. Negative tracking only kicks in at the largest sizes. */
+@utility hero-display {
+  @apply font-serif font-light text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-[4.5rem] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
-  @apply font-serif text-4xl;
+  @apply font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl;
 }
 
 @utility section-title {
-  @apply font-serif text-2xl sm:text-3xl;
+  @apply font-serif text-2xl leading-tight tracking-tight sm:text-3xl;
 }
 
 @utility tile-title {
-  @apply font-serif text-2xl tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-wide;
 }
 
 @utility card-title {
-  @apply font-serif text-xl;
+  @apply font-serif text-xl leading-snug tracking-wide;
+}
+
+@utility pull-quote {
+  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight md:text-4xl md:leading-[1.2];
+}
+
+@utility footer-line {
+  @apply font-serif text-lg leading-snug;
 }
 
 @utility eyebrow {
-  @apply font-sans text-xs font-bold uppercase tracking-widest;
+  @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
 }
 
 @utility logo-wordmark {
-  @apply font-sans font-bold uppercase tracking-widest;
+  @apply font-sans font-bold uppercase tracking-[0.18em];
 }
 
 #hotfx-shy-header {
@@ -191,6 +242,29 @@ sl-dropdown::part(panel) {
 
 #hotfx-shy-header.hidden {
   transform: translateY(-100%);
+}
+
+/* Hero entrance — staggered fade-up. Each element sets its own
+   `--reveal-delay` inline. Respects prefers-reduced-motion: when the user
+   has reduced motion on, elements appear immediately at their final state. */
+.hero-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: hero-reveal-fade 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+@keyframes hero-reveal-fade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 .auth-background-pattern {

@@ -161,10 +161,10 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Desktop navigation --%>
               <nav class="hidden xl:block">
-                <ul class="flex gap-3">
+                <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
                     <.link
-                      class="text-base-content whitespace-nowrap text-sm hover:underline hover:underline-offset-2"
+                      class="text-base-content underline-offset-[6px] whitespace-nowrap text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline"
                       navigate={url}
                     >
                       {name}
@@ -220,7 +220,7 @@ defmodule EdenflowersWeb.Layouts do
 
                 <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
                   <span class="absolute inset-0 -mr-6 object-right-top md:hidden">
-                    <div class="bg-primary/90 text-primary-content inline-flex items-center rounded-full border-2 border-white px-1.5 py-0.5 text-xs font-semibold">
+                    <div class="bg-primary text-primary-content border-base-100 min-w-[1.25rem] text-[10px] inline-flex items-center justify-center rounded-full border-2 px-1 py-0.5 font-semibold leading-none">
                       {@order.total_items_in_cart}
                     </div>
                   </span>
@@ -255,25 +255,25 @@ defmodule EdenflowersWeb.Layouts do
               <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
             </div>
 
-            <div class="footer-grid__location space-y-1">
-              <h3 class="eyebrow text-base-content/50">Minimosen</h3>
-              <p class="font-serif whitespace-nowrap text-lg">Kauppapuistikko 21</p>
-              <p class="font-serif whitespace-nowrap text-lg">65100 Vaasa</p>
+            <div class="footer-grid__location space-y-2">
+              <h3 class="eyebrow text-base-content/60">Minimosen</h3>
+              <p class="footer-line whitespace-nowrap">Kauppapuistikko 21</p>
+              <p class="footer-line whitespace-nowrap">65100 Vaasa</p>
             </div>
 
-            <div class="footer-grid__hours space-y-1">
-              <h3 class="eyebrow text-base-content/50">
+            <div class="footer-grid__hours space-y-2">
+              <h3 class="eyebrow text-base-content/60">
                 {~t"Opening hours"}
               </h3>
-              <div class="font-serif space-y-0.5 text-lg">
-                <p class="whitespace-nowrap">Ma–Pe: 09:00–17:00</p>
-                <p class="whitespace-nowrap">La: 10:00–15:00</p>
-                <p class="whitespace-nowrap">Su: suljettu</p>
+              <div class="space-y-1">
+                <p class="footer-line whitespace-nowrap">Ma–Pe: 09:00–17:00</p>
+                <p class="footer-line whitespace-nowrap">La: 10:00–15:00</p>
+                <p class="footer-line whitespace-nowrap">Su: suljettu</p>
               </div>
             </div>
 
             <div class="footer-grid__socials space-y-2">
-              <h3 class="eyebrow text-base-content/50">{~t"Socials"}</h3>
+              <h3 class="eyebrow text-base-content/60">{~t"Socials"}</h3>
               <.social_media_links size={6} />
             </div>
           </div>
