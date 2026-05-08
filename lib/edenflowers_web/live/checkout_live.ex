@@ -151,7 +151,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                                 <div class="relative">
                                   <button
                                     type="button"
-                                    phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
                                     class="block shrink-0 cursor-pointer"
                                     data-testid="card-image-button"
                                     title={gettext("Change card")}
@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <button
                         :if={is_nil(card_line_item)}
                         type="button"
-                        phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
                         class="btn btn-dash w-full"
                         data-testid="select-card-button"
                       >

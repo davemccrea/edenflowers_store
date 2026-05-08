@@ -113,9 +113,14 @@ defmodule EdenflowersWeb.ProductLive do
 
                 <.button
                   type="submit"
+<<<<<<< locale-picker-native-dropdown
                   variant="primary"
                   size="lg"
                   phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+=======
+                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
+                  class="btn btn-primary btn-lg"
+>>>>>>> main
                   data-testid="add-to-cart-button"
                 >
                   <span class="flex items-center gap-2">
