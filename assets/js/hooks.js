@@ -351,36 +351,6 @@ Hooks.Stripe = {
         ],
       });
 
-      // Express Checkout Element — renders native Apple Pay / Google Pay buttons
-      // when available on the device/browser. Hidden automatically when neither
-      // method is supported.
-      const expressCheckoutContainer = document.getElementById("express-checkout-container");
-      const expressCheckoutElement = elements.create("expressCheckout", {});
-      expressCheckoutElement.mount("#express-checkout-element");
-
-      expressCheckoutElement.on("ready", ({ availablePaymentMethods }) => {
-        if (!availablePaymentMethods) {
-          expressCheckoutContainer?.classList.add("hidden");
-        }
-      });
-
-      expressCheckoutElement.on("confirm", async (_event) => {
-        this.stripeLoading();
-        this.stripeErrorMessage.textContent = "";
-
-        const { error } = await stripe.confirmPayment({
-          elements,
-          confirmParams: { return_url: this.returnUrl },
-        });
-
-        if (error) {
-          if (error.type !== "validation_error") {
-            this.logAndPushError("error confirming express payment", error);
-          }
-          this.stripeReady();
-        }
-      });
-
       const paymentElement = elements.create("payment", {});
       paymentElement.mount("#payment-element");
       paymentElement.on("ready", (event) => {
