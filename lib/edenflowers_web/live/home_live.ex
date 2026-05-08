@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.HomeLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="relative not-last:border-b">
         <img
           src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}

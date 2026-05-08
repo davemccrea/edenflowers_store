@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.OrderLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <h1>{~t"Order #1234"}</h1>
       </.container>

@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.ProductLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />

@@ -11,6 +11,41 @@ defmodule EdenflowersWeb.Layouts do
   # and other static content.
   embed_templates "layouts/*"
 
+  attr :id, :string, required: true
+  attr :current_path, :string, required: true
+  attr :placement, :string, default: "top", values: ~w(top bottom)
+  slot :inner_block, required: true
+
+  def locale_picker(assigns) do
+    locales =
+      for code <- Edenflowers.Locales.all() do
+        language_code = code |> String.split("-") |> hd()
+        name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
+        {code, String.capitalize(name)}
+      end
+
+    assigns = assign(assigns, :locales, locales)
+
+    ~H"""
+    <details id={@id} class={["dropdown dropdown-end", "dropdown-#{@placement}"]}>
+      <summary class="cursor-pointer list-none">
+        {render_slot(@inner_block)}
+      </summary>
+      <ul class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-1 rounded-none border p-1 shadow">
+        <li :for={{code, name} <- @locales}>
+          <.link href={~p"/locale/#{code}?redirect_to=#{@current_path}"}>
+            {name}
+          </.link>
+        </li>
+      </ul>
+    </details>
+    """
+  end
+
+  attr :flash, :map, required: true
+  attr :current_path, :string, required: true
+  slot :inner_block, required: true
+
   def auth(assigns) do
     {:ok, current_locale} = Localize.Language.display_name(Localize.get_locale())
 
@@ -33,14 +68,14 @@ defmodule EdenflowersWeb.Layouts do
       </main>
 
       <footer class="py-8 text-center">
-        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
-          <button class="group cursor-pointer">
+        <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+          <span class="group inline-flex cursor-pointer items-center gap-1">
             <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
             <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
               {@current_locale}
             </span>
-          </button>
-        </.live_component>
+          </span>
+        </.locale_picker>
       </footer>
     </div>
     """
@@ -49,6 +84,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
   attr :order, :map, required: true
+  attr :current_path, :string, required: true
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -201,14 +237,14 @@ defmodule EdenflowersWeb.Layouts do
               </.link>
 
               <%!-- Locale picker button --%>
-              <.live_component id="locale-picker-header" module={EdenflowersWeb.LocalePicker}>
-                <button class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2">
+              <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
+                <span class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2">
                   <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
                   <span class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex">
                     {@current_locale}
                   </span>
-                </button>
-              </.live_component>
+                </span>
+              </.locale_picker>
 
               <%!-- Cart button --%>
               <button
@@ -281,14 +317,14 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="flex flex-col items-center gap-4 py-8">
-        <.live_component id="locale-picker-footer" module={EdenflowersWeb.LocalePicker}>
-          <button class="group cursor-pointer">
+        <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+          <span class="group inline-flex cursor-pointer items-center gap-1">
             <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
             <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
               {@current_locale}
             </span>
-          </button>
-        </.live_component>
+          </span>
+        </.locale_picker>
 
         <span class="text-xs">
           © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
