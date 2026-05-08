@@ -105,7 +105,8 @@ defmodule Generator do
   def line_item(opts \\ []) do
     changeset_generator(LineItem, :add_to_cart,
       defaults: %{
-        quantity: 1
+        quantity: 1,
+        is_card: false
       },
       overrides: opts,
       authorize?: false
