@@ -27,7 +27,12 @@ defmodule Edenflowers.Store.LineItem do
     create :add_to_cart do
       accept [:order_id, :product_variant_id, :quantity, :is_card]
 
+      upsert? true
+      upsert_identity :unique_product_variant
+      upsert_fields [:quantity]
+
       change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
+      change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
     destroy :remove_item do
