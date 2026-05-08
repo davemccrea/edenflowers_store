@@ -556,7 +556,11 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    pending_card_message = socket.assigns.form.params["card_message"]
+    pending_params =
+      socket.assigns.form.params
+      |> Map.take(["card_message", "recipient_name"])
+      |> Enum.reject(fn {_k, v} -> not is_binary(v) end)
+      |> Map.new()
 
     if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
       LineItem.remove_item(existing)
@@ -573,8 +577,8 @@ defmodule EdenflowersWeb.CheckoutLive do
     socket = reload_order(socket)
 
     socket =
-      if is_binary(pending_card_message) do
-        form = AshPhoenix.Form.validate(socket.assigns.form, %{"card_message" => pending_card_message})
+      if map_size(pending_params) > 0 do
+        form = AshPhoenix.Form.validate(socket.assigns.form, pending_params)
         assign(socket, form: form)
       else
         socket
@@ -593,9 +597,21 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
+    pending_form_params = socket.assigns.form.params
+
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
       {:ok, _order} ->
-        {:noreply, reload_order(socket)}
+        socket = reload_order(socket)
+
+        socket =
+          if map_size(pending_form_params) > 0 do
+            form = AshPhoenix.Form.validate(socket.assigns.form, pending_form_params)
+            assign(socket, form: form)
+          else
+            socket
+          end
+
+        {:noreply, socket}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -628,7 +644,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
     cond do
-      Enum.empty?(order.line_items) ->
+      order.line_items |> Enum.reject(& &1.is_card) |> Enum.empty?() ->
         Order.restart_checkout!(order, actor: actor)
         {:noreply, push_navigate(socket, to: ~p"/")}
 
@@ -854,8 +870,10 @@ defmodule EdenflowersWeb.CheckoutLive do
     end)
   end
 
-  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
-  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+  defp cart_has_items?(%{line_items: line_items}) do
+    non_card_items = Enum.reject(line_items, & &1.is_card)
+    if Enum.empty?(non_card_items), do: {:error, :empty_cart}, else: {:ok, non_card_items}
+  end
 
   defp get_next_section_id(id, 1), do: "#{id}-section-2"
   defp get_next_section_id(id, 2), do: "#{id}-section-3"
