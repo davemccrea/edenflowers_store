@@ -58,6 +58,16 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
+/* Pointer cursor on all interactive elements that don't already get it
+   from the browser or daisyUI — covers bare <button>, role="button" nodes,
+   <label> wrappers, and <summary> (used by the FAQ accordion). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label,
+summary {
+  cursor: pointer;
+}
+
 /* Global keyboard focus indicator — 2px primary-colour outline matching the
    Stripe Elements focus style set in hooks.js. Covers all interactive elements
    that receive keyboard focus without overriding pointer-driven focus. */
