@@ -178,30 +178,31 @@ body.ready {
 }
 
 @utility hero-heading-overlay {
-  @apply font-serif text-4xl font-light leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl;
+  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
 }
 
 /* Editorial display size — used for marquee headlines (e.g. the home hero).
    Sized for a confident two-line wrap at desktop without crowding the photo
-   subject. Negative tracking only kicks in at the largest sizes. */
+   subject. Mobile leading is loosened so 2–3 line wraps don't feel cramped;
+   negative tracking only kicks in at the largest sizes. */
 @utility hero-display {
-  @apply font-serif font-light text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-[4.5rem] md:tracking-[-0.01em] lg:text-[5.5rem];
+  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
-  @apply font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl;
+  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1];
 }
 
 @utility section-title {
-  @apply font-serif text-2xl leading-tight tracking-tight sm:text-3xl;
+  @apply font-serif text-3xl leading-tight tracking-tight md:text-4xl;
 }
 
 @utility tile-title {
-  @apply font-serif text-2xl leading-snug tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
 }
 
 @utility card-title {
-  @apply font-serif text-xl leading-snug tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {
