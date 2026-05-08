@@ -36,6 +36,7 @@ defmodule EdenflowersWeb.Router do
     ash_authentication_live_session :authenticated_routes,
       on_mount: [
         EdenflowersWeb.Hooks.PutLocale,
+        EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
@@ -66,7 +67,8 @@ defmodule EdenflowersWeb.Router do
       auth_routes_prefix: "/auth",
       on_mount: [
         {EdenflowersWeb.LiveUserAuth, :live_no_user},
-        EdenflowersWeb.Hooks.PutLocale
+        EdenflowersWeb.Hooks.PutLocale,
+        EdenflowersWeb.Hooks.PutCurrentPath
       ]
     )
 
@@ -74,7 +76,8 @@ defmodule EdenflowersWeb.Router do
       live_view: EdenflowersWeb.MagicLinkCompleteLive,
       auth_routes_prefix: "/auth",
       on_mount: [
-        EdenflowersWeb.Hooks.PutLocale
+        EdenflowersWeb.Hooks.PutLocale,
+        EdenflowersWeb.Hooks.PutCurrentPath
       ]
     )
   end
