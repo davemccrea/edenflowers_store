@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Mobile hamburger menu --%>
               <div class="block xl:hidden">
                 <button
-                  phx-click={JS.exec("phx-show", to: "#nav-drawer")}
+                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#nav-drawer")}
                   type="button"
                   class="h-12 w-12 cursor-pointer"
                   aria-label={~t"Open navigation menu"}
@@ -212,7 +212,7 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Cart button --%>
               <button
-                phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+                phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
                 type="button"
                 class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
               >

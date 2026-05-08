@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.ProductLive do
 
                 <button
                   type="submit"
-                  phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
                   class="btn btn-primary btn-lg"
                   data-testid="add-to-cart-button"
                 >
