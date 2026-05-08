@@ -492,96 +492,98 @@ Hooks.Stripe = {
   },
 };
 
-function daisyAlertVariantClass(variant) {
-  const map = {
-    info: "alert-info",
-    primary: "alert-info",
-    success: "alert-success",
-    warning: "alert-warning",
-    error: "alert-error",
-    danger: "alert-error",
-  };
-  return map[variant] || "";
-}
-
-function daisyAlertIconSvg(variant) {
+function toastVariantClasses(variant) {
   switch (variant) {
-    case "success":
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-    case "warning":
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+    case "success": return { border: "border-primary",   icon: "text-primary" };
+    case "warning": return { border: "border-amber-500", icon: "text-amber-600" };
     case "error":
-    case "danger":
-      return `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-    default:
-      return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-6 w-6 shrink-0 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+    case "danger":  return { border: "border-rose-500",  icon: "text-rose-500" };
+    default:        return { border: "border-sky-400",   icon: "text-sky-500" };
   }
 }
 
-function createDaisyAlert({ id, variant, message, duration, closable }) {
+function toastIconSvg(variant) {
+  switch (variant) {
+    case "success":
+      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+    case "warning":
+      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>`;
+    case "error":
+    case "danger":
+      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+    default:
+      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  }
+}
+
+function createToast({ id, variant, message, duration, closable }) {
+  const { border, icon: iconColor } = toastVariantClasses(variant);
+
   const div = document.createElement("div");
   if (id) div.id = id;
-  div.className = `alert ${daisyAlertVariantClass(variant)} w-full max-w-sm shadow-lg`;
+  div.className = `toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 ${border} rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs`;
   div.setAttribute("role", "alert");
 
-  const iconWrapper = document.createElement("span");
-  iconWrapper.innerHTML = daisyAlertIconSvg(variant);
-  if (iconWrapper.firstChild) div.appendChild(iconWrapper.firstChild);
+  const iconEl = document.createElement("span");
+  iconEl.className = `shrink-0 mt-0.5 ${iconColor}`;
+  iconEl.innerHTML = toastIconSvg(variant);
+  div.appendChild(iconEl);
 
-  const messageSpan = document.createElement("span");
-  messageSpan.textContent = message;
-  div.appendChild(messageSpan);
+  const msgEl = document.createElement("p");
+  msgEl.className = "text-sm text-base-content flex-1";
+  msgEl.textContent = message;
+  div.appendChild(msgEl);
 
   if (closable) {
     const btn = document.createElement("button");
-    btn.className = "btn btn-ghost btn-xs btn-circle ml-auto";
-    btn.textContent = "✕";
-    btn.addEventListener("click", () => dismissDaisyAlert(div));
+    btn.className = "text-base-content/30 hover:text-base-content/60 ml-auto -mr-1 -mt-0.5 text-lg leading-none cursor-pointer";
+    btn.setAttribute("aria-label", "Dismiss");
+    btn.textContent = "×";
+    btn.addEventListener("click", () => dismissToast(div));
     div.appendChild(btn);
   }
 
   if (duration > 0) {
-    setTimeout(() => dismissDaisyAlert(div), duration);
+    setTimeout(() => dismissToast(div), duration);
   }
 
   return div;
 }
 
-function dismissDaisyAlert(el) {
-  el.style.transition = "opacity 0.3s";
+function dismissToast(el) {
+  el.style.transition = "opacity 0.2s, transform 0.2s";
   el.style.opacity = "0";
-  setTimeout(() => el.remove(), 300);
+  el.style.transform = "translateX(0.5rem)";
+  setTimeout(() => el.remove(), 200);
 }
 
 Hooks.AlertHandler = {
   mounted() {
     this.handleEvent("toast:show", (toast) => {
-      const alertEl = createDaisyAlert({
+      this.el.appendChild(createToast({
         id: `alert-${toast.id}`,
         variant: toast.variant,
         message: toast.message,
         duration: parseInt(toast.duration || "5000", 10),
         closable: toast.closable,
-      });
-      this.el.appendChild(alertEl);
+      }));
     });
   },
 
   disconnected() {
     if (document.getElementById("alert-disconnected")) return;
-    const alertEl = createDaisyAlert({
+    this.el.appendChild(createToast({
       id: "alert-disconnected",
       variant: "warning",
       message: this.el.getAttribute("data-disconnected-message"),
       duration: 0,
       closable: false,
-    });
-    this.el.appendChild(alertEl);
+    }));
   },
 
   reconnected() {
-    const alertEl = document.getElementById("alert-disconnected");
-    if (alertEl) dismissDaisyAlert(alertEl);
+    const el = document.getElementById("alert-disconnected");
+    if (el) dismissToast(el);
   },
 };
 
@@ -589,14 +591,13 @@ Hooks.FlashHandler = {
   mounted() {
     const container = document.getElementById("alert-group") || this.el;
     for (const flashEl of Array.from(this.el.querySelectorAll("[data-variant]"))) {
-      const alertEl = createDaisyAlert({
+      container.appendChild(createToast({
         id: flashEl.id,
         variant: flashEl.dataset.variant,
         message: flashEl.dataset.message,
         duration: parseInt(flashEl.dataset.duration || "5000", 10),
         closable: flashEl.dataset.closable === "true",
-      });
-      container.appendChild(alertEl);
+      }));
     }
     this.pushEvent("lv:clear-flash", {});
   },

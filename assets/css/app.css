@@ -165,6 +165,19 @@ body.ready {
   touch-action: manipulation;
 }
 
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(0.5rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.toast-item {
+  animation: toast-slide-in 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item { animation: none; }
+}
+
 @utility container {
   @apply mx-auto px-4 sm:px-8;
 }

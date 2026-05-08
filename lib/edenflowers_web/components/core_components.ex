@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div
       id="alert-group"
-      class="toast toast-top toast-end z-[100]"
+      class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end"
       phx-hook="AlertHandler"
       data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
     />
