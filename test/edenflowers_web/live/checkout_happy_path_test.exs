@@ -399,6 +399,88 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     end)
   end
 
+  test "applying a promo code preserves unsaved values typed into the current step", %{
+    conn: conn
+  } do
+    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    # Type into step 1 without submitting — phx-change ships the values
+    # to the server so they live on the form's params.
+    view
+    |> form("#checkout-form-1", %{
+      "form" => %{
+        "customer_name" => "Jane Doe",
+        "customer_email" => "jane@example.com"
+      }
+    })
+    |> render_change()
+
+    # Apply the promo from the cart sidebar.
+    html =
+      view
+      |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
+      |> render_submit()
+
+    assert html =~ ~s(data-testid="promo-code-badge")
+    assert html =~ "Jane Doe"
+    assert html =~ "jane@example.com"
+  end
+
+  test "selecting a card preserves the unsaved recipient name on step 2", %{conn: conn} do
+    cards_category = generate(product_category(slug: "cards", draft: false))
+    card_tax_rate = generate(tax_rate())
+
+    card_product =
+      generate(
+        product(
+          product_category_id: cards_category.id,
+          tax_rate_id: card_tax_rate.id,
+          draft: false
+        )
+      )
+
+    card_variant =
+      generate(product_variant(product_id: card_product.id, size: :small, draft: false))
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    # Step 1
+    view
+    |> form("#checkout-form-1", %{
+      "form" => %{
+        "customer_name" => "Jane Doe",
+        "customer_email" => "jane@example.com"
+      }
+    })
+    |> render_submit()
+
+    # Mark as gift so the card-selection UI is rendered.
+    view
+    |> element(~s(input[name="form[gift]"][value="true"]))
+    |> render_change(%{"form" => %{"gift" => "true"}})
+
+    # Type a recipient name without submitting — phx-change ships it to
+    # the server so it lives on the form's params.
+    view
+    |> form("#checkout-form-2", %{
+      "form" => %{
+        "gift" => "true",
+        "recipient_name" => "John Recipient"
+      }
+    })
+    |> render_change()
+
+    # Pick a card.
+    html =
+      view
+      |> render_click("select_card", %{"variant-id" => card_variant.id})
+
+    assert html =~ ~s(data-testid="card-message-textarea")
+    assert html =~ "John Recipient"
+  end
+
   test "Stripe failure on step 4 keeps the order in checkout and sends no email", %{
     conn: conn,
     order: order,

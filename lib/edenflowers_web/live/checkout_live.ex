@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -170,11 +170,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                                   <button
                                     type="button"
                                     phx-click="remove_card"
-                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-1.5 -right-1.5 h-5 min-h-0 w-5"
+                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-2 -right-2 h-7 min-h-0 w-7"
                                     data-testid="remove-card-button"
                                     title={gettext("Remove card")}
                                   >
-                                    <.icon name="hero-x-mark" class="h-3 w-3" />
+                                    <.icon name="hero-trash" class="text-error h-4 w-4" />
                                     <span class="sr-only">{gettext("Remove card")}</span>
                                   </button>
                                 </div>
@@ -556,46 +556,20 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    pending_card_message = socket.assigns.form.params["card_message"]
-
-    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
-      LineItem.remove_item(existing)
-    end
-
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-
-    LineItem.add_card!(%{
-      order_id: socket.assigns.order.id,
-      product_variant_id: variant.id,
-      quantity: 1
-    })
-
-    socket = reload_order(socket)
-
-    socket =
-      if is_binary(pending_card_message) do
-        form = AshPhoenix.Form.validate(socket.assigns.form, %{"card_message" => pending_card_message})
-        assign(socket, form: form)
-      else
-        socket
-      end
-
-    {:noreply, socket}
+    order = Order.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("remove_card", _, socket) do
-    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
-      LineItem.remove_item(existing)
-      Order.clear_card_message!(socket.assigns.order, actor: actor(socket))
-    end
-
-    {:noreply, reload_order(socket)}
+    order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, _order} ->
-        {:noreply, reload_order(socket)}
+      {:ok, order} ->
+        {:noreply, assign_forms(socket, order)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -603,8 +577,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   # Stripe events
@@ -755,17 +729,27 @@ defmodule EdenflowersWeb.CheckoutLive do
     String.to_atom("#{action}_step_#{step}")
   end
 
-  defp make_form(order, action) do
+  defp make_form(order, action, params \\ %{}) do
     order
-    |> AshPhoenix.Form.for_update(action)
+    |> AshPhoenix.Form.for_update(action, params: params)
     |> to_form()
   end
 
+  # Rebuilds both forms against the latest order while preserving any unsaved
+  # input the customer has typed. The data side has to refresh because some
+  # validations read off the order's loaded relationships (e.g. line_items);
+  # the params side has to be preserved so applying a promo or selecting a
+  # card doesn't wipe values the customer is still editing.
   defp assign_forms(socket, order) do
+    form_params = (socket.assigns[:form] && socket.assigns.form.params) || %{}
+
+    promo_params =
+      (socket.assigns[:promo_code_form] && socket.assigns.promo_code_form.params) || %{}
+
     socket
     |> assign(order: order)
-    |> assign(form: make_form(order, action_name(:save, order.step)))
-    |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+    |> assign(form: make_form(order, action_name(:save, order.step), form_params))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code, promo_params))
   end
 
   defp submit_form(socket, step, params) do

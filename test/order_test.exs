@@ -1,7 +1,7 @@
 defmodule Edenflowers.Store.OrderTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.Order
 
   describe "Store Resource" do
     test "creates an order for checkout" do
@@ -322,16 +322,7 @@ defmodule Edenflowers.Store.OrderTest do
       |> Ash.Changeset.for_update(:set_gift, %{gift: true})
       |> Ash.update!(authorize?: false)
 
-    LineItem.add_card!(
-      %{
-        order_id: order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      },
-      authorize?: false
-    )
-
-    Order.get_for_checkout!(order.id, actor: nil)
+    Order.add_card!(order, variant.id, authorize?: false)
   end
 
   describe "Card message length validation" do
@@ -1129,6 +1120,88 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, error} = Order.add_promotion_with_code(order, "   ", authorize?: false)
       assert %Ash.Error.Invalid{} = error
+    end
+  end
+
+  describe "Card line items via Order" do
+    setup do
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards", draft: false))
+
+      card_product =
+        generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id, draft: false))
+
+      card_variant_a = generate(product_variant(product_id: card_product.id, size: :small, draft: false))
+      card_variant_b = generate(product_variant(product_id: card_product.id, size: :large, draft: false))
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      %{order: order, card_variant_a: card_variant_a, card_variant_b: card_variant_b}
+    end
+
+    test "add_card adds a card line item and returns the loaded order", %{
+      order: order,
+      card_variant_a: card_variant_a
+    } do
+      assert {:ok, order} = Order.add_card(order, card_variant_a.id, authorize?: false)
+
+      card = Enum.find(order.line_items, & &1.is_card)
+      assert card
+      assert card.product_variant_id == card_variant_a.id
+      assert card.card_size == card_variant_a.size
+
+      # @checkout_load calculations should be present on the returned order
+      refute match?(%Ash.NotLoaded{}, order.total)
+    end
+
+    test "add_card replaces an existing card line item rather than appending", %{
+      order: order,
+      card_variant_a: card_variant_a,
+      card_variant_b: card_variant_b
+    } do
+      {:ok, _} = Order.add_card(order, card_variant_a.id, authorize?: false)
+      assert {:ok, order} = Order.add_card(order, card_variant_b.id, authorize?: false)
+
+      cards = Enum.filter(order.line_items, & &1.is_card)
+      assert length(cards) == 1
+      assert hd(cards).product_variant_id == card_variant_b.id
+      assert hd(cards).card_size == card_variant_b.size
+    end
+
+    test "remove_card destroys the card line item and clears card_message", %{
+      order: order,
+      card_variant_a: card_variant_a
+    } do
+      gift_order =
+        order
+        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
+        |> Ash.update!(authorize?: false)
+
+      {:ok, with_card} = Order.add_card(gift_order, card_variant_a.id, authorize?: false)
+
+      with_message =
+        with_card
+        |> Ash.Changeset.for_update(:save_step_2, %{
+          gift: true,
+          recipient_name: "Jane",
+          card_message: "Hello"
+        })
+        |> Ash.update!(authorize?: false)
+
+      assert with_message.card_message == "Hello"
+
+      assert {:ok, order} = Order.remove_card(with_message, authorize?: false)
+
+      refute Enum.any?(order.line_items, & &1.is_card)
+      assert is_nil(order.card_message)
+    end
+
+    test "remove_card is a no-op when there is no card line item", %{order: order} do
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      refute Enum.any?(order.line_items, & &1.is_card)
+
+      assert {:ok, order} = Order.remove_card(order, authorize?: false)
+      refute Enum.any?(order.line_items, & &1.is_card)
     end
   end
 
