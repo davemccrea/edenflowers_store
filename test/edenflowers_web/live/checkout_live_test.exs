@@ -276,6 +276,34 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> assert_has("[data-testid='remove-card-button']")
     end
 
+    test "card row in cart sidebar is read-only (no quantity or remove controls)",
+         %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
+      gift_order = generate(order(step: 2, gift: true))
+
+      LineItem.add_item!(%{
+        order_id: gift_order.id,
+        product_variant_id: variant.id,
+        quantity: 1
+      })
+
+      card =
+        Order.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        |> Enum.find(& &1.is_card)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      # The card line item is still rendered in the cart so the customer can
+      # see it on the totals breakdown.
+      |> assert_has("#checkout-line-items", text: card_product.name)
+      # But its row does not expose +/- or trash controls — those would let
+      # the customer accidentally end up with quantity > 1 cards or remove
+      # the card from a place that contradicts the dedicated step-2 UI.
+      |> refute_has("#checkout-line-items-increment-#{card.id}")
+      |> refute_has("#checkout-line-items-decrement-#{card.id}")
+      |> refute_has("#checkout-line-items-remove-#{card.id}")
+    end
+
     test "select_card event adds a card line item to the order",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       gift_order = generate(order(step: 2, gift: true))

@@ -170,11 +170,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                                   <button
                                     type="button"
                                     phx-click="remove_card"
-                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-1.5 -right-1.5 h-5 min-h-0 w-5"
+                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-2 -right-2 h-7 min-h-0 w-7"
                                     data-testid="remove-card-button"
                                     title={gettext("Remove card")}
                                   >
-                                    <.icon name="hero-x-mark" class="h-3 w-3" />
+                                    <.icon name="hero-trash" class="text-error h-4 w-4" />
                                     <span class="sr-only">{gettext("Remove card")}</span>
                                   </button>
                                 </div>
