@@ -65,19 +65,19 @@ defmodule EdenflowersWeb.ProductLive do
 
           <%!-- Product Details --%>
           <section aria-labelledby="product-details-heading" class="flex flex-col gap-8">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <h1 id="product-details-heading" data-testid="product-name" class="page-title tracking-wide">
-                  {@product.name}
-                </h1>
-              </div>
-              <p data-testid="product-price" class="text-2xl">
+            <div class="flex flex-col gap-3">
+              <h1 id="product-details-heading" data-testid="product-name" class="page-title">
+                {@product.name}
+              </h1>
+              <p data-testid="product-price" class="font-serif text-base-content/80 text-2xl sm:text-3xl">
                 {Edenflowers.Utils.format_money(@selected_variant.price)}
               </p>
             </div>
 
-            <div class="text-base-content/80 prose max-w-none">
-              <p data-testid="product-description" class="leading-relaxed">{@product.description}</p>
+            <div class="text-base-content/80 max-w-prose">
+              <p data-testid="product-description" class="leading-relaxed sm:text-lg">
+                {@product.description}
+              </p>
             </div>
 
             <div class="flex flex-col gap-6">
