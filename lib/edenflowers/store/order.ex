@@ -61,7 +61,8 @@ defmodule Edenflowers.Store.Order do
     define :edit_step_1, action: :edit_step_1
     define :edit_step_2, action: :edit_step_2
     define :edit_step_3, action: :edit_step_3
-    define :clear_card_message, action: :clear_card_message
+    define :add_card, action: :add_card, args: [:product_variant_id]
+    define :remove_card, action: :remove_card
   end
 
   actions do
@@ -180,11 +181,6 @@ defmodule Edenflowers.Store.Order do
       change load(@checkout_load)
     end
 
-    update :clear_card_message do
-      change set_attribute(:card_message, nil)
-      change load(@checkout_load)
-    end
-
     update :update_locale do
       argument :locale, :string, allow_nil?: false
       validate argument_in(:locale, @locales)
@@ -223,6 +219,20 @@ defmodule Edenflowers.Store.Order do
 
     update :restart_checkout do
       change {Changes.ResetCheckout, []}
+    end
+
+    update :add_card do
+      argument :product_variant_id, :uuid, allow_nil?: false
+      change {Changes.SwapCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :remove_card do
+      change set_attribute(:card_message, nil)
+      change {Changes.RemoveCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
     end
   end
 

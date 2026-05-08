@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
               <div class="flex flex-col gap-2">
                 <span>{line_item.product_name}</span>
 
-                <div class="flex flex-row items-center gap-2">
+                <div :if={not line_item.is_card} class="flex flex-row items-center gap-2">
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
@@ -52,6 +52,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
               <div class="flex flex-col items-end gap-2">
                 <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
                 <button
+                  :if={not line_item.is_card}
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="btn btn-square btn-ghost btn-xs phx-click-loading:btn-disabled"
