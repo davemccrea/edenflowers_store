@@ -62,7 +62,6 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main class="flex flex-grow items-center justify-center">
-        <.alert_group />
         <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
       </main>
@@ -277,7 +276,6 @@ defmodule EdenflowersWeb.Layouts do
     </div>
 
     <main class="flex-grow">
-      <.alert_group />
       <.flash_group flash={@flash} />
 
       {render_slot(@inner_block)}

@@ -89,12 +89,6 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
   end
 
   defp error_toast(socket) do
-    toast =
-      EdenflowersWeb.LiveToast.new(
-        :warning,
-        ~t"Error sending magic link. Please try again later."
-      )
-
-    push_event(socket, "toast:show", toast)
+    put_flash(socket, :warning, ~t"Error sending magic link. Please try again later.")
   end
 end

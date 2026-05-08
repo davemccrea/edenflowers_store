@@ -30,7 +30,6 @@ defmodule EdenflowersWeb.CoreComponents do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Phoenix.LiveView.JS
-  alias EdenflowersWeb.LiveToast
 
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
@@ -49,51 +48,55 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders a component for dynamic, client-side alerts.
+  Renders flash messages as toast notifications.
 
-  This component is typically used for displaying alerts that are not part of
-  the standard Phoenix flash message lifecycle. For example, you might use this
-  for real-time notifications triggered by client-side events or LiveView pushes
-  that require a more persistent or distinct UI treatment than flash messages.
-  """
-  def alert_group(assigns) do
-    ~H"""
-    <div
-      id="alert-group"
-      class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end"
-      phx-hook="AlertHandler"
-      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
-    />
-    """
-  end
-
-  @doc """
-  Renders the Phoenix flash messages.
-
-  Flash messages are typically used for feedback after an action, such as a successful
-  form submission or an error during an operation. Due to limitations in the Phoenix
-  flash system, only one type of flash message (e.g., one :info or one :error) can be
-  displayed at a time when set directly on the connection.
-
-  It also includes a built-in alert for disconnection/reconnection status.
+  Also handles the disconnected/reconnected banner via the FlashHandler hook.
   """
   def flash_group(assigns) do
-    flash = Enum.map(assigns.flash, fn {key, msg} -> LiveToast.new(key, msg) end)
-    assigns = assign(assigns, :flash, flash)
-
     ~H"""
-    <div id="flash-group" class="hidden" phx-hook="FlashHandler">
+    <div
+      id="flash-group"
+      class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end"
+      phx-hook="FlashHandler"
+      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
+    >
       <div
-        :for={f <- @flash}
-        id={"flash-#{f.id}"}
-        data-variant={f.variant}
-        data-message={f.message}
-        data-duration={f.duration}
-        data-closable={to_string(f.closable)}
-      />
+        :for={{key, msg} <- @flash}
+        id={"flash-#{key}"}
+        class={[
+          "toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs",
+          flash_border_class(key)
+        ]}
+        data-key={key}
+        data-duration="5000"
+        role="alert"
+      >
+        <.icon name={flash_icon(key)} class={["size-4 shrink-0 mt-0.5", flash_icon_class(key)]} />
+        <p class="text-sm text-base-content flex-1">{msg}</p>
+        <button
+          class="text-base-content/30 hover:text-base-content/60 ml-auto -mr-1 -mt-0.5 text-lg leading-none cursor-pointer"
+          aria-label={~t"Dismiss"}
+          data-dismiss
+        >×</button>
+      </div>
     </div>
     """
   end
+
+  defp flash_border_class("error"), do: "border-rose-500"
+  defp flash_border_class("warning"), do: "border-amber-500"
+  defp flash_border_class("success"), do: "border-primary"
+  defp flash_border_class(_), do: "border-sky-400"
+
+  defp flash_icon_class("error"), do: "text-rose-500"
+  defp flash_icon_class("warning"), do: "text-amber-600"
+  defp flash_icon_class("success"), do: "text-primary"
+  defp flash_icon_class(_), do: "text-sky-500"
+
+  defp flash_icon("error"), do: "hero-x-circle-mini"
+  defp flash_icon("warning"), do: "hero-exclamation-triangle-mini"
+  defp flash_icon("success"), do: "hero-check-circle-mini"
+  defp flash_icon(_), do: "hero-information-circle-mini"
 
   @doc """
   Renders a button with navigation support.

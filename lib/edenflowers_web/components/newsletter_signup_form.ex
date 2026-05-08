@@ -60,8 +60,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
       {:error, error} ->
         Logger.error(inspect(error))
-        toast = EdenflowersWeb.LiveToast.new(:error, ~t"There was an error subscribing to the newsletter.")
-        {:noreply, push_event(socket, "toast:show", toast)}
+        {:noreply, put_flash(socket, :error, ~t"There was an error subscribing to the newsletter.")}
     end
   end
 end

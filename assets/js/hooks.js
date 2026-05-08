@@ -492,118 +492,54 @@ Hooks.Stripe = {
   },
 };
 
-function toastVariantClasses(variant) {
-  switch (variant) {
-    case "success": return { border: "border-primary",   icon: "text-primary" };
-    case "warning": return { border: "border-amber-500", icon: "text-amber-600" };
-    case "error":
-    case "danger":  return { border: "border-rose-500",  icon: "text-rose-500" };
-    default:        return { border: "border-sky-400",   icon: "text-sky-500" };
-  }
-}
+Hooks.FlashHandler = {
+  mounted() { this.initAlerts(); },
+  updated() { this.initAlerts(); },
 
-function toastIconSvg(variant) {
-  switch (variant) {
-    case "success":
-      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-    case "warning":
-      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>`;
-    case "error":
-    case "danger":
-      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
-    default:
-      return `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
-  }
-}
+  initAlerts() {
+    for (const el of Array.from(this.el.children)) {
+      if (el.dataset.initialized) continue;
+      el.dataset.initialized = "true";
+      const key = el.dataset.key;
+      const duration = parseInt(el.dataset.duration || "5000", 10);
+      el.querySelector("[data-dismiss]")
+        ?.addEventListener("click", () => this.dismiss(el, key));
+      if (duration > 0) setTimeout(() => this.dismiss(el, key), duration);
+    }
+  },
 
-function createToast({ id, variant, message, duration, closable }) {
-  const { border, icon: iconColor } = toastVariantClasses(variant);
-
-  const div = document.createElement("div");
-  if (id) div.id = id;
-  div.className = `toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 ${border} rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs`;
-  div.setAttribute("role", "alert");
-
-  const iconEl = document.createElement("span");
-  iconEl.className = `shrink-0 mt-0.5 ${iconColor}`;
-  iconEl.innerHTML = toastIconSvg(variant);
-  div.appendChild(iconEl);
-
-  const msgEl = document.createElement("p");
-  msgEl.className = "text-sm text-base-content flex-1";
-  msgEl.textContent = message;
-  div.appendChild(msgEl);
-
-  if (closable) {
-    const btn = document.createElement("button");
-    btn.className = "text-base-content/30 hover:text-base-content/60 ml-auto -mr-1 -mt-0.5 text-lg leading-none cursor-pointer";
-    btn.setAttribute("aria-label", "Dismiss");
-    btn.textContent = "×";
-    btn.addEventListener("click", () => dismissToast(div));
-    div.appendChild(btn);
-  }
-
-  if (duration > 0) {
-    setTimeout(() => dismissToast(div), duration);
-  }
-
-  return div;
-}
-
-function dismissToast(el) {
-  el.style.transition = "opacity 0.2s, transform 0.2s";
-  el.style.opacity = "0";
-  el.style.transform = "translateX(0.5rem)";
-  setTimeout(() => el.remove(), 200);
-}
-
-Hooks.AlertHandler = {
-  mounted() {
-    this.handleEvent("toast:show", (toast) => {
-      this.el.appendChild(createToast({
-        id: `alert-${toast.id}`,
-        variant: toast.variant,
-        message: toast.message,
-        duration: parseInt(toast.duration || "5000", 10),
-        closable: toast.closable,
-      }));
-    });
+  dismiss(el, key) {
+    if (el.dataset.dismissing) return;
+    el.dataset.dismissing = "true";
+    el.style.transition = "opacity 0.2s, transform 0.2s";
+    el.style.opacity = "0";
+    el.style.transform = "translateX(0.5rem)";
+    setTimeout(() => {
+      if (key) this.pushEvent("lv:clear-flash", { key });
+      else el.remove();
+    }, 200);
   },
 
   disconnected() {
-    if (document.getElementById("alert-disconnected")) return;
-    this.el.appendChild(createToast({
-      id: "alert-disconnected",
-      variant: "warning",
-      message: this.el.getAttribute("data-disconnected-message"),
-      duration: 0,
-      closable: false,
-    }));
+    if (document.getElementById("flash-disconnected")) return;
+    const msg = this.el.getAttribute("data-disconnected-message");
+    const div = document.createElement("div");
+    div.id = "flash-disconnected";
+    div.className = "toast-item flex items-start gap-3 bg-base-100 shadow-sm border-l-2 border-amber-500 rounded-r-sm px-4 py-3 min-w-[260px] max-w-xs";
+    div.setAttribute("role", "alert");
+    const icon = document.createElement("span");
+    icon.className = "shrink-0 mt-0.5 text-amber-600";
+    icon.innerHTML = `<svg class="size-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>`;
+    const p = document.createElement("p");
+    p.className = "text-sm text-base-content";
+    p.textContent = msg;
+    div.appendChild(icon);
+    div.appendChild(p);
+    this.el.appendChild(div);
   },
 
   reconnected() {
-    const el = document.getElementById("alert-disconnected");
-    if (el) dismissToast(el);
-  },
-};
-
-Hooks.FlashHandler = {
-  mounted() {
-    const container = document.getElementById("alert-group") || this.el;
-    for (const flashEl of Array.from(this.el.querySelectorAll("[data-variant]"))) {
-      container.appendChild(createToast({
-        id: flashEl.id,
-        variant: flashEl.dataset.variant,
-        message: flashEl.dataset.message,
-        duration: parseInt(flashEl.dataset.duration || "5000", 10),
-        closable: flashEl.dataset.closable === "true",
-      }));
-    }
-    this.pushEvent("lv:clear-flash", {});
-  },
-
-  disconnected() {
-    // Alerts already moved to #alert-group; nothing to clean up
+    this.dismiss(document.getElementById("flash-disconnected"), null);
   },
 };
 
