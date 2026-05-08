@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
     end
 
-    with {:ok, _line_items} <- cart_has_items?(order),
+    with :ok <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       fulfillment_options = sort_fulfillment_options(fulfillment_options)
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
@@ -35,6 +35,11 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> maybe_setup_stripe(order)}
     else
       {:error, :empty_cart} ->
+        # Mounting with an effectively-empty cart means the customer either
+        # navigated here directly or returned after another tab emptied the
+        # cart. Reset before bouncing so a stale step/card/contact details
+        # don't survive into the next checkout.
+        Order.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
       error ->
@@ -602,7 +607,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
     cond do
-      Enum.empty?(order.line_items) ->
+      order.cart_effectively_empty? ->
         Order.restart_checkout!(order, actor: actor)
         {:noreply, push_navigate(socket, to: ~p"/")}
 
@@ -838,8 +843,8 @@ defmodule EdenflowersWeb.CheckoutLive do
     end)
   end
 
-  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
-  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+  defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
+  defp cart_has_items?(_order), do: :ok
 
   defp get_next_section_id(id, 1), do: "#{id}-section-2"
   defp get_next_section_id(id, 2), do: "#{id}-section-3"

@@ -23,6 +23,7 @@ defmodule Edenflowers.Store.Order do
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
+    :cart_effectively_empty?,
     :promotion,
     :fulfillment_option,
     :line_items
@@ -219,6 +220,7 @@ defmodule Edenflowers.Store.Order do
 
     update :restart_checkout do
       change {Changes.ResetCheckout, []}
+      require_atomic? false
     end
 
     update :add_card do
@@ -351,6 +353,12 @@ defmodule Edenflowers.Store.Order do
               )
 
     calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
+
+    # A cart with only a card line item is presented as empty in the UI
+    # (card controls are hidden in the cart sidebar) and shouldn't keep
+    # checkout alive on its own. Treat it as effectively empty so reset
+    # logic and the mount guard agree with what the customer sees.
+    calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0)
   end
 
   aggregates do
@@ -358,6 +366,7 @@ defmodule Edenflowers.Store.Order do
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
     sum :discount_amount, :line_items, :discount_amount
+    count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
   end
 
   identities do
