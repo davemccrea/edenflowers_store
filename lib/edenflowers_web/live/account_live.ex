@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.AccountLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}></Layouts.app>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}></Layouts.app>
     """
   end
 end
