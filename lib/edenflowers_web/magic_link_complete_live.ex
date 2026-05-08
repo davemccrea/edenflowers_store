@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.auth flash={@flash}>
+    <Layouts.auth flash={@flash} current_path={@current_path}>
       <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-8 p-8 shadow-lg">
         <h2 class="text-center text-lg font-bold">
           {~t"Complete sign in"}
