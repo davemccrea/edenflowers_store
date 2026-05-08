@@ -399,6 +399,35 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     end)
   end
 
+  test "applying a promo code preserves unsaved values typed into the current step", %{
+    conn: conn
+  } do
+    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    # Type into step 1 without submitting — phx-change ships the values
+    # to the server so they live on the form's params.
+    view
+    |> form("#checkout-form-1", %{
+      "form" => %{
+        "customer_name" => "Jane Doe",
+        "customer_email" => "jane@example.com"
+      }
+    })
+    |> render_change()
+
+    # Apply the promo from the cart sidebar.
+    html =
+      view
+      |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
+      |> render_submit()
+
+    assert html =~ ~s(data-testid="promo-code-badge")
+    assert html =~ "Jane Doe"
+    assert html =~ "jane@example.com"
+  end
+
   test "Stripe failure on step 4 keeps the order in checkout and sends no email", %{
     conn: conn,
     order: order,

@@ -594,8 +594,8 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, _order} ->
-        {:noreply, reload_order(socket)}
+      {:ok, order} ->
+        {:noreply, assign_promo(socket, order)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -603,8 +603,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_promo(socket, order)}
   end
 
   # Stripe events
@@ -765,6 +765,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     socket
     |> assign(order: order)
     |> assign(form: make_form(order, action_name(:save, order.step)))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+  end
+
+  # Refresh order + promo form only. The main step form is left alone so
+  # unsaved input the customer has typed into the current step survives.
+  defp assign_promo(socket, order) do
+    socket
+    |> assign(order: order)
     |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
   end
 
