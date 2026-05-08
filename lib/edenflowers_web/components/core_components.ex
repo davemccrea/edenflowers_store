@@ -677,6 +677,7 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.toggle_class("overflow-hidden", to: "html")
+        |> JS.pop_focus()
       }
       class="z-100 relative"
     >
