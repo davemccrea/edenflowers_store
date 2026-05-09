@@ -51,12 +51,13 @@ git branch -d feature/my-feature
 
 ### Releasing a new version
 
-1. Update the version in `mix.exs` (e.g. `0.1.0` → `0.2.0`)
-2. Commit the change: `git commit -am "Bump version to v0.2.0"`
-3. Tag the commit: `git tag v0.2.0`
-4. Push the tag: `git push origin v0.2.0`
+Use `deploy.sh` with the new semver version:
 
-GitHub Actions will build the Docker image and deploy it to the server automatically.
+```bash
+./deploy.sh 0.3.0
+```
+
+The script verifies the working tree is clean, the tag doesn't already exist, and that compile + tests pass. It then bumps the version in `mix.exs`, commits, tags `v0.3.0`, and pushes both `main` and the tag. GitHub Actions takes it from there to build the Docker image and deploy.
 
 ### Syncing images to server
 
