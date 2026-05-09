@@ -6,10 +6,6 @@ defmodule Edenflowers.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication, AshAdmin.Resource]
 
-  admin do
-    actor? true
-  end
-
   authentication do
     add_ons do
       log_out_everywhere do
@@ -39,6 +35,10 @@ defmodule Edenflowers.Accounts.User do
   postgres do
     table "users"
     repo Edenflowers.Repo
+  end
+
+  admin do
+    actor?(true)
   end
 
   code_interface do
