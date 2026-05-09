@@ -183,7 +183,7 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
+    order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
     assert order.state == :placed
@@ -193,7 +193,7 @@ defmodule Edenflowers.Store.OrderTest do
 
   describe "Gift flow validation" do
     test "requires recipient_name when gift is true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Attempt to save step 2 with gift=true but no recipient_name
       assert {:error, error} =
@@ -208,7 +208,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "does not require recipient_name when gift is false" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Should succeed without recipient_name when gift is false
       assert {:ok, order} =
@@ -224,7 +224,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "accepts recipient_name when gift is true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Should succeed with recipient_name when gift is true
       assert {:ok, order} =
@@ -257,6 +257,10 @@ defmodule Edenflowers.Store.OrderTest do
       assert order.recipient_name == "John Smith"
       assert order.card_message == "Happy birthday!"
 
+      # Production flow: customer hits "Edit" on the gift step, returning the
+      # order to :gift_options before re-submitting.
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
+
       {:ok, order} =
         order
         |> Ash.Changeset.for_update(:submit_gift_options, %{
@@ -288,7 +292,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "retains recipient_name when gift remains true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # First set gift=true with recipient info
       {:ok, order} =
@@ -299,7 +303,10 @@ defmodule Edenflowers.Store.OrderTest do
         })
         |> Ash.update(authorize?: false)
 
-      # Update with gift still true - should retain fields
+      # Production flow: customer hits "Edit" on the gift step, returning the
+      # order to :gift_options before re-submitting unchanged.
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
+
       {:ok, order} =
         order
         |> Ash.Changeset.for_update(:submit_gift_options, %{
@@ -317,9 +324,7 @@ defmodule Edenflowers.Store.OrderTest do
     variant = generate(product_variant(product_id: card_product.id, size: size))
 
     order =
-      Order.create_for_checkout!(authorize?: false)
-      |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-      |> Ash.update!(authorize?: false)
+      generate(order(state: :gift_options, gift: true))
 
     Order.add_card!(order, variant.id, authorize?: false)
   end
@@ -910,10 +915,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 requires fulfillment_date", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-
-      # Set step to 3
-      order = Ash.Changeset.for_update(order, :return_to_delivery) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       # Attempt to save without fulfillment_date
       assert {:error, error} =
@@ -927,8 +929,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :return_to_delivery) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       # Note: In real flow, delivery_address would trigger HereAPI calls
       # For pickup, we don't need delivery address
@@ -953,8 +954,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 with pickup calculates correct fixed price", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :return_to_delivery) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       assert {:ok, order} =
                order
@@ -968,8 +968,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :return_to_delivery) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       yesterday = Date.add(Date.utc_today(), -1)
 
@@ -995,7 +994,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "payment_status transitions from pending to paid" do
-      order = generate(order(payment_status: :pending, payment_intent_id: "pi_test"))
+      order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
 
       assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
       assert order.payment_status == :paid
@@ -1031,7 +1030,7 @@ defmodule Edenflowers.Store.OrderTest do
       order =
         generate(
           order(
-            step: 4,
+            state: :payment,
             customer_name: "Test Customer",
             customer_email: "test@example.com",
             gift: true,
@@ -1076,16 +1075,15 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.fulfillment_option_id)
     end
 
-    test "reset preserves order id and state" do
-      order = generate(order(step: 3, customer_name: "Test", customer_email: "test@example.com"))
+    test "reset preserves order id and returns the order to :contact_details" do
+      order = generate(order(state: :delivery, customer_name: "Test", customer_email: "test@example.com"))
       original_id = order.id
-      original_state = order.state
 
       assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
-      # ID and state should remain unchanged
+      # The same row, rewound to the start of the flow
       assert reset_order.id == original_id
-      assert reset_order.state == original_state
+      assert reset_order.state == :contact_details
     end
 
     test "reset destroys all line items, including any leftover card" do
@@ -1222,13 +1220,9 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "remove_card destroys the card line item and clears card_message", %{
-      order: order,
       card_variant_a: card_variant_a
     } do
-      gift_order =
-        order
-        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-        |> Ash.update!(authorize?: false)
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       {:ok, with_card} = Order.add_card(gift_order, card_variant_a.id, authorize?: false)
 

@@ -247,14 +247,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "saving step 2 with gift=false removes card line items", %{
-      order: order,
       card_variant: card_variant
     } do
-      order =
-        order
-        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-        |> Ash.update!(authorize?: false)
-
+      order = generate(order(state: :gift_options, gift: true))
       Order.add_card!(order, card_variant.id, authorize?: false)
 
       order
