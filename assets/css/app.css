@@ -398,6 +398,98 @@ body.ready {
   }
 }
 
+/* Embla Carousel — Featured Blooms.
+   Embla is headless: container must be flex, slides must be flex-none, the
+   rest is ours. Slide widths track the old Tailwind breakpoint widths
+   (xs:w-1/2, sm:w-72) but with sensible mobile defaults.
+   Hook: assets/js/hooks.js (Hooks.FeaturedCarousel) */
+.embla__viewport {
+  overflow: hidden;
+  /* Mobile edge-bleed: break out of the parent container so the active slide
+     reaches the viewport edges. Above sm we sit inside the container again. */
+  margin-inline: calc(50% - 50vw);
+}
+@media (min-width: 640px) {
+  .embla__viewport {
+    margin-inline: 0;
+  }
+}
+.embla__container {
+  display: flex;
+  gap: 0.5rem; /* matches the old space-x-2 */
+  padding: 0.5rem;
+  /* Touch action lets vertical page scroll co-exist with Embla's horizontal drag. */
+  touch-action: pan-y pinch-zoom;
+}
+.embla__slide {
+  /* Mobile: active card dominates with a small peek on each side. The hook
+     writes --embla-progress (0 = focused, 1 = at neighbour snap) on every
+     scroll frame; CSS scales/fades neighbours so the focused card pops. */
+  flex: 0 0 85%;
+  min-width: 0;
+  --embla-progress: 0;
+  transform: scale(calc(1 - var(--embla-progress) * 0.08));
+  opacity: calc(1 - var(--embla-progress) * 0.45);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+@media (min-width: 480px) {
+  .embla__slide { flex-basis: 50%; }
+}
+@media (min-width: 640px) {
+  /* Above sm we show multiple cards in a row — kill the focal-point effect
+     so every visible card reads equally. */
+  .embla__slide {
+    flex-basis: 18rem; /* sm:w-72 = 18rem */
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: drop the scale/fade so the carousel is a flat strip. */
+  .embla__slide {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Dots — sit in the site's muted-UI register (base-content/15 and /60),
+   matching how the calendar and secondary text use base-content opacities.
+   Quiet enough to read as a typographic mark rather than UI chrome. */
+.embla__dot {
+  width: 0.3125rem; /* 5px */
+  height: 0.3125rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.embla__dot--selected {
+  background: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  width: 0.875rem; /* 14px — pill stretches ~2.8× wider than tall */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .embla__dot {
+    transition: background-color 200ms ease, width 200ms ease;
+  }
+}
+
+/* Disabled prev/next on edges fades visually but stays in tab order.
+   `:where` keeps the daisyUI .btn rules from out-specifying us. */
+:where(.embla__prev, .embla__next):disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Hide arrows + dots when the carousel has nothing to scroll (all slides
+   fit in view). The hook toggles .embla--no-scroll on the enclosing
+   <section> from onSelect, which fires on init, scroll, and reInit. */
+.embla--no-scroll :where(.embla__prev, .embla__next, .embla__dots) {
+  display: none;
+}
+
 .auth-background-pattern {
   background-color: #fafaf9;
   background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
