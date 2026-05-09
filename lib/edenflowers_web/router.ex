@@ -88,10 +88,10 @@ defmodule EdenflowersWeb.Router do
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 
-    ash_admin "/",
-      AshAuthentication.Phoenix.LiveSession.opts(
-        on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}]
-      )
+    ash_admin(
+      "/",
+      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
+    )
   end
 
   # Other scopes may use custom stacks.

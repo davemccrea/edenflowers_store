@@ -4,7 +4,7 @@ defmodule Edenflowers.Store do
     extensions: [AshAdmin.Domain]
 
   admin do
-    show? true
+    show?(true)
   end
 
   resources do
