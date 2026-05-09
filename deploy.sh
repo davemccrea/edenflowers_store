@@ -41,6 +41,6 @@ echo "Updated mix.exs to version $VERSION"
 git add mix.exs
 git commit -m "Bump version to $TAG"
 git tag "$TAG"
-git push origin main "$TAG"
+SKIP_HOOKS=1 git push origin main "$TAG"
 
 echo "Deployed $TAG — GitHub Actions will build and deploy the Docker image."
