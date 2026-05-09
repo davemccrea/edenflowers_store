@@ -46,42 +46,80 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <section id="store" class="not-last:border-b">
-        <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="section-title mb-4 px-2">{~t"Featured Blooms"}</h2>
+        <div class="container py-24 xl:max-w-[70vw]">
+          <div class="mb-4 flex items-end justify-between gap-4 px-2">
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
 
-          <div
-            id="product-slider"
-            style="scrollbar-width: thin;"
-            class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
-          >
-            <ul class="flex space-x-2 py-2">
-              <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
-                <.link
-                  navigate={~p"/product/#{product}"}
-                  aria-labelledby={product.name}
-                  class="group flex flex-col"
-                >
-                  <div class="mb-3 overflow-hidden rounded-lg">
-                    <img
-                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                      alt={product.name}
-                      class="aspect-square w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  <div class="text-base-content flex flex-col items-center gap-1">
-                    <h3
-                      id={product.name}
-                      class="card-title underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
-                    >
-                      {product.name}
-                    </h3>
-                    <p class="text-base-content/70 text-sm">
-                      {Edenflowers.Utils.format_money(product.cheapest_price)}
-                    </p>
-                  </div>
-                </.link>
-              </li>
-            </ul>
+            <div class="hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                class="embla__prev btn btn-circle btn-ghost"
+                aria-label={~t"Previous"}
+              >
+                <.icon name="hero-chevron-left" class="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                class="embla__next btn btn-circle btn-ghost"
+                aria-label={~t"Next"}
+              >
+                <.icon name="hero-chevron-right" class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div class="embla">
+            <div
+              id="featured-blooms-viewport"
+              phx-hook="FeaturedCarousel"
+              phx-update="ignore"
+              class="embla__viewport"
+              role="region"
+              aria-label={~t"Featured Blooms"}
+            >
+              <ul class="embla__container">
+                <li :for={product <- @products} class="embla__slide">
+                  <.link
+                    navigate={~p"/product/#{product}"}
+                    aria-labelledby={product.name}
+                    class="group flex flex-col"
+                  >
+                    <div class="mb-3 overflow-hidden rounded-lg">
+                      <picture>
+                        <%!-- Mobile: 4:5 portrait crop for an immersive feel.
+                             Desktop (sm+): 1:1 square so cards sit cleanly in a row. --%>
+                        <source
+                          media="(min-width: 640px)"
+                          srcset={
+                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()
+                          }
+                        />
+                        <img
+                          src={
+                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()
+                          }
+                          alt={product.name}
+                          class="aspect-[4/5] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] sm:aspect-square"
+                        />
+                      </picture>
+                    </div>
+                    <div class="text-base-content flex flex-col items-center gap-1">
+                      <h3
+                        id={product.name}
+                        class="card-title underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
+                      >
+                        {product.name}
+                      </h3>
+                      <p class="text-base-content/70 text-sm">
+                        {Edenflowers.Utils.format_money(product.cheapest_price)}
+                      </p>
+                    </div>
+                  </.link>
+                </li>
+              </ul>
+            </div>
+
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
           </div>
         </div>
       </section>
