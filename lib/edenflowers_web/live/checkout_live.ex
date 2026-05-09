@@ -883,10 +883,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Stripe utilities
   #
-  # We only touch Stripe once the customer is on step 4. Earlier mounts (or
-  # mounts where the LiveView reconnects on a non-payment step) skip the round
-  # trip entirely.
-  defp maybe_setup_stripe(socket, %{step: 4} = order), do: setup_stripe(socket, order)
+  # We only touch Stripe once the customer is on the payment state. Earlier
+  # mounts (or mounts where the LiveView reconnects on a non-payment state)
+  # skip the round trip entirely.
+  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
   defp maybe_setup_stripe(socket, _order), do: socket
 
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
