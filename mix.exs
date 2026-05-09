@@ -112,7 +112,8 @@ defmodule Edenflowers.MixProject do
       {:localize_web, "~> 0.5.1"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
-      {:imgproxy, "~> 3.1"}
+      {:imgproxy, "~> 3.1"},
+      {:ash_admin, "~> 1.0"}
     ]
   end
 
