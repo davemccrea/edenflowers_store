@@ -272,13 +272,17 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -292,10 +296,14 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -346,12 +354,16 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[@errors != [] && "input-error"]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         />
       </label>
       <button class="btn btn-primary join-item z-50">{@button_text}</button>
     </fieldset>
-    <.error :for={msg <- @errors}>{msg}</.error>
+    <div :if={@errors != []} id={"#{@id}-error"}>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
     """
   end
 
@@ -368,6 +380,8 @@ defmodule EdenflowersWeb.CoreComponents do
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            aria-invalid={@errors != []}
+            aria-describedby={@errors != [] && "#{@id}-error"}
             {@rest}
           />
           <div
@@ -386,7 +400,9 @@ defmodule EdenflowersWeb.CoreComponents do
           </div>
         </div>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -608,7 +624,7 @@ defmodule EdenflowersWeb.CoreComponents do
   def social_media_links(assigns) do
     ~H"""
     <div class="flex flex-row gap-4">
-      <a href="#">
+      <a href="#" aria-label="Eden Flowers on Facebook">
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -617,10 +633,10 @@ defmodule EdenflowersWeb.CoreComponents do
             |> Imgproxy.resize(128, 128, type: "fill")
             |> to_string()
           }
-          alt="Facebook logo"
+          alt=""
         />
       </a>
-      <a href="#">
+      <a href="#" aria-label="Eden Flowers on Instagram">
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -629,7 +645,7 @@ defmodule EdenflowersWeb.CoreComponents do
             |> Imgproxy.resize(128, 128, type: "fill")
             |> to_string()
           }
-          alt="Instagram logo"
+          alt=""
         />
       </a>
     </div>
@@ -662,6 +678,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
   attr :class, :string, default: "bg-base-100 min-w-96"
+  attr :label, :string, default: nil
   slot :inner_block, required: true
 
   def drawer(%{placement: placement} = assigns) do
@@ -708,6 +725,7 @@ defmodule EdenflowersWeb.CoreComponents do
         id={"#{@id}-dialog"}
         role="dialog"
         aria-modal="true"
+        aria-label={@label}
         class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>

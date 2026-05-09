@@ -142,51 +142,46 @@ defmodule EdenflowersWeb.ProductLive do
           <h2 id="faq-heading" class="section-title mb-12 text-center">{~t"Frequently Asked Questions"}</h2>
 
           <div class="space-y-4">
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" checked="checked" />
-              <div class="collapse-title font-medium">{~t"How long will my flowers stay fresh?"}</div>
+            <details class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border" open>
+              <summary class="collapse-title font-medium">{~t"How long will my flowers stay fresh?"}</summary>
               <div class="collapse-content text-base-content/80">
                 <p>
                   {~t"Our flowers are carefully selected and arranged to last 5-7 days with proper care. We recommend changing the water every 2-3 days, trimming the stems, and keeping them away from direct sunlight and drafts."}
                 </p>
               </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"What is your delivery policy?"}</div>
+            </details>
+            <details class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
+              <summary class="collapse-title font-medium">{~t"What is your delivery policy?"}</summary>
               <div class="collapse-content text-base-content/80">
                 <p>
                   {~t"We offer same-day delivery for orders placed before 2 PM on weekdays. For weekend deliveries, please place your order by Friday 2 PM. All our deliveries are carefully handled to ensure your flowers arrive in perfect condition."}
                 </p>
               </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"Can I include a personal message with my order?"}</div>
+            </details>
+            <details class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
+              <summary class="collapse-title font-medium">{~t"Can I include a personal message with my order?"}</summary>
               <div class="collapse-content text-base-content/80">
                 <p>
                   {~t"Yes! You can add a personal message during checkout. We'll include it on a beautiful card with your delivery. Messages can be up to 200 characters."}
                 </p>
               </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"Do you offer subscription services?"}</div>
+            </details>
+            <details class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
+              <summary class="collapse-title font-medium">{~t"Do you offer subscription services?"}</summary>
               <div class="collapse-content text-base-content/80">
                 <p>
                   {~t"Yes, we offer weekly, bi-weekly, and monthly subscription services. You can customize your subscription to match your preferences and schedule. Subscribers receive a 10% discount on all orders."}
                 </p>
               </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"What happens if I'm not home for delivery?"}</div>
+            </details>
+            <details class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
+              <summary class="collapse-title font-medium">{~t"What happens if I'm not home for delivery?"}</summary>
               <div class="collapse-content text-base-content/80">
                 <p>
                   {~t"Our delivery team will attempt to leave your flowers in a safe, shaded location. If no suitable location is available, they will leave a note with instructions for redelivery. You can also specify delivery instructions during checkout."}
                 </p>
               </div>
-            </div>
+            </details>
           </div>
         </section>
       </.container>
