@@ -282,7 +282,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.position == "63.0951,21.6165"
@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end
   end

@@ -95,7 +95,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "shows 'Add a card' button when order is a gift",
          %{conn: conn, variant: variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           )
         )
 
-      step_3_order = generate(order(step: 3, customer_name: "Jane", customer_email: "jane@example.com"))
+      step_3_order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
       LineItem.add_item!(%{
         order_id: step_3_order.id,
@@ -209,7 +209,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(step_3_order.id, actor: nil)
       assert reloaded.fulfillment_option_id == delivery_option.id
       assert reloaded.fulfillment_method == :delivery
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
     end
 
     test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       Order.add_card!(order, card_variant.id, authorize?: false)
 
       order
-      |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
+      |> Ash.Changeset.for_update(:submit_gift_options, %{gift: false})
       |> Ash.update!(authorize?: false)
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
@@ -267,7 +267,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "shows card message textarea when a card line item exists",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -286,7 +286,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "card row in cart sidebar is read-only (no quantity or remove controls)",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -314,7 +314,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "select_card event adds a card line item to the order",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -333,7 +333,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "remove_card event removes the card from the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -355,7 +355,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "save_form_2 persists card_message on the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       # recipient_name is required when gift=true, so seed it on the order directly
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test Recipient"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test Recipient"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -377,7 +377,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "card_message is preserved across re-renders while on step 2",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Original"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -397,7 +397,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "renders maxlength matching the selected card's size limit",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -420,7 +420,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -447,7 +447,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -470,7 +470,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "submitting an oversize message renders the inline error",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -493,7 +493,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "remove_card clears card_message on the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order =
-        generate(order(step: 2, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
+        generate(order(state: :gift_options, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
 
       LineItem.add_item!(%{
         order_id: gift_order.id,
@@ -537,7 +537,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       stale =
         order
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Stale Customer",
           customer_email: "stale@example.com"
         })
@@ -549,7 +549,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []
       assert is_nil(reloaded.customer_name)
-      assert reloaded.step == 1
+      assert reloaded.state == :contact_details
     end
 
     test "removing the last non-card line item mid-checkout resets the order and redirects",

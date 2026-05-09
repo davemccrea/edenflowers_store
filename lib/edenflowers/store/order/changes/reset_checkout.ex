@@ -12,7 +12,6 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
   alias Edenflowers.Store.LineItem
 
   @reset_attrs %{
-    step: 1,
     customer_name: nil,
     customer_email: nil,
     gift: false,
