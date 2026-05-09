@@ -28,10 +28,6 @@
 
     <script src="https://js.stripe.com/v3/">
     </script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js">
-    </script>
   </head>
   <body class="bg-base-200 flex min-h-screen flex-col antialiased">
     {@inner_content}
@@ -56,20 +52,7 @@
       })();
     </script>
 
-    <script type="module">
-      // https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/
-      async function ensureCustomElementDefined(elementName) {
-        const elementExists = document.querySelector(elementName);
-        if (elementExists) {
-          await customElements.whenDefined(elementName);
-        }
-      }
-
-      await Promise.allSettled([
-        ensureCustomElementDefined("sl-alert"),
-        ensureCustomElementDefined("sl-icon"),
-      ]);
-
+    <script>
       document.body.classList.add('ready');
     </script>
   </body>

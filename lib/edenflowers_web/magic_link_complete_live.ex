@@ -83,14 +83,8 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
         |> assign(:form, form)
         |> assign(:trigger_action, true)
       else
-        error_toast =
-          EdenflowersWeb.LiveToast.new(
-            :warning,
-            ~t"Error signing in. Please try again later."
-          )
-
         socket
-        |> push_event("toast:show", error_toast)
+        |> put_flash(:warning, ~t"Error signing in. Please try again later.")
         |> assign(form: form)
       end
 
