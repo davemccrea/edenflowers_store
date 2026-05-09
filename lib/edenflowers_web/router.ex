@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
+  use AshAdmin.Router
 
   import AshAuthentication.Plug.Helpers
   import Oban.Web.Router
@@ -82,10 +83,13 @@ defmodule EdenflowersWeb.Router do
     )
   end
 
-  # TODO: auth
-  scope "/admin", EdenflowersWeb do
+  scope "/admin" do
     pipe_through :browser
+
     oban_dashboard("/oban")
+
+    ash_admin "/",
+      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}]
   end
 
   # Other scopes may use custom stacks.
