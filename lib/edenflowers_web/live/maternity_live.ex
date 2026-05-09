@@ -29,7 +29,11 @@ defmodule EdenflowersWeb.MaternityLive do
         />
       </header>
 
-      <main class="flex flex-grow items-center justify-center px-6 py-8 md:-mt-24">
+      <main
+        id="main-content"
+        tabindex="-1"
+        class="flex flex-grow items-center justify-center px-6 py-8 outline-hidden md:-mt-24"
+      >
         <div class="flex w-full max-w-4xl flex-col items-center gap-8 md:flex-row md:items-center md:gap-12">
           <div class="order-2 w-full max-w-sm flex-shrink-0 md:order-1 md:w-96">
             <img

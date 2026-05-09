@@ -31,11 +31,8 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-echo "Compiling..."
-mix compile --warnings-as-errors
-
-echo "Running tests..."
-mix test
+echo "Running precommit checks..."
+mix precommit
 
 sed -i '' "s/version: \"[0-9]*\.[0-9]*\.[0-9]*\"/version: \"$VERSION\"/" mix.exs
 
@@ -44,6 +41,6 @@ echo "Updated mix.exs to version $VERSION"
 git add mix.exs
 git commit -m "Bump version to $TAG"
 git tag "$TAG"
-git push origin main "$TAG"
+SKIP_HOOKS=1 git push origin main "$TAG"
 
 echo "Deployed $TAG — GitHub Actions will build and deploy the Docker image."
