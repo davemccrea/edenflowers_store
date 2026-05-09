@@ -4,11 +4,7 @@ defmodule Edenflowers.Accounts.Token do
     domain: Edenflowers.Accounts,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication.TokenResource, AshAdmin.Resource]
-
-  admin do
-    show? false
-  end
+    extensions: [AshAuthentication.TokenResource]
 
   postgres do
     table "tokens"

@@ -1,8 +1,8 @@
 defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
-  use AshAdmin.Router
 
+  import AshAdmin.Router
   import AshAuthentication.Plug.Helpers
   import Oban.Web.Router
 
