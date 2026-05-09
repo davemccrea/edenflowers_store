@@ -346,6 +346,40 @@ body.ready {
   @apply font-sans font-bold uppercase tracking-[0.18em];
 }
 
+/* Link underlines — unified policy.
+
+   Thickness is fixed in px (3 for display, 2 for nav) rather than
+   `from-font` — we want a deliberate brand stroke, not a typeface-quiet
+   line. Offsets are em-based so the gap tracks text size.
+
+   Three buckets, sized by the text they decorate:
+     -display  for serif headings (text-2xl+): card titles, drawer links
+     -nav      for small UI labels (text-xs..sm): header nav, footer
+     -body     for inline prose links — dimmed, always visible */
+@utility link-underline-hover-display {
+  @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.3em] hover:underline;
+  text-decoration-thickness: 3px;
+}
+
+@utility link-underline-group-hover-display {
+  @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.3em] group-hover:underline;
+  text-decoration-thickness: 3px;
+}
+
+@utility link-underline-hover-nav {
+  @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.25em] hover:underline;
+  text-decoration-thickness: 2px;
+}
+
+/* Body: dimmed, always-visible underline for inline prose links.
+   Stays at `from-font` thickness — body links should defer to the reading
+   flow, not interrupt it. This is the one place restraint wins. */
+@utility link-underline-static-body {
+  @apply underline underline-offset-[0.2em];
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-decoration-thickness: from-font;
+}
+
 #hotfx-shy-header {
   display: flex;
   position: fixed;

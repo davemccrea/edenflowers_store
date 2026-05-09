@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.HomeLive do
                     <div class="text-base-content flex flex-col items-center gap-1">
                       <h3
                         id={product.name}
-                        class="card-title underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
+                        class="card-title link-underline-group-hover-display"
                       >
                         {product.name}
                       </h3>
@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.HomeLive do
           </blockquote>
           <.link
             navigate={~p"/about"}
-            class="eyebrow text-base-content underline-offset-[6px] hover:decoration-(--color-accent-alt) hover:underline"
+            class="eyebrow text-base-content link-underline-hover-nav"
           >
             {~t"Learn more"}
           </.link>

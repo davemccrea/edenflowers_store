@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.StoreLive do
                 <div class="flex flex-1 flex-col gap-2 px-5 py-5 sm:px-6 sm:py-6">
                   <h3
                     id={"product-#{product.id}"}
-                    class="card-title text-base-content underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
+                    class="card-title text-base-content link-underline-group-hover-display"
                   >
                     {product.name}
                   </h3>

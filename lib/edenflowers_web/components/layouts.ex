@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Layouts do
           <ul class="space-y-4">
             <li :for={{url, name} <- @nav}>
               <.link
-                class="font-serif text-base-content text-3xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
+                class="font-serif text-base-content link-underline-hover-display text-3xl"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={url}
               >
@@ -239,7 +239,7 @@ defmodule EdenflowersWeb.Layouts do
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
                     <.link
-                      class="text-base-content underline-offset-[6px] whitespace-nowrap text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline"
+                      class="text-base-content link-underline-hover-nav whitespace-nowrap text-sm tracking-wide"
                       navigate={url}
                     >
                       {name}
@@ -369,7 +369,7 @@ defmodule EdenflowersWeb.Layouts do
         <span class="text-xs">
           © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
           <a
-            class="text-base-content whitespace-nowrap hover:underline hover:underline-offset-2"
+            class="text-base-content link-underline-hover-nav whitespace-nowrap"
             href="https://github.com/davemccrea/edenflowers_store"
           >
             {~t"Built with "} <span>❤️</span>
