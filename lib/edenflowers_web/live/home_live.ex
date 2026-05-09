@@ -54,36 +54,44 @@ defmodule EdenflowersWeb.HomeLive do
               <button
                 type="button"
                 class="embla__prev btn btn-circle btn-ghost"
-                aria-label={~t"Previous"}
+                aria-label={~t"Previous slide"}
+                aria-controls="featured-blooms-viewport"
               >
                 <.icon name="hero-chevron-left" class="h-5 w-5" />
               </button>
               <button
                 type="button"
                 class="embla__next btn btn-circle btn-ghost"
-                aria-label={~t"Next"}
+                aria-label={~t"Next slide"}
+                aria-controls="featured-blooms-viewport"
               >
                 <.icon name="hero-chevron-right" class="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          <div class="embla">
+          <div
+            class="embla"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label={~t"Featured Blooms"}
+          >
             <div
               id="featured-blooms-viewport"
               phx-hook="FeaturedCarousel"
               phx-update="ignore"
               class="embla__viewport"
-              role="region"
-              aria-label={~t"Featured Blooms"}
+              data-dot-label-template={~t"Go to slide __N__"}
             >
               <ul class="embla__container">
-                <li :for={product <- @products} class="embla__slide">
-                  <.link
-                    navigate={~p"/product/#{product}"}
-                    aria-labelledby={product.name}
-                    class="group flex flex-col"
-                  >
+                <li
+                  :for={{product, idx} <- Enum.with_index(@products)}
+                  class="embla__slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
+                >
+                  <.link navigate={~p"/product/#{product}"} class="group flex flex-col">
                     <div class="mb-3 overflow-hidden rounded-lg">
                       <picture>
                         <%!-- Mobile: 4:5 portrait crop for an immersive feel.
@@ -98,16 +106,13 @@ defmodule EdenflowersWeb.HomeLive do
                           src={
                             product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()
                           }
-                          alt={product.name}
+                          alt=""
                           class="aspect-[4/5] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] sm:aspect-square"
                         />
                       </picture>
                     </div>
                     <div class="text-base-content flex flex-col items-center gap-1">
-                      <h3
-                        id={product.name}
-                        class="card-title link-underline-group-hover-display"
-                      >
+                      <h3 class="card-title link-underline-group-hover-display">
                         {product.name}
                       </h3>
                       <p class="text-base-content/70 text-sm">
