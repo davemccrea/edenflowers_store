@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.MaternityLive do
               Eden Flowers är för tillfället stängd pga mammaledighet. Har du förfrågning gällande bröllop, möhippa eller andra större event- ta kontakt via
               <a
                 href="mailto:info@edenflowers.fi"
-                class="underline-offset-3 underline decoration-stone-300"
+                class="link-underline-static-body"
               >
                 info@edenflowers.fi
               </a>
@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.MaternityLive do
               Eden Flowers on tällä hetkellä suljettu äitiysloman vuoksi. Jos sinulla on tiedusteluja koskien häitä, polttareita tai muita suurempia tapahtumia, ota yhteyttä osoitteeseen
               <a
                 href="mailto:info@edenflowers.fi"
-                class="underline-offset-3 underline decoration-stone-300"
+                class="link-underline-static-body"
               >
                 info@edenflowers.fi
               </a>

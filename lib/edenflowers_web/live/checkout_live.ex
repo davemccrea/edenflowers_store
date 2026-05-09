@@ -3,20 +3,29 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, LineItem, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
+  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
+
+  defp submit_action_for(:contact_details), do: :submit_contact_details
+  defp submit_action_for(:gift_options), do: :submit_gift_options
+  defp submit_action_for(:delivery), do: :submit_delivery
+  defp submit_action_for(:payment), do: nil
+
+  defp state_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
 
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
     end
 
-    with {:ok, _line_items} <- cart_has_items?(order),
+    with :ok <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       fulfillment_options = sort_fulfillment_options(fulfillment_options)
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
@@ -29,12 +38,17 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
-       |> assign(:form, make_form(order, action_name(:save, order.step)))
+       |> assign(:form, build_submit_form(order))
        |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> assign(:client_secret, nil)
        |> maybe_setup_stripe(order)}
     else
       {:error, :empty_cart} ->
+        # Mounting with an effectively-empty cart means the customer either
+        # navigated here directly or returned after another tab emptied the
+        # cart. Reset before bouncing so a stale step/card/contact details
+        # don't survive into the next checkout.
+        Order.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
       error ->
@@ -49,14 +63,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
-              <.steps step={@order.step}>
+              <.steps state={@order.state}>
                 <section
-                  :if={@order.step == 1}
+                  :if={@order.state == :contact_details}
                   id={"#{@id}-section-1"}
                   class="checkout__section"
                   data-testid="checkout-step-1"
@@ -89,7 +103,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <section
-                  :if={@order.step == 2}
+                  :if={@order.state == :gift_options}
                   id={"#{@id}-section-2"}
                   class="checkout__section"
                   data-testid="checkout-step-2"
@@ -170,11 +184,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                                   <button
                                     type="button"
                                     phx-click="remove_card"
-                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-1.5 -right-1.5 h-5 min-h-0 w-5"
+                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-2 -right-2 h-7 min-h-0 w-7"
                                     data-testid="remove-card-button"
                                     title={gettext("Remove card")}
                                   >
-                                    <.icon name="hero-x-mark" class="h-3 w-3" />
+                                    <.icon name="hero-trash" class="text-error h-4 w-4" />
                                     <span class="sr-only">{gettext("Remove card")}</span>
                                   </button>
                                 </div>
@@ -211,7 +225,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <section :if={@order.step == 3} id={"#{@id}-section-3"} class="checkout__section">
+                <section :if={@order.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{~t"Delivery Information"}</.form_heading>
 
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
@@ -305,7 +319,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <% end %>
                 </section>
 
-                <section :if={@order.step == 4} id={"#{@id}-section-4"} class="checkout__section">
+                <section :if={@order.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{~t"Payment"}</.form_heading>
 
                   <form
@@ -367,7 +381,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <div class="border-neutral/5 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-sm">
-                  <div :if={@order.step >= 4} class="flex justify-between" data-testid="delivery-cost">
+                  <div :if={@order.state == :payment} class="flex justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_amount) -> %>
@@ -419,6 +433,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       <.drawer
         id="card-drawer"
         placement="right"
+        label="Select a Card"
         class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
       >
         <div class="flex flex-col gap-6" data-testid="card-drawer">
@@ -510,8 +525,8 @@ defmodule EdenflowersWeb.CheckoutLive do
       end
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _order} ->
-        next_section_id = get_next_section_id(socket.assigns.id, 3)
+      {:ok, order} ->
+        next_section_id = next_section_id(socket.assigns.id, order.state)
 
         {:noreply,
          socket
@@ -524,24 +539,24 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("save_form_" <> step, %{"form" => params}, socket) do
-    submit_form(socket, String.to_integer(step), params)
+  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
+    submit_form(socket, params)
   end
 
   # Step navigation
   def handle_event("edit_step_3", _params, socket) do
-    Order.edit_step_3!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_step(reload_order(socket), 3)}
+    Order.return_to_delivery!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :delivery)}
   end
 
   def handle_event("edit_step_1", _params, socket) do
-    Order.edit_step_1!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_step(reload_order(socket), 1)}
+    Order.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
   end
 
   def handle_event("edit_step_2", _params, socket) do
-    Order.edit_step_2!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_step(reload_order(socket), 2)}
+    Order.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :gift_options)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
@@ -556,46 +571,20 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    pending_card_message = socket.assigns.form.params["card_message"]
-
-    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
-      LineItem.remove_item(existing)
-    end
-
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-
-    LineItem.add_card!(%{
-      order_id: socket.assigns.order.id,
-      product_variant_id: variant.id,
-      quantity: 1
-    })
-
-    socket = reload_order(socket)
-
-    socket =
-      if is_binary(pending_card_message) do
-        form = AshPhoenix.Form.validate(socket.assigns.form, %{"card_message" => pending_card_message})
-        assign(socket, form: form)
-      else
-        socket
-      end
-
-    {:noreply, socket}
+    order = Order.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("remove_card", _, socket) do
-    if existing = Enum.find(socket.assigns.order.line_items, & &1.is_card) do
-      LineItem.remove_item(existing)
-      Order.clear_card_message!(socket.assigns.order, actor: actor(socket))
-    end
-
-    {:noreply, reload_order(socket)}
+    order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, _order} ->
-        {:noreply, reload_order(socket)}
+      {:ok, order} ->
+        {:noreply, assign_forms(socket, order)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -603,8 +592,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   # Stripe events
@@ -628,14 +617,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
     cond do
-      Enum.empty?(order.line_items) ->
+      order.cart_effectively_empty? ->
         Order.restart_checkout!(order, actor: actor)
         {:noreply, push_navigate(socket, to: ~p"/")}
 
       # Cart changed while the customer is on the payment step. The PaymentIntent's
       # amount must follow the new total, otherwise `confirmPayment` would charge
       # the previous amount.
-      order.step == 4 and not is_nil(order.payment_intent_id) ->
+      order.state == :payment and not is_nil(order.payment_intent_id) ->
         {:noreply, sync_payment_intent(assign(socket, order: order), order)}
 
       true ->
@@ -652,7 +641,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Components
   # ==========
 
-  attr :step, :integer, required: true
+  attr :state, :atom, required: true
   slot :inner_block
 
   def steps(assigns) do
@@ -665,18 +654,21 @@ defmodule EdenflowersWeb.CheckoutLive do
             3 -> ~t"Delivery Information"
             4 -> ~t"Payment"
           end
-        end
+        end,
+        position: state_index(assigns.state) + 1
       )
 
     ~H"""
-    <div :if={@step > 1} class="mb-4 space-y-4">
-      <.form_heading :for={n <- 1..(@step - 1)} active={false} edit_step={n}>{@step_title.(n)}</.form_heading>
+    <div :if={@position > 1} class="mb-4 space-y-4">
+      <.form_heading :for={n <- 1..(@position - 1)} active={false} edit_step={n}>
+        {@step_title.(n)}
+      </.form_heading>
     </div>
 
     {render_slot(@inner_block)}
 
-    <div :if={@step < 4} class="mb-4 space-y-4">
-      <.form_heading :for={n <- (@step + 1)..4} active={false}>{@step_title.(n)}</.form_heading>
+    <div :if={@position < 4} class="mb-4 space-y-4">
+      <.form_heading :for={n <- (@position + 1)..4} active={false}>{@step_title.(n)}</.form_heading>
     </div>
     """
   end
@@ -689,9 +681,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row items-center justify-between">
-      <h1 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
+      <h2 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
         {render_slot(@inner_block)}
-      </h1>
+      </h2>
       <button
         :if={@edit_step}
         type="button"
@@ -751,27 +743,43 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp action_name(action, step) when is_atom(action) and is_integer(step) do
-    String.to_atom("#{action}_step_#{step}")
-  end
-
-  defp make_form(order, action) do
+  defp make_form(order, action, params \\ %{}) do
     order
-    |> AshPhoenix.Form.for_update(action)
+    |> AshPhoenix.Form.for_update(action, params: params)
     |> to_form()
   end
 
-  defp assign_forms(socket, order) do
-    socket
-    |> assign(order: order)
-    |> assign(form: make_form(order, action_name(:save, order.step)))
-    |> assign(promo_code_form: make_form(order, :add_promotion_with_code))
+  # Builds the submit-form for the order's current state. Returns nil on the
+  # payment state because the payment screen is driven by Stripe Elements
+  # (not an Ash form submission).
+  defp build_submit_form(order, params \\ %{}) do
+    case submit_action_for(order.state) do
+      nil -> nil
+      action -> make_form(order, action, params)
+    end
   end
 
-  defp submit_form(socket, step, params) do
+  # Rebuilds both forms against the latest order while preserving any unsaved
+  # input the customer has typed. The data side has to refresh because some
+  # validations read off the order's loaded relationships (e.g. line_items);
+  # the params side has to be preserved so applying a promo or selecting a
+  # card doesn't wipe values the customer is still editing.
+  defp assign_forms(socket, order) do
+    form_params = (socket.assigns[:form] && socket.assigns.form && socket.assigns.form.params) || %{}
+
+    promo_params =
+      (socket.assigns[:promo_code_form] && socket.assigns.promo_code_form.params) || %{}
+
+    socket
+    |> assign(order: order)
+    |> assign(form: build_submit_form(order, form_params))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code, promo_params))
+  end
+
+  defp submit_form(socket, params) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _order} ->
-        next_section_id = get_next_section_id(socket.assigns.id, step)
+      {:ok, order} ->
+        next_section_id = next_section_id(socket.assigns.id, order.state)
 
         {:noreply,
          socket
@@ -783,9 +791,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  # When `save_step_3` fails on the delivery_address field, surface the
-  # error inside the address input component so the user sees it next to
-  # the field instead of at the form root.
+  # When `submit_delivery` fails on the delivery_address field, surface
+  # the error inside the address input component so the user sees it next
+  # to the field instead of at the form root.
   defp forward_delivery_address_error(form) do
     case form[:delivery_address].errors do
       [error | _] ->
@@ -807,14 +815,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     socket
     |> assign_forms(order)
-    |> ensure_stripe_for_step(order)
+    |> ensure_stripe_for_state(order)
   end
 
-  # If the customer just reached step 4, lazily create or retrieve the
-  # PaymentIntent. Skip if `client_secret` is already cached for the current
-  # session — re-running on every reload would burn a Stripe API call per
-  # event.
-  defp ensure_stripe_for_step(socket, %{step: 4} = order) do
+  # When the customer reaches the payment state, lazily create or retrieve
+  # the PaymentIntent. Skip if `client_secret` is already cached for the
+  # current session — re-running on every reload would burn a Stripe API
+  # call per event.
+  defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
     if socket.assigns[:client_secret] do
       socket
     else
@@ -822,12 +830,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp ensure_stripe_for_step(socket, _order), do: socket
+  defp ensure_stripe_for_state(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
   # value flows through on submit. Keys off fulfillment_method so the default
   # survives option renames/translations.
-  defp ensure_fulfillment_default(%{step: 3, fulfillment_option_id: nil} = order, options, actor) do
+  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
     case default_fulfillment_option_id(options) do
       nil -> order
       id -> Order.update_fulfillment_option!(order, id, actor: actor)
@@ -854,16 +862,17 @@ defmodule EdenflowersWeb.CheckoutLive do
     end)
   end
 
-  defp cart_has_items?(%{line_items: []}), do: {:error, :empty_cart}
-  defp cart_has_items?(%{line_items: line_items}), do: {:ok, line_items}
+  defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
+  defp cart_has_items?(_order), do: :ok
 
-  defp get_next_section_id(id, 1), do: "#{id}-section-2"
-  defp get_next_section_id(id, 2), do: "#{id}-section-3"
-  defp get_next_section_id(id, 3), do: "#{id}-section-4"
-  defp get_next_section_id(_, _), do: nil
+  defp next_section_id(id, state) when state in @checkout_states do
+    "#{id}-section-#{state_index(state) + 1}"
+  end
 
-  defp scroll_to_step(socket, step) do
-    push_event(socket, "focus-element", %{id: "#{socket.assigns.id}-section-#{step}"})
+  defp next_section_id(_, _), do: nil
+
+  defp scroll_to_state(socket, state) do
+    push_event(socket, "focus-element", %{id: "#{socket.assigns.id}-section-#{state_index(state) + 1}"})
   end
 
   defp size_label(:small), do: gettext("Small")
@@ -874,10 +883,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Stripe utilities
   #
-  # We only touch Stripe once the customer is on step 4. Earlier mounts (or
-  # mounts where the LiveView reconnects on a non-payment step) skip the round
-  # trip entirely.
-  defp maybe_setup_stripe(socket, %{step: 4} = order), do: setup_stripe(socket, order)
+  # We only touch Stripe once the customer is on the payment state. Earlier
+  # mounts (or mounts where the LiveView reconnects on a non-payment state)
+  # skip the round trip entirely.
+  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
   defp maybe_setup_stripe(socket, _order), do: socket
 
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do

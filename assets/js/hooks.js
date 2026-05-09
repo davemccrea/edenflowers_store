@@ -1,6 +1,156 @@
 // @ts-check
 
+import EmblaCarousel from "../vendor/embla-carousel.esm";
+
 export const Hooks = {};
+
+/**
+ * Carousel for the Featured Blooms section.
+ *
+ * Markup contract (set in HomeLive):
+ *   <div class="embla">
+ *     <div class="embla__viewport" phx-hook="FeaturedCarousel" id="...">
+ *       <ul class="embla__container">
+ *         <li class="embla__slide">...</li>
+ *       </ul>
+ *     </div>
+ *     <button class="embla__prev">…</button>
+ *     <button class="embla__next">…</button>
+ *     <div class="embla__dots"></div>
+ *   </div>
+ */
+Hooks.FeaturedCarousel = {
+  mounted() {
+    // Buttons live in the section heading (sibling of .embla), so we scope
+    // the lookup to the enclosing <section> rather than .embla itself.
+    const scope = this.el.closest("section") || document;
+    this.prevBtn = scope.querySelector(".embla__prev");
+    this.nextBtn = scope.querySelector(".embla__next");
+    this.dotsNode = scope.querySelector(".embla__dots");
+    this.dotNodes = [];
+
+    // Reduced-motion users skip the per-frame focal-point work entirely.
+    // The breakpoint above which the effect is disabled is handled in CSS.
+    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
+    // full page of cards on desktop.
+    this.embla = EmblaCarousel(this.el, {
+      align: "center",
+      containScroll: "trimSnaps",
+      slidesToScroll: 1,
+      breakpoints: {
+        "(min-width: 768px)": { slidesToScroll: "auto" },
+      },
+    });
+
+    this.boundOnSelect = this.onSelect.bind(this);
+    this.boundOnReInit = this.onReInit.bind(this);
+    this.boundOnTween = this.onTween.bind(this);
+
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener("click", () => this.embla.scrollPrev());
+    }
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener("click", () => this.embla.scrollNext());
+    }
+
+    this.buildDots();
+    this.setTweenFactor();
+    this.embla.on("select", this.boundOnSelect);
+    this.embla.on("reInit", this.boundOnReInit);
+    this.embla.on("scroll", this.boundOnTween);
+    this.embla.on("slideFocus", this.boundOnTween);
+    this.onSelect();
+    this.onTween();
+  },
+
+  updated() {
+    if (this.embla) this.embla.reInit();
+  },
+
+  destroyed() {
+    if (this.embla) this.embla.destroy();
+  },
+
+  /**
+   * Compute the focal-point falloff multiplier. Scaling by snapList length
+   * keeps the effect feeling consistent whether there are 3 or 30 snaps —
+   * matches Embla's predefined Tween Scale / Tween Opacity examples.
+   */
+  setTweenFactor() {
+    const TWEEN_FACTOR_BASE = 0.6;
+    this.tweenFactor = TWEEN_FACTOR_BASE * this.embla.scrollSnapList().length;
+  },
+
+  /**
+   * Per-frame focal-point effect: write each slide's distance-from-center
+   * (clamped 0..1) to a CSS custom property so CSS can scale/fade neighbours.
+   * Iterates by snap index and resolves slides via slideRegistry — correct
+   * under slidesToScroll:'auto' grouping at md+. CSS gates which breakpoint
+   * the effect actually applies at.
+   */
+  onTween(eventName) {
+    if (this.reducedMotion) return;
+    const engine = this.embla.internalEngine();
+    const scrollProgress = this.embla.scrollProgress();
+    const slidesInView = this.embla.slidesInView();
+    const slideNodes = this.embla.slideNodes();
+    const isScrollEvent = eventName === "scroll";
+
+    this.embla.scrollSnapList().forEach((scrollSnap, snapIndex) => {
+      const diffToTarget = scrollSnap - scrollProgress;
+
+      engine.slideRegistry[snapIndex].forEach((slideIndex) => {
+        // Per-frame: skip off-screen slides. On reInit / slideFocus / mount
+        // we update everyone so freshly-revealed slides paint correctly.
+        if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
+        const progress = Math.min(Math.abs(diffToTarget * this.tweenFactor), 1);
+        slideNodes[slideIndex].style.setProperty("--embla-progress", progress.toFixed(3));
+      });
+    });
+  },
+
+  buildDots() {
+    if (!this.dotsNode) return;
+    // Localized template comes from a data attr on the viewport. Falls back
+    // to English if missing so the carousel still works.
+    // Sentinel "__N__" is replaced client-side. Using %{n} would trigger
+    // Gettext binding-validation warnings server-side at every render.
+    const tpl = this.el.dataset.dotLabelTemplate || "Go to slide __N__";
+    const snapList = this.embla.scrollSnapList();
+    this.dotsNode.innerHTML = snapList
+      .map(
+        (_, i) =>
+          `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`
+      )
+      .join("");
+    this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
+    this.dotNodes.forEach((node, i) => {
+      node.addEventListener("click", () => this.embla.scrollTo(i));
+    });
+  },
+
+  onSelect() {
+    const selected = this.embla.selectedScrollSnap();
+    this.dotNodes.forEach((node, i) => {
+      const isSelected = i === selected;
+      node.classList.toggle("embla__dot--selected", isSelected);
+      node.setAttribute("aria-current", isSelected ? "true" : "false");
+    });
+    const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
+    this.el.closest("section")?.classList.toggle("embla--no-scroll", !canScroll);
+    if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
+    if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
+  },
+
+  onReInit() {
+    this.buildDots();
+    this.setTweenFactor();
+    this.onSelect();
+    this.onTween();
+  },
+};
 
 Hooks.CharacterCount = {
   mounted() {
@@ -492,94 +642,69 @@ Hooks.Stripe = {
   },
 };
 
-Hooks.AlertHandler = {
-  createDisconnectedAlert() {
-    this.disconnectedMessage = this.el.getAttribute(
-      "data-disconnected-message",
-    );
+Hooks.FlashHandler = {
+  mounted() { this.initAlerts(); },
+  updated() { this.initAlerts(); },
 
-    const disconnectedAlert = `
-      <sl-alert
-        id="alert-disconnected"
-        variant="warning"
-        closable="false"
-      >
-        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-         ${this.disconnectedMessage}
-      </sl-alert>
-      `;
-
-    this.el.insertAdjacentHTML("beforeend", disconnectedAlert);
+  initAlerts() {
+    for (const el of Array.from(this.el.children)) {
+      if (el.dataset.initialized) continue;
+      el.dataset.initialized = "true";
+      const key = el.dataset.key;
+      const duration = parseInt(el.dataset.duration || "5000", 10);
+      el.querySelector("[data-dismiss]")
+        ?.addEventListener("click", () => this.dismiss(el, key));
+      if (duration > 0) setTimeout(() => this.dismiss(el, key), duration);
+    }
   },
 
-  mounted() {
-    this.createDisconnectedAlert();
-
-    // Toasts are triggered by the server and inserted into the DOM when event is received.
-    this.handleEvent("toast:show", (alert) => {
-      const html = `
-      <sl-alert
-        id="alert-${alert.id}"
-        variant="${alert.variant}"
-        duration="${alert.duration}"
-        ${alert.closable ? "closable" : ""}
-        ${
-          alert.countdown == "rtl" || alert.countdown == "ltr"
-            ? `countdown="${alert.countdown}"`
-            : ""
-        }
-      >
-        <sl-icon slot="icon" name="${alert.icon}"></sl-icon>
-        ${alert.message}
-      </sl-alert>
-      `;
-
-      // Insert the toast into the DOM.
-      this.el.insertAdjacentHTML("beforeend", html);
-
-      const alertEl = this.el.querySelector(`#alert-${alert.id}`);
-      customElements.whenDefined("sl-alert").then(() => {
-        alertEl.toast();
-      });
-    });
+  dismiss(el, key) {
+    if (el.dataset.dismissing) return;
+    el.dataset.dismissing = "true";
+    setTimeout(() => {
+      if (key) this.pushEvent("lv:clear-flash", { key });
+      else el.remove();
+    }, 240);
   },
 
   disconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      customElements.whenDefined("sl-alert").then(() => {
-        /** @type {any} */ (disconnectedAlert).toast();
-      });
-    }
+    if (document.getElementById("flash-disconnected")) return;
+    const msg = this.el.getAttribute("data-disconnected-message");
+    const div = document.createElement("div");
+    div.id = "flash-disconnected";
+    div.className = "toast-item";
+    div.dataset.key = "warning";
+    // role="alert" implies aria-live="assertive" but some AT/browser combos
+    // miss it on dynamically-added nodes — set both explicitly.
+    div.setAttribute("role", "alert");
+    div.setAttribute("aria-live", "assertive");
+    div.setAttribute("aria-atomic", "true");
+    div.innerHTML = `
+      <div class="toast-item__head">
+        <p class="toast-item__eyebrow">Notice</p>
+      </div>
+      <p class="toast-item__body"></p>`;
+    // Note: the disconnected banner has no dismiss button — it's auto-removed
+    // when the socket reconnects (see reconnected() below).
+    div.querySelector(".toast-item__body").textContent = msg;
+    this.el.appendChild(div);
   },
 
   reconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      /** @type {any} */ (disconnectedAlert).hide();
-    }
+    const banner = document.getElementById("flash-disconnected");
+    if (!banner) return;
+    this.dismiss(banner, null);
 
-    this.createDisconnectedAlert();
-  },
-};
-
-Hooks.FlashHandler = {
-  mounted() {
-    customElements.whenDefined("sl-alert").then(() => {
-      for (const flashEl of Array.from(this.el.children)) {
-        flashEl.toast();
-      }
-
-      this.pushEvent("lv:clear-flash", {});
-    });
-  },
-  disconnected() {
-    // TODO: Is it necessary to check for this.el?
-    if (this.el) {
-      for (const flashEl of this.el.children) {
-        flashEl.remove();
-      }
-    }
+    // Announce the resolution politely so SR users hear that connection is back.
+    const reconnectedMsg = this.el.getAttribute("data-reconnected-message");
+    if (!reconnectedMsg) return;
+    const note = document.createElement("div");
+    note.className = "sr-only";
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+    note.textContent = reconnectedMsg;
+    this.el.appendChild(note);
+    setTimeout(() => note.remove(), 3000);
   },
 };
 

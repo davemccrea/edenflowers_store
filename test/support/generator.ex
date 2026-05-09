@@ -93,8 +93,7 @@ defmodule Generator do
     # We provide a base struct to avoid generating random foreign keys that don't exist
     seed_generator(
       %Order{
-        state: :checkout,
-        step: 1,
+        state: :contact_details,
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16()
       },
       overrides: opts,
@@ -105,7 +104,8 @@ defmodule Generator do
   def line_item(opts \\ []) do
     changeset_generator(LineItem, :add_to_cart,
       defaults: %{
-        quantity: 1
+        quantity: 1,
+        is_card: false
       },
       overrides: opts,
       authorize?: false

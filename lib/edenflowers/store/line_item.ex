@@ -16,7 +16,6 @@ defmodule Edenflowers.Store.LineItem do
 
   code_interface do
     define :add_item, action: :add_to_cart
-    define :add_card, action: :add_card
     define :remove_item, action: :remove_item
     define :increment_quantity, action: :increment_quantity
     define :decrement_quantity, action: :decrement_quantity
@@ -26,16 +25,14 @@ defmodule Edenflowers.Store.LineItem do
     defaults [:read]
 
     create :add_to_cart do
-      accept [:order_id, :product_variant_id, :quantity]
+      accept [:order_id, :product_variant_id, :quantity, :is_card]
+
+      upsert? true
+      upsert_identity :unique_product_variant
+      upsert_fields [:quantity]
 
       change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
-    end
-
-    create :add_card do
-      accept [:order_id, :product_variant_id, :quantity]
-
-      change set_attribute(:is_card, true)
-      change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
+      change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
     destroy :remove_item do
@@ -57,23 +54,18 @@ defmodule Edenflowers.Store.LineItem do
       authorize_if always()
     end
 
-    # Allow creating line items for any order (checkout flow)
+    # Allow creating line items for any order (checkout flow). The card
+    # variant is gated at the order level via Order.add_card.
     policy action_type(:create) do
       authorize_if always()
-    end
-
-    # Cards can only be added to gift orders in checkout state.
-    # A custom check is used because filter expressions can't reference
-    # relationships on create actions (no data exists yet).
-    policy action(:add_card) do
-      authorize_if {Edenflowers.Store.LineItem.Checks.OrderIsGiftInCheckout, []}
     end
 
     # Read/Update/Destroy access:
     # Multiple authorize_if within one policy = OR (only one needs to pass)
     policy action_type([:read, :update, :destroy]) do
-      # Guest checkout: Anyone can work with line items for orders in checkout state
-      authorize_if expr(order.state == :checkout)
+      # Guest checkout: Anyone can work with line items for orders still in
+      # the checkout flow (any sub-state before :placed).
+      authorize_if expr(order.state != :placed)
       # Placed orders: Only the owner can access their line items
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
     end

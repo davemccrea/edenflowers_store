@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     order =
       Ash.Seed.seed!(Order, %{
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
+        state: :payment,
         customer_name: "John Smith",
         customer_email: "john.smith@example.com",
         user_id: user.id,
@@ -113,7 +114,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                })
 
       order = Order.get_by_id!(order.id, authorize?: false)
-      assert order.state == :checkout
+      assert order.state == :payment
       assert order.payment_status == :failed
 
       refute_email_sent()
@@ -152,7 +153,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                })
 
       order = Order.get_by_id!(order.id, authorize?: false)
-      assert order.state == :checkout
+      assert order.state == :payment
       assert order.payment_status == :failed
     end
   end
