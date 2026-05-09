@@ -25,6 +25,10 @@ defmodule EdenflowersWeb.Router do
     plug :load_from_session
   end
 
+  pipeline :require_admin do
+    plug :check_admin_user
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :load_from_bearer
@@ -84,7 +88,7 @@ defmodule EdenflowersWeb.Router do
   end
 
   scope "/admin" do
-    pipe_through :browser
+    pipe_through [:browser, :require_admin]
 
     oban_dashboard("/oban")
 
@@ -96,6 +100,16 @@ defmodule EdenflowersWeb.Router do
   # scope "/api", EdenflowersWeb do
   #   pipe_through :api
   # end
+
+  defp check_admin_user(conn, _opts) do
+    if conn.assigns[:current_user] && conn.assigns.current_user.admin do
+      conn
+    else
+      conn
+      |> Phoenix.Controller.redirect(to: ~p"/sign-in")
+      |> Plug.Conn.halt()
+    end
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:edenflowers, :dev_routes) do
