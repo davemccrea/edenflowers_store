@@ -424,6 +424,7 @@ defmodule EdenflowersWeb.CheckoutLive do
       <.drawer
         id="card-drawer"
         placement="right"
+        label="Select a Card"
         class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
       >
         <div class="flex flex-col gap-6" data-testid="card-drawer">
@@ -668,9 +669,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp form_heading(assigns) do
     ~H"""
     <div class="flex flex-row items-center justify-between">
-      <h1 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
+      <h2 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
         {render_slot(@inner_block)}
-      </h1>
+      </h2>
       <button
         :if={@edit_step}
         type="button"

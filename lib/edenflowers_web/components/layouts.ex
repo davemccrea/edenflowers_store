@@ -114,7 +114,12 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(locales: locales)
 
     ~H"""
-    <.drawer id="nav-drawer" placement="left" class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
+    <.drawer
+      id="nav-drawer"
+      placement="left"
+      label="Navigation menu"
+      class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
+    >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
           navigate={~p"/"}
@@ -169,7 +174,12 @@ defmodule EdenflowersWeb.Layouts do
       </footer>
     </.drawer>
 
-    <.drawer id="cart-drawer" placement="right" class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
+    <.drawer
+      id="cart-drawer"
+      placement="right"
+      label="Shopping cart"
+      class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
+    >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <h1 class="section-title">
           <%= if not is_nil(@order.total_items_in_cart) do %>
