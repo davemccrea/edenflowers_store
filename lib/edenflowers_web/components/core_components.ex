@@ -57,8 +57,11 @@ defmodule EdenflowersWeb.CoreComponents do
     <div
       id="flash-group"
       class="z-[100] fixed top-6 right-6 flex flex-col items-end gap-3"
+      role="region"
+      aria-label={~t"Notifications"}
       phx-hook="FlashHandler"
       data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
+      data-reconnected-message={~t"Reconnected"}
     >
       <div
         :for={{key, msg} <- @flash}
@@ -66,7 +69,7 @@ defmodule EdenflowersWeb.CoreComponents do
         class="toast-item"
         data-key={key}
         data-duration="5000"
-        role="alert"
+        role={flash_role(key)}
       >
         <div class="toast-item__head">
           <p class="toast-item__eyebrow">{flash_label(key)}</p>
@@ -79,6 +82,10 @@ defmodule EdenflowersWeb.CoreComponents do
     </div>
     """
   end
+
+  # Errors interrupt; everything else waits politely. WCAG 4.1.3.
+  defp flash_role("error"), do: "alert"
+  defp flash_role(_), do: "status"
 
   # Severity → eyebrow label. Restrained, conventional words — the message
   # itself does the heavy lifting; the eyebrow just orients the reader.
@@ -624,7 +631,12 @@ defmodule EdenflowersWeb.CoreComponents do
   def social_media_links(assigns) do
     ~H"""
     <div class="flex flex-row gap-4">
-      <a href="#" aria-label="Eden Flowers on Facebook">
+      <a
+        href="https://www.facebook.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Facebook"
+      >
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -636,7 +648,12 @@ defmodule EdenflowersWeb.CoreComponents do
           alt=""
         />
       </a>
-      <a href="#" aria-label="Eden Flowers on Instagram">
+      <a
+        href="https://www.instagram.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Instagram"
+      >
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -651,6 +668,87 @@ defmodule EdenflowersWeb.CoreComponents do
     </div>
     """
   end
+
+  @doc """
+  Icon-only button. `aria_label` is required so we can't ship a nameless
+  button — keyboard/SR users always get an accessible name.
+  """
+  attr :aria_label, :string, required: true
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(type disabled name value form)
+  slot :inner_block, required: true
+
+  def icon_button(assigns) do
+    assigns = assign_new(assigns, :type, fn -> "button" end)
+
+    ~H"""
+    <button type={@type} class={@class} aria-label={@aria_label} {@rest}>
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Disclosure trigger — a button that controls a collapsible region (drawer,
+  menu, dialog). Sets `aria-expanded` and `aria-controls` so AT users know
+  the relationship. State must be tracked outside this component (LV
+  doesn't know if the drawer is open).
+  """
+  attr :aria_label, :string, required: true
+  attr :controls, :string, required: true, doc: "id of the controlled element"
+  attr :expanded, :boolean, default: false
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(phx-click phx-target type)
+  slot :inner_block, required: true
+
+  def disclosure_trigger(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={@class}
+      aria-label={@aria_label}
+      aria-controls={@controls}
+      aria-expanded={to_string(@expanded)}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Cart count badge: a button that opens the cart drawer, with a screen-reader
+  accessible name that includes the current count, plus a polite live region
+  that announces updates. Replaces the previous unlabelled badge.
+  """
+  attr :count, :integer, default: 0
+  attr :rest, :global, include: ~w(phx-click)
+  slot :inner_block, required: true, doc: "Visible content (icon, badge, optional text)"
+
+  def cart_count_badge(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+      aria-label={cart_aria_label(@count)}
+      aria-controls="cart-drawer"
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <span class="sr-only" aria-live="polite" aria-atomic="true">
+      {cart_aria_label(@count)}
+    </span>
+    """
+  end
+
+  defp cart_aria_label(count) when is_integer(count) and count > 0,
+    do:
+      Gettext.dngettext(EdenflowersWeb.Gettext, "default", "Cart, %{count} item", "Cart, %{count} items", count, %{
+        count: count
+      })
+
+  defp cart_aria_label(_), do: ~t"Cart, empty"
 
   @placement %{
     "left" => %{

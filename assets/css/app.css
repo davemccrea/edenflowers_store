@@ -52,9 +52,6 @@
   --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
 }
 
-/* Use the data attribute for dark mode  */
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
-
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
@@ -74,6 +71,25 @@ summary {
 *:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Skip link — visually hidden until keyboard focus, then anchored top-left
+   above all content. WCAG 2.4.1 Bypass Blocks. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0.5rem;
+  z-index: 200;
+  padding: 0.75rem 1rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 2px solid var(--color-primary);
+  border-radius: 0.25rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+.skip-link:focus {
+  top: 0.5rem;
 }
 
 /* LiveView lifecycle feedback. The .phx-* classes are toggled by Phoenix:
