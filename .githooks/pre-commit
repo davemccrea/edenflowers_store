@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+PRETTIER_VERSION="3.3.3"
+
+elixir_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ex|exs|heex)$' || true)
+prettier_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|mjs|cjs|css)$' || true)
+
+if [ -n "$elixir_files" ]; then
+  mix format $elixir_files
+  echo "$elixir_files" | xargs git add
+fi
+
+if [ -n "$prettier_files" ]; then
+  echo "$prettier_files" | xargs npx --yes prettier@$PRETTIER_VERSION --write
+  echo "$prettier_files" | xargs git add
+fi
