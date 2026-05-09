@@ -62,7 +62,6 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main class="flex flex-grow items-center justify-center">
-        <.alert_group />
         <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
       </main>
@@ -89,6 +88,14 @@ defmodule EdenflowersWeb.Layouts do
 
   def app(assigns) do
     {:ok, current_locale} = Localize.Language.display_name(Localize.get_locale())
+    current_locale_code = Localize.get_locale().cldr_locale_id |> to_string()
+
+    locales =
+      for code <- Edenflowers.Locales.all() do
+        language_code = code |> String.split("-") |> hd()
+        name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
+        {code, String.capitalize(name)}
+      end
 
     assigns =
       assigns
@@ -103,13 +110,15 @@ defmodule EdenflowersWeb.Layouts do
         ]
       )
       |> assign(current_locale: String.capitalize(current_locale))
+      |> assign(current_locale_code: current_locale_code)
+      |> assign(locales: locales)
 
     ~H"""
     <.drawer id="nav-drawer" placement="left" class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]">
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
           navigate={~p"/"}
-          class="text-primary logo-wordmark whitespace-nowrap sm:text-2xl"
+          class="text-primary logo-wordmark whitespace-nowrap text-xl sm:text-3xl"
         >
           Eden Flowers
         </.link>
@@ -131,11 +140,31 @@ defmodule EdenflowersWeb.Layouts do
                 {name}
               </.link>
             </li>
+            <li class="border-base-content/10 border-t pt-4">
+              <.link
+                class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
+                phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
+                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+              >
+                <.icon name="hero-user-circle" class="h-7 w-7" />
+                {if @current_user, do: ~t"Account", else: ~t"Sign In"}
+              </.link>
+            </li>
           </ul>
         </nav>
       </div>
 
-      <footer class="bg-base-300 flex flex-col px-8 py-8">
+      <footer class="bg-base-300 flex flex-col gap-6 px-8 py-8">
+        <ul class="flex flex-wrap gap-x-5 gap-y-2">
+          <li :for={{code, name} <- @locales}>
+            <.link
+              href={~p"/locale/#{code}?redirect_to=#{@current_path}"}
+              class={["text-base-content/80 text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4", code == @current_locale_code && "text-base-content font-semibold"]}
+            >
+              {name}
+            </.link>
+          </li>
+        </ul>
         <.social_media_links size={6} />
       </footer>
     </.drawer>
@@ -215,7 +244,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
-                class="text-primary logo-wordmark whitespace-nowrap text-xl sm:text-2xl"
+                class="text-primary logo-wordmark tracking-[0.14em] whitespace-nowrap text-2xl sm:tracking-[0.18em] sm:text-2xl lg:text-3xl"
               >
                 Eden Flowers
               </.link>
@@ -223,10 +252,10 @@ defmodule EdenflowersWeb.Layouts do
 
             <%!-- Right --%>
             <div class="flex flex-1 items-center justify-end lg:gap-4">
-              <%!-- Sign in --%>
+              <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
-                class="group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+                class="group hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
                 <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 lg:inline-flex">
@@ -236,15 +265,17 @@ defmodule EdenflowersWeb.Layouts do
                 </span>
               </.link>
 
-              <%!-- Locale picker button --%>
-              <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
-                <span class="group flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2">
-                  <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-                  <span class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex">
-                    {@current_locale}
+              <%!-- Locale picker (desktop only — mobile lives in nav drawer) --%>
+              <div class="hidden xl:block">
+                <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
+                  <span class="group flex h-10 cursor-pointer items-center gap-2">
+                    <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+                    <span class="text-base-content text-sm group-hover:text-base-content/60">
+                      {@current_locale}
+                    </span>
                   </span>
-                </span>
-              </.locale_picker>
+                </.locale_picker>
+              </div>
 
               <%!-- Cart button --%>
               <button
@@ -255,8 +286,8 @@ defmodule EdenflowersWeb.Layouts do
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
 
                 <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
-                  <span class="absolute inset-0 -mr-6 object-right-top md:hidden">
-                    <div class="bg-primary text-primary-content border-base-100 min-w-[1.25rem] text-[10px] inline-flex items-center justify-center rounded-full border-2 px-1 py-0.5 font-semibold leading-none">
+                  <span class="absolute top-0 right-0 lg:hidden">
+                    <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
                     </div>
                   </span>
@@ -277,7 +308,6 @@ defmodule EdenflowersWeb.Layouts do
     </div>
 
     <main class="flex-grow">
-      <.alert_group />
       <.flash_group flash={@flash} />
 
       {render_slot(@inner_block)}
