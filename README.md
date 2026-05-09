@@ -2,6 +2,16 @@
 
 ## Development
 
+### First-time setup
+
+After cloning, point git at the project's hooks directory so the pre-commit and pre-push hooks run:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hooks live in `.githooks/` (versioned with the repo). `pre-commit` formats staged Elixir files with `mix format` and staged JS/CSS files with Prettier (via `npx`). `pre-push` runs `mix precommit` (compile, deps.unlock, format check, tests). On the first commit that touches JS or CSS, `npx` will download Prettier into its cache; subsequent runs are instant.
+
 ### Running locally
 
 - `iex -S mix phx.server` — start the server at [`localhost:4000`](http://localhost:4000)
