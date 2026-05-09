@@ -254,8 +254,8 @@ defmodule EdenflowersWeb.Layouts do
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
 
                 <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
-                  <span class="absolute inset-0 -mr-6 object-right-top md:hidden">
-                    <div class="bg-primary text-primary-content border-base-100 min-w-[1.25rem] text-[10px] inline-flex items-center justify-center rounded-full border-2 px-1 py-0.5 font-semibold leading-none">
+                  <span class="absolute top-0 right-0 lg:hidden">
+                    <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
                     </div>
                   </span>
