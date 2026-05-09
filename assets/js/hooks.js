@@ -29,6 +29,12 @@ Hooks.FeaturedCarousel = {
     this.dotsNode = scope.querySelector(".embla__dots");
     this.dotNodes = [];
 
+    // The mobile focal-point effect (scale/fade neighbours) is purely
+    // decorative — skip the per-frame work for reduced-motion users and
+    // above the sm breakpoint where the CSS shows multiple equal cards.
+    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.smQuery = window.matchMedia("(min-width: 640px)");
+
     // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
     // full page of cards on desktop.
     this.embla = EmblaCarousel(this.el, {
@@ -42,6 +48,7 @@ Hooks.FeaturedCarousel = {
 
     this.boundOnSelect = this.onSelect.bind(this);
     this.boundOnReInit = this.onReInit.bind(this);
+    this.boundOnTween = this.onTween.bind(this);
 
     if (this.prevBtn) {
       this.prevBtn.addEventListener("click", () => this.embla.scrollPrev());
@@ -51,9 +58,15 @@ Hooks.FeaturedCarousel = {
     }
 
     this.buildDots();
+    this.setTweenFactor();
     this.embla.on("select", this.boundOnSelect);
     this.embla.on("reInit", this.boundOnReInit);
-    requestAnimationFrame(() => this.boundOnSelect());
+    this.embla.on("scroll", this.boundOnTween);
+    this.embla.on("slideFocus", this.boundOnTween);
+    requestAnimationFrame(() => {
+      this.boundOnSelect();
+      this.boundOnTween();
+    });
   },
 
   updated() {
@@ -62,6 +75,59 @@ Hooks.FeaturedCarousel = {
 
   destroyed() {
     if (this.embla) this.embla.destroy();
+  },
+
+  /**
+   * Compute the focal-point falloff multiplier. Scaling by snapList length
+   * keeps the effect feeling consistent whether there are 3 or 30 snaps —
+   * matches Embla's predefined Tween Scale / Tween Opacity examples.
+   */
+  setTweenFactor() {
+    const TWEEN_FACTOR_BASE = 0.6;
+    this.tweenFactor = TWEEN_FACTOR_BASE * this.embla.scrollSnapList().length;
+  },
+
+  /**
+   * Per-frame focal-point effect: write each slide's distance-from-center
+   * (clamped 0..1) to a CSS custom property so CSS can scale/fade neighbours.
+   * Iterates by snap index and resolves slides via slideRegistry, which is
+   * Embla's idiomatic shape — correct under slidesToScroll:'auto' grouping
+   * and any future loop config.
+   */
+  onTween(eventName) {
+    if (this.reducedMotion || this.smQuery.matches) return;
+    const engine = this.embla.internalEngine();
+    const scrollProgress = this.embla.scrollProgress();
+    const slidesInView = this.embla.slidesInView();
+    const slideNodes = this.embla.slideNodes();
+    const isScrollEvent = eventName === "scroll";
+
+    this.embla.scrollSnapList().forEach((scrollSnap, snapIndex) => {
+      let diffToTarget = scrollSnap - scrollProgress;
+      const slidesInSnap = engine.slideRegistry[snapIndex];
+
+      slidesInSnap.forEach((slideIndex) => {
+        // On 'scroll' (per-frame), skip off-screen slides for performance.
+        // On 'reInit' / 'slideFocus' / initial mount, update everyone so
+        // freshly-revealed slides have the correct value on first paint.
+        if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
+
+        if (engine.options.loop) {
+          engine.slideLooper.loopPoints.forEach((loopItem) => {
+            const target = loopItem.target();
+            if (slideIndex === loopItem.index && target !== 0) {
+              const sign = Math.sign(target);
+              if (sign === -1) diffToTarget = scrollSnap - (1 + scrollProgress);
+              if (sign === 1) diffToTarget = scrollSnap + (1 - scrollProgress);
+            }
+          });
+        }
+
+        const tweenValue = Math.abs(diffToTarget * this.tweenFactor);
+        const progress = Math.min(Math.max(tweenValue, 0), 1);
+        slideNodes[slideIndex].style.setProperty("--embla-progress", progress.toFixed(3));
+      });
+    });
   },
 
   buildDots() {
@@ -90,7 +156,9 @@ Hooks.FeaturedCarousel = {
 
   onReInit() {
     this.buildDots();
+    this.setTweenFactor();
     this.onSelect();
+    this.onTween();
   },
 };
 

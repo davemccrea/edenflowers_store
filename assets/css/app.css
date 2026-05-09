@@ -263,6 +263,14 @@ body.ready {
    Hook: assets/js/hooks.js (Hooks.FeaturedCarousel) */
 .embla__viewport {
   overflow: hidden;
+  /* Mobile edge-bleed: break out of the parent container so the active slide
+     reaches the viewport edges. Above sm we sit inside the container again. */
+  margin-inline: calc(50% - 50vw);
+}
+@media (min-width: 640px) {
+  .embla__viewport {
+    margin-inline: 0;
+  }
 }
 .embla__container {
   display: flex;
@@ -272,14 +280,35 @@ body.ready {
   touch-action: pan-y pinch-zoom;
 }
 .embla__slide {
-  flex: 0 0 75%; /* mobile: one main card with a hint of the next */
+  /* Mobile: active card dominates with a small peek on each side. The hook
+     writes --embla-progress (0 = focused, 1 = at neighbour snap) on every
+     scroll frame; CSS scales/fades neighbours so the focused card pops. */
+  flex: 0 0 85%;
   min-width: 0;
+  --embla-progress: 0;
+  transform: scale(calc(1 - var(--embla-progress) * 0.08));
+  opacity: calc(1 - var(--embla-progress) * 0.45);
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 @media (min-width: 480px) {
   .embla__slide { flex-basis: 50%; }
 }
 @media (min-width: 640px) {
-  .embla__slide { flex-basis: 18rem; } /* sm:w-72 = 18rem */
+  /* Above sm we show multiple cards in a row — kill the focal-point effect
+     so every visible card reads equally. */
+  .embla__slide {
+    flex-basis: 18rem; /* sm:w-72 = 18rem */
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: drop the scale/fade so the carousel is a flat strip. */
+  .embla__slide {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 /* Dots — neutral, theme-aware. Active dot uses primary brand color. */
