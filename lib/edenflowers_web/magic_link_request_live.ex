@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.auth flash={@flash}>
+    <Layouts.auth flash={@flash} current_path={@current_path}>
       <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-4 p-8 shadow-lg">
         <h2 class="text-center text-lg font-bold">
           {~t"Sign in to your account"}
@@ -89,12 +89,6 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
   end
 
   defp error_toast(socket) do
-    toast =
-      EdenflowersWeb.LiveToast.new(
-        :warning,
-        ~t"Error sending magic link. Please try again later."
-      )
-
-    push_event(socket, "toast:show", toast)
+    put_flash(socket, :warning, ~t"Error sending magic link. Please try again later.")
   end
 end

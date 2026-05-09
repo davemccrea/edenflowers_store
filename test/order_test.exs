@@ -1,13 +1,12 @@
 defmodule Edenflowers.Store.OrderTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.Order
 
   describe "Store Resource" do
     test "creates an order for checkout" do
       order = Order.create_for_checkout!(authorize?: false)
-      assert order.state == :checkout
-      assert order.step == 1
+      assert order.state == :contact_details
     end
 
     test "counts number of items in cart" do
@@ -184,7 +183,7 @@ defmodule Edenflowers.Store.OrderTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = generate(order(payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
+    order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
     assert order.state == :placed
@@ -194,12 +193,12 @@ defmodule Edenflowers.Store.OrderTest do
 
   describe "Gift flow validation" do
     test "requires recipient_name when gift is true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Attempt to save step 2 with gift=true but no recipient_name
       assert {:error, error} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: nil
                })
@@ -209,12 +208,12 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "does not require recipient_name when gift is false" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Should succeed without recipient_name when gift is false
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: false,
                  recipient_name: nil
                })
@@ -225,12 +224,12 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "accepts recipient_name when gift is true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # Should succeed with recipient_name when gift is true
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane Doe"
                })
@@ -248,7 +247,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_2, %{
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
           gift: true,
           recipient_name: "John Smith",
           card_message: "Happy birthday!"
@@ -258,9 +257,13 @@ defmodule Edenflowers.Store.OrderTest do
       assert order.recipient_name == "John Smith"
       assert order.card_message == "Happy birthday!"
 
+      # Production flow: customer hits "Edit" on the gift step, returning the
+      # order to :gift_options before re-submitting.
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
+
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_2, %{
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
           gift: false
         })
         |> Ash.update(authorize?: false)
@@ -278,7 +281,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane Doe",
                  card_message: "With love"
@@ -289,21 +292,24 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "retains recipient_name when gift remains true" do
-      order = Order.create_for_checkout!(authorize?: false)
+      order = generate(order(state: :gift_options))
 
       # First set gift=true with recipient info
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_2, %{
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
           gift: true,
           recipient_name: "Alice Johnson"
         })
         |> Ash.update(authorize?: false)
 
-      # Update with gift still true - should retain fields
+      # Production flow: customer hits "Edit" on the gift step, returning the
+      # order to :gift_options before re-submitting unchanged.
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
+
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_2, %{
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
           gift: true,
           recipient_name: "Alice Johnson"
         })
@@ -318,20 +324,9 @@ defmodule Edenflowers.Store.OrderTest do
     variant = generate(product_variant(product_id: card_product.id, size: size))
 
     order =
-      Order.create_for_checkout!(authorize?: false)
-      |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-      |> Ash.update!(authorize?: false)
+      generate(order(state: :gift_options, gift: true))
 
-    LineItem.add_card!(
-      %{
-        order_id: order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      },
-      authorize?: false
-    )
-
-    Order.get_for_checkout!(order.id, actor: nil)
+    Order.add_card!(order, variant.id, authorize?: false)
   end
 
   describe "Card message length validation" do
@@ -348,7 +343,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -364,7 +359,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, %Ash.Error.Invalid{} = error} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -380,7 +375,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, _updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -394,7 +389,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, %Ash.Error.Invalid{}} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -408,7 +403,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, _updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -422,7 +417,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, %Ash.Error.Invalid{}} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -436,7 +431,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -451,7 +446,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: "       "
@@ -471,7 +466,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, %Ash.Error.Invalid{} = error} =
                reloaded
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: "Hello"
@@ -486,7 +481,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, _updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: ""
@@ -500,7 +495,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:ok, _updated} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: message
@@ -511,7 +506,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, %Ash.Error.Invalid{}} =
                order
-               |> Ash.Changeset.for_update(:save_step_2, %{
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane",
                  card_message: over_limit
@@ -525,7 +520,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert_raise Ash.Error.Unknown, ~r/line_items to be loaded/, fn ->
         stripped
-        |> Ash.Changeset.for_update(:save_step_2, %{
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
           gift: true,
           recipient_name: "Jane",
           card_message: "Hello"
@@ -591,7 +586,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Save step 1 with customer details
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_1, %{
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
                  customer_name: "New Customer",
                  customer_email: "newcustomer@example.com"
                })
@@ -618,7 +613,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Save step 1 with same email but different name
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_1, %{
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
                  customer_name: "Updated Name",
                  customer_email: "existing@example.com"
                })
@@ -641,7 +636,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       {:ok, order1} =
         order1
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Regular Customer",
           customer_email: "regular@example.com"
         })
@@ -652,7 +647,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       {:ok, order2} =
         order2
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Regular Customer",
           customer_email: "regular@example.com"
         })
@@ -677,7 +672,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Save step 1 with uppercase email
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Customer",
           customer_email: "CUSTOMER@EXAMPLE.COM"
         })
@@ -700,7 +695,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Save step 1
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Test User",
           customer_email: "test@example.com"
         })
@@ -713,7 +708,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Update step 2 (gift options)
       {:ok, order} =
         order
-        |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
+        |> Ash.Changeset.for_update(:submit_gift_options, %{gift: false})
         |> Ash.update(authorize?: false)
 
       # Verify user_id is unchanged
@@ -728,7 +723,7 @@ defmodule Edenflowers.Store.OrderTest do
       # Save step 1 with only email (name is nil)
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_1, %{
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
                  customer_email: "nametest@example.com"
                })
                |> Ash.update(authorize?: false)
@@ -743,7 +738,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, error} =
                order2
-               |> Ash.Changeset.for_update(:save_step_1, %{
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
                  customer_name: "Test User"
                })
                |> Ash.update(authorize?: false)
@@ -920,15 +915,12 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 requires fulfillment_date", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-
-      # Set step to 3
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       # Attempt to save without fulfillment_date
       assert {:error, error} =
                order
-               |> Ash.Changeset.for_update(:save_step_3, %{
+               |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id
                })
                |> Ash.update(authorize?: false)
@@ -937,14 +929,13 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       # Note: In real flow, delivery_address would trigger HereAPI calls
       # For pickup, we don't need delivery address
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_3, %{
+               |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: Date.add(Date.utc_today(), 1)
                })
@@ -952,7 +943,7 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert order.fulfillment_option_id == pickup_option.id
       assert order.fulfillment_amount == Decimal.new("5.00")
-      assert order.step == 4
+      assert order.state == :payment
 
       # Delivery fields should be cleared
       assert is_nil(order.delivery_address)
@@ -963,12 +954,11 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 with pickup calculates correct fixed price", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       assert {:ok, order} =
                order
-               |> Ash.Changeset.for_update(:save_step_3, %{
+               |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: Date.add(Date.utc_today(), 2)
                })
@@ -978,15 +968,14 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
-      order = Order.create_for_checkout!(authorize?: false)
-      order = Ash.Changeset.for_update(order, :edit_step_3) |> Ash.update!(authorize?: false)
+      order = generate(order(state: :delivery))
 
       yesterday = Date.add(Date.utc_today(), -1)
 
       # Attempt to save with past date
       assert {:error, error} =
                order
-               |> Ash.Changeset.for_update(:save_step_3, %{
+               |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: yesterday
                })
@@ -1005,7 +994,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
 
     test "payment_status transitions from pending to paid" do
-      order = generate(order(payment_status: :pending, payment_intent_id: "pi_test"))
+      order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
 
       assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
       assert order.payment_status == :paid
@@ -1041,7 +1030,7 @@ defmodule Edenflowers.Store.OrderTest do
       order =
         generate(
           order(
-            step: 4,
+            state: :payment,
             customer_name: "Test Customer",
             customer_email: "test@example.com",
             gift: true,
@@ -1066,7 +1055,7 @@ defmodule Edenflowers.Store.OrderTest do
       assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
       # Verify all fields are cleared
-      assert reset_order.step == 1
+      assert reset_order.state == :contact_details
       assert is_nil(reset_order.customer_name)
       assert is_nil(reset_order.customer_email)
       assert reset_order.gift == false
@@ -1086,16 +1075,69 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.fulfillment_option_id)
     end
 
-    test "reset preserves order id and state" do
-      order = generate(order(step: 3, customer_name: "Test", customer_email: "test@example.com"))
+    test "reset preserves order id and returns the order to :contact_details" do
+      order = generate(order(state: :delivery, customer_name: "Test", customer_email: "test@example.com"))
       original_id = order.id
-      original_state = order.state
 
       assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
-      # ID and state should remain unchanged
+      # The same row, rewound to the start of the flow
       assert reset_order.id == original_id
-      assert reset_order.state == original_state
+      assert reset_order.state == :contact_details
+    end
+
+    test "reset destroys all line items, including any leftover card" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+
+      order = gift_order_with_card(card_product, :medium)
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
+
+      order = Ash.load!(order, [:line_items], authorize?: false)
+      assert length(order.line_items) == 2
+
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
+      reset_order = Ash.load!(reset_order, [:line_items, :cart_effectively_empty?], authorize?: false)
+
+      assert reset_order.line_items == []
+      assert reset_order.cart_effectively_empty? == true
+    end
+  end
+
+  describe "cart_effectively_empty? calculation" do
+    test "true when the order has no line items" do
+      order = Order.create_for_checkout!(authorize?: false)
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == true
+    end
+
+    test "true when the only remaining line item is a card" do
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards"))
+      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
+
+      order = gift_order_with_card(card_product, :medium)
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == true
+    end
+
+    test "false when at least one non-card line item remains" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      order = generate(order())
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
+
+      assert order.cart_effectively_empty? == false
     end
   end
 
@@ -1132,16 +1174,94 @@ defmodule Edenflowers.Store.OrderTest do
     end
   end
 
+  describe "Card line items via Order" do
+    setup do
+      tax_rate = generate(tax_rate())
+      cards_category = generate(product_category(slug: "cards", draft: false))
+
+      card_product =
+        generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id, draft: false))
+
+      card_variant_a = generate(product_variant(product_id: card_product.id, size: :small, draft: false))
+      card_variant_b = generate(product_variant(product_id: card_product.id, size: :large, draft: false))
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      %{order: order, card_variant_a: card_variant_a, card_variant_b: card_variant_b}
+    end
+
+    test "add_card adds a card line item and returns the loaded order", %{
+      order: order,
+      card_variant_a: card_variant_a
+    } do
+      assert {:ok, order} = Order.add_card(order, card_variant_a.id, authorize?: false)
+
+      card = Enum.find(order.line_items, & &1.is_card)
+      assert card
+      assert card.product_variant_id == card_variant_a.id
+      assert card.card_size == card_variant_a.size
+
+      # @checkout_load calculations should be present on the returned order
+      refute match?(%Ash.NotLoaded{}, order.total)
+    end
+
+    test "add_card replaces an existing card line item rather than appending", %{
+      order: order,
+      card_variant_a: card_variant_a,
+      card_variant_b: card_variant_b
+    } do
+      {:ok, _} = Order.add_card(order, card_variant_a.id, authorize?: false)
+      assert {:ok, order} = Order.add_card(order, card_variant_b.id, authorize?: false)
+
+      cards = Enum.filter(order.line_items, & &1.is_card)
+      assert length(cards) == 1
+      assert hd(cards).product_variant_id == card_variant_b.id
+      assert hd(cards).card_size == card_variant_b.size
+    end
+
+    test "remove_card destroys the card line item and clears card_message", %{
+      card_variant_a: card_variant_a
+    } do
+      gift_order = generate(order(state: :gift_options, gift: true))
+
+      {:ok, with_card} = Order.add_card(gift_order, card_variant_a.id, authorize?: false)
+
+      with_message =
+        with_card
+        |> Ash.Changeset.for_update(:submit_gift_options, %{
+          gift: true,
+          recipient_name: "Jane",
+          card_message: "Hello"
+        })
+        |> Ash.update!(authorize?: false)
+
+      assert with_message.card_message == "Hello"
+
+      assert {:ok, order} = Order.remove_card(with_message, authorize?: false)
+
+      refute Enum.any?(order.line_items, & &1.is_card)
+      assert is_nil(order.card_message)
+    end
+
+    test "remove_card is a no-op when there is no card line item", %{order: order} do
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      refute Enum.any?(order.line_items, & &1.is_card)
+
+      assert {:ok, order} = Order.remove_card(order, authorize?: false)
+      refute Enum.any?(order.line_items, & &1.is_card)
+    end
+  end
+
   describe "add_payment_intent_id policy" do
     test "guest can attach payment intent during checkout" do
-      order = generate(order(state: :checkout))
+      order = generate(order(state: :payment))
 
       assert {:ok, updated} = Order.add_payment_intent_id(order, "pi_guest_test", actor: nil)
       assert updated.payment_intent_id == "pi_guest_test"
     end
 
     test "system actor can attach payment intent during checkout" do
-      order = generate(order(state: :checkout))
+      order = generate(order(state: :payment))
 
       assert {:ok, updated} =
                Order.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})

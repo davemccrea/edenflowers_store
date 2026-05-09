@@ -23,6 +23,7 @@ defmodule Edenflowers.Store.Order do
     :total,
     :tax_amount,
     :fulfillment_tax_amount,
+    :cart_effectively_empty?,
     :promotion,
     :fulfillment_option,
     :line_items
@@ -33,12 +34,23 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
+  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+
   state_machine do
-    initial_states([:checkout])
-    default_initial_state(:checkout)
+    initial_states([:contact_details])
+    default_initial_state(:contact_details)
 
     transitions do
-      transition(:finalize_checkout, from: :checkout, to: :placed)
+      transition(:submit_contact_details, from: :contact_details, to: :gift_options)
+      transition(:submit_gift_options, from: :gift_options, to: :delivery)
+      transition(:submit_delivery, from: :delivery, to: :payment)
+      transition(:finalize_checkout, from: :payment, to: :placed)
+
+      transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
+      transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
+      transition(:return_to_delivery, from: :payment, to: :delivery)
+
+      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
     end
   end
 
@@ -48,6 +60,12 @@ defmodule Edenflowers.Store.Order do
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
     define :get_all_completed, action: :completed
+    define :submit_contact_details, action: :submit_contact_details
+    define :submit_gift_options, action: :submit_gift_options
+    define :submit_delivery, action: :submit_delivery
+    define :return_to_contact_details, action: :return_to_contact_details
+    define :return_to_gift_options, action: :return_to_gift_options
+    define :return_to_delivery, action: :return_to_delivery
     define :finalize_checkout, action: :finalize_checkout
     define :mark_payment_failed, action: :mark_payment_failed
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
@@ -58,10 +76,8 @@ defmodule Edenflowers.Store.Order do
     define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
     define :restart_checkout, action: :restart_checkout
-    define :edit_step_1, action: :edit_step_1
-    define :edit_step_2, action: :edit_step_2
-    define :edit_step_3, action: :edit_step_3
-    define :clear_card_message, action: :clear_card_message
+    define :add_card, action: :add_card, args: [:product_variant_id]
+    define :remove_card, action: :remove_card
   end
 
   actions do
@@ -93,47 +109,31 @@ defmodule Edenflowers.Store.Order do
 
     # Create Actions
     create :create_for_checkout do
-      change set_attribute(:step, 1)
       change {Changes.GenerateOrderReference, []}
     end
 
-    # Step-specific Update Actions
-    update :edit_step_1 do
-      change set_attribute(:step, 1)
-      change load(@checkout_load)
-    end
-
-    update :save_step_1 do
+    # Forward checkout transitions
+    update :submit_contact_details do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
       change {Changes.UpsertUserAndAssignToOrder, []}
-      change set_attribute(:step, 2)
+      change transition_state(:gift_options)
       change load(@checkout_load)
       require_atomic? false
     end
 
-    update :edit_step_2 do
-      change set_attribute(:step, 2)
-      change load(@checkout_load)
-    end
-
-    update :save_step_2 do
+    update :submit_gift_options do
       accept [:gift, :recipient_name, :card_message]
-      change set_attribute(:step, 3)
       change {Changes.TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate {Validations.ValidateCardMessageLength, []}
       change {Changes.ClearGiftFields, []}
+      change transition_state(:delivery)
       change load(@checkout_load)
       require_atomic? false
     end
 
-    update :edit_step_3 do
-      change set_attribute(:step, 3)
-      change load(@checkout_load)
-    end
-
-    update :save_step_3 do
+    update :submit_delivery do
       accept [
         :fulfillment_option_id,
         :recipient_name,
@@ -147,16 +147,28 @@ defmodule Edenflowers.Store.Order do
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
       change {Changes.CalculateFulfillmentCost, []}
-      change set_attribute(:step, 4)
+      change transition_state(:payment)
       change load(@checkout_load)
       require_atomic? false
     end
 
-    update :save_step_4 do
-      accept []
+    # Backward "edit" transitions
+    update :return_to_contact_details do
+      change transition_state(:contact_details)
+      change load(@checkout_load)
     end
 
-    # Other Update Actions
+    update :return_to_gift_options do
+      change transition_state(:gift_options)
+      change load(@checkout_load)
+    end
+
+    update :return_to_delivery do
+      change transition_state(:delivery)
+      change load(@checkout_load)
+    end
+
+    # Lifecycle transitions
     update :finalize_checkout do
       validate present(:payment_intent_id)
       change transition_state(:placed)
@@ -177,11 +189,6 @@ defmodule Edenflowers.Store.Order do
 
     update :set_gift do
       accept [:gift]
-      change load(@checkout_load)
-    end
-
-    update :clear_card_message do
-      change set_attribute(:card_message, nil)
       change load(@checkout_load)
     end
 
@@ -223,6 +230,22 @@ defmodule Edenflowers.Store.Order do
 
     update :restart_checkout do
       change {Changes.ResetCheckout, []}
+      change transition_state(:contact_details)
+      require_atomic? false
+    end
+
+    update :add_card do
+      argument :product_variant_id, :uuid, allow_nil?: false
+      change {Changes.SwapCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :remove_card do
+      change set_attribute(:card_message, nil)
+      change {Changes.RemoveCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
     end
   end
 
@@ -243,12 +266,12 @@ defmodule Edenflowers.Store.Order do
     end
 
     policy action_type(:read) do
-      authorize_if expr(state == :checkout)
+      authorize_if expr(state in ^@checkout_states)
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
     policy action_type(:update) do
-      authorize_if expr(state == :checkout)
+      authorize_if expr(state in ^@checkout_states)
     end
   end
 
@@ -257,12 +280,10 @@ defmodule Edenflowers.Store.Order do
 
     attribute :order_reference, :string, allow_nil?: false
 
-    attribute :step, :integer, default: 1, constraints: [min: 1, max: 4]
-
     attribute :state, :atom do
       allow_nil? false
-      default :checkout
-      constraints one_of: [:checkout, :placed]
+      default :contact_details
+      constraints one_of: [:contact_details, :gift_options, :delivery, :payment, :placed]
     end
 
     attribute :ordered_at, :utc_datetime
@@ -341,6 +362,12 @@ defmodule Edenflowers.Store.Order do
               )
 
     calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
+
+    # A cart with only a card line item is presented as empty in the UI
+    # (card controls are hidden in the cart sidebar) and shouldn't keep
+    # checkout alive on its own. Treat it as effectively empty so reset
+    # logic and the mount guard agree with what the customer sees.
+    calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0)
   end
 
   aggregates do
@@ -348,6 +375,7 @@ defmodule Edenflowers.Store.Order do
     sum :line_total, :line_items, :line_total
     sum :line_tax_amount, :line_items, :line_tax_amount
     sum :discount_amount, :line_items, :discount_amount
+    count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
   end
 
   identities do

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="w-full">
+<html lang={to_string(Localize.get_locale().cldr_locale_id)} class="w-full">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title default="Store" prefix="Eden Flowers — ">
       {assigns[:page_title]}
@@ -28,49 +28,12 @@
 
     <script src="https://js.stripe.com/v3/">
     </script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js">
-    </script>
   </head>
   <body class="bg-base-200 flex min-h-screen flex-col antialiased">
+    <a href="#main-content" class="skip-link">{~t"Skip to main content"}</a>
     {@inner_content}
 
     <script>
-      (() => {
-        const setTheme = (theme) => {
-          if (theme === "system") {
-            localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
-          } else {
-            localStorage.setItem("phx:theme", theme);
-            document.documentElement.setAttribute("data-theme", theme);
-          }
-        };
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
-        }
-        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-
-        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
-      })();
-    </script>
-
-    <script type="module">
-      // https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/
-      async function ensureCustomElementDefined(elementName) {
-        const elementExists = document.querySelector(elementName);
-        if (elementExists) {
-          await customElements.whenDefined(elementName);
-        }
-      }
-
-      await Promise.allSettled([
-        ensureCustomElementDefined("sl-dropdown"),
-        ensureCustomElementDefined("sl-alert"),
-        ensureCustomElementDefined("sl-icon"),
-      ]);
-
       document.body.classList.add('ready');
     </script>
   </body>

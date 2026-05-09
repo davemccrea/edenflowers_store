@@ -13,27 +13,32 @@ defmodule EdenflowersWeb.HomeLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
-      <section class="relative not-last:border-b">
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+      <section class="relative overflow-hidden not-last:border-b">
         <img
           src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
           class="h-[100vh] w-full object-cover"
           alt=""
         />
 
-        <div class="from-black/50 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+        <%!-- Localised legibility wash: a soft radial darkens the area behind
+             the headline block (mobile bottom-left, desktop centre-left),
+             leaving the rest of the photo bright. --%>
+        <div
+          class="pointer-events-none absolute inset-0 md:hidden"
+          style="background: radial-gradient(closest-corner at 28% 78%, rgba(0,0,0,0.55), rgba(0,0,0,0) 65%);"
+        />
+        <div
+          class="pointer-events-none absolute inset-0 hidden md:block"
+          style="background: radial-gradient(closest-corner at 25% 55%, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);"
+        />
 
-        <div class="container absolute inset-0 flex flex-col justify-center gap-5">
-          <img
-            src={"local:///Eden_flowers-logo1_white_web.svg" |> Imgproxy.new() |> to_string()}
-            class="w-24 sm:w-36"
-            alt="Eden Flowers"
-          />
-          <h1 class="hero-heading max-w-[16ch] text-white">
+        <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
+          <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="flex flex-wrap items-center gap-4">
-            <.button href="#store" variant="primary" size="lg" class="gap-2">
+          <div class="hero-reveal" style="--reveal-delay: 280ms;">
+            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
               {~t"Shop Now"} <span aria-hidden="true">→</span>
             </.button>
           </div>
@@ -41,48 +46,101 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <section id="store" class="not-last:border-b">
-        <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="section-title mb-4 px-2">{~t"Featured Blooms"}</h2>
+        <div class="container py-24 xl:max-w-[70vw]">
+          <div class="mb-4 flex items-end justify-between gap-4 px-2">
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
+
+            <div class="hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                class="embla__prev btn btn-circle btn-ghost"
+                aria-label={~t"Previous slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-left" class="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                class="embla__next btn btn-circle btn-ghost"
+                aria-label={~t"Next slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-right" class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
 
           <div
-            id="product-slider"
-            style="scrollbar-width: thin;"
-            class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
+            class="embla"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label={~t"Featured Blooms"}
           >
-            <ul class="flex space-x-2 py-2">
-              <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
-                <.link
-                  navigate={~p"/product/#{product}"}
-                  aria-labelledby={product.name}
-                  class="flex flex-col transition duration-100 hover:opacity-90"
+            <div
+              id="featured-blooms-viewport"
+              phx-hook="FeaturedCarousel"
+              phx-update="ignore"
+              class="embla__viewport"
+              data-dot-label-template={~t"Go to slide __N__"}
+            >
+              <ul class="embla__container">
+                <li
+                  :for={{product, idx} <- Enum.with_index(@products)}
+                  class="embla__slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <div class="mb-2 overflow-hidden rounded-lg">
-                    <img
-                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                      alt={product.name}
-                      class="aspect-square w-full object-cover"
-                    />
-                  </div>
-                  <div class="text-base-content flex flex-col items-center">
-                    <h3 id={product.name} class="card-title">{product.name}</h3>
-                    <p class="text-sm">{Edenflowers.Utils.format_money(product.cheapest_price)}</p>
-                  </div>
-                </.link>
-              </li>
-            </ul>
+                  <.link navigate={~p"/product/#{product}"} class="group flex flex-col">
+                    <div class="mb-3 overflow-hidden rounded-lg">
+                      <picture>
+                        <%!-- Mobile: 4:5 portrait crop for an immersive feel.
+                             Desktop (sm+): 1:1 square so cards sit cleanly in a row. --%>
+                        <source
+                          media="(min-width: 640px)"
+                          srcset={
+                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()
+                          }
+                        />
+                        <img
+                          src={
+                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()
+                          }
+                          alt=""
+                          class="aspect-[4/5] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] sm:aspect-square"
+                        />
+                      </picture>
+                    </div>
+                    <div class="text-base-content flex flex-col items-center gap-1">
+                      <h3 class="card-title link-underline-group-hover-display">
+                        {product.name}
+                      </h3>
+                      <p class="text-base-content/70 text-sm">
+                        {Edenflowers.Utils.format_money(product.cheapest_price)}
+                      </p>
+                    </div>
+                  </.link>
+                </li>
+              </ul>
+            </div>
+
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
           </div>
         </div>
       </section>
 
       <%!-- Pull quote --%>
       <section class="bg-pastel-3 not-last:border-b">
-        <div class="container flex flex-col items-center gap-12 py-24">
-          <p class="font-serif max-w-4xl text-center text-3xl font-light leading-10 sm:leading-14 md:text-4xl">
+        <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
+          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
-          </p>
-          <a class="font-bold uppercase tracking-wider underline underline-offset-4" href={~p"/about"}>
+          </blockquote>
+          <.link
+            navigate={~p"/about"}
+            class="eyebrow text-base-content link-underline-hover-nav"
+          >
             {~t"Learn more"}
-          </a>
+          </.link>
         </div>
       </section>
 

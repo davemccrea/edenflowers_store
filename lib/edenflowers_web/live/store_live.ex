@@ -47,73 +47,72 @@ defmodule EdenflowersWeb.StoreLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
           <:item navigate={~p"/store"} label={~t"Store"} />
+          <:item label={@selected_category.name} />
         </.breadcrumb>
 
-        <div class="mb-12">
-          <h1 class="page-title text-base-content mb-2">
+        <div class="mb-10 max-w-2xl">
+          <h1 class="page-title text-base-content mb-3">
             {@selected_category.name}
           </h1>
-          <p class="text-base-content/60 text-sm sm:text-base">
+          <p class="text-base-content/70 leading-relaxed sm:text-lg">
             {@selected_category.description}
           </p>
         </div>
 
-        <div class="mb-8">
-          <div class="flex flex-wrap gap-3">
-            <.button
-              :for={category <- @categories}
-              navigate={~p"/store/#{category.slug}"}
-              variant={if(@selected_category.id == category.id, do: "primary", else: nil)}
-            >
-              {category.name}
-            </.button>
-          </div>
-        </div>
+        <nav aria-label={~t"Categories"} class="mb-10 flex flex-wrap gap-3">
+          <.button
+            :for={category <- @categories}
+            navigate={~p"/store/#{category.slug}"}
+            variant={if(@selected_category.id == category.id, do: "primary", else: nil)}
+            aria-current={@selected_category.id == category.id && "page"}
+          >
+            {category.name}
+          </.button>
+        </nav>
 
         <%= if Enum.empty?(@products) do %>
-          <div class="border-primary/40 bg-base-100 flex flex-col items-center gap-4 border border-dashed px-8 py-16 text-center">
-            <.icon name="hero-sparkles" class="text-primary h-12 w-12" />
-            <h3 class="section-title">{~t"Fresh stems loading soon"}</h3>
-            <p class="text-base-content/80 max-w-md text-sm sm:text-base">
-              {~t"We're refreshing our collection. Check back shortly for newly arranged bouquets ready to ship."}
+          <div class="bg-pastel-3 flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
+            <.icon name="hero-sparkles" class="text-primary/80 h-10 w-10" />
+            <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
+            <p class="text-base-content/75 max-w-md leading-relaxed">
+              {~t"We're refreshing this collection right now. Check back shortly — or browse another category in the meantime."}
             </p>
+            <.button navigate={~p"/store/bouquets"} variant="secondary" class="mt-2">
+              {~t"Browse bouquets"}
+            </.button>
           </div>
         <% else %>
-          <ul class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6" role="list">
+          <ul class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 xl:gap-8" role="list">
             <li
               :for={product <- @products}
-              class="group border-base-300/80 bg-base-100 relative flex flex-col overflow-hidden border transition duration-200 hover:border-primary/60 hover:shadow-md"
+              class="group border-base-300/70 bg-base-100 relative flex flex-col overflow-hidden rounded-lg border focus-within:border-primary/60 focus-within:shadow-lg hover:border-primary/50 hover:shadow-lg"
             >
               <.link
-                class="flex h-full flex-col"
+                class="flex h-full flex-col focus:outline-none"
                 navigate={~p"/product/#{product}"}
-                aria-labelledby={"product-#{product.id}"}
               >
                 <figure class="aspect-square relative overflow-hidden">
                   <img
                     src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                    alt={product.name}
-                    class="h-full w-full object-cover transition duration-500 group-hover:scale-102"
+                    alt=""
+                    class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
                     width="1"
                     height="1"
                     loading="lazy"
                   />
                 </figure>
 
-                <div class="flex flex-1 flex-col justify-between gap-2 px-5 pt-5 pb-5 sm:px-6 sm:pb-6">
-                  <h3
-                    id={"product-#{product.id}"}
-                    class="card-title text-base-content tracking-wide"
-                  >
+                <div class="flex flex-1 flex-col gap-2 px-5 py-5 sm:px-6 sm:py-6">
+                  <h3 class="card-title text-base-content link-underline-group-hover-display">
                     {product.name}
                   </h3>
 
-                  <div class="text-base-content/70 text-sm sm:text-base">
+                  <div class="text-base-content/70 text-sm">
                     {Edenflowers.Utils.format_money(product.cheapest_price)}
                   </div>
                 </div>

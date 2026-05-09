@@ -30,7 +30,6 @@ defmodule EdenflowersWeb.CoreComponents do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Phoenix.LiveView.JS
-  alias EdenflowersWeb.LiveToast
 
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
@@ -49,53 +48,51 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders a component for dynamic, client-side alerts.
+  Renders flash messages as toast notifications.
 
-  This component is typically used for displaying alerts that are not part of
-  the standard Phoenix flash message lifecycle. For example, you might use this
-  for real-time notifications triggered by client-side events or LiveView pushes
-  that require a more persistent or distinct UI treatment than flash messages.
-  """
-  def alert_group(assigns) do
-    ~H"""
-    <div
-      id="alert-group"
-      phx-hook="AlertHandler"
-      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
-    />
-    """
-  end
-
-  @doc """
-  Renders the Phoenix flash messages.
-
-  Flash messages are typically used for feedback after an action, such as a successful
-  form submission or an error during an operation. Due to limitations in the Phoenix
-  flash system, only one type of flash message (e.g., one :info or one :error) can be
-  displayed at a time when set directly on the connection.
-
-  It also includes a built-in alert for disconnection/reconnection status.
+  Also handles the disconnected/reconnected banner via the FlashHandler hook.
   """
   def flash_group(assigns) do
-    flash = Enum.map(assigns.flash, fn {key, msg} -> LiveToast.new(key, msg) end)
-    assigns = assign(assigns, :flash, flash)
-
     ~H"""
-    <div id="flash-group" phx-hook="FlashHandler">
-      <sl-alert
-        :for={f <- @flash}
-        id={"flash-#{f.id}"}
-        variant={f.variant}
-        duration={f.duration}
-        closable={f.closable}
-        countdown={f.countdown}
+    <div
+      id="flash-group"
+      class="z-[100] fixed top-6 right-6 flex flex-col items-end gap-3"
+      role="region"
+      aria-label={~t"Notifications"}
+      phx-hook="FlashHandler"
+      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
+      data-reconnected-message={~t"Reconnected"}
+    >
+      <div
+        :for={{key, msg} <- @flash}
+        id={"flash-#{key}"}
+        class="toast-item"
+        data-key={key}
+        data-duration="5000"
+        role={flash_role(key)}
       >
-        <sl-icon slot="icon" name={f.icon} />
-        {f.message}
-      </sl-alert>
+        <div class="toast-item__head">
+          <p class="toast-item__eyebrow">{flash_label(key)}</p>
+          <button class="toast-item__dismiss" aria-label={~t"Dismiss"} data-dismiss>
+            <.icon name="hero-x-mark" />
+          </button>
+        </div>
+        <p class="toast-item__body">{msg}</p>
+      </div>
     </div>
     """
   end
+
+  # Errors interrupt; everything else waits politely. WCAG 4.1.3.
+  defp flash_role("error"), do: "alert"
+  defp flash_role(_), do: "status"
+
+  # Severity → eyebrow label. Restrained, conventional words — the message
+  # itself does the heavy lifting; the eyebrow just orients the reader.
+  defp flash_label("error"), do: ~t"Couldn't complete"
+  defp flash_label("warning"), do: ~t"Notice"
+  defp flash_label("success"), do: ~t"Confirmed"
+  defp flash_label(_), do: ~t"Note"
 
   @doc """
   Renders a button with navigation support.
@@ -282,13 +279,17 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -302,10 +303,14 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -356,12 +361,16 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[@errors != [] && "input-error"]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         />
       </label>
       <button class="btn btn-primary join-item z-50">{@button_text}</button>
     </fieldset>
-    <.error :for={msg <- @errors}>{msg}</.error>
+    <div :if={@errors != []} id={"#{@id}-error"}>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
     """
   end
 
@@ -378,6 +387,8 @@ defmodule EdenflowersWeb.CoreComponents do
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            aria-invalid={@errors != []}
+            aria-describedby={@errors != [] && "#{@id}-error"}
             {@rest}
           />
           <div
@@ -396,7 +407,9 @@ defmodule EdenflowersWeb.CoreComponents do
           </div>
         </div>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -578,7 +591,7 @@ defmodule EdenflowersWeb.CoreComponents do
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: "size-4"
+  attr :class, :any, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
@@ -618,7 +631,12 @@ defmodule EdenflowersWeb.CoreComponents do
   def social_media_links(assigns) do
     ~H"""
     <div class="flex flex-row gap-4">
-      <a href="#">
+      <a
+        href="https://www.facebook.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Facebook"
+      >
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -627,10 +645,15 @@ defmodule EdenflowersWeb.CoreComponents do
             |> Imgproxy.resize(128, 128, type: "fill")
             |> to_string()
           }
-          alt="Facebook logo"
+          alt=""
         />
       </a>
-      <a href="#">
+      <a
+        href="https://www.instagram.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Instagram"
+      >
         <img
           class={"h-#{@size} w-#{@size}"}
           src={
@@ -639,12 +662,93 @@ defmodule EdenflowersWeb.CoreComponents do
             |> Imgproxy.resize(128, 128, type: "fill")
             |> to_string()
           }
-          alt="Instagram logo"
+          alt=""
         />
       </a>
     </div>
     """
   end
+
+  @doc """
+  Icon-only button. `aria_label` is required so we can't ship a nameless
+  button — keyboard/SR users always get an accessible name.
+  """
+  attr :aria_label, :string, required: true
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(type disabled name value form)
+  slot :inner_block, required: true
+
+  def icon_button(assigns) do
+    assigns = assign_new(assigns, :type, fn -> "button" end)
+
+    ~H"""
+    <button type={@type} class={@class} aria-label={@aria_label} {@rest}>
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Disclosure trigger — a button that controls a collapsible region (drawer,
+  menu, dialog). Sets `aria-expanded` and `aria-controls` so AT users know
+  the relationship. State must be tracked outside this component (LV
+  doesn't know if the drawer is open).
+  """
+  attr :aria_label, :string, required: true
+  attr :controls, :string, required: true, doc: "id of the controlled element"
+  attr :expanded, :boolean, default: false
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(phx-click phx-target type)
+  slot :inner_block, required: true
+
+  def disclosure_trigger(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={@class}
+      aria-label={@aria_label}
+      aria-controls={@controls}
+      aria-expanded={to_string(@expanded)}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Cart count badge: a button that opens the cart drawer, with a screen-reader
+  accessible name that includes the current count, plus a polite live region
+  that announces updates. Replaces the previous unlabelled badge.
+  """
+  attr :count, :integer, default: 0
+  attr :rest, :global, include: ~w(phx-click)
+  slot :inner_block, required: true, doc: "Visible content (icon, badge, optional text)"
+
+  def cart_count_badge(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+      aria-label={cart_aria_label(@count)}
+      aria-controls="cart-drawer"
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <span class="sr-only" aria-live="polite" aria-atomic="true">
+      {cart_aria_label(@count)}
+    </span>
+    """
+  end
+
+  defp cart_aria_label(count) when is_integer(count) and count > 0,
+    do:
+      Gettext.dngettext(EdenflowersWeb.Gettext, "default", "Cart, %{count} item", "Cart, %{count} items", count, %{
+        count: count
+      })
+
+  defp cart_aria_label(_), do: ~t"Cart, empty"
 
   @placement %{
     "left" => %{
@@ -672,6 +776,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
   attr :class, :string, default: "bg-base-100 min-w-96"
+  attr :label, :string, default: nil
   slot :inner_block, required: true
 
   def drawer(%{placement: placement} = assigns) do
@@ -718,6 +823,7 @@ defmodule EdenflowersWeb.CoreComponents do
         id={"#{@id}-dialog"}
         role="dialog"
         aria-modal="true"
+        aria-label={@label}
         class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>

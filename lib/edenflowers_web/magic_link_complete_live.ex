@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.auth flash={@flash}>
+    <Layouts.auth flash={@flash} current_path={@current_path}>
       <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-8 p-8 shadow-lg">
         <h2 class="text-center text-lg font-bold">
           {~t"Complete sign in"}
@@ -83,14 +83,8 @@ defmodule EdenflowersWeb.MagicLinkCompleteLive do
         |> assign(:form, form)
         |> assign(:trigger_action, true)
       else
-        error_toast =
-          EdenflowersWeb.LiveToast.new(
-            :warning,
-            ~t"Error signing in. Please try again later."
-          )
-
         socket
-        |> push_event("toast:show", error_toast)
+        |> put_flash(:warning, ~t"Error signing in. Please try again later.")
         |> assign(form: form)
       end
 

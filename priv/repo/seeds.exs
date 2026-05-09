@@ -55,7 +55,7 @@ bouquets_category =
     draft: false,
     description: "Handcrafted floral arrangements featuring seasonal blooms in elegant compositions.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Buketter",
         description: "Handgjorda blomsterarrangemang med säsongens blommor i eleganta kompositioner."
       },
@@ -75,7 +75,7 @@ cards_category =
     draft: false,
     description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Kort",
         description: "Omsorgsfullt designade gratulationskort för varje tillfälle och känsla."
       },
@@ -95,7 +95,7 @@ pre_loved_category =
     draft: false,
     description: "Curated vintage and gently used items finding new homes and stories.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Begagnat",
         description: "Utvalda vintage- och varsamt använda föremål som hittar nya hem och berättelser."
       },
