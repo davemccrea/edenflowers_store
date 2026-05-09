@@ -52,6 +52,7 @@ defmodule EdenflowersWeb.StoreLive do
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
           <:item navigate={~p"/store"} label={~t"Store"} />
+          <:item label={@selected_category.name} />
         </.breadcrumb>
 
         <div class="mb-10 max-w-2xl">
