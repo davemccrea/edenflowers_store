@@ -64,15 +64,16 @@ defmodule EdenflowersWeb.StoreLive do
           </p>
         </div>
 
-        <div class="mb-10 flex flex-wrap gap-3">
+        <nav aria-label={~t"Categories"} class="mb-10 flex flex-wrap gap-3">
           <.button
             :for={category <- @categories}
             navigate={~p"/store/#{category.slug}"}
             variant={if(@selected_category.id == category.id, do: "primary", else: nil)}
+            aria-current={@selected_category.id == category.id && "page"}
           >
             {category.name}
           </.button>
-        </div>
+        </nav>
 
         <%= if Enum.empty?(@products) do %>
           <div class="bg-pastel-3 flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
@@ -94,12 +95,11 @@ defmodule EdenflowersWeb.StoreLive do
               <.link
                 class="flex h-full flex-col focus:outline-none"
                 navigate={~p"/product/#{product}"}
-                aria-labelledby={"product-#{product.id}"}
               >
                 <figure class="aspect-square relative overflow-hidden">
                   <img
                     src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                    alt={product.name}
+                    alt=""
                     class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
                     width="1"
                     height="1"
@@ -108,10 +108,7 @@ defmodule EdenflowersWeb.StoreLive do
                 </figure>
 
                 <div class="flex flex-1 flex-col gap-2 px-5 py-5 sm:px-6 sm:py-6">
-                  <h3
-                    id={"product-#{product.id}"}
-                    class="card-title text-base-content link-underline-group-hover-display"
-                  >
+                  <h3 class="card-title text-base-content link-underline-group-hover-display">
                     {product.name}
                   </h3>
 

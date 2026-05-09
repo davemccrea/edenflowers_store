@@ -113,11 +113,16 @@ Hooks.FeaturedCarousel = {
 
   buildDots() {
     if (!this.dotsNode) return;
+    // Localized template comes from a data attr on the viewport. Falls back
+    // to English if missing so the carousel still works.
+    // Sentinel "__N__" is replaced client-side. Using %{n} would trigger
+    // Gettext binding-validation warnings server-side at every render.
+    const tpl = this.el.dataset.dotLabelTemplate || "Go to slide __N__";
     const snapList = this.embla.scrollSnapList();
     this.dotsNode.innerHTML = snapList
       .map(
         (_, i) =>
-          `<button type="button" class="embla__dot" aria-label="Go to slide ${i + 1}"></button>`
+          `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`
       )
       .join("");
     this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
@@ -129,7 +134,9 @@ Hooks.FeaturedCarousel = {
   onSelect() {
     const selected = this.embla.selectedScrollSnap();
     this.dotNodes.forEach((node, i) => {
-      node.classList.toggle("embla__dot--selected", i === selected);
+      const isSelected = i === selected;
+      node.classList.toggle("embla__dot--selected", isSelected);
+      node.setAttribute("aria-current", isSelected ? "true" : "false");
     });
     const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
     this.el.closest("section")?.classList.toggle("embla--no-scroll", !canScroll);
@@ -667,7 +674,11 @@ Hooks.FlashHandler = {
     div.id = "flash-disconnected";
     div.className = "toast-item";
     div.dataset.key = "warning";
+    // role="alert" implies aria-live="assertive" but some AT/browser combos
+    // miss it on dynamically-added nodes — set both explicitly.
     div.setAttribute("role", "alert");
+    div.setAttribute("aria-live", "assertive");
+    div.setAttribute("aria-atomic", "true");
     div.innerHTML = `
       <div class="toast-item__head">
         <p class="toast-item__eyebrow">Notice</p>
@@ -680,7 +691,20 @@ Hooks.FlashHandler = {
   },
 
   reconnected() {
-    this.dismiss(document.getElementById("flash-disconnected"), null);
+    const banner = document.getElementById("flash-disconnected");
+    if (!banner) return;
+    this.dismiss(banner, null);
+
+    // Announce the resolution politely so SR users hear that connection is back.
+    const reconnectedMsg = this.el.getAttribute("data-reconnected-message");
+    if (!reconnectedMsg) return;
+    const note = document.createElement("div");
+    note.className = "sr-only";
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+    note.textContent = reconnectedMsg;
+    this.el.appendChild(note);
+    setTimeout(() => note.remove(), 3000);
   },
 };
 
