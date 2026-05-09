@@ -159,8 +159,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :order_reference, :text, null: false
-      add :step, :bigint, default: 1
-      add :state, :text, null: false, default: "checkout"
+      add :state, :text, null: false, default: "contact_details"
       add :ordered_at, :utc_datetime
       add :payment_status, :text, default: "pending"
       add :fulfillment_status, :text, default: "pending"
@@ -174,6 +173,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :delivery_instructions, :text
       add :fulfillment_date, :date
       add :fulfillment_amount, :decimal
+      add :fulfillment_method, :text
       add :geocoded_address, :text
       add :here_id, :text
       add :distance, :bigint
@@ -215,6 +215,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :product_name, :text, null: false
       add :product_image_slug, :text, null: false
       add :is_card, :boolean, null: false, default: false
+      add :card_size, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,

@@ -185,7 +185,7 @@ defmodule Edenflowers.Store.PromotionTest do
       assert promotion.usage == 0
 
       # Create order with promotion
-      order = generate(order(promotion_id: promotion.id, payment_intent_id: "pi_test"))
+      order = generate(order(state: :payment, promotion_id: promotion.id, payment_intent_id: "pi_test"))
 
       # Add line item
       _line_item =

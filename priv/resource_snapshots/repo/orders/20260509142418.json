@@ -25,20 +25,8 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "1",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "step",
-      "type": "bigint"
-    },
-    {
       "allow_nil?": false,
-      "default": "\"checkout\"",
+      "default": "\"contact_details\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -203,6 +191,18 @@
       "size": null,
       "source": "fulfillment_amount",
       "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fulfillment_method",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -400,7 +400,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B346E973F901926347496E8AAB63A5999DF66475FFA536897A1CFED129113C41",
+  "hash": "15EFBA966A47C4BD5B5B961660EDCA712C93559562EC3629BED9501EBDFEAECE",
   "identities": [
     {
       "all_tenants?": false,

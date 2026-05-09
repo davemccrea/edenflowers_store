@@ -532,7 +532,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert log =~ "Failed to update payment intent"
 
     stalled = Order.get_by_id!(order.id, authorize?: false)
-    assert stalled.state == :checkout
+    assert stalled.state == :payment
     assert stalled.payment_status != :paid
 
     assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
