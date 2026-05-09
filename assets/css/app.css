@@ -165,6 +165,113 @@ body.ready {
   touch-action: manipulation;
 }
 
+/* ── Toast (flash) ─────────────────────────────────────────────────────────
+   System feedback styled as quiet rectangles. Surface is intentionally
+   plain — no texture, no decoration — so the eye reads the message, not
+   the chrome. Severity is signalled by a single small dot before the
+   eyebrow. The card drifts in from above-right and lifts on dismiss.
+   See lib/edenflowers_web/components/core_components.ex (flash_group/1). */
+
+@keyframes toast-drop-in {
+  from { opacity: 0; transform: translate(1.25rem, -0.75rem) rotate(2.5deg); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translate(0, 0) rotate(0); }
+}
+
+@keyframes toast-lift-out {
+  from { opacity: 1; transform: translate(0, 0) rotate(0); }
+  to   { opacity: 0; transform: translate(0.5rem, -0.5rem) rotate(-1.5deg); }
+}
+
+.toast-item {
+  position: relative;
+  width: 22rem;
+  background: oklch(99% 0.003 80);
+  color: oklch(25% 0.015 60);
+  /* A firm 1px hairline matching the site's section dividers (header,
+     footer, banner). Same lightness as the rest of the site's strong
+     edges — gives the card real architecture instead of floating UI. */
+  border: 1px solid oklch(21% 0.006 286);
+  border-radius: 0;
+  /* Soft warm drop shadow for depth; the hairline does the edge-definition
+     work that a faint shadow would otherwise have to. */
+  box-shadow:
+    0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
+    0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
+  transform-origin: 100% 0;
+  animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.toast-item[data-dismissing] {
+  animation: toast-lift-out 280ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
+}
+
+/* Severity ground — a soft, high-lightness tint that fills the heading
+   band. Values are intentionally in the L 92–94% range so the band reads
+   as a watercolor wash rather than a saturated alert color. The eyebrow
+   text sits on top in its normal warm-grey; we don't tint the type. */
+.toast-item[data-key="error"]    { --toast-ground: oklch(93% 0.04 30); }
+.toast-item[data-key="warning"]  { --toast-ground: oklch(94% 0.05 85); }
+.toast-item[data-key="success"]  { --toast-ground: oklch(94% 0.04 155); }
+.toast-item[data-key="info"]     { --toast-ground: oklch(94% 0.025 220); }
+
+/* Heading band — full-width tinted region containing the eyebrow label
+   and dismiss control. The bottom edge uses the same near-black hairline
+   as the rest of the card and the site's section dividers, so the band
+   reads as an architectural row, not a colored ribbon stuck on top. */
+.toast-item__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem 0.55rem 1.25rem;
+  background: var(--toast-ground, oklch(94% 0.04 155));
+  border-bottom: 1px solid oklch(21% 0.006 286);
+}
+
+.toast-item__eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: oklch(28% 0.02 60);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.toast-item__body {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: oklch(35% 0.015 60);
+  /* Body region has its own quiet padding, distinct from the heading
+     band's padding — establishes the two-region structure clearly. */
+  padding: 0.85rem 1.25rem 1rem;
+}
+
+.toast-item__dismiss {
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  color: oklch(35% 0.02 60);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+.toast-item__dismiss:hover { color: oklch(15% 0.02 60); }
+/* The heroicons plugin renders icons as a span with a mask. 14px reads
+   as a quiet close affordance; the surrounding padding keeps a
+   comfortable click target. */
+.toast-item__dismiss .hero-x-mark,
+.toast-item__dismiss .hero-x-mark-mini {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item,
+  .toast-item[data-dismissing] { animation: none; }
+}
+
 @utility container {
   @apply mx-auto px-4 sm:px-8;
 }
@@ -178,30 +285,31 @@ body.ready {
 }
 
 @utility hero-heading-overlay {
-  @apply font-serif text-4xl font-light leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl;
+  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
 }
 
 /* Editorial display size — used for marquee headlines (e.g. the home hero).
    Sized for a confident two-line wrap at desktop without crowding the photo
-   subject. Negative tracking only kicks in at the largest sizes. */
+   subject. Mobile leading is loosened so 2–3 line wraps don't feel cramped;
+   negative tracking only kicks in at the largest sizes. */
 @utility hero-display {
-  @apply font-serif font-light text-5xl leading-[1.02] tracking-tight sm:text-6xl md:text-[4.5rem] md:tracking-[-0.01em] lg:text-[5.5rem];
+  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
-  @apply font-serif text-4xl leading-[1.1] tracking-tight sm:text-5xl;
+  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1];
 }
 
 @utility section-title {
-  @apply font-serif text-2xl leading-tight tracking-tight sm:text-3xl;
+  @apply font-serif text-3xl leading-tight tracking-tight md:text-4xl;
 }
 
 @utility tile-title {
-  @apply font-serif text-2xl leading-snug tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
 }
 
 @utility card-title {
-  @apply font-serif text-xl leading-snug tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {

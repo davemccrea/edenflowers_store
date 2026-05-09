@@ -492,94 +492,52 @@ Hooks.Stripe = {
   },
 };
 
-Hooks.AlertHandler = {
-  createDisconnectedAlert() {
-    this.disconnectedMessage = this.el.getAttribute(
-      "data-disconnected-message",
-    );
+Hooks.FlashHandler = {
+  mounted() { this.initAlerts(); },
+  updated() { this.initAlerts(); },
 
-    const disconnectedAlert = `
-      <sl-alert
-        id="alert-disconnected"
-        variant="warning"
-        closable="false"
-      >
-        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-         ${this.disconnectedMessage}
-      </sl-alert>
-      `;
-
-    this.el.insertAdjacentHTML("beforeend", disconnectedAlert);
+  initAlerts() {
+    for (const el of Array.from(this.el.children)) {
+      if (el.dataset.initialized) continue;
+      el.dataset.initialized = "true";
+      const key = el.dataset.key;
+      const duration = parseInt(el.dataset.duration || "5000", 10);
+      el.querySelector("[data-dismiss]")
+        ?.addEventListener("click", () => this.dismiss(el, key));
+      if (duration > 0) setTimeout(() => this.dismiss(el, key), duration);
+    }
   },
 
-  mounted() {
-    this.createDisconnectedAlert();
-
-    // Toasts are triggered by the server and inserted into the DOM when event is received.
-    this.handleEvent("toast:show", (alert) => {
-      const html = `
-      <sl-alert
-        id="alert-${alert.id}"
-        variant="${alert.variant}"
-        duration="${alert.duration}"
-        ${alert.closable ? "closable" : ""}
-        ${
-          alert.countdown == "rtl" || alert.countdown == "ltr"
-            ? `countdown="${alert.countdown}"`
-            : ""
-        }
-      >
-        <sl-icon slot="icon" name="${alert.icon}"></sl-icon>
-        ${alert.message}
-      </sl-alert>
-      `;
-
-      // Insert the toast into the DOM.
-      this.el.insertAdjacentHTML("beforeend", html);
-
-      const alertEl = this.el.querySelector(`#alert-${alert.id}`);
-      customElements.whenDefined("sl-alert").then(() => {
-        alertEl.toast();
-      });
-    });
+  dismiss(el, key) {
+    if (el.dataset.dismissing) return;
+    el.dataset.dismissing = "true";
+    setTimeout(() => {
+      if (key) this.pushEvent("lv:clear-flash", { key });
+      else el.remove();
+    }, 240);
   },
 
   disconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      customElements.whenDefined("sl-alert").then(() => {
-        /** @type {any} */ (disconnectedAlert).toast();
-      });
-    }
+    if (document.getElementById("flash-disconnected")) return;
+    const msg = this.el.getAttribute("data-disconnected-message");
+    const div = document.createElement("div");
+    div.id = "flash-disconnected";
+    div.className = "toast-item";
+    div.dataset.key = "warning";
+    div.setAttribute("role", "alert");
+    div.innerHTML = `
+      <div class="toast-item__head">
+        <p class="toast-item__eyebrow">Notice</p>
+      </div>
+      <p class="toast-item__body"></p>`;
+    // Note: the disconnected banner has no dismiss button — it's auto-removed
+    // when the socket reconnects (see reconnected() below).
+    div.querySelector(".toast-item__body").textContent = msg;
+    this.el.appendChild(div);
   },
 
   reconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      /** @type {any} */ (disconnectedAlert).hide();
-    }
-
-    this.createDisconnectedAlert();
-  },
-};
-
-Hooks.FlashHandler = {
-  mounted() {
-    customElements.whenDefined("sl-alert").then(() => {
-      for (const flashEl of Array.from(this.el.children)) {
-        flashEl.toast();
-      }
-
-      this.pushEvent("lv:clear-flash", {});
-    });
-  },
-  disconnected() {
-    // TODO: Is it necessary to check for this.el?
-    if (this.el) {
-      for (const flashEl of this.el.children) {
-        flashEl.remove();
-      }
-    }
+    this.dismiss(document.getElementById("flash-disconnected"), null);
   },
 };
 
