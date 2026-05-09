@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> fill_in("Your Name *", with: "John Doe")
       |> fill_in("Email *", with: "john@example.com")
       |> click_button("Next")
-      |> assert_has("h1", text: "Gift Options")
+      |> assert_has("h2", text: "Gift Options")
     end
   end
 
@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "successfully submits and progresses to step 3", %{session: session} do
       session
       |> click_button("Next")
-      |> assert_has("h1", text: "Delivery Information")
+      |> assert_has("h2", text: "Delivery Information")
     end
 
     test "does not show 'Select a card' button when gift is false", %{session: session} do
