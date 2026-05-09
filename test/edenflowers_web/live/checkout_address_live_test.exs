@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     product = generate(product())
     variant = generate(product_variant(%{product_id: product.id}))
     delivery_option = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :fixed, base_price: "5.00"))
-    order = generate(order(step: 3, customer_name: "Jane", customer_email: "jane@example.com"))
+    order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
     LineItem.add_item!(%{
       order_id: order.id,
@@ -282,7 +282,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.position == "63.0951,21.6165"
@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end
   end

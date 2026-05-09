@@ -1,10 +1,10 @@
 defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   @moduledoc """
-  For `save_step_3`, derives `fulfillment_amount` (and, for delivery, the
-  geocoded fields) from the chosen `FulfillmentOption`. The corresponding
-  attributes are not in the action's `accept` list, so this change is the
-  only path that can set them — closing the trust-the-client gap on
-  delivery cost.
+  For `submit_delivery`, derives `fulfillment_amount` (and, for delivery,
+  the geocoded fields) from the chosen `FulfillmentOption`. The
+  corresponding attributes are not in the action's `accept` list, so this
+  change is the only path that can set them — closing the trust-the-client
+  gap on delivery cost.
   """
   use Ash.Resource.Change
 

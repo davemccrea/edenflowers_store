@@ -63,8 +63,9 @@ defmodule Edenflowers.Store.LineItem do
     # Read/Update/Destroy access:
     # Multiple authorize_if within one policy = OR (only one needs to pass)
     policy action_type([:read, :update, :destroy]) do
-      # Guest checkout: Anyone can work with line items for orders in checkout state
-      authorize_if expr(order.state == :checkout)
+      # Guest checkout: Anyone can work with line items for orders still in
+      # the checkout flow (any sub-state before :placed).
+      authorize_if expr(order.state != :placed)
       # Placed orders: Only the owner can access their line items
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
     end
