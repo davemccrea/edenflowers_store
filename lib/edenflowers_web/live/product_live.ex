@@ -6,8 +6,10 @@ defmodule EdenflowersWeb.ProductLive do
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
+    locale = current_locale_atom()
     {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
+    product_category = product.product_category |> Ash.load!(:translations) |> AshTranslation.translate(locale)
 
     selected_variant =
       case length(product_variants) do
@@ -30,6 +32,7 @@ defmodule EdenflowersWeb.ProductLive do
      socket
      |> assign(order_id: order_id)
      |> assign(product: product)
+     |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)}
   end
@@ -41,7 +44,7 @@ defmodule EdenflowersWeb.ProductLive do
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
           <:item navigate={~p"/store"} label={~t"Store"} />
-          <:item navigate={~p"/store/#{@product.product_category.slug}"} label={@product.product_category.name} />
+          <:item navigate={~p"/store/#{@product.product_category.slug}"} label={@product_category.name} />
           <:item label={@product.name} />
         </.breadcrumb>
 
@@ -188,6 +191,8 @@ defmodule EdenflowersWeb.ProductLive do
     </Layouts.app>
     """
   end
+
+  defp current_locale_atom, do: Localize.get_locale().cldr_locale_id
 
   def handle_event("change", %{"product_variant_id" => id}, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
