@@ -1,2 +1,6 @@
 #!/bin/sh
+if [ "$SKIP_HOOKS" = "1" ]; then
+  echo "pre-push: SKIP_HOOKS=1, skipping precommit checks"
+  exit 0
+fi
 mix precommit
