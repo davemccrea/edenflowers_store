@@ -43,13 +43,13 @@ defmodule Edenflowers.Email do
   Builds an order confirmation email
   """
   def order_confirmation(order) do
-    Gettext.put_locale(EdenflowersWeb.Gettext, order.locale)
-
-    new()
-    |> from(@from_address)
-    |> to(order.customer_email)
-    |> subject("#{~t"Order Confirmation"} - #{order.order_reference}")
-    |> text_body(render_order_confirmation(order, order.locale))
+    Gettext.with_locale(EdenflowersWeb.Gettext, order.locale, fn ->
+      new()
+      |> from(@from_address)
+      |> to(order.customer_email)
+      |> subject("#{~t"Order Confirmation"} - #{order.order_reference}")
+      |> text_body(render_order_confirmation(order, order.locale))
+    end)
   end
 
   defp render_order_confirmation(order, locale) do

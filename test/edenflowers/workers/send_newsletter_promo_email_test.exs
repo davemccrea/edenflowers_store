@@ -55,4 +55,15 @@ defmodule Edenflowers.Workers.SendNewsletterPromoEmailTest do
       end)
     end
   end
+
+  describe "locale scoping" do
+    test "does not leak job's locale into the caller's process state" do
+      Gettext.put_locale(EdenflowersWeb.Gettext, "en")
+      {:ok, _user} = User.subscribe_to_newsletter("scope@example.com", authorize?: false)
+
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "scope@example.com", "locale" => "fi"})
+
+      assert Gettext.get_locale(EdenflowersWeb.Gettext) == "en"
+    end
+  end
 end
