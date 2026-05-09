@@ -311,19 +311,21 @@ body.ready {
   }
 }
 
-/* Dots — neutral, theme-aware. Active dot uses primary brand color. */
+/* Dots — sit in the site's muted-UI register (base-content/15 and /60),
+   matching how the calendar and secondary text use base-content opacities.
+   Quiet enough to read as a typographic mark rather than UI chrome. */
 .embla__dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.3125rem; /* 5px */
+  height: 0.3125rem;
   border-radius: 9999px;
-  background: color-mix(in oklab, currentColor 25%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 15%, transparent);
   border: 0;
   padding: 0;
   cursor: pointer;
 }
 .embla__dot--selected {
-  background: var(--color-primary);
-  width: 1.25rem; /* active dot stretches into a pill — clearer affordance */
+  background: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  width: 0.875rem; /* 14px — pill stretches ~2.8× wider than tall */
 }
 @media (prefers-reduced-motion: no-preference) {
   .embla__dot {
@@ -337,6 +339,13 @@ body.ready {
   opacity: 0.3;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Hide arrows + dots when the carousel has nothing to scroll (all slides
+   fit in view). The hook toggles .embla--no-scroll on the enclosing
+   <section> from onSelect, which fires on init, scroll, and reInit. */
+.embla--no-scroll :where(.embla__prev, .embla__next, .embla__dots) {
+  display: none;
 }
 
 .auth-background-pattern {

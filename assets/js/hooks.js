@@ -29,11 +29,9 @@ Hooks.FeaturedCarousel = {
     this.dotsNode = scope.querySelector(".embla__dots");
     this.dotNodes = [];
 
-    // The mobile focal-point effect (scale/fade neighbours) is purely
-    // decorative — skip the per-frame work for reduced-motion users and
-    // above the sm breakpoint where the CSS shows multiple equal cards.
+    // Reduced-motion users skip the per-frame focal-point work entirely.
+    // The breakpoint above which the effect is disabled is handled in CSS.
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    this.smQuery = window.matchMedia("(min-width: 640px)");
 
     // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
     // full page of cards on desktop.
@@ -63,10 +61,8 @@ Hooks.FeaturedCarousel = {
     this.embla.on("reInit", this.boundOnReInit);
     this.embla.on("scroll", this.boundOnTween);
     this.embla.on("slideFocus", this.boundOnTween);
-    requestAnimationFrame(() => {
-      this.boundOnSelect();
-      this.boundOnTween();
-    });
+    this.onSelect();
+    this.onTween();
   },
 
   updated() {
@@ -90,12 +86,12 @@ Hooks.FeaturedCarousel = {
   /**
    * Per-frame focal-point effect: write each slide's distance-from-center
    * (clamped 0..1) to a CSS custom property so CSS can scale/fade neighbours.
-   * Iterates by snap index and resolves slides via slideRegistry, which is
-   * Embla's idiomatic shape — correct under slidesToScroll:'auto' grouping
-   * and any future loop config.
+   * Iterates by snap index and resolves slides via slideRegistry — correct
+   * under slidesToScroll:'auto' grouping at md+. CSS gates which breakpoint
+   * the effect actually applies at.
    */
   onTween(eventName) {
-    if (this.reducedMotion || this.smQuery.matches) return;
+    if (this.reducedMotion) return;
     const engine = this.embla.internalEngine();
     const scrollProgress = this.embla.scrollProgress();
     const slidesInView = this.embla.slidesInView();
@@ -103,28 +99,13 @@ Hooks.FeaturedCarousel = {
     const isScrollEvent = eventName === "scroll";
 
     this.embla.scrollSnapList().forEach((scrollSnap, snapIndex) => {
-      let diffToTarget = scrollSnap - scrollProgress;
-      const slidesInSnap = engine.slideRegistry[snapIndex];
+      const diffToTarget = scrollSnap - scrollProgress;
 
-      slidesInSnap.forEach((slideIndex) => {
-        // On 'scroll' (per-frame), skip off-screen slides for performance.
-        // On 'reInit' / 'slideFocus' / initial mount, update everyone so
-        // freshly-revealed slides have the correct value on first paint.
+      engine.slideRegistry[snapIndex].forEach((slideIndex) => {
+        // Per-frame: skip off-screen slides. On reInit / slideFocus / mount
+        // we update everyone so freshly-revealed slides paint correctly.
         if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
-
-        if (engine.options.loop) {
-          engine.slideLooper.loopPoints.forEach((loopItem) => {
-            const target = loopItem.target();
-            if (slideIndex === loopItem.index && target !== 0) {
-              const sign = Math.sign(target);
-              if (sign === -1) diffToTarget = scrollSnap - (1 + scrollProgress);
-              if (sign === 1) diffToTarget = scrollSnap + (1 - scrollProgress);
-            }
-          });
-        }
-
-        const tweenValue = Math.abs(diffToTarget * this.tweenFactor);
-        const progress = Math.min(Math.max(tweenValue, 0), 1);
+        const progress = Math.min(Math.abs(diffToTarget * this.tweenFactor), 1);
         slideNodes[slideIndex].style.setProperty("--embla-progress", progress.toFixed(3));
       });
     });
@@ -150,6 +131,8 @@ Hooks.FeaturedCarousel = {
     this.dotNodes.forEach((node, i) => {
       node.classList.toggle("embla__dot--selected", i === selected);
     });
+    const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
+    this.el.closest("section")?.classList.toggle("embla--no-scroll", !canScroll);
     if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
     if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
   },

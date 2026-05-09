@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <section id="store" class="not-last:border-b">
-        <div class="m-auto py-24 xl:max-w-[70vw]">
+        <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
             <h2 class="section-title">{~t"Featured Blooms"}</h2>
 
@@ -119,7 +119,7 @@ defmodule EdenflowersWeb.HomeLive do
               </ul>
             </div>
 
-            <div class="embla__dots mt-4 flex justify-center gap-2" />
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
           </div>
         </div>
       </section>
