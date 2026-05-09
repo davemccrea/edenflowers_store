@@ -33,7 +33,7 @@ if config_env() in [:prod, :dev] do
     salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
 
   config :stripity_stripe,
-    api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
+    api_key: System.get_env("STRIPE_SECRET_KEY") || raise("environment variable STRIPE_SECRET_KEY is missing.")
 
   config :edenflowers,
          :stripe_webhook_secret,
