@@ -46,8 +46,15 @@ defmodule EdenflowersWeb.ProductLive do
         </.breadcrumb>
 
         <div class="grid gap-12 md:grid-cols-2 md:items-start">
-          <%!-- Product Image --%>
-          <figure class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md">
+          <%!-- Product Image. The `view-transition-name: product-hero`
+               pairs with the clicked card on the home carousel (which gets
+               the same name stamped on it via app.js) so the thumbnail
+               morphs into this figure on navigate. The name is page-local
+               (one product per page) so a fixed name is safe. --%>
+          <figure
+            class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md"
+            style="view-transition-name: product-hero;"
+          >
             <img
               data-testid="product-image"
               src={@selected_variant.image_slug |> Imgproxy.new() |> Imgproxy.resize(800, 800, type: "fill") |> to_string()}

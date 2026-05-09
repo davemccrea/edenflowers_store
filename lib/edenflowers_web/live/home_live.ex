@@ -84,7 +84,16 @@ defmodule EdenflowersWeb.HomeLive do
                     aria-labelledby={product.name}
                     class="group flex flex-col"
                   >
-                    <div class="mb-3 overflow-hidden rounded-lg">
+                    <%!-- The wrapping <div> is the morph source: a capture-
+                         phase click listener in app.js sees `data-vt-name`
+                         and stamps `view-transition-name: product-hero` on
+                         it before LV navigates. The product page's <figure>
+                         carries the same name as a static style, so the
+                         browser pairs them and morphs the size/position. --%>
+                    <div
+                      class="mb-3 overflow-hidden rounded-lg"
+                      data-vt-name="product-hero"
+                    >
                       <picture>
                         <%!-- Mobile: 4:5 portrait crop for an immersive feel.
                              Desktop (sm+): 1:1 square so cards sit cleanly in a row. --%>

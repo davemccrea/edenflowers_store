@@ -29,10 +29,65 @@ import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
+
+// View Transitions API integration.
+//
+// Elements opt in via `data-vt-name="<name>"`. A capture-phase click listener
+// stamps `view-transition-name` on the element synchronously so the browser
+// has the name in place when LiveView's link handler initiates navigation.
+//
+// We can't use `phx-click` + `JS.dispatch` here because LV's link click
+// handler shadows `phx-click` on descendants of `<.link navigate>` — the
+// navigation fires but the dispatch silently doesn't.
+//
+// onDocumentPatch wraps LV's DOM patch in `document.startViewTransition()`
+// only when something has opted in; otherwise the patch runs normally with
+// zero overhead. Fallback path covers Firefox <=144 (no callbackOptions).
+let transitionTags = [];
+let scheduleTransition = false;
+
+document.addEventListener(
+  "click",
+  (e) => {
+    const el =
+      e.target instanceof Element
+        ? e.target.closest("[data-vt-name]")
+        : null;
+    if (!el) return;
+    const name = el.getAttribute("data-vt-name");
+    if (!name) return;
+    el.style.viewTransitionName = name;
+    transitionTags.push(el);
+    scheduleTransition = true;
+  },
+  { capture: true }
+);
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
   hooks: { ...Hooks, ...colocatedHooks },
+  dom: {
+    onDocumentPatch(start) {
+      const update = () => {
+        transitionTags.forEach((el) => (el.style.viewTransitionName = ""));
+        transitionTags = [];
+        scheduleTransition = false;
+        start();
+      };
+
+      if (!scheduleTransition || !document.startViewTransition) {
+        update();
+        return;
+      }
+
+      try {
+        document.startViewTransition({ update });
+      } catch (_err) {
+        document.startViewTransition(update);
+      }
+    },
+  },
 });
 
 // Show progress bar on live navigation and form submits
