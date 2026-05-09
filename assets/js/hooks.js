@@ -1,6 +1,98 @@
 // @ts-check
 
+import EmblaCarousel from "../vendor/embla-carousel.esm";
+
 export const Hooks = {};
+
+/**
+ * Carousel for the Featured Blooms section.
+ *
+ * Markup contract (set in HomeLive):
+ *   <div class="embla">
+ *     <div class="embla__viewport" phx-hook="FeaturedCarousel" id="...">
+ *       <ul class="embla__container">
+ *         <li class="embla__slide">...</li>
+ *       </ul>
+ *     </div>
+ *     <button class="embla__prev">…</button>
+ *     <button class="embla__next">…</button>
+ *     <div class="embla__dots"></div>
+ *   </div>
+ */
+Hooks.FeaturedCarousel = {
+  mounted() {
+    // Buttons live in the section heading (sibling of .embla), so we scope
+    // the lookup to the enclosing <section> rather than .embla itself.
+    const scope = this.el.closest("section") || document;
+    this.prevBtn = scope.querySelector(".embla__prev");
+    this.nextBtn = scope.querySelector(".embla__next");
+    this.dotsNode = scope.querySelector(".embla__dots");
+    this.dotNodes = [];
+
+    // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
+    // full page of cards on desktop.
+    this.embla = EmblaCarousel(this.el, {
+      align: "center",
+      containScroll: "trimSnaps",
+      slidesToScroll: 1,
+      breakpoints: {
+        "(min-width: 768px)": { slidesToScroll: "auto" },
+      },
+    });
+
+    this.boundOnSelect = this.onSelect.bind(this);
+    this.boundOnReInit = this.onReInit.bind(this);
+
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener("click", () => this.embla.scrollPrev());
+    }
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener("click", () => this.embla.scrollNext());
+    }
+
+    this.buildDots();
+    this.embla.on("select", this.boundOnSelect);
+    this.embla.on("reInit", this.boundOnReInit);
+    requestAnimationFrame(() => this.boundOnSelect());
+  },
+
+  updated() {
+    if (this.embla) this.embla.reInit();
+  },
+
+  destroyed() {
+    if (this.embla) this.embla.destroy();
+  },
+
+  buildDots() {
+    if (!this.dotsNode) return;
+    const snapList = this.embla.scrollSnapList();
+    this.dotsNode.innerHTML = snapList
+      .map(
+        (_, i) =>
+          `<button type="button" class="embla__dot" aria-label="Go to slide ${i + 1}"></button>`
+      )
+      .join("");
+    this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
+    this.dotNodes.forEach((node, i) => {
+      node.addEventListener("click", () => this.embla.scrollTo(i));
+    });
+  },
+
+  onSelect() {
+    const selected = this.embla.selectedScrollSnap();
+    this.dotNodes.forEach((node, i) => {
+      node.classList.toggle("embla__dot--selected", i === selected);
+    });
+    if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
+    if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
+  },
+
+  onReInit() {
+    this.buildDots();
+    this.onSelect();
+  },
+};
 
 Hooks.CharacterCount = {
   mounted() {
