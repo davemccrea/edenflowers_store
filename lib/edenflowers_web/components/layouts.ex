@@ -11,6 +11,33 @@ defmodule EdenflowersWeb.Layouts do
   # and other static content.
   embed_templates "layouts/*"
 
+  @doc """
+  Renders the locale switcher as a single source of truth for header,
+  drawer, and footer. Uses `aria-current="true"` on the active locale so
+  AT users hear which language they're on.
+  """
+  attr :locales, :list, required: true, doc: "list of {code, name} tuples"
+  attr :current_locale_code, :string, required: true
+  attr :current_path, :string, required: true
+  attr :class, :any, default: nil
+  attr :item_class, :any, default: nil
+
+  def locale_list(assigns) do
+    ~H"""
+    <ul class={@class}>
+      <li :for={{code, name} <- @locales}>
+        <.link
+          href={~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          class={[@item_class, code == @current_locale_code && "text-base-content font-semibold"]}
+          aria-current={code == @current_locale_code && "true"}
+        >
+          {name}
+        </.link>
+      </li>
+    </ul>
+    """
+  end
+
   attr :id, :string, required: true
   attr :current_path, :string, required: true
   attr :placement, :string, default: "top", values: ~w(top bottom)
@@ -61,7 +88,7 @@ defmodule EdenflowersWeb.Layouts do
         </.link>
       </header>
 
-      <main class="flex flex-grow items-center justify-center">
+      <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
         <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
       </main>
@@ -128,9 +155,9 @@ defmodule EdenflowersWeb.Layouts do
           Eden Flowers
         </.link>
 
-        <button type="button" phx-click={JS.exec("phx-hide", to: "#nav-drawer")} class="h-12 w-12 cursor-pointer">
+        <.icon_button aria_label={~t"Close navigation menu"} phx-click={JS.exec("phx-hide", to: "#nav-drawer")}>
           <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-        </button>
+        </.icon_button>
       </header>
 
       <div class="flex flex-1 flex-col justify-between p-8">
@@ -160,16 +187,13 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <footer class="bg-base-300 flex flex-col gap-6 px-8 py-8">
-        <ul class="flex flex-wrap gap-x-5 gap-y-2">
-          <li :for={{code, name} <- @locales}>
-            <.link
-              href={~p"/locale/#{code}?redirect_to=#{@current_path}"}
-              class={["text-base-content/80 text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4", code == @current_locale_code && "text-base-content font-semibold"]}
-            >
-              {name}
-            </.link>
-          </li>
-        </ul>
+        <.locale_list
+          locales={@locales}
+          current_locale_code={@current_locale_code}
+          current_path={@current_path}
+          class="flex flex-wrap gap-x-5 gap-y-2"
+          item_class="text-base-content/80 text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
+        />
         <.social_media_links size={6} />
       </footer>
     </.drawer>
@@ -189,9 +213,9 @@ defmodule EdenflowersWeb.Layouts do
           <% end %>
         </h1>
 
-        <button phx-click={JS.exec("phx-hide", to: "#cart-drawer")} type="button" class="h-12 w-12 cursor-pointer">
+        <.icon_button aria_label={~t"Close cart"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
           <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-        </button>
+        </.icon_button>
       </header>
 
       <div class="flex flex-1 flex-col justify-between overflow-y-auto p-8">
@@ -224,14 +248,13 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex flex-1 justify-start">
               <%!-- Mobile hamburger menu --%>
               <div class="block xl:hidden">
-                <button
+                <.disclosure_trigger
+                  aria_label={~t"Open navigation menu"}
+                  controls="nav-drawer"
                   phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#nav-drawer")}
-                  type="button"
-                  class="h-12 w-12 cursor-pointer"
-                  aria-label={~t"Open navigation menu"}
                 >
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
-                </button>
+                </.disclosure_trigger>
               </div>
 
               <%!-- Desktop navigation --%>
@@ -288,36 +311,39 @@ defmodule EdenflowersWeb.Layouts do
               </div>
 
               <%!-- Cart button --%>
-              <button
+              <.cart_count_badge
+                count={@order.total_items_in_cart || 0}
                 phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
-                type="button"
-                class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
               >
-                <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-shopping-bag" />
-
+                <.icon
+                  class="text-base-content h-5 w-5 group-hover:text-base-content/60"
+                  name="hero-shopping-bag"
+                />
                 <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
-                  <span class="absolute top-0 right-0 lg:hidden">
+                  <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
                     <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
                     </div>
                   </span>
                 <% end %>
-
-                <span class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex">
+                <span
+                  class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex"
+                  aria-hidden="true"
+                >
                   <%= if not is_nil(@order.total_items_in_cart) do %>
                     {~t"Cart"} ({@order.total_items_in_cart})
                   <% else %>
                     {~t"Cart"}
                   <% end %>
                 </span>
-              </button>
+              </.cart_count_badge>
             </div>
           </div>
         </section>
       </header>
     </div>
 
-    <main class="flex-grow">
+    <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
       <.flash_group flash={@flash} />
 
       {render_slot(@inner_block)}
@@ -377,31 +403,6 @@ defmodule EdenflowersWeb.Layouts do
         </span>
       </div>
     </footer>
-    """
-  end
-
-  @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
-
-  See <head> in root.html.heex which applies the theme before page load.
-  """
-  def theme_toggle(assigns) do
-    ~H"""
-    <div class="card border-base-300 bg-base-300 relative flex flex-row items-center rounded-full border-2">
-      <div class="border-1 border-base-200 bg-base-100 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left] absolute left-0 h-full w-1/3 rounded-full brightness-200" />
-
-      <button class="flex w-1/3 cursor-pointer p-2" phx-click={JS.dispatch("phx:set-theme")} data-phx-theme="system">
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
-
-      <button class="flex w-1/3 cursor-pointer p-2" phx-click={JS.dispatch("phx:set-theme")} data-phx-theme="light">
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
-
-      <button class="flex w-1/3 cursor-pointer p-2" phx-click={JS.dispatch("phx:set-theme")} data-phx-theme="dark">
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
-    </div>
     """
   end
 end
