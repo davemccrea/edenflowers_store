@@ -21,18 +21,6 @@ defmodule EdenflowersWeb.HomeLive do
           alt=""
         />
 
-        <%!-- Localised legibility wash: a soft radial darkens the area behind
-             the headline block (mobile bottom-left, desktop centre-left),
-             leaving the rest of the photo bright. --%>
-        <div
-          class="pointer-events-none absolute inset-0 md:hidden"
-          style="background: radial-gradient(closest-corner at 28% 78%, rgba(0,0,0,0.55), rgba(0,0,0,0) 65%);"
-        />
-        <div
-          class="pointer-events-none absolute inset-0 hidden md:block"
-          style="background: radial-gradient(closest-corner at 25% 55%, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);"
-        />
-
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
