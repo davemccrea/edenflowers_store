@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Cart.Validations.ValidateDeliveryAddress do
+defmodule Edenflowers.Store.Order.Validations.ValidateDeliveryAddress do
   use Ash.Resource.Validation
 
   alias Edenflowers.Fulfillments

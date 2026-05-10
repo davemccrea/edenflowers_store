@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Store.Cart
+  alias Edenflowers.Store.Order
 
   setup do
     Edenflowers.Repo.delete_all(Oban.Job)
@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
       Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)
 
     order =
-      Ash.Seed.seed!(Cart, %{
+      Ash.Seed.seed!(Order, %{
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
         state: :payment,
         customer_name: "John Smith",
@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     _line_item =
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 1
         )
@@ -51,10 +51,10 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_succeeded_1",
                  type: "payment_intent.succeeded",
-                 data: %{object: %{metadata: %{"cart_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Cart.get_by_id!(order.id, authorize?: false)
+      order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
 
@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
       event = %Stripe.Event{
         id: "evt_succeeded_dup",
         type: "payment_intent.succeeded",
-        data: %{object: %{metadata: %{"cart_id" => order.id}}}
+        data: %{object: %{metadata: %{"order_id" => order.id}}}
       }
 
       # First delivery — finalizes + enqueues.
@@ -77,14 +77,14 @@ defmodule EdenflowersWeb.StripeHandlerTest do
       # constraint on the worker collapses the duplicate enqueue.
       assert :ok = EdenflowersWeb.StripeHandler.handle_event(event)
 
-      order = Cart.get_by_id!(order.id, authorize?: false)
+      order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
 
       assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
-    test "returns :error when metadata.cart_id is missing" do
+    test "returns :error when metadata.order_id is missing" do
       log =
         capture_log(fn ->
           assert :error =
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
 
       assert log =~ "payment_intent.succeeded"
       assert log =~ "evt_no_metadata"
-      assert log =~ "missing cart_id metadata"
+      assert log =~ "missing order_id metadata"
 
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
       refute_email_sent()
@@ -110,10 +110,10 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_failed_1",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{metadata: %{"cart_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Cart.get_by_id!(order.id, authorize?: false)
+      order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
 
@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_first_success",
                  type: "payment_intent.succeeded",
-                 data: %{object: %{metadata: %{"cart_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
       # A late `payment_failed` for the same intent shouldn't flip the order back.
@@ -134,10 +134,10 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_late_failure",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{metadata: %{"cart_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Cart.get_by_id!(order.id, authorize?: false)
+      order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
     end
@@ -149,10 +149,10 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
                  type: "payment_intent.canceled",
-                 data: %{object: %{metadata: %{"cart_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Cart.get_by_id!(order.id, authorize?: false)
+      order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
     end

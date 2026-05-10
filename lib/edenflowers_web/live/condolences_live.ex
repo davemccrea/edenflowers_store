@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.CondolencesLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} cart={@cart} flash={@flash} current_path={@current_path}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <h1 class="page-title">{~t"Condolences"}</h1>
       </.container>

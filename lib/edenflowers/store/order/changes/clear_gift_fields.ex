@@ -1,15 +1,13 @@
-defmodule Edenflowers.Store.Cart.Changes.ClearGiftFields do
+defmodule Edenflowers.Store.Order.Changes.ClearGiftFields do
   @moduledoc """
-  Clears gift-related fields and removes the card line item when the cart is not a gift.
+  Clears gift-related fields and removes the card line item when the order is not a gift.
 
   When the gift flag is set to false, this change clears the recipient_name and
-  card_message fields and destroys the card line item attached to the cart, if any.
+  card_message fields and destroys the card line item attached to the order, if any.
   """
   use Ash.Resource.Change
 
   require Ash.Query
-
-  alias Edenflowers.Store.CartLineItem
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -20,8 +18,8 @@ defmodule Edenflowers.Store.Cart.Changes.ClearGiftFields do
         changeset = Ash.Changeset.force_change_attributes(changeset, %{recipient_name: nil, card_message: nil})
 
         Ash.Changeset.after_action(changeset, fn _changeset, result ->
-          CartLineItem
-          |> Ash.Query.filter(cart_id == ^result.id and is_card == true)
+          Edenflowers.Store.LineItem
+          |> Ash.Query.filter(order_id == ^result.id and is_card == true)
           |> Ash.read_one(authorize?: false)
           |> case do
             {:ok, nil} ->

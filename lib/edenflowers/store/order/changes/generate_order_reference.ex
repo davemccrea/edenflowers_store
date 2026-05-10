@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Cart.Changes.GenerateOrderReference do
+defmodule Edenflowers.Store.Order.Changes.GenerateOrderReference do
   use Ash.Resource.Change
 
   @impl true

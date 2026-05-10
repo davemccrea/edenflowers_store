@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.AboutLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} cart={@cart} flash={@flash} current_path={@current_path}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <%!-- Hero --%>
       <section class="relative not-last:border-b">
         <img

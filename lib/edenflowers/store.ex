@@ -16,9 +16,7 @@ defmodule Edenflowers.Store do
     resource Edenflowers.Store.TaxRate
     resource Edenflowers.Store.Promotion
     resource Edenflowers.Store.OpeningHours
-    resource Edenflowers.Store.Cart
-    resource Edenflowers.Store.CartLineItem
     resource Edenflowers.Store.Order
-    resource Edenflowers.Store.OrderLineItem
+    resource Edenflowers.Store.LineItem
   end
 end

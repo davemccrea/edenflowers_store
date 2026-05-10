@@ -175,7 +175,7 @@ defmodule Edenflowers.Store.PromotionTest do
     end
 
     test "increments usage when order is finalized with promotion" do
-      alias Edenflowers.Store.Cart
+      alias Edenflowers.Store.Order
 
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
@@ -191,7 +191,7 @@ defmodule Edenflowers.Store.PromotionTest do
       _line_item =
         generate(
           line_item(
-            cart_id: order.id,
+            order_id: order.id,
             product_variant_id: product_variant.id
           )
         )
@@ -290,7 +290,7 @@ defmodule Edenflowers.Store.PromotionTest do
     end
 
     test "prevents applying promotion to order when usage limit reached" do
-      alias Edenflowers.Store.Cart
+      alias Edenflowers.Store.Order
 
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
@@ -313,12 +313,12 @@ defmodule Edenflowers.Store.PromotionTest do
         {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       end)
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add line item
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id
         )
       )

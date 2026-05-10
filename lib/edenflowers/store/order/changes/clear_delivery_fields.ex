@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Cart.Changes.ClearDeliveryFields do
+defmodule Edenflowers.Store.Order.Changes.ClearDeliveryFields do
   use Ash.Resource.Change
 
   @fields [

@@ -1,11 +1,11 @@
-defmodule Edenflowers.Store.Cart.Changes.UpsertUserAndAssignToCart do
+defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
   @moduledoc """
-  Creates or updates a user and assigns them to the cart.
+  Creates or updates a user and assigns them to the order.
 
   This change finds or creates a user based on the customer_email
-  and customer_name provided in the cart. If the user already exists,
-  their name is updated. The user is then associated with the cart
-  via the user_id field — and copied onto the Order at conversion time.
+  and customer_name provided in the order. If the user already exists,
+  their name is updated. The user is then associated with the order
+  via the user_id field.
 
   If user creation fails, an error is added to the changeset.
   """
@@ -29,7 +29,7 @@ defmodule Edenflowers.Store.Cart.Changes.UpsertUserAndAssignToCart do
           Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
 
         {:error, error} ->
-          Logger.info("Failed to upsert user for cart: #{inspect(error)}")
+          Logger.info("Failed to upsert user for order: #{inspect(error)}")
 
           Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidChanges{
             message: "Unable to create or update user account"

@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   import Swoosh.TestAssertions
   import ExUnit.CaptureLog
 
-  alias Edenflowers.Store.{CartLineItem, Cart}
+  alias Edenflowers.Store.{LineItem, Order}
 
   setup :verify_on_exit!
 
@@ -26,10 +26,10 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
         )
       )
 
-    order = generate(cart())
+    order = generate(order())
 
-    CartLineItem.add_item!(%{
-      cart_id: order.id,
+    LineItem.add_item!(%{
+      order_id: order.id,
       product_variant_id: variant.id,
       quantity: 1
     })
@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     stub(Edenflowers.StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, payment_intent} end)
     stub(Edenflowers.StripeAPI.Mock, :update_payment_intent, fn _order -> {:ok, payment_intent} end)
 
-    conn = Plug.Test.init_test_session(conn, %{cart_id: order.id})
+    conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
     %{conn: conn, order: order, fulfillment_option: fulfillment_option}
   end
@@ -104,10 +104,10 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"cart_id" => order.id}}}
+               data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
-    finalized = Cart.get_by_id!(order.id, authorize?: false)
+    finalized = Order.get_by_id!(order.id, authorize?: false)
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
 
@@ -204,11 +204,11 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"cart_id" => order.id}}}
+               data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
     finalized =
-      Cart.get_by_id!(order.id, authorize?: false)
+      Order.get_by_id!(order.id, authorize?: false)
       |> Ash.load!([:line_items], authorize?: false)
 
     assert finalized.state == :placed
@@ -296,10 +296,10 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"cart_id" => order.id}}}
+               data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
-    finalized = Cart.get_by_id!(order.id, authorize?: false)
+    finalized = Order.get_by_id!(order.id, authorize?: false)
 
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
@@ -374,11 +374,11 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
                type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"cart_id" => order.id}}}
+               data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
     finalized =
-      Cart.get_by_id!(order.id, authorize?: false)
+      Order.get_by_id!(order.id, authorize?: false)
       |> Ash.load!([:promotion_applied?, :discount_amount, :total, :promotion], authorize?: false)
 
     assert finalized.state == :placed
@@ -531,7 +531,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert html =~ "Payment processing error"
     assert log =~ "Failed to update payment intent"
 
-    stalled = Cart.get_by_id!(order.id, authorize?: false)
+    stalled = Order.get_by_id!(order.id, authorize?: false)
     assert stalled.state == :payment
     assert stalled.payment_status != :paid
 

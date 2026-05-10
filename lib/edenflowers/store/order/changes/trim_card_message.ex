@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Cart.Changes.TrimCardMessage do
+defmodule Edenflowers.Store.Order.Changes.TrimCardMessage do
   @moduledoc """
   Trims leading and trailing whitespace from card_message before validation.
 

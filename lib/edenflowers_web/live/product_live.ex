@@ -1,11 +1,11 @@
 defmodule EdenflowersWeb.ProductLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Store.{Product, CartLineItem}
+  alias Edenflowers.Store.{Product, LineItem}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  def mount(%{"id" => id}, %{"cart_id" => cart_id}, socket) do
+  def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     locale = current_locale_atom()
     {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.ProductLive do
 
     {:ok,
      socket
-     |> assign(cart_id: cart_id)
+     |> assign(order_id: order_id)
      |> assign(product: product)
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.ProductLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} cart={@cart} flash={@flash} current_path={@current_path}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <.breadcrumb>
           <:item navigate={~p"/"} label={~t"Home"} />
@@ -200,8 +200,8 @@ defmodule EdenflowersWeb.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    CartLineItem.add_item(%{
-      cart_id: socket.assigns.cart_id,
+    LineItem.add_item(%{
+      order_id: socket.assigns.order_id,
       product_variant_id: socket.assigns.selected_variant.id,
       quantity: 1
     })

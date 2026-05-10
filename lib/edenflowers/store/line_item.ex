@@ -1,11 +1,4 @@
-defmodule Edenflowers.Store.CartLineItem do
-  @moduledoc """
-  A mutable line item belonging to a `Cart`. Add/remove/increment/decrement
-  during checkout. At conversion time, `Cart.Changes.ConvertToOrder`
-  snapshots each `CartLineItem` into a fresh `OrderLineItem`; the cart line
-  items remain on the cart row for audit/refund linkage.
-  """
-
+defmodule Edenflowers.Store.LineItem do
   use Ash.Resource,
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
@@ -14,10 +7,10 @@ defmodule Edenflowers.Store.CartLineItem do
 
   postgres do
     repo Edenflowers.Repo
-    table "cart_line_items"
+    table "line_items"
 
     references do
-      reference :cart, on_delete: :delete
+      reference :order, on_delete: :delete
     end
   end
 
@@ -32,13 +25,13 @@ defmodule Edenflowers.Store.CartLineItem do
     defaults [:read]
 
     create :add_to_cart do
-      accept [:cart_id, :product_variant_id, :quantity, :is_card]
+      accept [:order_id, :product_variant_id, :quantity, :is_card]
 
       upsert? true
       upsert_identity :unique_product_variant
       upsert_fields [:quantity]
 
-      change Edenflowers.Store.CartLineItem.Changes.PopulateFromVariant
+      change Edenflowers.Store.LineItem.Changes.PopulateFromVariant
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
@@ -56,32 +49,34 @@ defmodule Edenflowers.Store.CartLineItem do
   end
 
   policies do
+    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    # Allow creating cart line items without authentication. The card variant
-    # is gated at the cart level via Cart.add_card.
+    # Allow creating line items for any order (checkout flow). The card
+    # variant is gated at the order level via Order.add_card.
     policy action_type(:create) do
       authorize_if always()
     end
 
     # Read/Update/Destroy access:
-    # Cart line items are public-by-id while the cart is in checkout.
-    # Once the cart is :converted, the cart line items become an audit record
-    # — only the owner can read them.
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
     policy action_type([:read, :update, :destroy]) do
-      authorize_if expr(cart.state != :converted)
-      authorize_if expr(cart.state == :converted and cart.user_id == ^actor(:id))
+      # Guest checkout: Anyone can work with line items for orders still in
+      # the checkout flow (any sub-state before :placed).
+      authorize_if expr(order.state != :placed)
+      # Placed orders: Only the owner can access their line items
+      authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
     end
   end
 
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish_all :create, ["cart_line_item", "changed", :cart_id]
-    publish_all :update, ["cart_line_item", "changed", :cart_id]
-    publish_all :destroy, ["cart_line_item", "changed", :cart_id], previous_values?: true
+    publish_all :create, ["line_item", "changed", :order_id]
+    publish_all :update, ["line_item", "changed", :order_id]
+    publish_all :destroy, ["line_item", "changed", :order_id], previous_values?: true
   end
 
   preparations do
@@ -101,16 +96,18 @@ defmodule Edenflowers.Store.CartLineItem do
   end
 
   relationships do
-    belongs_to :cart, Edenflowers.Store.Cart, allow_nil?: false
+    belongs_to :order, Edenflowers.Store.Order, allow_nil?: false
     belongs_to :product, Edenflowers.Store.Product, allow_nil?: false
     belongs_to :product_variant, Edenflowers.Store.ProductVariant, allow_nil?: false
   end
 
   calculations do
-    calculate :promotion_applied?, :boolean, expr(not is_nil(cart.promotion_id))
+    calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
+    # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
     calculate :line_subtotal, :decimal, expr(unit_price * quantity)
 
+    # This is the final amount for a specific line item, including the subtotal plus taxes and minus any line-specific discounts.
     calculate :line_total,
               :decimal,
               expr(
@@ -126,15 +123,16 @@ defmodule Edenflowers.Store.CartLineItem do
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal * cart.promotion.discount_percentage,
+                  do: line_subtotal * order.promotion.discount_percentage,
                   else: 0
                 )
               )
 
+    # This is the amount of tax applied to a specific line item.
     calculate :line_tax_amount, :decimal, expr(line_total * tax_rate)
   end
 
   identities do
-    identity :unique_product_variant, [:cart_id, :product_variant_id]
+    identity :unique_product_variant, [:order_id, :product_variant_id]
   end
 end

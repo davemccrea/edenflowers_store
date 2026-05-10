@@ -1,6 +1,6 @@
-defmodule Edenflowers.Store.Cart.Changes.CopyFulfillmentMethod do
+defmodule Edenflowers.Store.Order.Changes.CopyFulfillmentMethod do
   @moduledoc """
-  Denormalizes `fulfillment_method` onto the cart whenever
+  Denormalizes `fulfillment_method` onto the order whenever
   `fulfillment_option_id` changes, so validations and the UI can read the
   method as a direct attribute instead of traversing the relationship.
 

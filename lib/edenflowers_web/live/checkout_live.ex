@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
-  alias Edenflowers.Store.{Cart, FulfillmentOption, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -20,15 +20,15 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp state_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
 
-  def mount(_params, _session, %{assigns: %{cart: cart}} = socket) do
+  def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "cart_line_item:changed:#{cart.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
     end
 
-    with :ok <- cart_has_items?(cart),
+    with :ok <- cart_has_items?(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       fulfillment_options = sort_fulfillment_options(fulfillment_options)
-      cart = ensure_fulfillment_default(cart, fulfillment_options, socket.assigns[:current_user])
+      order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       card_variants = ProductVariant.for_card_drawer!()
 
       {:ok,
@@ -37,18 +37,18 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
-       |> assign(:cart, cart)
-       |> assign(:form, build_submit_form(cart))
-       |> assign(:promo_code_form, make_form(cart, :add_promotion_with_code))
+       |> assign(:order, order)
+       |> assign(:form, build_submit_form(order))
+       |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> assign(:client_secret, nil)
-       |> maybe_setup_stripe(cart)}
+       |> maybe_setup_stripe(order)}
     else
       {:error, :empty_cart} ->
         # Mounting with an effectively-empty cart means the customer either
         # navigated here directly or returned after another tab emptied the
         # cart. Reset before bouncing so a stale step/card/contact details
         # don't survive into the next checkout.
-        Cart.restart_checkout!(cart, actor: socket.assigns[:current_user])
+        Order.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
       error ->
@@ -63,14 +63,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} cart={@cart} flash={@flash} current_path={@current_path}>
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
         <div class="flex flex-col gap-12">
           <div class="flex flex-col gap-8 md:flex-row">
             <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
-              <.steps state={@cart.state}>
+              <.steps state={@order.state}>
                 <section
-                  :if={@cart.state == :contact_details}
+                  :if={@order.state == :contact_details}
                   id={"#{@id}-section-1"}
                   class="checkout__section"
                   data-testid="checkout-step-1"
@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <section
-                  :if={@cart.state == :gift_options}
+                  :if={@order.state == :gift_options}
                   id={"#{@id}-section-2"}
                   class="checkout__section"
                   data-testid="checkout-step-2"
@@ -131,18 +131,18 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </.input>
 
                     <.input
-                      hidden={not @cart.gift}
+                      hidden={not @order.gift}
                       label={~t"Recipient Name *"}
                       field={@form[:recipient_name]}
                       type="text"
                       data-testid="recipient-name-input"
                     />
 
-                    <% card_line_item = Enum.find(@cart.line_items, & &1.is_card) %>
+                    <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
                     <% card_message_max =
                       if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.card_size) %>
 
-                    <div :if={@cart.gift} class="flex flex-col gap-4" data-testid="card-selection">
+                    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
                       <div :if={card_line_item} data-testid="card-preview">
                         <fieldset
                           id={"#{@id}-field-card-message"}
@@ -225,7 +225,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <section :if={@cart.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
+                <section :if={@order.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
                   <.form_heading>{~t"Delivery Information"}</.form_heading>
 
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
@@ -240,7 +240,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     </.input>
                   </.form>
 
-                  <%= if not is_nil(@cart.fulfillment_option) do %>
+                  <%= if not is_nil(@order.fulfillment_option) do %>
                     <.form
                       id={"#{@id}-form-3b"}
                       for={@form}
@@ -249,14 +249,14 @@ defmodule EdenflowersWeb.CheckoutLive do
                       class="checkout__form"
                     >
                       <.live_component
-                        :if={@cart.fulfillment_method == :delivery}
+                        :if={@order.fulfillment_method == :delivery}
                         id="address-input"
                         module={EdenflowersWeb.AddressInputComponent}
-                        cart={@cart}
+                        order={@order}
                       />
 
                       <.input
-                        :if={@cart.fulfillment_method == :delivery}
+                        :if={@order.fulfillment_method == :delivery}
                         label={~t"Delivery Instructions"}
                         field={@form[:delivery_instructions]}
                         type="text"
@@ -264,7 +264,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       />
 
                       <.input
-                        label={recipient_label(@cart, "phone")}
+                        label={recipient_label(@order, "phone")}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
                         type="text"
@@ -272,7 +272,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                       <fieldset class="flex flex-col">
                         <label class="mb-1">
-                          <%= if @cart.fulfillment_method == :delivery do %>
+                          <%= if @order.fulfillment_method == :delivery do %>
                             {~t"Delivery Date *"}
                           <% else %>
                             {~t"Pickup Date *"}
@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                           on_select={fn date -> send(self(), {:date_selected, date}) end}
                           date_callback={
                             fn date ->
-                              {_, state} = Fulfillments.fulfill_on_date(@cart.fulfillment_option, date)
+                              {_, state} = Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
                               state
                             end
                           }
@@ -319,7 +319,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <% end %>
                 </section>
 
-                <section :if={@cart.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
+                <section :if={@order.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
                   <.form_heading>{~t"Payment"}</.form_heading>
 
                   <form
@@ -329,7 +329,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     phx-submit="save_form_4"
                     data-client-secret={@client_secret}
                     data-publishable-key={stripe_publishable_key()}
-                    data-return-url={url(~p"/checkout/complete/#{@cart.id}")}
+                    data-return-url={url(~p"/checkout/complete/#{@order.id}")}
                     data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
                     data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
                     class="flex flex-col gap-4"
@@ -338,7 +338,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
                     <.form_button disabled={true} id="payment-button">
-                      {~t"Pay"} {Edenflowers.Utils.format_money(@cart.total)}
+                      {~t"Pay"} {Edenflowers.Utils.format_money(@order.total)}
                     </.form_button>
                   </form>
 
@@ -354,13 +354,13 @@ defmodule EdenflowersWeb.CheckoutLive do
             <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
               <section class="flex flex-col gap-4 p-1" data-testid="cart-section">
                 <h2 class="card-title" data-testid="cart-heading">
-                  {~t"Cart"} ({if @cart.total_items_in_cart, do: @cart.total_items_in_cart, else: 0})
+                  {~t"Cart"} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
                 </h2>
 
-                <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} cart={@cart} />
+                <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
 
                 <.form
-                  :if={not @cart.promotion_applied?}
+                  :if={not @order.promotion_applied?}
                   id={"#{@id}-form-promotional"}
                   for={@promo_code_form}
                   phx-submit="update_promotional"
@@ -381,15 +381,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <div class="border-neutral/5 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-sm">
-                  <div :if={@cart.state == :payment} class="flex justify-between" data-testid="delivery-cost">
+                  <div :if={@order.state == :payment} class="flex justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
-                      <% is_nil(@cart.fulfillment_amount) -> %>
+                      <% is_nil(@order.fulfillment_amount) -> %>
                         <span>—</span>
-                      <% Decimal.eq?(@cart.fulfillment_amount, 0) -> %>
+                      <% Decimal.eq?(@order.fulfillment_amount, 0) -> %>
                         {~t"Free"}
                       <% true -> %>
-                        <span>{Edenflowers.Utils.format_money(@cart.fulfillment_amount)}</span>
+                        <span>{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                     <% end %>
                   </div>
 
@@ -397,18 +397,18 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div class="flex flex-row gap-2">
                       <span>{~t"Discount"}</span>
                       <button
-                        :if={@cart.promotion_applied?}
+                        :if={@order.promotion_applied?}
                         phx-click="clear_promo"
                         class="badge badge-dash badge-neutral badge-sm flex cursor-pointer items-center gap-1"
                         data-testid="promo-code-badge"
                       >
-                        {@cart.promotion.code} <span><.icon name="hero-x-mark" class="flex h-4 w-4" /></span>
+                        {@order.promotion.code} <span><.icon name="hero-x-mark" class="flex h-4 w-4" /></span>
                       </button>
                     </div>
 
-                    <%= if @cart.promotion_applied? do %>
+                    <%= if @order.promotion_applied? do %>
                       <span class="text-success" data-testid="discount-amount">
-                        - {Edenflowers.Utils.format_money(@cart.discount_amount)}
+                        - {Edenflowers.Utils.format_money(@order.discount_amount)}
                       </span>
                     <% else %>
                       <span data-testid="discount-amount">- {Edenflowers.Utils.format_money(0)}</span>
@@ -421,7 +421,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                   <div class="flex justify-between font-semibold" data-testid="order-total">
                     <span>{~t"Total"}</span>
-                    <span data-testid="total-amount">{Edenflowers.Utils.format_money(@cart.total)}</span>
+                    <span data-testid="total-amount">{Edenflowers.Utils.format_money(@order.total)}</span>
                   </div>
                 </div>
               </section>
@@ -504,7 +504,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("save_form_4", _, socket) do
-    case stripe_api().update_payment_intent(socket.assigns.cart) do
+    case stripe_api().update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
@@ -525,12 +525,12 @@ defmodule EdenflowersWeb.CheckoutLive do
       end
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, cart} ->
-        next_section_id = next_section_id(socket.assigns.id, cart.state)
+      {:ok, order} ->
+        next_section_id = next_section_id(socket.assigns.id, order.state)
 
         {:noreply,
          socket
-         |> reload_cart()
+         |> reload_order()
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
@@ -545,46 +545,46 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Step navigation
   def handle_event("edit_step_3", _params, socket) do
-    Cart.return_to_delivery!(socket.assigns.cart, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_cart(socket), :delivery)}
+    Order.return_to_delivery!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :delivery)}
   end
 
   def handle_event("edit_step_1", _params, socket) do
-    Cart.return_to_contact_details!(socket.assigns.cart, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_cart(socket), :contact_details)}
+    Order.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
   end
 
   def handle_event("edit_step_2", _params, socket) do
-    Cart.return_to_gift_options!(socket.assigns.cart, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_cart(socket), :gift_options)}
+    Order.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :gift_options)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    Cart.update_fulfillment_option!(socket.assigns.cart, id, actor: actor(socket))
-    {:noreply, reload_cart(socket)}
+    Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
-    Cart.set_gift!(socket.assigns.cart, gift, actor: actor(socket))
-    {:noreply, reload_cart(socket)}
+    Order.set_gift!(socket.assigns.order, gift, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-    cart = Cart.add_card!(socket.assigns.cart, variant.id, actor: actor(socket))
-    {:noreply, assign_forms(socket, cart)}
+    order = Order.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("remove_card", _, socket) do
-    cart = Cart.remove_card!(socket.assigns.cart, actor: actor(socket))
-    {:noreply, assign_forms(socket, cart)}
+    order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("update_promotional", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, cart} ->
-        {:noreply, assign_forms(socket, cart)}
+      {:ok, order} ->
+        {:noreply, assign_forms(socket, order)}
 
       {:error, promo_code_form} ->
         {:noreply, assign(socket, promo_code_form: promo_code_form)}
@@ -592,8 +592,8 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("clear_promo", _, socket) do
-    cart = Cart.clear_promotion!(socket.assigns.cart, actor: actor(socket))
-    {:noreply, assign_forms(socket, cart)}
+    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
+    {:noreply, assign_forms(socket, order)}
   end
 
   # Stripe events
@@ -612,23 +612,23 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Info Events
   # ===========
 
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "cart_line_item:changed:" <> _}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     actor = actor(socket)
-    cart = Cart.get_for_checkout!(socket.assigns.cart.id, actor: actor)
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
     cond do
-      cart.cart_effectively_empty? ->
-        Cart.restart_checkout!(cart, actor: actor)
+      order.cart_effectively_empty? ->
+        Order.restart_checkout!(order, actor: actor)
         {:noreply, push_navigate(socket, to: ~p"/")}
 
       # Cart changed while the customer is on the payment step. The PaymentIntent's
       # amount must follow the new total, otherwise `confirmPayment` would charge
       # the previous amount.
-      cart.state == :payment and not is_nil(cart.payment_intent_id) ->
-        {:noreply, sync_payment_intent(assign(socket, cart: cart), cart)}
+      order.state == :payment and not is_nil(order.payment_intent_id) ->
+        {:noreply, sync_payment_intent(assign(socket, order: order), order)}
 
       true ->
-        {:noreply, assign(socket, cart: cart)}
+        {:noreply, assign(socket, order: order)}
     end
   end
 
@@ -736,54 +736,54 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp recipient_label(_cart, field) do
+  defp recipient_label(_order, field) do
     case field do
       "address" -> gettext("Address *")
       "phone" -> gettext("Phone Number")
     end
   end
 
-  defp make_form(cart, action, params \\ %{}) do
-    cart
+  defp make_form(order, action, params \\ %{}) do
+    order
     |> AshPhoenix.Form.for_update(action, params: params)
     |> to_form()
   end
 
-  # Builds the submit-form for the cart's current state. Returns nil on the
+  # Builds the submit-form for the order's current state. Returns nil on the
   # payment state because the payment screen is driven by Stripe Elements
   # (not an Ash form submission).
-  defp build_submit_form(cart, params \\ %{}) do
-    case submit_action_for(cart.state) do
+  defp build_submit_form(order, params \\ %{}) do
+    case submit_action_for(order.state) do
       nil -> nil
-      action -> make_form(cart, action, params)
+      action -> make_form(order, action, params)
     end
   end
 
-  # Rebuilds both forms against the latest cart while preserving any unsaved
+  # Rebuilds both forms against the latest order while preserving any unsaved
   # input the customer has typed. The data side has to refresh because some
-  # validations read off the cart's loaded relationships (e.g. line_items);
+  # validations read off the order's loaded relationships (e.g. line_items);
   # the params side has to be preserved so applying a promo or selecting a
   # card doesn't wipe values the customer is still editing.
-  defp assign_forms(socket, cart) do
+  defp assign_forms(socket, order) do
     form_params = (socket.assigns[:form] && socket.assigns.form && socket.assigns.form.params) || %{}
 
     promo_params =
       (socket.assigns[:promo_code_form] && socket.assigns.promo_code_form.params) || %{}
 
     socket
-    |> assign(cart: cart)
-    |> assign(form: build_submit_form(cart, form_params))
-    |> assign(promo_code_form: make_form(cart, :add_promotion_with_code, promo_params))
+    |> assign(order: order)
+    |> assign(form: build_submit_form(order, form_params))
+    |> assign(promo_code_form: make_form(order, :add_promotion_with_code, promo_params))
   end
 
   defp submit_form(socket, params) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, cart} ->
-        next_section_id = next_section_id(socket.assigns.id, cart.state)
+      {:ok, order} ->
+        next_section_id = next_section_id(socket.assigns.id, order.state)
 
         {:noreply,
          socket
-         |> reload_cart()
+         |> reload_order()
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
@@ -809,40 +809,40 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp actor(socket), do: socket.assigns[:current_user]
 
-  defp reload_cart(socket) do
-    cart = Cart.get_for_checkout!(socket.assigns.cart.id, actor: actor(socket))
-    cart = ensure_fulfillment_default(cart, socket.assigns.fulfillment_options, actor(socket))
+  defp reload_order(socket) do
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
-    |> assign_forms(cart)
-    |> ensure_stripe_for_state(cart)
+    |> assign_forms(order)
+    |> ensure_stripe_for_state(order)
   end
 
   # When the customer reaches the payment state, lazily create or retrieve
   # the PaymentIntent. Skip if `client_secret` is already cached for the
   # current session — re-running on every reload would burn a Stripe API
   # call per event.
-  defp ensure_stripe_for_state(socket, %{state: :payment} = cart) do
+  defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
     if socket.assigns[:client_secret] do
       socket
     else
-      setup_stripe(socket, cart)
+      setup_stripe(socket, order)
     end
   end
 
-  defp ensure_stripe_for_state(socket, _cart), do: socket
+  defp ensure_stripe_for_state(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
   # value flows through on submit. Keys off fulfillment_method so the default
   # survives option renames/translations.
-  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = cart, options, actor) do
+  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
     case default_fulfillment_option_id(options) do
-      nil -> cart
-      id -> Cart.update_fulfillment_option!(cart, id, actor: actor)
+      nil -> order
+      id -> Order.update_fulfillment_option!(order, id, actor: actor)
     end
   end
 
-  defp ensure_fulfillment_default(cart, _options, _actor), do: cart
+  defp ensure_fulfillment_default(order, _options, _actor), do: order
 
   defp default_fulfillment_option_id(options) do
     delivery = Enum.find(options, &(&1.fulfillment_method == :delivery))
@@ -863,7 +863,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
-  defp cart_has_items?(_cart), do: :ok
+  defp cart_has_items?(_order), do: :ok
 
   defp next_section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state_index(state) + 1}"
@@ -886,16 +886,16 @@ defmodule EdenflowersWeb.CheckoutLive do
   # We only touch Stripe once the customer is on the payment state. Earlier
   # mounts (or mounts where the LiveView reconnects on a non-payment state)
   # skip the round trip entirely.
-  defp maybe_setup_stripe(socket, %{state: :payment} = cart), do: setup_stripe(socket, cart)
-  defp maybe_setup_stripe(socket, _cart), do: socket
+  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
+  defp maybe_setup_stripe(socket, _order), do: socket
 
-  defp setup_stripe(socket, %{payment_intent_id: nil} = cart) do
-    case stripe_api().create_payment_intent(cart) do
+  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
+    case stripe_api().create_payment_intent(order) do
       {:ok, payment_intent} ->
-        case Cart.add_payment_intent_id(cart, payment_intent.id, actor: actor(socket)) do
-          {:ok, cart} ->
+        case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
+          {:ok, order} ->
             socket
-            |> assign(cart: cart)
+            |> assign(order: order)
             |> assign(client_secret: payment_intent.client_secret)
 
           {:error, reason} ->
@@ -903,38 +903,38 @@ defmodule EdenflowersWeb.CheckoutLive do
             # doesn't linger in the dashboard. Best-effort; surface a flash either way.
             stripe_api().cancel_payment_intent(payment_intent)
 
-            Logger.error("Failed to persist payment_intent_id for cart #{cart.id}: #{inspect(reason)}")
+            Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
 
             stripe_unavailable(socket)
         end
 
       {:error, reason} ->
-        Logger.error("Failed to create payment intent for cart #{cart.id}: #{inspect(reason)}")
+        Logger.error("Failed to create payment intent for order #{order.id}: #{inspect(reason)}")
         stripe_unavailable(socket)
     end
   end
 
-  defp setup_stripe(socket, cart) do
-    case stripe_api().retrieve_payment_intent(cart) do
+  defp setup_stripe(socket, order) do
+    case stripe_api().retrieve_payment_intent(order) do
       {:ok, payment_intent} ->
         assign(socket, client_secret: payment_intent.client_secret)
 
       {:error, reason} ->
-        Logger.error("Failed to retrieve payment intent for cart #{cart.id}: #{inspect(reason)}")
+        Logger.error("Failed to retrieve payment intent for order #{order.id}: #{inspect(reason)}")
         stripe_unavailable(socket)
     end
   end
 
-  # Re-sync the existing PaymentIntent's amount with the current cart total
+  # Re-sync the existing PaymentIntent's amount with the current order total
   # without changing the client_secret (so the already-mounted Elements UI keeps
   # working).
-  defp sync_payment_intent(socket, cart) do
-    case stripe_api().update_payment_intent(cart) do
+  defp sync_payment_intent(socket, order) do
+    case stripe_api().update_payment_intent(order) do
       {:ok, _payment_intent} ->
         socket
 
       {:error, reason} ->
-        Logger.error("Failed to sync payment intent amount for cart #{cart.id}: #{inspect(reason)}")
+        Logger.error("Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}")
 
         put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
     end

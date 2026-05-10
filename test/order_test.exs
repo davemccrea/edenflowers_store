@@ -1,11 +1,11 @@
-defmodule Edenflowers.Store.CartTest do
+defmodule Edenflowers.Store.OrderTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.Cart
+  alias Edenflowers.Store.Order
 
   describe "Store Resource" do
     test "creates an order for checkout" do
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
       assert order.state == :contact_details
     end
 
@@ -15,12 +15,12 @@ defmodule Edenflowers.Store.CartTest do
       product_1_product_variant_1 = generate(product_variant(product_id: product_1.id))
       product_2 = generate(product(tax_rate_id: tax_rate.id))
       product_2_product_variant_1 = generate(product_variant(product_id: product_2.id))
-      order = generate(cart())
+      order = generate(order())
 
       _line_item_1 =
         generate(
           line_item(
-            cart_id: order.id,
+            order_id: order.id,
             product_variant_id: product_1_product_variant_1.id,
             quantity: 2
           )
@@ -29,7 +29,7 @@ defmodule Edenflowers.Store.CartTest do
       _line_item_2 =
         generate(
           line_item(
-            cart_id: order.id,
+            order_id: order.id,
             product_variant_id: product_2_product_variant_1.id,
             quantity: 1
           )
@@ -49,11 +49,11 @@ defmodule Edenflowers.Store.CartTest do
       product_2 = generate(product(tax_rate_id: tax_rate_2.id))
       product_2_product_variant_1 = generate(product_variant(product_id: product_2.id, price: "6.00"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_1_product_variant_1.id,
           quantity: 2
         )
@@ -61,7 +61,7 @@ defmodule Edenflowers.Store.CartTest do
 
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_2_product_variant_1.id,
           quantity: 1
         )
@@ -80,11 +80,11 @@ defmodule Edenflowers.Store.CartTest do
       product_variant_2 = generate(product_variant(product_id: product.id, price: "29.99"))
       promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant_1.id,
           quantity: 1
         )
@@ -92,13 +92,13 @@ defmodule Edenflowers.Store.CartTest do
 
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant_2.id,
           quantity: 2
         )
       )
 
-      order = Cart.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
+      order = Order.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
 
       order = Ash.load!(order, [:line_total, :line_tax_amount], authorize?: false)
 
@@ -117,23 +117,23 @@ defmodule Edenflowers.Store.CartTest do
       product_variant = generate(product_variant(product_id: product.id))
       promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add a line item so we can apply the promotion
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id
         )
       )
 
-      order = Cart.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
+      order = Order.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
 
       assert order.promotion_applied? == true
     end
 
     test "promotion_applied? returns false if no promotion applied" do
-      order = Cart.create_for_checkout!(authorize?: false, load: [:promotion_applied?])
+      order = Order.create_for_checkout!(authorize?: false, load: [:promotion_applied?])
       assert order.promotion_applied? == false
     end
   end
@@ -160,12 +160,12 @@ defmodule Edenflowers.Store.CartTest do
     {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
-      generate(cart(fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount))
+      generate(order(fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount))
 
     _line_item =
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 2
         )
@@ -183,9 +183,9 @@ defmodule Edenflowers.Store.CartTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = generate(cart(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
+    order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
-    assert {:ok, order} = Cart.convert(order.id, authorize?: false)
+    assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
     assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
@@ -193,7 +193,7 @@ defmodule Edenflowers.Store.CartTest do
 
   describe "Gift flow validation" do
     test "requires recipient_name when gift is true" do
-      order = generate(cart(state: :gift_options))
+      order = generate(order(state: :gift_options))
 
       # Attempt to save step 2 with gift=true but no recipient_name
       assert {:error, error} =
@@ -208,7 +208,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "does not require recipient_name when gift is false" do
-      order = generate(cart(state: :gift_options))
+      order = generate(order(state: :gift_options))
 
       # Should succeed without recipient_name when gift is false
       assert {:ok, order} =
@@ -224,7 +224,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "accepts recipient_name when gift is true" do
-      order = generate(cart(state: :gift_options))
+      order = generate(order(state: :gift_options))
 
       # Should succeed with recipient_name when gift is true
       assert {:ok, order} =
@@ -259,7 +259,7 @@ defmodule Edenflowers.Store.CartTest do
 
       # Production flow: customer hits "Edit" on the gift step, returning the
       # order to :gift_options before re-submitting.
-      {:ok, order} = Cart.return_to_gift_options(order, authorize?: false)
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
 
       {:ok, order} =
         order
@@ -292,7 +292,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "retains recipient_name when gift remains true" do
-      order = generate(cart(state: :gift_options))
+      order = generate(order(state: :gift_options))
 
       # First set gift=true with recipient info
       {:ok, order} =
@@ -305,7 +305,7 @@ defmodule Edenflowers.Store.CartTest do
 
       # Production flow: customer hits "Edit" on the gift step, returning the
       # order to :gift_options before re-submitting unchanged.
-      {:ok, order} = Cart.return_to_gift_options(order, authorize?: false)
+      {:ok, order} = Order.return_to_gift_options(order, authorize?: false)
 
       {:ok, order} =
         order
@@ -324,9 +324,9 @@ defmodule Edenflowers.Store.CartTest do
     variant = generate(product_variant(product_id: card_product.id, size: size))
 
     order =
-      generate(cart(state: :gift_options, gift: true))
+      generate(order(state: :gift_options, gift: true))
 
-    Cart.add_card!(order, variant.id, authorize?: false)
+    Order.add_card!(order, variant.id, authorize?: false)
   end
 
   describe "Card message length validation" do
@@ -458,11 +458,11 @@ defmodule Edenflowers.Store.CartTest do
 
     test "rejects non-empty card_message when no card line item exists" do
       order =
-        Cart.create_for_checkout!(authorize?: false)
+        Order.create_for_checkout!(authorize?: false)
         |> Ash.Changeset.for_update(:set_gift, %{gift: true})
         |> Ash.update!(authorize?: false)
 
-      reloaded = Cart.get_for_checkout!(order.id, actor: nil)
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
 
       assert {:error, %Ash.Error.Invalid{} = error} =
                reloaded
@@ -539,18 +539,18 @@ defmodule Edenflowers.Store.CartTest do
       promotion =
         generate(promotion(code: "SUMMER20", discount_percentage: "0.20", minimum_cart_total: "0"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add line item
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id
         )
       )
 
       # Apply promotion using code
-      assert {:ok, order} = Cart.add_promotion_with_code(order, "SUMMER20", authorize?: false)
+      assert {:ok, order} = Order.add_promotion_with_code(order, "SUMMER20", authorize?: false)
       assert order.promotion_id == promotion.id
     end
 
@@ -559,17 +559,17 @@ defmodule Edenflowers.Store.CartTest do
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id
         )
       )
 
       # Try to apply non-existent code
-      assert {:error, error} = Cart.add_promotion_with_code(order, "INVALID", authorize?: false)
+      assert {:error, error} = Order.add_promotion_with_code(order, "INVALID", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
@@ -578,7 +578,7 @@ defmodule Edenflowers.Store.CartTest do
     test "creates new user when saving step 1 with new email" do
       alias Edenflowers.Accounts.User
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Verify user doesn't exist yet
       assert {:error, %Ash.Error.Invalid{}} = User.get_by_email("newcustomer@example.com", authorize?: false)
@@ -608,7 +608,7 @@ defmodule Edenflowers.Store.CartTest do
       {:ok, existing_user} = User.upsert("existing@example.com", "Old Name", authorize?: false)
       assert existing_user.name == "Old Name"
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Save step 1 with same email but different name
       assert {:ok, order} =
@@ -632,7 +632,7 @@ defmodule Edenflowers.Store.CartTest do
       alias Edenflowers.Accounts.User
 
       # Create first order for customer
-      order1 = Cart.create_for_checkout!(authorize?: false)
+      order1 = Order.create_for_checkout!(authorize?: false)
 
       {:ok, order1} =
         order1
@@ -643,7 +643,7 @@ defmodule Edenflowers.Store.CartTest do
         |> Ash.update(authorize?: false)
 
       # Create second order for same customer
-      order2 = Cart.create_for_checkout!(authorize?: false)
+      order2 = Order.create_for_checkout!(authorize?: false)
 
       {:ok, order2} =
         order2
@@ -667,7 +667,7 @@ defmodule Edenflowers.Store.CartTest do
       # Create user with lowercase email
       {:ok, user1} = User.upsert("customer@example.com", "Customer", authorize?: false)
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Save step 1 with uppercase email
       {:ok, order} =
@@ -690,7 +690,7 @@ defmodule Edenflowers.Store.CartTest do
     test "preserves user_id through subsequent step updates" do
       alias Edenflowers.Accounts.User
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Save step 1
       {:ok, order} =
@@ -718,7 +718,7 @@ defmodule Edenflowers.Store.CartTest do
     test "allows nil customer_name but requires customer_email" do
       alias Edenflowers.Accounts.User
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Save step 1 with only email (name is nil)
       assert {:ok, order} =
@@ -734,7 +734,7 @@ defmodule Edenflowers.Store.CartTest do
       assert order.user_id == user.id
 
       # But customer_email is required - missing it should fail
-      order2 = Cart.create_for_checkout!(authorize?: false)
+      order2 = Order.create_for_checkout!(authorize?: false)
 
       assert {:error, error} =
                order2
@@ -756,19 +756,19 @@ defmodule Edenflowers.Store.CartTest do
       # Create promotion requiring minimum 40.00 cart total
       promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "40.00"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add items totaling 50.00 (2 x 25.00)
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 2
         )
       )
 
       # Apply promotion - should succeed as 50.00 >= 40.00
-      assert {:ok, order} = Cart.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
+      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
       assert order.promotion_id == promotion.id
       # After 20% discount: 50.00 - 10.00 = 40.00
       assert Decimal.equal?(order.line_total, "40.00")
@@ -782,19 +782,19 @@ defmodule Edenflowers.Store.CartTest do
       # Create promotion requiring minimum 50.00 cart total
       promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "50.00"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add items totaling 30.00 (2 x 15.00)
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 2
         )
       )
 
       # Apply promotion - should fail as 30.00 < 50.00
-      assert {:error, error} = Cart.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:error, error} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
@@ -806,19 +806,19 @@ defmodule Edenflowers.Store.CartTest do
       # Create promotion requiring minimum 50.00 cart total
       promotion = generate(promotion(discount_percentage: "0.15", minimum_cart_total: "50.00"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add item totaling exactly 50.00
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 1
         )
       )
 
       # Apply promotion - should succeed as 50.00 == 50.00
-      assert {:ok, order} = Cart.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
+      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
       assert order.promotion_id == promotion.id
       # After 15% discount: 50.00 - 7.50 = 42.50
       assert Decimal.equal?(order.line_total, "42.50")
@@ -828,10 +828,10 @@ defmodule Edenflowers.Store.CartTest do
       # Create promotion requiring minimum 20.00 cart total
       promotion = generate(promotion(discount_percentage: "0.10", minimum_cart_total: "20.00"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # No line items added - cart total is 0
-      assert {:error, error} = Cart.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:error, error} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
@@ -843,19 +843,19 @@ defmodule Edenflowers.Store.CartTest do
       # Create promotion with no minimum requirement
       promotion = generate(promotion(discount_percentage: "0.10", minimum_cart_total: "0"))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       # Add small item
       generate(
         line_item(
-          cart_id: order.id,
+          order_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 1
         )
       )
 
       # Apply promotion - should succeed regardless of cart size
-      assert {:ok, order} = Cart.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
       assert order.promotion_id == promotion.id
     end
   end
@@ -915,7 +915,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "save_step_3 requires fulfillment_date", %{pickup_option: pickup_option} do
-      order = generate(cart(state: :delivery))
+      order = generate(order(state: :delivery))
 
       # Attempt to save without fulfillment_date
       assert {:error, error} =
@@ -929,7 +929,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
-      order = generate(cart(state: :delivery))
+      order = generate(order(state: :delivery))
 
       # Note: In real flow, delivery_address would trigger HereAPI calls
       # For pickup, we don't need delivery address
@@ -954,7 +954,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "save_step_3 with pickup calculates correct fixed price", %{pickup_option: pickup_option} do
-      order = generate(cart(state: :delivery))
+      order = generate(order(state: :delivery))
 
       assert {:ok, order} =
                order
@@ -968,7 +968,7 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
-      order = generate(cart(state: :delivery))
+      order = generate(order(state: :delivery))
 
       yesterday = Date.add(Date.utc_today(), -1)
 
@@ -987,24 +987,24 @@ defmodule Edenflowers.Store.CartTest do
 
   describe "Order state transitions" do
     test "finalize_checkout requires payment_intent_id" do
-      order = generate(cart(payment_intent_id: nil))
+      order = generate(order(payment_intent_id: nil))
 
-      assert {:error, error} = Cart.convert(order.id, authorize?: false)
+      assert {:error, error} = Order.finalize_checkout(order.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
     test "payment_status transitions from pending to paid" do
-      order = generate(cart(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
+      order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
 
-      assert {:ok, order} = Cart.convert(order.id, authorize?: false)
+      assert {:ok, order} = Order.finalize_checkout(order.id, authorize?: false)
       assert order.payment_status == :paid
     end
 
     test "cannot finalize order already in :order state" do
-      order = generate(cart(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
+      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
 
       # Should now fail with clear error message
-      assert {:error, error} = Cart.convert(order.id, authorize?: false)
+      assert {:error, error} = Order.finalize_checkout(order.id, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
@@ -1052,7 +1052,7 @@ defmodule Edenflowers.Store.CartTest do
         )
 
       # Reset the order
-      assert {:ok, reset_order} = Cart.restart_checkout(order, authorize?: false)
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
       # Verify all fields are cleared
       assert reset_order.state == :contact_details
@@ -1076,10 +1076,10 @@ defmodule Edenflowers.Store.CartTest do
     end
 
     test "reset preserves order id and returns the order to :contact_details" do
-      order = generate(cart(state: :delivery, customer_name: "Test", customer_email: "test@example.com"))
+      order = generate(order(state: :delivery, customer_name: "Test", customer_email: "test@example.com"))
       original_id = order.id
 
-      assert {:ok, reset_order} = Cart.restart_checkout(order, authorize?: false)
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
 
       # The same row, rewound to the start of the flow
       assert reset_order.id == original_id
@@ -1095,12 +1095,12 @@ defmodule Edenflowers.Store.CartTest do
       card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
 
       order = gift_order_with_card(card_product, :medium)
-      generate(cart_line_item(cart_id: order.id, product_variant_id: variant.id, quantity: 2))
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
 
       order = Ash.load!(order, [:line_items], authorize?: false)
       assert length(order.line_items) == 2
 
-      assert {:ok, reset_order} = Cart.restart_checkout(order, authorize?: false)
+      assert {:ok, reset_order} = Order.restart_checkout(order, authorize?: false)
       reset_order = Ash.load!(reset_order, [:line_items, :cart_effectively_empty?], authorize?: false)
 
       assert reset_order.line_items == []
@@ -1110,7 +1110,7 @@ defmodule Edenflowers.Store.CartTest do
 
   describe "cart_effectively_empty? calculation" do
     test "true when the order has no line items" do
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
       order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
 
       assert order.cart_effectively_empty? == true
@@ -1132,8 +1132,8 @@ defmodule Edenflowers.Store.CartTest do
       product = generate(product(tax_rate_id: tax_rate.id))
       variant = generate(product_variant(product_id: product.id))
 
-      order = generate(cart())
-      generate(cart_line_item(cart_id: order.id, product_variant_id: variant.id, quantity: 1))
+      order = generate(order())
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
       order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
 
@@ -1143,33 +1143,33 @@ defmodule Edenflowers.Store.CartTest do
 
   describe "Order update_locale action" do
     test "updates locale to a configured locale" do
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
       assert order.locale == "sv-FI"
 
-      assert {:ok, updated_order} = Cart.update_locale(order, "en-GB", authorize?: false)
+      assert {:ok, updated_order} = Order.update_locale(order, "en-GB", authorize?: false)
       assert updated_order.locale == "en-GB"
     end
 
     test "rejects locale that is not in the configured set" do
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
-      assert {:error, error} = Cart.update_locale(order, "en-US", authorize?: false)
+      assert {:error, error} = Order.update_locale(order, "en-US", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
 
   describe "add_promotion_with_code argument validation" do
     test "rejects nil code" do
-      order = generate(cart())
+      order = generate(order())
 
-      assert {:error, error} = Cart.add_promotion_with_code(order, nil, authorize?: false)
+      assert {:error, error} = Order.add_promotion_with_code(order, nil, authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
     test "rejects whitespace-only code" do
-      order = generate(cart())
+      order = generate(order())
 
-      assert {:error, error} = Cart.add_promotion_with_code(order, "   ", authorize?: false)
+      assert {:error, error} = Order.add_promotion_with_code(order, "   ", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end
@@ -1185,7 +1185,7 @@ defmodule Edenflowers.Store.CartTest do
       card_variant_a = generate(product_variant(product_id: card_product.id, size: :small, draft: false))
       card_variant_b = generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
-      order = Cart.create_for_checkout!(authorize?: false)
+      order = Order.create_for_checkout!(authorize?: false)
 
       %{order: order, card_variant_a: card_variant_a, card_variant_b: card_variant_b}
     end
@@ -1194,7 +1194,7 @@ defmodule Edenflowers.Store.CartTest do
       order: order,
       card_variant_a: card_variant_a
     } do
-      assert {:ok, order} = Cart.add_card(order, card_variant_a.id, authorize?: false)
+      assert {:ok, order} = Order.add_card(order, card_variant_a.id, authorize?: false)
 
       card = Enum.find(order.line_items, & &1.is_card)
       assert card
@@ -1210,8 +1210,8 @@ defmodule Edenflowers.Store.CartTest do
       card_variant_a: card_variant_a,
       card_variant_b: card_variant_b
     } do
-      {:ok, _} = Cart.add_card(order, card_variant_a.id, authorize?: false)
-      assert {:ok, order} = Cart.add_card(order, card_variant_b.id, authorize?: false)
+      {:ok, _} = Order.add_card(order, card_variant_a.id, authorize?: false)
+      assert {:ok, order} = Order.add_card(order, card_variant_b.id, authorize?: false)
 
       cards = Enum.filter(order.line_items, & &1.is_card)
       assert length(cards) == 1
@@ -1222,9 +1222,9 @@ defmodule Edenflowers.Store.CartTest do
     test "remove_card destroys the card line item and clears card_message", %{
       card_variant_a: card_variant_a
     } do
-      gift_order = generate(cart(state: :gift_options, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      {:ok, with_card} = Cart.add_card(gift_order, card_variant_a.id, authorize?: false)
+      {:ok, with_card} = Order.add_card(gift_order, card_variant_a.id, authorize?: false)
 
       with_message =
         with_card
@@ -1237,42 +1237,42 @@ defmodule Edenflowers.Store.CartTest do
 
       assert with_message.card_message == "Hello"
 
-      assert {:ok, order} = Cart.remove_card(with_message, authorize?: false)
+      assert {:ok, order} = Order.remove_card(with_message, authorize?: false)
 
       refute Enum.any?(order.line_items, & &1.is_card)
       assert is_nil(order.card_message)
     end
 
     test "remove_card is a no-op when there is no card line item", %{order: order} do
-      order = Cart.get_for_checkout!(order.id, authorize?: false)
+      order = Order.get_for_checkout!(order.id, authorize?: false)
       refute Enum.any?(order.line_items, & &1.is_card)
 
-      assert {:ok, order} = Cart.remove_card(order, authorize?: false)
+      assert {:ok, order} = Order.remove_card(order, authorize?: false)
       refute Enum.any?(order.line_items, & &1.is_card)
     end
   end
 
   describe "add_payment_intent_id policy" do
     test "guest can attach payment intent during checkout" do
-      order = generate(cart(state: :payment))
+      order = generate(order(state: :payment))
 
-      assert {:ok, updated} = Cart.add_payment_intent_id(order, "pi_guest_test", actor: nil)
+      assert {:ok, updated} = Order.add_payment_intent_id(order, "pi_guest_test", actor: nil)
       assert updated.payment_intent_id == "pi_guest_test"
     end
 
     test "system actor can attach payment intent during checkout" do
-      order = generate(cart(state: :payment))
+      order = generate(order(state: :payment))
 
       assert {:ok, updated} =
-               Cart.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})
+               Order.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})
 
       assert updated.payment_intent_id == "pi_system_test"
     end
 
     test "cannot attach payment intent to a placed order" do
-      order = generate(cart(state: :placed, payment_status: :paid, payment_intent_id: "pi_old"))
+      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_old"))
 
-      assert {:error, error} = Cart.add_payment_intent_id(order, "pi_new", actor: nil)
+      assert {:error, error} = Order.add_payment_intent_id(order, "pi_new", actor: nil)
       assert %Ash.Error.Forbidden{} = error
     end
   end

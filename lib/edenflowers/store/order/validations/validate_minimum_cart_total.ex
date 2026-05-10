@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Cart.Validations.ValidateMinimumCartTotal do
+defmodule Edenflowers.Store.Order.Validations.ValidateMinimumCartTotal do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -17,8 +17,8 @@ defmodule Edenflowers.Store.Cart.Validations.ValidateMinimumCartTotal do
 
   defp validate_minimum_cart_total(changeset, promotion_id) do
     with {:ok, promotion} <- Edenflowers.Store.Promotion.get_by_id(promotion_id, authorize?: false),
-         {:ok, cart} <- Ash.load(changeset.data, [:line_total], authorize?: false, lazy?: true) do
-      line_total = cart.line_total || Decimal.new(0)
+         {:ok, order} <- Ash.load(changeset.data, [:line_total], authorize?: false, lazy?: true) do
+      line_total = order.line_total || Decimal.new(0)
       minimum_required = promotion.minimum_cart_total
 
       if Decimal.compare(line_total, minimum_required) in [:gt, :eq] do

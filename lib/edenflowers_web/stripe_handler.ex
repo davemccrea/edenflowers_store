@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.StripeHandler do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Store.Cart
+  alias Edenflowers.Store.Order
   alias Edenflowers.Workers.SendOrderConfirmationEmail
 
   @impl true
@@ -17,20 +17,20 @@ defmodule EdenflowersWeb.StripeHandler do
   def handle_event(%Stripe.Event{type: "payment_intent.succeeded"} = event) do
     # Always re-enqueue on success: the worker has a unique constraint on
     # `order_id`, so a redelivered webhook collapses to the existing job, and a
-    # prior delivery that converted but failed to enqueue gets a second chance.
-    with {:ok, cart_id} <- fetch_cart_id(event),
-         {:ok, order_id} <- convert(cart_id),
+    # prior delivery that finalized but failed to enqueue gets a second chance.
+    with {:ok, order_id} <- fetch_order_id(event),
+         {:ok, _outcome} <- finalize_checkout(order_id),
          {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order_id}) do
       :ok
     else
-      {:error, :missing_cart_id} ->
-        Logger.warning("Stripe payment_intent.succeeded event #{event.id} is missing cart_id metadata")
+      {:error, :missing_order_id} ->
+        Logger.warning("Stripe payment_intent.succeeded event #{event.id} is missing order_id metadata")
 
         :error
 
-      {:error, {:conversion_failed, cart_id, reason}} ->
+      {:error, {:payment_update_failed, order_id, reason}} ->
         Logger.error(
-          "Failed to convert cart #{cart_id} for Stripe payment_intent.succeeded event #{event.id}: #{inspect(reason)}"
+          "Failed to mark order #{order_id} as paid for Stripe payment_intent.succeeded event #{event.id}: #{inspect(reason)}"
         )
 
         :error
@@ -47,26 +47,26 @@ defmodule EdenflowersWeb.StripeHandler do
   @impl true
   def handle_event(%Stripe.Event{type: type} = event)
       when type in ["payment_intent.payment_failed", "payment_intent.canceled"] do
-    with {:ok, cart_id} <- fetch_cart_id(event),
-         {:ok, outcome} <- mark_payment_failed(cart_id) do
+    with {:ok, order_id} <- fetch_order_id(event),
+         {:ok, outcome} <- mark_payment_failed(order_id) do
       case outcome do
-        :already_converted ->
+        :already_paid ->
           # A succeeded event arrived first (or was reprocessed). Don't downgrade.
           :ok
 
-        _cart ->
-          Logger.info("Marked cart #{cart_id} payment as failed for Stripe #{type} event #{event.id}")
+        _order ->
+          Logger.info("Marked order #{order_id} payment as failed for Stripe #{type} event #{event.id}")
 
           :ok
       end
     else
-      {:error, :missing_cart_id} ->
-        Logger.warning("Stripe #{type} event #{event.id} is missing cart_id metadata")
+      {:error, :missing_order_id} ->
+        Logger.warning("Stripe #{type} event #{event.id} is missing order_id metadata")
         :error
 
-      {:error, {:payment_update_failed, cart_id, reason}} ->
+      {:error, {:payment_update_failed, order_id, reason}} ->
         Logger.error(
-          "Failed to mark cart #{cart_id} as failed for Stripe #{type} event #{event.id}: #{inspect(reason)}"
+          "Failed to mark order #{order_id} as failed for Stripe #{type} event #{event.id}: #{inspect(reason)}"
         )
 
         :error
@@ -79,46 +79,43 @@ defmodule EdenflowersWeb.StripeHandler do
     :ok
   end
 
-  defp fetch_cart_id(%Stripe.Event{data: %{object: %{metadata: %{"cart_id" => cart_id}}}})
-       when is_binary(cart_id) and cart_id != "" do
-    {:ok, cart_id}
+  defp fetch_order_id(%Stripe.Event{data: %{object: %{metadata: %{"order_id" => order_id}}}})
+       when is_binary(order_id) and order_id != "" do
+    {:ok, order_id}
   end
 
-  defp fetch_cart_id(_event), do: {:error, :missing_cart_id}
+  defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
-  # Idempotent: if the cart has already been converted (state == :converted),
-  # we surface its existing order_id so the email enqueue still happens.
-  defp convert(cart_id) do
-    with {:ok, cart} <- Cart.get_by_id(cart_id, actor: system_actor()) do
-      case cart.state do
-        :converted ->
-          {:ok, cart.order_id}
+  defp finalize_checkout(order_id) do
+    case Order.finalize_checkout(order_id, actor: system_actor()) do
+      {:ok, order} ->
+        {:ok, order}
 
-        _ ->
-          case Cart.convert(cart, actor: system_actor()) do
-            {:ok, converted} -> {:ok, converted.order_id}
-            {:error, reason} -> {:error, {:conversion_failed, cart_id, reason}}
-          end
-      end
-    else
-      {:error, reason} -> {:error, {:conversion_failed, cart_id, reason}}
+      {:error, reason} ->
+        # AshStateMachine refuses :checkout → :placed when state is already
+        # :placed. Detect that via current state instead of pattern-matching on
+        # the error struct so the handler stays decoupled from Ash internals.
+        case Order.get_by_id(order_id, actor: system_actor()) do
+          {:ok, %{state: :placed}} -> {:ok, :already_placed}
+          _ -> {:error, {:payment_update_failed, order_id, reason}}
+        end
     end
   end
 
-  defp mark_payment_failed(cart_id) do
-    with {:ok, cart} <- Cart.get_by_id(cart_id, actor: system_actor()) do
-      case cart.state do
-        :converted ->
-          {:ok, :already_converted}
+  defp mark_payment_failed(order_id) do
+    with {:ok, order} <- Order.get_by_id(order_id, actor: system_actor()) do
+      case order.payment_status do
+        :paid ->
+          {:ok, :already_paid}
 
         _ ->
-          case Cart.mark_payment_failed(cart, actor: system_actor()) do
-            {:ok, cart} -> {:ok, cart}
-            {:error, reason} -> {:error, {:payment_update_failed, cart_id, reason}}
+          case Order.mark_payment_failed(order, actor: system_actor()) do
+            {:ok, order} -> {:ok, order}
+            {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
           end
       end
     else
-      {:error, reason} -> {:error, {:payment_update_failed, cart_id, reason}}
+      {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
     end
   end
 end
