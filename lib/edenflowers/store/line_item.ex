@@ -46,33 +46,28 @@ defmodule Edenflowers.Store.LineItem do
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
     end
-
-    # Called by Order.Changes.SnapshotTotals under the :system actor.
-    update :snapshot_totals do
-      accept [:placed_line_total, :placed_discount_amount, :placed_line_tax_amount]
-    end
   end
 
   policies do
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
-    end
-
+    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
+    # Allow creating line items for any order (checkout flow). The card
+    # variant is gated at the order level via Order.add_card.
     policy action_type(:create) do
-      authorize_if expr(order.state != :placed)
+      authorize_if always()
     end
 
-    policy action_type(:read) do
+    # Read/Update/Destroy access:
+    # Multiple authorize_if within one policy = OR (only one needs to pass)
+    policy action_type([:read, :update, :destroy]) do
+      # Guest checkout: Anyone can work with line items for orders still in
+      # the checkout flow (any sub-state before :placed).
       authorize_if expr(order.state != :placed)
+      # Placed orders: Only the owner can access their line items
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
-    end
-
-    policy action_type([:update, :destroy]) do
-      authorize_if expr(order.state != :placed)
     end
   end
 
@@ -97,13 +92,6 @@ defmodule Edenflowers.Store.LineItem do
     attribute :product_image_slug, :string, allow_nil?: false
     attribute :is_card, :boolean, default: false, allow_nil?: false
     attribute :card_size, Edenflowers.Store.ProductVariantSize
-
-    # Snapshot fields written by Order.Changes.SnapshotTotals at the
-    # parent's :finalize_checkout.
-    attribute :placed_line_total, :decimal
-    attribute :placed_discount_amount, :decimal
-    attribute :placed_line_tax_amount, :decimal
-
     timestamps()
   end
 

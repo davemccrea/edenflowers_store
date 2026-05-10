@@ -21,8 +21,29 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
 
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
     order_id
+    # TODO: use system_actor here or authorize?: false ?
     |> Order.get_by_id!(actor: system_actor(), authorize?: false)
-    |> Ash.load!([:line_items], actor: system_actor(), authorize?: false)
+    |> Ash.load!(
+      [
+        # Aggregates
+        :line_total,
+        :line_tax_amount,
+        :discount_amount,
+
+        # Calculations
+        :promotion_applied?,
+        :total,
+        :tax_amount,
+        :fulfillment_tax_amount,
+
+        # Relationships
+        :promotion,
+        fulfillment_option: [:tax_rate],
+        line_items: [:line_subtotal, :line_total]
+      ],
+      actor: system_actor(),
+      authorize?: false
+    )
     |> Email.order_confirmation()
     |> Mailer.deliver()
   end

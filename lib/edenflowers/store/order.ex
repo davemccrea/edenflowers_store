@@ -171,7 +171,6 @@ defmodule Edenflowers.Store.Order do
     # Lifecycle transitions
     update :finalize_checkout do
       validate present(:payment_intent_id)
-      change {Changes.SnapshotTotals, []}
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -271,38 +270,8 @@ defmodule Edenflowers.Store.Order do
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
-    # Cart-flow actions: locked once state leaves @checkout_states.
-    policy action([
-             :submit_contact_details,
-             :submit_gift_options,
-             :submit_delivery,
-             :return_to_contact_details,
-             :return_to_gift_options,
-             :return_to_delivery,
-             :update_fulfillment_option,
-             :set_gift,
-             :add_payment_intent_id,
-             :add_promotion_with_id,
-             :add_promotion_with_code,
-             :clear_promotion,
-             :restart_checkout,
-             :add_card,
-             :remove_card
-           ]) do
+    policy action_type(:update) do
       authorize_if expr(state in ^@checkout_states)
-    end
-
-    policy action(:finalize_checkout) do
-      authorize_if expr(state == :payment)
-    end
-
-    policy action(:mark_payment_failed) do
-      authorize_if expr(state in ^@checkout_states)
-    end
-
-    # Presentational: safe on placed orders.
-    policy action(:update_locale) do
-      authorize_if always()
     end
   end
 
@@ -358,7 +327,6 @@ defmodule Edenflowers.Store.Order do
     # so validations and templates can branch on a plain attribute instead of
     # traversing the relationship.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
-    attribute :fulfillment_tax_rate, :decimal
     attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
@@ -368,15 +336,6 @@ defmodule Edenflowers.Store.Order do
     attribute :payment_intent_id, :string
 
     attribute :locale, :string, default: "sv-FI"
-
-    # Snapshot fields written by Changes.SnapshotTotals at :finalize_checkout.
-    attribute :placed_line_total, :decimal
-    attribute :placed_line_tax_amount, :decimal
-    attribute :placed_discount_amount, :decimal
-    attribute :placed_fulfillment_tax_amount, :decimal
-    attribute :placed_tax_amount, :decimal
-    attribute :placed_total, :decimal
-    attribute :placed_promotion_code, :string
 
     timestamps()
   end
@@ -392,11 +351,15 @@ defmodule Edenflowers.Store.Order do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
 
-    # Uses the denormalised fulfillment_tax_rate so a later edit to the
-    # rate row can't change the cart's quoted tax mid-flight.
     calculate :fulfillment_tax_amount,
               :decimal,
-              expr((fulfillment_amount || 0) * (fulfillment_tax_rate || 0))
+              expr(
+                if is_nil(fulfillment_option_id) do
+                  0
+                else
+                  (fulfillment_amount || 0) * fulfillment_option.tax_rate.percentage
+                end
+              )
 
     calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
 
