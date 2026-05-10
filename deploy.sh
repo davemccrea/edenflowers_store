@@ -25,6 +25,30 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$BRANCH" != "main" ]]; then
+  echo "Error: must deploy from main (currently on $BRANCH)"
+  exit 1
+fi
+
+echo "Fetching origin to verify local main is up-to-date..."
+git fetch origin main --tags
+
+LOCAL="$(git rev-parse main)"
+REMOTE="$(git rev-parse origin/main)"
+BASE="$(git merge-base main origin/main)"
+
+if [[ "$LOCAL" != "$REMOTE" ]]; then
+  if [[ "$LOCAL" == "$BASE" ]]; then
+    echo "Error: local main is behind origin/main — run 'git pull --ff-only' first"
+  elif [[ "$REMOTE" == "$BASE" ]]; then
+    echo "Error: local main has unpushed commits — push them before deploying"
+  else
+    echo "Error: local main and origin/main have diverged — reconcile before deploying"
+  fi
+  exit 1
+fi
+
 if [[ -f .env ]]; then
   set -a
   source .env
@@ -41,6 +65,6 @@ echo "Updated mix.exs to version $VERSION"
 git add mix.exs
 git commit -m "Bump version to $TAG"
 git tag "$TAG"
-SKIP_HOOKS=1 git push origin main "$TAG"
+SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
 echo "Deployed $TAG — GitHub Actions will build and deploy the Docker image."
