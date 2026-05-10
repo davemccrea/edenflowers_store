@@ -63,6 +63,20 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> click_button("Next")
       |> assert_has("h2", text: "Gift Options")
     end
+
+    test "rejects an invalid email and stays on step 1", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "John Doe")
+      |> fill_in("Email *", with: "notanemail")
+      |> click_button("Next")
+      |> assert_has("p", text: "Must be a valid email address")
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      assert reloaded.state == :contact_details
+      assert is_nil(reloaded.customer_email)
+    end
   end
 
   describe "Step 2: Gift Options" do

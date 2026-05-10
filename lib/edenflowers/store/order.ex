@@ -121,6 +121,8 @@ defmodule Edenflowers.Store.Order do
     update :submit_contact_details do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
+
+      validate {Validations.ValidateCustomerEmail, []}
       change {Changes.UpsertUserAndAssignToOrder, []}
       change transition_state(:gift_options)
       change load(@checkout_load)

@@ -95,7 +95,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.input
                       label={~t"Email *"}
                       field={@form[:customer_email]}
-                      type="text"
+                      type="email"
                       data-testid="customer-email-input"
                     />
 
@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         label={recipient_label(@order, "phone")}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
-                        type="text"
+                        type="tel"
                       />
 
                       <fieldset class="flex flex-col">

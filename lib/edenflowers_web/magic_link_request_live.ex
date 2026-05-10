@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.MagicLinkRequestLive do
           </p>
         <% else %>
           <.form class="flex w-full flex-col space-y-4" for={@form} phx-change="change" phx-submit="submit" method="POST">
-            <.input autofocus field={@form[:email]} label={~t"Email"} placeholder={~t"info@edenflowers.fi"} />
+            <.input autofocus field={@form[:email]} type="email" label={~t"Email"} />
 
             <.button type="submit" variant="primary" size="lg">
               {~t"Get Magic Link"}
