@@ -16,24 +16,19 @@
 
 /* Brand extension palette. daisyUI semantics (primary, base-*) handle
    universal UI; these handle editorial surfaces specific to the brand.
-   Surface + `-content` share hue and chroma, varying only in lightness —
-   keeps the pairing in one color family. Add a token only when a call
-   site needs it. */
+   Whole system sits in one warm family (hue ~75 paper / ~150 forest):
+     cream  — warm light surface (footer, callouts, banner, empty states)
+     forest — dark anchor for reverse-out sections
+   Surface + `-content` share hue and chroma, varying only in lightness. */
 @theme {
-  --color-mist: oklch(94.3% 0.012 286.2);
-  --color-mist-content: oklch(31.7% 0.067 281.9);
+  --color-cream: oklch(95% 0.025 75);
+  --color-cream-content: oklch(30% 0.05 60);
 
-  --color-linen: oklch(96.4% 0.015 90.2);
-  --color-linen-content: oklch(36.9% 0.054 89.2);
-
-  --color-bloom: oklch(94.3% 0.025 61.6);
-  --color-bloom-content: oklch(40.4% 0.087 54.5);
-
-  --color-sage: oklch(94.8% 0.032 145.3);
-  --color-sage-content: oklch(36.5% 0.09 143.5);
+  --color-forest: oklch(26% 0.05 152);
+  --color-forest-content: oklch(94% 0.02 80);
 
   /* Single-role: link underlines on serif headings and nav. */
-  --color-link-underline: oklch(0.81 0.15 93);
+  --color-link-underline: oklch(81% 0.15 93);
 }
 
 @plugin "../vendor/heroicons";
@@ -51,10 +46,12 @@
   color-scheme: "light";
   --color-primary: oklch(0.3684 0.0478 156.76);
   --color-primary-content: var(--color-neutral-100);
-  --color-base-100: white;
-  --color-base-200: oklch(98.5% 0.001 106.423);
-  --color-base-300: oklch(97% 0.001 106.424);
-  --color-base-content: oklch(21% 0.006 285.885);
+  /* Warm neutral spine, hue ~75 — agrees with --color-cream and reads
+     as paper/oat across every section. */
+  --color-base-100: oklch(99% 0.004 75);
+  --color-base-200: oklch(97% 0.008 75);
+  --color-base-300: oklch(93.5% 0.012 75);
+  --color-base-content: oklch(22% 0.015 75);
 }
 
 [data-phx-session],

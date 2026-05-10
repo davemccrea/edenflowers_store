@@ -237,8 +237,8 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="w-full">
         <%!-- Banner --%>
-        <section class="bg-mist border-b py-2 text-center">
-          <span class="text-mist-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
+        <section class="bg-forest py-2 text-center">
+          <span class="text-forest-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
         </section>
 
         <%!-- Main header --%>
@@ -350,7 +350,7 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="bg-bloom border-t border-b">
+      <div class="bg-cream border-t border-b">
         <div class="container py-20 md:py-36">
           <div class="footer-grid">
             <div class="footer-grid__newsletter space-y-4">

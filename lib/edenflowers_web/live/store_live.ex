@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.StoreLive do
         </nav>
 
         <%= if Enum.empty?(@products) do %>
-          <div class="bg-linen flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
+          <div class="bg-cream flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
             <.icon name="hero-sparkles" class="text-primary/80 h-10 w-10" />
             <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
             <p class="text-base-content/75 max-w-md leading-relaxed">
