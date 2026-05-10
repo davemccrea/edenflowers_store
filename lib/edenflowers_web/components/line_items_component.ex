@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.LineItemsComponent do
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Store.LineItem
+  alias Edenflowers.Store.Order
 
   attr :id, :string, required: true
   attr :order, :any, required: true
@@ -75,17 +75,17 @@ defmodule EdenflowersWeb.LineItemsComponent do
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
-    LineItem.remove_item(id)
+    Order.remove_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
-    LineItem.increment_quantity(id)
+    Order.increment_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
-    LineItem.decrement_quantity(id)
+    Order.decrement_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 end
