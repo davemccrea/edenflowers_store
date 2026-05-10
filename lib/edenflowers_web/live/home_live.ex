@@ -37,10 +37,13 @@ defmodule EdenflowersWeb.HomeLive do
           <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="hero-reveal" style="--reveal-delay: 280ms;">
-            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
-              {~t"Shop Now"} <span aria-hidden="true">→</span>
-            </.button>
+          <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
+            <.link
+              href="#store"
+              class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
+            >
+              {~t"Shop Now"}
+            </.link>
           </div>
         </div>
       </section>

@@ -8,40 +8,42 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
   def render(assigns) do
     ~H"""
-    <section class="space-y-4">
-      <h1 class="section-title">
-        {~t"Register and enjoy 15% off your next order."}
-      </h1>
+    <section class="max-w-md space-y-5">
+      <h3 class="eyebrow text-base-content/60">{~t"Newsletter"}</h3>
+
+      <p class="font-serif text-2xl leading-snug tracking-tight md:text-3xl">
+        {~t"Fifteen percent off your first order."}
+      </p>
 
       <%= if @submitted do %>
-        <p>{~t"Thanks! We've sent your 15% off code to your inbox."}</p>
+        <p class="text-base-content/80">
+          {~t"Thanks! We've sent your 15% off code to your inbox."}
+        </p>
       <% else %>
-        <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit">
+        <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit" class="space-y-4">
           <label for="newsletter-form_email_address" class="sr-only">
             {~t"Email Address"}
           </label>
-          <div class="space-y-2">
-            <div class="relative max-w-sm">
-              <input
-                type="email"
-                name="email_address"
-                id="newsletter-form_email_address"
-                value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-                class="input input-lg w-full pr-12"
-                placeholder={~t"Your email"}
-              />
-              <button
-                type="submit"
-                class="text-base-content/50 absolute inset-y-0 right-3 z-10 flex cursor-pointer items-center transition hover:text-base-content"
-                aria-label={~t"Register"}
-              >
-                <.icon name="hero-paper-airplane" class="h-5 w-5" />
-              </button>
-            </div>
-            <p class="text-base-content/60 text-xs">
-              {~t"We send out only ocassional emails. Unsubscribe at any time."}
-            </p>
+          <div class="border-base-content/30 flex items-baseline gap-4 border-b pb-1 transition-colors focus-within:border-base-content">
+            <input
+              type="email"
+              name="email_address"
+              id="newsletter-form_email_address"
+              value={Phoenix.HTML.Form.input_value(@form, :email_address)}
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40 focus:outline-none focus:ring-0"
+              placeholder={~t"your@email.com"}
+              autocomplete="email"
+            />
+            <button
+              type="submit"
+              class="eyebrow text-base-content/70 link-underline-hover-nav whitespace-nowrap py-2 hover:text-base-content"
+            >
+              {~t"Subscribe"}
+            </button>
           </div>
+          <p class="text-base-content/60 text-xs leading-relaxed">
+            {~t"We send out only occasional emails. Unsubscribe at any time."}
+          </p>
         </.form>
       <% end %>
     </section>
