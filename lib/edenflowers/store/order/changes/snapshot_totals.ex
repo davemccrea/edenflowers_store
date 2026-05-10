@@ -1,41 +1,7 @@
 defmodule Edenflowers.Store.Order.Changes.SnapshotTotals do
   @moduledoc """
-  At `:finalize_checkout`, captures all derived numeric values from the cart
-  into stored `placed_*` attributes on the order, and into `placed_*`
-  attributes on each line item.
-
-  After this runs and the order transitions to `:placed`:
-
-    * Lockdown policies refuse any further mutation of either resource.
-    * Reads on placed orders take their numbers from `placed_*` fields,
-      not from live aggregates/calculations — so a later edit to
-      `promotion.discount_percentage`, `tax_rate.percentage` or
-      `fulfillment_option.base_price` cannot retroactively change what
-      this order says.
-
-  Runs in `before_action`. The order is still in `:payment` state at this
-  point, which is what the cart-flow load and the `:update` policies
-  expect; the state transition to `:placed` happens later in the same
-  action via `transition_state(:placed)`.
-
-  Snapshots:
-
-    * `placed_line_total`, `placed_line_tax_amount`,
-      `placed_discount_amount` — were aggregates over `line_items`;
-      copied as concrete decimals.
-    * `placed_fulfillment_tax_amount` — was a calculation deriving from
-      `fulfillment_amount * fulfillment_option.tax_rate.percentage`;
-      copied as a concrete decimal. The rate itself is already
-      denormalised to `fulfillment_tax_rate` at submit_delivery, but the
-      *amount* is what the receipt prints.
-    * `placed_tax_amount`, `placed_total` — derived totals; concrete
-      decimals.
-    * `placed_promotion_code` — was read live via `order.promotion.code`;
-      a later admin edit of the promotion's code must not change what
-      this order's confirmation email/receipt displays.
-    * Per line item: `placed_line_total`, `placed_discount_amount`,
-      `placed_line_tax_amount` — were calculations on LineItem that
-      depended on the live promotion percentage. Concrete decimals after.
+  Captures the cart's derived numeric values into `placed_*` attributes
+  on the order and its line items at `:finalize_checkout`. See ADR-0001.
   """
   use Ash.Resource.Change
 

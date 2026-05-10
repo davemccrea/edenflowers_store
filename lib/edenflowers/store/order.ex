@@ -171,10 +171,6 @@ defmodule Edenflowers.Store.Order do
     # Lifecycle transitions
     update :finalize_checkout do
       validate present(:payment_intent_id)
-      # Snapshot before the state transition: the change reads aggregates and
-      # calculations off the cart (which still need :payment-state semantics)
-      # and writes them into the placed_* stored fields. After this action
-      # commits, lockdown policies prevent any further edit.
       change {Changes.SnapshotTotals, []}
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
@@ -275,10 +271,7 @@ defmodule Edenflowers.Store.Order do
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
-    # Cart-flow actions: gated on cart states. Spree-style "complete = locked"
-    # — once the order has been placed, none of these can run, even via the
-    # owner. The action's `accept` list scopes *which* fields a request can
-    # touch; this policy scopes *when* the action can run at all.
+    # Cart-flow actions: locked once state leaves @checkout_states.
     policy action([
              :submit_contact_details,
              :submit_gift_options,
@@ -299,19 +292,15 @@ defmodule Edenflowers.Store.Order do
       authorize_if expr(state in ^@checkout_states)
     end
 
-    # Conversion: only fires from :payment.
     policy action(:finalize_checkout) do
       authorize_if expr(state == :payment)
     end
 
-    # Payment-failure marker is meaningful only while still in checkout.
-    # After place, payment_status flows via mark_refunded (admin-only).
     policy action(:mark_payment_failed) do
       authorize_if expr(state in ^@checkout_states)
     end
 
-    # Locale is presentational; updating it on a placed order (e.g. from a
-    # later visit) is harmless and doesn't violate the snapshot.
+    # Presentational: safe on placed orders.
     policy action(:update_locale) do
       authorize_if always()
     end
@@ -369,10 +358,6 @@ defmodule Edenflowers.Store.Order do
     # so validations and templates can branch on a plain attribute instead of
     # traversing the relationship.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
-    # Denormalized VAT rate for the chosen fulfillment option. Captured by
-    # CalculateFulfillmentCost at the same time as fulfillment_amount so a
-    # later edit to the option's tax_rate (e.g. Finland VAT change) cannot
-    # retroactively alter what this order was quoted/charged.
     attribute :fulfillment_tax_rate, :decimal
     attribute :geocoded_address, :string
     attribute :here_id, :string
@@ -384,24 +369,13 @@ defmodule Edenflowers.Store.Order do
 
     attribute :locale, :string, default: "sv-FI"
 
-    # ====================
-    # Snapshot fields
-    # ====================
-    # All `placed_*` attributes are populated exactly once, by
-    # Changes.SnapshotTotals at :finalize_checkout, and never mutated again.
-    # They store the resolved numeric values from the cart so that subsequent
-    # edits to upstream data (promotion percentage, fulfillment_option price,
-    # tax_rate percentage, promotion code) cannot retroactively change what
-    # this placed order says. See ADR-0001 for rationale.
+    # Snapshot fields written by Changes.SnapshotTotals at :finalize_checkout.
     attribute :placed_line_total, :decimal
     attribute :placed_line_tax_amount, :decimal
     attribute :placed_discount_amount, :decimal
     attribute :placed_fulfillment_tax_amount, :decimal
     attribute :placed_tax_amount, :decimal
     attribute :placed_total, :decimal
-    # Snapshot of promotion.code at place-time. The promotion_id FK stays for
-    # reporting (which promotion was used) but the *code as it was* is the
-    # authoritative answer for the customer-facing receipt.
     attribute :placed_promotion_code, :string
 
     timestamps()
@@ -418,13 +392,8 @@ defmodule Edenflowers.Store.Order do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
 
-    # Reads the *denormalised* fulfillment_tax_rate (captured at
-    # submit_delivery), not the live `fulfillment_option.tax_rate.percentage`.
-    # A later edit to the rate row therefore can't change the cart's quoted
-    # tax mid-flight either — it's already locked in from the moment the
-    # delivery cost was calculated. After finalize_checkout, the snapshot
-    # field `placed_fulfillment_tax_amount` is the authoritative value;
-    # this calculation is only consulted during cart-flow.
+    # Uses the denormalised fulfillment_tax_rate so a later edit to the
+    # rate row can't change the cart's quoted tax mid-flight.
     calculate :fulfillment_tax_amount,
               :decimal,
               expr((fulfillment_amount || 0) * (fulfillment_tax_rate || 0))

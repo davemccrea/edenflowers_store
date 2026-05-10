@@ -1,15 +1,9 @@
 defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   @moduledoc """
   For `submit_delivery`, derives `fulfillment_amount` (and, for delivery,
-  the geocoded fields) from the chosen `FulfillmentOption`. The
-  corresponding attributes are not in the action's `accept` list, so this
-  change is the only path that can set them — closing the trust-the-client
-  gap on delivery cost.
-
-  Also captures the option's `tax_rate.percentage` onto the order as
-  `fulfillment_tax_rate`. Denormalising the rate here means a later edit
-  to the rate row (e.g. Finland VAT change) cannot retroactively alter
-  what this order was quoted or charged.
+  the geocoded fields) and captures `fulfillment_tax_rate` from the
+  chosen `FulfillmentOption`. These attributes are not in the action's
+  `accept` list, so this change is the only path that can set them.
   """
   use Ash.Resource.Change
 
@@ -82,8 +76,6 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
     end
   end
 
-  # Loads with `:tax_rate` so we can capture the rate's percentage onto the
-  # order at quote-time.
   defp load_option(nil), do: {:error, :missing_option}
 
   defp load_option(id) do

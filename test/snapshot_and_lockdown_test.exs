@@ -1,15 +1,5 @@
 defmodule Edenflowers.Store.SnapshotAndLockdownTest do
-  @moduledoc """
-  Covers the invariants from docs/adr/0001-immutable-orders-via-snapshot-and-lockdown.md.
-
-  The snapshot tests assert that finalize_checkout captures all derived
-  numeric values onto the order (and per-line-item) so that subsequent
-  upstream edits cannot retroactively change history.
-
-  The lockdown tests assert that once an order is :placed, neither
-  cart-flow actions nor line-item mutations are allowed — even by the
-  owner.
-  """
+  @moduledoc "Covers the invariants from ADR-0001."
 
   use Edenflowers.DataCase
   import Generator
@@ -96,9 +86,7 @@ defmodule Edenflowers.Store.SnapshotAndLockdownTest do
 
       original_rate = order.fulfillment_tax_rate
 
-      # Simulate a Finland VAT change: edit the rate row directly. (TaxRate
-      # doesn't expose a generic :update action — Ash.Seed.update! bypasses
-      # actions/policies the same way Ash.Seed.seed! bypasses creates.)
+      # TaxRate has no generic :update action; bypass via Ash.Seed.
       Ash.Seed.update!(tax_rate, %{percentage: Decimal.new("0.30")})
 
       reloaded = Order.get_by_id!(order.id, authorize?: false)

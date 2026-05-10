@@ -1,20 +1,6 @@
 defmodule Edenflowers.Repo.Migrations.AddOrderSnapshotFields do
   @moduledoc """
-  Adds snapshot fields to `orders` and `line_items` for the Spree-style
-  immutable-after-place model. See ADR-0001.
-
-    * `orders.fulfillment_tax_rate` — denormalised at submit_delivery so a
-      later edit to the option's tax_rate (e.g. Finland VAT change) cannot
-      retroactively alter what this order was quoted/charged.
-    * `orders.placed_*` — captured at finalize_checkout from live
-      aggregates/calculations. Authoritative for placed orders.
-    * `line_items.placed_*` — captured at the parent order's
-      finalize_checkout from live calculations.
-
-  All columns nullable: cart-state rows have them as NULL; placed rows have
-  them populated. Lockdown is enforced at the resource policy layer; the
-  database doesn't need a CHECK because the only writers are the snapshot
-  change and admin-only post-place actions.
+  Snapshot columns on `orders` and `line_items`. See ADR-0001.
   """
 
   use Ecto.Migration
