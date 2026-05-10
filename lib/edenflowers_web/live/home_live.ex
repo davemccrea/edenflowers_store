@@ -130,9 +130,9 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <%!-- Pull quote --%>
-      <section class="bg-pastel-3 not-last:border-b">
+      <section class="bg-linen text-linen-content not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
+          <blockquote class="pull-quote text-linen-content/90 max-w-4xl text-center">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
           <.link

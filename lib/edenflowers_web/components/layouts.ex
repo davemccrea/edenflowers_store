@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.Layouts do
             </li>
             <li class="border-base-content/10 border-t pt-4">
               <.link
-                class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
+                class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
               >
@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.Layouts do
           current_locale_code={@current_locale_code}
           current_path={@current_path}
           class="flex flex-wrap gap-x-5 gap-y-2"
-          item_class="text-base-content/80 text-sm tracking-wide hover:decoration-(--color-accent-alt) hover:underline hover:underline-offset-4"
+          item_class="text-base-content/80 text-sm tracking-wide hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
         />
         <.social_media_links size={6} />
       </footer>
@@ -237,8 +237,8 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="w-full">
         <%!-- Banner --%>
-        <section class="bg-pastel-1 border-b py-2 text-center">
-          <span class="text-accent-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
+        <section class="bg-mist border-b py-2 text-center">
+          <span class="text-mist-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
         </section>
 
         <%!-- Main header --%>
@@ -350,7 +350,7 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="bg-accent border-t border-b">
+      <div class="bg-bloom border-t border-b">
         <div class="container py-20 md:py-36">
           <div class="footer-grid">
             <div class="footer-grid__newsletter space-y-4">
