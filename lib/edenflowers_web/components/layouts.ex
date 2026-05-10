@@ -69,20 +69,12 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  # `fallback: true` is load-bearing: without downloaded CLDR data for the
-  # active locale, the bare display_name/1 call raises UnknownLanguageError.
-  defp current_locale_display_name do
-    code = Localize.get_locale().cldr_locale_id |> to_string()
-    language_code = code |> String.split("-") |> hd()
-    Localize.Language.display_name!(language_code, locale: code, fallback: true)
-  end
-
   attr :flash, :map, required: true
   attr :current_path, :string, required: true
   slot :inner_block, required: true
 
   def auth(assigns) do
-    current_locale = current_locale_display_name()
+    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
 
     assigns =
       assigns
@@ -123,7 +115,7 @@ defmodule EdenflowersWeb.Layouts do
 
   def app(assigns) do
     current_locale_code = Localize.get_locale().cldr_locale_id |> to_string()
-    current_locale = current_locale_display_name()
+    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
 
     locales =
       for code <- Edenflowers.Locales.all() do
