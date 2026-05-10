@@ -1,25 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="${1:-}"
-
-if [[ -z "$VERSION" ]]; then
-  echo "Usage: ./deploy.sh <version>  (e.g. ./deploy.sh 0.2.0)"
-  exit 1
-fi
-
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Error: version must be in semver format (e.g. 0.2.0)"
-  exit 1
-fi
-
-TAG="v$VERSION"
-
-if git rev-parse "$TAG" &>/dev/null; then
-  echo "Error: tag $TAG already exists"
-  exit 1
-fi
-
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Error: working directory is not clean — commit or stash changes first"
   exit 1
@@ -46,6 +27,51 @@ if [[ "$LOCAL" != "$REMOTE" ]]; then
   else
     echo "Error: local main and origin/main have diverged — reconcile before deploying"
   fi
+  exit 1
+fi
+
+CURRENT="$(grep -E 'version: "[0-9]+\.[0-9]+\.[0-9]+"' mix.exs | head -1 | sed -E 's/.*version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')"
+if [[ -z "$CURRENT" ]]; then
+  echo "Error: could not read current version from mix.exs"
+  exit 1
+fi
+
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+PATCH_NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
+MINOR_NEXT="$MAJOR.$((MINOR + 1)).0"
+MAJOR_NEXT="$((MAJOR + 1)).0.0"
+
+VERSION="${1:-}"
+
+if [[ -z "$VERSION" ]]; then
+  echo
+  echo "Current version: $CURRENT"
+  echo
+  echo "Select release type:"
+  echo "  1) patch  → $PATCH_NEXT  (bug fixes)"
+  echo "  2) minor  → $MINOR_NEXT  (new features)"
+  echo "  3) major  → $MAJOR_NEXT  (breaking changes)"
+  echo
+  read -r -p "Choice [1]: " CHOICE
+  CHOICE="${CHOICE:-1}"
+
+  case "$CHOICE" in
+    1) VERSION="$PATCH_NEXT" ;;
+    2) VERSION="$MINOR_NEXT" ;;
+    3) VERSION="$MAJOR_NEXT" ;;
+    *) echo "Error: invalid choice"; exit 1 ;;
+  esac
+fi
+
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Error: version must be in semver format (e.g. 0.2.0)"
+  exit 1
+fi
+
+TAG="v$VERSION"
+
+if git rev-parse "$TAG" &>/dev/null; then
+  echo "Error: tag $TAG already exists"
   exit 1
 fi
 
