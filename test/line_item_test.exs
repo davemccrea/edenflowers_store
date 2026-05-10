@@ -237,4 +237,59 @@ defmodule Edenflowers.Store.LineItemTest do
       assert second.quantity == 2
     end
   end
+
+  describe "remove_item resetting an empty checkout" do
+    setup %{order: order, product_variant: product_variant} do
+      {:ok, line_item} =
+        LineItem.add_item(%{
+          order_id: order.id,
+          product_variant_id: product_variant.id,
+          quantity: 1
+        })
+
+      stale =
+        order
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
+          customer_name: "Stale Customer",
+          customer_email: "stale@example.com"
+        })
+        |> Ash.update!(authorize?: false)
+
+      %{order: stale, line_item: line_item}
+    end
+
+    test "removing the last non-card line item clears stale checkout fields",
+         %{order: order, line_item: line_item} do
+      LineItem.remove_item!(line_item)
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+
+      assert reloaded.line_items == []
+      assert reloaded.state == :contact_details
+      assert is_nil(reloaded.customer_name)
+      assert is_nil(reloaded.customer_email)
+    end
+
+    test "removing one of several line items leaves checkout fields intact", %{
+      order: order,
+      product: product
+    } do
+      other_variant = generate(product_variant(product_id: product.id, size: :large))
+
+      {:ok, second_line_item} =
+        LineItem.add_item(%{
+          order_id: order.id,
+          product_variant_id: other_variant.id,
+          quantity: 1
+        })
+
+      LineItem.remove_item!(second_line_item)
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+
+      assert length(reloaded.line_items) == 1
+      assert reloaded.customer_name == "Stale Customer"
+      assert reloaded.customer_email == "stale@example.com"
+    end
+  end
 end

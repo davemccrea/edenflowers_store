@@ -37,6 +37,7 @@ defmodule Edenflowers.Store.LineItem do
 
     destroy :remove_item do
       require_atomic? false
+      change {Edenflowers.Store.LineItem.Changes.MaybeRestartCheckout, []}
     end
 
     update :increment_quantity do

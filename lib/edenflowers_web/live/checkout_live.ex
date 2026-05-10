@@ -613,12 +613,13 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ===========
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    actor = actor(socket)
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
 
     cond do
+      # When the cart goes empty, `LineItem.remove_item`'s after-action has
+      # already restarted the checkout. We just need to bounce the customer
+      # so they don't stare at a now-empty checkout step.
       order.cart_effectively_empty? ->
-        Order.restart_checkout!(order, actor: actor)
         {:noreply, push_navigate(socket, to: ~p"/")}
 
       # Cart changed while the customer is on the payment step. The PaymentIntent's

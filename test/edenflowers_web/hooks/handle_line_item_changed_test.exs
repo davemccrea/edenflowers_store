@@ -1,4 +1,11 @@
 defmodule EdenflowersWeb.Hooks.HandleLineItemChangedTest do
+  @moduledoc """
+  Integration coverage for the cart-drawer-from-non-checkout-page flow.
+  The actual reset is enforced in the domain (see
+  `Edenflowers.Store.LineItem.Changes.MaybeRestartCheckout`); this test
+  guards against a future regression where the hook stops keeping the
+  page's order assigns in sync with that reset.
+  """
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest

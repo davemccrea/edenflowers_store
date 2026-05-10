@@ -46,7 +46,15 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
     |> Ash.Query.filter(order_id == ^order.id)
     |> Ash.read!(authorize?: false)
     |> Enum.reduce_while(:ok, fn line_item, :ok ->
-      case Ash.destroy(line_item, action: :remove_item, authorize?: false) do
+      # `skip_checkout_reset` short-circuits the LineItem's after-action
+      # `MaybeRestartCheckout`. Without it, destroying the leftover items
+      # here would call back into `restart_checkout` recursively.
+      changeset =
+        line_item
+        |> Ash.Changeset.for_destroy(:remove_item, %{}, authorize?: false)
+        |> Ash.Changeset.set_context(%{skip_checkout_reset: true})
+
+      case Ash.destroy(changeset) do
         :ok -> {:cont, :ok}
         {:error, error} -> {:halt, {:error, error}}
       end
