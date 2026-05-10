@@ -5,6 +5,11 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   corresponding attributes are not in the action's `accept` list, so this
   change is the only path that can set them — closing the trust-the-client
   gap on delivery cost.
+
+  Also captures the option's `tax_rate.percentage` onto the order as
+  `fulfillment_tax_rate`. Denormalising the rate here means a later edit
+  to the rate row (e.g. Finland VAT change) cannot retroactively alter
+  what this order was quoted or charged.
   """
   use Ash.Resource.Change
 
@@ -27,10 +32,11 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   defp apply_pickup(changeset) do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
+    with {:ok, option} <- load_option(id),
          {:ok, amount} <- Fulfillments.calculate_price(option) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_amount: amount,
+        fulfillment_tax_rate: option.tax_rate.percentage,
         delivery_address: nil,
         delivery_instructions: nil,
         geocoded_address: nil,
@@ -51,14 +57,15 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
+    with {:ok, option} <- load_option(id),
          {:ok, result} <- Fulfillments.calculate_delivery(delivery_address, option) do
       Ash.Changeset.force_change_attributes(changeset,
         geocoded_address: result.geocoded_address,
         position: result.position,
         here_id: result.here_id,
         distance: result.distance,
-        fulfillment_amount: result.fulfillment_amount
+        fulfillment_amount: result.fulfillment_amount,
+        fulfillment_tax_rate: option.tax_rate.percentage
       )
     else
       {:error, reason} when is_atom(reason) ->
@@ -72,6 +79,18 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
           field: :delivery_address,
           message: Fulfillments.delivery_error_message(:unknown)
         })
+    end
+  end
+
+  # Loads with `:tax_rate` so we can capture the rate's percentage onto the
+  # order at quote-time.
+  defp load_option(nil), do: {:error, :missing_option}
+
+  defp load_option(id) do
+    case Ash.get(FulfillmentOption, id, load: [:tax_rate], authorize?: false) do
+      {:ok, %{tax_rate: %{percentage: _}} = option} -> {:ok, option}
+      {:ok, _} -> {:error, :missing_tax_rate}
+      {:error, error} -> {:error, error}
     end
   end
 end
