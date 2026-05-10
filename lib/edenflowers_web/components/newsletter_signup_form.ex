@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
       <h3 class="eyebrow text-base-content/60">{~t"Newsletter"}</h3>
 
       <p class="font-serif text-2xl leading-snug tracking-tight md:text-3xl">
-        {~t"Fifteen percent off your first order."}
+        {~t"Get 15% off your first order."}
       </p>
 
       <%= if @submitted do %>
