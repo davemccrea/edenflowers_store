@@ -65,6 +65,20 @@ echo "Updated mix.exs to version $VERSION"
 git add mix.exs
 git commit -m "Bump version to $TAG"
 git tag "$TAG"
+
+echo
+echo "About to push to origin:"
+echo "  main → $(git rev-parse --short HEAD) ($(git log -1 --pretty=%s))"
+echo "  tag  → $TAG"
+echo
+read -r -p "Proceed with push? [y/N] " REPLY
+if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+  echo "Aborted. Cleaning up local commit and tag..."
+  git tag -d "$TAG"
+  git reset --hard HEAD~1
+  exit 1
+fi
+
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
 echo "Deployed $TAG — GitHub Actions will build and deploy the Docker image."
