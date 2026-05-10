@@ -94,35 +94,7 @@ defmodule EdenflowersWeb.HomeLive do
                   aria-roledescription="slide"
                   aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <.link navigate={~p"/product/#{product}"} class="group flex flex-col">
-                    <div class="mb-3 overflow-hidden rounded-lg">
-                      <picture>
-                        <%!-- Mobile: 4:5 portrait crop for an immersive feel.
-                             Desktop (sm+): 1:1 square so cards sit cleanly in a row. --%>
-                        <source
-                          media="(min-width: 640px)"
-                          srcset={
-                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()
-                          }
-                        />
-                        <img
-                          src={
-                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()
-                          }
-                          alt=""
-                          class="aspect-[4/5] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] sm:aspect-square"
-                        />
-                      </picture>
-                    </div>
-                    <div class="text-base-content flex flex-col items-center gap-1">
-                      <h3 class="card-title link-underline-group-hover-display">
-                        {product.name}
-                      </h3>
-                      <p class="text-base-content/70 text-sm">
-                        {Edenflowers.Utils.format_money(product.cheapest_price)}
-                      </p>
-                    </div>
-                  </.link>
+                  <.product_card product={product} navigate={~p"/product/#{product}"} />
                 </li>
               </ul>
             </div>

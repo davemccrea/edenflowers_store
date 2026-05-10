@@ -600,6 +600,54 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  Renders a product card used by both the Featured Blooms carousel (home)
+  and the Store grid. One editorial treatment, no surface chrome — the
+  photograph is the card; the only interactive accent is the brand
+  honey underline on hover. Mobile uses a 4:5 portrait crop for an
+  immersive feel; desktop uses a 1:1 square so cards line up cleanly.
+
+  `from_price?: true` prefixes the price with the "From" preposition,
+  appropriate when the value comes from `cheapest_price` across variants.
+  """
+  attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
+  attr :navigate, :string, required: true
+  attr :from_price?, :boolean, default: true
+  attr :class, :any, default: nil
+
+  def product_card(assigns) do
+    ~H"""
+    <.link navigate={@navigate} class={["group block focus:outline-none", @class]}>
+      <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
+        <img
+          src={@product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()}
+          alt=""
+          loading="lazy"
+          class="block h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:hidden"
+        />
+        <img
+          src={@product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
+          alt=""
+          loading="lazy"
+          class="hidden h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:block"
+        />
+      </figure>
+
+      <div class="text-base-content flex flex-col gap-1.5">
+        <h3 class="card-title link-underline-group-hover-display">
+          {@product.name}
+        </h3>
+        <p class="font-serif text-base-content/65 text-base italic leading-none">
+          <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
+            {~t"From"}
+          </span>
+          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+        </p>
+      </div>
+    </.link>
+    """
+  end
+
+  @doc """
   Renders a category tile: a clickable image card with an overlaid label.
 
   ## Examples
