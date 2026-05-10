@@ -14,13 +14,6 @@ defmodule Edenflowers.Store.LineItem do
     end
   end
 
-  code_interface do
-    define :add_item, action: :add_to_cart
-    define :remove_item, action: :remove_item
-    define :increment_quantity, action: :increment_quantity
-    define :decrement_quantity, action: :decrement_quantity
-  end
-
   actions do
     defaults [:read]
 

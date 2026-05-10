@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.ProductLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Store.{Product, LineItem}
+  alias Edenflowers.Store.{Product, Order}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
@@ -200,11 +200,7 @@ defmodule EdenflowersWeb.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    LineItem.add_item(%{
-      order_id: socket.assigns.order_id,
-      product_variant_id: socket.assigns.selected_variant.id,
-      quantity: 1
-    })
+    Order.add_line_item(socket.assigns.order, socket.assigns.selected_variant.id, 1)
 
     {:noreply, socket}
   end
