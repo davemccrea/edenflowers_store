@@ -4,15 +4,19 @@ defmodule Edenflowers.StripeAPI.Behaviour do
   This allows us to mock Stripe API calls in tests.
   """
 
-  @callback create_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
-  @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
-  @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_payment_intent(cart :: map()) :: {:ok, map()} | {:error, term()}
+  @callback retrieve_payment_intent(cart :: map()) :: {:ok, map()} | {:error, term()}
+  @callback update_payment_intent(cart :: map()) :: {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
 end
 
 defmodule Edenflowers.StripeAPI do
   @moduledoc """
   Real implementation of Stripe API interactions.
+
+  Operates on `Edenflowers.Store.Cart` (during checkout) and threads the
+  `cart_id` through Stripe metadata so the webhook can resolve the cart for
+  conversion.
   """
 
   @behaviour Edenflowers.StripeAPI.Behaviour
@@ -26,7 +30,7 @@ defmodule Edenflowers.StripeAPI do
       currency: "EUR",
       automatic_payment_methods: %{enabled: true, allow_redirects: :never},
       metadata: %{
-        "order_id" => id
+        "cart_id" => id
       }
     })
   end

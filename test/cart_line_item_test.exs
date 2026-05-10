@@ -1,10 +1,10 @@
-defmodule Edenflowers.Store.LineItemTest do
+defmodule Edenflowers.Store.CartLineItemTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.{Order, LineItem}
+  alias Edenflowers.Store.{Cart, CartLineItem}
 
   setup do
-    order = generate(order())
+    order = generate(cart())
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
     product_variant = generate(product_variant(product_id: product.id))
@@ -15,9 +15,9 @@ defmodule Edenflowers.Store.LineItemTest do
   describe "Order Item Resource" do
     test "creates an order item", %{order: order, product_variant: product_variant} do
       assert {:ok, _} =
-               LineItem
+               CartLineItem
                |> Ash.Changeset.for_create(:add_to_cart, %{
-                 order_id: order.id,
+                 cart_id: order.id,
                  product_variant_id: product_variant.id
                })
                |> Ash.create(authorize?: false)
@@ -25,9 +25,9 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "default quantity is 1", %{order: order, product_variant: product_variant} do
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -37,9 +37,9 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "quantity can only be 1 or greater", %{order: order, product_variant: product_variant} do
       assert {:error, _} =
-               LineItem
+               CartLineItem
                |> Ash.Changeset.for_create(:add_to_cart, %{
-                 order_id: order.id,
+                 cart_id: order.id,
                  product_variant_id: product_variant.id,
                  quantity: 0
                })
@@ -48,9 +48,9 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "increments quantity", %{order: order, product_variant: product_variant} do
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -62,9 +62,9 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "decrements quantity", %{order: order, product_variant: product_variant} do
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 3
         })
@@ -77,9 +77,9 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "decrements quantity no lower than 1", %{order: order, product_variant: product_variant} do
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -91,13 +91,13 @@ defmodule Edenflowers.Store.LineItemTest do
 
     test "promotion_applied? returns true if promotion applied to order", %{product_variant: product_variant} do
       promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
-      order = generate(order())
+      order = generate(cart())
 
       # Add line item first
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -115,9 +115,9 @@ defmodule Edenflowers.Store.LineItemTest do
       product_variant: product_variant
     } do
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -133,17 +133,17 @@ defmodule Edenflowers.Store.LineItemTest do
       product_variant: product_variant
     } do
       first =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
 
       second =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -151,7 +151,7 @@ defmodule Edenflowers.Store.LineItemTest do
       assert first.id == second.id
       assert second.quantity == 2
 
-      line_items = Ash.read!(LineItem, authorize?: false)
+      line_items = Ash.read!(CartLineItem, authorize?: false)
       assert length(line_items) == 1
     end
 
@@ -159,18 +159,18 @@ defmodule Edenflowers.Store.LineItemTest do
       order: order,
       product_variant: product_variant
     } do
-      LineItem
+      CartLineItem
       |> Ash.Changeset.for_create(:add_to_cart, %{
-        order_id: order.id,
+        cart_id: order.id,
         product_variant_id: product_variant.id,
         quantity: 3
       })
       |> Ash.create!(authorize?: false)
 
       line_item =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id,
           quantity: 1
         })
@@ -186,21 +186,21 @@ defmodule Edenflowers.Store.LineItemTest do
     } do
       second_variant = generate(product_variant(product_id: product.id))
 
-      LineItem
+      CartLineItem
       |> Ash.Changeset.for_create(:add_to_cart, %{
-        order_id: order.id,
+        cart_id: order.id,
         product_variant_id: first_variant.id
       })
       |> Ash.create!(authorize?: false)
 
-      LineItem
+      CartLineItem
       |> Ash.Changeset.for_create(:add_to_cart, %{
-        order_id: order.id,
+        cart_id: order.id,
         product_variant_id: second_variant.id
       })
       |> Ash.create!(authorize?: false)
 
-      line_items = Ash.read!(LineItem, authorize?: false)
+      line_items = Ash.read!(CartLineItem, authorize?: false)
       assert length(line_items) == 2
       assert Enum.all?(line_items, &(&1.quantity == 1))
     end
@@ -212,9 +212,9 @@ defmodule Edenflowers.Store.LineItemTest do
       original_price = product_variant.price
 
       first =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)
@@ -226,9 +226,9 @@ defmodule Edenflowers.Store.LineItemTest do
       |> Ash.update!(authorize?: false)
 
       second =
-        LineItem
+        CartLineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
-          order_id: order.id,
+          cart_id: order.id,
           product_variant_id: product_variant.id
         })
         |> Ash.create!(authorize?: false)

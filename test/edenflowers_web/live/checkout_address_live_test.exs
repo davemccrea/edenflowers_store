@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
   import Generator
   import Mox
 
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.{CartLineItem, Cart}
 
   setup :verify_on_exit!
 
@@ -13,10 +13,10 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     product = generate(product())
     variant = generate(product_variant(%{product_id: product.id}))
     delivery_option = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :fixed, base_price: "5.00"))
-    order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
+    order = generate(cart(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
-    LineItem.add_item!(%{
-      order_id: order.id,
+    CartLineItem.add_item!(%{
+      cart_id: order.id,
       product_variant_id: variant.id,
       quantity: 1
     })
@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
     end)
 
-    conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+    conn = Plug.Test.init_test_session(conn, %{cart_id: order.id})
 
     %{conn: conn, order: order, delivery_option: delivery_option}
   end
@@ -230,7 +230,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
 
       seed_confirmed_address(order, delivery_option)
 
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = Plug.Test.init_test_session(conn, %{cart_id: order.id})
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
       assert html =~ ~s(data-testid="input-confirmed")
@@ -251,7 +251,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
       render_async(view)
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Cart.get_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
       assert is_nil(reloaded.geocoded_address)
       assert is_nil(reloaded.fulfillment_amount)
@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
         }
       })
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Cart.get_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
@@ -322,7 +322,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
         }
       })
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Cart.get_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end

@@ -37,8 +37,8 @@ defmodule EdenflowersWeb.AddressInputComponent do
     socket =
       socket
       |> assign(assigns)
-      |> assign_new(:typed, fn -> assigns.order.delivery_address end)
-      |> assign_new(:confirmed, fn -> confirmed_from_order(assigns.order) end)
+      |> assign_new(:typed, fn -> assigns.cart.delivery_address end)
+      |> assign_new(:confirmed, fn -> confirmed_from_cart(assigns.cart) end)
 
     {:ok, socket}
   end
@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         {:noreply, socket}
 
       true ->
-        fulfillment_option = socket.assigns.order.fulfillment_option
+        fulfillment_option = socket.assigns.cart.fulfillment_option
 
         # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
@@ -143,24 +143,24 @@ defmodule EdenflowersWeb.AddressInputComponent do
     assign(socket, loading: false, confirmed: nil, error: {:api, message})
   end
 
-  # If the order already has a persisted geocode (e.g. user navigated back
+  # If the cart already has a persisted geocode (e.g. user navigated back
   # from step 4), reflect it as confirmed so the check icon and delivery
   # summary render without re-geocoding.
-  defp confirmed_from_order(%{delivery_address: address, geocoded_address: geocoded} = order)
+  defp confirmed_from_cart(%{delivery_address: address, geocoded_address: geocoded} = cart)
        when is_binary(address) and is_binary(geocoded) do
     %{
       address: address,
       result: %{
         geocoded_address: geocoded,
-        position: order.position,
-        here_id: order.here_id,
-        distance: order.distance,
-        fulfillment_amount: order.fulfillment_amount
+        position: cart.position,
+        here_id: cart.here_id,
+        distance: cart.distance,
+        fulfillment_amount: cart.fulfillment_amount
       }
     }
   end
 
-  defp confirmed_from_order(_), do: nil
+  defp confirmed_from_cart(_), do: nil
 
   defp confirmed?(typed, confirmed, loading) do
     not loading and not is_nil(confirmed) and typed == confirmed.address

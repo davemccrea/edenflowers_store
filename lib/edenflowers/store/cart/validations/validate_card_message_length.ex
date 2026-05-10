@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.Validations.ValidateCardMessageLength do
+defmodule Edenflowers.Store.Cart.Validations.ValidateCardMessageLength do
   @moduledoc """
   Enforces the per-card-size length limit for card_message.
 
@@ -38,7 +38,7 @@ defmodule Edenflowers.Store.Order.Validations.ValidateCardMessageLength do
   defp card_line_item(changeset) do
     case changeset.data.line_items do
       %Ash.NotLoaded{} ->
-        raise "ValidateCardMessageLength requires line_items to be loaded on the order"
+        raise "ValidateCardMessageLength requires line_items to be loaded on the cart"
 
       items when is_list(items) ->
         Enum.find(items, & &1.is_card)

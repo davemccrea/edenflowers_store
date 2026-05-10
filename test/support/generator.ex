@@ -7,8 +7,10 @@ defmodule Generator do
     ProductCategory,
     Product,
     ProductVariant,
+    Cart,
+    CartLineItem,
     Order,
-    LineItem,
+    OrderLineItem,
     FulfillmentOption
   }
 
@@ -86,13 +88,11 @@ defmodule Generator do
     )
   end
 
-  def order(opts \\ []) do
-    # For testing orders, we use seed_generator to allow setting any attribute
-    # including internal ones that wouldn't normally be accepted in actions
-    # (like fulfillment_amount, payment_intent_id, promotion_id, etc.)
-    # We provide a base struct to avoid generating random foreign keys that don't exist
+  def cart(opts \\ []) do
+    # seed_generator (vs changeset_generator) so tests can set internal
+    # attributes like fulfillment_amount, payment_intent_id, promotion_id.
     seed_generator(
-      %Order{
+      %Cart{
         state: :contact_details,
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16()
       },
@@ -101,11 +101,52 @@ defmodule Generator do
     )
   end
 
-  def line_item(opts \\ []) do
-    changeset_generator(LineItem, :add_to_cart,
+  def cart_line_item(opts \\ []) do
+    changeset_generator(CartLineItem, :add_to_cart,
       defaults: %{
         quantity: 1,
         is_card: false
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  # A *placed* order. Bypasses the conversion flow — sets every snapshot
+  # field directly. Use cart() + Cart.convert when you want to exercise the
+  # conversion itself.
+  def order(opts \\ []) do
+    seed_generator(
+      %Order{
+        order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
+        ordered_at: DateTime.utc_now(),
+        payment_status: :paid,
+        fulfillment_status: :pending,
+        payment_intent_id: "pi_test_#{:rand.uniform(1_000_000)}",
+        customer_name: "Test Customer",
+        customer_email: "test@example.com",
+        gift: false,
+        locale: "sv-FI",
+        line_total: Decimal.new("0"),
+        line_tax_amount: Decimal.new("0"),
+        discount_amount: Decimal.new("0"),
+        fulfillment_tax_amount: Decimal.new("0"),
+        tax_amount: Decimal.new("0"),
+        total: Decimal.new("0")
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  def order_line_item(opts \\ []) do
+    changeset_generator(OrderLineItem, :snapshot_from_cart,
+      defaults: %{
+        quantity: 1,
+        is_card: false,
+        line_total: Decimal.new("0"),
+        discount_amount: Decimal.new("0"),
+        line_tax_amount: Decimal.new("0")
       },
       overrides: opts,
       authorize?: false

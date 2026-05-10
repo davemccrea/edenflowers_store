@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
+defmodule Edenflowers.Store.Cart.Changes.ResetCheckout do
   @moduledoc """
-  Returns an order to its initial checkout state: blanks every checkout
-  field and destroys any line items left on the order. The order row, its
+  Returns a cart to its initial checkout state: blanks every checkout
+  field and destroys any line items left on the cart. The cart row, its
   id, `order_reference`, and `state` are preserved so the existing browser
   session keeps pointing at the same cart.
   """
@@ -9,7 +9,7 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
 
   require Ash.Query
 
-  alias Edenflowers.Store.LineItem
+  alias Edenflowers.Store.CartLineItem
 
   @reset_attrs %{
     customer_name: nil,
@@ -41,9 +41,9 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
     |> Ash.Changeset.after_action(&destroy_line_items/2)
   end
 
-  defp destroy_line_items(_changeset, order) do
-    LineItem
-    |> Ash.Query.filter(order_id == ^order.id)
+  defp destroy_line_items(_changeset, cart) do
+    CartLineItem
+    |> Ash.Query.filter(cart_id == ^cart.id)
     |> Ash.read!(authorize?: false)
     |> Enum.reduce_while(:ok, fn line_item, :ok ->
       case Ash.destroy(line_item, action: :remove_item, authorize?: false) do
@@ -52,7 +52,7 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
       end
     end)
     |> case do
-      :ok -> {:ok, order}
+      :ok -> {:ok, cart}
       {:error, error} -> {:error, error}
     end
   end

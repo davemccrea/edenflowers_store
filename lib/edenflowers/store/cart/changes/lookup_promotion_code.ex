@@ -1,9 +1,9 @@
-defmodule Edenflowers.Store.Order.Changes.LookupPromotionCode do
+defmodule Edenflowers.Store.Cart.Changes.LookupPromotionCode do
   @moduledoc """
-  Looks up a promotion by its code and assigns it to the order.
+  Looks up a promotion by its code and assigns it to the cart.
 
   If the code is valid and the promotion is active, the promotion_id
-  is set on the order. If the code is invalid or the promotion is
+  is set on the cart. If the code is invalid or the promotion is
   inactive/expired, an error is added to the changeset.
   """
   use Ash.Resource.Change

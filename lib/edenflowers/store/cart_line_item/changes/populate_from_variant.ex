@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.LineItem.Changes.PopulateFromVariant do
+defmodule Edenflowers.Store.CartLineItem.Changes.PopulateFromVariant do
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

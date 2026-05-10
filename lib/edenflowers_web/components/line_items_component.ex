@@ -1,17 +1,28 @@
 defmodule EdenflowersWeb.LineItemsComponent do
+  @moduledoc """
+  Renders line items belonging to either a Cart (mutable, with quantity
+  controls) or an Order (read-only snapshot).
+
+  Pass `cart` for the in-flight checkout flow; pass `order` for the placed
+  order confirmation/account view. Exactly one must be provided.
+  """
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Store.LineItem
+  alias Edenflowers.Store.CartLineItem
 
   attr :id, :string, required: true
-  attr :order, :any, required: true
+  attr :cart, :any, default: nil
+  attr :order, :any, default: nil
 
   def render(assigns) do
+    assigns = assign(assigns, :line_items, line_items_for(assigns))
+    assigns = assign(assigns, :editable, not is_nil(assigns.cart))
+
     ~H"""
     <div id={@id}>
-      <%= if Enum.any?(@order.line_items) do %>
+      <%= if Enum.any?(@line_items) do %>
         <ul class="flex flex-col gap-2">
-          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
+          <li :for={line_item <- @line_items} class="flex flex-row gap-4 text-sm">
             <img
               class="h-18 w-18 rounded"
               src={line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(144, 144, type: "fill") |> to_string()}
@@ -22,7 +33,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
               <div class="flex flex-col gap-2">
                 <span>{line_item.product_name}</span>
 
-                <div :if={not line_item.is_card} class="flex flex-row items-center gap-2">
+                <div :if={@editable and not line_item.is_card} class="flex flex-row items-center gap-2">
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
@@ -47,12 +58,16 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     <.icon class="h-4 w-4" name="hero-plus-mini" />
                   </button>
                 </div>
+
+                <div :if={not @editable and not line_item.is_card} class="text-base-content/60">
+                  ×{line_item.quantity}
+                </div>
               </div>
 
               <div class="flex flex-col items-end gap-2">
                 <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
                 <button
-                  :if={not line_item.is_card}
+                  :if={@editable and not line_item.is_card}
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="btn btn-square btn-ghost btn-xs phx-click-loading:btn-disabled"
@@ -75,17 +90,21 @@ defmodule EdenflowersWeb.LineItemsComponent do
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
-    LineItem.remove_item(id)
+    CartLineItem.remove_item(id)
     {:noreply, socket}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
-    LineItem.increment_quantity(id)
+    CartLineItem.increment_quantity(id)
     {:noreply, socket}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
-    LineItem.decrement_quantity(id)
+    CartLineItem.decrement_quantity(id)
     {:noreply, socket}
   end
+
+  defp line_items_for(%{cart: %{line_items: items}}) when is_list(items), do: items
+  defp line_items_for(%{order: %{line_items: items}}) when is_list(items), do: items
+  defp line_items_for(_), do: []
 end

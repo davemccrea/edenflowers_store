@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Router do
       on_mount: [
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
-        EdenflowersWeb.Hooks.PutOrder,
+        EdenflowersWeb.Hooks.PutCart,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
       live "/maternity", MaternityLive

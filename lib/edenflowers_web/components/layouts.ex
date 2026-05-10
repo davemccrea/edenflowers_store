@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.Layouts do
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
-  attr :order, :map, required: true
+  attr :cart, :map, required: true
   attr :current_path, :string, required: true
   slot :inner_block, required: true
 
@@ -206,8 +206,8 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <h1 class="section-title">
-          <%= if not is_nil(@order.total_items_in_cart) do %>
-            {~t"Cart"} ({@order.total_items_in_cart})
+          <%= if not is_nil(@cart.total_items_in_cart) do %>
+            {~t"Cart"} ({@cart.total_items_in_cart})
           <% else %>
             {~t"Cart"}
           <% end %>
@@ -219,10 +219,10 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <div class="flex flex-1 flex-col justify-between overflow-y-auto p-8">
-        <.live_component id="cart-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
+        <.live_component id="cart-line-items" module={EdenflowersWeb.LineItemsComponent} cart={@cart} />
       </div>
 
-      <footer :if={Enum.any?(@order.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
+      <footer :if={Enum.any?(@cart.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
         <.button navigate={~p"/checkout"} variant="primary" phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
           {~t"Checkout"}
         </.button>
@@ -312,17 +312,17 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Cart button --%>
               <.cart_count_badge
-                count={@order.total_items_in_cart || 0}
+                count={@cart.total_items_in_cart || 0}
                 phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
               >
                 <.icon
                   class="text-base-content h-5 w-5 group-hover:text-base-content/60"
                   name="hero-shopping-bag"
                 />
-                <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
+                <%= if not is_nil(@cart.total_items_in_cart) && @cart.total_items_in_cart > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
                     <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
-                      {@order.total_items_in_cart}
+                      {@cart.total_items_in_cart}
                     </div>
                   </span>
                 <% end %>
@@ -330,8 +330,8 @@ defmodule EdenflowersWeb.Layouts do
                   class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex"
                   aria-hidden="true"
                 >
-                  <%= if not is_nil(@order.total_items_in_cart) do %>
-                    {~t"Cart"} ({@order.total_items_in_cart})
+                  <%= if not is_nil(@cart.total_items_in_cart) do %>
+                    {~t"Cart"} ({@cart.total_items_in_cart})
                   <% else %>
                     {~t"Cart"}
                   <% end %>

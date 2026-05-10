@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
+defmodule Edenflowers.Store.Cart.Changes.CalculateFulfillmentCost do
   @moduledoc """
   For `submit_delivery`, derives `fulfillment_amount` (and, for delivery,
   the geocoded fields) from the chosen `FulfillmentOption`. The

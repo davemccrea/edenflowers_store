@@ -1,4 +1,4 @@
-defmodule Edenflowers.Store.Order.Validations.ValidateFulfillmentDate do
+defmodule Edenflowers.Store.Cart.Validations.ValidateFulfillmentDate do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
