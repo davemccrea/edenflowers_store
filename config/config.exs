@@ -66,6 +66,8 @@ config :edenflowers,
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services]
 
+config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
+
 # Configure the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
   url: [host: "localhost"],
