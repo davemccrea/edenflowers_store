@@ -1,19 +1,32 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "Error: working directory is not clean — commit or stash changes first"
-  exit 1
+if [[ -t 1 ]]; then
+  BOLD=$'\033[1m'; DIM=$'\033[2m'; RESET=$'\033[0m'
+  RED=$'\033[31m'; GREEN=$'\033[32m'; CYAN=$'\033[36m'
+else
+  BOLD=""; DIM=""; RESET=""; RED=""; GREEN=""; CYAN=""
 fi
+
+section() { printf '\n%s▶ %s%s\n' "$BOLD$CYAN" "$1" "$RESET"; }
+ok()      { printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$1"; }
+fail()    { printf '  %s✗ %s%s\n' "$RED" "$1" "$RESET" >&2; exit 1; }
+
+section "Preflight checks"
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  fail "working directory is not clean — commit or stash changes first"
+fi
+ok "working tree clean"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "$BRANCH" != "main" ]]; then
-  echo "Error: must deploy from main (currently on $BRANCH)"
-  exit 1
+  fail "must deploy from main (currently on $BRANCH)"
 fi
+ok "on main"
 
-echo "Fetching origin to verify local main is up-to-date..."
-git fetch origin main --tags
+printf '  %sfetching origin...%s\n' "$DIM" "$RESET"
+git fetch --quiet origin main --tags
 
 LOCAL="$(git rev-parse main)"
 REMOTE="$(git rev-parse origin/main)"
@@ -21,19 +34,18 @@ BASE="$(git merge-base main origin/main)"
 
 if [[ "$LOCAL" != "$REMOTE" ]]; then
   if [[ "$LOCAL" == "$BASE" ]]; then
-    echo "Error: local main is behind origin/main — run 'git pull --ff-only' first"
+    fail "local main is behind origin/main — run 'git pull --ff-only' first"
   elif [[ "$REMOTE" == "$BASE" ]]; then
-    echo "Error: local main has unpushed commits — push them before deploying"
+    fail "local main has unpushed commits — push them before deploying"
   else
-    echo "Error: local main and origin/main have diverged — reconcile before deploying"
+    fail "local main and origin/main have diverged — reconcile before deploying"
   fi
-  exit 1
 fi
+ok "local main matches origin"
 
 CURRENT="$(grep -E 'version: "[0-9]+\.[0-9]+\.[0-9]+"' mix.exs | head -1 | sed -E 's/.*version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')"
 if [[ -z "$CURRENT" ]]; then
-  echo "Error: could not read current version from mix.exs"
-  exit 1
+  fail "could not read current version from mix.exs"
 fi
 
 IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
@@ -44,35 +56,31 @@ MAJOR_NEXT="$((MAJOR + 1)).0.0"
 VERSION="${1:-}"
 
 if [[ -z "$VERSION" ]]; then
+  section "Version selection"
+  printf '  current: %s%s%s\n\n' "$BOLD" "$CURRENT" "$RESET"
+  echo "  1) patch → $PATCH_NEXT  (bug fixes)"
+  echo "  2) minor → $MINOR_NEXT  (new features)"
+  echo "  3) major → $MAJOR_NEXT  (breaking changes)"
   echo
-  echo "Current version: $CURRENT"
-  echo
-  echo "Select release type:"
-  echo "  1) patch  → $PATCH_NEXT  (bug fixes)"
-  echo "  2) minor  → $MINOR_NEXT  (new features)"
-  echo "  3) major  → $MAJOR_NEXT  (breaking changes)"
-  echo
-  read -r -p "Choice [1]: " CHOICE
+  read -r -p "  Choice [1]: " CHOICE
   CHOICE="${CHOICE:-1}"
 
   case "$CHOICE" in
     1) VERSION="$PATCH_NEXT" ;;
     2) VERSION="$MINOR_NEXT" ;;
     3) VERSION="$MAJOR_NEXT" ;;
-    *) echo "Error: invalid choice"; exit 1 ;;
+    *) fail "invalid choice" ;;
   esac
 fi
 
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Error: version must be in semver format (e.g. 0.2.0)"
-  exit 1
+  fail "version must be in semver format (e.g. 0.2.0)"
 fi
 
 TAG="v$VERSION"
 
 if git rev-parse "$TAG" &>/dev/null; then
-  echo "Error: tag $TAG already exists"
-  exit 1
+  fail "tag $TAG already exists"
 fi
 
 if [[ -f .env ]]; then
@@ -81,30 +89,34 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-echo "Running precommit checks..."
+section "Running precommit checks"
 mix precommit
 
-sed -i '' "s/version: \"[0-9]*\.[0-9]*\.[0-9]*\"/version: \"$VERSION\"/" mix.exs
-
-echo "Updated mix.exs to version $VERSION"
+section "Tagging release"
+# Use -i.bak + rm so it works on both BSD sed (macOS) and GNU sed (Linux).
+sed -i.bak "s/version: \"[0-9]*\.[0-9]*\.[0-9]*\"/version: \"$VERSION\"/" mix.exs
+rm -f mix.exs.bak
+ok "mix.exs → $VERSION"
 
 git add mix.exs
-git commit -m "Bump version to $TAG"
+git commit --quiet -m "Bump version to $TAG"
+ok "commit created"
 git tag "$TAG"
+ok "tag $TAG created"
 
-echo
-echo "About to push to origin:"
-echo "  main → $(git rev-parse --short HEAD) ($(git log -1 --pretty=%s))"
+section "Ready to push"
+echo "  main → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
 echo "  tag  → $TAG"
 echo
-read -r -p "Proceed with push? [y/N] " REPLY
+read -r -p "  Proceed with push? [y/N] " REPLY
 if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
-  echo "Aborted. Cleaning up local commit and tag..."
-  git tag -d "$TAG"
-  git reset --hard HEAD~1
+  printf '\n  %saborted — cleaning up local commit and tag%s\n' "$DIM" "$RESET"
+  git tag -d "$TAG" >/dev/null
+  git reset --hard --quiet HEAD~1
   exit 1
 fi
 
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
-echo "Deployed $TAG — GitHub Actions will build and deploy the Docker image."
+printf '\n%s%s✓ Deployed %s%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
+  "$BOLD" "$GREEN" "$TAG" "$RESET" "$DIM" "$RESET"
