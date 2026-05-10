@@ -37,10 +37,13 @@ defmodule EdenflowersWeb.HomeLive do
           <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="hero-reveal" style="--reveal-delay: 280ms;">
-            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
-              {~t"Shop Now"} <span aria-hidden="true">→</span>
-            </.button>
+          <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
+            <.link
+              href="#store"
+              class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
+            >
+              {~t"Shop Now"}
+            </.link>
           </div>
         </div>
       </section>
@@ -130,14 +133,14 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <%!-- Pull quote --%>
-      <section class="bg-pastel-3 not-last:border-b">
+      <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
+          <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
           <.link
             navigate={~p"/about"}
-            class="eyebrow text-base-content link-underline-hover-nav"
+            class="eyebrow text-forest-content link-underline-hover-nav"
           >
             {~t"Learn more"}
           </.link>

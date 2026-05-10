@@ -4,80 +4,69 @@
 @source "../js";
 @source "../../lib/edenflowers_web";
 
-/* Add variants based on LiveView classes */
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 @theme {
-    --font-sans: "Open Sans", sans-serif;
-    --font-serif: "Crimson Text", serif;
-    --header-height: 8rem;
+  --font-sans: "Open Sans", sans-serif;
+  --font-serif: "Crimson Text", serif;
+  --header-height: 8rem;
 }
 
-/* Pastel palette — soft surfaces for banners, callouts, section backgrounds.
-   Use these for decorative backgrounds; use semantic tokens (primary, accent)
-   for brand-meaningful colors. `inline` lets us reference Tailwind's default
-   palette vars without CSS-variable scoping issues. */
-@theme inline {
-    --color-pastel-1: var(
-        --color-sky-100
-    ); /* cool blue   — announcements, info */
-    --color-pastel-2: var(--color-pink-100); /* soft pink   — footer, romance */
-    --color-pastel-3: var(
-        --color-amber-100
-    ); /* warm cream  — highlights, quotes */
-    --color-pastel-4: var(
-        --color-green-100
-    ); /* fresh green — nature, success-adjacent */
+/* Brand extension palette. daisyUI semantics (primary, base-*) handle
+   universal UI; these handle editorial surfaces specific to the brand.
+   Whole system sits in one warm family (hue ~75 paper / ~150 forest):
+     cream  — warm light surface (footer, callouts, banner, empty states)
+     forest — dark anchor for reverse-out sections
+   Surface + `-content` share hue and chroma, varying only in lightness. */
+@theme {
+  --color-cream: oklch(95% 0.025 75);
+  --color-cream-content: oklch(30% 0.05 60);
+
+  --color-forest: oklch(26% 0.05 152);
+  --color-forest-content: oklch(94% 0.02 80);
+
+  /* Single-role: link underlines on serif headings and nav. */
+  --color-link-underline: oklch(81% 0.15 93);
 }
 
-/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
-   The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
 
-/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
-   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
-   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+/* Update: curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+   Changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
-    themes: false;
+  themes: false;
 }
 
 @plugin "../vendor/daisyui-theme" {
-    name: "light";
-    default: true;
-    prefersdark: false;
-    color-scheme: "light";
-    --color-primary: oklch(0.3684 0.0478 156.76); /* brand primary */
-    --color-primary-content: oklch(0.97 0 0); /* neutral-100 */
-    --color-accent: var(--color-pink-100); /* same as --color-pastel-2 */
-    --color-accent-alt: oklch(
-        0.81 0.15 93
-    ); /* mustardy yellow — link underline on serif headings */
-    --color-accent-content: var(--color-base-content);
-    --color-base-100: white;
-    --color-base-200: oklch(98.5% 0.001 106.423); /* stone-50 */
-    --color-base-300: oklch(97% 0.001 106.424); /* stone-100 */
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-primary: oklch(0.3684 0.0478 156.76);
+  --color-primary-content: var(--color-neutral-100);
+  /* Warm neutral spine, hue ~75 — agrees with --color-cream and reads
+     as paper/oat across every section. */
+  --color-base-100: oklch(99% 0.004 75);
+  --color-base-200: oklch(97% 0.008 75);
+  --color-base-300: oklch(93.5% 0.012 75);
+  --color-base-content: oklch(22% 0.015 75);
 }
 
-/* Make LiveView wrapper divs transparent for layout */
 [data-phx-session],
 [data-phx-teleported-src] {
-    display: contents;
+  display: contents;
 }
 
-/* Pointer cursor on all interactive elements that don't already get it
-   from the browser or daisyUI — covers bare <button>, role="button" nodes,
-   <label> wrappers, and <summary> (used by the FAQ accordion). */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 label,
 summary {
-    cursor: pointer;
+  cursor: pointer;
 }
 
-/* Skip link — visually hidden until keyboard focus, then anchored top-left
-   above all content. WCAG 2.4.1 Bypass Blocks. */
+/* WCAG 2.4.1 Bypass Blocks — visually hidden until keyboard focus. */
 .skip-link {
   position: absolute;
   top: -100px;
@@ -95,482 +84,399 @@ summary {
   top: 0.5rem;
 }
 
-/* LiveView lifecycle feedback. The .phx-* classes are toggled by Phoenix:
-     phx-connected      — socket is connected (steady state)
-     phx-loading         — initial connect or reconnect in progress
-     phx-click-loading   — a phx-click handler is in flight
-     phx-submit-loading  — a form is submitting
-     phx-change-loading  — a phx-change handler is in flight
-   Subtle opacity drops give the user a "something's happening" cue without
-   blocking interaction. Respects prefers-reduced-motion. */
 @media (prefers-reduced-motion: no-preference) {
-    main {
-        transition: opacity 200ms ease-out;
-    }
-    .phx-loading main,
-    .phx-click-loading main {
-        opacity: 0.7;
-    }
-    .phx-submit-loading [type="submit"],
-    .phx-submit-loading button[phx-click] {
-        cursor: progress;
-    }
+  main {
+    transition: opacity 200ms ease-out;
+  }
+  .phx-loading main,
+  .phx-click-loading main {
+    opacity: 0.7;
+  }
+  .phx-submit-loading [type="submit"],
+  .phx-submit-loading button[phx-click] {
+    cursor: progress;
+  }
 }
 
-/* https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
+/* FOUC fix: https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
-    opacity: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+  opacity: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 body.ready {
-    transition: 0.25s opacity;
-    opacity: 1;
+  transition: 0.25s opacity;
+  opacity: 1;
 }
 
-/* Default smooth color & opacity transitions for header/nav links and icon
-   buttons. Keeps hover states from snapping while staying respectful of
-   motion-reduce users. Anything that opts out can override with
-   `transition-none`. */
 @media (prefers-reduced-motion: no-preference) {
-    a,
-    button,
-    .btn,
-    [role="button"] {
-        transition-property:
-            color, background-color, border-color, opacity, box-shadow,
-            transform;
-        transition-duration: 150ms;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    }
+  a,
+  button,
+  .btn,
+  [role="button"] {
+    transition-property: color, background-color, border-color, opacity,
+      box-shadow, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
-/*
-  Footer grid layout — "draw" the layout per breakpoint:
-
-  mobile:         sm:                   lg:
-  ┌────────────┐  ┌──────────┬────────┐  ┌────────────┬──────────┬────────┐
-  │ newsletter │  │newsletter│location│  │ newsletter │ location │socials │
-  ├────────────┤  │          ├────────┤  │            ├──────────┴────────┤
-  │  location  │  │          │ hours  │  │            │       hours       │
-  ├────────────┤  ├──────────┴────────┤  └────────────┴───────────────────┘
-  │   hours    │  │      socials      │
-  ├────────────┤  └───────────────────┘
-  │  socials   │
-  └────────────┘
-*/
 .footer-grid {
-    display: grid;
-    gap: 3rem;
-    grid-template-areas:
-        "newsletter"
-        "location"
-        "hours"
-        "socials";
+  display: grid;
+  gap: 3rem;
+  grid-template-areas:
+    "newsletter"
+    "location"
+    "hours"
+    "socials";
 }
 
 .footer-grid__newsletter {
-    grid-area: newsletter;
+  grid-area: newsletter;
 }
 .footer-grid__location {
-    grid-area: location;
+  grid-area: location;
 }
 .footer-grid__hours {
-    grid-area: hours;
+  grid-area: hours;
 }
 .footer-grid__socials {
-    grid-area: socials;
+  grid-area: socials;
 }
 
 @media (width >= theme(--breakpoint-sm)) {
-    .footer-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas:
-            "newsletter  location"
-            "newsletter  hours"
-            "socials     socials";
-    }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location"
+      "newsletter  hours"
+      "socials     socials";
+  }
 }
 
 @media (width >= theme(--breakpoint-lg)) {
-    .footer-grid {
-        grid-template-columns: 2fr 1fr 1fr;
-        grid-template-areas:
-            "newsletter  location  socials"
-            "newsletter  hours     socials";
-    }
+  .footer-grid {
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location  socials"
+      "newsletter  hours     socials";
+  }
 }
 
 .checkout__section {
-    @apply flex flex-col gap-8 mb-12;
-    scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
+  @apply flex flex-col gap-8 mb-12;
+  scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
 }
 
 .checkout__form {
-    @apply flex flex-col space-y-6;
+  @apply flex flex-col space-y-6;
 }
 
 .disable-dbl-tap-zoom {
-    touch-action: manipulation;
+  touch-action: manipulation;
 }
 
-/* ── Toast (flash) ─────────────────────────────────────────────────────────
-   System feedback styled as quiet rectangles. Surface is intentionally
-   plain — no texture, no decoration — so the eye reads the message, not
-   the chrome. Severity is signalled by a single small dot before the
-   eyebrow. The card drifts in from above-right and lifts on dismiss.
-   See lib/edenflowers_web/components/core_components.ex (flash_group/1). */
-
+/* Toast (flash) — see core_components.ex (flash_group/1). */
 @keyframes toast-drop-in {
-    from {
-        opacity: 0;
-        transform: translate(1.25rem, -0.75rem) rotate(2.5deg);
-    }
-    60% {
-        opacity: 1;
-    }
-    to {
-        opacity: 1;
-        transform: translate(0, 0) rotate(0);
-    }
+  from {
+    opacity: 0;
+    transform: translate(1.25rem, -0.75rem) rotate(2.5deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
 }
 
 @keyframes toast-lift-out {
-    from {
-        opacity: 1;
-        transform: translate(0, 0) rotate(0);
-    }
-    to {
-        opacity: 0;
-        transform: translate(0.5rem, -0.5rem) rotate(-1.5deg);
-    }
+  from {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(0.5rem, -0.5rem) rotate(-1.5deg);
+  }
 }
 
 .toast-item {
-    position: relative;
-    width: 22rem;
-    background: oklch(99% 0.003 80);
-    color: oklch(25% 0.015 60);
-    /* A firm 1px hairline matching the site's section dividers (header,
-     footer, banner). Same lightness as the rest of the site's strong
-     edges — gives the card real architecture instead of floating UI. */
-    border: 1px solid oklch(21% 0.006 286);
-    border-radius: 0;
-    /* Soft warm drop shadow for depth; the hairline does the edge-definition
-     work that a faint shadow would otherwise have to. */
-    box-shadow:
-        0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
-        0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
-    transform-origin: 100% 0;
-    animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  position: relative;
+  width: 22rem;
+  background: oklch(99% 0.003 80);
+  color: oklch(25% 0.015 60);
+  border: 1px solid oklch(21% 0.006 286);
+  border-radius: 0;
+  box-shadow:
+    0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
+    0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
+  transform-origin: 100% 0;
+  animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .toast-item[data-dismissing] {
-    animation: toast-lift-out 280ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
+  animation: toast-lift-out 280ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
 }
 
-/* Severity ground — a soft, high-lightness tint that fills the heading
-   band. Values are intentionally in the L 92–94% range so the band reads
-   as a watercolor wash rather than a saturated alert color. The eyebrow
-   text sits on top in its normal warm-grey; we don't tint the type. */
 .toast-item[data-key="error"] {
-    --toast-ground: oklch(93% 0.04 30);
+  --toast-ground: oklch(93% 0.04 30);
 }
 .toast-item[data-key="warning"] {
-    --toast-ground: oklch(94% 0.05 85);
+  --toast-ground: oklch(94% 0.05 85);
 }
 .toast-item[data-key="success"] {
-    --toast-ground: oklch(94% 0.04 155);
+  --toast-ground: oklch(94% 0.04 155);
 }
 .toast-item[data-key="info"] {
-    --toast-ground: oklch(94% 0.025 220);
+  --toast-ground: oklch(94% 0.025 220);
 }
 
-/* Heading band — full-width tinted region containing the eyebrow label
-   and dismiss control. The bottom edge uses the same near-black hairline
-   as the rest of the card and the site's section dividers, so the band
-   reads as an architectural row, not a colored ribbon stuck on top. */
 .toast-item__head {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.55rem 0.75rem 0.55rem 1.25rem;
-    background: var(--toast-ground, oklch(94% 0.04 155));
-    border-bottom: 1px solid oklch(21% 0.006 286);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem 0.55rem 1.25rem;
+  background: var(--toast-ground, oklch(94% 0.04 155));
+  border-bottom: 1px solid oklch(21% 0.006 286);
 }
 
 .toast-item__eyebrow {
-    font-family: var(--font-sans);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: oklch(28% 0.02 60);
-    line-height: 1.3;
-    flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: oklch(28% 0.02 60);
+  line-height: 1.3;
+  flex: 1;
 }
 
 .toast-item__body {
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: oklch(35% 0.015 60);
-    /* Body region has its own quiet padding, distinct from the heading
-     band's padding — establishes the two-region structure clearly. */
-    padding: 0.85rem 1.25rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: oklch(35% 0.015 60);
+  padding: 0.85rem 1.25rem 1rem;
 }
 
 .toast-item__dismiss {
-    display: grid;
-    place-items: center;
-    padding: 0.25rem;
-    color: oklch(35% 0.02 60);
-    cursor: pointer;
-    transition: color 150ms ease;
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  color: oklch(35% 0.02 60);
+  cursor: pointer;
+  transition: color 150ms ease;
 }
 .toast-item__dismiss:hover {
-    color: oklch(15% 0.02 60);
+  color: oklch(15% 0.02 60);
 }
-/* The heroicons plugin renders icons as a span with a mask. 14px reads
-   as a quiet close affordance; the surrounding padding keeps a
-   comfortable click target. */
 .toast-item__dismiss .hero-x-mark,
 .toast-item__dismiss .hero-x-mark-mini {
-    width: 0.875rem;
-    height: 0.875rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .toast-item,
-    .toast-item[data-dismissing] {
-        animation: none;
-    }
+  .toast-item,
+  .toast-item[data-dismissing] {
+    animation: none;
+  }
 }
 
 @utility container {
-    @apply mx-auto px-4 sm:px-8;
+  @apply mx-auto px-4 sm:px-8;
 }
 
-/* Typography scale — keep all font-serif headings on these utilities so the
-   visual rhythm stays in one place. Crimson Text needs slightly tighter
-   tracking and leading at display sizes; tile/card titles get `tracking-wide`
-   for a calmer, more "boutique" feel at smaller sizes. */
 @utility hero-heading {
-    @apply font-serif text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl md:text-7xl;
+  @apply font-serif text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl md:text-7xl;
 }
 
 @utility hero-heading-overlay {
-    @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
+  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
 }
 
-/* Editorial display size — used for marquee headlines (e.g. the home hero).
-   Sized for a confident two-line wrap at desktop without crowding the photo
-   subject. Mobile leading is loosened so 2–3 line wraps don't feel cramped;
-   negative tracking only kicks in at the largest sizes. */
 @utility hero-display {
-    @apply font-serif font-light text-5xl leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
+  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
-    @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1];
+  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1];
 }
 
 @utility section-title {
-    @apply font-serif text-3xl leading-tight tracking-tight md:text-4xl;
+  @apply font-serif text-3xl leading-tight tracking-tight md:text-4xl;
 }
 
 @utility tile-title {
-    @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
 }
 
 @utility card-title {
-    @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {
-    @apply font-serif text-3xl font-light leading-[1.25] tracking-tight md:text-4xl md:leading-[1.2];
+  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight md:text-4xl md:leading-[1.2];
 }
 
 @utility footer-line {
-    @apply font-serif text-lg leading-snug;
+  @apply font-serif text-lg leading-snug;
 }
 
 @utility eyebrow {
-    @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
+  @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
 }
 
 @utility logo-wordmark {
-    @apply font-sans font-bold uppercase tracking-[0.18em];
+  @apply font-sans font-bold uppercase tracking-[0.18em];
 }
 
-/* Link underlines — unified policy.
-
-   Thickness is fixed in px (3 for display, 2 for nav) rather than
-   `from-font` — we want a deliberate brand stroke, not a typeface-quiet
-   line. Offsets are em-based so the gap tracks text size.
-
-   Three buckets, sized by the text they decorate:
-     -display  for serif headings (text-2xl+): card titles, drawer links
-     -nav      for small UI labels (text-xs..sm): header nav, footer
-     -body     for inline prose links — dimmed, always visible */
+/* Link underlines: thickness fixed in px (deliberate brand stroke, not
+   `from-font`); em offsets track text size. Three buckets:
+     -display  serif headings (text-2xl+)
+     -nav      small UI labels (text-xs..sm)
+     -body     inline prose links — dimmed, always visible */
 @utility link-underline-hover-display {
-    @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.3em] hover:underline;
-    text-decoration-thickness: 3px;
+  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.3em] hover:underline;
+  text-decoration-thickness: 3px;
 }
 
 @utility link-underline-group-hover-display {
-    @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.3em] group-hover:underline;
-    text-decoration-thickness: 3px;
+  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.3em] group-hover:underline;
+  text-decoration-thickness: 3px;
 }
 
 @utility link-underline-hover-nav {
-    @apply no-underline decoration-(--color-accent-alt) underline-offset-[0.25em] hover:underline;
-    text-decoration-thickness: 2px;
+  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.25em] hover:underline;
+  text-decoration-thickness: 2px;
 }
 
-/* Body: dimmed, always-visible underline for inline prose links.
-   Stays at `from-font` thickness — body links should defer to the reading
-   flow, not interrupt it. This is the one place restraint wins. */
 @utility link-underline-static-body {
-    @apply underline underline-offset-[0.2em];
-    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
-    text-decoration-thickness: from-font;
+  @apply underline underline-offset-[0.2em];
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-decoration-thickness: from-font;
 }
 
 #hotfx-shy-header {
-    display: flex;
-    position: fixed;
-    top: 0;
-    z-index: 50;
-    width: 100vw;
-    transition: transform 0.2s ease-out;
+  display: flex;
+  position: fixed;
+  top: 0;
+  z-index: 50;
+  width: 100vw;
+  transition: transform 0.2s ease-out;
 }
 
 #hotfx-shy-header.hidden {
-    transform: translateY(-100%);
+  transform: translateY(-100%);
 }
 
-/* Hero entrance — staggered fade-up. Each element sets its own
-   `--reveal-delay` inline. Respects prefers-reduced-motion: when the user
-   has reduced motion on, elements appear immediately at their final state. */
+/* Each element sets its own `--reveal-delay` inline. */
 .hero-reveal {
-    opacity: 0;
-    transform: translateY(12px);
-    animation: hero-reveal-fade 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: var(--reveal-delay, 0ms);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: hero-reveal-fade 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 @keyframes hero-reveal-fade {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-    .hero-reveal {
-        opacity: 1;
-        transform: none;
-        animation: none;
-    }
+  .hero-reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
-/* Embla Carousel — Featured Blooms.
-   Embla is headless: container must be flex, slides must be flex-none, the
-   rest is ours. Slide widths track the old Tailwind breakpoint widths
-   (xs:w-1/2, sm:w-72) but with sensible mobile defaults.
-   Hook: assets/js/hooks.js (Hooks.FeaturedCarousel) */
+/* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */
 .embla__viewport {
-    overflow: hidden;
-    /* Mobile edge-bleed: break out of the parent container so the active slide
-     reaches the viewport edges. Above sm we sit inside the container again. */
-    margin-inline: calc(50% - 50vw);
+  overflow: hidden;
+  /* Mobile edge-bleed: break out of the parent container to viewport edges. */
+  margin-inline: calc(50% - 50vw);
 }
 @media (min-width: 640px) {
-    .embla__viewport {
-        margin-inline: 0;
-    }
+  .embla__viewport {
+    margin-inline: 0;
+  }
 }
 .embla__container {
-    display: flex;
-    gap: 0.5rem; /* matches the old space-x-2 */
-    padding: 0.5rem;
-    /* Touch action lets vertical page scroll co-exist with Embla's horizontal drag. */
-    touch-action: pan-y pinch-zoom;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  /* Lets vertical page scroll co-exist with Embla's horizontal drag. */
+  touch-action: pan-y pinch-zoom;
 }
 .embla__slide {
-    /* Mobile: active card dominates with a small peek on each side. The hook
-     writes --embla-progress (0 = focused, 1 = at neighbour snap) on every
-     scroll frame; CSS scales/fades neighbours so the focused card pops. */
-    flex: 0 0 85%;
-    min-width: 0;
-    --embla-progress: 0;
-    transform: scale(calc(1 - var(--embla-progress) * 0.08));
-    opacity: calc(1 - var(--embla-progress) * 0.45);
-    transform-origin: center;
-    will-change: transform, opacity;
+  /* Hook writes --embla-progress (0 = focused, 1 = at neighbour snap) on
+       every scroll frame; CSS scales/fades neighbours so the focused card pops. */
+  flex: 0 0 85%;
+  min-width: 0;
+  --embla-progress: 0;
+  transform: scale(calc(1 - var(--embla-progress) * 0.08));
+  opacity: calc(1 - var(--embla-progress) * 0.45);
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 @media (min-width: 480px) {
-    .embla__slide {
-        flex-basis: 50%;
-    }
+  .embla__slide {
+    flex-basis: 50%;
+  }
 }
 @media (min-width: 640px) {
-    /* Above sm we show multiple cards in a row — kill the focal-point effect
-     so every visible card reads equally. */
-    .embla__slide {
-        flex-basis: 18rem; /* sm:w-72 = 18rem */
-        transform: none;
-        opacity: 1;
-    }
+  /* Multi-card row — drop the focal-point effect. */
+  .embla__slide {
+    flex-basis: 18rem;
+    transform: none;
+    opacity: 1;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-    /* Reduced motion: drop the scale/fade so the carousel is a flat strip. */
-    .embla__slide {
-        transform: none;
-        opacity: 1;
-    }
+  .embla__slide {
+    transform: none;
+    opacity: 1;
+  }
 }
 
-/* Dots — sit in the site's muted-UI register (base-content/15 and /60),
-   matching how the calendar and secondary text use base-content opacities.
-   Quiet enough to read as a typographic mark rather than UI chrome. */
 .embla__dot {
-    width: 0.3125rem; /* 5px */
-    height: 0.3125rem;
-    border-radius: 9999px;
-    background: color-mix(in oklab, var(--color-base-content) 15%, transparent);
-    border: 0;
-    padding: 0;
-    cursor: pointer;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 .embla__dot--selected {
-    background: color-mix(in oklab, var(--color-base-content) 60%, transparent);
-    width: 0.875rem; /* 14px — pill stretches ~2.8× wider than tall */
+  background: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  width: 0.875rem;
 }
 @media (prefers-reduced-motion: no-preference) {
-    .embla__dot {
-        transition:
-            background-color 200ms ease,
-            width 200ms ease;
-    }
+  .embla__dot {
+    transition:
+      background-color 200ms ease,
+      width 200ms ease;
+  }
 }
 
-/* Disabled prev/next on edges fades visually but stays in tab order.
-   `:where` keeps the daisyUI .btn rules from out-specifying us. */
+/* `:where` keeps daisyUI .btn rules from out-specifying us. */
 :where(.embla__prev, .embla__next):disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    pointer-events: none;
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
-/* Hide arrows + dots when the carousel has nothing to scroll (all slides
-   fit in view). The hook toggles .embla--no-scroll on the enclosing
-   <section> from onSelect, which fires on init, scroll, and reInit. */
+/* Hook toggles .embla--no-scroll when all slides fit in view. */
 .embla--no-scroll :where(.embla__prev, .embla__next, .embla__dots) {
-    display: none;
+  display: none;
 }
 
 .auth-background-pattern {
-    background-color: #fafaf9;
-    background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-color: #fafaf9;
+  background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
