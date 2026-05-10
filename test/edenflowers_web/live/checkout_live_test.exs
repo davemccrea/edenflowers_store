@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
   import Generator
   import Mox
+  import ExUnit.CaptureLog
 
   alias Edenflowers.Store.{Order, LineItem}
 
@@ -539,7 +540,13 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
         |> Ash.update!(authorize?: false)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
-      assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+
+      log =
+        capture_log(fn ->
+          assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+        end)
+
+      assert log =~ "Cart is empty"
 
       reloaded = Order.get_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []
