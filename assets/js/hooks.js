@@ -31,7 +31,9 @@ Hooks.FeaturedCarousel = {
 
     // Reduced-motion users skip the per-frame focal-point work entirely.
     // The breakpoint above which the effect is disabled is handled in CSS.
-    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
     // full page of cards on desktop.
@@ -106,7 +108,10 @@ Hooks.FeaturedCarousel = {
         // we update everyone so freshly-revealed slides paint correctly.
         if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
         const progress = Math.min(Math.abs(diffToTarget * this.tweenFactor), 1);
-        slideNodes[slideIndex].style.setProperty("--embla-progress", progress.toFixed(3));
+        slideNodes[slideIndex].style.setProperty(
+          "--embla-progress",
+          progress.toFixed(3),
+        );
       });
     });
   },
@@ -122,7 +127,7 @@ Hooks.FeaturedCarousel = {
     this.dotsNode.innerHTML = snapList
       .map(
         (_, i) =>
-          `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`
+          `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`,
       )
       .join("");
     this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
@@ -139,7 +144,9 @@ Hooks.FeaturedCarousel = {
       node.setAttribute("aria-current", isSelected ? "true" : "false");
     });
     const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
-    this.el.closest("section")?.classList.toggle("embla--no-scroll", !canScroll);
+    this.el
+      .closest("section")
+      ?.classList.toggle("embla--no-scroll", !canScroll);
     if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
     if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
   },
@@ -174,7 +181,7 @@ Hooks.FocusElement = {
       const firstForm = this.el.querySelector('[id$="-form-1"]');
       if (firstForm) {
         const firstInput = firstForm.querySelector(
-          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
         );
         if (firstInput) {
           /** @type {HTMLElement} */ (firstInput).focus();
@@ -196,10 +203,12 @@ Hooks.FocusElement = {
         // preventScroll keeps keyboard focus working without overriding the
         // scroll position we just set above.
         const firstInput = element.querySelector(
-          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
         );
         if (firstInput) {
-          /** @type {HTMLElement} */ (firstInput).focus({ preventScroll: true });
+          /** @type {HTMLElement} */ (firstInput).focus({
+            preventScroll: true,
+          });
         }
       });
     });
@@ -575,9 +584,11 @@ Hooks.Stripe = {
    */
   buildAppearance() {
     const css = getComputedStyle(document.documentElement);
-    const v = (name, fallback = "") => css.getPropertyValue(name).trim() || fallback;
+    const v = (name, fallback = "") =>
+      css.getPropertyValue(name).trim() || fallback;
 
     const baseContent = v("--color-base-content", "#1f2937");
+    const base100 = v("--color-base-100", "#ffffff");
     const primary = v("--color-primary", "#0570de");
     const error = v("--color-error", "#dc2626");
 
@@ -587,7 +598,7 @@ Hooks.Stripe = {
       theme: "flat",
       variables: {
         colorPrimary: primary,
-        colorBackground: v("--color-base-100", "#ffffff"),
+        colorBackground: base100,
         colorText: baseContent,
         colorDanger: error,
         fontFamily: v("--font-sans", "system-ui, sans-serif"),
@@ -598,6 +609,7 @@ Hooks.Stripe = {
       },
       rules: {
         ".Input": {
+          backgroundColor: base100,
           border: `1px solid ${subtleBorder}`,
           boxShadow: "none",
           fontSize: "18px",
@@ -607,16 +619,19 @@ Hooks.Stripe = {
           padding: "10.5px 12px",
         },
         ".Input:focus": {
+          backgroundColor: base100,
           border: `1px solid ${baseContent}`,
           outline: `2px solid ${baseContent}`,
           outlineOffset: "2px",
           boxShadow: "none",
         },
         ".Input--invalid": {
+          backgroundColor: base100,
           border: `1px solid ${error}`,
           boxShadow: "none",
         },
         ".Input--invalid:focus": {
+          backgroundColor: base100,
           border: `1px solid ${error}`,
           outline: `2px solid ${error}`,
           outlineOffset: "2px",
@@ -643,8 +658,12 @@ Hooks.Stripe = {
 };
 
 Hooks.FlashHandler = {
-  mounted() { this.initAlerts(); },
-  updated() { this.initAlerts(); },
+  mounted() {
+    this.initAlerts();
+  },
+  updated() {
+    this.initAlerts();
+  },
 
   initAlerts() {
     for (const el of Array.from(this.el.children)) {
@@ -652,8 +671,9 @@ Hooks.FlashHandler = {
       el.dataset.initialized = "true";
       const key = el.dataset.key;
       const duration = parseInt(el.dataset.duration || "5000", 10);
-      el.querySelector("[data-dismiss]")
-        ?.addEventListener("click", () => this.dismiss(el, key));
+      el.querySelector("[data-dismiss]")?.addEventListener("click", () =>
+        this.dismiss(el, key),
+      );
       if (duration > 0) setTimeout(() => this.dismiss(el, key), duration);
     }
   },
