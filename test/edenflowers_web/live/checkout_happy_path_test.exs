@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   import Swoosh.TestAssertions
   import ExUnit.CaptureLog
 
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.Order
 
   setup :verify_on_exit!
 
@@ -28,11 +28,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     order = generate(order())
 
-    LineItem.add_item!(%{
-      order_id: order.id,
-      product_variant_id: variant.id,
-      quantity: 1
-    })
+    Order.add_line_item!(order, variant.id, 1, authorize?: false)
 
     payment_intent = %{
       id: "pi_test_#{:rand.uniform(1_000_000)}",
