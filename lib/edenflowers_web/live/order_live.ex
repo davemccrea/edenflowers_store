@@ -11,7 +11,8 @@ defmodule EdenflowersWeb.OrderLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1>{~t"Order #1234"}</h1>
+        <p class="eyebrow text-base-content/60 mb-8 md:mb-12">{~t"Your account"}</p>
+        <h1 class="page-title">{~t"Order #1234"}</h1>
       </.container>
     </Layouts.app>
     """

@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.HomeLive do
           </h1>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.link
-              href="#store"
+              navigate={~p"/store"}
               class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
             >
               {~t"Shop Now"}

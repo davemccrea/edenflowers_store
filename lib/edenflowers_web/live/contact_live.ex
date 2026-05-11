@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.ContactLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
+        <p class="eyebrow text-base-content/60 mb-8 md:mb-12">{~t"Visit us"}</p>
         <h1 class="page-title">{~t"Contact"}</h1>
       </.container>
     </Layouts.app>
