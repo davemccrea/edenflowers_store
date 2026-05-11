@@ -10,8 +10,23 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Edenflowers.Accounts.User
+alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
+
+# Admin user. `admin` is writable?: false on the resource so normal Ash actions
+# can't set it — raw SQL is the appropriate escape hatch for seed setup.
+admin_email = "mail@dmccrea.me"
+admin_name = "David McCrea"
+
+case Repo.query!("SELECT id FROM users WHERE email = $1", [admin_email]).rows do
+  [] ->
+    Ash.Seed.seed!(User, %{email: admin_email, name: admin_name, admin: true})
+
+  [[_id]] ->
+    Repo.query!("UPDATE users SET admin = true, name = $1 WHERE email = $2", [admin_name, admin_email])
+end
 
 tax_rate =
   TaxRate
