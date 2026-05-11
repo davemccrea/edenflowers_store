@@ -129,6 +129,7 @@ body.ready {
     "newsletter"
     "location"
     "hours"
+    "help"
     "socials";
 }
 
@@ -141,6 +142,9 @@ body.ready {
 .footer-grid__hours {
   grid-area: hours;
 }
+.footer-grid__help {
+  grid-area: help;
+}
 .footer-grid__socials {
   grid-area: socials;
 }
@@ -151,16 +155,16 @@ body.ready {
     grid-template-areas:
       "newsletter  location"
       "newsletter  hours"
-      "socials     socials";
+      "help        socials";
   }
 }
 
 @media (width >= theme(--breakpoint-lg)) {
   .footer-grid {
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
     grid-template-areas:
-      "newsletter  location  socials"
-      "newsletter  hours     socials";
+      "newsletter  location  help  socials"
+      "newsletter  hours     help  socials";
   }
 }
 

@@ -374,6 +374,27 @@ defmodule EdenflowersWeb.Layouts do
               </div>
             </div>
 
+            <div class="footer-grid__help space-y-2">
+              <h3 class="eyebrow text-base-content/60">{~t"Help"}</h3>
+              <ul class="space-y-1">
+                <li>
+                  <.link navigate={~p"/faq"} class="footer-line link-underline-hover-nav">
+                    {~t"FAQ"}
+                  </.link>
+                </li>
+                <li>
+                  <.link navigate={~p"/contact"} class="footer-line link-underline-hover-nav">
+                    {~t"Contact"}
+                  </.link>
+                </li>
+                <li>
+                  <.link navigate={~p"/about"} class="footer-line link-underline-hover-nav">
+                    {~t"About"}
+                  </.link>
+                </li>
+              </ul>
+            </div>
+
             <div class="footer-grid__socials space-y-2">
               <h3 class="eyebrow text-base-content/60">{~t"Socials"}</h3>
               <.social_media_links size={6} />
@@ -383,20 +404,6 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="container">
-        <nav
-          aria-label={~t"Help links"}
-          class="flex flex-col items-center gap-4 pt-10 pb-8 sm:flex-row sm:justify-center sm:gap-8"
-        >
-          <.link navigate={~p"/faq"} class="link-underline-hover-nav text-sm">
-            {~t"Frequently asked questions"}
-          </.link>
-          <.link navigate={~p"/contact"} class="link-underline-hover-nav text-sm">
-            {~t"Contact"}
-          </.link>
-        </nav>
-
-        <div class="border-base-content/12 border-t"></div>
-
         <div class="flex flex-col items-center gap-4 py-6 sm:flex-row sm:justify-between">
           <.locale_picker id="locale-picker-footer" current_path={@current_path}>
             <span class="group inline-flex cursor-pointer items-center gap-1">
