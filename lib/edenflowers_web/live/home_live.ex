@@ -92,6 +92,44 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
+      <%!-- Location --%>
+      <section class="not-last:border-b" aria-labelledby="location-heading">
+        <div class="container py-24 md:py-32">
+          <div class="grid grid-cols-1 items-start gap-16 md:grid-cols-[1.4fr_1fr] md:gap-20">
+            <div class="flex flex-col gap-6">
+              <p class="eyebrow text-base-content/60">{~t"Eden Flowers · Vaasa"}</p>
+              <h2 id="location-heading" class="section-title max-w-[14ch]">
+                {~t"A florist in Vaasa, Finland."}
+              </h2>
+              <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+                {~t"Hand-arranged flowers from our shop on Kauppapuistikko. We deliver across the Vaasa region — call ahead for pickup, or we'll bring them to your door."}
+              </p>
+              <nav aria-label={~t"Location links"} class="flex flex-wrap gap-x-8 gap-y-3 pt-2">
+                <.link navigate={~p"/contact"} class="link-underline-hover-nav">
+                  {~t"Visit the shop"}
+                </.link>
+                <.link navigate={~p"/faq"} class="link-underline-hover-nav">
+                  {~t"Delivery info"}
+                </.link>
+              </nav>
+            </div>
+
+            <aside class="border-base-content/12 flex flex-col items-center gap-6 border px-8 py-12 text-center md:py-16">
+              <p class="eyebrow text-base-content/70">{~t"Vaasa · Finland"}</p>
+              <div class="font-serif text-base-content/80 flex flex-col gap-1 text-lg leading-snug">
+                <span>63.0951° N</span>
+                <span>21.6165° E</span>
+              </div>
+              <div class="bg-base-content/20 h-px w-10"></div>
+              <address class="font-serif text-base-content flex flex-col gap-1 text-lg not-italic leading-snug">
+                <span>Kauppapuistikko 21</span>
+                <span>65100 Vaasa</span>
+              </address>
+            </aside>
+          </div>
+        </div>
+      </section>
+
       <%!-- Pull quote --%>
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
