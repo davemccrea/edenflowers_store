@@ -1265,7 +1265,7 @@ defmodule Edenflowers.Store.OrderTest do
   describe "Card line items via Order" do
     setup do
       tax_rate = generate(tax_rate())
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
 
       card_product =
         generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id, draft: false))

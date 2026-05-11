@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   } do
     # Seed a cards category + card product/variant so the card drawer has
     # something to pick.
-    cards_category = generate(product_category(slug: "cards", draft: false))
+    cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
 
     card_product =
@@ -425,7 +425,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   end
 
   test "selecting a card preserves the unsaved recipient name on step 2", %{conn: conn} do
-    cards_category = generate(product_category(slug: "cards", draft: false))
+    cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
 
     card_product =

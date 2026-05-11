@@ -231,7 +231,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   describe "Card selection" do
     setup %{order: order} do
       # Create a "cards" category with a card product (with a variant)
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       tax_rate_ = generate(tax_rate())
 
       card_product =
@@ -468,7 +468,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
   describe "Cart-empty reset" do
     setup %{order: order} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       tax_rate_ = generate(tax_rate())
 
       card_product =
