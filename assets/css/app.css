@@ -485,6 +485,51 @@ body.ready {
   display: block;
 }
 
+/* "Favourite" mark on the product photograph — top-right corner, hairline
+   frame with a softly translucent backdrop so the label sits *on* the
+   photograph rather than burned into it. */
+.product-mark {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  padding: 0.4rem 0.75rem;
+  background: color-mix(in oklab, var(--color-base-100) 85%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--color-base-content) 55%, transparent);
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+.product-mark__eyebrow {
+  @apply eyebrow;
+  color: var(--color-base-content);
+  font-size: 0.6875rem;
+}
+
+/* Size picker on product page — three serif words in a row, the active
+   one anchored by a honey underline. Same vocabulary as .category-index. */
+.size-option__label {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.15em;
+}
+.size-option[data-active="true"] .size-option__label {
+  text-decoration: underline;
+  text-decoration-color: var(--color-link-underline);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.3em;
+}
+.size-option:not([data-active="true"]):hover .size-option__label,
+.size-option:has(input:focus-visible) .size-option__label {
+  text-decoration: underline;
+  text-decoration-color: var(--color-link-underline);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.3em;
+}
+.size-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-link-underline);
+  outline-offset: 0.5rem;
+}
+
 /* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */
 .embla__viewport {
   overflow: hidden;
