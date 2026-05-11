@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.FaqLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">{~t"Frequently asked questions"}</h1>
+        <h1 class="page-title mb-16 md:mb-20">{~t"Frequently Asked Questions"}</h1>
 
         <dl class="faq-list max-w-3xl">
           <div class="faq-list__item">
