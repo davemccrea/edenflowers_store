@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.StoreLive do
       ProductCategory.get_all!()
       |> Ash.load!(:translations)
       |> Enum.map(&AshTranslation.translate(&1, locale))
+      |> Enum.with_index(1)
 
     category_slug = Map.get(params, "category")
 
@@ -49,30 +50,29 @@ defmodule EdenflowersWeb.StoreLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <.breadcrumb>
-          <:item navigate={~p"/"} label={~t"Home"} />
-          <:item navigate={~p"/store"} label={~t"Store"} />
-          <:item label={@selected_category.name} />
-        </.breadcrumb>
+        <p class="eyebrow text-base-content/60 mb-8 md:mb-12">{~t"The Store"}</p>
+        <h1 class="sr-only">{~t"Store"}</h1>
 
-        <div class="mb-10 max-w-2xl">
-          <h1 class="page-title text-base-content mb-3">
-            {@selected_category.name}
-          </h1>
-          <p class="text-base-content/70 leading-relaxed sm:text-lg">
-            {@selected_category.description}
-          </p>
-        </div>
-
-        <nav aria-label={~t"Categories"} class="mb-10 flex flex-wrap gap-3">
-          <.button
-            :for={category <- @categories}
-            navigate={~p"/store/#{category.slug}"}
-            variant={if(@selected_category.id == category.id, do: "primary", else: nil)}
-            aria-current={@selected_category.id == category.id && "page"}
-          >
-            {category.name}
-          </.button>
+        <nav aria-label={~t"Categories"} class="category-index mb-20 md:mb-28">
+          <ol class="category-index__list">
+            <li
+              :for={{category, idx} <- @categories}
+              class="category-index__item"
+              data-active={@selected_category.id == category.id && "true"}
+            >
+              <.link
+                navigate={~p"/store/#{category.slug}"}
+                class="category-index__link group"
+                aria-current={@selected_category.id == category.id && "page"}
+              >
+                <span class="category-index__numeral" aria-hidden="true">
+                  {String.pad_leading(Integer.to_string(idx), 2, "0")}
+                </span>
+                <span class="category-index__name">{category.name}</span>
+                <span class="category-index__description">{category.description}</span>
+              </.link>
+            </li>
+          </ol>
         </nav>
 
         <%= if Enum.empty?(@products) do %>
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.StoreLive do
           </div>
         <% else %>
           <ul
-            class="grid gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3 xl:gap-x-8 xl:gap-y-14"
+            class="grid gap-x-6 gap-y-16 md:grid-cols-2 md:gap-y-20 xl:grid-cols-3 xl:gap-x-8"
             role="list"
           >
             <li :for={product <- @products}>
