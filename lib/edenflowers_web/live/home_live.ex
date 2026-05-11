@@ -93,18 +93,19 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <%!-- Location: copy anchored to container left, map bleeds to viewport right --%>
-      <section class="bg-cream overflow-hidden not-last:border-b" aria-labelledby="location-heading">
-        <div class="grid grid-cols-1 items-center gap-12 md:grid-cols-[1fr_1.1fr] md:gap-16 lg:gap-24">
+      <section
+        class="bg-cream overflow-hidden not-last:border-b"
+        aria-labelledby="location-heading"
+      >
+        <div class="grid grid-cols-1 items-start gap-12 md:grid-cols-2 md:gap-16 lg:gap-24">
           <div class="container py-20 md:py-28 md:pr-0">
-            <div class="flex flex-col gap-7 md:max-w-[34ch] md:ml-auto md:pl-8">
-              <p class="eyebrow text-base-content/60">{~t"Where to find us"}</p>
-              <h2 id="location-heading" class="section-title">
-                {~t"Made in Vaasa, Finland."}
-              </h2>
-              <p class="text-base-content/80 text-lg leading-relaxed">
-                {~t"Hand-arranged flowers from our shop on Kauppapuistikko. We deliver up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
-              </p>
-            </div>
+            <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
+            <h2 id="location-heading" class="section-title mb-7">
+              {~t"Made in Vaasa, Finland."}
+            </h2>
+            <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+              {~t"Hand-arranged flowers from our shop on Kauppapuistikko. We deliver up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
+            </p>
           </div>
 
           <%!--
@@ -130,7 +131,7 @@ defmodule EdenflowersWeb.HomeLive do
             loading="lazy"
             width="800"
             height="940"
-            class="aspect-[6/7] w-full object-cover md:aspect-auto md:min-h-[28rem] md:h-full md:self-stretch"
+            class="aspect-[6/7] w-full object-cover md:my-20 lg:my-28"
           />
         </div>
       </section>
