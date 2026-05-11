@@ -29,6 +29,14 @@ defmodule Edenflowers.Accounts.User do
 
         sender Edenflowers.Accounts.User.Senders.SendOtp
       end
+
+      google do
+        client_id Edenflowers.Secrets
+        client_secret Edenflowers.Secrets
+        redirect_uri Edenflowers.Secrets
+        identity_resource Edenflowers.Accounts.UserIdentity
+        prevent_hijacking? false
+      end
     end
   end
 
@@ -43,12 +51,12 @@ defmodule Edenflowers.Accounts.User do
     action :request_otp,
       limit: 5,
       per: :timer.minutes(15),
-      key: fn query -> "otp:request:#{query.arguments[:email]}" end
+      key: fn input -> "otp:request:#{input.arguments[:email]}" end
 
     action :sign_in_with_otp,
       limit: 5,
       per: :timer.minutes(10),
-      key: fn query -> "otp:sign_in:#{query.arguments[:email]}" end
+      key: fn input -> "otp:sign_in:#{input.arguments[:email]}" end
   end
 
   admin do
@@ -114,6 +122,24 @@ defmodule Edenflowers.Accounts.User do
     update :set_newsletter_promo do
       argument :newsletter_promo_id, :uuid, allow_nil?: false
       change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
+    end
+
+    create :register_with_google do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
+
+      change fn changeset, _ctx ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+        |> Ash.Changeset.change_attribute(:name, user_info["name"])
+      end
     end
   end
 

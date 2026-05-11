@@ -38,6 +38,21 @@ defmodule EdenflowersWeb.OtpSignInLive do
           {~t"Sign in to your account"}
         </h2>
 
+        <%= if is_nil(@email) do %>
+          <a
+            href={~p"/auth/user/google"}
+            class="btn btn-lg btn-outline w-full"
+          >
+            <span>{~t"Continue with Google"}</span>
+          </a>
+
+          <div class="text-base-content/50 flex items-center gap-3 text-xs uppercase">
+            <hr class="border-base-300 flex-1" />
+            <span>{~t"or"}</span>
+            <hr class="border-base-300 flex-1" />
+          </div>
+        <% end %>
+
         <%= if @email do %>
           <p class="text-center text-sm">
             {~t"🥳 A sign-in code was sent to #{@email}."}
@@ -129,49 +144,40 @@ defmodule EdenflowersWeb.OtpSignInLive do
 
   def handle_event("request", %{"user" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.request_form, params: params) do
-      {:ok, _} ->
-        {:noreply, socket |> assign(email: params["email"]) |> start_resend_cooldown()}
-
-      :ok ->
+      result when result == :ok or (is_tuple(result) and elem(result, 0) == :ok) ->
         {:noreply, socket |> assign(email: params["email"]) |> start_resend_cooldown()}
 
       {:error, form} ->
-        {:noreply, socket |> assign(request_form: form) |> request_error_toast()}
+        {:noreply, socket |> assign(request_form: form) |> request_error_toast(form)}
     end
   end
 
+  # The OTP itself can only be validated server-side by the sign-in action's
+  # preparation, so we always hand off to AuthController and let it flash any
+  # failure. Client-side `pattern`/`maxlength` cover the empty/short-code case.
   def handle_event("verify", params, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.sign_in_form, params["user"] || %{})
 
-    socket =
-      if form.source.valid? do
-        socket
-        |> assign(:sign_in_form, form)
-        |> assign(:trigger_action, true)
-      else
-        socket
-        |> put_flash(:warning, ~t"That doesn't look like a valid code. Please check and try again.")
-        |> assign(sign_in_form: form)
-      end
-
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:sign_in_form, form)
+     |> assign(:trigger_action, true)}
   end
 
   def handle_event("resend", _params, %{assigns: %{email: email}} = socket) when is_binary(email) do
     if socket.assigns.resend_remaining > 0 do
       {:noreply, socket}
     else
-      params = %{"email" => email}
+      # Rebuild the request form so stale state from the original submission
+      # can't leak into the resend.
+      socket = assign_request_form(socket)
 
-      case AshPhoenix.Form.submit(socket.assigns.request_form, params: params) do
-        {:ok, _} ->
-          {:noreply, socket |> put_flash(:info, ~t"We've sent you a new code.") |> start_resend_cooldown()}
-
-        :ok ->
+      case AshPhoenix.Form.submit(socket.assigns.request_form, params: %{"email" => email}) do
+        result when result == :ok or (is_tuple(result) and elem(result, 0) == :ok) ->
           {:noreply, socket |> put_flash(:info, ~t"We've sent you a new code.") |> start_resend_cooldown()}
 
         {:error, form} ->
-          {:noreply, socket |> assign(request_form: form) |> request_error_toast()}
+          {:noreply, socket |> assign(request_form: form) |> request_error_toast(form)}
       end
     end
   end
@@ -248,7 +254,17 @@ defmodule EdenflowersWeb.OtpSignInLive do
     assign(socket, sign_in_form: form)
   end
 
-  defp request_error_toast(socket) do
-    put_flash(socket, :warning, ~t"We couldn't send your sign-in code. Please try again in a moment.")
+  defp request_error_toast(socket, form) do
+    if rate_limited?(form) do
+      put_flash(socket, :warning, ~t"Too many requests. Please wait a few minutes and try again.")
+    else
+      put_flash(socket, :warning, ~t"We couldn't send your sign-in code. Please try again in a moment.")
+    end
   end
+
+  defp rate_limited?(%{source: %{errors: errors}}) when is_list(errors) do
+    Enum.any?(errors, &match?(%AshRateLimiter.LimitExceeded{}, &1))
+  end
+
+  defp rate_limited?(_), do: false
 end

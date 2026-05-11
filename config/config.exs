@@ -88,6 +88,9 @@ config :edenflowers, EdenflowersWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Local
 
+# Default sender identity. Overridden in runtime.exs from MAILER_FROM_NAME / MAILER_FROM_EMAIL.
+config :edenflowers, :mailer_from_address, {"Jennie", "info@edenflowers.fi"}
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",

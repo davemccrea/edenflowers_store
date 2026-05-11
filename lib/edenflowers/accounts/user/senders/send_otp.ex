@@ -8,6 +8,8 @@ defmodule Edenflowers.Accounts.User.Senders.SendOtp do
   import Swoosh.Email
   alias Edenflowers.Mailer
 
+  @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
+
   @impl true
   def send(user_or_email, otp_code, _opts) do
     email =
@@ -18,8 +20,7 @@ defmodule Edenflowers.Accounts.User.Senders.SendOtp do
       end
 
     new()
-    # TODO: Replace with your email
-    |> from({"noreply", "noreply@example.com"})
+    |> from(@from_address)
     |> to(to_string(email))
     |> subject("Your sign-in code")
     |> html_body(body(otp_code: otp_code))
