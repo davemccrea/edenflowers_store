@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.StoreLive do
         </nav>
 
         <%= if Enum.empty?(@products) do %>
-          <div class="bg-pastel-3 flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
+          <div class="bg-cream flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
             <.icon name="hero-sparkles" class="text-primary/80 h-10 w-10" />
             <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
             <p class="text-base-content/75 max-w-md leading-relaxed">
@@ -87,36 +87,12 @@ defmodule EdenflowersWeb.StoreLive do
             </.button>
           </div>
         <% else %>
-          <ul class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 xl:gap-8" role="list">
-            <li
-              :for={product <- @products}
-              class="group border-base-300/70 bg-base-100 relative flex flex-col overflow-hidden rounded-lg border focus-within:border-primary/60 focus-within:shadow-lg hover:border-primary/50 hover:shadow-lg"
-            >
-              <.link
-                class="flex h-full flex-col focus:outline-none"
-                navigate={~p"/product/#{product}"}
-              >
-                <figure class="aspect-square relative overflow-hidden">
-                  <img
-                    src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                    alt=""
-                    class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
-                    width="1"
-                    height="1"
-                    loading="lazy"
-                  />
-                </figure>
-
-                <div class="flex flex-1 flex-col gap-2 px-5 py-5 sm:px-6 sm:py-6">
-                  <h3 class="card-title text-base-content link-underline-group-hover-display">
-                    {product.name}
-                  </h3>
-
-                  <div class="text-base-content/70 text-sm">
-                    {Edenflowers.Utils.format_money(product.cheapest_price)}
-                  </div>
-                </div>
-              </.link>
+          <ul
+            class="grid gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3 xl:gap-x-8 xl:gap-y-14"
+            role="list"
+          >
+            <li :for={product <- @products}>
+              <.product_card product={product} navigate={~p"/product/#{product}"} />
             </li>
           </ul>
         <% end %>

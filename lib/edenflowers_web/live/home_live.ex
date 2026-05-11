@@ -21,26 +21,17 @@ defmodule EdenflowersWeb.HomeLive do
           alt=""
         />
 
-        <%!-- Localised legibility wash: a soft radial darkens the area behind
-             the headline block (mobile bottom-left, desktop centre-left),
-             leaving the rest of the photo bright. --%>
-        <div
-          class="pointer-events-none absolute inset-0 md:hidden"
-          style="background: radial-gradient(closest-corner at 28% 78%, rgba(0,0,0,0.55), rgba(0,0,0,0) 65%);"
-        />
-        <div
-          class="pointer-events-none absolute inset-0 hidden md:block"
-          style="background: radial-gradient(closest-corner at 25% 55%, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);"
-        />
-
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="hero-reveal" style="--reveal-delay: 280ms;">
-            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
-              {~t"Shop Now"} <span aria-hidden="true">→</span>
-            </.button>
+          <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
+            <.link
+              href="#store"
+              class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
+            >
+              {~t"Shop Now"}
+            </.link>
           </div>
         </div>
       </section>
@@ -91,35 +82,7 @@ defmodule EdenflowersWeb.HomeLive do
                   aria-roledescription="slide"
                   aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <.link navigate={~p"/product/#{product}"} class="group flex flex-col">
-                    <div class="mb-3 overflow-hidden rounded-lg">
-                      <picture>
-                        <%!-- Mobile: 4:5 portrait crop for an immersive feel.
-                             Desktop (sm+): 1:1 square so cards sit cleanly in a row. --%>
-                        <source
-                          media="(min-width: 640px)"
-                          srcset={
-                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()
-                          }
-                        />
-                        <img
-                          src={
-                            product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()
-                          }
-                          alt=""
-                          class="aspect-[4/5] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] sm:aspect-square"
-                        />
-                      </picture>
-                    </div>
-                    <div class="text-base-content flex flex-col items-center gap-1">
-                      <h3 class="card-title link-underline-group-hover-display">
-                        {product.name}
-                      </h3>
-                      <p class="text-base-content/70 text-sm">
-                        {Edenflowers.Utils.format_money(product.cheapest_price)}
-                      </p>
-                    </div>
-                  </.link>
+                  <.product_card product={product} navigate={~p"/product/#{product}"} />
                 </li>
               </ul>
             </div>
@@ -130,14 +93,14 @@ defmodule EdenflowersWeb.HomeLive do
       </section>
 
       <%!-- Pull quote --%>
-      <section class="bg-pastel-3 not-last:border-b">
+      <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
+          <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
             {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
           <.link
             navigate={~p"/about"}
-            class="eyebrow text-base-content link-underline-hover-nav"
+            class="eyebrow text-forest-content link-underline-hover-nav"
           >
             {~t"Learn more"}
           </.link>

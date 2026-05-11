@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
     end
 
     with :ok <- cart_has_items?(order),
@@ -94,7 +95,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.input
                       label={~t"Email *"}
                       field={@form[:customer_email]}
-                      type="text"
+                      type="email"
                       data-testid="customer-email-input"
                     />
 
@@ -267,7 +268,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         label={recipient_label(@order, "phone")}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
-                        type="text"
+                        type="tel"
                       />
 
                       <fieldset class="flex flex-col">
@@ -616,20 +617,18 @@ defmodule EdenflowersWeb.CheckoutLive do
     actor = actor(socket)
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
-    cond do
-      order.cart_effectively_empty? ->
-        Order.restart_checkout!(order, actor: actor)
-        {:noreply, push_navigate(socket, to: ~p"/")}
-
-      # Cart changed while the customer is on the payment step. The PaymentIntent's
-      # amount must follow the new total, otherwise `confirmPayment` would charge
-      # the previous amount.
-      order.state == :payment and not is_nil(order.payment_intent_id) ->
-        {:noreply, sync_payment_intent(assign(socket, order: order), order)}
-
-      true ->
-        {:noreply, assign(socket, order: order)}
+    # Cart changed while the customer is on the payment step. The PaymentIntent's
+    # amount must follow the new total, otherwise `confirmPayment` would charge
+    # the previous amount.
+    if order.state == :payment and not is_nil(order.payment_intent_id) do
+      {:noreply, sync_payment_intent(assign(socket, order: order), order)}
+    else
+      {:noreply, assign(socket, order: order)}
     end
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
+    {:noreply, push_navigate(socket, to: ~p"/")}
   end
 
   def handle_info({:date_selected, date}, socket) do
