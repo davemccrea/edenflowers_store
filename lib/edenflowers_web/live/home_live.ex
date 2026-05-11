@@ -92,18 +92,15 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <%!-- Location --%>
-      <section class="not-last:border-b" aria-labelledby="location-heading">
-        <div class="container py-24 md:py-32">
-          <div class="grid grid-cols-1 items-start gap-16 md:grid-cols-[1.4fr_1fr] md:gap-20">
-            <div class="flex flex-col gap-6">
-              <p class="eyebrow text-base-content/60">{~t"Eden Flowers · Vaasa"}</p>
-              <h2 id="location-heading" class="section-title max-w-[14ch]">
-                {~t"A florist in Vaasa, Finland."}
+      <%!-- Location: copy anchored to container left, map bleeds to viewport right --%>
+      <section class="bg-cream overflow-hidden not-last:border-b" aria-labelledby="location-heading">
+        <div class="grid grid-cols-1 items-center gap-12 md:grid-cols-[1fr_1.1fr] md:gap-16 lg:gap-24">
+          <div class="container py-20 md:py-28 md:pr-0">
+            <div class="flex flex-col gap-8 md:max-w-[28ch] md:ml-auto md:pl-8">
+              <p class="eyebrow text-base-content/60">{~t"Where to find us"}</p>
+              <h2 id="location-heading" class="section-title">
+                {~t"Made in Vaasa, Finland."}
               </h2>
-              <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-                {~t"Hand-arranged flowers from our shop on Kauppapuistikko. We deliver across the Vaasa region — call ahead for pickup, or we'll bring them to your door."}
-              </p>
               <nav aria-label={~t"Location links"} class="flex flex-wrap gap-x-8 gap-y-3 pt-2">
                 <.link navigate={~p"/contact"} class="link-underline-hover-nav">
                   {~t"Visit the shop"}
@@ -113,19 +110,33 @@ defmodule EdenflowersWeb.HomeLive do
                 </.link>
               </nav>
             </div>
+          </div>
 
-            <aside class="border-base-content/12 flex flex-col items-center gap-6 border px-8 py-12 text-center md:py-16">
-              <p class="eyebrow text-base-content/70">{~t"Vaasa · Finland"}</p>
-              <div class="font-serif text-base-content/80 flex flex-col gap-1 text-lg leading-snug">
-                <span>63.0951° N</span>
-                <span>21.6165° E</span>
-              </div>
-              <div class="bg-base-content/20 h-px w-10"></div>
-              <address class="font-serif text-base-content flex flex-col gap-1 text-lg not-italic leading-snug">
-                <span>Kauppapuistikko 21</span>
-                <span>65100 Vaasa</span>
-              </address>
-            </aside>
+          <%!--
+            Map slot — bleeds to the viewport right edge on desktop.
+
+            To populate: export a static PNG from Mapbox Studio at 1200×1400,
+            center 63.0951, 21.6165, zoom ~11.5, with a muted editorial style
+            (paper land matching --color-cream, ink water close to --color-forest,
+            hairline roads, one honey marker on Kauppapuistikko 21, POIs off,
+            labels minimal). Save to priv/static/images/home-vaasa-map.png,
+            then replace the placeholder <div> below with:
+
+              <img
+                src={~p"/images/home-vaasa-map.png"}
+                alt={~t"Map showing Eden Flowers' location in Vaasa, Finland"}
+                loading="lazy"
+                width="1200"
+                height="1400"
+                class="aspect-[6/7] w-full h-full object-cover"
+              />
+          --%>
+          <div
+            role="img"
+            aria-label={~t"Map placeholder for Eden Flowers' location in Vaasa, Finland"}
+            class="border-base-content/12 bg-base-100/40 aspect-[6/7] flex items-center justify-center border md:aspect-auto md:min-h-[28rem] md:self-stretch md:border-r-0"
+          >
+            <p class="eyebrow text-base-content/40">{~t"Map of Vaasa"}</p>
           </div>
         </div>
       </section>
