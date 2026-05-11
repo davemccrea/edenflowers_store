@@ -43,3 +43,7 @@ images
 .DS_Store
 
 .playwright-mcp
+
+*.dump
+
+/priv/heroku_import/
