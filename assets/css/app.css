@@ -530,6 +530,31 @@ body.ready {
   outline-offset: 0.5rem;
 }
 
+/* Editorial FAQ list — questions and answers as prose, not as an accordion.
+   Each item is a hairline-separated row with serif question + serif italic
+   answer. Five items short enough to scan top-to-bottom. */
+.faq-list__item {
+  padding-block: 2rem;
+  border-top: 1px solid
+    color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+.faq-list__item:last-child {
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+.faq-list__question {
+  @apply font-serif text-xl leading-snug md:text-2xl;
+  margin: 0 0 0.875rem;
+}
+.faq-list__answer {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-base-content);
+  max-width: 60ch;
+  margin: 0;
+}
+
 /* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */
 .embla__viewport {
   overflow: hidden;

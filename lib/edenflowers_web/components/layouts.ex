@@ -392,6 +392,12 @@ defmodule EdenflowersWeb.Layouts do
           </span>
         </.locale_picker>
 
+        <nav class="text-sm" aria-label={~t"Help links"}>
+          <.link navigate={~p"/faq"} class="text-base-content/70 link-underline-hover-nav">
+            {~t"Frequently asked questions"}
+          </.link>
+        </nav>
+
         <span class="text-xs">
           © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
           <a
