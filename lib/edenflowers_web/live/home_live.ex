@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
+      <section class="bg-base-200 not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-20 pb-10 sm:px-8 md:justify-center md:px-12 md:py-28 lg:px-20">
             <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.HomeLive do
               {~t"Made in Vaasa, Finland."}
             </h2>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Hand-arranged flowers from our shop on Kauppapuistikko. We deliver up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
+              {~t"Cut and arranged the same day from a small shop on Kauppapuistikko. Eden Flowers delivers up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
             </p>
           </div>
 
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.HomeLive do
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
           <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
-            {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
+            {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
           <.link
             navigate={~p"/about"}
@@ -136,16 +136,11 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <%!-- Category tiles --%>
-      <section class="bg-base-200 not-last:border-b">
+      <%!-- Other services --%>
+      <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <h2 class="section-title mb-10">{~t"Start Here"}</h2>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <.category_tile
-              navigate={~p"/store"}
-              label={~t"Store"}
-              image_src="https://placehold.co/800x600/e8e0d8/888?text=Store"
-            />
+          <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <.category_tile
               navigate={~p"/weddings"}
               label={~t"Weddings"}
