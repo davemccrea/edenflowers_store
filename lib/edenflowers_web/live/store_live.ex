@@ -50,8 +50,8 @@ defmodule EdenflowersWeb.StoreLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <p class="eyebrow text-base-content/60 mb-8 md:mb-12">{~t"The Store"}</p>
-        <h1 class="sr-only">{~t"Store"}</h1>
+        <p class="eyebrow text-base-content/60 mb-5">{~t"The Store"}</p>
+        <h1 class="page-title mb-12 md:mb-16">{@selected_category.name}</h1>
 
         <nav aria-label={~t"Categories"} class="category-index mb-20 md:mb-28">
           <ol class="category-index__list">
