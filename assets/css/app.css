@@ -181,7 +181,7 @@ body.ready {
 @keyframes toast-drop-in {
   from {
     opacity: 0;
-    transform: translate(1.25rem, -0.75rem) rotate(2.5deg);
+    transform: translate(0, 0.75rem) rotate(-1.5deg);
   }
   60% {
     opacity: 1;
@@ -199,7 +199,7 @@ body.ready {
   }
   to {
     opacity: 0;
-    transform: translate(0.5rem, -0.5rem) rotate(-1.5deg);
+    transform: translate(0, 0.5rem) rotate(1deg);
   }
 }
 
@@ -213,7 +213,7 @@ body.ready {
   box-shadow:
     0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
     0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
-  transform-origin: 100% 0;
+  transform-origin: 50% 100%;
   animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
