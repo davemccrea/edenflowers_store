@@ -382,31 +382,41 @@ defmodule EdenflowersWeb.Layouts do
         </div>
       </div>
 
-      <div class="flex flex-col items-center gap-4 py-8">
-        <.locale_picker id="locale-picker-footer" current_path={@current_path}>
-          <span class="group inline-flex cursor-pointer items-center gap-1">
-            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@current_locale}
-            </span>
-          </span>
-        </.locale_picker>
-
-        <nav class="text-sm" aria-label={~t"Help links"}>
-          <.link navigate={~p"/faq"} class="text-base-content/70 link-underline-hover-nav">
+      <div class="container">
+        <nav
+          aria-label={~t"Help links"}
+          class="flex flex-col items-center gap-4 pt-10 pb-8 sm:flex-row sm:justify-center sm:gap-8"
+        >
+          <.link navigate={~p"/faq"} class="link-underline-hover-nav text-sm">
             {~t"Frequently asked questions"}
+          </.link>
+          <.link navigate={~p"/contact"} class="link-underline-hover-nav text-sm">
+            {~t"Contact"}
           </.link>
         </nav>
 
-        <span class="text-xs">
-          © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
-          <a
-            class="text-base-content link-underline-hover-nav whitespace-nowrap"
-            href="https://github.com/davemccrea/edenflowers_store"
-          >
-            {~t"Built with "} <span>❤️</span>
-          </a>
-        </span>
+        <div class="border-base-content/12 border-t"></div>
+
+        <div class="flex flex-col items-center gap-4 py-6 sm:flex-row sm:justify-between">
+          <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+            <span class="group inline-flex cursor-pointer items-center gap-1">
+              <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+                {@current_locale}
+              </span>
+            </span>
+          </.locale_picker>
+
+          <span class="text-xs">
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
+            <a
+              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              href="https://github.com/davemccrea/edenflowers_store"
+            >
+              {~t"Built with "} <span>❤️</span>
+            </a>
+          </span>
+        </div>
       </div>
     </footer>
     """
