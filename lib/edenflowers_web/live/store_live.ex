@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.StoreLive do
             <.icon name="hero-sparkles" class="text-primary/80 h-10 w-10" />
             <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
             <p class="text-base-content/75 max-w-md leading-relaxed">
-              {~t"We're refreshing this collection right now. Check back shortly — or browse another category in the meantime."}
+              {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
             </p>
             <.button navigate={~p"/store/bouquets"} variant="secondary" class="mt-2">
               {~t"Browse bouquets"}
