@@ -246,10 +246,17 @@ Hooks.CalendarHook = {
     this.setTabIndex(this.viewDate);
 
     this.calendarGrid.addEventListener("keydown", (event) => {
-      if (NAV_KEYS.includes(event.key)) {
-        event.preventDefault();
-        this.handleKeyDown(event.key);
+      // Bail on modifier-key combos so browser/SR shortcuts (Ctrl+Home,
+      // Shift+Arrow, etc.) still reach the host.
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
       }
+      if (!NAV_KEYS.includes(event.key)) return;
+      // Only intercept when a day button is the actual focus target — keeps
+      // arrow keys passing through to anything else nested in the grid.
+      if (!event.target.closest(`[id^="${this.id}-day-"]`)) return;
+      event.preventDefault();
+      this.handleKeyDown(event.key);
     });
   },
 

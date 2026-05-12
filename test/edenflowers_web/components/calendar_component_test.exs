@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.CalendarComponentTest do
         |> Localize.DateTime.to_string!(format: "MMMM y")
 
       assert html =~ expected_header
-      assert html =~ ~s(aria-selected="true")
+      assert html =~ ~s(aria-pressed="true")
     end
 
     test "leaves view_date alone when selected_date is already in the current view month" do
@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.CalendarComponentTest do
         |> Localize.DateTime.to_string!(format: "MMMM y")
 
       assert html =~ expected_header
-      refute html =~ ~s(aria-selected="true")
+      refute html =~ ~s(aria-pressed="true")
     end
   end
 end

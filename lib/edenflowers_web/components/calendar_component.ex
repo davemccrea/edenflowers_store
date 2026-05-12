@@ -60,6 +60,10 @@ defmodule EdenflowersWeb.CalendarComponent do
       data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
+      <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+        {live_region_text(@view_date, @selected_date)}
+      </div>
+
       <div class="flex items-center justify-between">
         <button
           id={"#{@id}-previous-month"}
@@ -76,51 +80,60 @@ defmodule EdenflowersWeb.CalendarComponent do
           id={"#{@id}-current-month"}
           phx-target={@myself}
           phx-click="current-month"
-          aria-label={~t"Show current month"}
           type="button"
-          class="cursor-pointer"
+          class="cursor-pointer rounded-sm focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
+          <span class="sr-only">— {~t"go to current month"}</span>
         </button>
         <button
           id={"#{@id}-next-month"}
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
+          class="text-base-content flex flex-none cursor-pointer items-center justify-center rounded-sm p-1.5 hover:text-base-content/60 focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
         </button>
       </div>
 
-      <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
-        <%= for week_day <- List.first(@week_rows) do %>
-          <span>
-            {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
-          </span>
-        <% end %>
+      <div
+        aria-hidden="true"
+        class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6"
+      >
+        <span :for={week_day <- List.first(@week_rows)}>
+          {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
+        </span>
       </div>
 
-      <div id={"#{@id}-grid"} role="grid" class="mt-1">
-        <div :for={{week, _index} <- Enum.with_index(@week_rows)} role="row" class="grid grid-cols-7">
-          <button
-            :for={day <- week}
-            id={"#{@id}-day-#{day}"}
-            phx-target={@myself}
-            phx-click="select"
-            phx-value-date={day}
-            data-key-targets={key_targets_json(day, @today_date)}
-            type="button"
-            aria-selected={if @selected_date && selected?(day, @selected_date), do: "true"}
-            tabindex="-1"
-            class={calendar_day_class(day, @view_date, @selected_date, @today_date, @selectable?.(day))}
-          >
-            <time datetime={day}>
-              {Localize.DateTime.to_string!(day, format: "d")}
-            </time>
-            {render_slot(@day_decoration, day)}
-          </button>
+      <div id={"#{@id}-grid"} class="mt-1">
+        <div :for={week <- @week_rows} class="grid grid-cols-7">
+          <%= for day <- week do %>
+            <%= if current_month?(day, @view_date) do %>
+              <button
+                id={"#{@id}-day-#{day}"}
+                phx-target={@myself}
+                phx-click="select"
+                phx-value-date={day}
+                data-key-targets={key_targets_json(day, @today_date)}
+                type="button"
+                aria-label={day_aria_label(day, @today_date, @selected_date, @selectable?.(day))}
+                aria-pressed={if @selected_date && selected?(day, @selected_date), do: "true", else: "false"}
+                aria-current={if day == @today_date, do: "date"}
+                aria-disabled={if not @selectable?.(day), do: "true"}
+                tabindex="-1"
+                class={calendar_day_class(day, @selected_date, @today_date, @selectable?.(day))}
+              >
+                <time datetime={Date.to_iso8601(day)} aria-hidden="true">
+                  {Localize.DateTime.to_string!(day, format: "d")}
+                </time>
+                {render_slot(@day_decoration, day)}
+              </button>
+            <% else %>
+              <div aria-hidden="true" class="aspect-square"></div>
+            <% end %>
+          <% end %>
         </div>
       </div>
     </div>
@@ -183,29 +196,53 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp calendar_day_class(day, view_date, selected_date, today_date, selectable?) do
-    is_current_month = current_month?(day, view_date)
+  defp calendar_day_class(day, selected_date, today_date, selectable?) do
     is_selected = selected?(day, selected_date)
     is_today = day == today_date
     is_disabled = not selectable?
 
-    if !is_current_month do
-      "opacity-0"
-    else
-      class_conditions = [
-        {"relative aspect-square", true},
-        {"underline", is_today},
-        {"cursor-pointer", !is_disabled},
-        {"bg-primary rounded-sm text-primary-content hover:bg-primary/90", is_selected and !is_disabled},
-        {"hover:bg-base-content/20 rounded-sm", !is_selected and !is_disabled},
-        {"cursor-not-allowed text-base-content/20", is_disabled}
-      ]
+    base = "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
 
-      class_conditions
-      |> Enum.filter(fn {_class, condition} -> condition end)
-      |> Enum.map(fn {class, _condition} -> class end)
-      |> Enum.join(" ")
+    state =
+      cond do
+        is_disabled ->
+          "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
+
+        is_selected ->
+          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-primary"
+
+        true ->
+          "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
+      end
+
+    if is_today, do: "#{base} #{state} underline", else: "#{base} #{state}"
+  end
+
+  defp day_aria_label(day, today_date, selected_date, selectable?) do
+    base = Localize.DateTime.to_string!(day, format: "EEEE, d MMMM y")
+
+    suffixes =
+      [
+        if(day == today_date, do: ~t"today"),
+        if(selected_date && selected?(day, selected_date), do: ~t"selected"),
+        if(not selectable?, do: ~t"not available")
+      ]
+      |> Enum.reject(&is_nil/1)
+
+    case suffixes do
+      [] -> base
+      list -> base <> ", " <> Enum.join(list, ", ")
     end
+  end
+
+  defp live_region_text(view_date, nil) do
+    Localize.DateTime.to_string!(view_date, format: "MMMM y")
+  end
+
+  defp live_region_text(view_date, selected_date) do
+    month = Localize.DateTime.to_string!(view_date, format: "MMMM y")
+    date = Localize.DateTime.to_string!(selected_date, format: "EEEE, d MMMM y")
+    "#{month}. #{date} #{~t"selected"}."
   end
 
   defp update_calendar_view(socket, date) do
