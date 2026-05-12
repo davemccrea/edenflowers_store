@@ -182,28 +182,28 @@ body.ready {
 }
 
 /* Toast (flash) — see core_components.ex (flash_group/1). */
-@keyframes toast-drop-in {
+@keyframes toast-slide-in {
   from {
     opacity: 0;
-    transform: translate(0, 0.75rem) rotate(-1.5deg);
+    transform: translateY(0.75rem);
   }
   60% {
     opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(0, 0) rotate(0);
+    transform: translateY(0);
   }
 }
 
-@keyframes toast-lift-out {
+@keyframes toast-slide-out {
   from {
     opacity: 1;
-    transform: translate(0, 0) rotate(0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translate(0, 0.5rem) rotate(1deg);
+    transform: translateY(0.5rem);
   }
 }
 
@@ -217,12 +217,11 @@ body.ready {
   box-shadow:
     0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
     0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
-  transform-origin: 50% 100%;
-  animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: toast-slide-in 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .toast-item[data-dismissing] {
-  animation: toast-lift-out 280ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
+  animation: toast-slide-out 220ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
 }
 
 .toast-item[data-key="error"] {
