@@ -194,7 +194,8 @@ defmodule EdenflowersWeb.Layouts do
               <.link
                 class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+                navigate={if @current_user, do: ~p"/account"}
+                href={unless @current_user, do: ~p"/sign-in"}
               >
                 <.icon name="hero-user-circle" class="h-7 w-7" />
                 {if @current_user, do: ~t"Account", else: ~t"Sign In"}
@@ -281,7 +282,8 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex flex-1 items-center justify-end lg:gap-4">
               <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
               <.link
-                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+                navigate={if @current_user, do: ~p"/account"}
+                href={unless @current_user, do: ~p"/sign-in"}
                 class="group hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
