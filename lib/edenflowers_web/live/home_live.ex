@@ -108,14 +108,14 @@ defmodule EdenflowersWeb.HomeLive do
             src={
               "local:///home-vaasa-map.png"
               |> Imgproxy.new()
-              |> Imgproxy.resize(800, 940, type: "fill")
+              |> Imgproxy.resize(1600, 1880, type: "fill")
               |> Imgproxy.set_extension("webp")
               |> to_string()
             }
             alt={~t"Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"}
             loading="lazy"
-            width="800"
-            height="940"
+            width="1600"
+            height="1880"
             class="aspect-[6/7] max-h-[520px] h-full w-full object-cover md:aspect-auto"
           />
         </div>

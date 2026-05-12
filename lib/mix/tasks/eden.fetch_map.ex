@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Eden.FetchMap do
   @moduledoc """
   Fetches the Vaasa location map from Mapbox Static Images API and writes it to
-  `priv/static/images/home-vaasa-map.png`.
+  `images/home-vaasa-map.png`, the Imgproxy local-storage source.
 
   ## Why a Mix task
 
@@ -22,17 +22,19 @@ defmodule Mix.Tasks.Eden.FetchMap do
 
   @shortdoc "Fetch the Vaasa location map from Mapbox"
 
-  # Composition spec — keep in sync with the HEEx comment in home_live.ex.
+  # Composition spec. Dimensions are the Mapbox source; the render aspect is
+  # preserved (1097:1280 ≈ 800:940) so Imgproxy can pure-downscale to any DPR
+  # without re-cropping.
   @longitude 21.6165
   @latitude 63.0951
   @zoom 10
-  @width 800
-  @height 940
+  @width 1097
+  @height 1280
   @style "davemccrea/cmp1rbxej001201r0c0z808jo"
   # `pin-s` is Mapbox's small built-in pin. Color is hex without `#`.
   # Honey approximates --color-link-underline.
   @marker_color "E8B33C"
-  @output_path "priv/static/images/home-vaasa-map.png"
+  @output_path "images/home-vaasa-map.png"
 
   @impl Mix.Task
   def run(_args) do
