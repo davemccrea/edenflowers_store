@@ -176,7 +176,8 @@ defmodule EdenflowersWeb.Layouts do
               <.link
                 class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+                navigate={if @current_user, do: ~p"/account"}
+                href={unless @current_user, do: ~p"/sign-in"}
               >
                 <.icon name="hero-user-circle" class="h-7 w-7" />
                 {if @current_user, do: ~t"Account", else: ~t"Sign In"}
@@ -198,36 +199,12 @@ defmodule EdenflowersWeb.Layouts do
       </footer>
     </.drawer>
 
-    <.drawer
-      id="cart-drawer"
-      placement="right"
-      label="Shopping cart"
-      class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
-    >
-      <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
-        <h1 class="section-title">
-          <%= if not is_nil(@order.total_items_in_cart) do %>
-            {~t"Cart"} ({@order.total_items_in_cart})
-          <% else %>
-            {~t"Cart"}
-          <% end %>
-        </h1>
-
-        <.icon_button aria_label={~t"Close cart"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
-          <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
-        </.icon_button>
-      </header>
-
-      <div class="flex flex-1 flex-col justify-between overflow-y-auto p-8">
-        <.live_component id="cart-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
-      </div>
-
-      <footer :if={Enum.any?(@order.line_items)} class="bg-base-300 flex flex-col px-8 py-8">
-        <.button navigate={~p"/checkout"} variant="primary" phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
-          {~t"Checkout"}
-        </.button>
-      </footer>
-    </.drawer>
+    <.live_component
+      id="cart-drawer-component"
+      module={EdenflowersWeb.CartDrawerComponent}
+      order={@order}
+      current_user={@current_user}
+    />
 
     <div
       id="hotfx-shy-header"
@@ -287,7 +264,8 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex flex-1 items-center justify-end lg:gap-4">
               <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
               <.link
-                navigate={if @current_user, do: ~p"/account", else: ~p"/sign-in"}
+                navigate={if @current_user, do: ~p"/account"}
+                href={unless @current_user, do: ~p"/sign-in"}
                 class="group hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
@@ -374,6 +352,27 @@ defmodule EdenflowersWeb.Layouts do
               </div>
             </div>
 
+            <div class="footer-grid__help space-y-2">
+              <h3 class="eyebrow text-base-content/60">{~t"Help"}</h3>
+              <ul class="space-y-1">
+                <li>
+                  <.link navigate={~p"/faq"} class="footer-line link-underline-hover-nav">
+                    {~t"FAQ"}
+                  </.link>
+                </li>
+                <li>
+                  <.link navigate={~p"/contact"} class="footer-line link-underline-hover-nav">
+                    {~t"Contact"}
+                  </.link>
+                </li>
+                <li>
+                  <.link navigate={~p"/about"} class="footer-line link-underline-hover-nav">
+                    {~t"About"}
+                  </.link>
+                </li>
+              </ul>
+            </div>
+
             <div class="footer-grid__socials space-y-2">
               <h3 class="eyebrow text-base-content/60">{~t"Socials"}</h3>
               <.social_media_links size={6} />
@@ -382,25 +381,27 @@ defmodule EdenflowersWeb.Layouts do
         </div>
       </div>
 
-      <div class="flex flex-col items-center gap-4 py-8">
-        <.locale_picker id="locale-picker-footer" current_path={@current_path}>
-          <span class="group inline-flex cursor-pointer items-center gap-1">
-            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@current_locale}
+      <div class="container">
+        <div class="flex flex-col items-center gap-3 py-6">
+          <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+            <span class="group inline-flex cursor-pointer items-center gap-1">
+              <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+                {@current_locale}
+              </span>
             </span>
-          </span>
-        </.locale_picker>
+          </.locale_picker>
 
-        <span class="text-xs">
-          © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
-          <a
-            class="text-base-content link-underline-hover-nav whitespace-nowrap"
-            href="https://github.com/davemccrea/edenflowers_store"
-          >
-            {~t"Built with "} <span>❤️</span>
-          </a>
-        </span>
+          <span class="text-xs">
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus: 2944459-6 •
+            <a
+              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              href="https://github.com/davemccrea/edenflowers_store"
+            >
+              {~t"Built with "} <span>❤️</span>
+            </a>
+          </span>
+        </div>
       </div>
     </footer>
     """

@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def container(assigns) do
     ~H"""
-    <div class={["container my-36", @class]}>
+    <div class={["mt-[calc(var(--header-height)+var(--spacing)*12)] container mb-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -851,7 +851,7 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.focus(to: "##{@id}-top")
-        |> JS.toggle_class("overflow-hidden", to: "html")
+        |> JS.add_class("overflow-hidden", to: "html")
       }
       phx-hide={
         %JS{}
@@ -861,7 +861,7 @@ defmodule EdenflowersWeb.CoreComponents do
           transition: {@transition, @transition_in, @transition_out},
           time: @time
         )
-        |> JS.toggle_class("overflow-hidden", to: "html")
+        |> JS.remove_class("overflow-hidden", to: "html")
         |> JS.pop_focus()
       }
       class="z-100 relative"

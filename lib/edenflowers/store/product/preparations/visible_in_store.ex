@@ -11,7 +11,7 @@ defmodule Edenflowers.Store.Product.Preparations.VisibleInStore do
       query,
       draft == false and
         exists(product_variants) and
-        product_category.draft == false
+        product_category.visibility == :public
     )
     |> Ash.Query.load([:cheapest_price, :product_variants, :product_category])
   end
