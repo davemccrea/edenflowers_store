@@ -10,5 +10,6 @@ defmodule Edenflowers.Accounts do
   resources do
     resource Edenflowers.Accounts.Token
     resource Edenflowers.Accounts.User
+    resource Edenflowers.Accounts.UserIdentity
   end
 end
