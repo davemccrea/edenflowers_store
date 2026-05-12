@@ -109,7 +109,7 @@ defmodule Edenflowers.MixProject do
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:localize, "~> 0.27.0"},
-      {:localize_web, "~> 0.5.1"},
+      {:localize_web, "~> 0.6.0"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
       {:imgproxy, "~> 3.1"},
