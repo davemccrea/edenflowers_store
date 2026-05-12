@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div
       id="flash-group"
-      class="z-[100] fixed top-6 right-6 flex flex-col items-end gap-3"
+      class="z-[100] fixed inset-x-0 bottom-6 flex flex-col items-center gap-3 px-4"
       role="region"
       aria-label={~t"Notifications"}
       phx-hook="FlashHandler"
