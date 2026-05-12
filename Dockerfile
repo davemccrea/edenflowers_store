@@ -46,6 +46,10 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
+# Localize ships only en/und CLDR data; fetch fi.etf, sv-FI.etf, etc. at
+# build time so display_name lookups don't crash when the customer switches.
+RUN mix localize.download_locales
+
 RUN mix assets.setup
 
 COPY priv priv

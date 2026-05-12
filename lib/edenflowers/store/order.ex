@@ -3,6 +3,7 @@ defmodule Edenflowers.Store.Order do
     domain: Edenflowers.Store,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshStateMachine]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -36,24 +37,6 @@ defmodule Edenflowers.Store.Order do
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
-  state_machine do
-    initial_states([:contact_details])
-    default_initial_state(:contact_details)
-
-    transitions do
-      transition(:submit_contact_details, from: :contact_details, to: :gift_options)
-      transition(:submit_gift_options, from: :gift_options, to: :delivery)
-      transition(:submit_delivery, from: :delivery, to: :payment)
-      transition(:finalize_checkout, from: :payment, to: :placed)
-
-      transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
-      transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
-      transition(:return_to_delivery, from: :payment, to: :delivery)
-
-      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
-    end
-  end
-
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
@@ -78,6 +61,28 @@ defmodule Edenflowers.Store.Order do
     define :restart_checkout, action: :restart_checkout
     define :add_card, action: :add_card, args: [:product_variant_id]
     define :remove_card, action: :remove_card
+    define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
+    define :add_line_item, action: :add_line_item, args: [:product_variant_id, :quantity]
+    define :increment_line_item, action: :increment_line_item, args: [:line_item_id]
+    define :decrement_line_item, action: :decrement_line_item, args: [:line_item_id]
+  end
+
+  state_machine do
+    initial_states([:contact_details])
+    default_initial_state(:contact_details)
+
+    transitions do
+      transition(:submit_contact_details, from: :contact_details, to: :gift_options)
+      transition(:submit_gift_options, from: :gift_options, to: :delivery)
+      transition(:submit_delivery, from: :delivery, to: :payment)
+      transition(:finalize_checkout, from: :payment, to: :placed)
+
+      transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
+      transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
+      transition(:return_to_delivery, from: :payment, to: :delivery)
+
+      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
+    end
   end
 
   actions do
@@ -116,6 +121,8 @@ defmodule Edenflowers.Store.Order do
     update :submit_contact_details do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
+
+      validate {Validations.ValidateCustomerEmail, []}
       change {Changes.UpsertUserAndAssignToOrder, []}
       change transition_state(:gift_options)
       change load(@checkout_load)
@@ -247,6 +254,35 @@ defmodule Edenflowers.Store.Order do
       change load(@checkout_load)
       require_atomic? false
     end
+
+    update :remove_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.RemoveLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :add_line_item do
+      argument :product_variant_id, :uuid, allow_nil?: false
+      argument :quantity, :integer, allow_nil?: false, constraints: [min: 1]
+      change {Changes.AddLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :increment_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.AdjustLineItemQuantity, direction: :increment}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :decrement_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.AdjustLineItemQuantity, direction: :decrement}
+      change load(@checkout_load)
+      require_atomic? false
+    end
   end
 
   policies do
@@ -273,6 +309,14 @@ defmodule Edenflowers.Store.Order do
     policy action_type(:update) do
       authorize_if expr(state in ^@checkout_states)
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish :restart_checkout, ["order", "checkout_restarted", :id]
+    publish :add_promotion_with_code, ["line_item", "changed", :id]
+    publish :clear_promotion, ["line_item", "changed", :id]
   end
 
   attributes do

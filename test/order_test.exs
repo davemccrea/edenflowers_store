@@ -1108,6 +1108,94 @@ defmodule Edenflowers.Store.OrderTest do
     end
   end
 
+  describe "Order.remove_line_item action" do
+    test "removes a single line item without resetting checkout when others remain" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant_1 = generate(product_variant(product_id: product.id))
+      variant_2 = generate(product_variant(product_id: product.id))
+
+      order =
+        generate(
+          order(
+            state: :delivery,
+            customer_name: "Keep Me",
+            customer_email: "keep@example.com"
+          )
+        )
+
+      to_remove = generate(line_item(order_id: order.id, product_variant_id: variant_1.id, quantity: 1))
+      _keep = generate(line_item(order_id: order.id, product_variant_id: variant_2.id, quantity: 1))
+
+      assert {:ok, updated} = Order.remove_line_item(order, to_remove.id, authorize?: false)
+
+      assert updated.state == :delivery
+      assert updated.customer_name == "Keep Me"
+      assert length(updated.line_items) == 1
+    end
+
+    test "removing the last non-card line item resets checkout fields" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            customer_name: "Stale Customer",
+            customer_email: "stale@example.com",
+            recipient_name: "Recipient",
+            payment_intent_id: "pi_stale"
+          )
+        )
+
+      line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      assert {:ok, updated} = Order.remove_line_item(order, line_item.id, authorize?: false)
+
+      assert updated.state == :contact_details
+      assert is_nil(updated.customer_name)
+      assert is_nil(updated.customer_email)
+      assert is_nil(updated.recipient_name)
+      assert is_nil(updated.payment_intent_id)
+      assert updated.line_items == []
+    end
+
+    test "broadcasts order:checkout_restarted when the cart empties" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+
+      order = generate(order(state: :delivery, customer_name: "X", customer_email: "x@example.com"))
+      line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
+
+      assert {:ok, _} = Order.remove_line_item(order, line_item.id, authorize?: false)
+
+      assert_receive %Phoenix.Socket.Broadcast{topic: topic}
+      assert topic == "order:checkout_restarted:#{order.id}"
+    end
+
+    test "does not broadcast order:checkout_restarted when other items remain" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant_1 = generate(product_variant(product_id: product.id))
+      variant_2 = generate(product_variant(product_id: product.id))
+
+      order = generate(order(state: :delivery))
+      to_remove = generate(line_item(order_id: order.id, product_variant_id: variant_1.id, quantity: 1))
+      _keep = generate(line_item(order_id: order.id, product_variant_id: variant_2.id, quantity: 1))
+
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
+
+      assert {:ok, _} = Order.remove_line_item(order, to_remove.id, authorize?: false)
+
+      refute_receive %Phoenix.Socket.Broadcast{topic: _}, 100
+    end
+  end
+
   describe "cart_effectively_empty? calculation" do
     test "true when the order has no line items" do
       order = Order.create_for_checkout!(authorize?: false)
@@ -1177,7 +1265,7 @@ defmodule Edenflowers.Store.OrderTest do
   describe "Card line items via Order" do
     setup do
       tax_rate = generate(tax_rate())
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
 
       card_product =
         generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id, draft: false))
@@ -1199,7 +1287,7 @@ defmodule Edenflowers.Store.OrderTest do
       card = Enum.find(order.line_items, & &1.is_card)
       assert card
       assert card.product_variant_id == card_variant_a.id
-      assert card.card_size == card_variant_a.size
+      assert card.variant_size == card_variant_a.size
 
       # @checkout_load calculations should be present on the returned order
       refute match?(%Ash.NotLoaded{}, order.total)
@@ -1216,7 +1304,7 @@ defmodule Edenflowers.Store.OrderTest do
       cards = Enum.filter(order.line_items, & &1.is_card)
       assert length(cards) == 1
       assert hd(cards).product_variant_id == card_variant_b.id
-      assert hd(cards).card_size == card_variant_b.size
+      assert hd(cards).variant_size == card_variant_b.size
     end
 
     test "remove_card destroys the card line item and clears card_message", %{

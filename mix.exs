@@ -4,7 +4,7 @@ defmodule Edenflowers.MixProject do
   def project do
     [
       app: :edenflowers,
-      version: "0.2.8",
+      version: "0.3.5",
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -112,7 +112,8 @@ defmodule Edenflowers.MixProject do
       {:localize_web, "~> 0.5.1"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
-      {:imgproxy, "~> 3.1"}
+      {:imgproxy, "~> 3.1"},
+      {:ash_admin, "~> 1.0"}
     ]
   end
 

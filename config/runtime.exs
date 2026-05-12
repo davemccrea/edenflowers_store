@@ -27,13 +27,18 @@ if config_env() in [:prod, :dev] do
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+  # Only the `mix eden.fetch_map` build-time task needs this — the running app
+  # serves the pre-fetched PNG. Don't raise on absence; non-design contributors
+  # shouldn't need a Mapbox token to start the app.
+  config :edenflowers, :mapbox_token, System.get_env("MAPBOX_TOKEN")
+
   config :imgproxy,
     prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
     key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),
     salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
 
   config :stripity_stripe,
-    api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
+    api_key: System.get_env("STRIPE_SECRET_KEY") || raise("environment variable STRIPE_SECRET_KEY is missing.")
 
   config :edenflowers,
          :stripe_webhook_secret,

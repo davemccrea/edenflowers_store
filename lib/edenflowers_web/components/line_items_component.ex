@@ -1,32 +1,67 @@
 defmodule EdenflowersWeb.LineItemsComponent do
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Store.LineItem
+  alias Edenflowers.Store.Order
 
   attr :id, :string, required: true
   attr :order, :any, required: true
+  attr :link_product, :boolean, default: false
 
   def render(assigns) do
     ~H"""
     <div id={@id}>
       <%= if Enum.any?(@order.line_items) do %>
-        <ul class="flex flex-col gap-2">
-          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-sm">
-            <img
-              class="h-18 w-18 rounded"
-              src={line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(144, 144, type: "fill") |> to_string()}
-              alt={"Image of #{line_item.product_name}"}
-            />
+        <ul class="flex flex-col gap-5">
+          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-base">
+            <%= if @link_product and not line_item.is_card do %>
+              <.link
+                navigate={~p"/product/#{line_item.product_id}"}
+                class="shrink-0 transition-opacity hover:opacity-70"
+              >
+                <img
+                  class="h-20 w-20 object-cover"
+                  src={
+                    line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(160, 160, type: "fill") |> to_string()
+                  }
+                  alt={"Image of #{line_item.product_name}"}
+                />
+              </.link>
+            <% else %>
+              <img
+                class="h-20 w-20 object-cover"
+                src={
+                  line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(160, 160, type: "fill") |> to_string()
+                }
+                alt={"Image of #{line_item.product_name}"}
+              />
+            <% end %>
 
-            <div class="flex flex-1 flex-row justify-between">
-              <div class="flex flex-col gap-2">
-                <span>{line_item.product_name}</span>
+            <div class="flex flex-1 flex-col gap-2">
+              <div class="flex flex-row justify-between gap-3">
+                <div class="flex flex-col gap-0.5">
+                  <%= if @link_product and not line_item.is_card do %>
+                    <.link
+                      navigate={~p"/product/#{line_item.product_id}"}
+                      class="link-underline-hover-nav"
+                    >
+                      {line_item.product_name}
+                    </.link>
+                  <% else %>
+                    <span>{line_item.product_name}</span>
+                  <% end %>
+                  <span :if={line_item.variant_size} class="font-serif text-base-content/65 text-sm italic leading-none">
+                    {String.capitalize(to_string(line_item.variant_size))}
+                  </span>
+                </div>
+                <span class="shrink-0 tabular-nums">{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
+              </div>
 
-                <div :if={not line_item.is_card} class="flex flex-row items-center gap-2">
+              <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-3">
+                <div class="flex flex-row items-center gap-3">
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="btn btn-xs btn-square phx-click-loading:btn-disabled"
+                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -34,11 +69,11 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
                   </button>
-                  <span>{line_item.quantity}</span>
+                  <span class="tabular-nums">{line_item.quantity}</span>
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="btn btn-xs btn-square phx-click-loading:btn-disabled"
+                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -47,45 +82,54 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     <.icon class="h-4 w-4" name="hero-plus-mini" />
                   </button>
                 </div>
-              </div>
-
-              <div class="flex flex-col items-end gap-2">
-                <span>{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
                 <button
-                  :if={not line_item.is_card}
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="btn btn-square btn-ghost btn-xs phx-click-loading:btn-disabled"
+                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria-label={~t"Remove"}
                 >
-                  <.icon name="hero-trash" class="text-error h-4 w-4" />
+                  <.icon name="hero-trash" class="h-4 w-4" />
+                </button>
+              </div>
+
+              <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
+                <button
+                  type="button"
+                  id={"#{@id}-remove-#{line_item.id}"}
+                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                  phx-click="remove_item"
+                  phx-value-id={line_item.id}
+                  phx-target={@myself}
+                  aria-label={~t"Remove"}
+                >
+                  <.icon name="hero-trash" class="h-4 w-4" />
                 </button>
               </div>
             </div>
           </li>
         </ul>
       <% else %>
-        <p>{~t"Your cart is empty."}</p>
+        <p class="text-base-content/70">{~t"Your cart is empty."}</p>
       <% end %>
     </div>
     """
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
-    LineItem.remove_item(id)
+    Order.remove_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
-    LineItem.increment_quantity(id)
+    Order.increment_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
-    LineItem.decrement_quantity(id)
+    Order.decrement_line_item(socket.assigns.order, id)
     {:noreply, socket}
   end
 end

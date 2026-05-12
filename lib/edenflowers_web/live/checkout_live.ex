@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
     end
 
     with :ok <- cart_has_items?(order),
@@ -39,7 +40,6 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:form, build_submit_form(order))
-       |> assign(:promo_code_form, make_form(order, :add_promotion_with_code))
        |> assign(:client_secret, nil)
        |> maybe_setup_stripe(order)}
     else
@@ -64,19 +64,20 @@ defmodule EdenflowersWeb.CheckoutLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <div class="mt-[calc(var(--header-height)+var(--spacing)*8)] mx-4 mb-24 lg:mx-24 xl:mx-48 2xl:mx-64">
+      <.container>
+        <div class="max-w-[58rem] mx-auto w-full">
+          <h1 class="page-title mb-10 md:mb-12">{~t"Checkout"}</h1>
+        </div>
         <div class="flex flex-col gap-12">
-          <div class="flex flex-col gap-8 md:flex-row">
-            <div id={@id} class="md:w-[60%]" phx-hook="FocusElement">
-              <.steps state={@order.state}>
+          <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
+            <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
+              <.steps state={@order.state} order={@order}>
                 <section
                   :if={@order.state == :contact_details}
                   id={"#{@id}-section-1"}
                   class="checkout__section"
                   data-testid="checkout-step-1"
                 >
-                  <.form_heading>{~t"Your Details"}</.form_heading>
-
                   <.form
                     id={"#{@id}-form-1"}
                     for={@form}
@@ -94,7 +95,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.input
                       label={~t"Email *"}
                       field={@form[:customer_email]}
-                      type="text"
+                      type="email"
                       data-testid="customer-email-input"
                     />
 
@@ -108,8 +109,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                   class="checkout__section"
                   data-testid="checkout-step-2"
                 >
-                  <.form_heading>{~t"Gift Options"}</.form_heading>
-
                   <.form
                     id={"#{@id}-form-2"}
                     for={@form}
@@ -123,7 +122,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       type="radio-card"
                       label={~t"Recipient *"}
                       field={@form[:gift]}
-                      options={[%{name: "❤️ For me", value: "false"}, %{name: "🎁 For somebody else", value: "true"}]}
+                      options={[%{name: ~t"For me", value: "false"}, %{name: ~t"For somebody else", value: "true"}]}
                       phx-change="set_gift"
                       data-testid="gift-recipient-selector"
                     >
@@ -140,7 +139,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                     <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
                     <% card_message_max =
-                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.card_size) %>
+                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.variant_size) %>
 
                     <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
                       <div :if={card_line_item} data-testid="card-preview">
@@ -184,11 +183,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                                   <button
                                     type="button"
                                     phx-click="remove_card"
-                                    class="btn btn-circle btn-ghost bg-base-200 absolute -top-2 -right-2 h-7 min-h-0 w-7"
+                                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
                                     data-testid="remove-card-button"
                                     title={gettext("Remove card")}
                                   >
-                                    <.icon name="hero-trash" class="text-error h-4 w-4" />
+                                    <.icon name="hero-trash" class="h-4 w-4" />
                                     <span class="sr-only">{gettext("Remove card")}</span>
                                   </button>
                                 </div>
@@ -213,11 +212,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                         :if={is_nil(card_line_item)}
                         type="button"
                         phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                        class="btn btn-dash w-full"
+                        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
                         data-testid="select-card-button"
                       >
-                        <.icon name="hero-gift" class="h-4 w-4" />
-                        {gettext("Add a card")}
+                        <.icon name="hero-envelope" class="h-4 w-4" />
+                        {gettext("Select a card")}
                       </button>
                     </div>
 
@@ -226,8 +225,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <section :if={@order.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
-                  <.form_heading>{~t"Delivery Information"}</.form_heading>
-
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
@@ -253,6 +250,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         id="address-input"
                         module={EdenflowersWeb.AddressInputComponent}
                         order={@order}
+                        label={recipient_label(@order, "address")}
                       />
 
                       <.input
@@ -267,7 +265,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         label={recipient_label(@order, "phone")}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
-                        type="text"
+                        type="tel"
                       />
 
                       <fieldset class="flex flex-col">
@@ -320,8 +318,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                 </section>
 
                 <section :if={@order.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
-                  <.form_heading>{~t"Payment"}</.form_heading>
-
                   <form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
@@ -349,86 +345,68 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.steps>
             </div>
 
-            <div class="md:border-neutral/20 md:border-r" />
-
-            <div class="md:w-[35%] md:sticky md:top-6 md:h-fit md:overflow-y-auto">
-              <section class="flex flex-col gap-4 p-1" data-testid="cart-section">
-                <h2 class="card-title" data-testid="cart-heading">
-                  {~t"Cart"} ({if @order.total_items_in_cart, do: @order.total_items_in_cart, else: 0})
-                </h2>
+            <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
+              <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section">
+                <p class="eyebrow text-base-content/60" data-testid="cart-heading">
+                  {~t"Cart"} ({@order.total_items_in_cart || 0})
+                </p>
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
 
-                <.form
-                  :if={not @order.promotion_applied?}
-                  id={"#{@id}-form-promotional"}
-                  for={@promo_code_form}
-                  phx-submit="update_promotional"
-                  class="space-y-2"
-                  data-testid="promo-code-form"
-                >
-                  <.input
-                    style="button-addon"
-                    label={~t"Promo Code"}
-                    field={@promo_code_form[:code]}
-                    type="text"
-                    button_text={~t"Apply"}
-                    placeholder={~t"Enter promo code"}
-                    data-testid="promo-code-input"
-                  />
-                </.form>
+                <.live_component
+                  id="checkout-promo"
+                  module={EdenflowersWeb.PromoCodeComponent}
+                  order={@order}
+                  current_user={@current_user}
+                />
 
-                <div class="border-neutral/5 border-t"></div>
+                <div class="border-base-content/12 border-t"></div>
 
-                <div class="flex flex-col gap-2 text-sm">
-                  <div :if={@order.state == :payment} class="flex justify-between" data-testid="delivery-cost">
+                <div class="flex flex-col gap-2 text-base">
+                  <div class="flex items-baseline justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_amount) -> %>
-                        <span>—</span>
+                        <span class="text-base-content/60">—</span>
                       <% Decimal.eq?(@order.fulfillment_amount, 0) -> %>
-                        {~t"Free"}
+                        <span>{~t"Free"}</span>
                       <% true -> %>
-                        <span>{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
+                        <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                     <% end %>
                   </div>
 
-                  <div class="flex justify-between" data-testid="discount-section">
-                    <div class="flex flex-row gap-2">
-                      <span>{~t"Discount"}</span>
-                      <button
-                        :if={@order.promotion_applied?}
-                        phx-click="clear_promo"
-                        class="badge badge-dash badge-neutral badge-sm flex cursor-pointer items-center gap-1"
-                        data-testid="promo-code-badge"
-                      >
-                        {@order.promotion.code} <span><.icon name="hero-x-mark" class="flex h-4 w-4" /></span>
-                      </button>
-                    </div>
-
-                    <%= if @order.promotion_applied? do %>
-                      <span class="text-success" data-testid="discount-amount">
-                        - {Edenflowers.Utils.format_money(@order.discount_amount)}
-                      </span>
-                    <% else %>
-                      <span data-testid="discount-amount">- {Edenflowers.Utils.format_money(0)}</span>
-                    <% end %>
+                  <div
+                    :if={@order.promotion_applied?}
+                    class="flex items-baseline justify-between"
+                    data-testid="discount-section"
+                  >
+                    <span>{~t"Discount"}</span>
+                    <span class="text-success tabular-nums" data-testid="discount-amount">
+                      - {Edenflowers.Utils.format_money(@order.discount_amount)}
+                    </span>
                   </div>
-                </div>
 
-                <div class="flex flex-col gap-2">
-                  <div class="border-neutral/5 border-t"></div>
+                  <div
+                    :if={@order.tax_amount && Decimal.gt?(@order.tax_amount, 0)}
+                    class="flex items-baseline justify-between"
+                    data-testid="vat-line"
+                  >
+                    <span>{~t"Incl. VAT"}</span>
+                    <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.tax_amount)}</span>
+                  </div>
 
-                  <div class="flex justify-between font-semibold" data-testid="order-total">
+                  <div class="mt-3 flex items-baseline justify-between font-semibold" data-testid="order-total">
                     <span>{~t"Total"}</span>
-                    <span data-testid="total-amount">{Edenflowers.Utils.format_money(@order.total)}</span>
+                    <span class="tabular-nums" data-testid="total-amount">
+                      {Edenflowers.Utils.format_money(@order.total)}
+                    </span>
                   </div>
                 </div>
               </section>
             </div>
           </div>
         </div>
-      </div>
+      </.container>
 
       <.drawer
         id="card-drawer"
@@ -581,21 +559,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign_forms(socket, order)}
   end
 
-  def handle_event("update_promotional", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.promo_code_form, params: params) do
-      {:ok, order} ->
-        {:noreply, assign_forms(socket, order)}
-
-      {:error, promo_code_form} ->
-        {:noreply, assign(socket, promo_code_form: promo_code_form)}
-    end
-  end
-
-  def handle_event("clear_promo", _, socket) do
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
-    {:noreply, assign_forms(socket, order)}
-  end
-
   # Stripe events
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("#{message}: #{inspect(details)}")
@@ -616,20 +579,18 @@ defmodule EdenflowersWeb.CheckoutLive do
     actor = actor(socket)
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
 
-    cond do
-      order.cart_effectively_empty? ->
-        Order.restart_checkout!(order, actor: actor)
-        {:noreply, push_navigate(socket, to: ~p"/")}
-
-      # Cart changed while the customer is on the payment step. The PaymentIntent's
-      # amount must follow the new total, otherwise `confirmPayment` would charge
-      # the previous amount.
-      order.state == :payment and not is_nil(order.payment_intent_id) ->
-        {:noreply, sync_payment_intent(assign(socket, order: order), order)}
-
-      true ->
-        {:noreply, assign(socket, order: order)}
+    # Cart changed while the customer is on the payment step. The PaymentIntent's
+    # amount must follow the new total, otherwise `confirmPayment` would charge
+    # the previous amount.
+    if order.state == :payment and not is_nil(order.payment_intent_id) do
+      {:noreply, sync_payment_intent(assign(socket, order: order), order)}
+    else
+      {:noreply, assign(socket, order: order)}
     end
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
+    {:noreply, push_navigate(socket, to: ~p"/")}
   end
 
   def handle_info({:date_selected, date}, socket) do
@@ -642,59 +603,105 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ==========
 
   attr :state, :atom, required: true
+  attr :order, :map, required: true
   slot :inner_block
 
   def steps(assigns) do
     assigns =
       assign(assigns,
-        step_title: fn n ->
-          case n do
-            1 -> ~t"Your Details"
-            2 -> ~t"Gift Options"
-            3 -> ~t"Delivery Information"
-            4 -> ~t"Payment"
-          end
-        end,
         position: state_index(assigns.state) + 1
       )
 
     ~H"""
-    <div :if={@position > 1} class="mb-4 space-y-4">
-      <.form_heading :for={n <- 1..(@position - 1)} active={false} edit_step={n}>
-        {@step_title.(n)}
-      </.form_heading>
-    </div>
-
-    {render_slot(@inner_block)}
-
-    <div :if={@position < 4} class="mb-4 space-y-4">
-      <.form_heading :for={n <- (@position + 1)..4} active={false}>{@step_title.(n)}</.form_heading>
-    </div>
-    """
-  end
-
-  slot :inner_block
-  attr :active, :boolean, default: true
-  attr :edit_step, :integer, default: nil
-  attr :rest, :global
-
-  defp form_heading(assigns) do
-    ~H"""
-    <div class="flex flex-row items-center justify-between">
-      <h2 class={["section-title", if(@active, do: "text-base-content", else: "text-base-content/40")]} {@rest}>
-        {render_slot(@inner_block)}
-      </h2>
-      <button
-        :if={@edit_step}
-        type="button"
-        class="btn btn-ghost text-base-content/40"
-        phx-click={"edit_step_#{@edit_step}"}
+    <ol class="flex flex-col">
+      <.checkout_step
+        :for={n <- 1..4}
+        n={n}
+        position={@position}
+        title={step_title(n)}
+        summary={if n < @position, do: step_summary(n, @order)}
       >
-        {~t"Edit"}
-      </button>
-    </div>
+        <%= if n == @position do %>
+          {render_slot(@inner_block)}
+        <% end %>
+      </.checkout_step>
+    </ol>
     """
   end
+
+  attr :n, :integer, required: true
+  attr :position, :integer, required: true
+  attr :title, :string, required: true
+  attr :summary, :string, default: nil
+  slot :inner_block
+
+  defp checkout_step(assigns) do
+    state =
+      cond do
+        assigns.n < assigns.position -> :past
+        assigns.n == assigns.position -> :current
+        true -> :future
+      end
+
+    assigns = assign(assigns, :state, state)
+
+    ~H"""
+    <li class={["border-base-content/12 py-8 md:py-10", @n > 1 && "border-t"]}>
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class={["section-title", @state == :future && "text-base-content/40"]}>
+          {@title}
+        </h2>
+        <.link
+          :if={@state == :past}
+          phx-click={"edit_step_#{@n}"}
+          class="link-underline-hover-nav text-sm"
+        >
+          {~t"Edit"}
+        </.link>
+      </div>
+
+      <p :if={@state == :past && @summary} class="text-base-content/70 mt-3">
+        {@summary}
+      </p>
+
+      <div :if={@state == :current} class="mt-8">
+        {render_slot(@inner_block)}
+      </div>
+    </li>
+    """
+  end
+
+  defp step_title(1), do: ~t"Your details"
+  defp step_title(2), do: ~t"Gift options"
+  defp step_title(3), do: ~t"Delivery"
+  defp step_title(4), do: ~t"Payment"
+
+  defp step_summary(1, %{customer_name: name, customer_email: email})
+       when is_binary(name) and is_binary(email),
+       do: "#{name} · #{email}"
+
+  defp step_summary(2, %{gift: false}), do: ~t"For me"
+  defp step_summary(2, %{gift: true, recipient_name: name}) when is_binary(name), do: ~t"For #{name}"
+  defp step_summary(2, _), do: nil
+
+  defp step_summary(3, %{fulfillment_method: method, fulfillment_date: date} = order)
+       when not is_nil(method) and not is_nil(date) do
+    method_label = if method == :delivery, do: ~t"Delivery", else: ~t"Pickup"
+    address = if method == :delivery, do: order.delivery_address, else: nil
+
+    [method_label, format_date(date), address]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" · ")
+  end
+
+  defp step_summary(_, _), do: nil
+
+  defp format_date(%Date{} = date) do
+    locale = Localize.get_locale().cldr_locale_id
+    Localize.Date.to_string!(date, locale: locale, format: :medium)
+  end
+
+  defp format_date(_), do: nil
 
   attr :rest, :global
   attr :disabled, :boolean, default: false
@@ -743,7 +750,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp make_form(order, action, params \\ %{}) do
+  defp make_form(order, action, params) do
     order
     |> AshPhoenix.Form.for_update(action, params: params)
     |> to_form()
@@ -759,21 +766,17 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  # Rebuilds both forms against the latest order while preserving any unsaved
-  # input the customer has typed. The data side has to refresh because some
-  # validations read off the order's loaded relationships (e.g. line_items);
-  # the params side has to be preserved so applying a promo or selecting a
-  # card doesn't wipe values the customer is still editing.
+  # Rebuilds the submit form against the latest order while preserving any
+  # unsaved input the customer has typed. The data side has to refresh because
+  # some validations read off the order's loaded relationships (e.g. line_items);
+  # the params side has to be preserved so selecting a card doesn't wipe values
+  # the customer is still editing.
   defp assign_forms(socket, order) do
     form_params = (socket.assigns[:form] && socket.assigns.form && socket.assigns.form.params) || %{}
-
-    promo_params =
-      (socket.assigns[:promo_code_form] && socket.assigns.promo_code_form.params) || %{}
 
     socket
     |> assign(order: order)
     |> assign(form: build_submit_form(order, form_params))
-    |> assign(promo_code_form: make_form(order, :add_promotion_with_code, promo_params))
   end
 
   defp submit_form(socket, params) do

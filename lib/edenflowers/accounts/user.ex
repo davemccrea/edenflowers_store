@@ -4,7 +4,7 @@ defmodule Edenflowers.Accounts.User do
     domain: Edenflowers.Accounts,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication]
+    extensions: [AshAuthentication, AshAdmin.Resource]
 
   authentication do
     add_ons do
@@ -35,6 +35,10 @@ defmodule Edenflowers.Accounts.User do
   postgres do
     table "users"
     repo Edenflowers.Repo
+  end
+
+  admin do
+    actor?(true)
   end
 
   code_interface do
