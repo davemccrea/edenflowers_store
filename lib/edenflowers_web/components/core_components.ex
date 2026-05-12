@@ -914,7 +914,7 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.focus(to: "##{@id}-top")
-        |> JS.toggle_class("overflow-hidden", to: "html")
+        |> JS.add_class("overflow-hidden", to: "html")
       }
       phx-hide={
         %JS{}
@@ -924,7 +924,7 @@ defmodule EdenflowersWeb.CoreComponents do
           transition: {@transition, @transition_in, @transition_out},
           time: @time
         )
-        |> JS.toggle_class("overflow-hidden", to: "html")
+        |> JS.remove_class("overflow-hidden", to: "html")
         |> JS.pop_focus()
       }
       class="z-100 relative"
