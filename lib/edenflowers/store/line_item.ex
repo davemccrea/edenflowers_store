@@ -84,7 +84,7 @@ defmodule Edenflowers.Store.LineItem do
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false
     attribute :is_card, :boolean, default: false, allow_nil?: false
-    attribute :card_size, Edenflowers.Store.ProductVariantSize
+    attribute :variant_size, Edenflowers.Store.ProductVariantSize
     timestamps()
   end
 
