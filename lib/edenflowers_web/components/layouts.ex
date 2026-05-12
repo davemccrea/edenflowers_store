@@ -380,7 +380,7 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="container">
-        <div class="flex flex-col items-center gap-4 py-6 sm:flex-row sm:justify-between">
+        <div class="flex flex-col items-center gap-3 py-6">
           <.locale_picker id="locale-picker-footer" current_path={@current_path}>
             <span class="group inline-flex cursor-pointer items-center gap-1">
               <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
@@ -391,7 +391,7 @@ defmodule EdenflowersWeb.Layouts do
           </.locale_picker>
 
           <span class="text-xs">
-            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} •
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus: 2944459-6 •
             <a
               class="text-base-content link-underline-hover-nav whitespace-nowrap"
               href="https://github.com/davemccrea/edenflowers_store"
