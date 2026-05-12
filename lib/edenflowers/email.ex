@@ -8,7 +8,7 @@ defmodule Edenflowers.Email do
 
   require EEx
 
-  @from_address {"Eden Flowers", "info@edenflowers.fi"}
+  @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
 
   # Compile the template at compile-time so gettext extraction works
   EEx.function_from_file(
@@ -65,7 +65,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_promo(email_address, promo_code) do
     new()
-    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Welcome to Eden Flowers — your 15% off code inside")
     |> text_body(render_newsletter_promo_template(%{promo_code: promo_code}))
@@ -73,7 +73,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_already_subscribed(email_address, promo_code) do
     new()
-    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Your Eden Flowers promo code")
     |> text_body(render_newsletter_already_subscribed_template(%{promo_code: promo_code}))
@@ -81,7 +81,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_resubscribed(email_address) do
     new()
-    |> from({"Eden Flowers", "orders@edenflowers.com"})
+    |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Welcome back to the Eden Flowers newsletter")
     |> text_body(render_newsletter_resubscribed_template(%{}))

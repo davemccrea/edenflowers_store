@@ -3,7 +3,6 @@ defmodule EdenflowersWeb.Router do
   use AshAuthentication.Phoenix.Router
 
   import AshAdmin.Router
-  import AshAuthentication.Plug.Helpers
   import Oban.Web.Router
 
   pipeline :browser do
@@ -63,21 +62,12 @@ defmodule EdenflowersWeb.Router do
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    # Using a custom live view which only handles magic link strategy
+    # Using a custom live view which handles the OTP strategy in a single page
     sign_in_route(
-      live_view: EdenflowersWeb.MagicLinkRequestLive,
+      live_view: EdenflowersWeb.OtpSignInLive,
       auth_routes_prefix: "/auth",
       on_mount: [
         {EdenflowersWeb.LiveUserAuth, :live_no_user},
-        EdenflowersWeb.Hooks.PutLocale,
-        EdenflowersWeb.Hooks.PutCurrentPath
-      ]
-    )
-
-    magic_sign_in_route(Edenflowers.Accounts.User, :magic_link,
-      live_view: EdenflowersWeb.MagicLinkCompleteLive,
-      auth_routes_prefix: "/auth",
-      on_mount: [
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
