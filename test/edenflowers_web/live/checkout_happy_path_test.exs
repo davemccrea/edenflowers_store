@@ -61,14 +61,14 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    assert render(view) =~ "Gift Options"
+    assert render(view) =~ "Gift options"
 
     # Step 2: Gift Options (not a gift — defaults are fine)
     view
     |> form("#checkout-form-2", %{"form" => %{"gift" => "false"}})
     |> render_submit()
 
-    assert render(view) =~ "Delivery Information"
+    assert render(view) =~ ~r{<h2[^>]*>\s*Delivery\s*</h2>}
 
     # Step 3: pick fulfillment option, then submit the date/phone form
     view
@@ -172,7 +172,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    assert render(view) =~ "Delivery Information"
+    assert render(view) =~ ~r{<h2[^>]*>\s*Delivery\s*</h2>}
 
     # Step 3
     view
@@ -327,9 +327,9 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Apply promo from the cart sidebar (available at any step)
+    # Apply promo from the cart drawer (available at any step)
     view
-    |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
+    |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
     |> render_submit()
 
     assert render(view) =~ ~s(data-testid="promo-code-badge")
@@ -413,11 +413,14 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_change()
 
-    # Apply the promo from the cart sidebar.
-    html =
-      view
-      |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
-      |> render_submit()
+    # Apply the promo from the cart drawer.
+    view
+    |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
+    |> render_submit()
+
+    # Render again so the broadcast-triggered handle_info has been processed
+    # and the parent LiveView has reloaded with the applied promo.
+    html = render(view)
 
     assert html =~ ~s(data-testid="promo-code-badge")
     assert html =~ "Jane Doe"
