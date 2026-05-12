@@ -12,15 +12,13 @@ defmodule EdenflowersWeb.AboutLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <%!-- Hero --%>
       <section class="relative not-last:border-b">
-        <img
-          src={
-            "local:///image_4.jpg"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(1920, 600, type: "fill")
-            |> to_string()
-          }
-          class="h-64 w-full object-cover sm:h-80 md:h-96"
+        <.image
+          src="local:///image_4.jpg"
           alt=""
+          width={1920}
+          height={600}
+          priority
+          class="h-64 w-full object-cover sm:h-80 md:h-96"
         />
         <div class="bg-black/30 absolute inset-0 flex items-end">
           <div class="container pb-10">
@@ -38,16 +36,13 @@ defmodule EdenflowersWeb.AboutLive do
             <%!-- Circular portrait --%>
             <div class="flex-shrink-0">
               <div class="h-56 w-56 overflow-hidden rounded-full sm:h-64 sm:w-64 md:h-72 md:w-72">
-                <img
-                  src={
-                    "local:///jennie_pregnant.jpg"
-                    |> Imgproxy.new()
-                    |> Imgproxy.resize(400, 400, type: "fill")
-                    |> Imgproxy.set_extension("webp")
-                    |> to_string()
-                  }
-                  class="h-full w-full object-cover"
+                <.image
+                  src="local:///jennie_pregnant.jpg"
                   alt="Jennie"
+                  width={288}
+                  height={288}
+                  sizes="288px"
+                  class="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -68,16 +63,12 @@ defmodule EdenflowersWeb.AboutLive do
 
       <%!-- Full-bleed image --%>
       <section class="not-last:border-b">
-        <img
-          src={
-            "local:///image_5.jpg"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(1920, 800, type: "fill")
-            |> Imgproxy.set_extension("webp")
-            |> to_string()
-          }
-          class="h-72 w-full object-cover sm:h-96 md:h-[480px]"
+        <.image
+          src="local:///image_5.jpg"
           alt=""
+          width={1920}
+          height={800}
+          class="h-72 w-full object-cover sm:h-96 md:h-[480px]"
         />
       </section>
 

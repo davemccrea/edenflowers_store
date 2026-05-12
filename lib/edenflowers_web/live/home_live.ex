@@ -15,10 +15,13 @@ defmodule EdenflowersWeb.HomeLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="relative overflow-hidden not-last:border-b">
-        <img
-          src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
-          class="h-[100vh] w-full object-cover"
+        <.image
+          src="local:///image_1.jpg"
           alt=""
+          width={1920}
+          height={1080}
+          priority
+          class="h-[100vh] w-full object-cover"
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
@@ -108,18 +111,12 @@ defmodule EdenflowersWeb.HomeLive do
             </p>
           </div>
 
-          <img
-            src={
-              "local:///home-vaasa-map.png"
-              |> Imgproxy.new()
-              |> Imgproxy.resize(1600, 1880, type: "fill")
-              |> Imgproxy.set_extension("webp")
-              |> to_string()
-            }
+          <.image
+            src="local:///home-vaasa-map.png"
             alt={~t"Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"}
-            loading="lazy"
-            width="1600"
-            height="1880"
+            width={1600}
+            height={1880}
+            sizes="(min-width: 768px) 50vw, 100vw"
             class="aspect-[6/7] max-h-[520px] h-full w-full object-cover md:aspect-auto"
           />
         </div>

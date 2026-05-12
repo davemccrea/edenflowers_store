@@ -656,6 +656,197 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  Renders an optimised responsive image through the configured Imgproxy server.
+
+  `width`/`height` are the **CSS pixel** dimensions the image will occupy on
+  screen — the component automatically emits a `srcset` covering 1×, 1.5×, and
+  2× so retina displays get a crisp source without callers having to remember
+  the rule.
+
+  Output is a `<picture>` with a WebP `<source>` and the original-format `<img>`
+  as fallback. When `priority` is set the image becomes a LCP candidate
+  (`loading="eager"`, `fetchpriority="high"`). Default for non-priority is
+  `loading="lazy"` + `decoding="async"`.
+
+  ## Art direction
+
+  Pass `sources` to swap crops per breakpoint — this replaces the legacy
+  pattern of two `<img>` tags toggled with `hidden`/`block` Tailwind classes:
+
+      <.image
+        src={@product.image_slug}
+        alt=""
+        width={600}
+        height={750}
+        sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
+        sizes="(min-width: 640px) 25vw, 50vw"
+      />
+
+  ## Bypass cases
+
+  Three sources skip the `<picture>` + `srcset` machinery:
+
+    * SVGs (no point rasterising to WebP)
+    * External URLs (no `local:///` prefix — passes through unchanged so
+      placeholder images keep working)
+    * Tiny images (`width <= 64` with no `sources`) — emits a single 2× source
+
+  ## Examples
+
+      <.image src="local:///hero.jpg" alt="" width={1920} height={1080} priority />
+      <.image src={@product.image_slug} alt={@product.name} width={1000} height={1250} priority />
+      <.image src={@slug} alt={~t"Map"} width={1600} height={1880} sizes="(min-width: 768px) 50vw, 100vw" />
+  """
+  attr :src, :string, required: true
+  attr :alt, :string, required: true
+  attr :width, :integer, required: true
+  attr :height, :integer, required: true
+  attr :sizes, :string, default: "100vw"
+  attr :priority, :boolean, default: false
+  attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
+  attr :format, :atom, default: :webp, values: [:webp, :original]
+  attr :quality, :integer, default: 80
+  attr :sources, :list, default: []
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(id data-testid)
+
+  def image(assigns) do
+    cond do
+      svg_src?(assigns.src) ->
+        render_passthrough(assigns, Imgproxy.new(assigns.src) |> to_string())
+
+      external_src?(assigns.src) ->
+        render_passthrough(assigns, assigns.src)
+
+      assigns.width <= 64 and assigns.sources == [] ->
+        render_tiny(assigns)
+
+      true ->
+        render_picture(assigns)
+    end
+  end
+
+  defp svg_src?(src), do: Path.extname(src) |> String.downcase() == ".svg"
+
+  defp external_src?(src),
+    do: not String.starts_with?(src, "local:///")
+
+  defp render_passthrough(assigns, url) do
+    assigns = assign(assigns, :resolved_src, url)
+
+    ~H"""
+    <img
+      src={@resolved_src}
+      alt={@alt}
+      width={@width}
+      height={@height}
+      loading={if @priority, do: "eager", else: "lazy"}
+      decoding="async"
+      fetchpriority={if @priority, do: "high"}
+      class={@class}
+      {@rest}
+    />
+    """
+  end
+
+  defp render_tiny(assigns) do
+    url =
+      assigns.src
+      |> imgproxy_resize(assigns.width * 2, assigns.height * 2, assigns.crop_type, assigns.quality)
+      |> maybe_extension(assigns.format)
+      |> to_string()
+
+    render_passthrough(assigns, url)
+  end
+
+  defp render_picture(assigns) do
+    base_variants =
+      build_variants(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality)
+
+    art_directed =
+      Enum.map(assigns.sources, fn source ->
+        crop = Map.get(source, :crop_type, assigns.crop_type)
+
+        %{
+          media: Map.fetch!(source, :media),
+          variants: build_variants(assigns.src, source.width, source.height, crop, assigns.quality)
+        }
+      end)
+
+    fallback_src = base_variants |> hd() |> Map.fetch!(:url)
+
+    assigns =
+      assign(assigns,
+        base_variants: base_variants,
+        art_directed: art_directed,
+        fallback_src: fallback_src
+      )
+
+    ~H"""
+    <picture>
+      <%= for ad <- @art_directed do %>
+        <%= if @format == :webp do %>
+          <source
+            type="image/webp"
+            media={ad.media}
+            srcset={srcset(ad.variants, :webp)}
+            sizes={@sizes}
+          />
+        <% end %>
+        <source media={ad.media} srcset={srcset(ad.variants, :original)} sizes={@sizes} />
+      <% end %>
+      <source :if={@format == :webp} type="image/webp" srcset={srcset(@base_variants, :webp)} sizes={@sizes} />
+      <img
+        src={@fallback_src}
+        srcset={srcset(@base_variants, :original)}
+        sizes={@sizes}
+        alt={@alt}
+        width={@width}
+        height={@height}
+        loading={if @priority, do: "eager", else: "lazy"}
+        decoding="async"
+        fetchpriority={if @priority, do: "high"}
+        class={@class}
+        {@rest}
+      />
+    </picture>
+    """
+  end
+
+  # Emits 1×, 1.5×, and 2× variants of the declared CSS-pixel size, capped at
+  # 3840w. Below 320w we skip 1.5× — the visible gain is marginal and the
+  # source asset may not be that large.
+  defp build_variants(src, width, height, crop_type, quality) do
+    multipliers = if width <= 320, do: [1.0, 2.0], else: [1.0, 1.5, 2.0]
+
+    multipliers
+    |> Enum.map(fn m ->
+      w = min(round(width * m), 3840)
+      h = min(round(height * m), 3840)
+      img = imgproxy_resize(src, w, h, crop_type, quality)
+      %{width: w, base_url: to_string(img), webp_url: img |> Imgproxy.set_extension("webp") |> to_string()}
+    end)
+    |> Enum.uniq_by(& &1.width)
+    |> Enum.map(&Map.put(&1, :url, &1.base_url))
+  end
+
+  defp imgproxy_resize(src, width, height, crop_type, quality) do
+    src
+    |> Imgproxy.new()
+    |> Imgproxy.resize(width, height, type: crop_type)
+    |> Imgproxy.add_option(:q, [quality])
+  end
+
+  defp maybe_extension(img, :webp), do: Imgproxy.set_extension(img, "webp")
+  defp maybe_extension(img, :original), do: img
+
+  defp srcset(variants, :webp),
+    do: variants |> Enum.map_join(", ", &"#{&1.webp_url} #{&1.width}w")
+
+  defp srcset(variants, :original),
+    do: variants |> Enum.map_join(", ", &"#{&1.base_url} #{&1.width}w")
+
+  @doc """
   Renders a product card used by both the Featured Blooms carousel (home)
   and the Store grid. One editorial treatment, no surface chrome — the
   photograph is the card; the only interactive accent is the brand
@@ -674,17 +865,14 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <.link navigate={@navigate} class={["group block focus:outline-none", @class]}>
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
-        <img
-          src={@product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 750, type: "fill") |> to_string()}
+        <.image
+          src={@product.image_slug}
           alt=""
-          loading="lazy"
-          class="block h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:hidden"
-        />
-        <img
-          src={@product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-          alt=""
-          loading="lazy"
-          class="hidden h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:block"
+          width={600}
+          height={750}
+          sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
+          sizes="(min-width: 640px) 25vw, 50vw"
+          class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
         />
       </figure>
 
@@ -717,10 +905,13 @@ defmodule EdenflowersWeb.CoreComponents do
   def category_tile(assigns) do
     ~H"""
     <.link navigate={@navigate} class="group relative overflow-hidden">
-      <img
+      <.image
         src={@image_src}
-        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
         alt={@label}
+        width={800}
+        height={400}
+        sizes="(min-width: 768px) 33vw, 100vw"
+        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
       />
       <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
       <div class="absolute inset-0 flex items-end p-6">
@@ -733,6 +924,10 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :size, :integer, default: 5
 
   def social_media_links(assigns) do
+    # @size is a Tailwind scale step; multiply by 4 to get CSS pixels
+    # (h-5 = 20px, h-8 = 32px). Stays below the 64px tiny-icon threshold.
+    assigns = assign(assigns, :px, assigns.size * 4)
+
     ~H"""
     <div class="flex flex-row gap-4">
       <a
@@ -741,15 +936,12 @@ defmodule EdenflowersWeb.CoreComponents do
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Facebook"
       >
-        <img
-          class={"h-#{@size} w-#{@size}"}
-          src={
-            "local:///facebook_logo_bw_128px.png"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(128, 128, type: "fill")
-            |> to_string()
-          }
+        <.image
+          src="local:///facebook_logo_bw_128px.png"
           alt=""
+          width={@px}
+          height={@px}
+          class={"h-#{@size} w-#{@size}"}
         />
       </a>
       <a
@@ -758,15 +950,12 @@ defmodule EdenflowersWeb.CoreComponents do
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Instagram"
       >
-        <img
-          class={"h-#{@size} w-#{@size}"}
-          src={
-            "local:///instagram_logo_bw_128px.png"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(128, 128, type: "fill")
-            |> to_string()
-          }
+        <.image
+          src="local:///instagram_logo_bw_128px.png"
           alt=""
+          width={@px}
+          height={@px}
+          class={"h-#{@size} w-#{@size}"}
         />
       </a>
     </div>
