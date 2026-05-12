@@ -331,14 +331,14 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     # input is collapsed behind a "Have a promo code?" toggle by default,
     # so click that first to reveal the form.
     view
-    |> element("[data-testid='cart-drawer-promo-toggle']")
+    |> element("#cart-drawer-promo [data-testid='promo-toggle']")
     |> render_click()
 
     view
     |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
     |> render_submit()
 
-    assert render(view) =~ ~s(data-testid="promo-code-badge")
+    assert render(view) =~ ~s(data-testid="promo-badge")
 
     # Step 1 → 4
     view
@@ -423,7 +423,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     # behind a "Have a promo code?" toggle by default, so click that first
     # to reveal the form.
     view
-    |> element("[data-testid='cart-drawer-promo-toggle']")
+    |> element("#cart-drawer-promo [data-testid='promo-toggle']")
     |> render_click()
 
     view
@@ -434,7 +434,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     # and the parent LiveView has reloaded with the applied promo.
     html = render(view)
 
-    assert html =~ ~s(data-testid="promo-code-badge")
+    assert html =~ ~s(data-testid="promo-badge")
     assert html =~ "Jane Doe"
     assert html =~ "jane@example.com"
   end

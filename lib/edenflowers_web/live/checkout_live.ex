@@ -351,6 +351,13 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
 
+                <.live_component
+                  id="checkout-promo"
+                  module={EdenflowersWeb.PromoCodeComponent}
+                  order={@order}
+                  current_user={@current_user}
+                />
+
                 <div class="border-base-content/12 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-base">
@@ -364,27 +371,6 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <% true -> %>
                         <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                     <% end %>
-                  </div>
-
-                  <div
-                    :if={@order.promotion_applied?}
-                    class="flex items-baseline justify-between"
-                    data-testid="discount-section"
-                  >
-                    <div class="flex flex-row items-baseline gap-2">
-                      <span>{~t"Discount"}</span>
-                      <button
-                        phx-click="clear_promo"
-                        class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
-                        data-testid="promo-code-badge"
-                      >
-                        {@order.promotion.code} <.icon name="hero-x-mark" class="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    <span class="text-success tabular-nums" data-testid="discount-amount">
-                      - {Edenflowers.Utils.format_money(@order.discount_amount)}
-                    </span>
                   </div>
 
                   <div
@@ -557,11 +543,6 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("remove_card", _, socket) do
     order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
-    {:noreply, assign_forms(socket, order)}
-  end
-
-  def handle_event("clear_promo", _, socket) do
-    order = Order.clear_promotion!(socket.assigns.order, actor: actor(socket))
     {:noreply, assign_forms(socket, order)}
   end
 
