@@ -139,7 +139,7 @@ defmodule Edenflowers.Store.ProductTest do
   describe "Product.get_all_for_store filtering" do
     test "includes published products with variants and published category", %{tax_rate: tax_rate} do
       # Create published category
-      published_category = generate(product_category(draft: false))
+      published_category = generate(product_category(visibility: :public))
 
       # Create published product with variants
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
@@ -151,7 +151,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes draft products", %{tax_rate: tax_rate} do
-      published_category = generate(product_category(draft: false))
+      published_category = generate(product_category(visibility: :public))
 
       # Create draft product with variants
       draft_product =
@@ -165,7 +165,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes products without product_variants", %{tax_rate: tax_rate} do
-      published_category = generate(product_category(draft: false))
+      published_category = generate(product_category(visibility: :public))
 
       # Create published product WITHOUT variants
       product_no_variants =
@@ -178,7 +178,7 @@ defmodule Edenflowers.Store.ProductTest do
 
     test "excludes products with draft category", %{tax_rate: tax_rate} do
       # Create draft category
-      draft_category = generate(product_category(draft: true))
+      draft_category = generate(product_category(visibility: :draft))
 
       # Create published product with variants but draft category
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_category.id, draft: false))
@@ -190,7 +190,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "loads cheapest_price, product_variants, and product_category", %{tax_rate: tax_rate} do
-      published_category = generate(product_category(draft: false))
+      published_category = generate(product_category(visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id, price: "15.99"))
 
@@ -206,8 +206,8 @@ defmodule Edenflowers.Store.ProductTest do
 
   describe "Product.get_by_category filtering" do
     test "returns only products in specified category", %{tax_rate: tax_rate} do
-      category_a = generate(product_category(draft: false))
-      category_b = generate(product_category(draft: false))
+      category_a = generate(product_category(visibility: :public))
+      category_b = generate(product_category(visibility: :public))
 
       product_a = generate(product(tax_rate_id: tax_rate.id, product_category_id: category_a.id, draft: false))
       _variant_a = generate(product_variant(product_id: product_a.id))
@@ -222,7 +222,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "returns empty list when category has no qualifying products", %{tax_rate: _tax_rate} do
-      empty_category = generate(product_category(draft: false))
+      empty_category = generate(product_category(visibility: :public))
 
       products = Product.get_by_category!(empty_category.id, authorize?: false)
 
@@ -232,7 +232,7 @@ defmodule Edenflowers.Store.ProductTest do
 
   describe "Product.get_by_category_slug filtering" do
     test "returns products matching the slug", %{tax_rate: tax_rate} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
@@ -242,8 +242,8 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes products from a different category slug", %{tax_rate: tax_rate} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
-      other_category = generate(product_category(draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
+      other_category = generate(product_category(visibility: :public))
 
       card_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       _card_variant = generate(product_variant(product_id: card_product.id))
@@ -258,7 +258,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes draft products", %{tax_rate: tax_rate} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       draft_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: true))
       _variant = generate(product_variant(product_id: draft_product.id))
 
@@ -268,7 +268,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes products without variants", %{tax_rate: tax_rate} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
 
       product_no_variants =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
@@ -279,7 +279,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "excludes products in a draft category", %{tax_rate: tax_rate} do
-      draft_cards_category = generate(product_category(slug: "cards", draft: true))
+      draft_cards_category = generate(product_category(slug: "cards", visibility: :draft))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
@@ -289,7 +289,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
 
     test "loads cheapest_price, product_variants, product_category, and tax_rate", %{tax_rate: tax_rate} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id, price: "7.50"))
 

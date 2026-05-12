@@ -49,6 +49,7 @@ defmodule EdenflowersWeb.Router do
       live "/condolences", CondolencesLive
       live "/about", AboutLive
       live "/contact", ContactLive
+      live "/faq", FaqLive
       live "/product/:id", ProductLive
       live "/checkout", CheckoutLive
       live "/order/:id", OrderLive
