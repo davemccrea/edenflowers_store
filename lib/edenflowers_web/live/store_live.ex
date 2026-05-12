@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.StoreLive do
 
         <%= if Enum.empty?(@products) do %>
           <div class="bg-cream flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
-            <.flower seed={@selected_category.slug} class="text-primary/80 h-20 w-20" />
+            <.flower name="flower-42" class="text-primary/80 h-20 w-20" />
             <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
             <p class="text-base-content/75 max-w-md leading-relaxed">
               {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
