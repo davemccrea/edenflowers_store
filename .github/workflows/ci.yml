@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   test:
@@ -33,22 +35,15 @@ jobs:
           version-file: .tool-versions
           version-type: strict
 
-      - name: Restore deps cache
+      - name: Restore deps and build cache
         uses: actions/cache@v5
         with:
-          path: deps
-          key: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-deps-${{ hashFiles('mix.lock') }}
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-${{ env.MIX_ENV }}-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-deps-
-
-      - name: Restore build cache
-        uses: actions/cache@v5
-        with:
-          path: _build
-          key: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-build-${{ env.MIX_ENV }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-build-${{ env.MIX_ENV }}-${{ hashFiles('mix.lock') }}-
-            ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-build-${{ env.MIX_ENV }}-
+            ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-${{ env.MIX_ENV }}-
 
       - run: mix deps.get
       - run: mix deps.compile
