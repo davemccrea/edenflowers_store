@@ -10,7 +10,7 @@
 <%= gettext("Email") %>: <%= @order.customer_email %>
 
 <%= gettext("ITEMS") %>
-<%= for item <- @order.line_items do %>- <%= item.product_name %> (<%= item.quantity %>) <%= @format_currency.(item.line_total) %>
+<%= for item <- @order.line_items do %>- <%= item.product_name %><%= if item.variant_size do %> (<%= String.capitalize(to_string(item.variant_size)) %>)<% end %> (<%= item.quantity %>) <%= @format_currency.(item.line_total) %>
 <% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= gettext("DELIVERY") %><% else %><%= gettext("PICKUP") %><% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= if @order.gift do %><%= gettext("Recipient") %>: <%= @order.recipient_name %><% else %><%= gettext("Recipient") %>: <%= @order.customer_name %><% end %>

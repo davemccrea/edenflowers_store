@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                     <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
                     <% card_message_max =
-                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.card_size) %>
+                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.variant_size) %>
 
                     <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
                       <div :if={card_line_item} data-testid="card-preview">

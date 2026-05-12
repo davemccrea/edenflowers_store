@@ -38,16 +38,21 @@ defmodule EdenflowersWeb.LineItemsComponent do
 
             <div class="flex flex-1 flex-col gap-2">
               <div class="flex flex-row justify-between gap-3">
-                <%= if @link_product and not line_item.is_card do %>
-                  <.link
-                    navigate={~p"/product/#{line_item.product_id}"}
-                    class="link-underline-hover-nav"
-                  >
-                    {line_item.product_name}
-                  </.link>
-                <% else %>
-                  <span>{line_item.product_name}</span>
-                <% end %>
+                <div class="flex flex-col gap-0.5">
+                  <%= if @link_product and not line_item.is_card do %>
+                    <.link
+                      navigate={~p"/product/#{line_item.product_id}"}
+                      class="link-underline-hover-nav"
+                    >
+                      {line_item.product_name}
+                    </.link>
+                  <% else %>
+                    <span>{line_item.product_name}</span>
+                  <% end %>
+                  <span :if={line_item.variant_size} class="font-serif text-base-content/65 text-sm italic leading-none">
+                    {String.capitalize(to_string(line_item.variant_size))}
+                  </span>
+                </div>
                 <span class="shrink-0 tabular-nums">{Edenflowers.Utils.format_money(line_item.line_subtotal)}</span>
               </div>
 
