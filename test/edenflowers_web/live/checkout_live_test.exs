@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> fill_in("Your Name *", with: "John Doe")
       |> fill_in("Email *", with: "john@example.com")
       |> click_button("Next")
-      |> assert_has("h2", text: "Gift Options")
+      |> assert_has("h2", text: "Gift options")
     end
 
     test "rejects an invalid email and stays on step 1", %{conn: conn, order: order} do
@@ -95,7 +95,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "successfully submits and progresses to step 3", %{session: session} do
       session
       |> click_button("Next")
-      |> assert_has("h2", text: "Delivery Information")
+      |> assert_has("h2", text: "Delivery")
     end
 
     test "does not show 'Select a card' button when gift is false", %{session: session} do
@@ -277,7 +277,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> assert_has("[data-testid='remove-card-button']")
     end
 
-    test "card row in cart sidebar is read-only (no quantity or remove controls)",
+    test "card row in cart sidebar has a remove control but no quantity controls",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       gift_order = generate(order(state: :gift_options, gift: true))
 
@@ -290,15 +290,13 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      # The card line item is still rendered in the cart so the customer can
-      # see it on the totals breakdown.
+      # The card line item is rendered in the cart so the customer can see it
+      # on the totals breakdown and remove it if they change their mind.
       |> assert_has("#checkout-line-items", text: card_product.name)
-      # But its row does not expose +/- or trash controls — those would let
-      # the customer accidentally end up with quantity > 1 cards or remove
-      # the card from a place that contradicts the dedicated step-2 UI.
+      |> assert_has("#checkout-line-items-remove-#{card.id}")
+      # Cards are always quantity 1, so the +/- controls do not apply.
       |> refute_has("#checkout-line-items-increment-#{card.id}")
       |> refute_has("#checkout-line-items-decrement-#{card.id}")
-      |> refute_has("#checkout-line-items-remove-#{card.id}")
     end
 
     test "select_card event adds a card line item to the order",
