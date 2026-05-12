@@ -65,9 +65,11 @@ defmodule EdenflowersWeb.CheckoutLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title mb-10 md:mb-12">{~t"Checkout"}</h1>
+        <div class="max-w-[58rem] mx-auto w-full">
+          <h1 class="page-title mb-10 md:mb-12">{~t"Checkout"}</h1>
+        </div>
         <div class="flex flex-col gap-12">
-          <div class="flex flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
+          <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
             <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
               <.steps state={@order.state} order={@order}>
                 <section
