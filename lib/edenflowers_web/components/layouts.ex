@@ -51,21 +51,39 @@ defmodule EdenflowersWeb.Layouts do
         {code, String.capitalize(name)}
       end
 
-    assigns = assign(assigns, :locales, locales)
+    position_area =
+      case assigns.placement do
+        "bottom" -> "bottom span-left"
+        "top" -> "top span-left"
+      end
+
+    assigns =
+      assigns
+      |> assign(:locales, locales)
+      |> assign(:anchor_name, "--#{assigns.id}")
+      |> assign(:position_area, position_area)
 
     ~H"""
-    <details id={@id} class={["dropdown dropdown-end", "dropdown-#{@placement}"]}>
-      <summary class="cursor-pointer list-none">
-        {render_slot(@inner_block)}
-      </summary>
-      <ul class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-1 rounded-none border p-1 shadow">
-        <li :for={{code, name} <- @locales}>
-          <.link href={~p"/locale/#{code}?redirect_to=#{@current_path}"}>
-            {name}
-          </.link>
-        </li>
-      </ul>
-    </details>
+    <button
+      type="button"
+      popovertarget={@id}
+      style={"anchor-name: #{@anchor_name}"}
+      class="cursor-pointer bg-transparent p-0"
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <ul
+      id={@id}
+      popover
+      style={"position-anchor: #{@anchor_name}; position-area: #{@position_area};"}
+      class="dropdown menu bg-base-100 border-base-300 rounded-none border p-1 shadow"
+    >
+      <li :for={{code, name} <- @locales}>
+        <.link href={~p"/locale/#{code}?redirect_to=#{@current_path}"}>
+          {name}
+        </.link>
+      </li>
+    </ul>
     """
   end
 
