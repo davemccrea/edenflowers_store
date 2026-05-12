@@ -2,6 +2,8 @@ defmodule EdenflowersWeb.CalendarComponent do
   use EdenflowersWeb, :live_component
   require Logger
 
+  alias EdenflowersWeb.CalendarComponent.Keymap
+
   @week_begins :default
   @default_timezone "Europe/Helsinki"
 
@@ -10,38 +12,42 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:ok,
      socket
-     |> assign(render_count: 0)
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
-     |> assign(date_callback: Map.get(socket.assigns, :date_callback, fn _ -> :ok end))
-     |> assign(on_select: fn date -> send(self(), {:date_selected, date}) end)
+     |> assign(selectable?: fn _ -> true end)
      |> update_calendar_view(today_date)}
   end
 
   def update(assigns, socket) do
     selected_date = parse_date(assigns.selected_date)
-    today_date = socket.assigns.today_date
-    view_date = if selected_date, do: selected_date, else: today_date
 
-    # Only update the calendar view if the component is being rendered for the first time
-    # TODO: is this even necessary?
     socket =
-      if socket.assigns.render_count == 0,
-        do: update_calendar_view(socket, view_date),
-        else: socket
+      socket
+      |> assign(assigns)
+      |> assign(selected_date: selected_date)
 
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> assign(render_count: socket.assigns.render_count + 1)
-     |> assign(selected_date: selected_date)}
+    # If the parent passes a selected_date outside the current view month
+    # (e.g. form pre-populated on remount), advance the view so the selected
+    # pill is visible. No-op when the selected date is already in view.
+    socket =
+      if selected_date && not current_month?(selected_date, socket.assigns.view_date) do
+        update_calendar_view(socket, selected_date)
+      else
+        socket
+      end
+
+    {:ok, socket}
   end
 
   attr :id, :string, required: true
   attr :field, :any, required: true
   attr :selected_date, :string, required: false
-  attr :date_callback, :any, required: false
+
+  attr :selectable?, :any,
+    default: nil,
+    doc: "(Date.t() -> boolean()). Called lazily per visible cell. Defaults to always-selectable."
+
   attr :error, :boolean, default: false
   slot :day_decoration, required: false
 
@@ -51,7 +57,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       id={"#{@id}"}
       class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2 sm:max-w-xs"}
       phx-hook="CalendarHook"
-      data-view-date={@view_date}
+      data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
       <div class="flex items-center justify-between">
@@ -104,18 +110,11 @@ defmodule EdenflowersWeb.CalendarComponent do
             phx-target={@myself}
             phx-click="select"
             phx-value-date={day}
-            data-key-arrow-up={calculate_date_for_key(day, "ArrowUp", @today_date)}
-            data-key-arrow-down={calculate_date_for_key(day, "ArrowDown", @today_date)}
-            data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft", @today_date)}
-            data-key-arrow-right={calculate_date_for_key(day, "ArrowRight", @today_date)}
-            data-key-home={calculate_date_for_key(day, "Home", @today_date)}
-            data-key-end={calculate_date_for_key(day, "End", @today_date)}
-            data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
-            data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
+            data-key-targets={key_targets_json(day, @today_date)}
             type="button"
-            aria-selected={@selected_date && selected?(day, @selected_date)}
+            aria-selected={if @selected_date && selected?(day, @selected_date), do: "true"}
             tabindex="-1"
-            class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
+            class={calendar_day_class(day, @view_date, @selected_date, @today_date, @selectable?.(day))}
           >
             <time datetime={day}>
               {Localize.DateTime.to_string!(day, format: "d")}
@@ -131,32 +130,22 @@ defmodule EdenflowersWeb.CalendarComponent do
   # Event Handlers
 
   def handle_event("current-month", _, socket) do
-    date = socket.assigns.today_date
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, socket.assigns.today_date)}
   end
 
   def handle_event("previous-month", _, socket) do
-    date =
-      socket.assigns.view_date
-      |> Date.shift(month: -1)
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, Date.shift(socket.assigns.view_date, month: -1))}
   end
 
   def handle_event("next-month", _, socket) do
-    date =
-      socket.assigns.view_date
-      |> Date.shift(month: 1)
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, Date.shift(socket.assigns.view_date, month: 1))}
   end
 
   def handle_event("select", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string),
          true <- current_month?(date, socket.assigns.view_date),
-         :ok <- socket.assigns.date_callback.(date) do
-      socket.assigns.on_select.(date)
+         true <- socket.assigns.selectable?.(date) do
+      send(self(), {:date_selected, date})
 
       {:noreply,
        socket
@@ -171,7 +160,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     date =
       view_date
       |> Date.from_iso8601!()
-      |> handle_date_navigation(key, socket.assigns.today_date)
+      |> Keymap.next_date(key, socket.assigns.today_date)
 
     {:noreply, update_calendar_view(socket, date)}
   end
@@ -194,11 +183,11 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
+  defp calendar_day_class(day, view_date, selected_date, today_date, selectable?) do
     is_current_month = current_month?(day, view_date)
     is_selected = selected?(day, selected_date)
     is_today = day == today_date
-    is_disabled = date_status != :ok
+    is_disabled = not selectable?
 
     if !is_current_month do
       "opacity-0"
@@ -225,47 +214,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> assign(week_rows: week_rows(date))
   end
 
-  defp calculate_date_for_key(date, key, today_date), do: handle_date_navigation(date, key, today_date)
+  @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
 
-  defp handle_date_navigation(date, key, today_date) do
-    target_date =
-      case key do
-        "ArrowUp" ->
-          Date.add(date, -7)
-
-        "ArrowDown" ->
-          Date.add(date, 7)
-
-        "ArrowLeft" ->
-          Date.add(date, -1)
-
-        "ArrowRight" ->
-          Date.add(date, 1)
-
-        "PageUp" ->
-          Date.shift(date, month: -1)
-
-        "PageDown" ->
-          Date.shift(date, month: 1)
-
-        "Home" ->
-          Date.beginning_of_week(date, @week_begins)
-
-        "End" ->
-          Date.end_of_week(date, @week_begins)
-
-        _ ->
-          Logger.info("key #{key} not configured")
-          date
-      end
-
-    disallow_past_months(target_date, date, today_date)
-  end
-
-  defp disallow_past_months(target_date, focused_date, today_date) do
-    if Date.before?(target_date, Date.beginning_of_month(today_date)),
-      do: focused_date,
-      else: target_date
+  defp key_targets_json(date, today_date) do
+    @nav_keys
+    |> Map.new(fn key -> {key, Date.to_iso8601(Keymap.next_date(date, key, today_date))} end)
+    |> Jason.encode!()
   end
 
   defp week_rows(view_date) do
@@ -289,7 +243,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     last = Date.end_of_month(view_date)
 
     Date.range(first, last)
-    |> Enum.map(&Calendar.strftime(&1, "%Y-%m-%d"))
+    |> Enum.map(&Date.to_iso8601/1)
     |> Jason.encode!()
   end
 

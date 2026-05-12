@@ -284,11 +284,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                           }
                           selected_date={@form[:fulfillment_date].value}
                           module={EdenflowersWeb.CalendarComponent}
-                          on_select={fn date -> send(self(), {:date_selected, date}) end}
-                          date_callback={
+                          selectable?={
                             fn date ->
-                              {_, state} = Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
-                              state
+                              {fulfillable?, _reason} =
+                                Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
+
+                              fulfillable?
                             end
                           }
                         >
