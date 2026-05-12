@@ -187,7 +187,9 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp previous_month_button_class(view_date, today_date) do
     is_disabled = current_month?(view_date, today_date)
-    base_class = "flex flex-none items-center justify-center p-1.5"
+
+    base_class =
+      "focus-visible:outline-base-content flex flex-none items-center justify-center rounded-sm p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2"
 
     if is_disabled do
       "#{base_class} text-base-content/20"
@@ -209,7 +211,7 @@ defmodule EdenflowersWeb.CalendarComponent do
           "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
 
         is_selected ->
-          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-primary"
+          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-base-content"
 
         true ->
           "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
