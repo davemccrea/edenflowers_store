@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       <div class="flex items-center justify-between">
         <button
           id={"#{@id}-previous-month"}
-          disabled={@view_date.month == @today_date.month}
+          disabled={current_month?(@view_date, @today_date)}
           phx-target={@myself}
           phx-click="previous-month"
           type="button"
@@ -113,11 +113,7 @@ defmodule EdenflowersWeb.CalendarComponent do
             data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
             data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
             type="button"
-            aria-selected={
-              if @selected_date,
-                do: selected?(day, @selected_date),
-                else: selected?(day, @view_date)
-            }
+            aria-selected={@selected_date && selected?(day, @selected_date)}
             tabindex="-1"
             class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
           >
@@ -188,7 +184,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   # Helper Functions
 
   defp previous_month_button_class(view_date, today_date) do
-    is_disabled = view_date.month == today_date.month
+    is_disabled = current_month?(view_date, today_date)
     base_class = "flex flex-none items-center justify-center p-1.5"
 
     if is_disabled do
@@ -247,10 +243,10 @@ defmodule EdenflowersWeb.CalendarComponent do
           Date.add(date, 1)
 
         "PageUp" ->
-          Date.shift(date, month: 1)
+          Date.shift(date, month: -1)
 
         "PageDown" ->
-          Date.shift(date, month: -1)
+          Date.shift(date, month: 1)
 
         "Home" ->
           Date.beginning_of_week(date, @week_begins)
