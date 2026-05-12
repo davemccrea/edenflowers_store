@@ -9,23 +9,19 @@ defmodule EdenflowersWeb.MaternityLive do
     ~H"""
     <div class="bg-base-200 flex min-h-screen flex-col">
       <header class="flex justify-center py-8">
-        <img
-          src={
-            "local:///Eden_flowers-logo1_green_web.svg"
-            |> Imgproxy.new()
-            |> to_string()
-          }
+        <.image
+          src="local:///Eden_flowers-logo1_green_web.svg"
+          alt="Eden Flowers"
+          width={160}
+          height={80}
           class="w-40 md:hidden"
-          alt="Eden Flowers"
         />
-        <img
-          src={
-            "local:///Eden_flowers-logo2_green_web.svg"
-            |> Imgproxy.new()
-            |> to_string()
-          }
-          class="hidden w-64 md:block"
+        <.image
+          src="local:///Eden_flowers-logo2_green_web.svg"
           alt="Eden Flowers"
+          width={256}
+          height={80}
+          class="hidden w-64 md:block"
         />
       </header>
 
@@ -36,16 +32,13 @@ defmodule EdenflowersWeb.MaternityLive do
       >
         <div class="flex w-full max-w-4xl flex-col items-center gap-8 md:flex-row md:items-center md:gap-12">
           <div class="order-2 w-full max-w-sm flex-shrink-0 md:order-1 md:w-96">
-            <img
-              src={
-                "local:///jennie_pregnant.jpg"
-                |> Imgproxy.new()
-                |> Imgproxy.resize(800, 1000, type: "fill")
-                |> Imgproxy.set_extension("webp")
-                |> to_string()
-              }
-              class="w-full rounded-md object-cover shadow-md"
+            <.image
+              src="local:///jennie_pregnant.jpg"
               alt="Jennie"
+              width={400}
+              height={500}
+              sizes="(min-width: 768px) 384px, 100vw"
+              class="w-full rounded-md object-cover shadow-md"
             />
           </div>
 

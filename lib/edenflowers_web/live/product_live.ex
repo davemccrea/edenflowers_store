@@ -48,14 +48,15 @@ defmodule EdenflowersWeb.ProductLive do
           <%!-- Photograph: capped at 480px wide on desktop so it sits at
                a calmer scale; aspect 4:5 matches the mobile grid card. --%>
           <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
-            <img
+            <.image
               data-testid="product-image"
-              src={
-                @selected_variant.image_slug |> Imgproxy.new() |> Imgproxy.resize(1000, 1250, type: "fill") |> to_string()
-              }
+              src={@selected_variant.image_slug}
               alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
+              width={1000}
+              height={1250}
+              sizes="(min-width: 768px) 480px, 100vw"
+              priority
               class="h-full w-full object-cover"
-              loading="eager"
             />
             <figcaption :if={@product.featured} class="product-mark">
               <span class="product-mark__eyebrow">{~t"Favourite"}</span>
