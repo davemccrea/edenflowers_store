@@ -1265,7 +1265,7 @@ defmodule Edenflowers.Store.OrderTest do
   describe "Card line items via Order" do
     setup do
       tax_rate = generate(tax_rate())
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
 
       card_product =
         generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id, draft: false))
@@ -1287,7 +1287,7 @@ defmodule Edenflowers.Store.OrderTest do
       card = Enum.find(order.line_items, & &1.is_card)
       assert card
       assert card.product_variant_id == card_variant_a.id
-      assert card.card_size == card_variant_a.size
+      assert card.variant_size == card_variant_a.size
 
       # @checkout_load calculations should be present on the returned order
       refute match?(%Ash.NotLoaded{}, order.total)
@@ -1304,7 +1304,7 @@ defmodule Edenflowers.Store.OrderTest do
       cards = Enum.filter(order.line_items, & &1.is_card)
       assert length(cards) == 1
       assert hd(cards).product_variant_id == card_variant_b.id
-      assert hd(cards).card_size == card_variant_b.size
+      assert hd(cards).variant_size == card_variant_b.size
     end
 
     test "remove_card destroys the card line item and clears card_message", %{
