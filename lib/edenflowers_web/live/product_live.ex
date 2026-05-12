@@ -130,7 +130,7 @@ defmodule EdenflowersWeb.ProductLive do
 
             <p class="text-base-content/75 text-base">
               {~t"Have a question?"}
-              <.link navigate={~p"/faq"} class="text-base-content link-underline-hover-nav whitespace-nowrap">
+              <.link navigate={~p"/faq"} class="link-underline-hover-nav whitespace-nowrap">
                 {~t"See the FAQ"}
               </.link>
             </p>
