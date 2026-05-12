@@ -169,14 +169,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                                     data-testid="card-image-button"
                                     title={gettext("Change card")}
                                   >
-                                    <img
-                                      src={
-                                        card_line_item.product_image_slug
-                                        |> Imgproxy.new()
-                                        |> Imgproxy.resize(160, 160, type: "fill")
-                                        |> to_string()
-                                      }
+                                    <.image
+                                      src={card_line_item.product_image_slug}
                                       alt={card_line_item.product_name}
+                                      width={80}
+                                      height={80}
+                                      sizes="80px"
                                       class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
                                     />
                                   </button>
@@ -442,14 +440,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                 class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
                 data-testid={"card-option-#{variant.id}"}
               >
-                <img
-                  src={
-                    variant.image_slug
-                    |> Imgproxy.new()
-                    |> Imgproxy.resize(200, 200, type: "fill")
-                    |> to_string()
-                  }
+                <.image
+                  src={variant.image_slug}
                   alt={variant.product.name}
+                  width={96}
+                  height={96}
+                  sizes="96px"
                   class="h-24 w-24 object-cover"
                 />
                 <span class="text-sm">{variant.product.name}</span>
