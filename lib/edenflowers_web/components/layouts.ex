@@ -346,8 +346,12 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="bg-cream border-t border-b">
-        <div class="container py-20 md:py-36">
+      <div class="bg-cream relative overflow-hidden border-t border-b">
+        <.flower
+          name="flower-41"
+          class="text-base-content/15 pointer-events-none absolute top-6 right-6 h-20 w-20 md:top-10 md:right-10 md:h-28 md:w-28"
+        />
+        <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
             <div class="footer-grid__newsletter space-y-4">
               <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />

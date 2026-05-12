@@ -600,8 +600,6 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @flower_paths Path.wildcard(Path.join(File.cwd!(), "priv/svg/flower-*.svg")) |> Enum.sort()
-  @flower_names Enum.map(@flower_paths, &Path.basename(&1, ".svg"))
-  @flower_count length(@flower_names)
 
   @flowers (for path <- @flower_paths, into: %{} do
               raw = File.read!(path)
@@ -628,22 +626,20 @@ defmodule EdenflowersWeb.CoreComponents do
   Renders a hand-drawn botanical illustration inline.
 
   Tailwind classes drive size (e.g. `h-10 w-10`) and color (e.g. `text-forest-content`),
-  since the SVG paths use `fill:currentColor`. Selection is deterministic from
-  `seed` — same seed always yields the same drawing — or pass an explicit `name`
-  like `"flower-09"` to pin one. The source SVGs ship in the repo at `priv/svg/`
-  and are inlined at compile time.
+  since the SVG paths use `fill:currentColor`. Pass `name` to pick a specific
+  drawing — the source SVGs ship in the repo at `priv/svg/` and are inlined at
+  compile time.
 
   ## Examples
 
-      <.flower seed="cart-empty" class="h-32 w-32 text-primary/80" />
+      <.flower name="flower-30" class="h-32 w-32 text-primary/80" />
       <.flower name="flower-09" class="h-10 w-10 text-forest-content/70" />
   """
-  attr :seed, :any, default: nil
-  attr :name, :string, default: nil, values: [nil | @flower_names]
+  attr :name, :string, required: true, values: Map.keys(@flowers)
   attr :class, :any, default: "h-6 w-6"
 
   def flower(assigns) do
-    %{viewbox: viewbox, body: body} = Map.fetch!(@flowers, assigns.name || flower_pick(assigns.seed))
+    %{viewbox: viewbox, body: body} = Map.fetch!(@flowers, assigns.name)
     assigns = assign(assigns, viewbox: viewbox, body: body)
 
     ~H"""
@@ -658,9 +654,6 @@ defmodule EdenflowersWeb.CoreComponents do
     </svg>
     """
   end
-
-  defp flower_pick(nil), do: "flower-01"
-  defp flower_pick(seed), do: Enum.at(@flower_names, :erlang.phash2(seed, @flower_count))
 
   @doc """
   Renders a product card used by both the Featured Blooms carousel (home)

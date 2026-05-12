@@ -92,7 +92,11 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
+      <section class="bg-cream relative overflow-hidden not-last:border-b" aria-labelledby="location-heading">
+        <.flower
+          name="flower-41"
+          class="text-base-content/15 pointer-events-none absolute top-4 left-4 h-16 w-16 md:top-8 md:left-8 md:h-24 md:w-24"
+        />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
@@ -124,7 +128,7 @@ defmodule EdenflowersWeb.HomeLive do
       <%!-- Pull quote --%>
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <.flower seed="pull-quote" class="text-forest-content/70 h-12 w-12" />
+          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
           <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
             {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
