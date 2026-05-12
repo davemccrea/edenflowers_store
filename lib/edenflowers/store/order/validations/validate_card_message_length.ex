@@ -23,7 +23,7 @@ defmodule Edenflowers.Store.Order.Validations.ValidateCardMessageLength do
           nil ->
             {:error, field: :card_message, message: ~t"Select a card before writing a message"}
 
-          %{card_size: size} ->
+          %{variant_size: size} ->
             max = ProductVariantSize.max_message_length(size)
 
             if String.length(message) > max do

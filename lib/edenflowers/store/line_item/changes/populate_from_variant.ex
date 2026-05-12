@@ -16,15 +16,9 @@ defmodule Edenflowers.Store.LineItem.Changes.PopulateFromVariant do
         product_name: variant.product.name,
         product_image_slug: variant.image_slug,
         unit_price: variant.price,
-        tax_rate: variant.product.tax_rate.percentage
+        tax_rate: variant.product.tax_rate.percentage,
+        variant_size: variant.size
       }
-
-      attrs =
-        if Ash.Changeset.get_attribute(changeset, :is_card) do
-          Map.put(attrs, :card_size, variant.size)
-        else
-          attrs
-        end
 
       Ash.Changeset.force_change_attributes(changeset, attrs)
     else

@@ -1,0 +1,46 @@
+{
+  "version": 8,
+  "name": "Eden Flowers — Vaasa",
+  "metadata": {
+    "mapbox:autocomposite": true,
+    "mapbox:type": "default"
+  },
+  "sources": {
+    "composite": {
+      "url": "mapbox://mapbox.mapbox-streets-v8",
+      "type": "vector"
+    }
+  },
+  "sprite": "mapbox://sprites/mapbox/light-v11",
+  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "paper",
+      "type": "background",
+      "paint": {
+        "background-color": "#F2EAD8"
+      }
+    },
+    {
+      "id": "water-fill",
+      "type": "fill",
+      "source": "composite",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#8A9C95",
+        "fill-opacity": 0.55
+      }
+    },
+    {
+      "id": "coastline",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "water",
+      "paint": {
+        "line-color": "#5E6E66",
+        "line-width": 0.5,
+        "line-opacity": 0.7
+      }
+    }
+  ]
+}

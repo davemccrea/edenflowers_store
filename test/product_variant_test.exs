@@ -115,9 +115,9 @@ defmodule Edenflowers.Store.ProductVariantTest do
   describe "ProductVariant.for_card_drawer" do
     setup do
       tax_rate = generate(tax_rate())
-      cards_category = generate(product_category(slug: "cards", draft: false))
-      draft_cards_category = generate(product_category(slug: "cards-draft", draft: true))
-      other_category = generate(product_category(draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
+      draft_cards_category = generate(product_category(slug: "cards-draft", visibility: :draft))
+      other_category = generate(product_category(visibility: :public))
 
       card_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       other_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: other_category.id, draft: false))

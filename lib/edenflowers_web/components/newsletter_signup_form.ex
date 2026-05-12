@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
 
       <%= if @submitted do %>
         <p class="text-base-content/80">
-          {~t"Thanks! We've sent your 15% off code to your inbox."}
+          {~t"Thanks! Your 15% off code is on its way to your inbox."}
         </p>
       <% else %>
         <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit" class="space-y-4">
@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.NewsletterSignupForm do
             </button>
           </div>
           <p class="text-base-content/60 text-xs leading-relaxed">
-            {~t"We send out only occasional emails. Unsubscribe at any time."}
+            {~t"Only occasional emails — unsubscribe at any time."}
           </p>
         </.form>
       <% end %>

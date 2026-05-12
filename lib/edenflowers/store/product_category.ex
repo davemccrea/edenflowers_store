@@ -25,21 +25,21 @@ defmodule Edenflowers.Store.ProductCategory do
     defaults [:read, :destroy]
 
     read :get_all do
-      filter expr(draft == false)
+      filter expr(visibility == :public)
     end
 
     read :get_by_slug do
       argument :slug, :string, allow_nil?: false
-      filter expr(slug == ^arg(:slug) and draft == false)
+      filter expr(slug == ^arg(:slug) and visibility == :public)
       get? true
     end
 
     create :create do
-      accept [:slug, :draft, :name, :description, :translations]
+      accept [:slug, :visibility, :name, :description, :translations]
     end
 
     update :update do
-      accept [:slug, :draft, :name, :description, :translations]
+      accept [:slug, :visibility, :name, :description, :translations]
     end
   end
 
@@ -66,7 +66,15 @@ defmodule Edenflowers.Store.ProductCategory do
     attribute :name, :string, allow_nil?: false
     attribute :description, :string, allow_nil?: true
     attribute :slug, :string, allow_nil?: false
-    attribute :draft, :boolean, allow_nil?: false, default: true
+
+    # :public — browsable in the store ribbon and at /store/:slug
+    # :draft  — work-in-progress, not yet ready to publish
+    # :hidden — intentionally kept out of the storefront, products are still
+    #           reachable through other surfaces (e.g. card-drawer at checkout)
+    attribute :visibility, :atom,
+      allow_nil?: false,
+      default: :draft,
+      constraints: [one_of: [:public, :draft, :hidden]]
   end
 
   relationships do

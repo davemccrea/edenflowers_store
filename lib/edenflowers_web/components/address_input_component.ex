@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         id="address-input-field"
         name="delivery_address"
         value={@typed}
-        label={~t"Address *"}
+        label={@label}
         type="text"
         errors={errors(@error, @touched)}
         phx-change="typing"

@@ -25,11 +25,14 @@ defmodule Edenflowers.Store.ProductVariant do
     end
 
     read :for_card_drawer do
+      # The Cards category is intentionally hidden from the storefront
+      # (visibility: :hidden) — products are surfaced only at checkout via
+      # this action. Excluding :draft keeps work-in-progress categories out.
       filter expr(
                draft == false and
                  product.draft == false and
                  product.product_category.slug == "cards" and
-                 product.product_category.draft == false
+                 product.product_category.visibility != :draft
              )
 
       prepare build(sort: [size: :asc], load: [product: [:tax_rate]])
