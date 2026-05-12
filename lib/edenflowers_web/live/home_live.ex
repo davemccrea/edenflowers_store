@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.HomeLive do
 
       <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-2">
-          <div class="flex flex-col px-4 pt-20 pb-10 sm:px-8 md:justify-center md:px-12 md:py-28 lg:px-20">
+          <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
             <h2 id="location-heading" class="section-title mb-7">
               {~t"Made in Vaasa, Finland."}
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.HomeLive do
             loading="lazy"
             width="800"
             height="940"
-            class="aspect-[6/7] h-full w-full object-cover md:aspect-auto"
+            class="aspect-[6/7] max-h-[520px] h-full w-full object-cover md:aspect-auto"
           />
         </div>
       </section>
