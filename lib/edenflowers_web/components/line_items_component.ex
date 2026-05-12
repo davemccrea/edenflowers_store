@@ -115,7 +115,9 @@ defmodule EdenflowersWeb.LineItemsComponent do
         <div class="flex flex-col items-center gap-5 py-10 text-center">
           <.flower name="flower-30" class="text-primary/70 h-20 w-20" />
           <p class="font-serif text-lg">{~t"Your cart is empty."}</p>
-          <.button navigate={~p"/store"}>{~t"Browse the store"}</.button>
+          <.button navigate={~p"/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
+            {~t"Browse the store"}
+          </.button>
         </div>
       <% end %>
     </div>
