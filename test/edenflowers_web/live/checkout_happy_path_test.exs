@@ -327,7 +327,13 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Apply promo from the cart drawer (available at any step)
+    # Apply promo from the cart drawer (available at any step). The promo
+    # input is collapsed behind a "Have a promo code?" toggle by default,
+    # so click that first to reveal the form.
+    view
+    |> element("[data-testid='cart-drawer-promo-toggle']")
+    |> render_click()
+
     view
     |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
     |> render_submit()
@@ -413,7 +419,13 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_change()
 
-    # Apply the promo from the cart drawer.
+    # Apply the promo from the cart drawer. The promo input is collapsed
+    # behind a "Have a promo code?" toggle by default, so click that first
+    # to reveal the form.
+    view
+    |> element("[data-testid='cart-drawer-promo-toggle']")
+    |> render_click()
+
     view
     |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
     |> render_submit()
