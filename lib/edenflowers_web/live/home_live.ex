@@ -124,6 +124,7 @@ defmodule EdenflowersWeb.HomeLive do
       <%!-- Pull quote --%>
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
+          <.flower seed="pull-quote" class="text-forest-content/70 h-12 w-12" />
           <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
             {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
