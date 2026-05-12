@@ -27,6 +27,11 @@ if config_env() in [:prod, :dev] do
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+  # Only the `mix eden.fetch_map` build-time task needs this — the running app
+  # serves the pre-fetched PNG. Don't raise on absence; non-design contributors
+  # shouldn't need a Mapbox token to start the app.
+  config :edenflowers, :mapbox_token, System.get_env("MAPBOX_TOKEN")
+
   config :imgproxy,
     prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
     key: System.get_env("IMGPROXY_KEY") || raise("environment variable IMGPROXY_KEY is missing."),
@@ -49,6 +54,26 @@ if config_env() in [:prod, :dev] do
   config :edenflowers,
          :maintenance_bypass_secret,
          System.get_env("MAINTENANCE_BYPASS_SECRET")
+
+  config :edenflowers,
+         :mailer_from_address,
+         {System.get_env("MAILER_FROM_NAME", "Jennie"), System.get_env("MAILER_FROM_EMAIL", "info@edenflowers.fi")}
+
+  # Google Sign-In. If these are unset, the Google strategy still loads but
+  # will fail at request time when someone clicks the button. Set both
+  # GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable. GOOGLE_REDIRECT_URI
+  # defaults to the local dev callback if unset; override in prod.
+  if client_id = System.get_env("GOOGLE_CLIENT_ID") do
+    config :edenflowers, :google_client_id, client_id
+  end
+
+  if client_secret = System.get_env("GOOGLE_CLIENT_SECRET") do
+    config :edenflowers, :google_client_secret, client_secret
+  end
+
+  config :edenflowers,
+         :google_redirect_uri,
+         System.get_env("GOOGLE_REDIRECT_URI", "http://localhost:4000/auth/user/google/callback")
 end
 
 if config_env() == :prod do

@@ -4,7 +4,7 @@ defmodule Edenflowers.Accounts.User do
     domain: Edenflowers.Accounts,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication, AshAdmin.Resource]
+    extensions: [AshAuthentication, AshRateLimiter, AshAdmin.Resource]
 
   authentication do
     add_ons do
@@ -22,12 +22,20 @@ defmodule Edenflowers.Accounts.User do
     end
 
     strategies do
-      magic_link do
+      otp do
         identity_field :email
         registration_enabled? true
-        require_interaction? true
+        brute_force_strategy :rate_limit
 
-        sender Edenflowers.Accounts.User.Senders.SendMagicLinkEmail
+        sender Edenflowers.Accounts.User.Senders.SendOtp
+      end
+
+      google do
+        client_id Edenflowers.Secrets
+        client_secret Edenflowers.Secrets
+        redirect_uri Edenflowers.Secrets
+        identity_resource Edenflowers.Accounts.UserIdentity
+        prevent_hijacking? false
       end
     end
   end
@@ -35,6 +43,20 @@ defmodule Edenflowers.Accounts.User do
   postgres do
     table "users"
     repo Edenflowers.Repo
+  end
+
+  rate_limit do
+    backend Edenflowers.RateLimiter
+
+    action :request_otp,
+      limit: 5,
+      per: :timer.minutes(15),
+      key: fn input -> "otp:request:#{input.arguments[:email]}" end
+
+    action :sign_in_with_otp,
+      limit: 5,
+      per: :timer.minutes(10),
+      key: fn input -> "otp:sign_in:#{input.arguments[:email]}" end
   end
 
   admin do
@@ -45,8 +67,8 @@ defmodule Edenflowers.Accounts.User do
     define :get_by_subject, action: :get_by_subject, args: [:subject]
     define :get_by_email, action: :get_by_email, args: [:email]
     define :upsert, action: :upsert, args: [:email, :name]
-    define :sign_in_with_magic_link, action: :sign_in_with_magic_link, args: [:token]
-    define :request_magic_link, action: :request_magic_link, args: [:email]
+    define :request_otp, action: :request_otp, args: [:email]
+    define :sign_in_with_otp, action: :sign_in_with_otp, args: [:email, :otp]
     define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
     define :update_name, action: :update_name, args: [:name]
     define :update_newsletter_preference, action: :update_newsletter_preference, args: [:newsletter_opt_in]
@@ -82,32 +104,6 @@ defmodule Edenflowers.Accounts.User do
       accept [:name, :newsletter_opt_in]
     end
 
-    create :sign_in_with_magic_link do
-      description "Sign in or register a user with magic link."
-
-      argument :token, :string do
-        description "The token from the magic link that was sent to the user"
-        allow_nil? false
-      end
-
-      upsert? true
-      upsert_identity :unique_email
-      upsert_fields [:email]
-
-      # Uses the information from the token to create or sign in the user
-      change AshAuthentication.Strategy.MagicLink.SignInChange
-
-      metadata :token, :string do
-        allow_nil? false
-      end
-    end
-
-    action :request_magic_link do
-      argument :email, :ci_string, allow_nil?: false
-
-      run AshAuthentication.Strategy.MagicLink.Request
-    end
-
     create :subscribe_to_newsletter do
       accept [:email]
       upsert? true
@@ -126,6 +122,24 @@ defmodule Edenflowers.Accounts.User do
     update :set_newsletter_promo do
       argument :newsletter_promo_id, :uuid, allow_nil?: false
       change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
+    end
+
+    create :register_with_google do
+      argument :user_info, :map, allow_nil?: false
+      argument :oauth_tokens, :map, allow_nil?: false
+      upsert? true
+      upsert_identity :unique_email
+
+      change AshAuthentication.GenerateTokenChange
+      change AshAuthentication.Strategy.OAuth2.IdentityChange
+
+      change fn changeset, _ctx ->
+        user_info = Ash.Changeset.get_argument(changeset, :user_info)
+
+        changeset
+        |> Ash.Changeset.change_attribute(:email, user_info["email"])
+        |> Ash.Changeset.change_attribute(:name, user_info["name"])
+      end
     end
   end
 
