@@ -181,17 +181,10 @@ body.ready {
   }
 }
 
-.checkout__section {
-  @apply flex flex-col gap-8 mb-12;
+/* Scroll anchor coordinates with scroll-into-view in hooks.js — offsets the
+   landing position so the heading clears the fixed page header. */
+.scroll-anchor-below-header {
   scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
-}
-
-.checkout__form {
-  @apply flex flex-col space-y-6;
-}
-
-.disable-dbl-tap-zoom {
-  touch-action: manipulation;
 }
 
 /* Toast (flash) — see core_components.ex (flash_group/1). */
@@ -514,11 +507,6 @@ body.ready {
     color-mix(in oklab, var(--color-base-content) 55%, transparent);
   pointer-events: none;
   backdrop-filter: blur(2px);
-}
-.product-mark__eyebrow {
-  @apply eyebrow;
-  color: var(--color-base-content);
-  font-size: 0.6875rem;
 }
 
 /* Size picker on product page — three serif words in a row, the active
