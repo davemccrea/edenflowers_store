@@ -343,8 +343,8 @@ defmodule EdenflowersWeb.CheckoutLive do
               </.steps>
             </div>
 
-            <div class="md:w-[20rem] md:sticky md:top-2 md:h-fit md:overflow-y-auto lg:w-[22rem]">
-              <section class="flex flex-col gap-6" data-testid="cart-section">
+            <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
+              <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section">
                 <p class="eyebrow text-base-content/60" data-testid="cart-heading">
                   {~t"Cart"} ({@order.total_items_in_cart || 0})
                 </p>
@@ -371,6 +371,17 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <% true -> %>
                         <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
                     <% end %>
+                  </div>
+
+                  <div
+                    :if={@order.promotion_applied?}
+                    class="flex items-baseline justify-between"
+                    data-testid="discount-section"
+                  >
+                    <span>{~t"Discount"}</span>
+                    <span class="text-success tabular-nums" data-testid="discount-amount">
+                      - {Edenflowers.Utils.format_money(@order.discount_amount)}
+                    </span>
                   </div>
 
                   <div

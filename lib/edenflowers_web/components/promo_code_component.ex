@@ -55,6 +55,7 @@ defmodule EdenflowersWeb.PromoCodeComponent do
               button_text={~t"Apply"}
               placeholder={~t"Promo code"}
               data-testid="promo-input"
+              phx-mounted={JS.focus()}
             />
           </.form>
         <% true -> %>
