@@ -77,7 +77,7 @@
     image("assets/logo.svg", height: 80pt),
   )
 
-  v(32pt)
+  v(18pt)
 
   // ── Customer + Fulfillment ──────────────────────────────────────────
   // Fulfillment block self-contains its date — no separate "Date" eyebrow.
@@ -124,9 +124,9 @@
 
   // Tighter gap before the card-message annotation, so it sits closer to
   // its parent (Customer/Fulfillment) rather than reading as its own
-  // section. If there's no message, the full 28pt section break carries
+  // section. If there's no message, the full section break carries
   // through to the Order section directly.
-  v(if order.card_message != none { 18pt } else { 28pt })
+  v(if order.card_message != none { 12pt } else { 20pt })
 
   // ── Card message ────────────────────────────────────────────────────
   // Treated as an annotation, not a section: eyebrow + body-size serif
@@ -136,12 +136,12 @@
     eyebrow(t("card-message"))
     v(5pt)
     text(font: fonts.serif, style: "italic")[#order.card_message]
-    v(28pt)
+    v(20pt)
   }
 
   // ── Line items ──────────────────────────────────────────────────────
   eyebrow(t("order"))
-  v(8pt)
+  v(6pt)
 
   // Column headers: quiet sans, mixed case, muted ink. Reserved for the
   // section heading above; the hairline rule alone separates header from
@@ -155,7 +155,7 @@
     column-gutter: 8pt,
     align: (left, right, right, right, right),
     stroke: none,
-    inset: (x: 0pt, y: 6pt),
+    inset: (x: 0pt, y: 5pt),
 
     head(t("item")),
     head(t("unit-price-excl-vat")),
@@ -179,7 +179,7 @@
     )).flatten()
   )
 
-  v(14pt)
+  v(10pt)
 
   // ── Totals ──────────────────────────────────────────────────────────
   // Single grid keeps row spacing under one `row-gutter` knob instead of
@@ -225,11 +225,13 @@
     ]
   ]
 
-  // 28pt minimum gap + elastic spacer. The minimum guarantees breathing
+  // Minimum gap + elastic spacer. The minimum guarantees breathing
   // room above the band even when the page is dense; the `1fr` absorbs
   // all remaining vertical space so the band anchors to the bottom of
-  // the content area on sparser layouts (pickup, few line items).
-  v(28pt)
+  // the content area on sparser layouts (pickup, few line items). On a
+  // multi-page receipt the `1fr` has no slack to absorb and becomes a
+  // no-op, so the band flows naturally after totals.
+  v(20pt)
   v(1fr)
 
   // ── Closing band ────────────────────────────────────────────────────
@@ -239,14 +241,15 @@
   block(
     width: 100%,
     fill: colors.forest,
-    inset: (x: 24pt, y: 18pt),
+    inset: (x: 24pt, y: 14pt),
+    breakable: false,
     [
       #set align(center)
       #set text(fill: colors.forest-content)
       #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light")[
         #t("thank-you")
       ]
-      #v(6pt)
+      #v(4pt)
       #set text(font: fonts.sans, size: type-scale.small,
                 fill: colors.forest-content.transparentize(25%))
       #block(width: 80%)[#t("closing-line")]
