@@ -7,6 +7,10 @@
 [en]
 receipt = "Receipt"
 reference = "Reference"
+ordered = "Ordered"
+order-date = "Order date"
+delivery-date = "Delivery date"
+pickup-date = "Pickup date"
 business-id = "Business ID"
 customer = "Customer"
 fulfillment = "Fulfillment"
@@ -31,6 +35,10 @@ closing-line = "Questions or changes? Reply to your confirmation email and Jenni
 [fi]
 receipt = "Kuitti"
 reference = "Viite"
+ordered = "Tilattu"
+order-date = "Tilauspäivä"
+delivery-date = "Toimituspäivä"
+pickup-date = "Noutopäivä"
 business-id = "Y-tunnus"
 customer = "Asiakas"
 fulfillment = "Toimitus"
@@ -55,6 +63,10 @@ closing-line = "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jen
 [sv]
 receipt = "Kvitto"
 reference = "Referens"
+ordered = "Beställd"
+order-date = "Beställningsdatum"
+delivery-date = "Leveransdatum"
+pickup-date = "Avhämtningsdatum"
 business-id = "FO-nummer"
 customer = "Kund"
 fulfillment = "Leverans"

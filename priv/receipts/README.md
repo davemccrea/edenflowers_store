@@ -10,7 +10,8 @@ Typst project for the order-receipt PDF emailed to customers.
 - `main.typ` — entry point. Reads `sys.inputs.order` in production; falls back to a fixture for local preview.
 - `translations.toml` — receipt labels in `en` / `fi` / `sv`.
 - `shop.toml` — static shop identity (name, address, business ID, contact).
-- `sample/order.{en,fi,sv}.json` — fixture payloads, one per locale.
+- `sample/order.{en,fi,sv}.json` — delivery fixture payloads, one per locale.
+- `sample/order.{en,fi,sv}.pickup.json` — pickup fixture payloads, one per locale.
 - `fonts/` — Open Sans + Crimson Text `.ttf` files (OFL 1.1, see below).
 - `assets/logo.svg` — brand logo.
 
@@ -20,9 +21,11 @@ Typst project for the order-receipt PDF emailed to customers.
 brew install typst   # one-time
 
 cd priv/receipts
-typst watch main.typ preview.pdf --font-path fonts                   # default sv
+typst watch main.typ preview.pdf --font-path fonts                   # default sv, delivery
 typst compile main.typ preview.pdf --font-path fonts --input fixture=fi
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en
+typst compile main.typ preview.pdf --font-path fonts --input fixture=sv.pickup
+typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
 ```
 
 `typst watch` recompiles on save for live preview.

@@ -3,14 +3,16 @@
 // Production path: Elixir invokes
 //   typst compile main.typ out.pdf --input order=<json-encoded order>
 //
-// Local preview falls back to a fixture. Override the language by
-// setting --input fixture=en|fi|sv (default sv, matching the app's
-// default locale).
+// Local preview falls back to a fixture. Override via `--input fixture=…`:
+//   en | fi | sv          (default sv, delivery)
+//   en.pickup | fi.pickup | sv.pickup
 #let order = if "order" in sys.inputs {
-  json.decode(sys.inputs.order)
+  // `json()` accepts bytes directly — `json.decode` is deprecated in
+  // Typst 0.14 and removed in 0.15.
+  json(bytes(sys.inputs.order))
 } else {
-  let lang = sys.inputs.at("fixture", default: "sv")
-  json("sample/order." + lang + ".json")
+  let fixture = sys.inputs.at("fixture", default: "sv")
+  json("sample/order." + fixture + ".json")
 }
 
 #receipt(order)
