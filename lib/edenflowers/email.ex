@@ -39,6 +39,13 @@ defmodule Edenflowers.Email do
     [:_assigns]
   )
 
+  EEx.function_from_file(
+    :defp,
+    :render_otp_sign_in_template,
+    Path.join([__DIR__, "email", "templates", "otp_sign_in.text.eex"]),
+    [:assigns]
+  )
+
   @doc """
   Builds an order confirmation email
   """
@@ -85,6 +92,14 @@ defmodule Edenflowers.Email do
     |> to(email_address)
     |> subject(~t"Welcome back to the Eden Flowers newsletter")
     |> text_body(render_newsletter_resubscribed_template(%{}))
+  end
+
+  def otp_sign_in(email_address, otp_code) do
+    new()
+    |> from(@from_address)
+    |> to(email_address)
+    |> subject(~t"Your Eden Flowers sign-in code")
+    |> text_body(render_otp_sign_in_template(%{otp_code: otp_code}))
   end
 
   defp format_currency(amount, locale) do
