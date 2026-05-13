@@ -219,7 +219,24 @@ Hooks.FocusElement = {
  * Navigate the calendar with the keyboard without a round trip to the server for each key press.
  * If the user tries to navigate to a date outside the visible month then the keydown event is
  * forwarded to the server and the server re-renders the view.
+ *
+ * Wire protocol (server <-> hook):
+ *   - data-view-date           : ISO date of the currently focused cell
+ *   - data-focusable-dates     : JSON array of ISO dates focusable client-side (current month)
+ *   - data-key-targets (cell)  : JSON map { "ArrowUp": "2026-05-05", ... } of the date each
+ *                                key would navigate to from this cell
  */
+const NAV_KEYS = [
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+  "PageUp",
+  "PageDown",
+];
+
 Hooks.CalendarHook = {
   mounted() {
     // Validate required elements and attributes
@@ -229,46 +246,66 @@ Hooks.CalendarHook = {
     this.setTabIndex(this.viewDate);
 
     this.calendarGrid.addEventListener("keydown", (event) => {
-      const key = event.key;
-      const keys = {
-        ArrowUp: "data-key-arrow-up",
-        ArrowDown: "data-key-arrow-down",
-        ArrowLeft: "data-key-arrow-left",
-        ArrowRight: "data-key-arrow-right",
-        Home: "data-key-home",
-        End: "data-key-end",
-        PageUp: "data-key-page-up",
-        PageDown: "data-key-page-down",
-      };
-
-      if (key in keys) {
-        event.preventDefault();
-        this.handleKeyDown(key, keys[key]);
+      // Bail on modifier-key combos so browser/SR shortcuts (Ctrl+Home,
+      // Shift+Arrow, etc.) still reach the host.
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
       }
+      if (!NAV_KEYS.includes(event.key)) return;
+      // Only intercept when a day button is the actual focus target — keeps
+      // arrow keys passing through to anything else nested in the grid.
+      if (!event.target.closest(`[id^="${this.id}-day-"]`)) return;
+      event.preventDefault();
+      this.handleKeyDown(event.key);
     });
   },
 
   updated() {
-    this.focusableDates = this.getFocusableDates();
+    this.focusableDates = this.getFocusableDates() || [];
     this.viewDate = this.getViewDate();
     this.setTabIndex(this.viewDate);
+
+    // If the server just moved the view date in response to a cross-month
+    // keyboard nav, restore DOM focus to the newly-promoted cell. Doing this
+    // here (instead of in a pushEventTo callback) avoids racing the morph:
+    // updated() runs after the patch has landed, so the target cell exists.
+    if (this.pendingKeyboardNav) {
+      this.pendingKeyboardNav = false;
+      this.clientFocus(this.viewDate);
+    }
   },
 
   /**
    * Handles the keydown event for the calendar grid.
    * @example
-   * handleKeyDown("ArrowUp", "data-key-arrow-up");
+   * handleKeyDown("ArrowUp");
    * @param {String} key - The key pressed by the user.
-   * @param {String} attribute - The attribute associated with the key.
    * @returns {void}
    */
-  handleKeyDown(key, attribute) {
+  handleKeyDown(key) {
+    // If focusable dates are missing/empty, every nav would otherwise fall
+    // through to serverFocus and spam the server on each keypress.
+    if (!this.focusableDates.length) return;
+
+    // A server roundtrip is already in flight (held-key repeat across a month
+    // boundary). Drop the event rather than queueing — the user can resume
+    // navigating once focus lands on the newly-promoted cell.
+    if (this.pendingKeyboardNav) return;
+
+    // Read targets from the currently-focused cell, not the root: each cell's
+    // targets are relative to its own date (ArrowDown from May 1 -> May 8,
+    // ArrowDown from May 8 -> May 15, etc).
     const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
     if (!viewDateEl) return;
 
-    const nextDate = viewDateEl.getAttribute(attribute);
+    const targets = this.parseKeyTargets(viewDateEl);
+    if (!targets) return;
+
+    const nextDate = targets[key];
     if (!nextDate) {
-      this.error(`Attribute '${attribute}' is missing on view date element.`);
+      this.error(
+        `Key '${key}' missing from data-key-targets on view date element.`,
+      );
       return;
     }
 
@@ -281,6 +318,28 @@ Hooks.CalendarHook = {
     this.clientFocus(nextDate);
     this.setTabIndex(nextDate);
     this.viewDate = nextDate;
+  },
+
+  /**
+   * Parses the data-key-targets JSON map from a cell element.
+   * @param {Element} el
+   * @returns {Object<string, string> | null}
+   */
+  parseKeyTargets(el) {
+    const raw = el.getAttribute("data-key-targets");
+    if (!raw) {
+      this.error(
+        "Attribute 'data-key-targets' is missing on view date element.",
+      );
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      this.error(`Failed to parse 'data-key-targets': ${error.message}`);
+      return null;
+    }
   },
 
   //
@@ -308,20 +367,16 @@ Hooks.CalendarHook = {
 
   /**
    * Used when the focus is to be moved to a date that is not focusable by the client.
+   * The server will rerender into the new month; updated() then restores DOM
+   * focus to the newly-promoted view date via the `pendingKeyboardNav` flag.
    * @example
    * serverFocus("ArrowUp");
    * @param {String} key - The key pressed by the user.
    * @returns {void}
    */
   serverFocus(key) {
-    const payload = {
-      key: key,
-      viewDate: this.viewDate,
-    };
-
-    const callback = () => this.clientFocus(this.viewDate);
-
-    this.pushEventTo(this.el, "keydown", payload, callback);
+    this.pendingKeyboardNav = true;
+    this.pushEventTo(this.el, "keydown", { key, viewDate: this.viewDate });
   },
 
   /**
@@ -369,10 +424,12 @@ Hooks.CalendarHook = {
 
     // Check for focusable dates
     this.focusableDates = this.getFocusableDates();
-    if (!this.focusableDates || !this.focusableDates.length) {
-      this.error(
-        "Attribute 'data-focusable-dates' is required and must not be empty.",
-      );
+    if (this.focusableDates === null) {
+      this.error("Attribute 'data-focusable-dates' is required.");
+      return false;
+    }
+    if (!this.focusableDates.length) {
+      this.error("Attribute 'data-focusable-dates' must not be empty.");
       return false;
     }
 
@@ -418,10 +475,9 @@ Hooks.CalendarHook = {
 
   getFocusableDates() {
     const focusableDatesAttr = this.el.getAttribute("data-focusable-dates");
-    if (!focusableDatesAttr) {
-      this.error("Attribute 'data-focusable-dates' is required.");
-      return [];
-    }
+    // Distinguish "attribute missing" (null) from "parsed but empty" ([]) so
+    // validateRequirements can emit a single error for the missing-attr case.
+    if (!focusableDatesAttr) return null;
 
     try {
       return JSON.parse(focusableDatesAttr);

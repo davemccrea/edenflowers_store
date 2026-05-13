@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section
                   :if={@order.state == :contact_details}
                   id={"#{@id}-section-1"}
-                  class="checkout__section"
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-1"
                 >
                   <.form
@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     for={@form}
                     phx-change="validate_form_1"
                     phx-submit="save_form_1"
-                    class="checkout__form"
+                    class="flex flex-col space-y-6"
                     data-testid="checkout-form-1"
                   >
                     <.input
@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section
                   :if={@order.state == :gift_options}
                   id={"#{@id}-section-2"}
-                  class="checkout__section"
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-2"
                 >
                   <.form
@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     for={@form}
                     phx-change="validate_form_2"
                     phx-submit="save_form_2"
-                    class="checkout__form"
+                    class="flex flex-col space-y-6"
                     data-testid="checkout-form-2"
                   >
                     <.input
@@ -222,7 +222,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <section :if={@order.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
+                <section
+                  :if={@order.state == :delivery}
+                  id={"#{@id}-section-3"}
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
+                >
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
@@ -241,7 +245,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       for={@form}
                       phx-change="validate_form_3"
                       phx-submit="save_form_3"
-                      class="checkout__form"
+                      class="flex flex-col space-y-6"
                     >
                       <.live_component
                         :if={@order.fulfillment_method == :delivery}
@@ -282,11 +286,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                           }
                           selected_date={@form[:fulfillment_date].value}
                           module={EdenflowersWeb.CalendarComponent}
-                          on_select={fn date -> send(self(), {:date_selected, date}) end}
-                          date_callback={
+                          selectable?={
                             fn date ->
-                              {_, state} = Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
-                              state
+                              {fulfillable?, _reason} =
+                                Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
+
+                              fulfillable?
                             end
                           }
                         >
@@ -315,7 +320,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <% end %>
                 </section>
 
-                <section :if={@order.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
+                <section
+                  :if={@order.state == :payment}
+                  id={"#{@id}-section-4"}
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
+                >
                   <form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
@@ -644,13 +653,27 @@ defmodule EdenflowersWeb.CheckoutLive do
     ~H"""
     <li class={["border-base-content/12 py-8 md:py-10", @n > 1 && "border-t"]}>
       <div class="flex items-baseline justify-between gap-4">
-        <h2 class={["section-title", @state == :future && "text-base-content/40"]}>
-          {@title}
-        </h2>
+        <div class="flex items-baseline gap-3">
+          <span
+            aria-hidden="true"
+            class={["eyebrow tabular-nums", @state == :current && "text-[var(--color-link-underline)]", @state != :current && "text-base-content/55"]}
+          >
+            {String.pad_leading(Integer.to_string(@n), 2, "0")}
+          </span>
+          <h2 class={["section-title flex items-baseline gap-2", @state == :past && "text-base-content/70", @state == :future && "text-base-content/40"]}>
+            <span class="sr-only">{step_label(@state)}: </span>
+            <span>{@title}</span>
+            <.icon
+              :if={@state == :past}
+              name="hero-check-mini"
+              class="size-4 text-base-content/70 self-center"
+            />
+          </h2>
+        </div>
         <.link
           :if={@state == :past}
           phx-click={"edit_step_#{@n}"}
-          class="link-underline-hover-nav text-sm"
+          class="link-underline-hover-nav shrink-0 text-sm"
         >
           {~t"Edit"}
         </.link>
@@ -671,6 +694,10 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp step_title(2), do: ~t"Gift options"
   defp step_title(3), do: ~t"Delivery"
   defp step_title(4), do: ~t"Payment"
+
+  defp step_label(:past), do: ~t"Completed"
+  defp step_label(:current), do: ~t"Current step"
+  defp step_label(:future), do: ~t"Upcoming"
 
   defp step_summary(1, %{customer_name: name, customer_email: email})
        when is_binary(name) and is_binary(email),

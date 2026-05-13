@@ -8,6 +8,66 @@
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
+/* Self-hosted brand fonts. Open Sans is a variable font covering all
+   weights in a single file; Crimson Text ships static weights. Both are
+   SIL OFL 1.1 — see assets/fonts/OFL.txt. */
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-Variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: italic;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-600italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-700italic.woff2") format("woff2");
+}
+
 @theme {
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
@@ -59,7 +119,7 @@
   display: contents;
 }
 
-button:not(:disabled),
+button:not(:disabled):not([aria-disabled="true"]),
 [role="button"]:not([aria-disabled="true"]),
 label,
 summary {
@@ -181,17 +241,10 @@ body.ready {
   }
 }
 
-.checkout__section {
-  @apply flex flex-col gap-8 mb-12;
+/* Scroll anchor coordinates with scroll-into-view in hooks.js — offsets the
+   landing position so the heading clears the fixed page header. */
+.scroll-anchor-below-header {
   scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
-}
-
-.checkout__form {
-  @apply flex flex-col space-y-6;
-}
-
-.disable-dbl-tap-zoom {
-  touch-action: manipulation;
 }
 
 /* Toast (flash) — see core_components.ex (flash_group/1). */
@@ -514,11 +567,6 @@ body.ready {
     color-mix(in oklab, var(--color-base-content) 55%, transparent);
   pointer-events: none;
   backdrop-filter: blur(2px);
-}
-.product-mark__eyebrow {
-  @apply eyebrow;
-  color: var(--color-base-content);
-  font-size: 0.6875rem;
 }
 
 /* Size picker on product page — three serif words in a row, the active

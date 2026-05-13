@@ -6,38 +6,9 @@ defmodule Edenflowers.Email do
   import Swoosh.Email
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  require EEx
+  alias Edenflowers.Email.Templates
 
   @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
-
-  # Compile the template at compile-time so gettext extraction works
-  EEx.function_from_file(
-    :defp,
-    :render_order_confirmation_template,
-    Path.join([__DIR__, "email", "templates", "order_confirmation.text.eex"]),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_newsletter_promo_template,
-    Path.join([__DIR__, "email", "templates", "newsletter_promo.text.eex"]),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_newsletter_already_subscribed_template,
-    Path.join([__DIR__, "email", "templates", "newsletter_already_subscribed.text.eex"]),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_newsletter_resubscribed_template,
-    Path.join([__DIR__, "email", "templates", "newsletter_resubscribed.text.eex"]),
-    [:_assigns]
-  )
 
   @doc """
   Builds an order confirmation email
@@ -53,14 +24,12 @@ defmodule Edenflowers.Email do
   end
 
   defp render_order_confirmation(order, locale) do
-    assigns = %{
+    Templates.order_confirmation(%{
       order: order,
       format_currency: &format_currency(&1, locale),
       format_date: &format_date(&1, locale),
       format_datetime: &format_datetime(&1, locale)
-    }
-
-    render_order_confirmation_template(assigns)
+    })
   end
 
   def newsletter_promo(email_address, promo_code) do
@@ -68,7 +37,7 @@ defmodule Edenflowers.Email do
     |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Welcome to Eden Flowers — your 15% off code inside")
-    |> text_body(render_newsletter_promo_template(%{promo_code: promo_code}))
+    |> text_body(Templates.newsletter_promo(%{promo_code: promo_code}))
   end
 
   def newsletter_already_subscribed(email_address, promo_code) do
@@ -76,7 +45,7 @@ defmodule Edenflowers.Email do
     |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Your Eden Flowers promo code")
-    |> text_body(render_newsletter_already_subscribed_template(%{promo_code: promo_code}))
+    |> text_body(Templates.newsletter_already_subscribed(%{promo_code: promo_code}))
   end
 
   def newsletter_resubscribed(email_address) do
@@ -84,7 +53,15 @@ defmodule Edenflowers.Email do
     |> from(@from_address)
     |> to(email_address)
     |> subject(~t"Welcome back to the Eden Flowers newsletter")
-    |> text_body(render_newsletter_resubscribed_template(%{}))
+    |> text_body(Templates.newsletter_resubscribed(%{}))
+  end
+
+  def otp_sign_in(email_address, otp_code) do
+    new()
+    |> from(@from_address)
+    |> to(email_address)
+    |> subject(~t"Your Eden Flowers sign-in code")
+    |> text_body(Templates.otp_sign_in(%{otp_code: otp_code}))
   end
 
   defp format_currency(amount, locale) do
