@@ -31,6 +31,7 @@ discount = "Discount"
 total-paid = "Total paid"
 thank-you = "Thank you for your order."
 closing-line = "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
+track-order = "Track your order"
 
 [fi]
 receipt = "Kuitti"
@@ -59,6 +60,7 @@ discount = "Alennus"
 total-paid = "Maksettu yhteensä"
 thank-you = "Kiitos tilauksestasi."
 closing-line = "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jennie palaa asiaan."
+track-order = "Seuraa tilausta"
 
 [sv]
 receipt = "Kvitto"
@@ -87,3 +89,4 @@ discount = "Rabatt"
 total-paid = "Betalat totalt"
 thank-you = "Tack för din beställning."
 closing-line = "Frågor eller ändringar? Svara på bekräftelsemejlet så återkommer Jennie."
+track-order = "Spåra din beställning"
