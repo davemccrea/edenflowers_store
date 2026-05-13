@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     |> form("#checkout-form-2", %{"form" => %{"gift" => "false"}})
     |> render_submit()
 
-    assert render(view) =~ ~r{<h2[^>]*>\s*Delivery\s*</h2>}
+    assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
     # Step 3: pick fulfillment option, then submit the date/phone form
     view
@@ -172,7 +172,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    assert render(view) =~ ~r{<h2[^>]*>\s*Delivery\s*</h2>}
+    assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
     # Step 3
     view
