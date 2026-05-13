@@ -42,6 +42,28 @@ snapshots land.
 - `priv/receipts/fonts/` is gitignored — vendor the static weights or
   run `fetch_fonts.sh` during image build so they're present at runtime.
 
+## Persistence
+
+Render once at placement and write the PDF to disk; never regenerate.
+The deploy target is bare metal, so a local folder is the simplest
+durable option — no object storage needed.
+
+- **Path** — configurable, defaulting to e.g.
+  `/var/lib/edenflowers/receipts/`. Outside the release directory so
+  deploys don't wipe or shadow it.
+- **Layout** — shard by year/month: `2026/05/EF-2026-00428.pdf`.
+  Avoids one giant flat directory, easier to prune.
+- **Write-once** — never overwrite. The file is the canonical artifact
+  that was emailed; matches #158's immutability story.
+- **Serving** — through a Phoenix controller that re-authorises against
+  the order, not via static file serving. Otherwise anyone who guesses
+  an `EF-2026-…` reference downloads someone else's receipt.
+- **Backups** — the receipts folder must be in the backup scope
+  alongside Postgres. Call this out in the deploy runbook.
+
+Keeps the email attachment, the customer-support reprint, and the VAT
+audit trail all reading from the same on-disk file.
+
 ## Tests
 
 - `Edenflowers.ReceiptTest` — golden test: marshal a fixture order, diff
