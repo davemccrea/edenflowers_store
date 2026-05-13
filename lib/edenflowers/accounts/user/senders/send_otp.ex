@@ -23,15 +23,17 @@ defmodule Edenflowers.Accounts.User.Senders.SendOtp do
     |> from(@from_address)
     |> to(to_string(email))
     |> subject("Your sign-in code")
-    |> html_body(body(otp_code: otp_code))
+    |> text_body(body(otp_code: otp_code))
     |> Mailer.deliver!()
   end
 
   defp body(params) do
     """
-    <p>Your sign-in code is:</p>
-    <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">#{params[:otp_code]}</p>
-    <p>This code expires in 10 minutes.</p>
+    Your sign-in code is:
+
+        #{params[:otp_code]}
+
+    This code expires in 10 minutes.
     """
   end
 end
