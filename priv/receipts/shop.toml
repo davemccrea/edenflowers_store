@@ -1,0 +1,12 @@
+# Static shop identity, loaded by receipt.typ. Lives Typst-side because
+# none of these vary between environments and the values don't appear in
+# any Elixir config today.
+#
+# FIXME placeholders below — fill these in with the real business ID and
+# contact details before the first real-customer render.
+
+name = "Eden Flowers"
+address = "Minimossen, Myrvägen 1, 65230 Vasa"
+business_id = "0000000-0"  # FIXME: real Y-tunnus
+email = "hello@edenflowers.fi"
+phone = "+358 40 000 0000"  # FIXME: real phone

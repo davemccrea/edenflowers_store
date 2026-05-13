@@ -1,27 +1,24 @@
 {
+  "lang": "sv",
   "reference": "EF-2026-00428",
-  "ordered_at": "13 May 2026, 14:32",
+  "ordered_at": "13.5.2026 kl. 14:32",
   "customer": {
     "name": "Anna Lindqvist",
     "email": "anna.lindqvist@example.fi"
   },
   "fulfillment": {
     "method": "delivery",
-    "method_label": "Delivery",
     "recipient_name": "Margareta Lindqvist",
     "recipient_phone": "+358 40 555 0123",
-    "address": "Korsholmsesplanaden 12 A 4, 65100 Vaasa",
-    "instructions": "Doorbell to top-floor flat — please leave with the neighbour if no answer.",
-    "date": "Saturday, 16 May 2026"
-  },
-  "shop": {
-    "address_line": "Minimossen, Myrvägen 1, 65230 Vasa"
+    "address": "Korsholmsesplanaden 12 A 4, 65100 Vasa",
+    "instructions": "Ringklocka till översta våningen — om ingen öppnar, lämna hos grannen.",
+    "date": "Lördag 16.5.2026"
   },
   "card_message": "Grattis på födelsedagen, mamma! Med kärlek från oss alla.",
   "line_items": [
     {
-      "name": "Spring Posy",
-      "variant_size": "Medium",
+      "name": "Vårbukett",
+      "variant_size": "Mellanstor",
       "quantity": 1,
       "unit_price_ex_vat": "31,79 €",
       "unit_price": "39,90 €",
@@ -29,7 +26,7 @@
       "line_total": "39,90 €"
     },
     {
-      "name": "Eucalyptus Bunch",
+      "name": "Eukalyptusbukett",
       "variant_size": null,
       "quantity": 2,
       "unit_price_ex_vat": "6,77 €",
@@ -38,7 +35,7 @@
       "line_total": "17,00 €"
     },
     {
-      "name": "Handwritten Card",
+      "name": "Handskrivet kort",
       "variant_size": null,
       "quantity": 1,
       "unit_price_ex_vat": "3,59 €",
