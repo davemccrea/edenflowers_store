@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.ProductLive do
               class="h-full w-full object-cover"
             />
             <figcaption :if={@product.featured} class="product-mark">
-              <span class="product-mark__eyebrow">{~t"Favourite"}</span>
+              <span class="eyebrow text-base-content text-[0.6875rem]">{~t"Favourite"}</span>
             </figcaption>
           </figure>
 
