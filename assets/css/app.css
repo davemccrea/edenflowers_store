@@ -8,6 +8,66 @@
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
+/* Self-hosted brand fonts. Open Sans is a variable font covering all
+   weights in a single file; Crimson Text ships static weights. Both are
+   SIL OFL 1.1 — see assets/fonts/OFL.txt. */
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-Variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: italic;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-600italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-700italic.woff2") format("woff2");
+}
+
 @theme {
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
@@ -85,17 +145,30 @@ summary {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  main {
-    transition: opacity 200ms ease-out;
+  /* Dim everything body-level (header, main, drawers) in lockstep, but keep
+     the flash group crisp so the "Disconnected" toast stays readable. */
+  body > *:not(#flash-group) {
+    transition: opacity 200ms ease-out 0ms;
   }
-  .phx-loading main,
-  .phx-click-loading main {
+  /* 400ms delay before dimming so sub-400ms socket flaps stay invisible;
+     un-dim is immediate (no delay) when the class is removed. */
+  .phx-loading body > *:not(#flash-group),
+  .phx-click-loading body > *:not(#flash-group) {
     opacity: 0.7;
+    transition-delay: 400ms;
   }
   .phx-submit-loading [type="submit"],
   .phx-submit-loading button[phx-click] {
     cursor: progress;
   }
+}
+
+/* Gate clicks during reconnect/loading so a tap on a CTA mid-flap doesn't
+   queue an ambiguous action. Keyboard focus and scrolling are unaffected;
+   the flash group stays interactive so toasts can be dismissed. */
+.phx-loading body > *:not(#flash-group),
+.phx-click-loading body > *:not(#flash-group) {
+  pointer-events: none;
 }
 
 /* FOUC fix: https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
@@ -168,42 +241,35 @@ body.ready {
   }
 }
 
-.checkout__section {
-  @apply flex flex-col gap-8 mb-12;
+/* Scroll anchor coordinates with scroll-into-view in hooks.js — offsets the
+   landing position so the heading clears the fixed page header. */
+.scroll-anchor-below-header {
   scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
 }
 
-.checkout__form {
-  @apply flex flex-col space-y-6;
-}
-
-.disable-dbl-tap-zoom {
-  touch-action: manipulation;
-}
-
 /* Toast (flash) — see core_components.ex (flash_group/1). */
-@keyframes toast-drop-in {
+@keyframes toast-slide-in {
   from {
     opacity: 0;
-    transform: translate(1.25rem, -0.75rem) rotate(2.5deg);
+    transform: translateY(0.75rem);
   }
   60% {
     opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(0, 0) rotate(0);
+    transform: translateY(0);
   }
 }
 
-@keyframes toast-lift-out {
+@keyframes toast-slide-out {
   from {
     opacity: 1;
-    transform: translate(0, 0) rotate(0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translate(0.5rem, -0.5rem) rotate(-1.5deg);
+    transform: translateY(0.5rem);
   }
 }
 
@@ -217,12 +283,11 @@ body.ready {
   box-shadow:
     0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
     0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
-  transform-origin: 100% 0;
-  animation: toast-drop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: toast-slide-in 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .toast-item[data-dismissing] {
-  animation: toast-lift-out 280ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
+  animation: toast-slide-out 220ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
 }
 
 .toast-item[data-key="error"] {
@@ -502,11 +567,6 @@ body.ready {
     color-mix(in oklab, var(--color-base-content) 55%, transparent);
   pointer-events: none;
   backdrop-filter: blur(2px);
-}
-.product-mark__eyebrow {
-  @apply eyebrow;
-  color: var(--color-base-content);
-  font-size: 0.6875rem;
 }
 
 /* Size picker on product page — three serif words in a row, the active

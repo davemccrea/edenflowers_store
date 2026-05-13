@@ -15,10 +15,13 @@ defmodule EdenflowersWeb.HomeLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="relative overflow-hidden not-last:border-b">
-        <img
-          src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
-          class="h-[100vh] w-full object-cover"
+        <.image
+          src="local:///image_1.jpg"
           alt=""
+          width={1920}
+          height={1080}
+          priority
+          class="h-[100vh] w-full object-cover"
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
@@ -92,7 +95,11 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
+      <section class="bg-cream relative overflow-hidden not-last:border-b" aria-labelledby="location-heading">
+        <.flower
+          name="flower-41"
+          class="text-base-content/15 pointer-events-none absolute top-4 left-4 h-16 w-16 md:top-8 md:left-8 md:h-24 md:w-24"
+        />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
@@ -104,18 +111,12 @@ defmodule EdenflowersWeb.HomeLive do
             </p>
           </div>
 
-          <img
-            src={
-              "local:///home-vaasa-map.png"
-              |> Imgproxy.new()
-              |> Imgproxy.resize(800, 940, type: "fill")
-              |> Imgproxy.set_extension("webp")
-              |> to_string()
-            }
+          <.image
+            src="local:///home-vaasa-map.png"
             alt={~t"Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"}
-            loading="lazy"
-            width="800"
-            height="940"
+            width={1600}
+            height={1880}
+            sizes="(min-width: 768px) 50vw, 100vw"
             class="aspect-[6/7] max-h-[520px] h-full w-full object-cover md:aspect-auto"
           />
         </div>
@@ -124,6 +125,7 @@ defmodule EdenflowersWeb.HomeLive do
       <%!-- Pull quote --%>
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
+          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
           <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
             {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>

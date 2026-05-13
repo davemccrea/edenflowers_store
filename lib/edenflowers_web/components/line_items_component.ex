@@ -18,21 +18,23 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 navigate={~p"/product/#{line_item.product_id}"}
                 class="shrink-0 transition-opacity hover:opacity-70"
               >
-                <img
-                  class="h-20 w-20 object-cover"
-                  src={
-                    line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(160, 160, type: "fill") |> to_string()
-                  }
+                <.image
+                  src={line_item.product_image_slug}
                   alt={"Image of #{line_item.product_name}"}
+                  width={80}
+                  height={80}
+                  sizes="80px"
+                  class="h-20 w-20 object-cover"
                 />
               </.link>
             <% else %>
-              <img
-                class="h-20 w-20 object-cover"
-                src={
-                  line_item.product_image_slug |> Imgproxy.new() |> Imgproxy.resize(160, 160, type: "fill") |> to_string()
-                }
+              <.image
+                src={line_item.product_image_slug}
                 alt={"Image of #{line_item.product_name}"}
+                width={80}
+                height={80}
+                sizes="80px"
+                class="h-20 w-20 object-cover"
               />
             <% end %>
 
@@ -112,7 +114,13 @@ defmodule EdenflowersWeb.LineItemsComponent do
           </li>
         </ul>
       <% else %>
-        <p class="text-base-content/70">{~t"Your cart is empty."}</p>
+        <div class="flex flex-col items-center gap-5 py-10 text-center">
+          <.flower name="flower-30" class="text-primary/70 h-20 w-20" />
+          <p class="font-serif text-lg">{~t"Your cart is empty."}</p>
+          <.button navigate={~p"/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
+            {~t"Browse the store"}
+          </.button>
+        </div>
       <% end %>
     </div>
     """
