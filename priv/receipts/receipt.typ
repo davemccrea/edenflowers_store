@@ -115,10 +115,11 @@
   let head(label) = table.cell(eyebrow(label))
 
   table(
-    columns: (1fr, 96pt, 36pt, 48pt, 64pt),
+    columns: (1fr, 110pt, 36pt, 48pt, 64pt),
+    column-gutter: 8pt,
     align: (left, right, right, right, right),
     stroke: none,
-    inset: (x: 5pt, y: 6pt),
+    inset: (x: 0pt, y: 6pt),
 
     head(t("item")),
     head(t("unit-price-excl-vat")),
