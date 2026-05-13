@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section
                   :if={@order.state == :contact_details}
                   id={"#{@id}-section-1"}
-                  class="checkout__section"
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-1"
                 >
                   <.form
@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     for={@form}
                     phx-change="validate_form_1"
                     phx-submit="save_form_1"
-                    class="checkout__form"
+                    class="flex flex-col space-y-6"
                     data-testid="checkout-form-1"
                   >
                     <.input
@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                 <section
                   :if={@order.state == :gift_options}
                   id={"#{@id}-section-2"}
-                  class="checkout__section"
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-2"
                 >
                   <.form
@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     for={@form}
                     phx-change="validate_form_2"
                     phx-submit="save_form_2"
-                    class="checkout__form"
+                    class="flex flex-col space-y-6"
                     data-testid="checkout-form-2"
                   >
                     <.input
@@ -222,7 +222,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                   </.form>
                 </section>
 
-                <section :if={@order.state == :delivery} id={"#{@id}-section-3"} class="checkout__section">
+                <section
+                  :if={@order.state == :delivery}
+                  id={"#{@id}-section-3"}
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
+                >
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
@@ -241,7 +245,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       for={@form}
                       phx-change="validate_form_3"
                       phx-submit="save_form_3"
-                      class="checkout__form"
+                      class="flex flex-col space-y-6"
                     >
                       <.live_component
                         :if={@order.fulfillment_method == :delivery}
@@ -315,7 +319,11 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <% end %>
                 </section>
 
-                <section :if={@order.state == :payment} id={"#{@id}-section-4"} class="checkout__section">
+                <section
+                  :if={@order.state == :payment}
+                  id={"#{@id}-section-4"}
+                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
+                >
                   <form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
