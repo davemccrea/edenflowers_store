@@ -178,6 +178,7 @@ defmodule Edenflowers.Store.Order do
     # Lifecycle transitions
     update :finalize_checkout do
       validate present(:payment_intent_id)
+      change {Changes.SnapshotTotals, []}
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -286,14 +287,15 @@ defmodule Edenflowers.Store.Order do
   end
 
   policies do
-    # System bypass - for webhooks and background jobs
-    bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
+    # Admin/system can always read (admin views, background workers loading
+    # placed orders). Mutations on placed orders go via sibling resources
+    # per ADR 0001, so neither actor is bypassed for updates.
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if action_type(:read)
     end
 
-    # Admin bypass - admins can do anything
-    bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
     end
 
     # Allow creating orders without authentication (for checkout flow)
@@ -306,7 +308,41 @@ defmodule Edenflowers.Store.Order do
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
-    policy action_type(:update) do
+    # Presentational; allowed in any state, including :placed.
+    policy action(:update_locale) do
+      authorize_if always()
+    end
+
+    # State transition from :payment to :placed.
+    policy action(:finalize_checkout) do
+      authorize_if expr(state == :payment)
+    end
+
+    # All other mutating actions are cart-flow only. Per-action listing
+    # replaces the previous broad `action_type(:update)` policy so a placed
+    # order can't accidentally be edited via any of these actions.
+    policy action([
+             :submit_contact_details,
+             :submit_gift_options,
+             :submit_delivery,
+             :return_to_contact_details,
+             :return_to_gift_options,
+             :return_to_delivery,
+             :update_fulfillment_option,
+             :set_gift,
+             :add_payment_intent_id,
+             :mark_payment_failed,
+             :add_promotion_with_id,
+             :add_promotion_with_code,
+             :clear_promotion,
+             :restart_checkout,
+             :add_card,
+             :remove_card,
+             :remove_line_item,
+             :add_line_item,
+             :increment_line_item,
+             :decrement_line_item
+           ]) do
       authorize_if expr(state in ^@checkout_states)
     end
   end
@@ -371,6 +407,12 @@ defmodule Edenflowers.Store.Order do
     # so validations and templates can branch on a plain attribute instead of
     # traversing the relationship.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
+    # Captured at submit_delivery / update_fulfillment_option from
+    # `fulfillment_option.tax_rate.percentage`. Feeds the live
+    # `fulfillment_tax_amount` calculation so a tax-rate edit doesn't
+    # retroactively rewrite an in-flight cart's tax — and so the
+    # placed_fulfillment_tax_amount snapshot inherits the quoted rate.
+    attribute :fulfillment_tax_rate, :decimal
     attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
@@ -380,6 +422,19 @@ defmodule Edenflowers.Store.Order do
     attribute :payment_intent_id, :string
 
     attribute :locale, :string, default: "sv-FI"
+
+    # Snapshot of the cart's aggregates and the promotion code at
+    # `:finalize_checkout`. Nullable so historical placed orders aren't
+    # broken; new placed orders always populate them via SnapshotTotals.
+    # Placed-order read paths consume these directly; cart-flow read paths
+    # continue to use the live aggregates/calculations.
+    attribute :placed_line_total, :decimal
+    attribute :placed_line_tax_amount, :decimal
+    attribute :placed_discount_amount, :decimal
+    attribute :placed_fulfillment_tax_amount, :decimal
+    attribute :placed_tax_amount, :decimal
+    attribute :placed_total, :decimal
+    attribute :placed_promotion_code, :string
 
     timestamps()
   end
@@ -398,10 +453,10 @@ defmodule Edenflowers.Store.Order do
     calculate :fulfillment_tax_amount,
               :decimal,
               expr(
-                if is_nil(fulfillment_option_id) do
+                if is_nil(fulfillment_tax_rate) do
                   0
                 else
-                  (fulfillment_amount || 0) * fulfillment_option.tax_rate.percentage
+                  (fulfillment_amount || 0) * fulfillment_tax_rate
                 end
               )
 

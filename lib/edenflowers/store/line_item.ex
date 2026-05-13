@@ -39,28 +39,57 @@ defmodule Edenflowers.Store.LineItem do
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
     end
+
+    # Freezes the live aggregates into `placed_*` columns. Called from
+    # `Order.Changes.SnapshotTotals` during `:finalize_checkout`, before
+    # the parent order transitions to `:placed`. Guarded by policy so no
+    # other caller can write these columns.
+    update :snapshot_totals do
+      accept [:placed_line_total, :placed_discount_amount, :placed_line_tax_amount]
+    end
   end
 
   policies do
-    # Admin bypass - admins can do anything
+    # Admin/system can always read (admin views, background workers loading
+    # placed orders' line items for the confirmation email). Mutations to
+    # placed orders go through sibling resources per ADR 0001, so neither
+    # actor is bypassed for updates/destroys.
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
+      authorize_if action_type(:read)
     end
 
-    # Allow creating line items for any order (checkout flow). The card
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
+    end
+
+    # Snapshot freezes placed_* columns; only the system actor (used by
+    # `Order.Changes.SnapshotTotals`) may invoke it, and only while the
+    # parent order is still in :payment. After that the row is immutable
+    # to every actor.
+    policy action(:snapshot_totals) do
+      forbid_if expr(order.state != :payment)
+      authorize_if actor_attribute_equals(:system, true)
+    end
+
+    # Add to cart only while the order is in checkout flow. The card
     # variant is gated at the order level via Order.add_card.
     policy action_type(:create) do
-      authorize_if always()
+      authorize_if expr(order.state != :placed)
     end
 
-    # Read/Update/Destroy access:
-    # Multiple authorize_if within one policy = OR (only one needs to pass)
-    policy action_type([:read, :update, :destroy]) do
-      # Guest checkout: Anyone can work with line items for orders still in
+    policy action_type(:read) do
+      # Guest checkout: anyone can work with line items for orders still in
       # the checkout flow (any sub-state before :placed).
       authorize_if expr(order.state != :placed)
-      # Placed orders: Only the owner can access their line items
+      # Placed orders: only the owner can read their line items.
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
+    end
+
+    # Placed orders are immutable to every actor; mutations during checkout
+    # flow are allowed via the existing cart actions.
+    policy action_type([:update, :destroy]) do
+      forbid_if expr(order.state == :placed)
+      authorize_if always()
     end
   end
 
@@ -85,6 +114,14 @@ defmodule Edenflowers.Store.LineItem do
     attribute :product_image_slug, :string, allow_nil?: false
     attribute :is_card, :boolean, default: false, allow_nil?: false
     attribute :variant_size, Edenflowers.Store.ProductVariantSize
+
+    # Snapshot of the live aggregates at finalize_checkout. Nullable so
+    # pre-snapshot rows aren't broken; new placed orders always populate
+    # them via `:snapshot_totals`.
+    attribute :placed_line_total, :decimal
+    attribute :placed_discount_amount, :decimal
+    attribute :placed_line_tax_amount, :decimal
+
     timestamps()
   end
 

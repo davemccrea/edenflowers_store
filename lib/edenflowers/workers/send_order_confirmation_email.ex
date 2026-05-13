@@ -20,30 +20,13 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
   end
 
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
+    # Placed orders are immutable per ADR 0001: the live aggregates the
+    # template used to read have all been frozen into `placed_*` columns by
+    # SnapshotTotals at finalize_checkout. The worker only needs the order
+    # row plus its line items.
     order_id
-    # TODO: use system_actor here or authorize?: false ?
-    |> Order.get_by_id!(actor: system_actor(), authorize?: false)
-    |> Ash.load!(
-      [
-        # Aggregates
-        :line_total,
-        :line_tax_amount,
-        :discount_amount,
-
-        # Calculations
-        :promotion_applied?,
-        :total,
-        :tax_amount,
-        :fulfillment_tax_amount,
-
-        # Relationships
-        :promotion,
-        fulfillment_option: [:tax_rate],
-        line_items: [:line_subtotal, :line_total]
-      ],
-      actor: system_actor(),
-      authorize?: false
-    )
+    |> Order.get_by_id!(actor: system_actor())
+    |> Ash.load!([:line_items], actor: system_actor())
     |> Email.order_confirmation()
     |> Mailer.deliver()
   end

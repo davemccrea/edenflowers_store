@@ -160,7 +160,13 @@ defmodule Edenflowers.Store.OrderTest do
     {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
-      generate(order(fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount))
+      generate(
+        order(
+          fulfillment_option_id: fulfillment_option.id,
+          fulfillment_amount: fulfillment_amount,
+          fulfillment_tax_rate: tax_rate_1.percentage
+        )
+      )
 
     _line_item =
       generate(
@@ -1066,6 +1072,8 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.delivery_instructions)
       assert is_nil(reset_order.fulfillment_date)
       assert is_nil(reset_order.fulfillment_amount)
+      assert is_nil(reset_order.fulfillment_method)
+      assert is_nil(reset_order.fulfillment_tax_rate)
       assert is_nil(reset_order.geocoded_address)
       assert is_nil(reset_order.here_id)
       assert is_nil(reset_order.distance)
@@ -1361,6 +1369,400 @@ defmodule Edenflowers.Store.OrderTest do
       order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_old"))
 
       assert {:error, error} = Order.add_payment_intent_id(order, "pi_new", actor: nil)
+      assert %Ash.Error.Forbidden{} = error
+    end
+  end
+
+  describe "fulfillment_tax_rate snapshot (ADR 0001)" do
+    setup do
+      tax_rate = generate(tax_rate(percentage: "0.255"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id, price: "50.00"))
+
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Pickup",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "10.00",
+            order_deadline: ~T[12:00:00]
+          )
+        )
+
+      order = generate(order(state: :delivery))
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      %{
+        order: order,
+        tax_rate: tax_rate,
+        fulfillment_option: fulfillment_option
+      }
+    end
+
+    test "submit_delivery captures fulfillment_tax_rate from the chosen option", %{
+      order: order,
+      fulfillment_option: option,
+      tax_rate: tax_rate
+    } do
+      assert {:ok, updated} =
+               order
+               |> Ash.Changeset.for_update(:submit_delivery, %{
+                 fulfillment_option_id: option.id,
+                 fulfillment_date: Date.add(Date.utc_today(), 1)
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Decimal.equal?(updated.fulfillment_tax_rate, tax_rate.percentage)
+    end
+
+    test "in-flight cart's fulfillment_tax_amount uses snapshot, not the live rate", %{
+      order: order,
+      fulfillment_option: option,
+      tax_rate: tax_rate
+    } do
+      {:ok, updated} =
+        order
+        |> Ash.Changeset.for_update(:submit_delivery, %{
+          fulfillment_option_id: option.id,
+          fulfillment_date: Date.add(Date.utc_today(), 1)
+        })
+        |> Ash.update(authorize?: false)
+
+      original_amount = Ash.load!(updated, :fulfillment_tax_amount, authorize?: false).fulfillment_tax_amount
+
+      # Admin edits the underlying tax rate row.
+      tax_rate
+      |> Ecto.Changeset.change(%{percentage: Decimal.new("0.10")})
+      |> Edenflowers.Repo.update!()
+
+      after_edit = Ash.load!(updated, :fulfillment_tax_amount, authorize?: false).fulfillment_tax_amount
+      assert Decimal.equal?(after_edit, original_amount)
+    end
+
+    test "update_fulfillment_option re-captures fulfillment_tax_rate for the new option", %{
+      order: order,
+      fulfillment_option: option,
+      tax_rate: original_rate
+    } do
+      {:ok, with_option} =
+        order
+        |> Ash.Changeset.for_update(:submit_delivery, %{
+          fulfillment_option_id: option.id,
+          fulfillment_date: Date.add(Date.utc_today(), 1)
+        })
+        |> Ash.update(authorize?: false)
+
+      new_tax = generate(tax_rate(percentage: "0.14"))
+
+      new_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: new_tax.id,
+            name: "Delivery alt",
+            fulfillment_method: :delivery,
+            rate_type: :fixed,
+            base_price: "12.00",
+            order_deadline: ~T[12:00:00]
+          )
+        )
+
+      assert {:ok, swapped} =
+               Order.update_fulfillment_option(with_option, new_option.id, authorize?: false)
+
+      assert Decimal.equal?(swapped.fulfillment_tax_rate, new_tax.percentage)
+      refute Decimal.equal?(swapped.fulfillment_tax_rate, original_rate.percentage)
+    end
+  end
+
+  describe "finalize_checkout snapshot (ADR 0001)" do
+    setup do
+      tax_rate = generate(tax_rate(percentage: "0.255"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id, price: "30.00"))
+
+      promotion =
+        generate(promotion(code: "SAVE10", discount_percentage: "0.10", minimum_cart_total: "0"))
+
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Pickup",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "10.00",
+            order_deadline: ~T[12:00:00]
+          )
+        )
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            payment_intent_id: "pi_test",
+            fulfillment_option_id: fulfillment_option.id,
+            fulfillment_amount: "10.00",
+            fulfillment_method: :pickup,
+            fulfillment_tax_rate: tax_rate.percentage,
+            promotion_id: promotion.id
+          )
+        )
+
+      line_item =
+        generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
+
+      %{
+        order: order,
+        line_item: line_item,
+        tax_rate: tax_rate,
+        promotion: promotion
+      }
+    end
+
+    test "finalize_checkout writes placed_* totals on Order", %{order: order, tax_rate: tax_rate} do
+      assert {:ok, placed} = Order.finalize_checkout(order.id, authorize?: false)
+
+      # subtotal = 2 * 30 = 60; discount 10% = 6; line_total = 54
+      assert Decimal.equal?(placed.placed_line_total, "54.00")
+      # line_tax_amount = 54 * 0.255 = 13.77
+      assert placed.placed_line_tax_amount
+             |> Decimal.round(2)
+             |> Decimal.equal?("13.77")
+
+      assert Decimal.equal?(placed.placed_discount_amount, "6.00")
+
+      # fulfillment_tax_amount = 10 * 0.255 = 2.55
+      assert placed.placed_fulfillment_tax_amount
+             |> Decimal.round(2)
+             |> Decimal.equal?("2.55")
+
+      # tax_amount = line_tax + fulfillment_tax
+      assert placed.placed_tax_amount
+             |> Decimal.round(2)
+             |> Decimal.equal?(Decimal.add(placed.placed_line_tax_amount, placed.placed_fulfillment_tax_amount) |> Decimal.round(2))
+
+      # total = line_total + fulfillment_amount = 54 + 10 = 64
+      assert Decimal.equal?(placed.placed_total, "64.00")
+
+      # Ignore tax_rate to silence unused; included in pattern for clarity
+      _ = tax_rate
+    end
+
+    test "finalize_checkout captures placed_promotion_code", %{order: order, promotion: promotion} do
+      assert {:ok, placed} = Order.finalize_checkout(order.id, authorize?: false)
+      assert placed.placed_promotion_code == promotion.code
+    end
+
+    test "finalize_checkout writes placed_* totals on each LineItem", %{
+      order: order,
+      line_item: line_item
+    } do
+      assert {:ok, _placed} = Order.finalize_checkout(order.id, authorize?: false)
+
+      reloaded = Ash.get!(Edenflowers.Store.LineItem, line_item.id, authorize?: false)
+
+      # subtotal 60, 10% discount = 6, line_total = 54
+      assert Decimal.equal?(reloaded.placed_line_total, "54.00")
+      assert Decimal.equal?(reloaded.placed_discount_amount, "6.00")
+      # line_tax_amount = 54 * 0.255
+      assert reloaded.placed_line_tax_amount
+             |> Decimal.round(2)
+             |> Decimal.equal?("13.77")
+    end
+
+    test "snapshot is immune to later promotion percentage edits", %{
+      order: order,
+      promotion: promotion
+    } do
+      {:ok, placed} = Order.finalize_checkout(order.id, authorize?: false)
+      original_total = placed.placed_total
+
+      promotion
+      |> Ecto.Changeset.change(%{discount_percentage: Decimal.new("0.90")})
+      |> Edenflowers.Repo.update!()
+
+      reloaded = Order.get_by_id!(placed.id, actor: %{system: true})
+      assert Decimal.equal?(reloaded.placed_total, original_total)
+    end
+
+    test "snapshot is immune to later tax rate edits", %{order: order, tax_rate: tax_rate} do
+      {:ok, placed} = Order.finalize_checkout(order.id, authorize?: false)
+      original_tax = placed.placed_tax_amount
+
+      tax_rate
+      |> Ecto.Changeset.change(%{percentage: Decimal.new("0.05")})
+      |> Edenflowers.Repo.update!()
+
+      reloaded = Order.get_by_id!(placed.id, actor: %{system: true})
+      assert Decimal.equal?(reloaded.placed_tax_amount, original_tax)
+    end
+
+    test "placed_promotion_code is nil when no promotion was applied" do
+      tax_rate = generate(tax_rate(percentage: "0.10"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id, price: "20.00"))
+
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Pickup-x",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00",
+            order_deadline: ~T[12:00:00]
+          )
+        )
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            payment_intent_id: "pi_no_promo",
+            fulfillment_option_id: fulfillment_option.id,
+            fulfillment_amount: "5.00",
+            fulfillment_method: :pickup,
+            fulfillment_tax_rate: tax_rate.percentage
+          )
+        )
+
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      {:ok, placed} = Order.finalize_checkout(order.id, authorize?: false)
+      assert is_nil(placed.placed_promotion_code)
+      assert is_nil(placed.placed_discount_amount) or Decimal.equal?(placed.placed_discount_amount, "0")
+    end
+  end
+
+  describe "Placed order lockdown (ADR 0001)" do
+    setup do
+      tax_rate = generate(tax_rate(percentage: "0.255"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id, price: "30.00"))
+
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            name: "Pickup",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00",
+            order_deadline: ~T[12:00:00]
+          )
+        )
+
+      {:ok, user} =
+        Edenflowers.Accounts.User.upsert("owner@example.com", "Owner", authorize?: false)
+
+      order =
+        generate(
+          order(
+            state: :placed,
+            payment_status: :paid,
+            payment_intent_id: "pi_locked",
+            user_id: user.id,
+            fulfillment_option_id: fulfillment_option.id,
+            fulfillment_amount: "5.00",
+            fulfillment_method: :pickup,
+            fulfillment_tax_rate: tax_rate.percentage,
+            placed_total: "65.00"
+          )
+        )
+
+      %{order: order, user: user, variant: variant}
+    end
+
+    test "owner cannot return placed order to an earlier checkout step", %{
+      order: order,
+      user: user
+    } do
+      assert {:error, error} = Order.return_to_contact_details(order, actor: user)
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "owner cannot restart checkout on a placed order", %{order: order, user: user} do
+      assert {:error, error} = Order.restart_checkout(order, actor: user)
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "admin cannot edit cart-flow fields on a placed order via cart actions", %{order: order} do
+      assert {:error, error} =
+               Order.add_payment_intent_id(order, "pi_admin_attempt", actor: %{admin: true})
+
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "system actor cannot edit cart-flow fields on a placed order via cart actions", %{
+      order: order
+    } do
+      assert {:error, error} =
+               Order.add_payment_intent_id(order, "pi_system_attempt", actor: %{system: true})
+
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "finalize_checkout is rejected once the order is placed", %{order: order} do
+      assert {:error, error} = Order.finalize_checkout(order.id, actor: %{system: true})
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "update_locale stays allowed even on placed orders", %{order: order, user: user} do
+      assert {:ok, updated} = Order.update_locale(order, "en-GB", actor: user)
+      assert updated.locale == "en-GB"
+    end
+
+    test "line items on a placed order cannot be created", %{order: order, variant: variant} do
+      assert {:error, error} =
+               Edenflowers.Store.LineItem
+               |> Ash.Changeset.for_create(:add_to_cart, %{
+                 order_id: order.id,
+                 product_variant_id: variant.id,
+                 quantity: 1
+               })
+               |> Ash.create(actor: nil)
+
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "line items on a placed order cannot be destroyed by the owner", %{
+      order: order,
+      user: user,
+      variant: variant
+    } do
+      # Manually attach a line item to the placed order (seed_generator bypass)
+      line_item =
+        Edenflowers.Store.LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: variant.id,
+          quantity: 1
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert {:error, error} =
+               Ash.destroy(line_item, action: :remove_item, actor: user)
+
+      assert %Ash.Error.Forbidden{} = error
+    end
+
+    test "snapshot_totals refuses non-system actors", %{order: order, variant: variant} do
+      line_item =
+        Edenflowers.Store.LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{
+          order_id: order.id,
+          product_variant_id: variant.id,
+          quantity: 1
+        })
+        |> Ash.create!(authorize?: false)
+
+      assert {:error, error} =
+               line_item
+               |> Ash.Changeset.for_update(:snapshot_totals, %{placed_line_total: "1.00"})
+               |> Ash.update(actor: %{admin: true})
+
       assert %Ash.Error.Forbidden{} = error
     end
   end
