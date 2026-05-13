@@ -248,7 +248,7 @@
       #set text(fill: colors.forest-content)
       #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light")[
         #t("thank-you")
-      ]
+      ]#h(4pt)#text(size: 12pt)[💛]
       #v(4pt)
       #set text(font: fonts.sans, size: type-scale.small,
                 fill: colors.forest-content.transparentize(25%))

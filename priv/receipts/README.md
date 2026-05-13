@@ -59,8 +59,13 @@ The `lang` field selects which row of `translations.toml` is used for labels.
 
 ## Fonts
 
-Open Sans and Crimson Text are bundled under `fonts/`. Both are SIL Open Font
-License 1.1 — see `fonts/OFL.txt`. Source projects:
+Open Sans, Crimson Text, and Noto Color Emoji are bundled under `fonts/`. All
+three are SIL Open Font License 1.1 — see `fonts/OFL.txt`. Source projects:
 
 - Open Sans: <https://github.com/googlefonts/opensans>
 - Crimson Text: <https://github.com/Fonthausen/CrimsonPro>
+- Noto Color Emoji: <https://github.com/googlefonts/noto-emoji>
+
+Noto Color Emoji carries the heart glyph in the closing band. Bundling it means
+the receipt renders identically on macOS, Ubuntu, and Docker without depending
+on system-installed emoji fonts.
