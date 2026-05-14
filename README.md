@@ -61,10 +61,10 @@ git branch -d feature/my-feature
 
 ### Releasing a new version
 
-Use `deploy.sh` with the new semver version:
+Use `scripts/deploy.sh` with the new semver version:
 
 ```bash
-./deploy.sh 0.3.0
+./scripts/deploy.sh 0.3.0
 ```
 
 The script verifies the working tree is clean, the tag doesn't already exist, and that compile + tests pass. It then bumps the version in `mix.exs`, commits, tags `v0.3.0`, and pushes both `main` and the tag. GitHub Actions takes it from there to build the Docker image and deploy.
