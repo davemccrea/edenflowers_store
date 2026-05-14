@@ -1,0 +1,54 @@
+{
+  "lang": "fi",
+  "reference": "EF-2026-00428",
+  "ordered_at": "13.5.2026 klo 14:32",
+  "customer": {
+    "name": "Anna Lindqvist",
+    "email": "anna.lindqvist@example.fi"
+  },
+  "fulfillment": {
+    "method": "delivery",
+    "recipient_name": "Margareta Lindqvist",
+    "recipient_phone": "+358 40 555 0123",
+    "address": "Korsholmsesplanaden 12 A 4, 65100 Vaasa",
+    "instructions": "Ovikello ylimpään kerrokseen — jos kukaan ei avaa, jätä naapurille.",
+    "date": "Lauantai 16.5.2026"
+  },
+  "card_message": "Grattis på födelsedagen, mamma! Med kärlek från oss alla.",
+  "line_items": [
+    {
+      "name": "Kevätkimppu",
+      "variant_size": "Keskikokoinen",
+      "quantity": 1,
+      "unit_price_ex_vat": "31,79 €",
+      "unit_price": "39,90 €",
+      "vat_rate": "25,5 %",
+      "line_total": "39,90 €"
+    },
+    {
+      "name": "Eukalyptuskimppu",
+      "variant_size": null,
+      "quantity": 2,
+      "unit_price_ex_vat": "6,77 €",
+      "unit_price": "8,50 €",
+      "vat_rate": "25,5 %",
+      "line_total": "17,00 €"
+    },
+    {
+      "name": "Käsinkirjoitettu kortti",
+      "variant_size": null,
+      "quantity": 1,
+      "unit_price_ex_vat": "3,59 €",
+      "unit_price": "4,50 €",
+      "vat_rate": "25,5 %",
+      "line_total": "4,50 €"
+    }
+  ],
+  "totals": {
+    "subtotal": "61,40 €",
+    "fulfillment": "9,00 €",
+    "discount": "6,14 €",
+    "tax": "13,38 €",
+    "grand_total": "64,26 €"
+  }
+}
