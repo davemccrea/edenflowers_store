@@ -112,7 +112,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     end
   end
 
-  describe "ProductVariant.for_card_drawer" do
+  describe "ProductVariant.purchasable_cards" do
     setup do
       tax_rate = generate(tax_rate())
       cards_category = generate(product_category(slug: "cards", visibility: :public))
@@ -135,7 +135,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "returns variants from the cards category", %{card_product: card_product} do
       variant = generate(product_variant(product_id: card_product.id, draft: false))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
 
       assert Enum.any?(variants, fn v -> v.id == variant.id end)
     end
@@ -144,7 +144,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       card_variant = generate(product_variant(product_id: card_product.id, draft: false))
       other_variant = generate(product_variant(product_id: other_product.id, draft: false))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
 
       assert Enum.any?(variants, fn v -> v.id == card_variant.id end)
       refute Enum.any?(variants, fn v -> v.id == other_variant.id end)
@@ -153,7 +153,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "excludes draft variants", %{card_product: card_product} do
       draft_variant = generate(product_variant(product_id: card_product.id, draft: true))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
 
       refute Enum.any?(variants, fn v -> v.id == draft_variant.id end)
     end
@@ -162,7 +162,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       draft_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: true))
       variant = generate(product_variant(product_id: draft_product.id, draft: false))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
 
       refute Enum.any?(variants, fn v -> v.id == variant.id end)
     end
@@ -174,7 +174,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_cards_category.id, draft: false))
       variant = generate(product_variant(product_id: product.id, draft: false))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
 
       refute Enum.any?(variants, fn v -> v.id == variant.id end)
     end
@@ -182,7 +182,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
     test "loads product with tax_rate", %{card_product: card_product} do
       generate(product_variant(product_id: card_product.id, draft: false))
 
-      variants = ProductVariant.for_card_drawer!(authorize?: false)
+      variants = ProductVariant.purchasable_cards!(authorize?: false)
       found = Enum.find(variants, fn v -> v.product_id == card_product.id end)
 
       assert found != nil
@@ -196,7 +196,7 @@ defmodule Edenflowers.Store.ProductVariantTest do
       generate(product_variant(product_id: card_product.id, size: :medium, draft: false))
 
       variants =
-        ProductVariant.for_card_drawer!(authorize?: false)
+        ProductVariant.purchasable_cards!(authorize?: false)
         |> Enum.filter(fn v -> v.product_id == card_product.id end)
         |> Enum.map(& &1.size)
 

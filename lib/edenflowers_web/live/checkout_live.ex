@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.CheckoutLive do
          {:ok, fulfillment_options} <- FulfillmentOption.list() do
       fulfillment_options = sort_fulfillment_options(fulfillment_options)
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
-      card_variants = ProductVariant.for_card_drawer!()
+      card_variants = ProductVariant.purchasable_cards!()
 
       {:ok,
        socket

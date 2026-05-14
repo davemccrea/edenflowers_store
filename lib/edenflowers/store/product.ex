@@ -11,17 +11,17 @@ defmodule Edenflowers.Store.Product do
   end
 
   code_interface do
-    define :get_all_for_store, action: :for_store
+    define :list_visible, action: :visible
     define :get_featured, action: :featured
     define :get_by_category, action: :by_category, args: [:category_id]
-    define :get_by_category_slug, action: :get_by_category_slug, args: [:slug]
+    define :get_by_category_slug, action: :by_category_slug, args: [:slug]
     define :get_by_id, action: :by_id, args: [:id]
   end
 
   actions do
     defaults [:read, :destroy]
 
-    read :for_store do
+    read :visible do
       prepare Edenflowers.Store.Product.Preparations.VisibleInStore
     end
 
@@ -37,7 +37,7 @@ defmodule Edenflowers.Store.Product do
       prepare Edenflowers.Store.Product.Preparations.VisibleInStore
     end
 
-    read :get_by_category_slug do
+    read :by_category_slug do
       argument :slug, :string, allow_nil?: false
 
       filter expr(product_category.slug == ^arg(:slug))

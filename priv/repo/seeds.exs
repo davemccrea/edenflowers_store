@@ -102,7 +102,7 @@ plants_category =
   })
   |> Ash.create!(authorize?: false)
 
-# Cards are surfaced only at checkout via ProductVariant.for_card_drawer.
+# Cards are surfaced only at checkout via ProductVariant.purchasable_cards.
 # visibility: :hidden keeps the category out of the store ribbon while still
 # allowing its products to be read by that action.
 cards_category =

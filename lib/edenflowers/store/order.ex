@@ -40,7 +40,7 @@ defmodule Edenflowers.Store.Order do
     define :get_by_id, action: :by_id, args: [:id]
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
-    define :get_all_completed, action: :completed
+    define :list_placed, action: :placed
     define :create_for_checkout, action: :create_for_checkout
     define :submit_contact_details, action: :submit_contact_details
     define :submit_gift_options, action: :submit_gift_options
@@ -107,7 +107,7 @@ defmodule Edenflowers.Store.Order do
       prepare build(load: @checkout_load)
     end
 
-    read :completed do
+    read :placed do
       filter expr(state == :placed)
     end
 

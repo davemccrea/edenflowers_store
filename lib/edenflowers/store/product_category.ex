@@ -17,18 +17,18 @@ defmodule Edenflowers.Store.ProductCategory do
   end
 
   code_interface do
-    define :get_all, action: :get_all
-    define :get_by_slug, action: :get_by_slug, args: [:slug]
+    define :get_all, action: :public
+    define :get_by_slug, action: :by_slug, args: [:slug]
   end
 
   actions do
     defaults [:read, :destroy]
 
-    read :get_all do
+    read :public do
       filter expr(visibility == :public)
     end
 
-    read :get_by_slug do
+    read :by_slug do
       argument :slug, :string, allow_nil?: false
       filter expr(slug == ^arg(:slug) and visibility == :public)
       get? true

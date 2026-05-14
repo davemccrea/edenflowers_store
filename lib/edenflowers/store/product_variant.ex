@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.ProductVariant do
 
   code_interface do
     define :get_by_id, action: :by_id, args: [:id]
-    define :for_card_drawer, action: :for_card_drawer
+    define :purchasable_cards, action: :purchasable_cards
   end
 
   actions do
@@ -24,7 +24,7 @@ defmodule Edenflowers.Store.ProductVariant do
       get? true
     end
 
-    read :for_card_drawer do
+    read :purchasable_cards do
       # The Cards category is intentionally hidden from the storefront
       # (visibility: :hidden) — products are surfaced only at checkout via
       # this action. Excluding :draft keeps work-in-progress categories out.

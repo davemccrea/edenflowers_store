@@ -136,7 +136,7 @@ defmodule Edenflowers.Store.ProductTest do
     end
   end
 
-  describe "Product.get_all_for_store filtering" do
+  describe "Product.list_visible filtering" do
     test "includes published products with variants and published category", %{tax_rate: tax_rate} do
       # Create published category
       published_category = generate(product_category(visibility: :public))
@@ -145,7 +145,7 @@ defmodule Edenflowers.Store.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Product.list_visible!(authorize?: false)
 
       assert Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -159,7 +159,7 @@ defmodule Edenflowers.Store.ProductTest do
 
       _variant = generate(product_variant(product_id: draft_product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Product.list_visible!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == draft_product.id end)
     end
@@ -171,7 +171,7 @@ defmodule Edenflowers.Store.ProductTest do
       product_no_variants =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Product.list_visible!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product_no_variants.id end)
     end
@@ -184,7 +184,7 @@ defmodule Edenflowers.Store.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Product.list_visible!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -194,7 +194,7 @@ defmodule Edenflowers.Store.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id, price: "15.99"))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Product.list_visible!(authorize?: false)
       found_product = Enum.find(products, fn p -> p.id == product.id end)
 
       assert found_product != nil
