@@ -78,8 +78,6 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
         :fulfillment_tax,
 
         # Relationships
-        :promotion,
-        fulfillment_option: [:tax_rate],
         line_items: [:subtotal, :total, :unit_price_ex_tax]
       ],
       actor: system_actor(),

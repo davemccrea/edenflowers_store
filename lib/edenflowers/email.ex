@@ -20,16 +20,14 @@ defmodule Edenflowers.Email do
       |> from(@from_address)
       |> to(order.customer_email)
       |> subject("#{~t"Order Confirmation"} - #{order.order_reference}")
-      |> text_body(render_order_confirmation(order, order.locale))
+      |> text_body(render_order_confirmation(order))
     end)
   end
 
-  defp render_order_confirmation(order, locale) do
+  defp render_order_confirmation(order) do
     Templates.order_confirmation(%{
       order: order,
-      format_currency: &Format.currency(&1, locale),
-      format_date: &Format.date(&1, locale),
-      format_datetime: &Format.datetime(&1, locale)
+      format_date: &Format.date(&1, order.locale)
     })
   end
 

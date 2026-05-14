@@ -314,7 +314,8 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       assert email.to == [{"", "jane@example.com"}]
       assert email.subject =~ "Order Confirmation"
       assert email.subject =~ finalized.order_reference
-      assert email.text_body =~ "Stadsgatan 3, 65300 Vasa"
+      assert email.text_body =~ finalized.order_reference
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
 
@@ -394,10 +395,8 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
-      # The template renders the discount line, not the promo code itself.
-      assert email.text_body =~ "Discount"
-      assert email.text_body =~ "-€7.00"
-      assert email.text_body =~ "Total: €28.00"
+      assert email.text_body =~ finalized.order_reference
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
 
