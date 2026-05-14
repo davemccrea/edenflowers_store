@@ -14,6 +14,7 @@ defmodule Edenflowers.Store.Order do
   alias Edenflowers.Store.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
+  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
   @checkout_load [
     :total_items_in_cart,
@@ -35,14 +36,12 @@ defmodule Edenflowers.Store.Order do
     table "orders"
   end
 
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
-
   code_interface do
-    define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
     define :get_all_completed, action: :completed
+    define :create_for_checkout, action: :create_for_checkout
     define :submit_contact_details, action: :submit_contact_details
     define :submit_gift_options, action: :submit_gift_options
     define :submit_delivery, action: :submit_delivery
@@ -52,6 +51,12 @@ defmodule Edenflowers.Store.Order do
     define :finalize_checkout, action: :finalize_checkout
     define :mark_payment_failed, action: :mark_payment_failed
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
+    define :add_line_item, action: :add_line_item, args: [:product_variant_id, :quantity]
+    define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
+    define :increment_line_item, action: :increment_line_item, args: [:line_item_id]
+    define :decrement_line_item, action: :decrement_line_item, args: [:line_item_id]
+    define :add_card, action: :add_card, args: [:product_variant_id]
+    define :remove_card, action: :remove_card
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
@@ -59,12 +64,6 @@ defmodule Edenflowers.Store.Order do
     define :set_gift, action: :set_gift, args: [:gift]
     define :update_locale, action: :update_locale, args: [:locale]
     define :restart_checkout, action: :restart_checkout
-    define :add_card, action: :add_card, args: [:product_variant_id]
-    define :remove_card, action: :remove_card
-    define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
-    define :add_line_item, action: :add_line_item, args: [:product_variant_id, :quantity]
-    define :increment_line_item, action: :increment_line_item, args: [:line_item_id]
-    define :decrement_line_item, action: :decrement_line_item, args: [:line_item_id]
   end
 
   state_machine do
@@ -185,33 +184,56 @@ defmodule Edenflowers.Store.Order do
       require_atomic? false
     end
 
-    update :update_fulfillment_option do
-      accept [:fulfillment_option_id]
-      change {Changes.SnapshotFulfillmentMethod, []}
-      change set_attribute(:fulfillment_date, nil)
-      change {Changes.ClearDeliveryFields, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :set_gift do
-      accept [:gift]
-      change load(@checkout_load)
-    end
-
-    update :update_locale do
-      argument :locale, :string, allow_nil?: false
-      validate argument_in(:locale, @locales)
-      change atomic_update(:locale, expr(^arg(:locale)))
+    update :mark_payment_failed do
+      validate attribute_does_not_equal(:payment_status, :paid)
+      change set_attribute(:payment_status, :failed)
     end
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
     end
 
-    update :mark_payment_failed do
-      validate attribute_does_not_equal(:payment_status, :paid)
-      change set_attribute(:payment_status, :failed)
+    update :add_line_item do
+      argument :product_variant_id, :uuid, allow_nil?: false
+      argument :quantity, :integer, allow_nil?: false, constraints: [min: 1]
+      change {Changes.AddLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :remove_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.RemoveLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :increment_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.AdjustLineItemQuantity, direction: :increment}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :decrement_line_item do
+      argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.AdjustLineItemQuantity, direction: :decrement}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :add_card do
+      argument :product_variant_id, :uuid, allow_nil?: false
+      change {Changes.SwapCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :remove_card do
+      change set_attribute(:card_message, nil)
+      change {Changes.RemoveCardLineItem, []}
+      change load(@checkout_load)
+      require_atomic? false
     end
 
     update :add_promotion_with_id do
@@ -239,52 +261,29 @@ defmodule Edenflowers.Store.Order do
       require_atomic? false
     end
 
+    update :update_fulfillment_option do
+      accept [:fulfillment_option_id]
+      change {Changes.SnapshotFulfillmentMethod, []}
+      change set_attribute(:fulfillment_date, nil)
+      change {Changes.ClearDeliveryFields, []}
+      change load(@checkout_load)
+      require_atomic? false
+    end
+
+    update :set_gift do
+      accept [:gift]
+      change load(@checkout_load)
+    end
+
+    update :update_locale do
+      argument :locale, :string, allow_nil?: false
+      validate argument_in(:locale, @locales)
+      change atomic_update(:locale, expr(^arg(:locale)))
+    end
+
     update :restart_checkout do
       change {Changes.ResetCheckout, []}
       change transition_state(:contact_details)
-      require_atomic? false
-    end
-
-    update :add_card do
-      argument :product_variant_id, :uuid, allow_nil?: false
-      change {Changes.SwapCardLineItem, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :remove_card do
-      change set_attribute(:card_message, nil)
-      change {Changes.RemoveCardLineItem, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :remove_line_item do
-      argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.RemoveLineItem, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :add_line_item do
-      argument :product_variant_id, :uuid, allow_nil?: false
-      argument :quantity, :integer, allow_nil?: false, constraints: [min: 1]
-      change {Changes.AddLineItem, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :increment_line_item do
-      argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.AdjustLineItemQuantity, direction: :increment}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :decrement_line_item do
-      argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.AdjustLineItemQuantity, direction: :decrement}
-      change load(@checkout_load)
       require_atomic? false
     end
   end
@@ -359,6 +358,8 @@ defmodule Edenflowers.Store.Order do
         ]
       ]
 
+    attribute :locale, :string, default: "sv-FI"
+
     # Step 1 - Your Details
     attribute :customer_name, :string
     attribute :customer_email, :string
@@ -392,8 +393,6 @@ defmodule Edenflowers.Store.Order do
     attribute :discount_rate, :decimal
     attribute :promotion_name, :string
     attribute :promotion_code, :string
-
-    attribute :locale, :string, default: "sv-FI"
 
     timestamps()
   end

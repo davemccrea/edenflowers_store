@@ -99,6 +99,16 @@ defmodule Edenflowers.Store.LineItem do
     # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
     calculate :subtotal, :decimal, expr(unit_price * quantity)
 
+    calculate :discount,
+              :decimal,
+              expr(
+                if(
+                  promotion_applied?,
+                  do: subtotal * order.discount_rate,
+                  else: 0
+                )
+              )
+
     # This is the final amount for a specific line item, including the subtotal plus taxes and minus any line-specific discounts.
     calculate :total,
               :decimal,
@@ -107,16 +117,6 @@ defmodule Edenflowers.Store.LineItem do
                   promotion_applied?,
                   do: subtotal - discount,
                   else: subtotal
-                )
-              )
-
-    calculate :discount,
-              :decimal,
-              expr(
-                if(
-                  promotion_applied?,
-                  do: subtotal * order.discount_rate,
-                  else: 0
                 )
               )
 

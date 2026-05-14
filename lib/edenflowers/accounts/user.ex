@@ -66,9 +66,9 @@ defmodule Edenflowers.Accounts.User do
   code_interface do
     define :get_by_subject, action: :get_by_subject, args: [:subject]
     define :get_by_email, action: :get_by_email, args: [:email]
-    define :upsert, action: :upsert, args: [:email, :name]
     define :request_otp, action: :request_otp, args: [:email]
     define :sign_in_with_otp, action: :sign_in_with_otp, args: [:email, :otp]
+    define :upsert, action: :upsert, args: [:email, :name]
     define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
     define :update_name, action: :update_name, args: [:name]
     define :update_newsletter_preference, action: :update_newsletter_preference, args: [:newsletter_opt_in]
@@ -100,28 +100,11 @@ defmodule Edenflowers.Accounts.User do
       upsert_identity :unique_email
     end
 
-    update :update do
-      accept [:name, :newsletter_opt_in]
-    end
-
     create :subscribe_to_newsletter do
       accept [:email]
       upsert? true
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
-    end
-
-    update :update_name do
-      accept [:name]
-    end
-
-    update :update_newsletter_preference do
-      accept [:newsletter_opt_in]
-    end
-
-    update :set_newsletter_promo do
-      argument :newsletter_promo_id, :uuid, allow_nil?: false
-      change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
     end
 
     create :register_with_google do
@@ -140,6 +123,23 @@ defmodule Edenflowers.Accounts.User do
         |> Ash.Changeset.change_attribute(:email, user_info["email"])
         |> Ash.Changeset.change_attribute(:name, user_info["name"])
       end
+    end
+
+    update :update do
+      accept [:name, :newsletter_opt_in]
+    end
+
+    update :update_name do
+      accept [:name]
+    end
+
+    update :update_newsletter_preference do
+      accept [:newsletter_opt_in]
+    end
+
+    update :set_newsletter_promo do
+      argument :newsletter_promo_id, :uuid, allow_nil?: false
+      change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
     end
   end
 
