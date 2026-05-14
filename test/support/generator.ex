@@ -32,7 +32,7 @@ defmodule Generator do
       defaults: %{
         name: words(),
         code: sequence(:promotion_code, &"PROMO-#{&1}"),
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "0",
         start_date: nil,
         expiration_date: nil,
@@ -89,7 +89,7 @@ defmodule Generator do
   def order(opts \\ []) do
     # For testing orders, we use seed_generator to allow setting any attribute
     # including internal ones that wouldn't normally be accepted in actions
-    # (like fulfillment_amount, payment_intent_id, promotion_id, etc.)
+    # (like fulfillment_fee, payment_intent_id, promotion_id, etc.)
     # We provide a base struct to avoid generating random foreign keys that don't exist
     seed_generator(
       %Order{

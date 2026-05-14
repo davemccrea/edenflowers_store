@@ -30,7 +30,7 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "Test",
                  code: "TEST",
-                 discount_percentage: "0.10",
+                 discount_rate: "0.10",
                  minimum_cart_total: "0"
                })
                |> Ash.create(actor: nil)
@@ -64,7 +64,7 @@ defmodule Edenflowers.PoliciesTest do
                  %{
                    name: "Stealth",
                    code: "STEALTH",
-                   discount_percentage: "0.50",
+                   discount_rate: "0.50",
                    minimum_cart_total: "0"
                  },
                  actor: %{system: true}

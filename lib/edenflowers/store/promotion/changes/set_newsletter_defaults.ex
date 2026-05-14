@@ -12,7 +12,7 @@ defmodule Edenflowers.Store.Promotion.Changes.SetNewsletterDefaults do
     changeset
     |> Ash.Changeset.force_change_attribute(:code, code)
     |> Ash.Changeset.force_change_attribute(:name, "Newsletter Welcome")
-    |> Ash.Changeset.force_change_attribute(:discount_percentage, Decimal.new("0.15"))
+    |> Ash.Changeset.force_change_attribute(:discount_rate, Decimal.new("0.15"))
     |> Ash.Changeset.force_change_attribute(:minimum_cart_total, Decimal.new("0"))
     |> Ash.Changeset.force_change_attribute(:start_date, today)
     |> Ash.Changeset.force_change_attribute(:expiration_date, Date.add(today, 30))

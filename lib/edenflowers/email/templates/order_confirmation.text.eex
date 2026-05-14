@@ -10,7 +10,7 @@
 <%= gettext("Email") %>: <%= @order.customer_email %>
 
 <%= gettext("ITEMS") %>
-<%= for item <- @order.line_items do %>- <%= item.product_name %><%= if item.variant_size do %> (<%= String.capitalize(to_string(item.variant_size)) %>)<% end %> (<%= item.quantity %>) <%= @format_currency.(item.line_total) %>
+<%= for item <- @order.line_items do %>- <%= item.product_name %><%= if item.variant_size do %> (<%= String.capitalize(to_string(item.variant_size)) %>)<% end %> (<%= item.quantity %>) <%= @format_currency.(item.total) %>
 <% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= gettext("DELIVERY") %><% else %><%= gettext("PICKUP") %><% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= if @order.gift do %><%= gettext("Recipient") %>: <%= @order.recipient_name %><% else %><%= gettext("Recipient") %>: <%= @order.customer_name %><% end %>
@@ -25,10 +25,10 @@
 <%= gettext("CARD MESSAGE") %>
 <%= @order.card_message %><% end %>
 
-<%= gettext("Delivery fee") %>: <%= @format_currency.(@order.fulfillment_amount) %>
-<%= if @order.promotion_applied? do %><%= gettext("Discount") %>: -<%= @format_currency.(@order.discount_amount) %>
-<% end %><%= gettext("Tax") %>: <%= @format_currency.(@order.tax_amount) %>
-<%= gettext("Total") %>: <%= @format_currency.(@order.total) %>
+<%= gettext("Delivery fee") %>: <%= @format_currency.(@order.fulfillment_fee) %>
+<%= if @order.promotion_applied? do %><%= gettext("Discount") %>: -<%= @format_currency.(@order.discount) %>
+<% end %><%= gettext("Tax") %>: <%= @format_currency.(@order.tax) %>
+<%= gettext("Total") %>: <%= @format_currency.(@order.grand_total) %>
 
 <%= gettext("If you have any questions or wish to make changes to your order, please reply to this email.") %>
 

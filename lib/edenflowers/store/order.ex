@@ -17,13 +17,13 @@ defmodule Edenflowers.Store.Order do
 
   @checkout_load [
     :total_items_in_cart,
-    :discount_amount,
-    :line_total,
-    :line_tax_amount,
+    :discount,
+    :items_subtotal,
+    :items_tax,
     :promotion_applied?,
-    :total,
-    :tax_amount,
-    :fulfillment_tax_amount,
+    :grand_total,
+    :tax,
+    :fulfillment_tax,
     :cart_effectively_empty?,
     :promotion,
     :fulfillment_option,
@@ -373,7 +373,7 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-    attribute :fulfillment_amount, :decimal
+    attribute :fulfillment_fee, :decimal
     # Snapshotted from FulfillmentOption (+ its TaxRate) by
     # SnapshotFulfillmentMethod. Frozen once the order is placed.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
@@ -389,7 +389,7 @@ defmodule Edenflowers.Store.Order do
 
     # Snapshotted from Promotion by SnapshotPromotion. Frozen once the order
     # is placed.
-    attribute :discount_percentage, :decimal
+    attribute :discount_rate, :decimal
     attribute :promotion_name, :string
     attribute :promotion_code, :string
 
@@ -407,13 +407,13 @@ defmodule Edenflowers.Store.Order do
 
   calculations do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
-    calculate :total, :decimal, expr(line_total + (fulfillment_amount || 0))
+    calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
 
-    calculate :fulfillment_tax_amount,
+    calculate :fulfillment_tax,
               :decimal,
-              expr((fulfillment_amount || 0) * (fulfillment_tax_percentage || 0))
+              expr((fulfillment_fee || 0) * (fulfillment_tax_percentage || 0))
 
-    calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
+    calculate :tax, :decimal, expr(items_tax + fulfillment_tax)
 
     # A cart with only a card line item is presented as empty in the UI
     # (card controls are hidden in the cart sidebar) and shouldn't keep
@@ -424,9 +424,9 @@ defmodule Edenflowers.Store.Order do
 
   aggregates do
     sum :total_items_in_cart, :line_items, :quantity
-    sum :line_total, :line_items, :line_total
-    sum :line_tax_amount, :line_items, :line_tax_amount
-    sum :discount_amount, :line_items, :discount_amount
+    sum :items_subtotal, :line_items, :total
+    sum :items_tax, :line_items, :tax
+    sum :discount, :line_items, :discount
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
   end
 

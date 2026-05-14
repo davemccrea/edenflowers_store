@@ -7,7 +7,7 @@ defmodule Edenflowers.Store.Order.Changes.ClearDeliveryFields do
     :position,
     :here_id,
     :distance,
-    :fulfillment_amount
+    :fulfillment_fee
   ]
 
   @impl true

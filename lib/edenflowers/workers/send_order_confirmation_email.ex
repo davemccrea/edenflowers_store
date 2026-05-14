@@ -26,20 +26,20 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
     |> Ash.load!(
       [
         # Aggregates
-        :line_total,
-        :line_tax_amount,
-        :discount_amount,
+        :items_subtotal,
+        :items_tax,
+        :discount,
 
         # Calculations
         :promotion_applied?,
-        :total,
-        :tax_amount,
-        :fulfillment_tax_amount,
+        :grand_total,
+        :tax,
+        :fulfillment_tax,
 
         # Relationships
         :promotion,
         fulfillment_option: [:tax_rate],
-        line_items: [:line_subtotal, :line_total]
+        line_items: [:subtotal, :total]
       ],
       actor: system_actor(),
       authorize?: false

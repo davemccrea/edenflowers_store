@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
       assert is_nil(reloaded.geocoded_address)
-      assert is_nil(reloaded.fulfillment_amount)
+      assert is_nil(reloaded.fulfillment_fee)
     end
 
     test "submit persists every geocode field, the sibling form fields, and advances the step", %{
@@ -284,7 +284,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       assert reloaded.position == "63.0951,21.6165"
       assert reloaded.here_id == "here-id-123"
       assert reloaded.distance == 3000
-      assert Decimal.eq?(reloaded.fulfillment_amount, Decimal.new("5.00"))
+      assert Decimal.eq?(reloaded.fulfillment_fee, Decimal.new("5.00"))
       assert reloaded.recipient_phone_number == "045 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
@@ -359,7 +359,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       here_id: "here-id-123",
       position: "63.0951,21.6165",
       distance: 3000,
-      fulfillment_amount: Decimal.new("5.00")
+      fulfillment_fee: Decimal.new("5.00")
     })
   end
 end

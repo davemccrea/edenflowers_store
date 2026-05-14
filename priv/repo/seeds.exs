@@ -284,7 +284,7 @@ Promotion
   %{
     name: "Summer offer, 15% off",
     code: "SUMMER15",
-    discount_percentage: "0.15",
+    discount_rate: "0.15",
     minimum_cart_total: "30.00",
     start_date: nil,
     expiration_date: ~D[2099-07-01]

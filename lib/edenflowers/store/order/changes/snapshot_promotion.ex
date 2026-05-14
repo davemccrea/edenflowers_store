@@ -29,16 +29,16 @@ defmodule Edenflowers.Store.Order.Changes.SnapshotPromotion do
     case Ash.Changeset.get_attribute(changeset, :promotion_id) do
       nil ->
         Ash.Changeset.force_change_attributes(changeset,
-          discount_percentage: nil,
+          discount_rate: nil,
           promotion_name: nil,
           promotion_code: nil
         )
 
       id ->
         case Ash.get(Promotion, id, authorize?: false) do
-          {:ok, %{discount_percentage: percentage, name: name, code: code}} ->
+          {:ok, %{discount_rate: rate, name: name, code: code}} ->
             Ash.Changeset.force_change_attributes(changeset,
-              discount_percentage: percentage,
+              discount_rate: rate,
               promotion_name: name,
               promotion_code: code
             )
