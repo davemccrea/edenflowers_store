@@ -75,16 +75,28 @@ RUN mix release
 FROM ${RUNNER_IMAGE} AS final
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates curl xz-utils \
+  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Typst — the receipt PDF renderer (Edenflowers.Receipt). Pinned
 # to the same version we develop against locally so layout and font
 # rendering are deterministic across environments. The musl static
 # binary works on any glibc Linux without runtime dependencies.
+#
+# curl/xz-utils are build-only; install, extract, smoke-test, then
+# purge in one layer so they don't bloat the final image. The smoke
+# test surfaces install corruption at build time rather than first
+# render — `tar` can exit 0 with nothing extracted if the filter
+# argument drifts past a release rename.
 ARG TYPST_VERSION=0.14.2
-RUN curl -fsSL "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
-  | tar -xJ --strip-components=1 -C /usr/local/bin "typst-x86_64-unknown-linux-musl/typst"
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl xz-utils \
+  && curl --fail-with-body -sSL "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+     | tar -xJ --strip-components=1 -C /usr/local/bin "typst-x86_64-unknown-linux-musl/typst" \
+  && typst --version \
+  && apt-get purge -y curl xz-utils \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
