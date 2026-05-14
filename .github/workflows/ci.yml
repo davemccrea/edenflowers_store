@@ -47,6 +47,12 @@ jobs:
               "typst-x86_64-unknown-linux-musl/typst"
           typst --version
 
+      # Pre-fetch @preview packages so the first real render's stderr stays
+      # quiet — Receipt.generate captures stdout for PDF bytes, and a cold
+      # cache prints download progress to stderr.
+      - name: Warm Typst package cache
+        run: typst compile priv/receipts/_warmup.typ /tmp/warmup.pdf
+
       - name: Restore deps and build cache
         uses: actions/cache@v5
         with:

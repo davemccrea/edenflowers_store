@@ -112,10 +112,22 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
+# `nobody` has no writable home, so point Typst's package cache at a path
+# under the chowned /app — same value used at warmup and at runtime so the
+# warmed cache is actually picked up.
+ENV XDG_CACHE_HOME=/app/.cache
+
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/edenflowers ./
 
 USER nobody
+
+# Pre-fetch @preview packages referenced by receipt.typ so the first real
+# render doesn't write download progress to stderr — Receipt.generate
+# captures stdout as PDF bytes, and cold-cache stderr would corrupt them.
+# Glob lets the path survive minor release-tarball layout changes.
+RUN typst compile /app/lib/edenflowers-*/priv/receipts/_warmup.typ /tmp/warmup.pdf \
+  && rm /tmp/warmup.pdf
 
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`
