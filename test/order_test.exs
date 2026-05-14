@@ -160,7 +160,13 @@ defmodule Edenflowers.Store.OrderTest do
     {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
-      generate(order(fulfillment_option_id: fulfillment_option.id, fulfillment_amount: fulfillment_amount))
+      generate(
+        order(
+          fulfillment_option_id: fulfillment_option.id,
+          fulfillment_amount: fulfillment_amount,
+          fulfillment_tax_percentage: tax_rate_1.percentage
+        )
+      )
 
     _line_item =
       generate(
@@ -1362,6 +1368,164 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert {:error, error} = Order.add_payment_intent_id(order, "pi_new", actor: nil)
       assert %Ash.Error.Forbidden{} = error
+    end
+  end
+
+  describe "Config snapshots are frozen on placed orders" do
+    # These tests simulate config drift by bypassing Ash and writing directly
+    # via Ecto — the snapshot must hold even if config is edited that way.
+    test "promotion discount_percentage is snapshotted and immune to later edits" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id, price: "100.00"))
+      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+
+      Edenflowers.Repo.update_all(
+        from(p in "promotions", where: p.id == ^Ecto.UUID.dump!(promotion.id)),
+        set: [discount_percentage: Decimal.new("0.99")]
+      )
+
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+
+      [line_item] = order.line_items
+      line_item = Ash.load!(line_item, [:discount_amount], authorize?: false)
+      assert Decimal.equal?(line_item.discount_amount, Decimal.new("20.00"))
+    end
+
+    test "clearing the promotion clears the snapshotted percentage" do
+      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      order = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+
+      {:ok, order} = Order.clear_promotion(order, authorize?: false)
+      assert is_nil(order.discount_percentage)
+    end
+
+    test "fulfillment_tax_percentage is snapshotted and immune to later edits" do
+      tax_rate = generate(tax_rate(percentage: "0.10"))
+
+      option =
+        generate(
+          fulfillment_option(
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "10.00",
+            tax_rate_id: tax_rate.id
+          )
+        )
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order} = Order.update_fulfillment_option(order, option.id, authorize?: false)
+      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+
+      Edenflowers.Repo.update_all(
+        from(t in "tax_rates", where: t.id == ^Ecto.UUID.dump!(tax_rate.id)),
+        set: [percentage: Decimal.new("0.25")]
+      )
+
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+    end
+
+    test "promotion name and code are snapshotted and immune to later edits" do
+      promotion =
+        generate(
+          promotion(
+            name: "Spring Sale",
+            code: "SPRING20",
+            discount_percentage: "0.20",
+            minimum_cart_total: "0"
+          )
+        )
+
+      order = Order.create_for_checkout!(authorize?: false)
+      {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
+
+      assert order.promotion_name == "Spring Sale"
+      assert order.promotion_code == "SPRING20"
+
+      Edenflowers.Repo.update_all(
+        from(p in "promotions", where: p.id == ^Ecto.UUID.dump!(promotion.id)),
+        set: [name: "Renamed", code: "RENAMED"]
+      )
+
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      assert order.promotion_name == "Spring Sale"
+      assert order.promotion_code == "SPRING20"
+    end
+
+    test "fulfillment option name is snapshotted and immune to later edits" do
+      tax_rate = generate(tax_rate(percentage: "0.10"))
+
+      option =
+        generate(
+          fulfillment_option(
+            name: "Pickup at Studio",
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00",
+            tax_rate_id: tax_rate.id
+          )
+        )
+
+      order = Order.create_for_checkout!(authorize?: false)
+      {:ok, order} = Order.update_fulfillment_option(order, option.id, authorize?: false)
+
+      assert order.fulfillment_option_name == "Pickup at Studio"
+
+      Edenflowers.Repo.update_all(
+        from(o in "fulfillment_options", where: o.id == ^Ecto.UUID.dump!(option.id)),
+        set: [name: "Renamed Option"]
+      )
+
+      order = Order.get_for_checkout!(order.id, authorize?: false)
+      assert order.fulfillment_option_name == "Pickup at Studio"
+    end
+
+    test "changing the fulfillment option re-snapshots method and tax percentage" do
+      vat_low = generate(tax_rate(percentage: "0.10"))
+      vat_high = generate(tax_rate(percentage: "0.25"))
+
+      pickup =
+        generate(
+          fulfillment_option(
+            fulfillment_method: :pickup,
+            rate_type: :fixed,
+            base_price: "5.00",
+            tax_rate_id: vat_low.id
+          )
+        )
+
+      delivery =
+        generate(
+          fulfillment_option(
+            fulfillment_method: :delivery,
+            rate_type: :fixed,
+            base_price: "15.00",
+            tax_rate_id: vat_high.id
+          )
+        )
+
+      order = Order.create_for_checkout!(authorize?: false)
+
+      {:ok, order} = Order.update_fulfillment_option(order, pickup.id, authorize?: false)
+      assert order.fulfillment_method == :pickup
+      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+
+      {:ok, order} = Order.update_fulfillment_option(order, delivery.id, authorize?: false)
+      assert order.fulfillment_method == :delivery
+      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.25"))
     end
   end
 end
