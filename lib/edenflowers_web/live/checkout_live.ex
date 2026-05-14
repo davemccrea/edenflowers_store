@@ -341,7 +341,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
                     <.form_button disabled={true} id="payment-button">
-                      {~t"Pay"} {Edenflowers.Utils.format_money(@order.total)}
+                      {~t"Pay"} {Edenflowers.Utils.format_money(@order.grand_total)}
                     </.form_button>
                   </form>
 
@@ -373,12 +373,12 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <div class="flex items-baseline justify-between" data-testid="delivery-cost">
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
-                      <% is_nil(@order.fulfillment_amount) -> %>
+                      <% is_nil(@order.fulfillment_fee) -> %>
                         <span class="text-base-content/60">—</span>
-                      <% Decimal.eq?(@order.fulfillment_amount, 0) -> %>
+                      <% Decimal.eq?(@order.fulfillment_fee, 0) -> %>
                         <span>{~t"Free"}</span>
                       <% true -> %>
-                        <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.fulfillment_amount)}</span>
+                        <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.fulfillment_fee)}</span>
                     <% end %>
                   </div>
 
@@ -389,23 +389,23 @@ defmodule EdenflowersWeb.CheckoutLive do
                   >
                     <span>{~t"Discount"}</span>
                     <span class="text-success tabular-nums" data-testid="discount-amount">
-                      - {Edenflowers.Utils.format_money(@order.discount_amount)}
+                      - {Edenflowers.Utils.format_money(@order.discount)}
                     </span>
                   </div>
 
                   <div
-                    :if={@order.tax_amount && Decimal.gt?(@order.tax_amount, 0)}
+                    :if={@order.tax && Decimal.gt?(@order.tax, 0)}
                     class="flex items-baseline justify-between"
                     data-testid="vat-line"
                   >
                     <span>{~t"Incl. VAT"}</span>
-                    <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.tax_amount)}</span>
+                    <span class="tabular-nums">{Edenflowers.Utils.format_money(@order.tax)}</span>
                   </div>
 
                   <div class="mt-3 flex items-baseline justify-between font-semibold" data-testid="order-total">
                     <span>{~t"Total"}</span>
                     <span class="tabular-nums" data-testid="total-amount">
-                      {Edenflowers.Utils.format_money(@order.total)}
+                      {Edenflowers.Utils.format_money(@order.grand_total)}
                     </span>
                   </div>
                 </div>

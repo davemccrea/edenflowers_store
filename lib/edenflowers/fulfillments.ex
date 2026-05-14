@@ -11,7 +11,7 @@ defmodule Edenflowers.Fulfillments do
           position: String.t(),
           here_id: String.t(),
           distance: integer(),
-          fulfillment_amount: Decimal.t()
+          fulfillment_fee: Decimal.t()
         }
 
   @spec calculate_delivery(String.t(), FulfillmentOption.t()) ::
@@ -19,14 +19,14 @@ defmodule Edenflowers.Fulfillments do
   def calculate_delivery(delivery_address, fulfillment_option) do
     with {:ok, {geocoded_address, position, here_id}} <- here_api().get_address(delivery_address),
          {:ok, distance} <- here_api().get_distance(position),
-         {:ok, fulfillment_amount} <- calculate_price(fulfillment_option, distance) do
+         {:ok, fulfillment_fee} <- calculate_price(fulfillment_option, distance) do
       {:ok,
        %{
          geocoded_address: geocoded_address,
          position: position,
          here_id: here_id,
          distance: distance,
-         fulfillment_amount: fulfillment_amount
+         fulfillment_fee: fulfillment_fee
        }}
     end
   end

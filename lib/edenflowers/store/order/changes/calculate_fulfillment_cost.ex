@@ -1,6 +1,6 @@
 defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   @moduledoc """
-  For `submit_delivery`, derives `fulfillment_amount` (and, for delivery,
+  For `submit_delivery`, derives `fulfillment_fee` (and, for delivery,
   the geocoded fields) from the chosen `FulfillmentOption`. The
   corresponding attributes are not in the action's `accept` list, so this
   change is the only path that can set them — closing the trust-the-client
@@ -28,9 +28,9 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
     with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
-         {:ok, amount} <- Fulfillments.calculate_price(option) do
+         {:ok, fee} <- Fulfillments.calculate_price(option) do
       Ash.Changeset.force_change_attributes(changeset,
-        fulfillment_amount: amount,
+        fulfillment_fee: fee,
         delivery_address: nil,
         delivery_instructions: nil,
         geocoded_address: nil,
@@ -58,7 +58,7 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
         position: result.position,
         here_id: result.here_id,
         distance: result.distance,
-        fulfillment_amount: result.fulfillment_amount
+        fulfillment_fee: result.fulfillment_fee
       )
     else
       {:error, reason} when is_atom(reason) ->

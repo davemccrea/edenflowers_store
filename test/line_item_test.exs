@@ -90,7 +90,7 @@ defmodule Edenflowers.Store.LineItemTest do
     end
 
     test "promotion_applied? returns true if promotion applied to order", %{product_variant: product_variant} do
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
       order = generate(order())
 
       # Add line item first

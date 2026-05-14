@@ -43,7 +43,7 @@ defmodule Edenflowers.Store.Promotion do
     end
 
     create :create do
-      accept [:name, :code, :discount_percentage, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+      accept [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     end
 
     update :increment_usage do
@@ -74,8 +74,8 @@ defmodule Edenflowers.Store.Promotion do
   end
 
   validations do
-    validate compare(:discount_percentage, greater_than: 0)
-    validate compare(:discount_percentage, less_than_or_equal_to: 1)
+    validate compare(:discount_rate, greater_than: 0)
+    validate compare(:discount_rate, less_than_or_equal_to: 1)
   end
 
   attributes do
@@ -87,7 +87,7 @@ defmodule Edenflowers.Store.Promotion do
       constraints allow_empty?: false, trim?: true
     end
 
-    attribute :discount_percentage, :decimal, allow_nil?: false
+    attribute :discount_rate, :decimal, allow_nil?: false
     attribute :minimum_cart_total, :decimal, allow_nil?: false
     attribute :start_date, :date
     attribute :expiration_date, :date

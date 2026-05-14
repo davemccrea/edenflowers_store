@@ -17,11 +17,11 @@ defmodule Edenflowers.Store.Order.Validations.ValidateMinimumCartTotal do
 
   defp validate_minimum_cart_total(changeset, promotion_id) do
     with {:ok, promotion} <- Edenflowers.Store.Promotion.get_by_id(promotion_id, authorize?: false),
-         {:ok, order} <- Ash.load(changeset.data, [:line_total], authorize?: false, lazy?: true) do
-      line_total = order.line_total || Decimal.new(0)
+         {:ok, order} <- Ash.load(changeset.data, [:items_subtotal], authorize?: false, lazy?: true) do
+      items_subtotal = order.items_subtotal || Decimal.new(0)
       minimum_required = promotion.minimum_cart_total
 
-      if Decimal.compare(line_total, minimum_required) in [:gt, :eq] do
+      if Decimal.compare(items_subtotal, minimum_required) in [:gt, :eq] do
         :ok
       else
         {:error,

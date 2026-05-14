@@ -305,7 +305,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert finalized.here_id == "here-id-123"
     assert finalized.position == "63.0951,21.6165"
     assert finalized.distance == 3000
-    assert Decimal.eq?(finalized.fulfillment_amount, Decimal.new("5.00"))
+    assert Decimal.eq?(finalized.fulfillment_fee, Decimal.new("5.00"))
     assert finalized.delivery_instructions == "Leave at back door"
 
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     order: order,
     fulfillment_option: fulfillment_option
   } do
-    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+    promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -381,13 +381,13 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     finalized =
       Order.get_by_id!(order.id, authorize?: false)
-      |> Ash.load!([:promotion_applied?, :discount_amount, :total, :promotion], authorize?: false)
+      |> Ash.load!([:promotion_applied?, :discount, :grand_total, :promotion], authorize?: false)
 
     assert finalized.state == :placed
     assert finalized.promotion_applied?
     assert to_string(finalized.promotion.code) == "SAVE20"
     # €35.00 line total × 20% = €7.00 discount
-    assert Decimal.eq?(finalized.discount_amount, Decimal.new("7.00"))
+    assert Decimal.eq?(finalized.discount, Decimal.new("7.00"))
 
     # Two jobs run on a promo order: the confirmation email and the
     # promotion-usage increment.
@@ -404,7 +404,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   test "applying a promo code preserves unsaved values typed into the current step", %{
     conn: conn
   } do
-    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+    promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
