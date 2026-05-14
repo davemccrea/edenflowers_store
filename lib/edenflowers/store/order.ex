@@ -405,14 +405,15 @@ defmodule Edenflowers.Store.Order do
   end
 
   calculations do
-    calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
-    calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
-
     calculate :fulfillment_tax,
               :decimal,
               expr((fulfillment_fee || 0) * (fulfillment_tax_percentage || 0))
 
     calculate :tax, :decimal, expr(items_tax + fulfillment_tax)
+
+    calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
+
+    calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
 
     # A cart with only a card line item is presented as empty in the UI
     # (card controls are hidden in the cart sidebar) and shouldn't keep

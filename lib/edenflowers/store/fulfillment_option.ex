@@ -13,6 +13,23 @@ defmodule Edenflowers.Store.FulfillmentOption do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  @accepted_fields [
+    :name,
+    :minimum_cart_total,
+    :fulfillment_method,
+    :rate_type,
+    :base_price,
+    :price_per_km,
+    :free_dist_km,
+    :max_dist_km,
+    :same_day,
+    :order_deadline,
+    :available_days,
+    :enabled_dates,
+    :disabled_dates,
+    :tax_rate_id
+  ]
+
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
@@ -24,42 +41,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
   end
 
   actions do
-    defaults [
-      :read,
-      :destroy,
-      create: [
-        :name,
-        :minimum_cart_total,
-        :fulfillment_method,
-        :rate_type,
-        :base_price,
-        :price_per_km,
-        :free_dist_km,
-        :max_dist_km,
-        :same_day,
-        :order_deadline,
-        :available_days,
-        :enabled_dates,
-        :disabled_dates,
-        :tax_rate_id
-      ],
-      update: [
-        :name,
-        :minimum_cart_total,
-        :fulfillment_method,
-        :rate_type,
-        :base_price,
-        :price_per_km,
-        :free_dist_km,
-        :max_dist_km,
-        :same_day,
-        :order_deadline,
-        :available_days,
-        :enabled_dates,
-        :disabled_dates,
-        :tax_rate_id
-      ]
-    ]
+    defaults [:read, :destroy, create: @accepted_fields, update: @accepted_fields]
 
     read :by_id do
       argument :id, :uuid, allow_nil?: false
