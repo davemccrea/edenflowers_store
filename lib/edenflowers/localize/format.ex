@@ -13,9 +13,10 @@ defmodule Edenflowers.Localize.Format do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end
 
-  def datetime(datetime, locale) do
-    {:ok, date_part} = Localize.Date.to_string(datetime, locale: locale, format: :short)
-    {:ok, time_part} = Localize.Time.to_string(datetime, locale: locale, format: :short)
+  def datetime(datetime, locale, time_zone \\ "Europe/Helsinki") do
+    shifted = DateTime.shift_zone!(datetime, time_zone)
+    {:ok, date_part} = Localize.Date.to_string(shifted, locale: locale, format: :short)
+    {:ok, time_part} = Localize.Time.to_string(shifted, locale: locale, format: :short)
     "#{date_part} #{time_part}"
   end
 
