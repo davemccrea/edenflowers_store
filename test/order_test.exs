@@ -40,7 +40,7 @@ defmodule Edenflowers.Store.OrderTest do
       assert order.total_items_in_cart == 3
     end
 
-    test "sums line_total and line_tax_amount correctly when no promotion is applied" do
+    test "sums items_subtotal and items_tax correctly when no promotion is applied" do
       tax_rate_1 = generate(tax_rate(percentage: "0.255"))
       product_1 = generate(product(tax_rate_id: tax_rate_1.id))
       product_1_product_variant_1 = generate(product_variant(product_id: product_1.id, price: "40.00"))
@@ -67,18 +67,18 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-      order = Ash.load!(order, [:line_total, :line_tax_amount], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_tax], authorize?: false)
 
-      assert Decimal.equal?(order.line_total, "86.00")
-      assert Decimal.equal?(order.line_tax_amount, "21.00")
+      assert Decimal.equal?(order.items_subtotal, "86.00")
+      assert Decimal.equal?(order.items_tax, "21.00")
     end
 
-    test "sums line_total and line_tax_amount correctly when promotion is applied" do
+    test "sums items_subtotal and items_tax correctly when promotion is applied" do
       tax_rate = generate(tax_rate(percentage: "0.255"))
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant_1 = generate(product_variant(product_id: product.id, price: "49.99"))
       product_variant_2 = generate(product_variant(product_id: product.id, price: "29.99"))
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -100,13 +100,13 @@ defmodule Edenflowers.Store.OrderTest do
 
       order = Order.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
 
-      order = Ash.load!(order, [:line_total, :line_tax_amount], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_tax], authorize?: false)
 
-      assert order.line_total
+      assert order.items_subtotal
              |> Decimal.round(2)
              |> Decimal.equal?("87.98")
 
-      assert order.line_tax_amount
+      assert order.items_tax
              |> Decimal.round(2)
              |> Decimal.equal?("22.43")
     end
@@ -115,7 +115,7 @@ defmodule Edenflowers.Store.OrderTest do
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id))
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -138,7 +138,7 @@ defmodule Edenflowers.Store.OrderTest do
     end
   end
 
-  test "calculates total and tax_amount correctly" do
+  test "calculates total and tax correctly" do
     tax_rate_2 = generate(tax_rate(percentage: "0.255"))
     tax_rate_1 = generate(tax_rate(percentage: "0.15"))
     product = generate(product(tax_rate_id: tax_rate_2.id))
@@ -157,13 +157,13 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-    {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
+    {:ok, fulfillment_fee} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     order =
       generate(
         order(
           fulfillment_option_id: fulfillment_option.id,
-          fulfillment_amount: fulfillment_amount,
+          fulfillment_fee: fulfillment_fee,
           fulfillment_tax_percentage: tax_rate_1.percentage
         )
       )
@@ -177,13 +177,13 @@ defmodule Edenflowers.Store.OrderTest do
         )
       )
 
-    order = Ash.load!(order, [:total, :tax_amount], authorize?: false)
+    order = Ash.load!(order, [:grand_total, :tax], authorize?: false)
 
-    assert order.total
+    assert order.grand_total
            |> Decimal.round(2)
            |> Decimal.equal?("64.97")
 
-    assert order.tax_amount
+    assert order.tax
            |> Decimal.round(2)
            |> Decimal.equal?("16.04")
   end
@@ -543,7 +543,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
 
       promotion =
-        generate(promotion(code: "SUMMER20", discount_percentage: "0.20", minimum_cart_total: "0"))
+        generate(promotion(code: "SUMMER20", discount_rate: "0.20", minimum_cart_total: "0"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -760,7 +760,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_variant = generate(product_variant(product_id: product.id, price: "25.00"))
 
       # Create promotion requiring minimum 40.00 cart total
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "40.00"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "40.00"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -774,10 +774,10 @@ defmodule Edenflowers.Store.OrderTest do
       )
 
       # Apply promotion - should succeed as 50.00 >= 40.00
-      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
+      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:items_subtotal])
       assert order.promotion_id == promotion.id
       # After 20% discount: 50.00 - 10.00 = 40.00
-      assert Decimal.equal?(order.line_total, "40.00")
+      assert Decimal.equal?(order.items_subtotal, "40.00")
     end
 
     test "rejects promotion when cart total is below minimum requirement" do
@@ -786,7 +786,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_variant = generate(product_variant(product_id: product.id, price: "15.00"))
 
       # Create promotion requiring minimum 50.00 cart total
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "50.00"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "50.00"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -810,7 +810,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_variant = generate(product_variant(product_id: product.id, price: "50.00"))
 
       # Create promotion requiring minimum 50.00 cart total
-      promotion = generate(promotion(discount_percentage: "0.15", minimum_cart_total: "50.00"))
+      promotion = generate(promotion(discount_rate: "0.15", minimum_cart_total: "50.00"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -824,15 +824,15 @@ defmodule Edenflowers.Store.OrderTest do
       )
 
       # Apply promotion - should succeed as 50.00 == 50.00
-      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:line_total])
+      assert {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:items_subtotal])
       assert order.promotion_id == promotion.id
       # After 15% discount: 50.00 - 7.50 = 42.50
-      assert Decimal.equal?(order.line_total, "42.50")
+      assert Decimal.equal?(order.items_subtotal, "42.50")
     end
 
     test "rejects promotion when cart is empty" do
       # Create promotion requiring minimum 20.00 cart total
-      promotion = generate(promotion(discount_percentage: "0.10", minimum_cart_total: "20.00"))
+      promotion = generate(promotion(discount_rate: "0.10", minimum_cart_total: "20.00"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -847,7 +847,7 @@ defmodule Edenflowers.Store.OrderTest do
       product_variant = generate(product_variant(product_id: product.id, price: "5.00"))
 
       # Create promotion with no minimum requirement
-      promotion = generate(promotion(discount_percentage: "0.10", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.10", minimum_cart_total: "0"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
@@ -948,7 +948,7 @@ defmodule Edenflowers.Store.OrderTest do
                |> Ash.update(authorize?: false)
 
       assert order.fulfillment_option_id == pickup_option.id
-      assert order.fulfillment_amount == Decimal.new("5.00")
+      assert order.fulfillment_fee == Decimal.new("5.00")
       assert order.state == :payment
 
       # Delivery fields should be cleared
@@ -970,7 +970,7 @@ defmodule Edenflowers.Store.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert Decimal.equal?(order.fulfillment_amount, "5.00")
+      assert Decimal.equal?(order.fulfillment_fee, "5.00")
     end
 
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
@@ -1046,7 +1046,7 @@ defmodule Edenflowers.Store.OrderTest do
             delivery_address: "Test Address",
             delivery_instructions: "Ring twice",
             fulfillment_date: Date.add(Date.utc_today(), 1),
-            fulfillment_amount: "5.00",
+            fulfillment_fee: "5.00",
             geocoded_address: "Calculated Address",
             here_id: "here123",
             distance: 5000,
@@ -1071,7 +1071,7 @@ defmodule Edenflowers.Store.OrderTest do
       assert is_nil(reset_order.delivery_address)
       assert is_nil(reset_order.delivery_instructions)
       assert is_nil(reset_order.fulfillment_date)
-      assert is_nil(reset_order.fulfillment_amount)
+      assert is_nil(reset_order.fulfillment_fee)
       assert is_nil(reset_order.geocoded_address)
       assert is_nil(reset_order.here_id)
       assert is_nil(reset_order.distance)
@@ -1296,7 +1296,7 @@ defmodule Edenflowers.Store.OrderTest do
       assert card.variant_size == card_variant_a.size
 
       # @checkout_load calculations should be present on the returned order
-      refute match?(%Ash.NotLoaded{}, order.total)
+      refute match?(%Ash.NotLoaded{}, order.grand_total)
     end
 
     test "add_card replaces an existing card line item rather than appending", %{
@@ -1374,41 +1374,41 @@ defmodule Edenflowers.Store.OrderTest do
   describe "Config snapshots are frozen on placed orders" do
     # These tests simulate config drift by bypassing Ash and writing directly
     # via Ecto — the snapshot must hold even if config is edited that way.
-    test "promotion discount_percentage is snapshotted and immune to later edits" do
+    test "promotion discount_rate is snapshotted and immune to later edits" do
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
       variant = generate(product_variant(product_id: product.id, price: "100.00"))
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
 
       order = Order.create_for_checkout!(authorize?: false)
 
       generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
       {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
-      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+      assert Decimal.equal?(order.discount_rate, Decimal.new("0.20"))
 
       Edenflowers.Repo.update_all(
         from(p in "promotions", where: p.id == ^Ecto.UUID.dump!(promotion.id)),
-        set: [discount_percentage: Decimal.new("0.99")]
+        set: [discount_rate: Decimal.new("0.99")]
       )
 
       order = Order.get_for_checkout!(order.id, authorize?: false)
-      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+      assert Decimal.equal?(order.discount_rate, Decimal.new("0.20"))
 
       [line_item] = order.line_items
-      line_item = Ash.load!(line_item, [:discount_amount], authorize?: false)
-      assert Decimal.equal?(line_item.discount_amount, Decimal.new("20.00"))
+      line_item = Ash.load!(line_item, [:discount], authorize?: false)
+      assert Decimal.equal?(line_item.discount, Decimal.new("20.00"))
     end
 
     test "clearing the promotion clears the snapshotted percentage" do
-      promotion = generate(promotion(discount_percentage: "0.20", minimum_cart_total: "0"))
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
       order = Order.create_for_checkout!(authorize?: false)
 
       {:ok, order} = Order.add_promotion_with_id(order, promotion.id, authorize?: false)
-      assert Decimal.equal?(order.discount_percentage, Decimal.new("0.20"))
+      assert Decimal.equal?(order.discount_rate, Decimal.new("0.20"))
 
       {:ok, order} = Order.clear_promotion(order, authorize?: false)
-      assert is_nil(order.discount_percentage)
+      assert is_nil(order.discount_rate)
     end
 
     test "fulfillment_tax_percentage is snapshotted and immune to later edits" do
@@ -1444,7 +1444,7 @@ defmodule Edenflowers.Store.OrderTest do
           promotion(
             name: "Spring Sale",
             code: "SPRING20",
-            discount_percentage: "0.20",
+            discount_rate: "0.20",
             minimum_cart_total: "0"
           )
         )

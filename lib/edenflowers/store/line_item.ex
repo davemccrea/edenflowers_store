@@ -72,7 +72,7 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   preparations do
-    prepare build(load: [:line_subtotal], sort: [inserted_at: :asc])
+    prepare build(load: [:subtotal], sort: [inserted_at: :asc])
   end
 
   attributes do
@@ -97,31 +97,31 @@ defmodule Edenflowers.Store.LineItem do
     calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
     # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
-    calculate :line_subtotal, :decimal, expr(unit_price * quantity)
+    calculate :subtotal, :decimal, expr(unit_price * quantity)
 
     # This is the final amount for a specific line item, including the subtotal plus taxes and minus any line-specific discounts.
-    calculate :line_total,
+    calculate :total,
               :decimal,
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal - discount_amount,
-                  else: line_subtotal
+                  do: subtotal - discount,
+                  else: subtotal
                 )
               )
 
-    calculate :discount_amount,
+    calculate :discount,
               :decimal,
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal * order.discount_percentage,
+                  do: subtotal * order.discount_rate,
                   else: 0
                 )
               )
 
     # This is the amount of tax applied to a specific line item.
-    calculate :line_tax_amount, :decimal, expr(line_total * tax_rate)
+    calculate :tax, :decimal, expr(total * tax_rate)
   end
 
   identities do
