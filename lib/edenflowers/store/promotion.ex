@@ -52,12 +52,12 @@ defmodule Edenflowers.Store.Promotion do
   end
 
   policies do
-    # System bypass - for webhooks and background jobs
+    # System bypass is scoped to the actions our jobs/webhooks actually invoke.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
+      authorize_if action([:increment_usage, :create_for_newsletter])
+      authorize_if action_type(:read)
     end
 
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
@@ -67,9 +67,8 @@ defmodule Edenflowers.Store.Promotion do
       authorize_if always()
     end
 
-    # Only system/admin via bypass — all others forbidden
     policy action_type([:create, :update, :destroy]) do
-      description "All mutations require admin or system actor (covered by bypass above)."
+      description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
   end
