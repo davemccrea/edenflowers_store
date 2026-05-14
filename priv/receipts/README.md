@@ -1,7 +1,6 @@
 # priv/receipts
 
-Typst project for the order-receipt PDF emailed to customers. The Elixir
-caller lives in a follow-up PR.
+Typst project for the order-receipt PDF emailed to customers.
 
 ## Preview locally
 
