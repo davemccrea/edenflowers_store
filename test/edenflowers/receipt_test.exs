@@ -96,14 +96,6 @@ defmodule Edenflowers.ReceiptTest do
   describe "generate/1" do
     @describetag :typst
 
-    setup do
-      if System.find_executable("typst") == nil do
-        {:skip, "typst binary not installed — skipping PDF render smoke test"}
-      else
-        :ok
-      end
-    end
-
     test "renders a non-empty PDF binary" do
       order = build_delivery_order(locale: "en-GB")
 
