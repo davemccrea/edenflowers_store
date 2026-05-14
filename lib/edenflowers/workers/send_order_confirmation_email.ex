@@ -7,6 +7,7 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
+  alias Edenflowers.Receipt
   alias Edenflowers.Store.Order
 
   def enqueue(%{"order_id" => order_id} = args) do
@@ -20,10 +21,52 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
   end
 
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
-    order_id
-    # TODO: use system_actor here or authorize?: false ?
-    |> Order.get_by_id!(actor: system_actor(), authorize?: false)
-    |> Ash.load!(
+    order =
+      order_id
+      |> Order.get_by_id!(actor: system_actor(), authorize?: false)
+      |> load_for_send()
+
+    # Idempotency for Oban retries: if a prior attempt already delivered
+    # the email and recorded the SHA, exit successfully without rendering
+    # or sending again.
+    if order.receipt_emailed_at do
+      :ok
+    else
+      send_with_receipt(order)
+    end
+  end
+
+  defp send_with_receipt(order) do
+    with {:ok, pdf} <- Receipt.generate(order),
+         sha = sha256_hex(pdf),
+         email = build_email(order, pdf),
+         {:ok, _result} <- Mailer.deliver(email),
+         {:ok, _order} <-
+           Order.mark_receipt_emailed(order, sha, actor: system_actor()) do
+      :ok
+    end
+  end
+
+  defp build_email(order, pdf) do
+    attachment =
+      Swoosh.Attachment.new(
+        {:data, pdf},
+        filename: "eden-flowers-#{order.order_reference}.pdf",
+        content_type: "application/pdf"
+      )
+
+    order
+    |> Email.order_confirmation()
+    |> Swoosh.Email.attachment(attachment)
+  end
+
+  defp sha256_hex(bytes) do
+    :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
+  end
+
+  defp load_for_send(order) do
+    Ash.load!(
+      order,
       [
         # Aggregates
         :items_subtotal,
@@ -44,7 +87,5 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
       actor: system_actor(),
       authorize?: false
     )
-    |> Email.order_confirmation()
-    |> Mailer.deliver()
   end
 end
