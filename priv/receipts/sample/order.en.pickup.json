@@ -19,7 +19,7 @@
       "unit_price_ex_tax": "31,79 €",
       "unit_price": "39,90 €",
       "tax_rate": "25,5 %",
-      "line_total": "39,90 €"
+      "total": "39,90 €"
     },
     {
       "product_name": "Eucalyptus Bunch",
@@ -28,12 +28,12 @@
       "unit_price_ex_tax": "6,77 €",
       "unit_price": "8,50 €",
       "tax_rate": "25,5 %",
-      "line_total": "8,50 €"
+      "total": "8,50 €"
     }
   ],
-  "line_total": "48,40 €",
-  "fulfillment_amount": "0,00 €",
-  "discount_amount": null,
-  "tax_amount": "9,84 €",
-  "total": "48,40 €"
+  "items_subtotal": "48,40 €",
+  "fulfillment_fee": "0,00 €",
+  "discount": null,
+  "tax": "9,84 €",
+  "grand_total": "48,40 €"
 }

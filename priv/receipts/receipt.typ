@@ -9,6 +9,39 @@
 // `shop` is loaded from shop.toml. All currency / date / VAT values
 // arrive pre-formatted as strings; labels are translated via order.lang.
 #let receipt(order) = {
+  // Schema contract. Typst has no struct types, so we assert keys
+  // exist up-front rather than discovering a missing field mid-render.
+  // Required: read unconditionally on every receipt. Optional: key must
+  // still be present in the dict; the value may be `none`.
+  let required = (
+    "lang", "order_reference", "ordered_at",
+    "customer_name", "customer_email",
+    "fulfillment_method", "fulfillment_date",
+    "line_items",
+    "items_subtotal", "fulfillment_fee", "tax", "grand_total",
+  )
+  let optional = (
+    "card_message",
+    "recipient_name", "recipient_phone_number",
+    "delivery_address", "delivery_instructions",
+    "discount",
+  )
+  for key in required {
+    assert(key in order, message: "receipt: missing required key `" + key + "`")
+  }
+  for key in optional {
+    assert(key in order, message: "receipt: missing optional key `" + key + "` (set to none if absent)")
+  }
+  let line_item_required = (
+    "product_name", "variant_size", "quantity",
+    "unit_price_ex_tax", "tax_rate", "total",
+  )
+  for item in order.line_items {
+    for key in line_item_required {
+      assert(key in item, message: "receipt: line item missing `" + key + "`")
+    }
+  }
+
   let t(key) = translate(key, order.lang)
   let fulfillment-label = if order.fulfillment_method == "delivery" {
     t("delivery")
@@ -176,7 +209,7 @@
       text(features: ("tnum",))[#item.unit_price_ex_tax],
       text(features: ("tnum",))[#item.quantity],
       text(features: ("tnum",))[#item.tax_rate],
-      text(features: ("tnum",))[#item.line_total],
+      text(features: ("tnum",))[#item.total],
     )).flatten()
   )
 
@@ -189,13 +222,13 @@
   // convention — "below the line") and a small size bump on the amount.
   let fee-label = t("fulfillment-fee").replace("{method}", fulfillment-label)
   let totals-rows = (
-    ([#t("subtotal")], [#order.line_total]),
-    ([#fee-label], [#order.fulfillment_amount]),
+    ([#t("subtotal")], [#order.items_subtotal]),
+    ([#fee-label], [#order.fulfillment_fee]),
   )
-  if order.discount_amount != none {
-    totals-rows.push(([#t("discount")], [−#order.discount_amount]))
+  if order.discount != none {
+    totals-rows.push(([#t("discount")], [−#order.discount]))
   }
-  totals-rows.push(([#t("vat")], [#order.tax_amount]))
+  totals-rows.push(([#t("vat")], [#order.tax]))
 
   // Three-column layout: label (auto), flexible gap (1fr), value (auto).
   // Auto-sizes labels to their widest content so locale variants like
@@ -221,7 +254,7 @@
         ],
         text(weight: "bold")[#t("total-paid")],
         [],
-        text(features: ("tnum",), weight: "bold")[#order.total],
+        text(features: ("tnum",), weight: "bold")[#order.grand_total],
       )
     ]
   ]

@@ -19,7 +19,7 @@
       "unit_price_ex_tax": "31,79 €",
       "unit_price": "39,90 €",
       "tax_rate": "25,5 %",
-      "line_total": "39,90 €"
+      "total": "39,90 €"
     },
     {
       "product_name": "Eukalyptusbukett",
@@ -28,7 +28,7 @@
       "unit_price_ex_tax": "6,77 €",
       "unit_price": "8,50 €",
       "tax_rate": "25,5 %",
-      "line_total": "17,00 €"
+      "total": "17,00 €"
     },
     {
       "product_name": "Handskrivet kort",
@@ -37,12 +37,12 @@
       "unit_price_ex_tax": "3,59 €",
       "unit_price": "4,50 €",
       "tax_rate": "25,5 %",
-      "line_total": "4,50 €"
+      "total": "4,50 €"
     }
   ],
-  "line_total": "61,40 €",
-  "fulfillment_amount": "9,00 €",
-  "discount_amount": "6,14 €",
-  "tax_amount": "13,38 €",
-  "total": "64,26 €"
+  "items_subtotal": "61,40 €",
+  "fulfillment_fee": "9,00 €",
+  "discount": "6,14 €",
+  "tax": "13,38 €",
+  "grand_total": "64,26 €"
 }
