@@ -210,14 +210,8 @@ defmodule Edenflowers.Store.Order do
       accept [:payment_intent_id]
     end
 
-    # Records that the order-confirmation email (with PDF receipt attached)
-    # was successfully delivered. The worker checks `receipt_emailed_at`
-    # before calling this action; the validation here is a resource-level
-    # backstop against double-marking on concurrent Oban retries.
-    #
     # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
-    # which is always false in SQL — fold the validation into the non-atomic
-    # changeset path instead, where nil-checks work correctly.
+    # (always false in SQL); the non-atomic path uses is_nil/1 correctly.
     update :mark_receipt_emailed do
       argument :receipt_sha256, :string, allow_nil?: false
 
@@ -415,12 +409,8 @@ defmodule Edenflowers.Store.Order do
 
     attribute :locale, :string, default: "sv-FI"
 
-    # Receipt delivery markers. Set by :mark_receipt_emailed after the
-    # confirmation email is successfully delivered with the PDF attached.
-    # `receipt_sha256` is the hex digest of the rendered PDF bytes; together
-    # they let us prove "we sent exactly this PDF at this time" without
-    # persisting the PDF itself (the renderer is deterministic from the
-    # placed order's snapshot columns).
+    # The SHA proves what was sent without persisting the PDF — the renderer is deterministic
+    # over the placed order's snapshot columns, so a re-render should reproduce these bytes.
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
 

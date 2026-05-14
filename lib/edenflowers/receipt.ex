@@ -17,7 +17,7 @@ defmodule Edenflowers.Receipt do
   calculations, and relationships already loaded:
 
       [:discount, :items_subtotal, :tax, :grand_total, :promotion_applied?,
-       line_items: [:total]]
+       line_items: [:total, :unit_price_ex_tax]]
 
   Use `Edenflowers.Receipt.load_for_receipt/1` to load them in one step.
   """
@@ -36,7 +36,7 @@ defmodule Edenflowers.Receipt do
         :promotion_applied?,
         :grand_total,
         :tax,
-        line_items: [:total]
+        line_items: [:total, :unit_price_ex_tax]
       ],
       authorize?: false
     )
@@ -74,10 +74,7 @@ defmodule Edenflowers.Receipt do
       fulfillment_date: Format.date(order.fulfillment_date, locale),
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,
-      # Customer-typed address, not the HERE-normalised one. The geocoded
-      # version powers driver routing internally; the receipt is the
-      # customer's record, so it should reflect their own words —
-      # including flat numbers, stair codes, etc. that HERE strips.
+      # Customer's typed address, not `geocoded_address` — HERE strips flat numbers and stair codes.
       delivery_address: order.delivery_address,
       delivery_instructions: order.delivery_instructions,
       card_message: order.card_message,
@@ -96,25 +93,13 @@ defmodule Edenflowers.Receipt do
       variant_size: variant_size_label(item.variant_size),
       quantity: item.quantity,
       unit_price: Format.currency(item.unit_price, locale),
-      unit_price_ex_tax: Format.currency(unit_price_ex_tax(item), locale),
+      unit_price_ex_tax: Format.currency(item.unit_price_ex_tax, locale),
       tax_rate: Format.percentage(item.tax_rate, locale),
       total: Format.currency(item.total, locale)
     }
   end
 
-  # The line-item `unit_price` is tax-inclusive (consumer-facing); the
-  # template renders an "excl. VAT" column for the Finnish VAT receipt
-  # convention. Derive instead of adding a new attribute — the inputs
-  # (`unit_price`, `tax_rate`) are both snapshot fields, so this stays
-  # deterministic with the rest of the order.
-  defp unit_price_ex_tax(item) do
-    Decimal.div(item.unit_price, Decimal.add(1, item.tax_rate))
-  end
-
-  # `order.discount` is `sum(line_items.discount)` — when no promotion
-  # is applied, each line item's discount is 0 so the sum is 0, not nil.
-  # The template treats `discount` as optional (may be `none`); render
-  # the row only when a promotion was actually applied.
+  # `order.discount` sums to 0 (not nil) when no promotion applies, so gate on `promotion_applied?`.
   defp discount_payload(order, locale) do
     if order.promotion_applied? do
       Format.currency(order.discount, locale)
@@ -124,9 +109,7 @@ defmodule Edenflowers.Receipt do
   defp variant_size_label(nil), do: nil
   defp variant_size_label(size), do: size |> to_string() |> String.capitalize()
 
-  # "sv-FI" → "sv". The Typst template reads order.lang to pick the
-  # translation column in priv/receipts/translations.toml, which is keyed
-  # by the two-letter language code.
+  # `translations.toml` keys are two-letter, but `order.locale` is e.g. "sv-FI".
   defp lang_from_locale(locale) when is_binary(locale), do: String.slice(locale, 0, 2)
 
   defp typst_args(json) do

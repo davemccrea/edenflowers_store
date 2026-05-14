@@ -26,9 +26,7 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
       |> Order.get_by_id!(actor: system_actor(), authorize?: false)
       |> load_for_send()
 
-    # Idempotency for Oban retries: if a prior attempt already delivered
-    # the email and recorded the SHA, exit successfully without rendering
-    # or sending again.
+    # Skip if a prior Oban attempt already delivered + marked.
     if order.receipt_emailed_at do
       :ok
     else
@@ -82,7 +80,7 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmail do
         # Relationships
         :promotion,
         fulfillment_option: [:tax_rate],
-        line_items: [:subtotal, :total]
+        line_items: [:subtotal, :total, :unit_price_ex_tax]
       ],
       actor: system_actor(),
       authorize?: false

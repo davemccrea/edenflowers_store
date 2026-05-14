@@ -1,17 +1,11 @@
 defmodule Edenflowers.ReceiptTest do
-  # build_payload/1 is a pure function — no DB needed. ExUnit.Case is
-  # enough, and async tests run faster.
+  # build_payload/1 is pure — no DB needed.
   use ExUnit.Case, async: true
 
   alias Edenflowers.Receipt
   alias Edenflowers.Store.{LineItem, Order}
 
-  # Sample fixtures committed under priv/receipts/sample/ are the executable
-  # contract — they're what the Typst template renders against during local
-  # preview and what receipt.typ's schema asserts read off. The structural
-  # tests below diff the *shape* of build_payload/1 against these fixtures
-  # rather than exact values, so a missing key or changed nullability
-  # surfaces immediately without coupling to fixture arithmetic.
+  # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
   @sample_dir Path.join([:code.priv_dir(:edenflowers), "receipts", "sample"])
 
   describe "build_payload/1" do
@@ -33,9 +27,7 @@ defmodule Edenflowers.ReceiptTest do
 
       assert_same_keys(payload, fixture)
       assert payload.fulfillment_method == "pickup"
-      # Pickup orders have null recipient fields and null delivery_address —
-      # the keys must still be present (the template asserts presence and
-      # then conditionally renders).
+      # Keys must be present on the payload even when null — the template asserts presence.
       assert payload.recipient_name == nil
       assert payload.recipient_phone_number == nil
       assert payload.delivery_address == nil
@@ -52,21 +44,15 @@ defmodule Edenflowers.ReceiptTest do
       order = build_delivery_order(locale: "fi")
       payload = Receipt.build_payload(order)
 
-      # Finnish CLDR: comma decimal separator, NBSP (U+00A0), € suffix.
-      # Regex \s does not match NBSP in Elixir's default mode, so match
-      # the byte sequence explicitly.
+      # NBSP (U+00A0) doesn't match \s in default mode.
       assert payload.items_subtotal =~ ~r/\d+,\d{2}\x{00A0}€/u
 
-      # "25,5 %" — Finnish percent: comma decimal + NBSP + %.
       [line | _] = payload.line_items
       assert line.tax_rate =~ ~r/25,5\x{00A0}%/u
     end
 
     test "renders tax_rate with a single fractional digit" do
-      # The Finnish standard VAT rate is 25.5% — the default :percent
-      # format rounds to whole percents ("26%") and would misrepresent
-      # the tax on a legal-purpose receipt. Format.percentage pins
-      # fractional_digits: 1.
+      # Default :percent rounds 25.5% to "26%" — regression guard for Format.percentage.
       order = build_delivery_order(locale: "en-GB")
       [line | _] = Receipt.build_payload(order).line_items
 
@@ -89,9 +75,6 @@ defmodule Edenflowers.ReceiptTest do
     end
 
     test "uses customer-typed delivery_address, never the geocoded one" do
-      # The receipt is the customer's record — show them what they typed,
-      # not HERE's canonical reformatting (which strips flat numbers,
-      # stair codes, etc.). Geocoded is used internally for routing only.
       order =
         build_delivery_order(
           locale: "en-GB",
@@ -102,17 +85,10 @@ defmodule Edenflowers.ReceiptTest do
       assert Receipt.build_payload(order).delivery_address == "Customer typed this"
     end
 
-    test "derives unit_price_ex_tax from unit_price and tax_rate" do
-      # unit_price 39,90 € incl. 25,5% VAT → 31,79 € excl. VAT.
-      # Matches the en.json fixture's first line item.
+    test "formats the LineItem.unit_price_ex_tax calculation as locale currency" do
       order = build_delivery_order(locale: "en-GB")
-      [first | _] = order.line_items
-
-      # Sanity check: the line item under test is the one with these numbers.
-      assert Decimal.equal?(first.unit_price, Decimal.new("39.90"))
-      assert Decimal.equal?(first.tax_rate, Decimal.new("0.255"))
-
       [payload_first | _] = Receipt.build_payload(order).line_items
+
       assert payload_first.unit_price_ex_tax =~ "31.79"
     end
   end
@@ -170,6 +146,7 @@ defmodule Edenflowers.ReceiptTest do
           variant_size: :medium,
           quantity: 1,
           unit_price: Decimal.new("39.90"),
+          unit_price_ex_tax: Decimal.new("31.79"),
           tax_rate: Decimal.new("0.255"),
           total: Decimal.new("39.90")
         },
@@ -178,6 +155,7 @@ defmodule Edenflowers.ReceiptTest do
           variant_size: nil,
           quantity: 2,
           unit_price: Decimal.new("8.50"),
+          unit_price_ex_tax: Decimal.new("6.77"),
           tax_rate: Decimal.new("0.255"),
           total: Decimal.new("17.00")
         }
@@ -215,6 +193,7 @@ defmodule Edenflowers.ReceiptTest do
           variant_size: :medium,
           quantity: 1,
           unit_price: Decimal.new("39.90"),
+          unit_price_ex_tax: Decimal.new("31.79"),
           tax_rate: Decimal.new("0.255"),
           total: Decimal.new("39.90")
         }

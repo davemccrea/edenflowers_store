@@ -19,11 +19,7 @@ defmodule Edenflowers.Localize.Format do
     "#{date_part} #{time_part}"
   end
 
-  # Tax rates are stored on LineItem as raw decimals (e.g. 0.255 for 25.5%).
-  # CLDR's :percent format multiplies by 100 and appends the locale-correct
-  # symbol. The Finnish VAT rate carries a fractional digit (25.5%), so
-  # we pin `fractional_digits: 1` — the default rounds to whole percents
-  # and would render "26%" for the standard rate.
+  # `fractional_digits: 1` — default rounds 25.5% (Finnish VAT) to "26%".
   def percentage(rate, locale) do
     Localize.Number.to_string!(rate, locale: locale, format: :percent, fractional_digits: 1)
   end
