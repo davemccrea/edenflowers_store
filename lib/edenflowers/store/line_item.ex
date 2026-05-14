@@ -42,25 +42,24 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   policies do
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
+      authorize_if action_type(:read)
     end
 
-    # Allow creating line items for any order (checkout flow). The card
-    # variant is gated at the order level via Order.add_card.
-    policy action_type(:create) do
-      authorize_if always()
-    end
-
-    # Read/Update/Destroy access:
-    # Multiple authorize_if within one policy = OR (only one needs to pass)
-    policy action_type([:read, :update, :destroy]) do
-      # Guest checkout: Anyone can work with line items for orders still in
-      # the checkout flow (any sub-state before :placed).
+    policy action_type(:read) do
       authorize_if expr(order.state != :placed)
-      # Placed orders: Only the owner can access their line items
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
+    end
+
+    # Filter expressions can't authorize creates (no row to filter yet), so a
+    # custom check resolves the parent order's state at evaluation time.
+    policy action_type(:create) do
+      authorize_if Edenflowers.Store.LineItem.Checks.OrderNotPlaced
+    end
+
+    policy action_type([:update, :destroy]) do
+      forbid_if expr(order.state == :placed)
+      authorize_if always()
     end
   end
 
@@ -116,7 +115,7 @@ defmodule Edenflowers.Store.LineItem do
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal * order.promotion.discount_percentage,
+                  do: line_subtotal * order.discount_percentage,
                   else: 0
                 )
               )

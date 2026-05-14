@@ -150,7 +150,7 @@ defmodule Edenflowers.Store.Order do
         :delivery_address
       ]
 
-      change {Changes.CopyFulfillmentMethod, []}
+      change {Changes.SnapshotFulfillmentMethod, []}
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
       change {Changes.CalculateFulfillmentCost, []}
@@ -187,7 +187,7 @@ defmodule Edenflowers.Store.Order do
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
-      change {Changes.CopyFulfillmentMethod, []}
+      change {Changes.SnapshotFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
       change {Changes.ClearDeliveryFields, []}
       change load(@checkout_load)
@@ -218,6 +218,7 @@ defmodule Edenflowers.Store.Order do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {Validations.ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
+      change {Changes.SnapshotPromotion, []}
       change load(@checkout_load)
       require_atomic? false
     end
@@ -225,6 +226,7 @@ defmodule Edenflowers.Store.Order do
     update :add_promotion_with_code do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
       change {Changes.LookupPromotionCode, []}
+      change {Changes.SnapshotPromotion, []}
       validate {Validations.ValidateMinimumCartTotal, []}
       change load(@checkout_load)
       require_atomic? false
@@ -232,7 +234,9 @@ defmodule Edenflowers.Store.Order do
 
     update :clear_promotion do
       change atomic_update(:promotion_id, expr(nil))
+      change {Changes.SnapshotPromotion, []}
       change load(@checkout_load)
+      require_atomic? false
     end
 
     update :restart_checkout do
@@ -286,17 +290,18 @@ defmodule Edenflowers.Store.Order do
   end
 
   policies do
-    # System bypass - for webhooks and background jobs
+    # System bypass is scoped: anything outside this list (including updates
+    # to a :placed order) falls through to the main policies.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
+      authorize_if action([:finalize_checkout, :mark_payment_failed])
+      authorize_if action_type(:read)
     end
 
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
+      authorize_if action_type(:read)
     end
 
-    # Allow creating orders without authentication (for checkout flow)
+    # Guest checkout: creating an order does not require authentication.
     policy action_type(:create) do
       authorize_if always()
     end
@@ -306,7 +311,9 @@ defmodule Edenflowers.Store.Order do
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
+    # Placed orders are sealed for every actor, including admins and system.
     policy action_type(:update) do
+      forbid_if expr(state == :placed)
       authorize_if expr(state in ^@checkout_states)
     end
   end
@@ -367,10 +374,11 @@ defmodule Edenflowers.Store.Order do
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
     attribute :fulfillment_amount, :decimal
-    # Denormalized from fulfillment_option. Kept in sync by CopyFulfillmentMethod
-    # so validations and templates can branch on a plain attribute instead of
-    # traversing the relationship.
+    # Snapshotted from FulfillmentOption (+ its TaxRate) by
+    # SnapshotFulfillmentMethod. Frozen once the order is placed.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
+    attribute :fulfillment_tax_percentage, :decimal
+    attribute :fulfillment_option_name, :string
     attribute :geocoded_address, :string
     attribute :here_id, :string
     attribute :distance, :integer
@@ -378,6 +386,12 @@ defmodule Edenflowers.Store.Order do
 
     # Step 4 - Payment
     attribute :payment_intent_id, :string
+
+    # Snapshotted from Promotion by SnapshotPromotion. Frozen once the order
+    # is placed.
+    attribute :discount_percentage, :decimal
+    attribute :promotion_name, :string
+    attribute :promotion_code, :string
 
     attribute :locale, :string, default: "sv-FI"
 
@@ -397,13 +411,7 @@ defmodule Edenflowers.Store.Order do
 
     calculate :fulfillment_tax_amount,
               :decimal,
-              expr(
-                if is_nil(fulfillment_option_id) do
-                  0
-                else
-                  (fulfillment_amount || 0) * fulfillment_option.tax_rate.percentage
-                end
-              )
+              expr((fulfillment_amount || 0) * (fulfillment_tax_percentage || 0))
 
     calculate :tax_amount, :decimal, expr(line_tax_amount + fulfillment_tax_amount)
 
