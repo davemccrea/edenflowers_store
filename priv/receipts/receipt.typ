@@ -4,12 +4,46 @@
 
 #let shop = toml("shop.toml")
 
-// Render a single receipt. `order` is a dict matching sample/order.*.json;
-// `shop` is loaded from shop.toml. All currency / date / VAT values arrive
-// pre-formatted as strings; labels are translated via order.lang.
+// Render a single receipt. `order` is a flat dict whose keys mirror the
+// Ash `Order` / `LineItem` attribute names; see sample/order.*.json.
+// `shop` is loaded from shop.toml. All currency / date / VAT values
+// arrive pre-formatted as strings; labels are translated via order.lang.
 #let receipt(order) = {
+  // Schema contract. Typst has no struct types, so we assert keys
+  // exist up-front rather than discovering a missing field mid-render.
+  // Required: read unconditionally on every receipt. Optional: key must
+  // still be present in the dict; the value may be `none`.
+  let required = (
+    "lang", "order_reference", "ordered_at",
+    "customer_name", "customer_email",
+    "fulfillment_method", "fulfillment_date",
+    "line_items",
+    "items_subtotal", "fulfillment_fee", "tax", "grand_total",
+  )
+  let optional = (
+    "card_message",
+    "recipient_name", "recipient_phone_number",
+    "delivery_address", "delivery_instructions",
+    "discount",
+  )
+  for key in required {
+    assert(key in order, message: "receipt: missing required key `" + key + "`")
+  }
+  for key in optional {
+    assert(key in order, message: "receipt: missing optional key `" + key + "` (set to none if absent)")
+  }
+  let line_item_required = (
+    "product_name", "variant_size", "quantity",
+    "unit_price_ex_tax", "tax_rate", "total",
+  )
+  for item in order.line_items {
+    for key in line_item_required {
+      assert(key in item, message: "receipt: line item missing `" + key + "`")
+    }
+  }
+
   let t(key) = translate(key, order.lang)
-  let fulfillment-label = if order.fulfillment.method == "delivery" {
+  let fulfillment-label = if order.fulfillment_method == "delivery" {
     t("delivery")
   } else {
     t("pickup")
@@ -45,7 +79,7 @@
   // QR encodes the customer-facing tracking URL. Reference is unguessable
   // (random hex, 48 bits of entropy) so the URL alone is hard to enumerate;
   // the tracking page should additionally email-gate on access.
-  let tracking-url = shop.tracking_base_url + "/" + order.reference
+  let tracking-url = shop.tracking_base_url + "/" + order.order_reference
 
   grid(
     columns: (auto, 1fr),
@@ -68,7 +102,7 @@
       #v(4pt)
       #text(features: ("tnum",))[
         #t("reference"):
-        #text(weight: "semibold")[#order.reference] \
+        #text(weight: "semibold")[#order.order_reference] \
         #t("order-date"): #text(weight: "semibold")[#order.ordered_at]
       ]
       #v(6pt)
@@ -84,7 +118,7 @@
   // The date is a property of the fulfillment (when to deliver / when to
   // collect), not a top-level field. Delivery and pickup share the same
   // shape: who/where, then a single inline date line at the bottom.
-  let date-label = if order.fulfillment.method == "delivery" {
+  let date-label = if order.fulfillment_method == "delivery" {
     t("delivery-date")
   } else {
     t("pickup-date")
@@ -96,21 +130,21 @@
     [
       #eyebrow(t("customer"))
       #v(5pt)
-      #text(weight: "semibold")[#order.customer.name] \
-      #order.customer.email
+      #text(weight: "semibold")[#order.customer_name] \
+      #order.customer_email
     ],
     [
       #eyebrow(fulfillment-label)
       #v(5pt)
-      #if order.fulfillment.method == "delivery" [
-        #text(weight: "semibold")[#order.fulfillment.recipient_name] \
-        #if order.fulfillment.recipient_phone != none [
-          #order.fulfillment.recipient_phone \
+      #if order.fulfillment_method == "delivery" [
+        #text(weight: "semibold")[#order.recipient_name] \
+        #if order.recipient_phone_number != none [
+          #order.recipient_phone_number \
         ]
-        #order.fulfillment.address \
-        #if order.fulfillment.instructions != none [
+        #order.delivery_address \
+        #if order.delivery_instructions != none [
           #text(font: fonts.serif, style: "italic")[
-            #order.fulfillment.instructions
+            #order.delivery_instructions
           ] \
         ]
       ] else [
@@ -118,7 +152,7 @@
         #shop.address
       ]
       #v(6pt)
-      #date-label: #text(weight: "semibold")[#order.fulfillment.date]
+      #date-label: #text(weight: "semibold")[#order.fulfillment_date]
     ],
   )
 
@@ -167,15 +201,15 @@
 
     ..order.line_items.map(item => (
       [
-        #item.name
+        #item.product_name
         #if item.variant_size != none [
           (#item.variant_size)
         ]
       ],
-      text(features: ("tnum",))[#item.unit_price_ex_vat],
+      text(features: ("tnum",))[#item.unit_price_ex_tax],
       text(features: ("tnum",))[#item.quantity],
-      text(features: ("tnum",))[#item.vat_rate],
-      text(features: ("tnum",))[#item.line_total],
+      text(features: ("tnum",))[#item.tax_rate],
+      text(features: ("tnum",))[#item.total],
     )).flatten()
   )
 
@@ -188,13 +222,13 @@
   // convention — "below the line") and a small size bump on the amount.
   let fee-label = t("fulfillment-fee").replace("{method}", fulfillment-label)
   let totals-rows = (
-    ([#t("subtotal")], [#order.totals.subtotal]),
-    ([#fee-label], [#order.totals.fulfillment]),
+    ([#t("subtotal")], [#order.items_subtotal]),
+    ([#fee-label], [#order.fulfillment_fee]),
   )
-  if order.totals.discount != none {
-    totals-rows.push(([#t("discount")], [−#order.totals.discount]))
+  if order.discount != none {
+    totals-rows.push(([#t("discount")], [−#order.discount]))
   }
-  totals-rows.push(([#t("vat")], [#order.totals.tax]))
+  totals-rows.push(([#t("vat")], [#order.tax]))
 
   // Three-column layout: label (auto), flexible gap (1fr), value (auto).
   // Auto-sizes labels to their widest content so locale variants like
@@ -220,7 +254,7 @@
         ],
         text(weight: "bold")[#t("total-paid")],
         [],
-        text(features: ("tnum",), weight: "bold")[#order.totals.grand_total],
+        text(features: ("tnum",), weight: "bold")[#order.grand_total],
       )
     ]
   ]
