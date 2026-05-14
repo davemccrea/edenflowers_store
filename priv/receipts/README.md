@@ -4,8 +4,15 @@ Typst project for the order-receipt PDF emailed to customers.
 
 ## Preview locally
 
+Eden Flowers pins Typst to **0.14.2** — match the `TYPST_VERSION` arg in
+the repo `Dockerfile`. Layout, kerning, and font fallback can shift
+between pre-1.0 Typst releases, so receipts rendered against the wrong
+version may not look identical to production.
+
 ```sh
-brew install typst   # one-time
+brew install typst                                                # if Homebrew's `typst` is currently 0.14.2
+# Otherwise, grab the pinned binary directly:
+# https://github.com/typst/typst/releases/tag/v0.14.2
 
 cd priv/receipts
 typst watch main.typ preview.pdf --font-path fonts                # default sv, delivery

@@ -75,8 +75,16 @@ RUN mix release
 FROM ${RUNNER_IMAGE} AS final
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
+  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates curl xz-utils \
   && rm -rf /var/lib/apt/lists/*
+
+# Install Typst — the receipt PDF renderer (Edenflowers.Receipt). Pinned
+# to the same version we develop against locally so layout and font
+# rendering are deterministic across environments. The musl static
+# binary works on any glibc Linux without runtime dependencies.
+ARG TYPST_VERSION=0.14.2
+RUN curl -fsSL "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+  | tar -xJ --strip-components=1 -C /usr/local/bin "typst-x86_64-unknown-linux-musl/typst"
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
