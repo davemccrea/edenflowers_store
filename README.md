@@ -16,6 +16,10 @@ The hooks live in `.githooks/` (versioned with the repo). `pre-commit` formats s
 
 - `iex -S mix phx.server` — start the server at [`localhost:4000`](http://localhost:4000)
 
+### Stripe webhooks in dev
+
+Order finalization and the confirmation email both depend on `payment_intent.succeeded`. In a second terminal, run `stripe listen --forward-to localhost:4000/webhook/stripe` and export the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.
+
 ### Database
 
 - `mix ash.setup` — create the database, run migrations, and seed
