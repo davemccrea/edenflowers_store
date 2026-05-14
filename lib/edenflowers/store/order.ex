@@ -52,6 +52,7 @@ defmodule Edenflowers.Store.Order do
     define :finalize_checkout, action: :finalize_checkout
     define :mark_payment_failed, action: :mark_payment_failed
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
+    define :mark_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
     define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
     define :clear_promotion, action: :clear_promotion
@@ -209,6 +210,25 @@ defmodule Edenflowers.Store.Order do
       accept [:payment_intent_id]
     end
 
+    # Records that the order-confirmation email (with PDF receipt attached)
+    # was successfully delivered. The worker checks `receipt_emailed_at`
+    # before calling this action; the validation here is a resource-level
+    # backstop against double-marking on concurrent Oban retries.
+    #
+    # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
+    # which is always false in SQL — fold the validation into the non-atomic
+    # changeset path instead, where nil-checks work correctly.
+    update :mark_receipt_emailed do
+      argument :receipt_sha256, :string, allow_nil?: false
+
+      validate attribute_equals(:receipt_emailed_at, nil),
+        message: "receipt already marked as emailed"
+
+      change set_attribute(:receipt_emailed_at, &DateTime.utc_now/0)
+      change set_attribute(:receipt_sha256, arg(:receipt_sha256))
+      require_atomic? false
+    end
+
     update :mark_payment_failed do
       validate attribute_does_not_equal(:payment_status, :paid)
       change set_attribute(:payment_status, :failed)
@@ -293,7 +313,7 @@ defmodule Edenflowers.Store.Order do
     # System bypass is scoped: anything outside this list (including updates
     # to a :placed order) falls through to the main policies.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:finalize_checkout, :mark_payment_failed])
+      authorize_if action([:finalize_checkout, :mark_payment_failed, :mark_receipt_emailed])
       authorize_if action_type(:read)
     end
 
@@ -394,6 +414,15 @@ defmodule Edenflowers.Store.Order do
     attribute :promotion_code, :string
 
     attribute :locale, :string, default: "sv-FI"
+
+    # Receipt delivery markers. Set by :mark_receipt_emailed after the
+    # confirmation email is successfully delivered with the PDF attached.
+    # `receipt_sha256` is the hex digest of the rendered PDF bytes; together
+    # they let us prove "we sent exactly this PDF at this time" without
+    # persisting the PDF itself (the renderer is deterministic from the
+    # placed order's snapshot columns).
+    attribute :receipt_emailed_at, :utc_datetime
+    attribute :receipt_sha256, :string
 
     timestamps()
   end
