@@ -1,19 +1,7 @@
 # priv/receipts
 
-Typst project for the order-receipt PDF emailed to customers.
-
-## Layout
-
-- `theme.typ` — brand tokens (colors, fonts, type scale). Mirrors `assets/css/app.css`.
-- `receipt.typ` — `receipt(order)` template.
-- `i18n.typ` — `translate(key, lang)` helper over `translations.toml`.
-- `main.typ` — entry point. Reads `sys.inputs.order` in production; falls back to a fixture for local preview.
-- `translations.toml` — receipt labels in `en` / `fi` / `sv`.
-- `shop.toml` — static shop identity (name, address, business ID, contact).
-- `sample/order.{en,fi,sv}.json` — delivery fixture payloads, one per locale.
-- `sample/order.{en,fi,sv}.pickup.json` — pickup fixture payloads, one per locale.
-- `fonts/` — Open Sans + Crimson Text `.ttf` files (OFL 1.1, see below).
-- `assets/logo.svg` — brand logo.
+Typst project for the order-receipt PDF emailed to customers. The Elixir
+caller lives in a follow-up PR.
 
 ## Preview locally
 
@@ -21,14 +9,11 @@ Typst project for the order-receipt PDF emailed to customers.
 brew install typst   # one-time
 
 cd priv/receipts
-typst watch main.typ preview.pdf --font-path fonts                   # default sv, delivery
+typst watch main.typ preview.pdf --font-path fonts                # default sv, delivery
 typst compile main.typ preview.pdf --font-path fonts --input fixture=fi
-typst compile main.typ preview.pdf --font-path fonts --input fixture=en
-typst compile main.typ preview.pdf --font-path fonts --input fixture=sv.pickup
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
+# fixtures: {en,fi,sv}[.pickup]
 ```
-
-`typst watch` recompiles on save for live preview.
 
 ## Render from Elixir
 
@@ -48,24 +33,11 @@ payload = order |> Edenflowers.Receipt.serialize() |> Jason.encode!()
 
 Attach via `Swoosh.Attachment.new({:data, pdf}, filename: "receipt-#{order.order_reference}.pdf", content_type: "application/pdf")`.
 
-## Order payload shape
-
-See `sample/order.en.json` for the canonical example. Every value the template
-displays — currency, dates, VAT rates, line totals — arrives **pre-formatted as
-strings**, so locale rules stay in Elixir alongside the existing
-`format_currency` / `format_date` helpers in `lib/edenflowers/email.ex`.
-
-The `lang` field selects which row of `translations.toml` is used for labels.
+All currency / date / VAT values arrive **pre-formatted as strings** — see
+`sample/order.en.json` for the canonical payload shape. The `lang` field
+selects the column in `translations.toml`.
 
 ## Fonts
 
-Open Sans, Crimson Text, and Noto Color Emoji are bundled under `fonts/`. All
-three are SIL Open Font License 1.1 — see `fonts/OFL.txt`. Source projects:
-
-- Open Sans: <https://github.com/googlefonts/opensans>
-- Crimson Text: <https://github.com/Fonthausen/CrimsonPro>
-- Noto Color Emoji: <https://github.com/googlefonts/noto-emoji>
-
-Noto Color Emoji carries the heart glyph in the closing band. Bundling it means
-the receipt renders identically on macOS, Ubuntu, and Docker without depending
-on system-installed emoji fonts.
+Open Sans, Crimson Text, and Noto Color Emoji are bundled under `fonts/` —
+SIL Open Font License 1.1 (`fonts/OFL.txt`).
