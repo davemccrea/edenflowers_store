@@ -11,6 +11,10 @@ defmodule EdenflowersWeb.Plugs.InitStore do
 
     if order_id do
       case Order.get_by_id(order_id, actor: actor) do
+        {:ok, %{state: :placed}} ->
+          order = Order.create_for_checkout!(actor: actor)
+          put_session(conn, :order_id, order.id)
+
         {:error, _} ->
           order = Order.create_for_checkout!(actor: actor)
           put_session(conn, :order_id, order.id)

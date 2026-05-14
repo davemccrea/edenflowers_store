@@ -78,6 +78,19 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
+# Pinned for deterministic layout/fonts vs local dev. `typst --version`
+# smoke-tests install — `tar` can exit 0 with nothing extracted if the
+# filter arg drifts past a release rename. curl/xz purged same layer.
+ARG TYPST_VERSION=0.14.2
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl xz-utils \
+  && curl --fail-with-body -sSL "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+     | tar -xJ --strip-components=1 -C /usr/local/bin "typst-x86_64-unknown-linux-musl/typst" \
+  && typst --version \
+  && apt-get purge -y curl xz-utils \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
+
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
   && locale-gen
@@ -92,10 +105,18 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
+# `nobody` has no writable home; same value at warmup + runtime so the cache hits.
+ENV XDG_CACHE_HOME=/app/.cache
+
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/edenflowers ./
 
 USER nobody
+
+# Warm @preview cache — first render's stdout is captured as PDF bytes,
+# cold-cache download progress on stderr would arrive interleaved otherwise.
+RUN typst compile /app/lib/edenflowers-*/priv/receipts/_warmup.typ /tmp/warmup.pdf \
+  && rm /tmp/warmup.pdf
 
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`

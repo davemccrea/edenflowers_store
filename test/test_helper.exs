@@ -2,6 +2,10 @@
 Mox.defmock(Edenflowers.StripeAPI.Mock, for: Edenflowers.StripeAPI.Behaviour)
 Mox.defmock(Edenflowers.HereAPI.Mock, for: Edenflowers.HereAPI.Behaviour)
 
-ExUnit.start()
+# Skip Typst-dependent smoke tests when the binary isn't on PATH (devs
+# without it locally). CI installs Typst, so the tag stays included there.
+typst_opts = if System.find_executable("typst"), do: [], else: [exclude: [:typst]]
+
+ExUnit.start(typst_opts)
 Ecto.Adapters.SQL.Sandbox.mode(Edenflowers.Repo, :manual)
 Faker.start()

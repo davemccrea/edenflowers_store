@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.PromoCodeComponent do
               class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
               data-testid="promo-badge"
             >
-              {@order.promotion.code} <.icon name="hero-x-mark" class="h-3 w-3" />
+              {@order.promotion_code} <.icon name="hero-x-mark" class="h-3 w-3" />
             </button>
           </div>
         <% @open -> %>

@@ -18,8 +18,8 @@ defmodule Edenflowers.StripeAPI do
   @behaviour Edenflowers.StripeAPI.Behaviour
 
   @impl true
-  def create_payment_intent(%{total: total, id: id}) do
-    amount = convert_to_stripe_amount(total)
+  def create_payment_intent(%{grand_total: grand_total, id: id}) do
+    amount = convert_to_stripe_amount(grand_total)
 
     Stripe.PaymentIntent.create(%{
       amount: amount,
@@ -37,8 +37,8 @@ defmodule Edenflowers.StripeAPI do
   end
 
   @impl true
-  def update_payment_intent(%{payment_intent_id: payment_intent_id, total: total}) do
-    amount = convert_to_stripe_amount(total)
+  def update_payment_intent(%{payment_intent_id: payment_intent_id, grand_total: grand_total}) do
+    amount = convert_to_stripe_amount(grand_total)
 
     Stripe.PaymentIntent.update(payment_intent_id, %{
       amount: amount
