@@ -7,6 +7,7 @@ defmodule Edenflowers.Email do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Email.Templates
+  alias Edenflowers.Localize.Format
 
   @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
 
@@ -26,9 +27,9 @@ defmodule Edenflowers.Email do
   defp render_order_confirmation(order, locale) do
     Templates.order_confirmation(%{
       order: order,
-      format_currency: &format_currency(&1, locale),
-      format_date: &format_date(&1, locale),
-      format_datetime: &format_datetime(&1, locale)
+      format_currency: &Format.currency(&1, locale),
+      format_date: &Format.date(&1, locale),
+      format_datetime: &Format.datetime(&1, locale)
     })
   end
 
@@ -62,19 +63,5 @@ defmodule Edenflowers.Email do
     |> to(email_address)
     |> subject(~t"Your Eden Flowers sign-in code")
     |> text_body(Templates.otp_sign_in(%{otp_code: otp_code}))
-  end
-
-  defp format_currency(amount, locale) do
-    Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
-  end
-
-  defp format_date(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: :short)
-  end
-
-  defp format_datetime(datetime, locale) do
-    {:ok, date_part} = Localize.Date.to_string(datetime, locale: locale, format: :short)
-    {:ok, time_part} = Localize.Time.to_string(datetime, locale: locale, format: :short)
-    "#{date_part} #{time_part}"
   end
 end
