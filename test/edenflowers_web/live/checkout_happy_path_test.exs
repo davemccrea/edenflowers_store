@@ -9,6 +9,8 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
   alias Edenflowers.Store.Order
 
+  @moduletag :typst
+
   setup :verify_on_exit!
 
   setup %{conn: conn} do
