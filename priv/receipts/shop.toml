@@ -1,0 +1,6 @@
+name = "Eden Flowers"
+address = "Minimossen, Myrvägen 1, 65230 Vasa"
+business_id = "2944459-6"
+email = "info@edenflowers.fi"
+phone = "040 220 9494"
+tracking_base_url = "https://edenflowers.fi/track"
