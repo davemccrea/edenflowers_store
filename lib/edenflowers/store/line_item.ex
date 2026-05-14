@@ -122,6 +122,9 @@ defmodule Edenflowers.Store.LineItem do
 
     # This is the amount of tax applied to a specific line item.
     calculate :tax, :decimal, expr(total * tax_rate)
+
+    # `unit_price` is stored tax-inclusive.
+    calculate :unit_price_ex_tax, :decimal, expr(unit_price / (1 + tax_rate))
   end
 
   identities do
