@@ -2,24 +2,9 @@ defmodule Edenflowers.Receipt do
   @moduledoc """
   Renders the order-receipt PDF by shelling out to the Typst CLI.
 
-  The Typst project lives under `priv/receipts/` and asserts a specific
-  payload shape in `receipt.typ`. This module builds that payload from a
-  loaded `Store.Order`, encodes it as JSON, and pipes it into
-  `typst compile` via the `--input` flag (which accepts only strings).
-
-  The renderer is deterministic: the same placed order always produces
-  the same PDF, so we don't persist the bytes — `Order.receipt_sha256`
-  is recorded after delivery as evidence of what was sent.
-
-  ## Required order load
-
-  `generate/1` expects an order with the following aggregates,
-  calculations, and relationships already loaded:
-
-      [:discount, :items_subtotal, :tax, :grand_total, :promotion_applied?,
-       line_items: [:total, :unit_price_ex_tax]]
-
-  Use `Edenflowers.Receipt.load_for_receipt/1` to load them in one step.
+  Deterministic over the placed order's snapshot columns, so the PDF
+  bytes aren't persisted — `Order.receipt_sha256` records what was sent.
+  Use `load_for_receipt/1` to load the aggregates `generate/1` expects.
   """
 
   alias Edenflowers.Localize.Format
@@ -42,25 +27,17 @@ defmodule Edenflowers.Receipt do
     )
   end
 
-  @doc """
-  Renders the PDF for a loaded order. Returns `{:ok, pdf_binary}` on
-  success or `{:error, reason}` on a non-zero Typst exit.
-  """
   def generate(%Order{} = order) do
     json = order |> build_payload() |> Jason.encode!()
 
-    case System.cmd(@typst_bin, typst_args(json), stderr_to_stdout: true) do
+    # Keep stderr separate — merging it would corrupt the PDF bytes on stdout.
+    case System.cmd(@typst_bin, typst_args(json)) do
       {pdf, 0} -> {:ok, pdf}
       {output, status} -> {:error, {:typst_failed, status, output}}
     end
   end
 
-  @doc """
-  Builds the payload map matching the Typst template's schema contract
-  in `priv/receipts/receipt.typ`. Exposed separately from `generate/1`
-  so tests can golden-diff it against the sample JSON fixtures without
-  invoking the Typst binary.
-  """
+  # Exposed so tests can golden-diff against sample JSON without invoking Typst.
   def build_payload(%Order{} = order) do
     locale = order.locale
 

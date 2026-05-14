@@ -35,8 +35,7 @@ jobs:
           version-file: .tool-versions
           version-type: strict
 
-      # Pinned to match the Dockerfile so receipt rendering is deterministic
-      # across CI and prod. Bump both together.
+      # Must match TYPST_VERSION in Dockerfile — bump both together.
       - name: Install Typst
         env:
           TYPST_VERSION: 0.14.2
@@ -47,9 +46,7 @@ jobs:
               "typst-x86_64-unknown-linux-musl/typst"
           typst --version
 
-      # Pre-fetch @preview packages so the first real render's stderr stays
-      # quiet — Receipt.generate captures stdout for PDF bytes, and a cold
-      # cache prints download progress to stderr.
+      # Warm @preview cache — Receipt.generate captures stdout as PDF bytes; cold-cache stderr would interleave.
       - name: Warm Typst package cache
         run: typst compile priv/receipts/_warmup.typ /tmp/warmup.pdf
 

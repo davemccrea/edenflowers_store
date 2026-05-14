@@ -78,16 +78,9 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Typst — the receipt PDF renderer (Edenflowers.Receipt). Pinned
-# to the same version we develop against locally so layout and font
-# rendering are deterministic across environments. The musl static
-# binary works on any glibc Linux without runtime dependencies.
-#
-# curl/xz-utils are build-only; install, extract, smoke-test, then
-# purge in one layer so they don't bloat the final image. The smoke
-# test surfaces install corruption at build time rather than first
-# render — `tar` can exit 0 with nothing extracted if the filter
-# argument drifts past a release rename.
+# Pinned for deterministic layout/fonts vs local dev. `typst --version`
+# smoke-tests install — `tar` can exit 0 with nothing extracted if the
+# filter arg drifts past a release rename. curl/xz purged same layer.
 ARG TYPST_VERSION=0.14.2
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl xz-utils \
@@ -112,9 +105,7 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
-# `nobody` has no writable home, so point Typst's package cache at a path
-# under the chowned /app — same value used at warmup and at runtime so the
-# warmed cache is actually picked up.
+# `nobody` has no writable home; same value at warmup + runtime so the cache hits.
 ENV XDG_CACHE_HOME=/app/.cache
 
 # Only copy the final release from the build stage
@@ -122,10 +113,8 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/edenflowers .
 
 USER nobody
 
-# Pre-fetch @preview packages referenced by receipt.typ so the first real
-# render doesn't write download progress to stderr — Receipt.generate
-# captures stdout as PDF bytes, and cold-cache stderr would corrupt them.
-# Glob lets the path survive minor release-tarball layout changes.
+# Warm @preview cache — first render's stdout is captured as PDF bytes,
+# cold-cache download progress on stderr would arrive interleaved otherwise.
 RUN typst compile /app/lib/edenflowers-*/priv/receipts/_warmup.typ /tmp/warmup.pdf \
   && rm /tmp/warmup.pdf
 

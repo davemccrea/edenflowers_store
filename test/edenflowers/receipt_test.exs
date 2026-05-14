@@ -106,8 +106,6 @@ defmodule Edenflowers.ReceiptTest do
     end
   end
 
-  # ── Fixtures ──────────────────────────────────────────────────────────
-
   defp build_delivery_order(opts) do
     locale = Keyword.fetch!(opts, :locale)
     with_promotion = Keyword.get(opts, :with_promotion, false)
