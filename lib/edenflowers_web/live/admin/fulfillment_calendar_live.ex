@@ -168,16 +168,24 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   defp admin_cell_class(_day, state, opts) do
     today? = Keyword.get(opts, :today?, false)
 
-    base =
-      "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
+    base = "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
 
     state_class =
       case state do
-        :open -> "cursor-pointer hover:bg-base-content/10"
-        :weekday_off -> "cursor-pointer bg-error/20 hover:bg-error/30 text-base-content/70"
-        :override_off -> "cursor-pointer bg-error/20 hover:bg-error/30 text-base-content/70"
-        :past -> "cursor-not-allowed text-base-content/30"
-        :mixed -> "cursor-not-allowed bg-base-content/10 text-base-content/50"
+        :open ->
+          "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
+
+        :weekday_off ->
+          "cursor-pointer bg-error/10 hover:bg-error/20 text-base-content/70 focus-visible:outline-base-content"
+
+        :override_off ->
+          "cursor-pointer bg-error/10 hover:bg-error/20 text-base-content/70 focus-visible:outline-base-content"
+
+        :past ->
+          "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
+
+        :mixed ->
+          "cursor-not-allowed bg-base-content/10 text-base-content/50 focus-visible:outline-base-content"
       end
 
     if today?, do: "#{base} #{state_class} underline", else: "#{base} #{state_class}"
@@ -190,7 +198,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     state_class =
       case state do
         :on -> "cursor-pointer hover:bg-base-content/10"
-        :off -> "cursor-pointer bg-error/20 hover:bg-error/30"
+        :off -> "cursor-pointer bg-error/10 hover:bg-error/20"
         :mixed -> "cursor-not-allowed bg-base-content/10 text-base-content/50"
       end
 
@@ -200,7 +208,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   defp legend_swatch(state) do
     "inline-block w-3 h-3 mr-2 rounded-sm align-middle " <>
       case state do
-        :closed -> "bg-error/40"
+        :closed -> "bg-error/20"
         :mixed -> "bg-base-content/20"
       end
   end

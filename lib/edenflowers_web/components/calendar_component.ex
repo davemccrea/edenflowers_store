@@ -163,8 +163,8 @@ defmodule EdenflowersWeb.CalendarComponent do
         <% end %>
       </div>
 
-      <div id={"#{@id}-grid"} class="mt-1">
-        <div :for={week <- @week_rows} class="grid grid-cols-7">
+      <div id={"#{@id}-grid"} class="mt-1 flex flex-col gap-0.5">
+        <div :for={week <- @week_rows} class="grid grid-cols-7 gap-0.5">
           <%= for day <- week do %>
             <%= if current_month?(day, @view_date) do %>
               <% state = @cell_state.(day) %>
