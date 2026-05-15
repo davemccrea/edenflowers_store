@@ -10,15 +10,13 @@ defmodule Edenflowers.Store.Order.Validations.ValidateFulfillmentDate do
     fulfillment_date = Ash.Changeset.get_attribute(changeset, :fulfillment_date)
     option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    cond do
-      is_nil(fulfillment_date) ->
-        {:error, field: :fulfillment_date, message: "is required"}
-
-      Date.compare(fulfillment_date, Date.utc_today()) == :lt ->
-        {:error, field: :fulfillment_date, message: ~t"Fulfillment date cannot be in the past"}
-
-      true ->
-        check_availability(option_id, fulfillment_date)
+    if is_nil(fulfillment_date) do
+      {:error, field: :fulfillment_date, message: "is required"}
+    else
+      # All other rules (past, weekday, disabled_dates, same-day deadline) live
+      # in Fulfillments.fulfill_on_date/3 so the validator and the calendar
+      # share one source of truth — including the Helsinki timezone used there.
+      check_availability(option_id, fulfillment_date)
     end
   end
 

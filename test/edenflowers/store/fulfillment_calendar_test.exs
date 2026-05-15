@@ -75,6 +75,135 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
       %{available_days: days} = FulfillmentCalendar.toggle_weekday(option, :sunday)
       assert :sunday in days
     end
+
+    test "enabling a weekday prunes stale enabled_dates on that weekday", %{tax_rate_id: tax_rate_id} do
+      # 2024-04-15 is a Monday. Start with Mondays off and an on-override.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+            enabled_dates: [~D[2024-04-15]]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :monday)
+
+      assert :monday in result.available_days
+      # The on-override is no longer needed — Mondays are open now.
+      refute ~D[2024-04-15] in result.enabled_dates
+    end
+
+    test "enabling a weekday preserves disabled_dates on that weekday", %{tax_rate_id: tax_rate_id} do
+      # Mondays off, with Mon 2024-04-15 in disabled_dates (redundant but present).
+      # After turning Mondays on, the off-override is a genuine exception and must survive.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+            disabled_dates: [~D[2024-04-15]]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :monday)
+
+      assert :monday in result.available_days
+      assert ~D[2024-04-15] in result.disabled_dates
+    end
+
+    test "disabling a weekday prunes stale disabled_dates on that weekday", %{tax_rate_id: tax_rate_id} do
+      # Mondays on, with Mon 2024-04-15 in disabled_dates as an off-override.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            disabled_dates: [~D[2024-04-15]]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :monday)
+
+      refute :monday in result.available_days
+      # The off-override is now redundant — Mondays are closed by rule.
+      refute ~D[2024-04-15] in result.disabled_dates
+    end
+
+    test "disabling a weekday preserves enabled_dates on that weekday", %{tax_rate_id: tax_rate_id} do
+      # Mondays on, with Mon 2024-04-15 in enabled_dates (redundant but present).
+      # After turning Mondays off, the on-override is a genuine exception and must survive.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            enabled_dates: [~D[2024-04-15]]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :monday)
+
+      refute :monday in result.available_days
+      assert ~D[2024-04-15] in result.enabled_dates
+    end
+
+    test "disabling a weekday preserves disabled_dates on key dates", %{tax_rate_id: tax_rate_id} do
+      # Mother's Day 2026 is Sunday 10 May. Closed via disabled_dates. Sundays on.
+      # After turning Sundays off, the disabled_dates entry must survive — without
+      # it, the key-date branch in cell_state would flip Mother's Day back to open.
+      mothers_day = ~D[2026-05-10]
+
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            disabled_dates: [mothers_day]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :sunday)
+
+      refute :sunday in result.available_days
+      assert mothers_day in result.disabled_dates
+    end
+
+    test "enabling a weekday still prunes enabled_dates on key dates", %{tax_rate_id: tax_rate_id} do
+      # Mother's Day was redundantly in enabled_dates (key-date protection already
+      # keeps it open). Either direction of weekday flip can prune it safely.
+      mothers_day = ~D[2026-05-10]
+
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+            enabled_dates: [mothers_day]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :sunday)
+
+      assert :sunday in result.available_days
+      refute mothers_day in result.enabled_dates
+    end
+
+    test "weekday flip only touches overrides matching the toggled weekday", %{tax_rate_id: tax_rate_id} do
+      # 2024-04-15 is Monday, 2024-04-16 is Tuesday.
+      # Toggling Monday should leave Tuesday's override completely alone.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            enabled_dates: [~D[2024-04-15]],
+            disabled_dates: [~D[2024-04-16]]
+          )
+        )
+
+      result = FulfillmentCalendar.toggle_weekday(option, :monday)
+
+      refute :monday in result.available_days
+      assert ~D[2024-04-15] in result.enabled_dates
+      assert ~D[2024-04-16] in result.disabled_dates
+    end
   end
 
   describe "cell_state_for_options/2" do
