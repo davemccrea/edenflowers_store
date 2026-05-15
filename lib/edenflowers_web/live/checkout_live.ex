@@ -630,18 +630,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Info Events
   # ===========
 
+  # No PaymentIntent sync here: the `pay` handler updates the amount
+  # synchronously before pushing `stripe:process_payment`, so Stripe always
+  # charges the cart total at the moment of click.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    actor = actor(socket)
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-
-    # Cart changed while the customer is on the payment step. The PaymentIntent's
-    # amount must follow the new total, otherwise `confirmPayment` would charge
-    # the previous amount.
-    if order.state == :payment and not is_nil(order.payment_intent_id) do
-      {:noreply, sync_payment_intent(assign(socket, order: order), order)}
-    else
-      {:noreply, assign(socket, order: order)}
-    end
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    {:noreply, assign(socket, order: order)}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
@@ -858,21 +852,6 @@ defmodule EdenflowersWeb.CheckoutLive do
         Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
 
         stripe_unavailable(socket)
-    end
-  end
-
-  # Re-sync the existing PaymentIntent's amount with the current order total
-  # without changing the client_secret (so the already-mounted Elements UI keeps
-  # working).
-  defp sync_payment_intent(socket, order) do
-    case stripe_api().update_payment_intent(order) do
-      {:ok, _payment_intent} ->
-        socket
-
-      {:error, reason} ->
-        Logger.error("Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}")
-
-        put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
     end
   end
 
