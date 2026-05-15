@@ -106,16 +106,10 @@ real meaning. Decline.
 
 ---
 
-### 8. Add a comment explaining the steps/inner_block split
+### 8. Add a comment explaining the steps/inner_block split ✓
 
-The outer step rendering (titles, summaries, edit links, position
-numbers) lives in `EdenflowersWeb.CheckoutComponents`. The step
-contents (forms, fields) live in `render/1` here, passed as
-`inner_block`. That split is unavoidable but non-obvious to a cold
-reader.
-
-- [ ] Add a one-line `<%# ... %>` comment above the `<.steps>` call
-      at line 75
+Done. Two-line `<%!-- ... --%>` comment above the `<.steps>` call,
+matching the codebase's existing HEEx comment style.
 
 ---
 

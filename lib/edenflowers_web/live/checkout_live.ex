@@ -72,6 +72,8 @@ defmodule EdenflowersWeb.CheckoutLive do
         <div class="flex flex-col gap-12">
           <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
             <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
+              <%!-- Outer step chrome (titles, summaries, edit links) lives in CheckoutComponents.
+                   The <section>s below are the inner content for the active step. --%>
               <.steps state={@order.state} order={@order}>
                 <section
                   :if={@order.state == :contact_details}
