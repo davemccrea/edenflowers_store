@@ -31,22 +31,18 @@ old name was also removed — `pay` makes the meaning self-evident.
 
 ---
 
-### 3. Derive DOM section IDs from a single helper
+### 3. Derive DOM section IDs from a single helper ✓
 
-Template literals `"#{@id}-section-1"`, `-2`, `-3`, `-4` appear at
-lines 78, 109, 149, 239. Two utility helpers (`next_section_id/2`,
-`scroll_to_state/2` at lines 783–790) compute the same strings via
-`state_index/1`.
+Done. New `section_id/2` helper is the single source of truth:
 
-If `@checkout_states` ever reorders, the helpers update but the
-literals don't. Single source of truth via `section_id(@id, :state)`.
+- Four template `id={section_id(@id, :contact_details)}` etc. replace
+  the magic `-section-N` literals
+- `next_section_id/2` delegates (with its existing two-clause shape
+  to keep the `nil` fallback)
+- `scroll_to_state/2` calls `section_id/2` instead of inlining
 
-- [ ] Add `section_id(id, state)` helper that returns
-      `"#{id}-section-#{state_index(state) + 1}"`
-- [ ] Replace each `id={"#{@id}-section-N"}` template literal with
-      `id={section_id(@id, :contact_details)}` etc.
-- [ ] Have `next_section_id/2` and `scroll_to_state/2` call the new
-      helper instead of building the string themselves
+If `@checkout_states` ever reorders, only `state_index/1` notices —
+all six call sites adjust automatically.
 
 ---
 

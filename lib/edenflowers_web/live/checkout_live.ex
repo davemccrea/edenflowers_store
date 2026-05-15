@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               <.steps state={@order.state} order={@order}>
                 <section
                   :if={@order.state == :contact_details}
-                  id={"#{@id}-section-1"}
+                  id={section_id(@id, :contact_details)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-1"
                 >
@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :gift_options}
-                  id={"#{@id}-section-2"}
+                  id={section_id(@id, :gift_options)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-2"
                 >
@@ -146,7 +146,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :delivery}
-                  id={"#{@id}-section-3"}
+                  id={section_id(@id, :delivery)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                 >
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :payment}
-                  id={"#{@id}-section-4"}
+                  id={section_id(@id, :payment)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                 >
                   <form
@@ -775,14 +775,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp cart_has_items?(_order), do: :ok
 
-  defp next_section_id(id, state) when state in @checkout_states do
+  defp section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state_index(state) + 1}"
   end
 
+  defp next_section_id(id, state) when state in @checkout_states, do: section_id(id, state)
   defp next_section_id(_, _), do: nil
 
   defp scroll_to_state(socket, state) do
-    push_event(socket, "focus-element", %{id: "#{socket.assigns.id}-section-#{state_index(state) + 1}"})
+    push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
   end
 
   defp size_label(:small), do: gettext("Small")
