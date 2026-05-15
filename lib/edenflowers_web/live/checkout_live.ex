@@ -27,8 +27,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
 
     with :ok <- cart_has_items?(order),
-         {:ok, fulfillment_options} <- FulfillmentOption.list() do
-      fulfillment_options = sort_fulfillment_options(fulfillment_options)
+         {:ok, fulfillment_options} <- FulfillmentOption.list_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       card_variants = ProductVariant.for_card_drawer!()
 
@@ -872,34 +871,15 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp ensure_stripe_for_state(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
-  # value flows through on submit. Keys off fulfillment_method so the default
-  # survives option renames/translations.
+  # value flows through on submit.
   defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
-    case default_fulfillment_option_id(options) do
+    case List.first(options) do
       nil -> order
-      id -> Order.update_fulfillment_option!(order, id, actor: actor)
+      %{id: id} -> Order.update_fulfillment_option!(order, id, actor: actor)
     end
   end
 
   defp ensure_fulfillment_default(order, _options, _actor), do: order
-
-  defp default_fulfillment_option_id(options) do
-    delivery = Enum.find(options, &(&1.fulfillment_method == :delivery))
-    fallback = List.first(options)
-
-    case delivery || fallback do
-      %{id: id} -> id
-      nil -> nil
-    end
-  end
-
-  defp sort_fulfillment_options(options) do
-    Enum.sort_by(options, fn
-      %{fulfillment_method: :delivery} -> 0
-      %{fulfillment_method: :pickup} -> 1
-      _ -> 2
-    end)
-  end
 
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp cart_has_items?(_order), do: :ok
