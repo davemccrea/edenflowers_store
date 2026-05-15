@@ -54,6 +54,25 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
       assert ~D[2024-04-15] in dates
       assert ~D[2024-04-10] in dates
     end
+
+    test "closes a key date even when its weekday is disabled", %{tax_rate_id: tax_rate_id} do
+      # Mother's Day 2026 is Sunday 10 May. Sundays off. Without key-date
+      # protection awareness, the toggle would treat Mother's Day as
+      # "currently closed by weekday" and try to open it. The fix: ask
+      # cell_state, which counts the key-date branch as :open.
+      mothers_day = ~D[2026-05-10]
+
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      assert %{enabled_dates: [], disabled_dates: [^mothers_day]} =
+               FulfillmentCalendar.toggle_date(option, mothers_day)
+    end
   end
 
   describe "toggle_weekday/2" do

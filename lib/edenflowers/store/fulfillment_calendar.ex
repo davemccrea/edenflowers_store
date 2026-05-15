@@ -105,13 +105,26 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
         # Remove the explicit off-override.
         %{enabled_dates: enabled, disabled_dates: List.delete(disabled, date)}
 
-      weekday_available?(option, date) ->
-        # Currently open by weekday default → add an off-override.
+      open_by_rules?(option, date) ->
+        # Currently open (by weekday rule or key-date protection) → close it.
         %{enabled_dates: enabled, disabled_dates: [date | disabled]}
 
       true ->
-        # Currently closed by weekday default → add an on-override.
+        # Currently closed by weekday rule → open it.
         %{enabled_dates: [date | enabled], disabled_dates: disabled}
+    end
+  end
+
+  # Whether `date` is open given the option's rules — same predicate as
+  # `cell_state`, minus the past-date check. `toggle_date` works on rules,
+  # not the calendar clock, so a hypothetical past-date click should still
+  # produce a sensible result.
+  defp open_by_rules?(option, date) do
+    cond do
+      date in option.disabled_dates -> false
+      date in option.enabled_dates -> true
+      key_date?(date) -> true
+      true -> weekday_available?(option, date)
     end
   end
 
