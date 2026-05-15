@@ -136,79 +136,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       data-testid="recipient-name-input"
                     />
 
-                    <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
-                    <% card_message_max =
-                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.variant_size) %>
-
-                    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
-                      <div :if={card_line_item} data-testid="card-preview">
-                        <fieldset
-                          id={"#{@id}-field-card-message"}
-                          phx-hook="CharacterCount"
-                          data-testid="card-message-field"
-                          class="flex flex-col"
-                        >
-                          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
-                          <div class="textarea textarea-lg relative w-full">
-                            <div class="relative w-full">
-                              <textarea
-                                id={"#{@id}-card-message"}
-                                name={@form[:card_message].name}
-                                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
-                                maxlength={card_message_max}
-                                rows={5}
-                                data-testid="card-message-textarea"
-                              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
-                              <div class="absolute top-2 right-2">
-                                <div class="relative">
-                                  <button
-                                    type="button"
-                                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                                    class="block shrink-0 cursor-pointer"
-                                    data-testid="card-image-button"
-                                    title={gettext("Change card")}
-                                  >
-                                    <.image
-                                      src={card_line_item.product_image_slug}
-                                      alt={card_line_item.product_name}
-                                      width={80}
-                                      height={80}
-                                      sizes="80px"
-                                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
-                                    />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    phx-click="remove_card"
-                                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
-                                    data-testid="remove-card-button"
-                                    title={gettext("Remove card")}
-                                  >
-                                    <.icon name="hero-trash" class="h-4 w-4" />
-                                    <span class="sr-only">{gettext("Remove card")}</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="text-base-content/40 flex justify-end text-xs">
-                              <span id="char-count" phx-update="ignore">0</span>/{card_message_max}
-                            </div>
-                          </div>
-                          <.field_errors field={@form[:card_message]} />
-                        </fieldset>
-                      </div>
-
-                      <button
-                        :if={is_nil(card_line_item)}
-                        type="button"
-                        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
-                        data-testid="select-card-button"
-                      >
-                        <.icon name="hero-envelope" class="h-4 w-4" />
-                        {gettext("Select a card")}
-                      </button>
-                    </div>
+                    <.gift_card_slot order={@order} form={@form} id={@id} />
 
                     <.form_button>{gettext("Next")}</.form_button>
                   </.form>
@@ -401,6 +329,94 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       <.card_drawer variants={@card_variants} />
     </Layouts.app>
+    """
+  end
+
+  attr :order, :map, required: true
+  attr :form, :map, required: true
+  attr :id, :string, required: true
+
+  defp gift_card_slot(assigns) do
+    card_line_item = Enum.find(assigns.order.line_items, & &1.is_card)
+
+    assigns =
+      assigns
+      |> assign(:card_line_item, card_line_item)
+      |> assign(
+        :card_message_max,
+        card_line_item && ProductVariantSize.max_message_length(card_line_item.variant_size)
+      )
+
+    ~H"""
+    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
+      <div :if={@card_line_item} data-testid="card-preview">
+        <fieldset
+          id={"#{@id}-field-card-message"}
+          phx-hook="CharacterCount"
+          data-testid="card-message-field"
+          class="flex flex-col"
+        >
+          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
+          <div class="textarea textarea-lg relative w-full">
+            <div class="relative w-full">
+              <textarea
+                id={"#{@id}-card-message"}
+                name={@form[:card_message].name}
+                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
+                maxlength={@card_message_max}
+                rows={5}
+                data-testid="card-message-textarea"
+              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
+              <div class="absolute top-2 right-2">
+                <div class="relative">
+                  <button
+                    type="button"
+                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+                    class="block shrink-0 cursor-pointer"
+                    data-testid="card-image-button"
+                    title={gettext("Change card")}
+                  >
+                    <.image
+                      src={@card_line_item.product_image_slug}
+                      alt={@card_line_item.product_name}
+                      width={80}
+                      height={80}
+                      sizes="80px"
+                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="remove_card"
+                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
+                    data-testid="remove-card-button"
+                    title={gettext("Remove card")}
+                  >
+                    <.icon name="hero-trash" class="h-4 w-4" />
+                    <span class="sr-only">{gettext("Remove card")}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="text-base-content/40 flex justify-end text-xs">
+              <span id="char-count" phx-update="ignore">0</span>/{@card_message_max}
+            </div>
+          </div>
+          <.field_errors field={@form[:card_message]} />
+        </fieldset>
+      </div>
+
+      <button
+        :if={is_nil(@card_line_item)}
+        type="button"
+        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
+        data-testid="select-card-button"
+      >
+        <.icon name="hero-envelope" class="h-4 w-4" />
+        {gettext("Select a card")}
+      </button>
+    </div>
     """
   end
 
