@@ -27,11 +27,11 @@ defmodule Edenflowers.Store.KeyDates do
     end)
   end
 
-  @spec icons_by_date(integer()) :: %{Date.t() => String.t()}
-  def icons_by_date(year) do
-    year
-    |> for_year()
-    |> Map.new(fn %{date: date, icon: icon} -> {date, icon} end)
+  @spec icon_for(Date.t()) :: String.t() | nil
+  def icon_for(%Date{} = date) do
+    Enum.find_value(@holidays, fn %{rule: rule, icon: icon} ->
+      if materialise(rule, date.year) == date, do: icon
+    end)
   end
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)

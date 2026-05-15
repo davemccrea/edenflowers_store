@@ -34,20 +34,23 @@ defmodule Edenflowers.Store.KeyDatesTest do
     end
   end
 
-  describe "icons_by_date/1" do
-    test "maps each holiday's date to its icon" do
-      icons = KeyDates.icons_by_date(2026)
+  describe "icon_for/1" do
+    test "returns the icon for each holiday in 2026" do
+      assert KeyDates.icon_for(~D[2026-02-14]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2026-03-08]) == "hero-sparkles-solid"
+      assert KeyDates.icon_for(~D[2026-05-10]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2026-11-08]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2026-12-24]) == "hero-gift-solid"
+    end
 
-      assert icons[~D[2026-02-14]] == "hero-heart-solid"
-      assert icons[~D[2026-03-08]] == "hero-sparkles-solid"
-      assert icons[~D[2026-05-10]] == "hero-heart-solid"
-      assert icons[~D[2026-11-08]] == "hero-heart-solid"
-      assert icons[~D[2026-12-24]] == "hero-gift-solid"
+    test "tracks the right year — Mother's Day shifts across years" do
+      assert KeyDates.icon_for(~D[2027-05-09]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2028-05-14]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2027-05-10]) == nil
     end
 
     test "returns nil for non-holiday dates" do
-      icons = KeyDates.icons_by_date(2026)
-      assert icons[~D[2026-06-15]] == nil
+      assert KeyDates.icon_for(~D[2026-06-15]) == nil
     end
   end
 end
