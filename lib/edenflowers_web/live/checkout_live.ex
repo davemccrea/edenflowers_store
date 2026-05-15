@@ -633,14 +633,16 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     actor = actor(socket)
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
+    socket = assign(socket, order: order)
 
     # Cart changed while the customer is on the payment step. The PaymentIntent's
     # amount must follow the new total, otherwise `confirmPayment` would charge
-    # the previous amount.
+    # the previous amount. The Stripe round-trip runs in a task so the new cart
+    # totals render immediately — matching the snappiness of earlier steps.
     if order.state == :payment and not is_nil(order.payment_intent_id) do
-      {:noreply, sync_payment_intent(assign(socket, order: order), order)}
+      {:noreply, sync_payment_intent_async(socket, order)}
     else
-      {:noreply, assign(socket, order: order)}
+      {:noreply, socket}
     end
   end
 
@@ -651,6 +653,36 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
+  end
+
+  # ============
+  # Async Events
+  # ============
+
+  def handle_async(:sync_payment_intent, {:ok, {:ok, _payment_intent}}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_async(:sync_payment_intent, {:ok, {:error, reason}}, socket) do
+    Logger.error(
+      "Failed to sync payment intent amount for order #{socket.assigns.order.id}: #{inspect(reason)}"
+    )
+
+    {:noreply, put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
+  end
+
+  # A newer cart change started a fresh sync and cancelled this one. Expected;
+  # the replacement task carries the up-to-date amount.
+  def handle_async(:sync_payment_intent, {:exit, {:shutdown, :cancel}}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_async(:sync_payment_intent, {:exit, reason}, socket) do
+    Logger.error(
+      "Sync payment intent task exited for order #{socket.assigns.order.id}: #{inspect(reason)}"
+    )
+
+    {:noreply, put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
   end
 
   # =======
@@ -852,17 +884,16 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Re-sync the existing PaymentIntent's amount with the current order total
   # without changing the client_secret (so the already-mounted Elements UI keeps
-  # working).
-  defp sync_payment_intent(socket, order) do
-    case stripe_api().update_payment_intent(order) do
-      {:ok, _payment_intent} ->
-        socket
-
-      {:error, reason} ->
-        Logger.error("Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}")
-
-        put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
-    end
+  # working). Runs in a task so the LiveView process isn't blocked on Stripe
+  # while the customer is staring at stale cart totals; result is handled in
+  # handle_async/3 above.
+  #
+  # start_async with the same name cancels any in-flight sync, so back-to-back
+  # cart edits can't leave Stripe at a stale amount via out-of-order responses
+  # — the latest cart-change always wins.
+  defp sync_payment_intent_async(socket, order) do
+    stripe = stripe_api()
+    start_async(socket, :sync_payment_intent, fn -> stripe.update_payment_intent(order) end)
   end
 
   defp stripe_unavailable(socket) do
