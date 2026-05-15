@@ -20,8 +20,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp submit_action_for(:delivery), do: :submit_delivery
   defp submit_action_for(:payment), do: nil
 
-  defp state_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
-
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
@@ -782,7 +780,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ===========
 
   defp section_id(id, state) when state in @checkout_states do
-    "#{id}-section-#{state_index(state) + 1}"
+    "#{id}-section-#{state}"
   end
 
   defp next_section_id(id, state) when state in @checkout_states, do: section_id(id, state)
