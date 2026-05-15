@@ -36,10 +36,19 @@ defmodule Edenflowers.Store.KeyDates do
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)
 
+  # Find the nth weekday of a month, e.g. the 2nd Sunday in May 2026 (Mother's Day).
   defp materialise({:nth_weekday, month, weekday, n}, year) do
+    # The weekday we want, as a number. Monday is 1, Sunday is 7.
     target = Map.fetch!(@weekdays, weekday)
+
+    # Start from the 1st of the month.
     first = Date.new!(year, month, 1)
+
+    # How many days to walk forward to reach the first matching weekday.
+    # mod 7 keeps this in 0..6, even if the subtraction goes negative.
     offset = Integer.mod(target - Date.day_of_week(first), 7)
+
+    # Jump to the first match, then add a week for each one after that.
     Date.add(first, offset + (n - 1) * 7)
   end
 end
