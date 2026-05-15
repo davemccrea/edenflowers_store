@@ -3,12 +3,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   require Logger
 
+  import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
+
   alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+  @checkout_states Order.checkout_states()
 
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
@@ -18,8 +20,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp submit_action_for(:delivery), do: :submit_delivery
   defp submit_action_for(:payment), do: nil
 
-  defp state_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
-
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
@@ -27,8 +27,7 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
 
     with :ok <- cart_has_items?(order),
-         {:ok, fulfillment_options} <- FulfillmentOption.list() do
-      fulfillment_options = sort_fulfillment_options(fulfillment_options)
+         {:ok, fulfillment_options} <- FulfillmentOption.list_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       card_variants = ProductVariant.for_card_drawer!()
 
@@ -71,18 +70,20 @@ defmodule EdenflowersWeb.CheckoutLive do
         <div class="flex flex-col gap-12">
           <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
             <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
+              <%!-- Outer step chrome (titles, summaries, edit links) lives in CheckoutComponents.
+                   The <section>s below are the inner content for the active step. --%>
               <.steps state={@order.state} order={@order}>
                 <section
                   :if={@order.state == :contact_details}
-                  id={"#{@id}-section-1"}
+                  id={section_id(@id, :contact_details)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-1"
                 >
                   <.form
                     id={"#{@id}-form-1"}
                     for={@form}
-                    phx-change="validate_form_1"
-                    phx-submit="save_form_1"
+                    phx-change="validate_form"
+                    phx-submit="save_form"
                     class="flex flex-col space-y-6"
                     data-testid="checkout-form-1"
                   >
@@ -105,15 +106,15 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :gift_options}
-                  id={"#{@id}-section-2"}
+                  id={section_id(@id, :gift_options)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                   data-testid="checkout-step-2"
                 >
                   <.form
                     id={"#{@id}-form-2"}
                     for={@form}
-                    phx-change="validate_form_2"
-                    phx-submit="save_form_2"
+                    phx-change="validate_form"
+                    phx-submit="save_form"
                     class="flex flex-col space-y-6"
                     data-testid="checkout-form-2"
                   >
@@ -137,86 +138,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       data-testid="recipient-name-input"
                     />
 
-                    <% card_line_item = Enum.find(@order.line_items, & &1.is_card) %>
-                    <% card_message_max =
-                      if card_line_item, do: ProductVariantSize.max_message_length(card_line_item.variant_size) %>
-
-                    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
-                      <div :if={card_line_item} data-testid="card-preview">
-                        <fieldset
-                          id={"#{@id}-field-card-message"}
-                          phx-hook="CharacterCount"
-                          data-testid="card-message-field"
-                          class="flex flex-col"
-                        >
-                          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
-                          <div class="textarea textarea-lg relative w-full">
-                            <div class="relative w-full">
-                              <textarea
-                                id={"#{@id}-card-message"}
-                                name={@form[:card_message].name}
-                                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
-                                maxlength={card_message_max}
-                                rows={5}
-                                data-testid="card-message-textarea"
-                              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
-                              <div class="absolute top-2 right-2">
-                                <div class="relative">
-                                  <button
-                                    type="button"
-                                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                                    class="block shrink-0 cursor-pointer"
-                                    data-testid="card-image-button"
-                                    title={gettext("Change card")}
-                                  >
-                                    <.image
-                                      src={card_line_item.product_image_slug}
-                                      alt={card_line_item.product_name}
-                                      width={80}
-                                      height={80}
-                                      sizes="80px"
-                                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
-                                    />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    phx-click="remove_card"
-                                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
-                                    data-testid="remove-card-button"
-                                    title={gettext("Remove card")}
-                                  >
-                                    <.icon name="hero-trash" class="h-4 w-4" />
-                                    <span class="sr-only">{gettext("Remove card")}</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="text-base-content/40 flex justify-end text-xs">
-                              <span id="char-count" phx-update="ignore">0</span>/{card_message_max}
-                            </div>
-                          </div>
-                          <.error :for={
-                            msg <-
-                              if Phoenix.Component.used_input?(@form[:card_message]),
-                                do: Enum.map(@form[:card_message].errors, &translate_error/1),
-                                else: []
-                          }>
-                            {msg}
-                          </.error>
-                        </fieldset>
-                      </div>
-
-                      <button
-                        :if={is_nil(card_line_item)}
-                        type="button"
-                        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
-                        data-testid="select-card-button"
-                      >
-                        <.icon name="hero-envelope" class="h-4 w-4" />
-                        {gettext("Select a card")}
-                      </button>
-                    </div>
+                    <.gift_card_slot order={@order} form={@form} id={@id} />
 
                     <.form_button>{gettext("Next")}</.form_button>
                   </.form>
@@ -224,7 +146,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :delivery}
-                  id={"#{@id}-section-3"}
+                  id={section_id(@id, :delivery)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                 >
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
@@ -243,8 +165,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <.form
                       id={"#{@id}-form-3b"}
                       for={@form}
-                      phx-change="validate_form_3"
-                      phx-submit="save_form_3"
+                      phx-change="validate_form"
+                      phx-submit="save_form"
                       class="flex flex-col space-y-6"
                     >
                       <.live_component
@@ -252,7 +174,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         id="address-input"
                         module={EdenflowersWeb.AddressInputComponent}
                         order={@order}
-                        label={recipient_label(@order, "address")}
+                        label={recipient_label(@order, :address)}
                       />
 
                       <.input
@@ -264,7 +186,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       />
 
                       <.input
-                        label={recipient_label(@order, "phone")}
+                        label={recipient_label(@order, :phone)}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
                         type="tel"
@@ -303,15 +225,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             />
                           </:day_decoration>
                         </.live_component>
-                        <.error :for={
-                          msg <-
-                            if(Phoenix.Component.used_input?(@form[:fulfillment_date]),
-                              do: Enum.map(@form[:fulfillment_date].errors, &translate_error(&1)),
-                              else: []
-                            )
-                        }>
-                          {msg}
-                        </.error>
+                        <.field_errors field={@form[:fulfillment_date]} />
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
@@ -322,14 +236,14 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                 <section
                   :if={@order.state == :payment}
-                  id={"#{@id}-section-4"}
+                  id={section_id(@id, :payment)}
                   class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
                 >
                   <form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
-                    phx-submit="save_form_4"
+                    phx-submit="pay"
                     data-client-secret={@client_secret}
                     data-publishable-key={stripe_publishable_key()}
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
@@ -415,60 +329,197 @@ defmodule EdenflowersWeb.CheckoutLive do
         </div>
       </.container>
 
-      <.drawer
-        id="card-drawer"
-        placement="right"
-        label="Select a Card"
-        class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
-      >
-        <div class="flex flex-col gap-6" data-testid="card-drawer">
-          <div class="flex flex-row items-center justify-between">
-            <h2 class="section-title">{gettext("Select a Card")}</h2>
-            <button
-              type="button"
-              phx-click={JS.exec("phx-hide", to: "#card-drawer")}
-              class="h-10 w-10 cursor-pointer"
-            >
-              <.icon name="hero-x-mark" class="h-6 w-6" />
-            </button>
-          </div>
-
-          <div
-            :for={{size, variants} <- Enum.group_by(@card_variants, & &1.size)}
-            class="flex flex-col gap-3"
-          >
-            <h3 class="font-semibold">{size_label(size)}</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <button
-                :for={variant <- variants}
-                type="button"
-                phx-click={
-                  JS.push("select_card", value: %{"variant-id" => variant.id})
-                  |> JS.exec("phx-hide", to: "#card-drawer")
-                }
-                class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
-                data-testid={"card-option-#{variant.id}"}
-              >
-                <.image
-                  src={variant.image_slug}
-                  alt={variant.product.name}
-                  width={96}
-                  height={96}
-                  sizes="96px"
-                  class="h-24 w-24 object-cover"
-                />
-                <span class="text-sm">{variant.product.name}</span>
-                <span class="text-base-content/60 text-xs">
-                  {Edenflowers.Utils.format_money(variant.price)}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </.drawer>
+      <.card_drawer variants={@card_variants} />
     </Layouts.app>
     """
   end
+
+  # Renders field errors only after the user has interacted with the input,
+  # matching Phoenix's `used_input?` convention so we don't flash errors at
+  # untouched fields on first render.
+  attr :field, Phoenix.HTML.FormField, required: true
+
+  defp field_errors(assigns) do
+    ~H"""
+    <.error :for={msg <- field_error_messages(@field)}>{msg}</.error>
+    """
+  end
+
+  defp field_error_messages(field) do
+    if Phoenix.Component.used_input?(field),
+      do: Enum.map(field.errors, &translate_error/1),
+      else: []
+  end
+
+  attr :rest, :global
+  attr :disabled, :boolean, default: false
+  slot :inner_block
+
+  defp form_button(assigns) do
+    ~H"""
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
+    >
+      <span>{render_slot(@inner_block)}</span>
+      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
+    </button>
+    """
+  end
+
+  attr :order, :map, required: true
+  attr :form, :map, required: true
+  attr :id, :string, required: true
+
+  defp gift_card_slot(assigns) do
+    card_line_item = Enum.find(assigns.order.line_items, & &1.is_card)
+
+    assigns =
+      assigns
+      |> assign(:card_line_item, card_line_item)
+      |> assign(
+        :card_message_max,
+        card_line_item && ProductVariantSize.max_message_length(card_line_item.variant_size)
+      )
+
+    ~H"""
+    <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
+      <div :if={@card_line_item} data-testid="card-preview">
+        <fieldset
+          id={"#{@id}-field-card-message"}
+          phx-hook="CharacterCount"
+          data-testid="card-message-field"
+          class="flex flex-col"
+        >
+          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
+          <div class="textarea textarea-lg relative w-full">
+            <div class="relative w-full">
+              <textarea
+                id={"#{@id}-card-message"}
+                name={@form[:card_message].name}
+                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
+                maxlength={@card_message_max}
+                rows={5}
+                data-testid="card-message-textarea"
+              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
+              <div class="absolute top-2 right-2">
+                <div class="relative">
+                  <button
+                    type="button"
+                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+                    class="block shrink-0 cursor-pointer"
+                    data-testid="card-image-button"
+                    title={gettext("Change card")}
+                  >
+                    <.image
+                      src={@card_line_item.product_image_slug}
+                      alt={@card_line_item.product_name}
+                      width={80}
+                      height={80}
+                      sizes="80px"
+                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="remove_card"
+                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
+                    data-testid="remove-card-button"
+                    title={gettext("Remove card")}
+                  >
+                    <.icon name="hero-trash" class="h-4 w-4" />
+                    <span class="sr-only">{gettext("Remove card")}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="text-base-content/40 flex justify-end text-xs">
+              <span id="char-count" phx-update="ignore">0</span>/{@card_message_max}
+            </div>
+          </div>
+          <.field_errors field={@form[:card_message]} />
+        </fieldset>
+      </div>
+
+      <button
+        :if={is_nil(@card_line_item)}
+        type="button"
+        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
+        data-testid="select-card-button"
+      >
+        <.icon name="hero-envelope" class="h-4 w-4" />
+        {gettext("Select a card")}
+      </button>
+    </div>
+    """
+  end
+
+  attr :variants, :list, required: true
+
+  defp card_drawer(assigns) do
+    ~H"""
+    <.drawer
+      id="card-drawer"
+      placement="right"
+      label="Select a Card"
+      class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
+    >
+      <div class="flex flex-col gap-6" data-testid="card-drawer">
+        <div class="flex flex-row items-center justify-between">
+          <h2 class="section-title">{gettext("Select a Card")}</h2>
+          <button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#card-drawer")}
+            class="h-10 w-10 cursor-pointer"
+          >
+            <.icon name="hero-x-mark" class="h-6 w-6" />
+          </button>
+        </div>
+
+        <div
+          :for={{size, variants} <- Enum.group_by(@variants, & &1.size)}
+          class="flex flex-col gap-3"
+        >
+          <h3 class="font-semibold">{size_label(size)}</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              :for={variant <- variants}
+              type="button"
+              phx-click={
+                JS.push("select_card", value: %{"variant-id" => variant.id})
+                |> JS.exec("phx-hide", to: "#card-drawer")
+              }
+              class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
+              data-testid={"card-option-#{variant.id}"}
+            >
+              <.image
+                src={variant.image_slug}
+                alt={variant.product.name}
+                width={96}
+                height={96}
+                sizes="96px"
+                class="h-24 w-24 object-cover"
+              />
+              <span class="text-sm">{variant.product.name}</span>
+              <span class="text-base-content/60 text-xs">
+                {Edenflowers.Utils.format_money(variant.price)}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </.drawer>
+    """
+  end
+
+  defp size_label(:small), do: gettext("Small")
+  defp size_label(:medium), do: gettext("Medium")
+  defp size_label(:large), do: gettext("Large")
+  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
+  defp size_label(_), do: ""
 
   # ==============
   # Event Handlers
@@ -476,31 +527,15 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   # Form validation & submission
 
-  def handle_event("validate_form_" <> _step, %{"form" => params}, socket) do
+  def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
-  end
-
-  # Step 4 does not save form data — it triggers Stripe payment processing directly.
-  def handle_event("save_form_4", _, %{assigns: %{client_secret: nil}} = socket) do
-    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
-  end
-
-  def handle_event("save_form_4", _, socket) do
-    case stripe_api().update_payment_intent(socket.assigns.order) do
-      {:ok, _payment_intent} ->
-        {:noreply, push_event(socket, "stripe:process_payment", %{})}
-
-      {:error, error} ->
-        Logger.error("Failed to update payment intent: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
-    end
   end
 
   # AddressInputComponent owns the address field's lifecycle independently
   # of the parent form, so submit is the only moment the parent learns the
   # typed value — bridge it into the form params here.
-  def handle_event("save_form_3", %{"form" => params} = all_params, socket) do
+  def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
     params =
       case all_params do
         %{"delivery_address" => address} -> Map.put(params, "delivery_address", address)
@@ -522,24 +557,39 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  def handle_event("save_form_" <> _step, %{"form" => params}, socket) do
+  def handle_event("save_form", %{"form" => params}, socket) do
     submit_form(socket, params)
   end
 
-  # Step navigation
-  def handle_event("edit_step_3", _params, socket) do
-    Order.return_to_delivery!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), :delivery)}
+  def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
+    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
   end
 
-  def handle_event("edit_step_1", _params, socket) do
+  def handle_event("pay", _, socket) do
+    case stripe_api().update_payment_intent(socket.assigns.order) do
+      {:ok, _payment_intent} ->
+        {:noreply, push_event(socket, "stripe:process_payment", %{})}
+
+      {:error, error} ->
+        Logger.error("Failed to update payment intent: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
+    end
+  end
+
+  # Step navigation
+  def handle_event("edit_step", %{"state" => "contact_details"}, socket) do
     Order.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
   end
 
-  def handle_event("edit_step_2", _params, socket) do
+  def handle_event("edit_step", %{"state" => "gift_options"}, socket) do
     Order.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :gift_options)}
+  end
+
+  def handle_event("edit_step", %{"state" => "delivery"}, socket) do
+    Order.return_to_delivery!(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), :delivery)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
@@ -603,150 +653,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # ==========
-  # Components
-  # ==========
-
-  attr :state, :atom, required: true
-  attr :order, :map, required: true
-  slot :inner_block
-
-  def steps(assigns) do
-    assigns =
-      assign(assigns,
-        position: state_index(assigns.state) + 1
-      )
-
-    ~H"""
-    <ol class="flex flex-col">
-      <.checkout_step
-        :for={n <- 1..4}
-        n={n}
-        position={@position}
-        title={step_title(n)}
-        summary={if n < @position, do: step_summary(n, @order)}
-      >
-        <%= if n == @position do %>
-          {render_slot(@inner_block)}
-        <% end %>
-      </.checkout_step>
-    </ol>
-    """
-  end
-
-  attr :n, :integer, required: true
-  attr :position, :integer, required: true
-  attr :title, :string, required: true
-  attr :summary, :string, default: nil
-  slot :inner_block
-
-  defp checkout_step(assigns) do
-    state =
-      cond do
-        assigns.n < assigns.position -> :past
-        assigns.n == assigns.position -> :current
-        true -> :future
-      end
-
-    assigns = assign(assigns, :state, state)
-
-    ~H"""
-    <li class={["border-base-content/12 py-8 md:py-10", @n > 1 && "border-t"]}>
-      <div class="flex items-baseline justify-between gap-4">
-        <div class="flex items-baseline gap-3">
-          <span
-            aria-hidden="true"
-            class={["eyebrow tabular-nums", @state == :current && "text-[var(--color-link-underline)]", @state != :current && "text-base-content/55"]}
-          >
-            {String.pad_leading(Integer.to_string(@n), 2, "0")}
-          </span>
-          <h2 class={["section-title flex items-baseline gap-2", @state == :past && "text-base-content/70", @state == :future && "text-base-content/40"]}>
-            <span class="sr-only">{step_label(@state)}: </span>
-            <span>{@title}</span>
-            <.icon
-              :if={@state == :past}
-              name="hero-check-mini"
-              class="size-4 text-base-content/70 self-center"
-            />
-          </h2>
-        </div>
-        <.link
-          :if={@state == :past}
-          phx-click={"edit_step_#{@n}"}
-          class="link-underline-hover-nav shrink-0 text-sm"
-        >
-          {~t"Edit"}
-        </.link>
-      </div>
-
-      <p :if={@state == :past && @summary} class="text-base-content/70 mt-3">
-        {@summary}
-      </p>
-
-      <div :if={@state == :current} class="mt-8">
-        {render_slot(@inner_block)}
-      </div>
-    </li>
-    """
-  end
-
-  defp step_title(1), do: ~t"Your details"
-  defp step_title(2), do: ~t"Gift options"
-  defp step_title(3), do: ~t"Delivery"
-  defp step_title(4), do: ~t"Payment"
-
-  defp step_label(:past), do: ~t"Completed"
-  defp step_label(:current), do: ~t"Current step"
-  defp step_label(:future), do: ~t"Upcoming"
-
-  defp step_summary(1, %{customer_name: name, customer_email: email})
-       when is_binary(name) and is_binary(email),
-       do: "#{name} · #{email}"
-
-  defp step_summary(2, %{gift: false}), do: ~t"For me"
-  defp step_summary(2, %{gift: true, recipient_name: name}) when is_binary(name), do: ~t"For #{name}"
-  defp step_summary(2, _), do: nil
-
-  defp step_summary(3, %{fulfillment_method: method, fulfillment_date: date} = order)
-       when not is_nil(method) and not is_nil(date) do
-    method_label = if method == :delivery, do: ~t"Delivery", else: ~t"Pickup"
-    address = if method == :delivery, do: order.delivery_address, else: nil
-
-    [method_label, format_date(date), address]
-    |> Enum.reject(&is_nil/1)
-    |> Enum.join(" · ")
-  end
-
-  defp step_summary(_, _), do: nil
-
-  defp format_date(%Date{} = date) do
-    locale = Localize.get_locale().cldr_locale_id
-    Localize.Date.to_string!(date, locale: locale, format: :medium)
-  end
-
-  defp format_date(_), do: nil
-
-  attr :rest, :global
-  attr :disabled, :boolean, default: false
-  slot :inner_block
-
-  defp form_button(assigns) do
-    ~H"""
-    <button
-      {@rest}
-      disabled={@disabled}
-      type="submit"
-      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
-    >
-      <span>{render_slot(@inner_block)}</span>
-      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
-    </button>
-    """
-  end
-
-  # =========
-  # Utilities
-  # =========
+  # =======
+  # General
+  # =======
 
   defp handle_mount_error(socket, log_message, flash_message) do
     Logger.error(log_message)
@@ -761,17 +670,23 @@ defmodule EdenflowersWeb.CheckoutLive do
     first_name = name |> String.split() |> List.first()
 
     case field do
-      "address" -> gettext("%{name}'s Address *", name: first_name)
-      "phone" -> gettext("%{name}'s Phone Number", name: first_name)
+      :address -> gettext("%{name}'s Address *", name: first_name)
+      :phone -> gettext("%{name}'s Phone Number", name: first_name)
     end
   end
 
   defp recipient_label(_order, field) do
     case field do
-      "address" -> gettext("Address *")
-      "phone" -> gettext("Phone Number")
+      :address -> gettext("Address *")
+      :phone -> gettext("Phone Number")
     end
   end
+
+  defp actor(socket), do: socket.assigns[:current_user]
+
+  # =====
+  # Forms
+  # =====
 
   defp make_form(order, action, params) do
     order
@@ -795,7 +710,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # the params side has to be preserved so selecting a card doesn't wipe values
   # the customer is still editing.
   defp assign_forms(socket, order) do
-    form_params = (socket.assigns[:form] && socket.assigns.form && socket.assigns.form.params) || %{}
+    form_params = if form = socket.assigns[:form], do: form.params, else: %{}
 
     socket
     |> assign(order: order)
@@ -833,7 +748,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp actor(socket), do: socket.assigns[:current_user]
+  # =====
+  # Order
+  # =====
 
   defp reload_order(socket) do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
@@ -844,10 +761,45 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> ensure_stripe_for_state(order)
   end
 
-  # When the customer reaches the payment state, lazily create or retrieve
-  # the PaymentIntent. Skip if `client_secret` is already cached for the
-  # current session — re-running on every reload would burn a Stripe API
-  # call per event.
+  # Persisted (not just visual) so the dependent form-3b renders and the
+  # value flows through on submit.
+  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
+    case List.first(options) do
+      nil -> order
+      %{id: id} -> Order.update_fulfillment_option!(order, id, actor: actor)
+    end
+  end
+
+  defp ensure_fulfillment_default(order, _options, _actor), do: order
+
+  defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
+  defp cart_has_items?(_order), do: :ok
+
+  # ===========
+  # DOM helpers
+  # ===========
+
+  defp section_id(id, state) when state in @checkout_states do
+    "#{id}-section-#{state}"
+  end
+
+  defp next_section_id(id, state) when state in @checkout_states, do: section_id(id, state)
+  defp next_section_id(_, _), do: nil
+
+  defp scroll_to_state(socket, state) do
+    push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
+  end
+
+  # ======
+  # Stripe
+  # ======
+
+  # We only touch Stripe once the customer is on the payment state. Earlier
+  # mounts (or mounts where the LiveView reconnects on a non-payment state)
+  # skip the round trip entirely.
+  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
+  defp maybe_setup_stripe(socket, _order), do: socket
+
   defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
     if socket.assigns[:client_secret] do
       socket
@@ -858,81 +810,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp ensure_stripe_for_state(socket, _order), do: socket
 
-  # Persisted (not just visual) so the dependent form-3b renders and the
-  # value flows through on submit. Keys off fulfillment_method so the default
-  # survives option renames/translations.
-  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
-    case default_fulfillment_option_id(options) do
-      nil -> order
-      id -> Order.update_fulfillment_option!(order, id, actor: actor)
-    end
-  end
-
-  defp ensure_fulfillment_default(order, _options, _actor), do: order
-
-  defp default_fulfillment_option_id(options) do
-    delivery = Enum.find(options, &(&1.fulfillment_method == :delivery))
-    fallback = List.first(options)
-
-    case delivery || fallback do
-      %{id: id} -> id
-      nil -> nil
-    end
-  end
-
-  defp sort_fulfillment_options(options) do
-    Enum.sort_by(options, fn
-      %{fulfillment_method: :delivery} -> 0
-      %{fulfillment_method: :pickup} -> 1
-      _ -> 2
-    end)
-  end
-
-  defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
-  defp cart_has_items?(_order), do: :ok
-
-  defp next_section_id(id, state) when state in @checkout_states do
-    "#{id}-section-#{state_index(state) + 1}"
-  end
-
-  defp next_section_id(_, _), do: nil
-
-  defp scroll_to_state(socket, state) do
-    push_event(socket, "focus-element", %{id: "#{socket.assigns.id}-section-#{state_index(state) + 1}"})
-  end
-
-  defp size_label(:small), do: gettext("Small")
-  defp size_label(:medium), do: gettext("Medium")
-  defp size_label(:large), do: gettext("Large")
-  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
-  defp size_label(_), do: ""
-
-  # Stripe utilities
-  #
-  # We only touch Stripe once the customer is on the payment state. Earlier
-  # mounts (or mounts where the LiveView reconnects on a non-payment state)
-  # skip the round trip entirely.
-  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
-  defp maybe_setup_stripe(socket, _order), do: socket
-
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     case stripe_api().create_payment_intent(order) do
       {:ok, payment_intent} ->
-        case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
-          {:ok, order} ->
-            socket
-            |> assign(order: order)
-            |> assign(client_secret: payment_intent.client_secret)
-
-          {:error, reason} ->
-            # Persisting the id failed — cancel the orphan intent on Stripe so it
-            # doesn't linger in the dashboard. Best-effort; surface a flash either way.
-            stripe_api().cancel_payment_intent(payment_intent)
-
-            Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
-
-            stripe_unavailable(socket)
-        end
+        persist_payment_intent(socket, order, payment_intent)
 
       {:error, reason} ->
         Logger.error("Failed to create payment intent for order #{order.id}: #{inspect(reason)}")
@@ -947,6 +828,24 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       {:error, reason} ->
         Logger.error("Failed to retrieve payment intent for order #{order.id}: #{inspect(reason)}")
+        stripe_unavailable(socket)
+    end
+  end
+
+  defp persist_payment_intent(socket, order, payment_intent) do
+    case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
+      {:ok, order} ->
+        socket
+        |> assign(order: order)
+        |> assign(client_secret: payment_intent.client_secret)
+
+      {:error, reason} ->
+        # Persisting the id failed — cancel the orphan intent on Stripe so it
+        # doesn't linger in the dashboard. Best-effort; surface a flash either way.
+        stripe_api().cancel_payment_intent(payment_intent)
+
+        Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
+
         stripe_unavailable(socket)
     end
   end
