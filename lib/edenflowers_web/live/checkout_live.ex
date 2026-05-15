@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -30,6 +30,7 @@ defmodule EdenflowersWeb.CheckoutLive do
          {:ok, fulfillment_options} <- FulfillmentOption.list_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       card_variants = ProductVariant.for_card_drawer!()
+      key_date_icons = load_key_date_icons()
 
       {:ok,
        socket
@@ -37,6 +38,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
+       |> assign(:key_date_icons, key_date_icons)
        |> assign(:order, order)
        |> assign(:form, build_submit_form(order))
        |> assign(:client_secret, nil)
@@ -219,8 +221,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                         >
                           <:day_decoration :let={day}>
                             <.icon
-                              :if={day == ~D[2025-05-07]}
-                              name="hero-heart-solid"
+                              :if={icon = Map.get(@key_date_icons, day)}
+                              name={icon}
                               class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
                             />
                           </:day_decoration>
@@ -774,6 +776,15 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp cart_has_items?(_order), do: :ok
+
+  defp load_key_date_icons do
+    today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+
+    Map.merge(
+      KeyDates.icons_by_date(today.year),
+      KeyDates.icons_by_date(today.year + 1)
+    )
+  end
 
   # ===========
   # DOM helpers
