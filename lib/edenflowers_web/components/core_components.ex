@@ -395,7 +395,7 @@ defmodule EdenflowersWeb.CoreComponents do
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != []}
             aria-describedby={@errors != [] && "#{@id}-error"}
-            phx-debounce={if @type == "email" and not @used?, do: "blur"}
+            phx-debounce={unless @used?, do: "blur"}
             {@rest}
           />
           <div
