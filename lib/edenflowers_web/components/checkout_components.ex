@@ -34,45 +34,39 @@ defmodule EdenflowersWeb.CheckoutComponents do
   slot :inner_block
 
   defp checkout_step(assigns) do
-    position_for = state_index(assigns.current_state)
-    position = state_index(assigns.state)
-
-    relative =
-      cond do
-        position < position_for -> :past
-        position == position_for -> :current
-        true -> :future
-      end
+    past? = state_index(assigns.state) < state_index(assigns.current_state)
+    current? = assigns.state == assigns.current_state
+    future? = not past? and not current?
 
     assigns =
       assigns
-      |> assign(:relative, relative)
-      |> assign(:position, position + 1)
+      |> assign(:past?, past?)
+      |> assign(:current?, current?)
+      |> assign(:future?, future?)
+      |> assign(:position_label, position_label(assigns.state))
       |> assign(:title, step_title(assigns.state))
-      |> assign(:summary, if(relative == :past, do: step_summary(assigns.state, assigns.order)))
+      |> assign(:summary, past? && step_summary(assigns.state, assigns.order))
+      |> assign(:a11y_status, a11y_status(past?, current?))
 
     ~H"""
-    <li class={["border-base-content/12 py-8 md:py-10", @position > 1 && "border-t"]}>
+    <li class={["border-base-content/12 py-8 md:py-10", not first_step?(@state) && "border-t"]}>
       <div class="flex items-baseline justify-between gap-4">
         <div class="flex items-baseline gap-3">
-          <span
-            aria-hidden="true"
-            class={["eyebrow tabular-nums", @relative == :current && "text-[var(--color-link-underline)]", @relative != :current && "text-base-content/55"]}
-          >
-            {String.pad_leading(Integer.to_string(@position), 2, "0")}
+          <span aria-hidden="true" class={position_classes(@current?)}>
+            {@position_label}
           </span>
-          <h2 class={["section-title flex items-baseline gap-2", @relative == :past && "text-base-content/70", @relative == :future && "text-base-content/40"]}>
-            <span class="sr-only">{step_label(@relative)}: </span>
+          <h2 class={title_classes(@past?, @future?)}>
+            <span class="sr-only">{@a11y_status}: </span>
             <span>{@title}</span>
             <.icon
-              :if={@relative == :past}
+              :if={@past?}
               name="hero-check-mini"
               class="size-4 text-base-content/70 self-center"
             />
           </h2>
         </div>
         <.link
-          :if={@relative == :past}
+          :if={@past?}
           phx-click={JS.push("edit_step", value: %{state: @state})}
           class="link-underline-hover-nav shrink-0 text-sm"
         >
@@ -80,11 +74,13 @@ defmodule EdenflowersWeb.CheckoutComponents do
         </.link>
       </div>
 
-      <p :if={@relative == :past && @summary} class="text-base-content/70 mt-3">
+      <p :if={@past? and @summary} class="text-base-content/70 mt-3">
         {@summary}
       </p>
 
-      <div :if={@relative == :current} class="mt-8">
+      <%!-- Active-step content. steps/1 only passes inner_block to the matching row,
+           and this guard makes the contract visible in the leaf component too. --%>
+      <div :if={@current?} class="mt-8">
         {render_slot(@inner_block)}
       </div>
     </li>
@@ -93,14 +89,38 @@ defmodule EdenflowersWeb.CheckoutComponents do
 
   defp state_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
 
+  defp first_step?(state), do: state_index(state) == 0
+
+  defp position_label(state) do
+    state
+    |> state_index()
+    |> Kernel.+(1)
+    |> Integer.to_string()
+    |> String.pad_leading(2, "0")
+  end
+
+  defp position_classes(true), do: ["eyebrow tabular-nums", "text-[var(--color-link-underline)]"]
+  defp position_classes(false), do: ["eyebrow tabular-nums", "text-base-content/55"]
+
+  defp title_classes(past?, future?) do
+    base = "section-title flex items-baseline gap-2"
+
+    cond do
+      past? -> [base, "text-base-content/70"]
+      future? -> [base, "text-base-content/40"]
+      # :current uses the default text color — no class needed.
+      true -> [base]
+    end
+  end
+
+  defp a11y_status(true, _), do: ~t"Completed"
+  defp a11y_status(_, true), do: ~t"Current step"
+  defp a11y_status(_, _), do: ~t"Upcoming"
+
   defp step_title(:contact_details), do: ~t"Your details"
   defp step_title(:gift_options), do: ~t"Gift options"
   defp step_title(:delivery), do: ~t"Delivery"
   defp step_title(:payment), do: ~t"Payment"
-
-  defp step_label(:past), do: ~t"Completed"
-  defp step_label(:current), do: ~t"Current step"
-  defp step_label(:future), do: ~t"Upcoming"
 
   defp step_summary(:contact_details, %{customer_name: name, customer_email: email})
        when is_binary(name) and is_binary(email),
