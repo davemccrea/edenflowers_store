@@ -334,6 +334,41 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
+  # Renders field errors only after the user has interacted with the input,
+  # matching Phoenix's `used_input?` convention so we don't flash errors at
+  # untouched fields on first render.
+  attr :field, Phoenix.HTML.FormField, required: true
+
+  defp field_errors(assigns) do
+    ~H"""
+    <.error :for={msg <- field_error_messages(@field)}>{msg}</.error>
+    """
+  end
+
+  defp field_error_messages(field) do
+    if Phoenix.Component.used_input?(field),
+      do: Enum.map(field.errors, &translate_error/1),
+      else: []
+  end
+
+  attr :rest, :global
+  attr :disabled, :boolean, default: false
+  slot :inner_block
+
+  defp form_button(assigns) do
+    ~H"""
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
+    >
+      <span>{render_slot(@inner_block)}</span>
+      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
+    </button>
+    """
+  end
+
   attr :order, :map, required: true
   attr :form, :map, required: true
   attr :id, :string, required: true
@@ -611,45 +646,6 @@ defmodule EdenflowersWeb.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
-  end
-
-  # ==========
-  # Components
-  # ==========
-
-  # Renders field errors only after the user has interacted with the input,
-  # matching Phoenix's `used_input?` convention so we don't flash errors at
-  # untouched fields on first render.
-  attr :field, Phoenix.HTML.FormField, required: true
-
-  defp field_errors(assigns) do
-    ~H"""
-    <.error :for={msg <- field_error_messages(@field)}>{msg}</.error>
-    """
-  end
-
-  defp field_error_messages(field) do
-    if Phoenix.Component.used_input?(field),
-      do: Enum.map(field.errors, &translate_error/1),
-      else: []
-  end
-
-  attr :rest, :global
-  attr :disabled, :boolean, default: false
-  slot :inner_block
-
-  defp form_button(assigns) do
-    ~H"""
-    <button
-      {@rest}
-      disabled={@disabled}
-      type="submit"
-      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
-    >
-      <span>{render_slot(@inner_block)}</span>
-      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
-    </button>
-    """
   end
 
   # =========

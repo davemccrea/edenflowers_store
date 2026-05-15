@@ -11,20 +11,15 @@ so the *why* survives even if the *how* changes during implementation.
 
 ## Priority 1 — quick structural wins
 
-### 1. Consolidate function components into one block
+### 1. Consolidate function components into one block ✓
 
-`gift_card_slot/1` and `card_drawer/1` sit at lines 337–481 (right after
-`render/1`). `field_errors/1` and `form_button/1` sit at lines 620–653
-(under `# Components`, mid-file).
+Done. `field_errors/1` + `field_error_messages/1` + `form_button/1`
+moved to sit alongside `gift_card_slot/1` / `card_drawer/1` right
+after `render/1`. Mid-file `# Components` banner removed.
 
-A reader scanning for "all the function components" has to know to
-look in two places. Put all four immediately after `render/1`, drop
-the `# Components` mid-file banner. Keeps components co-located with
-their call sites.
-
-- [ ] Move `field_errors/1` and `form_button/1` up next to
-      `gift_card_slot/1` / `card_drawer/1`
-- [ ] Remove the now-empty `# Components` section banner
+Order in the block: utility components first (`field_errors`,
+`form_button` — used everywhere), then page-specific components
+(`gift_card_slot`, `card_drawer`).
 
 ---
 
