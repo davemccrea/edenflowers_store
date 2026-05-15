@@ -219,6 +219,10 @@ defmodule EdenflowersWeb.CoreComponents do
     default: true,
     doc: "internal: set from Phoenix.Component.used_input?/1 when a :field is given"
 
+  attr :validate_live?, :boolean,
+    default: false,
+    doc: "opt out of the blur-first debounce and validate from the first keystroke (e.g. search inputs)"
+
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
                 phx-blur phx-debounce phx-focus phx-change)
@@ -395,7 +399,7 @@ defmodule EdenflowersWeb.CoreComponents do
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != []}
             aria-describedby={@errors != [] && "#{@id}-error"}
-            phx-debounce={unless @used?, do: "blur"}
+            phx-debounce={if not @used? and not @validate_live?, do: "blur"}
             {@rest}
           />
           <div
