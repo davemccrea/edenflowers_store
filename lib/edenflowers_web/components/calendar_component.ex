@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(on_click: :date_selected)
      |> assign(on_weekday_click: nil)
      |> assign(weekday_class: &default_weekday_class/1)
+     |> assign(cell_confirm: fn _ -> nil end)
      |> update_calendar_view(today_date)}
   end
 
@@ -88,6 +89,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     doc:
       "Optional (weekday_atom -> css_classes). Applied to each weekday header. Only meaningful when " <>
         "`on_weekday_click` is set. Defaults to a neutral button look."
+
+  attr :cell_confirm, :any,
+    default: nil,
+    doc:
+      "Optional (Date.t() -> String.t() | nil). When the function returns a string, the cell's click " <>
+        "is gated by a browser confirm dialog with that message. Returning `nil` clicks straight through."
 
   attr :error, :boolean, default: false
   slot :day_decoration, required: false
@@ -174,6 +181,7 @@ defmodule EdenflowersWeb.CalendarComponent do
                 phx-target={@myself}
                 phx-click="select"
                 phx-value-date={day}
+                data-confirm={@cell_confirm.(day)}
                 data-key-targets={key_targets_json(day, @today_date)}
                 type="button"
                 aria-label={day_aria_label(day, @today_date, @selected_date, selectable?)}
@@ -294,6 +302,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> maybe_default(:on_click, :date_selected)
     |> maybe_default(:clickable_states, [:open])
     |> maybe_default(:weekday_class, &default_weekday_class/1)
+    |> maybe_default(:cell_confirm, fn _ -> nil end)
   end
 
   @doc false
