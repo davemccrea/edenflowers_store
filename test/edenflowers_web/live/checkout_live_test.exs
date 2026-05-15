@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     only: [
       live: 2,
       render_click: 3,
+      render_change: 2,
       element: 2,
       render_blur: 2,
       render_submit: 2,
@@ -461,6 +462,29 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)
       assert is_nil(reloaded.card_message)
+    end
+
+    test "re-adding a card after removal renders an empty card_message field",
+         %{conn: conn, variant: variant, card_variant: card_variant} do
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
+
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
+
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
+
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      view
+      |> element("[data-testid='checkout-form-2']")
+      |> render_change(%{"form" => %{"card_message" => "Stale message"}})
+
+      render_click(view, "remove_card", %{})
+      html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
+
+      assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
     end
   end
 

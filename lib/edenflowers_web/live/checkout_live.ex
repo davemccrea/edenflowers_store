@@ -611,7 +611,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("remove_card", _, socket) do
     order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
-    {:noreply, assign_forms(socket, order)}
+    {:noreply, assign_forms(socket, order, drop: ["card_message"])}
   end
 
   # Stripe events
@@ -709,8 +709,19 @@ defmodule EdenflowersWeb.CheckoutLive do
   # some validations read off the order's loaded relationships (e.g. line_items);
   # the params side has to be preserved so selecting a card doesn't wipe values
   # the customer is still editing.
-  defp assign_forms(socket, order) do
-    form_params = if form = socket.assigns[:form], do: form.params, else: %{}
+  #
+  # Pass `drop: ["field_name", ...]` to discard specific params that the
+  # action just invalidated (e.g. clearing `card_message` when the card is
+  # removed) — otherwise the stale typed value would shadow the now-nil
+  # attribute on the rebuilt form.
+  defp assign_forms(socket, order, opts \\ []) do
+    drop = Keyword.get(opts, :drop, [])
+
+    form_params =
+      case socket.assigns[:form] do
+        nil -> %{}
+        form -> Map.drop(form.params, drop)
+      end
 
     socket
     |> assign(order: order)
