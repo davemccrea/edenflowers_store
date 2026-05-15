@@ -548,7 +548,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       {:error, form} ->
         forward_delivery_address_error(form)
-        {:noreply, assign(socket, form: form)}
+        # If `submit_delivery` rejected the date, an admin may have just closed
+        # it. Reload the order so the calendar re-paints with fresh availability,
+        # then re-assign the failed form so the customer still sees the error.
+        {:noreply, socket |> reload_order() |> assign(form: form)}
     end
   end
 

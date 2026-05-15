@@ -989,6 +989,26 @@ defmodule Edenflowers.Store.OrderTest do
 
       assert %Ash.Error.Invalid{} = error
     end
+
+    test "save_step_3 rejects a date the option no longer allows", %{pickup_option: pickup_option} do
+      order = generate(order(state: :delivery))
+      closed_date = Date.add(Date.utc_today(), 3)
+
+      {:ok, _} =
+        pickup_option
+        |> Ash.Changeset.for_update(:update, %{disabled_dates: [closed_date]})
+        |> Ash.update(authorize?: false)
+
+      assert {:error, error} =
+               order
+               |> Ash.Changeset.for_update(:submit_delivery, %{
+                 fulfillment_option_id: pickup_option.id,
+                 fulfillment_date: closed_date
+               })
+               |> Ash.update(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
   end
 
   describe "Order state transitions" do
