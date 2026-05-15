@@ -15,12 +15,18 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
-     |> assign(selectable?: fn _ -> true end)
+     |> assign(cell_state: fn _ -> :open end)
+     |> assign(cell_class: &default_cell_class/3)
+     |> assign(clickable_states: [:open])
+     |> assign(on_click: :date_selected)
+     |> assign(on_weekday_click: nil)
+     |> assign(weekday_class: &default_weekday_class/1)
      |> update_calendar_view(today_date)}
   end
 
   def update(assigns, socket) do
     selected_date = parse_date(assigns.selected_date)
+    assigns = normalize_optional_assigns(assigns)
 
     socket =
       socket
@@ -44,9 +50,44 @@ defmodule EdenflowersWeb.CalendarComponent do
   attr :field, :any, required: true
   attr :selected_date, :string, required: false
 
-  attr :selectable?, :any,
+  attr :cell_state, :any,
     default: nil,
-    doc: "(Date.t() -> boolean()). Called lazily per visible cell. Defaults to always-selectable."
+    doc:
+      "(Date.t() -> :open | :past | :weekday_off | :override_off). " <>
+        "Drives both clickability (only :open is clickable) and styling. " <>
+        "Defaults to always-:open."
+
+  attr :cell_class, :any,
+    default: nil,
+    doc:
+      "Optional (Date.t(), cell_state, opts -> css_classes). Overrides default per-state styling. " <>
+        "`opts` is a keyword list with `:selected?` and `:today?` so the override can compose with " <>
+        "the standard selected/today affordances. Defaults to a single closed style for all non-:open states."
+
+  attr :clickable_states, :any,
+    default: nil,
+    doc:
+      "List of cell states that propagate a click. Defaults to `[:open]` (checkout's " <>
+        "guarantee that only valid dates reach the parent). Admin editors typically pass " <>
+        "`[:open, :weekday_off, :override_off]` so every cell can be toggled."
+
+  attr :on_click, :any,
+    default: :date_selected,
+    doc:
+      "Message tag (atom) sent to the parent as `{tag, date}` on a valid click. " <>
+        "Defaults to `:date_selected` (the legacy checkout contract)."
+
+  attr :on_weekday_click, :any,
+    default: nil,
+    doc:
+      "Optional. When set, weekday headers become buttons and emit `{tag, weekday_atom}` (e.g. `:sunday`). " <>
+        "When unset, headers remain static labels."
+
+  attr :weekday_class, :any,
+    default: nil,
+    doc:
+      "Optional (weekday_atom -> css_classes). Applied to each weekday header. Only meaningful when " <>
+        "`on_weekday_click` is set. Defaults to a neutral button look."
 
   attr :error, :boolean, default: false
   slot :day_decoration, required: false
@@ -55,7 +96,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     ~H"""
     <div
       id={"#{@id}"}
-      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2 sm:max-w-xs"}
+      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2"}
       phx-hook="CalendarHook"
       data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
@@ -99,18 +140,35 @@ defmodule EdenflowersWeb.CalendarComponent do
       </div>
 
       <div
-        aria-hidden="true"
+        aria-hidden={if @on_weekday_click, do: nil, else: "true"}
         class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6"
       >
-        <span :for={week_day <- List.first(@week_rows)}>
-          {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
-        </span>
+        <%= for week_day <- List.first(@week_rows) do %>
+          <%= if @on_weekday_click do %>
+            <button
+              type="button"
+              phx-target={@myself}
+              phx-click="weekday-click"
+              phx-value-weekday={Atom.to_string(weekday_atom(week_day))}
+              aria-label={weekday_aria_label(week_day)}
+              class={@weekday_class.(weekday_atom(week_day))}
+            >
+              {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
+            </button>
+          <% else %>
+            <span>
+              {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
+            </span>
+          <% end %>
+        <% end %>
       </div>
 
       <div id={"#{@id}-grid"} class="mt-1">
         <div :for={week <- @week_rows} class="grid grid-cols-7">
           <%= for day <- week do %>
             <%= if current_month?(day, @view_date) do %>
+              <% state = @cell_state.(day) %>
+              <% selectable? = state in @clickable_states %>
               <button
                 id={"#{@id}-day-#{day}"}
                 phx-target={@myself}
@@ -118,12 +176,14 @@ defmodule EdenflowersWeb.CalendarComponent do
                 phx-value-date={day}
                 data-key-targets={key_targets_json(day, @today_date)}
                 type="button"
-                aria-label={day_aria_label(day, @today_date, @selected_date, @selectable?.(day))}
+                aria-label={day_aria_label(day, @today_date, @selected_date, selectable?)}
                 aria-pressed={if @selected_date && selected?(day, @selected_date), do: "true", else: "false"}
                 aria-current={if day == @today_date, do: "date"}
-                aria-disabled={if not @selectable?.(day), do: "true"}
+                aria-disabled={if not selectable?, do: "true"}
                 tabindex="-1"
-                class={calendar_day_class(day, @selected_date, @today_date, @selectable?.(day))}
+                class={@cell_class.(day, state,
+    selected?: selected?(day, @selected_date),
+    today?: day == @today_date)}
               >
                 <time datetime={Date.to_iso8601(day)} aria-hidden="true">
                   {Localize.DateTime.to_string!(day, format: "d")}
@@ -157,16 +217,20 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("select", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string),
          true <- current_month?(date, socket.assigns.view_date),
-         true <- socket.assigns.selectable?.(date) do
-      send(self(), {:date_selected, date})
-
-      {:noreply,
-       socket
-       |> assign(selected_date: date)
-       |> update_calendar_view(date)}
+         true <- socket.assigns.cell_state.(date) in socket.assigns.clickable_states do
+      send(self(), {socket.assigns.on_click, date})
+      {:noreply, update_calendar_view(socket, date)}
     else
       _ -> {:noreply, socket}
     end
+  end
+
+  def handle_event("weekday-click", %{"weekday" => weekday_string}, socket) do
+    if tag = socket.assigns.on_weekday_click do
+      send(self(), {tag, String.to_existing_atom(weekday_string)})
+    end
+
+    {:noreply, socket}
   end
 
   def handle_event("keydown", %{"key" => key, "viewDate" => view_date}, socket) do
@@ -198,26 +262,67 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp calendar_day_class(day, selected_date, today_date, selectable?) do
-    is_selected = selected?(day, selected_date)
-    is_today = day == today_date
-    is_disabled = not selectable?
+  @doc false
+  # Default per-state styling. All non-:open states collapse to a single closed style
+  # so customers see one "unavailable" look. The admin editor passes its own `cell_class`
+  # to distinguish weekday-off vs override-off vs past.
+  def default_cell_class(_day, state, opts) do
+    selected? = Keyword.get(opts, :selected?, false)
+    today? = Keyword.get(opts, :today?, false)
 
     base = "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
 
-    state =
+    state_class =
       cond do
-        is_disabled ->
+        state != :open ->
           "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
 
-        is_selected ->
+        selected? ->
           "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-base-content"
 
         true ->
           "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
       end
 
-    if is_today, do: "#{base} #{state} underline", else: "#{base} #{state}"
+    if today?, do: "#{base} #{state_class} underline", else: "#{base} #{state_class}"
+  end
+
+  defp normalize_optional_assigns(assigns) do
+    assigns
+    |> maybe_default(:cell_state, fn _ -> :open end)
+    |> maybe_default(:cell_class, &default_cell_class/3)
+    |> maybe_default(:on_click, :date_selected)
+    |> maybe_default(:clickable_states, [:open])
+    |> maybe_default(:weekday_class, &default_weekday_class/1)
+  end
+
+  @doc false
+  def default_weekday_class(_weekday) do
+    "hover:bg-base-content/10 focus-visible:outline-base-content cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+  end
+
+  defp maybe_default(assigns, key, default) do
+    case Map.get(assigns, key) do
+      nil -> Map.put(assigns, key, default)
+      _value -> assigns
+    end
+  end
+
+  defp weekday_atom(date) do
+    case Date.day_of_week(date) do
+      1 -> :monday
+      2 -> :tuesday
+      3 -> :wednesday
+      4 -> :thursday
+      5 -> :friday
+      6 -> :saturday
+      7 -> :sunday
+    end
+  end
+
+  defp weekday_aria_label(date) do
+    full = Localize.DateTime.to_string!(date, format: "EEEE")
+    ~t"Toggle " <> full
   end
 
   defp day_aria_label(day, today_date, selected_date, selectable?) do

@@ -109,6 +109,27 @@ defmodule Edenflowers.Fulfillments do
     end
   end
 
+  @type cell_state :: :open | :past | :weekday_off | :override_off
+
+  @doc """
+  Map `fulfill_on_date/3` into a coarse-grained cell state for the calendar UI.
+
+  Both the customer-facing checkout calendar and the admin date-toggle editor
+  consume this so the styling stays in sync with the actual selectability rules.
+
+  Same-day reasons collapse to `:past` — from the user's perspective, "today is
+  unavailable" reads exactly like "the past": a date you can't pick.
+  """
+  @spec cell_state(FulfillmentOption.t(), Date.t(), DateTime.t()) :: cell_state()
+  def cell_state(fulfillment_option, date, now \\ now()) do
+    case fulfill_on_date(fulfillment_option, date, now) do
+      {true, _} -> :open
+      {false, :date_disabled} -> :override_off
+      {false, :day_of_week_disabled} -> :weekday_off
+      {false, _past_or_same_day} -> :past
+    end
+  end
+
   defp date_past?({_, date, now}) do
     Date.compare(date, now) == :lt
   end

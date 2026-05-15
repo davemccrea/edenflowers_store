@@ -200,31 +200,26 @@ defmodule EdenflowersWeb.CheckoutLive do
                             {~t"Pickup Date *"}
                           <% end %>
                         </label>
-                        <.live_component
-                          id="calendar"
-                          error={
-                            Phoenix.Component.used_input?(@form[:fulfillment_date]) and
-                              Enum.any?(@form[:fulfillment_date].errors)
-                          }
-                          selected_date={@form[:fulfillment_date].value}
-                          module={EdenflowersWeb.CalendarComponent}
-                          selectable?={
-                            fn date ->
-                              {fulfillable?, _reason} =
-                                Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
-
-                              fulfillable?
-                            end
-                          }
-                        >
-                          <:day_decoration :let={day}>
-                            <.icon
-                              :if={icon = KeyDates.icon_for(day)}
-                              name={icon}
-                              class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
-                            />
-                          </:day_decoration>
-                        </.live_component>
+                        <div class="sm:max-w-xs">
+                          <.live_component
+                            id="calendar"
+                            error={
+                              Phoenix.Component.used_input?(@form[:fulfillment_date]) and
+                                Enum.any?(@form[:fulfillment_date].errors)
+                            }
+                            selected_date={@form[:fulfillment_date].value}
+                            module={EdenflowersWeb.CalendarComponent}
+                            cell_state={fn date -> Fulfillments.cell_state(@order.fulfillment_option, date) end}
+                          >
+                            <:day_decoration :let={day}>
+                              <.icon
+                                :if={icon = KeyDates.icon_for(day)}
+                                name={icon}
+                                class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
+                              />
+                            </:day_decoration>
+                          </.live_component>
+                        </div>
                         <.field_errors field={@form[:fulfillment_date]} />
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>

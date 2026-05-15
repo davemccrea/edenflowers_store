@@ -74,6 +74,15 @@ defmodule EdenflowersWeb.Router do
     )
   end
 
+  scope "/admin", EdenflowersWeb do
+    pipe_through :browser
+
+    ash_authentication_live_session :admin_routes,
+      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}] do
+      live "/fulfillment-calendar", Admin.FulfillmentCalendarLive
+    end
+  end
+
   scope "/admin" do
     pipe_through :browser
 
