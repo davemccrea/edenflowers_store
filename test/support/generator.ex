@@ -114,12 +114,15 @@ defmodule Generator do
 
   def fulfillment_option(opts \\ []) do
     tax_rate_id = opts[:tax_rate_id] || once(:default_tax_rate_id, fn -> generate(tax_rate()).id end)
+    method = opts[:fulfillment_method] || :pickup
+    sort_key = opts[:sort_key] || if method == :delivery, do: 0, else: 1
 
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
         tax_rate_id: tax_rate_id,
         name: sequence(:fulfillment_option_name, &"Fulfillment Option #{&1}"),
         fulfillment_method: :pickup,
+        sort_key: sort_key,
         rate_type: :fixed,
         minimum_cart_total: 0,
         base_price: "4.50",
