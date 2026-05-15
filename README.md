@@ -28,10 +28,10 @@ Order finalization and the confirmation email both depend on `payment_intent.suc
 
 #### Regenerating migrations
 
-When making breaking schema changes it's often easier to regenerate all migrations from scratch. `regen.sh` automates this:
+When making breaking schema changes it's often easier to regenerate all migrations from scratch. `scripts/regen-schema.sh` automates this:
 
 ```bash
-./regen.sh
+./scripts/regen-schema.sh
 ```
 
 It drops the database, deletes all existing migrations and resource snapshots, regenerates them fresh from the current Ash resource definitions, and re-seeds the database.
@@ -63,12 +63,20 @@ git branch -d feature/my-feature
 
 ## Deployment
 
+Server provisioning is handled by [phoenix-ansible](https://github.com/davemccrea/phoenix-ansible). App deploys run via GitHub Actions (`.github/workflows/deploy.yml`) to the server provisioned by that repo.
+
 ### Releasing a new version
 
 Use `scripts/deploy.sh` with the new semver version:
 
 ```bash
 ./scripts/deploy.sh 0.3.0
+```
+
+Or run it with no argument to pick patch/minor/major interactively:
+
+```bash
+./scripts/deploy.sh
 ```
 
 The script verifies the working tree is clean, the tag doesn't already exist, and that compile + tests pass. It then bumps the version in `mix.exs`, commits, tags `v0.3.0`, and pushes both `main` and the tag. GitHub Actions takes it from there to build the Docker image and deploy.
