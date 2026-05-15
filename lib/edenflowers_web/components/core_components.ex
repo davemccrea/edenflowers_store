@@ -215,9 +215,13 @@ defmodule EdenflowersWeb.CoreComponents do
     default: false,
     doc: "shows a success check icon in the trailing slot (default text-like inputs only)"
 
+  attr :used?, :boolean,
+    default: true,
+    doc: "internal: set from Phoenix.Component.used_input?/1 when a :field is given"
+
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
-                phx-blur phx-focus phx-change)
+                phx-blur phx-debounce phx-focus phx-change)
 
   slot :inner_block
 
@@ -226,11 +230,13 @@ defmodule EdenflowersWeb.CoreComponents do
       "Adornment rendered inside the text input on the right (e.g. spinner, icon). Only supported by the default (text-like) input."
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
-    errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
+    used? = Phoenix.Component.used_input?(field)
+    errors = if used?, do: field.errors, else: []
 
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
+    |> assign(:used?, used?)
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
@@ -389,6 +395,7 @@ defmodule EdenflowersWeb.CoreComponents do
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != []}
             aria-describedby={@errors != [] && "#{@id}-error"}
+            phx-debounce={if @type == "email" and not @used?, do: "blur"}
             {@rest}
           />
           <div
