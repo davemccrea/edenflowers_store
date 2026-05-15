@@ -3,6 +3,7 @@
 @source "../css";
 @source "../js";
 @source "../../lib/edenflowers_web";
+@source "../../lib/edenflowers";
 
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
