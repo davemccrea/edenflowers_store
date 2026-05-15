@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                         id="address-input"
                         module={EdenflowersWeb.AddressInputComponent}
                         order={@order}
-                        label={recipient_label(@order, "address")}
+                        label={recipient_label(@order, :address)}
                       />
 
                       <.input
@@ -186,7 +186,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                       />
 
                       <.input
-                        label={recipient_label(@order, "phone")}
+                        label={recipient_label(@order, :phone)}
                         placeholder={~t"045 1505141"}
                         field={@form[:recipient_phone_number]}
                         type="tel"
@@ -664,15 +664,15 @@ defmodule EdenflowersWeb.CheckoutLive do
     first_name = name |> String.split() |> List.first()
 
     case field do
-      "address" -> gettext("%{name}'s Address *", name: first_name)
-      "phone" -> gettext("%{name}'s Phone Number", name: first_name)
+      :address -> gettext("%{name}'s Address *", name: first_name)
+      :phone -> gettext("%{name}'s Phone Number", name: first_name)
     end
   end
 
   defp recipient_label(_order, field) do
     case field do
-      "address" -> gettext("Address *")
-      "phone" -> gettext("Phone Number")
+      :address -> gettext("Address *")
+      :phone -> gettext("Phone Number")
     end
   end
 

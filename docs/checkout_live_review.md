@@ -46,15 +46,11 @@ all six call sites adjust automatically.
 
 ---
 
-### 4. `recipient_label/2` should take an atom, not a string
+### 4. `recipient_label/2` should take an atom, not a string ✓
 
-Lines 668–682 dispatch on `"address"` vs `"phone"` — magic strings
-that appear nowhere else. Atoms are self-documenting and typos
-pattern-match-fail loudly.
-
-- [ ] Change function head to `recipient_label(order, :address)` /
-      `recipient_label(order, :phone)`
-- [ ] Update three call sites (lines 177, 189)
+Done. Inner `case` clauses now match `:address` / `:phone`; the two
+template call sites pass atoms. Typos pattern-match-fail with a
+clear `CaseClauseError` instead of falling silently through.
 
 ---
 
