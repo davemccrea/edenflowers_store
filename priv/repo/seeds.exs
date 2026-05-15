@@ -39,6 +39,7 @@ tax_rate =
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
   name: "Home delivery",
+  sort_key: 0,
   fulfillment_method: :delivery,
   rate_type: :dynamic,
   minimum_cart_total: 0,
@@ -54,6 +55,7 @@ FulfillmentOption
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
   name: "In store pickup",
+  sort_key: 1,
   fulfillment_method: :pickup,
   rate_type: :fixed,
   base_price: "0.00",

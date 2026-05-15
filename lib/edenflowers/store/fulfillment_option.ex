@@ -20,6 +20,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
 
   code_interface do
     define :list, action: :read
+    define :list_for_checkout, action: :list_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
   end
 
@@ -29,6 +30,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
       :destroy,
       create: [
         :name,
+        :sort_key,
         :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
@@ -45,6 +47,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
       ],
       update: [
         :name,
+        :sort_key,
         :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
@@ -65,6 +68,10 @@ defmodule Edenflowers.Store.FulfillmentOption do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
+    end
+
+    read :list_for_checkout do
+      prepare build(sort: [sort_key: :asc, name: :asc])
     end
   end
 
@@ -99,6 +106,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, public?: true
+    attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
 
     attribute :minimum_cart_total, :decimal, default: 0, public?: true
 
