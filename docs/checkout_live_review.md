@@ -56,25 +56,15 @@ clear `CaseClauseError` instead of falling silently through.
 
 ## Priority 2 — judgment-call improvements
 
-### 5. Flatten `setup_stripe/2` by extracting `persist_payment_intent/3`
+### 5. Flatten `setup_stripe/2` by extracting `persist_payment_intent/3` ✓
 
-Lines 807–830. The two-level `case` correctly distinguishes "create
-failed (no cleanup)" from "create OK, persist failed (orphan
-cleanup)". `with` would erase that distinction. Extracting the
-inner branch flattens the top-level to three lines.
+Done. `setup_stripe/2`'s create-path is now a flat three-line case
+that delegates the persist branch to `persist_payment_intent/3`.
 
-```elixir
-defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-  case stripe_api().create_payment_intent(order) do
-    {:ok, payment_intent} -> persist_payment_intent(socket, order, payment_intent)
-    {:error, reason} -> stripe_create_failed(socket, order, reason)
-  end
-end
-```
-
-- [ ] Extract `persist_payment_intent/3` carrying the orphan-cancel logic
-- [ ] Extract `stripe_create_failed/3` for the bare-flash path (or
-      keep inline — judgment call)
+The "create failed" branch stayed inline (two lines: Logger.error +
+stripe_unavailable). Extracting it would have named the lines but
+cost one more hop — judgment call resolved in favor of less
+abstraction.
 
 ---
 

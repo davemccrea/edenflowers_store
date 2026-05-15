@@ -803,21 +803,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     case stripe_api().create_payment_intent(order) do
       {:ok, payment_intent} ->
-        case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
-          {:ok, order} ->
-            socket
-            |> assign(order: order)
-            |> assign(client_secret: payment_intent.client_secret)
-
-          {:error, reason} ->
-            # Persisting the id failed — cancel the orphan intent on Stripe so it
-            # doesn't linger in the dashboard. Best-effort; surface a flash either way.
-            stripe_api().cancel_payment_intent(payment_intent)
-
-            Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
-
-            stripe_unavailable(socket)
-        end
+        persist_payment_intent(socket, order, payment_intent)
 
       {:error, reason} ->
         Logger.error("Failed to create payment intent for order #{order.id}: #{inspect(reason)}")
@@ -832,6 +818,24 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       {:error, reason} ->
         Logger.error("Failed to retrieve payment intent for order #{order.id}: #{inspect(reason)}")
+        stripe_unavailable(socket)
+    end
+  end
+
+  defp persist_payment_intent(socket, order, payment_intent) do
+    case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
+      {:ok, order} ->
+        socket
+        |> assign(order: order)
+        |> assign(client_secret: payment_intent.client_secret)
+
+      {:error, reason} ->
+        # Persisting the id failed — cancel the orphan intent on Stripe so it
+        # doesn't linger in the dashboard. Best-effort; surface a flash either way.
+        stripe_api().cancel_payment_intent(payment_intent)
+
+        Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
+
         stripe_unavailable(socket)
     end
   end
