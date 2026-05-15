@@ -90,17 +90,19 @@ this doc.
 
 ---
 
-### 7. Tag `cart_has_items?/1`'s success case
+### 7. Tag `cart_has_items?/1`'s success case — declined
 
-Lines 780–781 return `:ok` on success and `{:error, :empty_cart}` on
-failure. The `with` at line 31 then matches against
-`{:ok, fulfillment_options}` from a different clause. Mixing
-untagged success (`:ok`) with tagged tuples (`{:ok, _}`) in the same
-`with` makes the `else` block ambiguous about which clause failed.
+On re-reading, this would impose synthetic uniformity for marginal
+gain. Mixing `:ok` (untagged) and `{:ok, value}` (tagged) in a single
+`with` is idiomatic Elixir; the function returns `:ok` because it
+has no value to pass back, and that's the standard convention.
 
-- [ ] Change `cart_has_items?/1` success to `{:ok, :has_items}`
-      (or similar)
-- [ ] Update the `with` clause at line 31 to match
+The `else` block is unambiguous in practice: `{:error, :empty_cart}`
+is uniquely produced by `cart_has_items?/1`, and any other shape
+falls through to the generic `error -> ...` catch-all.
+
+Changing to `{:ok, :has_items}` would manufacture a tag with no
+real meaning. Decline.
 
 ---
 
