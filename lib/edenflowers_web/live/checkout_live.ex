@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+  @checkout_states Order.checkout_states()
 
   defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)

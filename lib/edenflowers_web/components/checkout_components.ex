@@ -1,7 +1,9 @@
 defmodule EdenflowersWeb.CheckoutComponents do
   use EdenflowersWeb, :html
 
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+  alias Edenflowers.Store.Order
+
+  @checkout_states Order.checkout_states()
 
   attr :state, :atom, required: true
   attr :order, :map, required: true

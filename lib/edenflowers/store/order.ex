@@ -37,6 +37,8 @@ defmodule Edenflowers.Store.Order do
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
+  def checkout_states, do: @checkout_states
+
   code_interface do
     define :create_for_checkout, action: :create_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
