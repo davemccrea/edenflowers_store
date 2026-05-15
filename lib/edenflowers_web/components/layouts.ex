@@ -87,6 +87,17 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
+  # Builds a sign-in href, attaching the current path as a `return_to` so the
+  # user lands back where they started. Filters out paths that aren't worth
+  # capturing (the sign-in page itself, the home page, anything not safe).
+  defp sign_in_href(current_path) do
+    case EdenflowersWeb.ReturnTo.safe_path(current_path) do
+      nil -> ~p"/sign-in"
+      "/" -> ~p"/sign-in"
+      path -> ~p"/sign-in?return_to=#{path}"
+    end
+  end
+
   attr :flash, :map, required: true
   attr :current_path, :string, required: true
   slot :inner_block, required: true
@@ -195,7 +206,7 @@ defmodule EdenflowersWeb.Layouts do
                 class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={if @current_user, do: ~p"/account"}
-                href={unless @current_user, do: ~p"/sign-in"}
+                href={unless @current_user, do: sign_in_href(@current_path)}
               >
                 <.icon name="hero-user-circle" class="h-7 w-7" />
                 {if @current_user, do: ~t"Account", else: ~t"Sign In"}
@@ -283,7 +294,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account"}
-                href={unless @current_user, do: ~p"/sign-in"}
+                href={unless @current_user, do: sign_in_href(@current_path)}
                 class="group hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />

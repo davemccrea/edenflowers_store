@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.Router do
       default: "en-GB"
 
     plug EdenflowersWeb.Plugs.PutLocaleSession
+    plug EdenflowersWeb.Plugs.CaptureReturnTo
     plug :load_from_session
   end
 
