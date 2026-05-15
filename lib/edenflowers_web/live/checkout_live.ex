@@ -243,7 +243,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
-                    phx-submit="save_form_4"
+                    phx-submit="pay"
                     data-client-secret={@client_secret}
                     data-publishable-key={stripe_publishable_key()}
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
@@ -555,12 +555,11 @@ defmodule EdenflowersWeb.CheckoutLive do
     submit_form(socket, params)
   end
 
-  # Step 4 does not save form data — it triggers Stripe payment processing directly.
-  def handle_event("save_form_4", _, %{assigns: %{client_secret: nil}} = socket) do
+  def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
     {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
   end
 
-  def handle_event("save_form_4", _, socket) do
+  def handle_event("pay", _, socket) do
     case stripe_api().update_payment_intent(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}

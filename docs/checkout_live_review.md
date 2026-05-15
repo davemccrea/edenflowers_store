@@ -23,15 +23,11 @@ Order in the block: utility components first (`field_errors`,
 
 ---
 
-### 2. Rename `save_form_4` → `pay`
+### 2. Rename `save_form_4` → `pay` ✓
 
-The rest of the file moved to `save_form` keyed on `@order.state`.
-Payment kept the legacy name. `save_form_4` is misleading on two
-fronts: it's the *fourth thing* (vestigial step number) and it's a
-*form save* (it isn't — it triggers Stripe).
-
-- [ ] Template line 246: `phx-submit="save_form_4"` → `phx-submit="pay"`
-- [ ] Handler lines 524, 528: rename event clauses to `"pay"`
+Done. Template `phx-submit` and both `handle_event` clauses renamed.
+The "Step 4 does not save form data" comment that was justifying the
+old name was also removed — `pay` makes the meaning self-evident.
 
 ---
 
