@@ -515,6 +515,12 @@ defmodule EdenflowersWeb.CheckoutLive do
     """
   end
 
+  defp size_label(:small), do: gettext("Small")
+  defp size_label(:medium), do: gettext("Medium")
+  defp size_label(:large), do: gettext("Large")
+  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
+  defp size_label(_), do: ""
+
   # ==============
   # Event Handlers
   # ==============
@@ -647,9 +653,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # =========
-  # Utilities
-  # =========
+  # =======
+  # General
+  # =======
 
   defp handle_mount_error(socket, log_message, flash_message) do
     Logger.error(log_message)
@@ -675,6 +681,12 @@ defmodule EdenflowersWeb.CheckoutLive do
       :phone -> gettext("Phone Number")
     end
   end
+
+  defp actor(socket), do: socket.assigns[:current_user]
+
+  # =====
+  # Forms
+  # =====
 
   defp make_form(order, action, params) do
     order
@@ -736,7 +748,9 @@ defmodule EdenflowersWeb.CheckoutLive do
     end
   end
 
-  defp actor(socket), do: socket.assigns[:current_user]
+  # =====
+  # Order
+  # =====
 
   defp reload_order(socket) do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
@@ -746,20 +760,6 @@ defmodule EdenflowersWeb.CheckoutLive do
     |> assign_forms(order)
     |> ensure_stripe_for_state(order)
   end
-
-  # When the customer reaches the payment state, lazily create or retrieve
-  # the PaymentIntent. Skip if `client_secret` is already cached for the
-  # current session — re-running on every reload would burn a Stripe API
-  # call per event.
-  defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
-    if socket.assigns[:client_secret] do
-      socket
-    else
-      setup_stripe(socket, order)
-    end
-  end
-
-  defp ensure_stripe_for_state(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
   # value flows through on submit.
@@ -775,6 +775,10 @@ defmodule EdenflowersWeb.CheckoutLive do
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp cart_has_items?(_order), do: :ok
 
+  # ===========
+  # DOM helpers
+  # ===========
+
   defp section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state_index(state) + 1}"
   end
@@ -786,19 +790,25 @@ defmodule EdenflowersWeb.CheckoutLive do
     push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
   end
 
-  defp size_label(:small), do: gettext("Small")
-  defp size_label(:medium), do: gettext("Medium")
-  defp size_label(:large), do: gettext("Large")
-  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
-  defp size_label(_), do: ""
+  # ======
+  # Stripe
+  # ======
 
-  # Stripe utilities
-  #
   # We only touch Stripe once the customer is on the payment state. Earlier
   # mounts (or mounts where the LiveView reconnects on a non-payment state)
   # skip the round trip entirely.
   defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
   defp maybe_setup_stripe(socket, _order), do: socket
+
+  defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
+    if socket.assigns[:client_secret] do
+      socket
+    else
+      setup_stripe(socket, order)
+    end
+  end
+
+  defp ensure_stripe_for_state(socket, _order), do: socket
 
   defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
     case stripe_api().create_payment_intent(order) do

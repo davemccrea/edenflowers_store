@@ -68,23 +68,25 @@ abstraction.
 
 ---
 
-### 6. Sub-section the `# Utilities` block
+### 6. Sub-section the `# Utilities` block ✓
 
-`# Utilities` at line 655 is a 200-line catch-all. The actual concepts:
+Done. The catch-all `# Utilities` block is now five labelled
+sub-sections:
 
-| Concept | Lines (current) |
-|---------|----------------|
-| Forms (build, assign, submit, address bridge) | 684–742 |
-| Order reload + fulfillment default | 744–778 |
-| DOM helpers (next_section_id, scroll_to_state) | 783–791 |
-| Stripe (already labelled) | 799–862 |
+- `# General` — `handle_mount_error`, `recipient_label`, `actor`
+- `# Forms` — `make_form`, `build_submit_form`, `assign_forms`,
+  `submit_form`, `forward_delivery_address_error`
+- `# Order` — `reload_order`, `ensure_fulfillment_default`,
+  `cart_has_items?`
+- `# DOM helpers` — `section_id`, `next_section_id`, `scroll_to_state`
+- `# Stripe` — `maybe_setup_stripe`, `ensure_stripe_for_state`,
+  `setup_stripe`, `persist_payment_intent`, `sync_payment_intent`,
+  `stripe_unavailable`
 
-The `# Stripe utilities` sub-header at line 799 already exists; promote
-the rest to match.
-
-- [ ] Split `# Utilities` into `# Forms`, `# Order reload`,
-      `# DOM helpers`, `# Stripe`
-- [ ] Move helpers under the right header in source order
+`size_label/1` moved up to sit next to `card_drawer/1` (its only
+caller), removing the cross-file distance between component and its
+helper. This also resolves the latent-risks note at the bottom of
+this doc.
 
 ---
 
@@ -171,9 +173,8 @@ The review also flagged but declined:
 
 ## Latent risks / unscored observations
 
-- **`size_label/1`** (lines 793–797) is only used by `card_drawer/1`.
-  Lives in the right module today; if `card_drawer/1` ever moves to
-  `CheckoutComponents`, `size_label/1` moves with it.
+- ~~**`size_label/1`** is only used by `card_drawer/1`.~~ Resolved in
+  item 6 — `size_label/1` now sits right next to `card_drawer/1`.
 - **`<.card_drawer>` at line 332** sits inside `<Layouts.app>` but
   outside `<.container>`. Probably intentional (drawer escapes
   container's max-width) but worth confirming visually once.
