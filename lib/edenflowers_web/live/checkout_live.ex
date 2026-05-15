@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -219,8 +219,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                         >
                           <:day_decoration :let={day}>
                             <.icon
-                              :if={day == ~D[2025-05-07]}
-                              name="hero-heart-solid"
+                              :if={icon = KeyDates.icon_for(day)}
+                              name={icon}
                               class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
                             />
                           </:day_decoration>
