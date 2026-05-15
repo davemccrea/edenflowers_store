@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, build_submit_form(order))
        |> assign(:client_secret, nil)
+       |> assign(:payment_syncing, false)
        |> maybe_setup_stripe(order)}
     else
       {:error, :empty_cart} ->
@@ -254,9 +255,21 @@ defmodule EdenflowersWeb.CheckoutLive do
                     <div phx-update="ignore" id="payment-element"></div>
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
-                    <.form_button disabled={true} id="payment-button">
-                      {~t"Pay"} {Edenflowers.Utils.format_money(@order.grand_total)}
-                    </.form_button>
+                    <%!--
+                      The button's own `disabled={true}` is a static literal that
+                      the Stripe hook flips off via DOM mutation once Elements is
+                      ready (see data-stripe-ready). The fieldset below carries
+                      the orthogonal "we're re-syncing the PaymentIntent" state
+                      so the customer can't commit to a charge before the
+                      definitive total is reflected in Stripe — fieldset disabled
+                      cascades to the button without colliding with the hook's
+                      attribute toggling.
+                    --%>
+                    <fieldset disabled={@payment_syncing} class="contents">
+                      <.form_button disabled={true} id="payment-button">
+                        {~t"Pay"} {Edenflowers.Utils.format_money(@order.grand_total)}
+                      </.form_button>
+                    </fieldset>
                   </form>
 
                   <p :if={!@client_secret} class="text-error" data-testid="stripe-unavailable">
@@ -639,8 +652,14 @@ defmodule EdenflowersWeb.CheckoutLive do
     # amount must follow the new total, otherwise `confirmPayment` would charge
     # the previous amount. The Stripe round-trip runs in a task so the new cart
     # totals render immediately — matching the snappiness of earlier steps.
+    # The Pay button is disabled until the sync settles so the customer never
+    # commits to a charge before seeing the definitive total reflected in
+    # Stripe.
     if order.state == :payment and not is_nil(order.payment_intent_id) do
-      {:noreply, sync_payment_intent_async(socket, order)}
+      {:noreply,
+       socket
+       |> assign(:payment_syncing, true)
+       |> sync_payment_intent_async(order)}
     else
       {:noreply, socket}
     end
@@ -660,7 +679,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   # ============
 
   def handle_async(:sync_payment_intent, {:ok, {:ok, _payment_intent}}, socket) do
-    {:noreply, socket}
+    {:noreply, assign(socket, :payment_syncing, false)}
   end
 
   def handle_async(:sync_payment_intent, {:ok, {:error, reason}}, socket) do
@@ -668,11 +687,18 @@ defmodule EdenflowersWeb.CheckoutLive do
       "Failed to sync payment intent amount for order #{socket.assigns.order.id}: #{inspect(reason)}"
     )
 
-    {:noreply, put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
+    # Re-enable the Pay button so the customer can retry — the synchronous
+    # update inside the pay handler will either succeed (this failure was
+    # transient) or surface its own error to them.
+    {:noreply,
+     socket
+     |> assign(:payment_syncing, false)
+     |> put_flash(:error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
   end
 
   # A newer cart change started a fresh sync and cancelled this one. Expected;
-  # the replacement task carries the up-to-date amount.
+  # the replacement task carries the up-to-date amount, so leave :payment_syncing
+  # true — the replacement's handle_async will clear it.
   def handle_async(:sync_payment_intent, {:exit, {:shutdown, :cancel}}, socket) do
     {:noreply, socket}
   end
@@ -682,7 +708,10 @@ defmodule EdenflowersWeb.CheckoutLive do
       "Sync payment intent task exited for order #{socket.assigns.order.id}: #{inspect(reason)}"
     )
 
-    {:noreply, put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
+    {:noreply,
+     socket
+     |> assign(:payment_syncing, false)
+     |> put_flash(:error, ~t"Cart changed but payment couldn't be updated. Please retry.")}
   end
 
   # =======
