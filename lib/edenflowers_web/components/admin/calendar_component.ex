@@ -100,6 +100,13 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     end
   end
 
+  # Muted-text opacity ladder, used by both cells and the weekday header.
+  # `/85` primary, `/65` secondary/closed, `/35` disabled. Anything outside
+  # this set is a typography choice (eyebrow, list copy), not a cell state.
+  #
+  # Clickable elements share `hover:bg-primary/10` so cells, weekday headers,
+  # and the scope chips (in `FulfillmentCalendarLive`) feel like one system.
+
   # Visual language: a florist's printed planner. Closed dates are crossed
   # out with a diagonal strike — the cell itself is marked as cancelled, not
   # just the digit. A muted gray background keeps closed cells visually
@@ -115,16 +122,16 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     # `after:` for the strike — the cell uses `before:` for the override
     # corner so the two pseudo-elements don't collide.
     closed_class =
-      "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-base-content/15 hover:after:bg-error " <>
+      "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 hover:after:bg-error " <>
         diagonal_strike("after")
 
     state_class =
       case state do
-        :open -> "cursor-pointer text-base-content hover:bg-primary/10"
+        :open -> "cursor-pointer text-base-content/85 hover:bg-primary/10"
         :weekday_off -> closed_class
         :override_off -> closed_class
-        :past -> "cursor-not-allowed text-base-content/25"
-        :mixed -> "cursor-not-allowed text-base-content/55 #{@mixed_tile_class}"
+        :past -> "cursor-not-allowed text-base-content/35"
+        :mixed -> "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
       end
 
     today_class = if today?, do: " font-bold text-primary", else: ""
@@ -141,14 +148,16 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     state_class =
       case state do
         :on ->
-          "cursor-pointer text-base-content/65 hover:text-base-content hover:bg-primary/10"
+          # On hover the text shifts from /65 → /85 so a "live" header signals
+          # interactivity even before the background fills in.
+          "cursor-pointer text-base-content/65 hover:text-base-content/85 hover:bg-primary/10"
 
         :off ->
           "cursor-pointer bg-base-content/10 text-base-content/65 line-through decoration-2 decoration-error/75 " <>
-            "hover:bg-base-content/15 hover:decoration-error"
+            "hover:bg-primary/10 hover:decoration-error"
 
         :mixed ->
-          "cursor-not-allowed text-base-content/45 #{@mixed_tile_class}"
+          "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
       end
 
     "#{base} #{state_class}"
@@ -166,7 +175,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   end
 
   defp legend_swatch(:mixed) do
-    "inline-block w-4 h-4 mr-2 rounded align-middle #{@mixed_tile_class}"
+    "#{@swatch_base} #{@mixed_tile_class}"
   end
 
   # Diagonal strike, ~22° off horizontal, ~56% of the container width.

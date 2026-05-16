@@ -128,9 +128,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
   end
 
+  # Inactive chip uses the same hover (`bg-primary/10`) as cells and weekday
+  # headers in CalendarComponent so the whole page reads as one interaction system.
   defp scope_button_class(false) do
-    "rounded border border-base-content/20 px-3.5 py-1.5 text-sm text-base-content/80 " <>
-      "hover:border-base-content/40 hover:bg-base-content/5 hover:text-base-content " <>
+    "rounded border border-base-content/20 px-3.5 py-1.5 text-sm text-base-content/65 " <>
+      "hover:border-primary/40 hover:text-base-content/85 hover:bg-primary/10 " <>
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
   end
 end
