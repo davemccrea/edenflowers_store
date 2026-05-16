@@ -770,3 +770,16 @@ body.ready {
     @apply bg-primary/75;
   }
 }
+
+/* Mixed state — options disagree at the current scope. 45° stripes are the
+   universal "indeterminate / pending" pattern; distinct from closed (strike),
+   open (plain), and past (faded), and pure background so the digit reads on top. */
+@utility calendar-mixed {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
+  );
+}

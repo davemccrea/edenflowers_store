@@ -14,9 +14,9 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   alias Edenflowers.Fulfillments
   alias Edenflowers.Store.FulfillmentCalendar
 
-  # Shared swatch shape for the "options disagree" state. Used by cells, the
-  # weekday header, and the legend, so they always read the same.
-  @mixed_tile_class "bg-base-content/8 ring-1 ring-inset ring-base-content/15"
+  # Shared "options disagree" tile — diagonal stripes via the calendar-mixed
+  # @utility in app.css. Used by cells, the weekday header, and the legend.
+  @mixed_tile_class "calendar-mixed"
 
   # Base box for the legend swatch — sized and positioned so the strike and
   # corner fragments can be reused unchanged.
@@ -112,7 +112,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
         :weekday_disabled -> closed_class
         :date_disabled -> closed_class
         :past -> "cursor-not-allowed text-base-content/35"
-        :mixed -> "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
+        :mixed -> "cursor-not-allowed text-base-content/85 #{@mixed_tile_class}"
       end
 
     today_class = if today?, do: " underline", else: ""
@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
             "hover:bg-primary/10 hover:decoration-error"
 
         :mixed ->
-          "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
+          "cursor-not-allowed text-base-content/85 #{@mixed_tile_class}"
       end
 
     "#{base} #{state_class}"
