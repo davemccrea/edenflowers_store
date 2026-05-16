@@ -4,8 +4,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
 
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
+  import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -212,11 +213,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             cell_state={fn date -> Fulfillments.customer_cell_state(@order.fulfillment_option, date) end}
                           >
                             <:day_decoration :let={day}>
-                              <.icon
-                                :if={icon = KeyDates.icon_for(day)}
-                                name={icon}
-                                class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
-                              />
+                              <.key_date_icon date={day} />
                             </:day_decoration>
                           </.live_component>
                         </div>

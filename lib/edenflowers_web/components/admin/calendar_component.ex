@@ -9,8 +9,10 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   """
   use EdenflowersWeb, :html
 
+  import EdenflowersWeb.KeyDateIcon
+
   alias Edenflowers.Fulfillments
-  alias Edenflowers.Store.{FulfillmentCalendar, KeyDates}
+  alias Edenflowers.Store.FulfillmentCalendar
 
   # Shared swatch shape for the "options disagree" state. Used by cells, the
   # weekday header, and the legend, so they always read the same.
@@ -48,11 +50,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       }
     >
       <:day_decoration :let={day}>
-        <.icon
-          :if={icon = KeyDates.icon_for(day)}
-          name={icon}
-          class="text-error absolute right-0 bottom-0 left-0 m-auto h-3 w-3 -translate-y-0.5"
-        />
+        <.key_date_icon date={day} />
       </:day_decoration>
     </.live_component>
     """
