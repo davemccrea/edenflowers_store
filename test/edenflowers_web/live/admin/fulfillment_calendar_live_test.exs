@@ -58,17 +58,18 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   end
 
   describe "rendered styling" do
-    # Guardrail: the cell strike and the legend swatch share the same visual
-    # fragments via diagonal_strike/1. If someone changes one and forgets the
-    # other, this catches it — both must contain the strike's rotation token.
-    test "closed cells and the legend swatch use the same diagonal-strike fragment", %{conn: conn} do
+    # Guardrail: closed cells get the strike on ::after (so ::before is free for
+    # the override corner); the legend swatch gets it on ::before. Both reference
+    # the same underlying CSS rule in app.css, so drift in the visual is
+    # impossible at the CSS layer — but this catches accidental removal of the
+    # utility class from either element.
+    test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/fulfillment-calendar")
 
       # Sundays are closed for the delivery option set up in `setup`, so any
       # rendered Sunday in the current month carries the closed strike.
-      assert html =~ "rotate-[-22deg]"
-      # Legend swatch reuses the same fragment via `before:` instead of `after:`.
-      assert html =~ "before:rotate-[-22deg]"
+      assert html =~ "calendar-strike-after"
+      assert html =~ "calendar-strike-before"
     end
   end
 

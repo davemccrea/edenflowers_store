@@ -106,10 +106,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center " <>
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
 
-    # Strike on `after:`, override corner on `before:` — pseudo-elements split so they don't collide.
-    closed_class =
-      "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 hover:after:bg-error " <>
-        diagonal_strike("after")
+    closed_class = "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after"
 
     state_class =
       case state do
@@ -121,7 +118,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       end
 
     today_class = if today?, do: " font-bold text-primary", else: ""
-    override_class = if override?, do: " " <> override_corner("before"), else: ""
+    override_class = if override?, do: " calendar-corner-before", else: ""
 
     "#{base} #{state_class}#{today_class}#{override_class}"
   end
@@ -149,31 +146,9 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     "#{base} #{state_class}"
   end
 
-  # Reuses diagonal_strike/override_corner so the legend can't drift from the real cells.
-  defp legend_swatch(:closed) do
-    "#{@swatch_base} bg-base-content/10 #{diagonal_strike("before")}"
-  end
-
-  defp legend_swatch(:override) do
-    "#{@swatch_base} ring-1 ring-inset ring-base-content/15 #{override_corner("after")}"
-  end
-
-  defp legend_swatch(:mixed) do
-    "#{@swatch_base} #{@mixed_tile_class}"
-  end
-
-  # Parameterised over `before` vs `after` so cells can pair the strike with the
-  # override corner (which holds `before:`) while the legend swatch reuses `before:`.
-  defp diagonal_strike(prefix) do
-    "#{prefix}:absolute #{prefix}:left-[22%] #{prefix}:right-[22%] #{prefix}:top-1/2 #{prefix}:h-[2px] " <>
-      "#{prefix}:-translate-y-1/2 #{prefix}:rotate-[-22deg] #{prefix}:bg-error/75 #{prefix}:content-[''] " <>
-      "#{prefix}:rounded-full"
-  end
-
-  # Top-right triangle — sits clear of the centred strike and the centred today digit.
-  defp override_corner(prefix) do
-    "#{prefix}:absolute #{prefix}:top-0 #{prefix}:right-0 #{prefix}:h-2 #{prefix}:w-2 " <>
-      "#{prefix}:bg-primary/75 #{prefix}:content-[''] " <>
-      "#{prefix}:[clip-path:polygon(100%_0,0_0,100%_100%)]"
-  end
+  # Uses the same calendar-strike-* / calendar-corner-* utilities as the
+  # cells (defined in app.css), so the legend can't drift from the real cells.
+  defp legend_swatch(:closed), do: "#{@swatch_base} bg-base-content/10 calendar-strike-before"
+  defp legend_swatch(:override), do: "#{@swatch_base} ring-1 ring-inset ring-base-content/15 calendar-corner-after"
+  defp legend_swatch(:mixed), do: "#{@swatch_base} #{@mixed_tile_class}"
 end
