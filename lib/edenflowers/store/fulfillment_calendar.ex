@@ -28,6 +28,13 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
 
   @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 
+  @typedoc "What the admin calendar is currently editing: every option, or one option by id."
+  @type scope :: :all | String.t()
+
+  @typedoc """
+  `Fulfillments.cell_state/4` outputs plus `:mixed`, which only happens in the
+  admin "All options" view when options disagree on a date.
+  """
   @type cell_state :: Fulfillments.cell_state() | :mixed
 
   @doc """
@@ -70,7 +77,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   Returns `:on` when the scoped option can't be found so the header keeps a
   sensible default rather than disappearing.
   """
-  @spec weekday_state(:all | String.t(), [FulfillmentOption.t()], atom()) :: :on | :off | :mixed
+  @spec weekday_state(scope(), [FulfillmentOption.t()], Weekday.t()) :: :on | :off | :mixed
   def weekday_state(:all, options, weekday) do
     options
     |> Enum.map(&(weekday in &1.available_days))
@@ -130,8 +137,8 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   "every override genuinely contradicts the weekday rule" so the override
   mark in the UI never lies.
   """
-  @spec toggle_weekday(FulfillmentOption.t(), atom()) :: %{
-          available_days: [atom()],
+  @spec toggle_weekday(FulfillmentOption.t(), Weekday.t()) :: %{
+          available_days: [Weekday.t()],
           enabled_dates: [Date.t()],
           disabled_dates: [Date.t()]
         }

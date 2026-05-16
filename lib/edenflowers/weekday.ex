@@ -3,6 +3,7 @@ defmodule Edenflowers.Weekday do
   Maps `Date.day_of_week/1` integers to atoms used by `FulfillmentOption.available_days`.
   """
 
+  @typedoc "Day-of-week atom matching the values stored in `FulfillmentOption.available_days`."
   @type t :: :monday | :tuesday | :wednesday | :thursday | :friday | :saturday | :sunday
 
   @spec from_date(Date.t()) :: t()

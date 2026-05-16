@@ -95,8 +95,6 @@ defmodule Edenflowers.Fulfillments do
     - The day of week is disabled and the date is not in the enabled dates
     - The date is today but the deadline for same day delivery has passed
     - The date is today but same day delivery is disabled
-
-  `now` must be a DateTime — same-day deadline checks need the time of day.
   """
   @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: {boolean(), atom()}
   def fulfill_on_date(fulfillment_option = %FulfillmentOption{}, date, now \\ now()) do
@@ -112,7 +110,14 @@ defmodule Edenflowers.Fulfillments do
     end
   end
 
+  @typedoc """
+  Coarse-grained selectability of a calendar cell. Drives both styling and
+  whether the cell propagates a click; the customer and admin calendars share
+  this vocabulary so they can't drift apart.
+  """
   @type cell_state :: :open | :past | :weekday_off | :override_off
+
+  @type audience :: :customer | :admin
 
   @doc """
   Coarse-grained cell state for the calendar UI. Used by both the customer
@@ -130,7 +135,7 @@ defmodule Edenflowers.Fulfillments do
     is editing rules, not booking against them. Today reflects whatever the
     weekday/override rules say so it can be toggled like any other date.
   """
-  @spec cell_state(FulfillmentOption.t(), Date.t(), DateTime.t() | Date.t(), keyword()) :: cell_state()
+  @spec cell_state(FulfillmentOption.t(), Date.t(), DateTime.t() | Date.t(), audience: audience()) :: cell_state()
   def cell_state(fulfillment_option, date, now \\ now(), opts \\ [])
 
   def cell_state(fulfillment_option, date, now, opts) when is_list(opts) do

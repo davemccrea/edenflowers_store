@@ -89,8 +89,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   end
 
   # `:all` collapses to `false` — across options, "some override, some don't"
-  # can't be summarized by a single corner mark. Same behaviour the old
-  # `view_model` enforced.
+  # can't be summarized by a single corner mark.
   defp scope_override?(:all, _options, _date), do: false
 
   defp scope_override?(option_id, options, date) do
@@ -100,18 +99,6 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     end
   end
 
-  # Muted-text opacity ladder, used by both cells and the weekday header.
-  # `/85` primary, `/65` secondary/closed, `/35` disabled. Anything outside
-  # this set is a typography choice (eyebrow, list copy), not a cell state.
-  #
-  # Clickable elements share `hover:bg-primary/10` so cells, weekday headers,
-  # and the scope chips (in `FulfillmentCalendarLive`) feel like one system.
-
-  # Visual language: a florist's printed planner. Closed dates are crossed
-  # out with a diagonal strike — the cell itself is marked as cancelled, not
-  # just the digit. A muted gray background keeps closed cells visually
-  # distinct from open ones. Cells whose state contradicts their weekday
-  # rule (explicit overrides) carry a small sage triangle in the top-right.
   defp cell_class(_day, state, opts, override?) do
     today? = Keyword.get(opts, :today?, false)
 
@@ -119,8 +106,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center " <>
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
 
-    # `after:` for the strike — the cell uses `before:` for the override
-    # corner so the two pseudo-elements don't collide.
+    # Strike on `after:`, override corner on `before:` — pseudo-elements split so they don't collide.
     closed_class =
       "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 hover:after:bg-error " <>
         diagonal_strike("after")
@@ -163,9 +149,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     "#{base} #{state_class}"
   end
 
-  # The :closed swatch mirrors a closed cell in miniature, the :override swatch
-  # mirrors a cell with a triangle corner. They reuse the same fragments as the
-  # cell so the legend can't drift from the real thing.
+  # Reuses diagonal_strike/override_corner so the legend can't drift from the real cells.
   defp legend_swatch(:closed) do
     "#{@swatch_base} bg-base-content/10 #{diagonal_strike("before")}"
   end
@@ -178,19 +162,15 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     "#{@swatch_base} #{@mixed_tile_class}"
   end
 
-  # Diagonal strike, ~22° off horizontal, ~56% of the container width.
-  # Parameterized over `:before` vs `:after` because cells use the override
-  # corner on `before:` already, while the legend swatch is free to use
-  # `before:` for the strike itself.
+  # Parameterised over `before` vs `after` so cells can pair the strike with the
+  # override corner (which holds `before:`) while the legend swatch reuses `before:`.
   defp diagonal_strike(prefix) do
     "#{prefix}:absolute #{prefix}:left-[22%] #{prefix}:right-[22%] #{prefix}:top-1/2 #{prefix}:h-[2px] " <>
       "#{prefix}:-translate-y-1/2 #{prefix}:rotate-[-22deg] #{prefix}:bg-error/75 #{prefix}:content-[''] " <>
       "#{prefix}:rounded-full"
   end
 
-  # Folded-page corner — small right-angled triangle in the top-right. Reads
-  # as "marked by hand" without competing with the closed strike (centred) or
-  # the today digit (centred).
+  # Top-right triangle — sits clear of the centred strike and the centred today digit.
   defp override_corner(prefix) do
     "#{prefix}:absolute #{prefix}:top-0 #{prefix}:right-0 #{prefix}:h-2 #{prefix}:w-2 " <>
       "#{prefix}:bg-primary/75 #{prefix}:content-[''] " <>

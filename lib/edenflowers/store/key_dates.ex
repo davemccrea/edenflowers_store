@@ -8,6 +8,9 @@ defmodule Edenflowers.Store.KeyDates do
   will live in a separate, customer-scoped resource.
   """
 
+  @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
+  @type holiday :: %{date: Date.t(), name: String.t(), icon: String.t()}
+
   @weekdays %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
 
   @holidays [
@@ -18,7 +21,7 @@ defmodule Edenflowers.Store.KeyDates do
     %{name: "Christmas Eve", icon: "hero-gift-solid", rule: {:fixed, 12, 24}}
   ]
 
-  @spec for_year(integer()) :: [%{date: Date.t(), icon: String.t(), name: String.t()}]
+  @spec for_year(integer()) :: [holiday()]
   def for_year(year) do
     Enum.map(@holidays, fn %{rule: rule} = holiday ->
       holiday
