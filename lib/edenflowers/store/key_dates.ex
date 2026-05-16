@@ -10,16 +10,20 @@ defmodule Edenflowers.Store.KeyDates do
   """
 
   @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
-  @type key_date :: %{date: Date.t(), name: String.t(), icon: String.t()}
+  @type key_date :: %{date: Date.t(), name: String.t(), icon: String.t(), colour_class: String.t()}
 
   @weekdays %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
 
+  # `colour_class` is the Tailwind text colour applied to the heart in the
+  # calendar watermark. Each date gets its own colour so the four key dates
+  # remain distinguishable when only the heart shape is shared.
+  # Valentine's Day reads as "Friend's Day" (Ystävänpäivä) in Finland — hence
+  # the friendly green rather than the romantic red.
   @key_dates [
-    %{name: "Valentine's Day", icon: "hero-heart-solid", rule: {:fixed, 2, 14}},
-    %{name: "Women's Day", icon: "hero-sparkles-solid", rule: {:fixed, 3, 8}},
-    %{name: "Mother's Day", icon: "hero-heart-solid", rule: {:nth_weekday, 5, :sunday, 2}},
-    %{name: "Father's Day", icon: "hero-heart-solid", rule: {:nth_weekday, 11, :sunday, 2}},
-    %{name: "Christmas Eve", icon: "hero-gift-solid", rule: {:fixed, 12, 24}}
+    %{name: "Valentine's Day", icon: "hero-heart", colour_class: "text-emerald-500", rule: {:fixed, 2, 14}},
+    %{name: "Women's Day", icon: "hero-heart", colour_class: "text-violet-500", rule: {:fixed, 3, 8}},
+    %{name: "Mother's Day", icon: "hero-heart", colour_class: "text-rose-500", rule: {:nth_weekday, 5, :sunday, 2}},
+    %{name: "Father's Day", icon: "hero-heart", colour_class: "text-sky-500", rule: {:nth_weekday, 11, :sunday, 2}}
   ]
 
   @spec for_year(integer()) :: [key_date()]
@@ -35,6 +39,13 @@ defmodule Edenflowers.Store.KeyDates do
   def icon_for(%Date{} = date) do
     Enum.find_value(@key_dates, fn %{rule: rule, icon: icon} ->
       if materialise(rule, date.year) == date, do: icon
+    end)
+  end
+
+  @spec colour_class_for(Date.t()) :: String.t() | nil
+  def colour_class_for(%Date{} = date) do
+    Enum.find_value(@key_dates, fn %{rule: rule, colour_class: colour_class} ->
+      if materialise(rule, date.year) == date, do: colour_class
     end)
   end
 

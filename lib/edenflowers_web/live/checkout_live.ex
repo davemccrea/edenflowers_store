@@ -201,7 +201,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             {~t"Pickup Date *"}
                           <% end %>
                         </label>
-                        <div class="sm:max-w-xs">
+                        <div class="sm:max-w-md">
                           <.live_component
                             id="calendar"
                             error={
@@ -212,8 +212,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                             module={EdenflowersWeb.CalendarComponent}
                             cell_state={fn date -> Fulfillments.customer_cell_state(@order.fulfillment_option, date) end}
                           >
-                            <:day_decoration :let={day}>
-                              <.key_date_icon date={day} />
+                            <:day_decoration :let={%{date: day, state: state}}>
+                              <.key_date_icon date={day} muted?={state == :past} />
                             </:day_decoration>
                           </.live_component>
                         </div>

@@ -93,7 +93,14 @@ defmodule EdenflowersWeb.CalendarComponent do
         "`on_weekday_click` is set. Defaults to a neutral button look."
 
   attr :error, :boolean, default: false
-  slot :day_decoration, required: false
+
+  slot :day_decoration,
+    required: false,
+    doc:
+      "Optional inner content rendered after the date digit. Receives a map " <>
+        "via `:let` with `:date`, `:state` (the result of `cell_state.(date)`), " <>
+        "and `:selected?`. Decoration components can use those to adapt their " <>
+        "visual to the cell's state — e.g. hide on a selected cell."
 
   def render(assigns) do
     ~H"""
@@ -188,10 +195,10 @@ defmodule EdenflowersWeb.CalendarComponent do
     selected?: selected?(day, @selected_date),
     today?: day == @today_date)}
               >
-                <time datetime={Date.to_iso8601(day)} aria-hidden="true">
+                <time datetime={Date.to_iso8601(day)} aria-hidden="true" class="relative z-10">
                   {Localize.DateTime.to_string!(day, format: "d")}
                 </time>
-                {render_slot(@day_decoration, day)}
+                {render_slot(@day_decoration, %{date: day, state: state, selected?: selected?(day, @selected_date)})}
               </button>
             <% else %>
               <div aria-hidden="true" class="aspect-square"></div>

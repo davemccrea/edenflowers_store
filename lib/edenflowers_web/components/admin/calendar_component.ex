@@ -49,8 +49,8 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
         end
       }
     >
-      <:day_decoration :let={day}>
-        <.key_date_icon date={day} />
+      <:day_decoration :let={%{date: day, state: state}}>
+        <.key_date_icon date={day} muted?={state == :past} />
       </:day_decoration>
     </.live_component>
     """
@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
         :mixed -> "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
       end
 
-    today_class = if today?, do: " font-bold text-primary", else: ""
+    today_class = if today?, do: " underline", else: ""
     override_class = if override?, do: " calendar-corner-before", else: ""
 
     "#{base} #{state_class}#{today_class}#{override_class}"

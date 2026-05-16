@@ -4,14 +4,13 @@ defmodule Edenflowers.Store.KeyDatesTest do
   alias Edenflowers.Store.KeyDates
 
   describe "for_year/1" do
-    test "materialises the five known key dates for 2026" do
+    test "materialises the four known key dates for 2026" do
       by_name = KeyDates.for_year(2026) |> Map.new(fn %{name: n, date: d} -> {n, d} end)
 
       assert by_name["Valentine's Day"] == ~D[2026-02-14]
       assert by_name["Women's Day"] == ~D[2026-03-08]
       assert by_name["Mother's Day"] == ~D[2026-05-10]
       assert by_name["Father's Day"] == ~D[2026-11-08]
-      assert by_name["Christmas Eve"] == ~D[2026-12-24]
     end
 
     test "nth-weekday rule shifts year-over-year" do
@@ -36,21 +35,35 @@ defmodule Edenflowers.Store.KeyDatesTest do
 
   describe "icon_for/1" do
     test "returns the icon for each key date in 2026" do
-      assert KeyDates.icon_for(~D[2026-02-14]) == "hero-heart-solid"
-      assert KeyDates.icon_for(~D[2026-03-08]) == "hero-sparkles-solid"
-      assert KeyDates.icon_for(~D[2026-05-10]) == "hero-heart-solid"
-      assert KeyDates.icon_for(~D[2026-11-08]) == "hero-heart-solid"
-      assert KeyDates.icon_for(~D[2026-12-24]) == "hero-gift-solid"
+      assert KeyDates.icon_for(~D[2026-02-14]) == "hero-heart"
+      assert KeyDates.icon_for(~D[2026-03-08]) == "hero-heart"
+      assert KeyDates.icon_for(~D[2026-05-10]) == "hero-heart"
+      assert KeyDates.icon_for(~D[2026-11-08]) == "hero-heart"
     end
 
     test "tracks the right year — Mother's Day shifts across years" do
-      assert KeyDates.icon_for(~D[2027-05-09]) == "hero-heart-solid"
-      assert KeyDates.icon_for(~D[2028-05-14]) == "hero-heart-solid"
+      assert KeyDates.icon_for(~D[2027-05-09]) == "hero-heart"
+      assert KeyDates.icon_for(~D[2028-05-14]) == "hero-heart"
       assert KeyDates.icon_for(~D[2027-05-10]) == nil
     end
 
     test "returns nil for non-key dates" do
       assert KeyDates.icon_for(~D[2026-06-15]) == nil
+    end
+  end
+
+  describe "colour_class_for/1" do
+    test "returns a distinct colour class for each key date" do
+      colours =
+        [~D[2026-02-14], ~D[2026-03-08], ~D[2026-05-10], ~D[2026-11-08]]
+        |> Enum.map(&KeyDates.colour_class_for/1)
+
+      assert Enum.all?(colours, &is_binary/1)
+      assert Enum.uniq(colours) == colours
+    end
+
+    test "returns nil for non-key dates" do
+      assert KeyDates.colour_class_for(~D[2026-06-15]) == nil
     end
   end
 end
