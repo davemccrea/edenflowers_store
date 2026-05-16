@@ -92,14 +92,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   @impl true
   def handle_info({:fulfillment_date_toggled, date}, socket) do
-    {:noreply, apply_to_scope(socket, &FulfillmentCalendar.toggle_date(&1, date))}
+    {:noreply, apply_to_scope(socket, &FulfillmentOption.toggle_date!(&1, date, actor: &2))}
   end
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
     if FulfillmentCalendar.weekday_state(socket.assigns.scope, socket.assigns.options, weekday) == :mixed do
       {:noreply, socket}
     else
-      {:noreply, apply_to_scope(socket, &FulfillmentCalendar.toggle_weekday(&1, weekday))}
+      {:noreply, apply_to_scope(socket, &FulfillmentOption.toggle_weekday!(&1, weekday, actor: &2))}
     end
   end
 
@@ -112,11 +112,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
         id -> Enum.filter(options, &(&1.id == id))
       end
 
-    updated_by_id =
-      Map.new(targets, fn option ->
-        updated = FulfillmentOption.update_calendar!(option, fun.(option), actor: actor)
-        {option.id, updated}
-      end)
+    updated_by_id = Map.new(targets, fn option -> {option.id, fun.(option, actor)} end)
 
     assign(socket, :options, Enum.map(options, &Map.get(updated_by_id, &1.id, &1)))
   end

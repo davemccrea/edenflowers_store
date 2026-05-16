@@ -23,6 +23,8 @@ defmodule Edenflowers.Store.FulfillmentOption do
     define :list_for_checkout, action: :list_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
     define :update_calendar, action: :update_calendar
+    define :toggle_date, action: :toggle_date, args: [:date]
+    define :toggle_weekday, action: :toggle_weekday, args: [:weekday]
   end
 
   actions do
@@ -80,6 +82,22 @@ defmodule Edenflowers.Store.FulfillmentOption do
                     "Prevents accidental writes to pricing or fulfillment-method attrs."
 
       accept [:available_days, :enabled_dates, :disabled_dates]
+    end
+
+    update :toggle_date do
+      description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in FulfillmentCalendar."
+      # The change reads the existing option to compute the new override sets,
+      # so it can't be expressed as a single DB expression.
+      require_atomic? false
+      argument :date, :date, allow_nil?: false
+      change Edenflowers.Store.FulfillmentOption.Changes.ToggleDate
+    end
+
+    update :toggle_weekday do
+      description "Toggle a single weekday on or off, also pruning now-redundant overrides per FulfillmentCalendar."
+      require_atomic? false
+      argument :weekday, :atom, allow_nil?: false
+      change Edenflowers.Store.FulfillmentOption.Changes.ToggleWeekday
     end
   end
 
