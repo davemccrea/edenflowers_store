@@ -37,11 +37,12 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   same-day operational rules (deadlines, `same_day: false`) do not collapse
   today into `:past`. Today reflects whatever the availability rules say,
   so the admin can toggle it like any other date.
-  """
-  @spec cell_state(FulfillmentOption.t(), Date.t()) :: cell_state()
-  def cell_state(%FulfillmentOption{} = option, %Date{} = date) do
-    today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
 
+  `today` is passed in so this function stays pure — easy to test, and the
+  view-model can compute it once per render rather than per cell.
+  """
+  @spec cell_state(FulfillmentOption.t(), Date.t(), Date.t()) :: cell_state()
+  def cell_state(%FulfillmentOption{} = option, %Date{} = date, %Date{} = today) do
     cond do
       Date.compare(date, today) == :lt -> :past
       date in option.disabled_dates -> :override_off
@@ -68,16 +69,79 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   on whether the date is open — used by the "All options" admin view to
   signal that the florist must pick a specific option to disambiguate.
   """
-  @spec cell_state_for_options([FulfillmentOption.t()], Date.t()) :: cell_state()
-  def cell_state_for_options([], _date), do: :open
+  @spec cell_state_for_options([FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
+  def cell_state_for_options([], _date, _today), do: :open
 
-  def cell_state_for_options(options, date) when is_list(options) do
+  def cell_state_for_options(options, date, today) when is_list(options) do
     options
-    |> Enum.map(&cell_state(&1, date))
+    |> Enum.map(&cell_state(&1, date, today))
     |> Enum.uniq()
     |> case do
       [single] -> single
       _multiple -> :mixed
+    end
+  end
+
+  @doc """
+  Weekday state across the current scope.
+
+  - `:on` — every option in scope has the weekday available.
+  - `:off` — no option in scope has the weekday available.
+  - `:mixed` — options disagree.
+
+  Scope is either `:all` (every option) or a single option id (UUID string).
+  Returns `:on` when the scoped option can't be found so the header keeps a
+  sensible default rather than disappearing.
+  """
+  @spec weekday_state(:all | String.t(), [FulfillmentOption.t()], atom()) :: :on | :off | :mixed
+  def weekday_state(:all, options, weekday) do
+    options
+    |> Enum.map(&(weekday in &1.available_days))
+    |> Enum.uniq()
+    |> case do
+      [true] -> :on
+      [false] -> :off
+      _mixed -> :mixed
+    end
+  end
+
+  def weekday_state(option_id, options, weekday) do
+    case Enum.find(options, &(&1.id == option_id)) do
+      nil -> :on
+      option -> if weekday in option.available_days, do: :on, else: :off
+    end
+  end
+
+  @doc """
+  Single-date admin view: cell state, override flag, and the optional key-date
+  name (used for the confirm prompt when an admin closes a holiday).
+
+  Returns the three pieces together so the render function makes one call per
+  cell instead of three. `override?` is intentionally `false` when scope is
+  `:all` — across options, "some override, some don't" can't be summarized
+  by one dot.
+  """
+  @type cell_view :: %{state: cell_state(), override?: boolean(), key_date_name: String.t() | nil}
+  @spec view_model(:all | String.t(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_view()
+  def view_model(:all, options, date, today) do
+    %{
+      state: cell_state_for_options(options, date, today),
+      override?: false,
+      key_date_name: KeyDates.name_for(date)
+    }
+  end
+
+  def view_model(option_id, options, date, today) do
+    case Enum.find(options, &(&1.id == option_id)) do
+      nil ->
+        %{state: :open, override?: false, key_date_name: KeyDates.name_for(date)}
+
+      option ->
+        %{
+          state: cell_state(option, date, today),
+          override?: override?(option, date),
+          key_date_name: KeyDates.name_for(date)
+        }
     end
   end
 

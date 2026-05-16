@@ -225,15 +225,15 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
     end
   end
 
-  describe "cell_state_for_options/2" do
+  describe "cell_state_for_options/3" do
     test "returns the single shared state when all options agree", %{tax_rate_id: tax_rate_id} do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
-      # Pick a date well in the future to avoid same-day edge cases.
-      future_wednesday = Date.utc_today() |> Date.shift(month: 3) |> next_weekday(:wednesday)
+      today = ~D[2024-04-01]
+      future_wednesday = today |> Date.shift(month: 3) |> next_weekday(:wednesday)
 
-      assert :open == FulfillmentCalendar.cell_state_for_options([a, b], future_wednesday)
+      assert :open == FulfillmentCalendar.cell_state_for_options([a, b], future_wednesday, today)
     end
 
     test "returns :mixed when options disagree", %{tax_rate_id: tax_rate_id} do
@@ -247,13 +247,19 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
           )
         )
 
-      future_sunday = Date.utc_today() |> Date.shift(month: 3) |> next_weekday(:sunday)
+      today = ~D[2024-04-01]
+      future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
-      assert :mixed == FulfillmentCalendar.cell_state_for_options([open_option, closed_option], future_sunday)
+      assert :mixed ==
+               FulfillmentCalendar.cell_state_for_options(
+                 [open_option, closed_option],
+                 future_sunday,
+                 today
+               )
     end
 
     test "returns :open for an empty options list", %{tax_rate_id: _} do
-      assert :open == FulfillmentCalendar.cell_state_for_options([], ~D[2024-04-10])
+      assert :open == FulfillmentCalendar.cell_state_for_options([], ~D[2024-04-10], ~D[2024-04-01])
     end
   end
 

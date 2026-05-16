@@ -22,6 +22,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
     define :list, action: :read
     define :list_for_checkout, action: :list_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
+    define :update_calendar, action: :update_calendar
   end
 
   actions do
@@ -72,6 +73,13 @@ defmodule Edenflowers.Store.FulfillmentOption do
 
     read :list_for_checkout do
       prepare build(sort: [sort_key: :asc, name: :asc])
+    end
+
+    update :update_calendar do
+      description "Admin-only update narrowed to the calendar overrides. " <>
+                    "Prevents accidental writes to pricing or fulfillment-method attrs."
+
+      accept [:available_days, :enabled_dates, :disabled_dates]
     end
   end
 
