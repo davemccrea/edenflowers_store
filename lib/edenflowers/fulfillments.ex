@@ -138,12 +138,8 @@ defmodule Edenflowers.Fulfillments do
     Enum.member?(disabled_dates, date)
   end
 
-  # Treats florist key dates as if they were always in `enabled_dates`, so the
-  # weekday rule cannot close them as collateral. An explicit `disabled_dates`
-  # entry still wins, and same-day operational rules still apply — the admin
-  # can deliberately close a key date, but cannot do so by accident.
   defp date_enabled?({%{enabled_dates: enabled_dates}, date, _}) do
-    Enum.member?(enabled_dates, date) or not is_nil(Edenflowers.Store.KeyDates.icon_for(date))
+    Enum.member?(enabled_dates, date)
   end
 
   defp weekday_enabled?({%{available_days: available_days}, date, _now}) do

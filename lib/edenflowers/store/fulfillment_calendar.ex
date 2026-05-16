@@ -24,7 +24,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   """
 
   alias Edenflowers.Fulfillments
-  alias Edenflowers.Store.{FulfillmentOption, KeyDates}
+  alias Edenflowers.Store.FulfillmentOption
 
   @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 
@@ -47,7 +47,6 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
       Date.compare(date, today) == :lt -> :past
       date in option.disabled_dates -> :override_off
       date in option.enabled_dates -> :open
-      key_date?(date) -> :open
       weekday_available?(option, date) -> :open
       true -> :weekday_off
     end
@@ -113,35 +112,25 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   end
 
   @doc """
-  Single-date admin view: cell state, override flag, and the optional key-date
-  name (used for the confirm prompt when an admin closes a holiday).
+  Single-date admin view: cell state and override flag together so the render
+  function makes one call per cell instead of two.
 
-  Returns the three pieces together so the render function makes one call per
-  cell instead of three. `override?` is intentionally `false` when scope is
-  `:all` — across options, "some override, some don't" can't be summarized
-  by one dot.
+  `override?` is intentionally `false` when scope is `:all` — across options,
+  "some override, some don't" can't be summarized by one dot.
   """
-  @type cell_view :: %{state: cell_state(), override?: boolean(), key_date_name: String.t() | nil}
+  @type cell_view :: %{state: cell_state(), override?: boolean()}
   @spec view_model(:all | String.t(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_view()
   def view_model(:all, options, date, today) do
-    %{
-      state: cell_state_for_options(options, date, today),
-      override?: false,
-      key_date_name: KeyDates.name_for(date)
-    }
+    %{state: cell_state_for_options(options, date, today), override?: false}
   end
 
   def view_model(option_id, options, date, today) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil ->
-        %{state: :open, override?: false, key_date_name: KeyDates.name_for(date)}
+        %{state: :open, override?: false}
 
       option ->
-        %{
-          state: cell_state(option, date, today),
-          override?: override?(option, date),
-          key_date_name: KeyDates.name_for(date)
-        }
+        %{state: cell_state(option, date, today), override?: override?(option, date)}
     end
   end
 
@@ -162,33 +151,16 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
 
     cond do
       date in enabled ->
-        # Remove the explicit on-override. Date returns to its weekday default.
         %{enabled_dates: List.delete(enabled, date), disabled_dates: disabled}
 
       date in disabled ->
-        # Remove the explicit off-override.
         %{enabled_dates: enabled, disabled_dates: List.delete(disabled, date)}
 
-      open_by_rules?(option, date) ->
-        # Currently open (by weekday rule or key-date protection) → close it.
+      weekday_available?(option, date) ->
         %{enabled_dates: enabled, disabled_dates: [date | disabled]}
 
       true ->
-        # Currently closed by weekday rule → open it.
         %{enabled_dates: [date | enabled], disabled_dates: disabled}
-    end
-  end
-
-  # Whether `date` is open given the option's rules — same predicate as
-  # `cell_state`, minus the past-date check. `toggle_date` works on rules,
-  # not the calendar clock, so a hypothetical past-date click should still
-  # produce a sensible result.
-  defp open_by_rules?(option, date) do
-    cond do
-      date in option.disabled_dates -> false
-      date in option.enabled_dates -> true
-      key_date?(date) -> true
-      true -> weekday_available?(option, date)
     end
   end
 
@@ -216,19 +188,8 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
         [weekday | option.available_days]
       end
 
-    # An override is stale when its presence and absence yield the same
-    # cell_state. For enabled_dates: open by rule, or a key date (which is
-    # protected regardless). For disabled_dates: closed by rule AND not a key
-    # date (key dates need the explicit disable to stay closed).
-    enabled =
-      Enum.reject(option.enabled_dates, fn date ->
-        weekday_atom(date) in available or key_date?(date)
-      end)
-
-    disabled =
-      Enum.reject(option.disabled_dates, fn date ->
-        weekday_atom(date) not in available and not key_date?(date)
-      end)
+    enabled = Enum.reject(option.enabled_dates, &(weekday_atom(&1) in available))
+    disabled = Enum.reject(option.disabled_dates, &(weekday_atom(&1) not in available))
 
     %{available_days: available, enabled_dates: enabled, disabled_dates: disabled}
   end
@@ -236,8 +197,6 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   defp weekday_available?(option, date) do
     weekday_atom(date) in option.available_days
   end
-
-  defp key_date?(date), do: not is_nil(KeyDates.icon_for(date))
 
   defp weekday_atom(date) do
     case Date.day_of_week(date) do

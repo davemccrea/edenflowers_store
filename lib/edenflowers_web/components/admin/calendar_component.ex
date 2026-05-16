@@ -2,10 +2,10 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   @moduledoc """
   Admin wrapper around `EdenflowersWeb.CalendarComponent`.
 
-  Holds every admin-specific binding — styling, key-date confirm, override
-  decoration, weekday-click — so the LiveView only orchestrates state. The
-  inner component keeps its checkout-shaped contract; this module bridges to
-  the admin view.
+  Holds every admin-specific binding — styling, override decoration,
+  weekday-click — so the LiveView only orchestrates state. The inner
+  component keeps its checkout-shaped contract; this module bridges to the
+  admin view.
   """
   use EdenflowersWeb, :html
 
@@ -36,12 +36,6 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
         fn day, state, opts ->
           view = FulfillmentCalendar.view_model(@scope, @options, day, @today)
           cell_class(day, state, opts, view.override?)
-        end
-      }
-      cell_confirm={
-        fn date ->
-          view = FulfillmentCalendar.view_model(@scope, @options, date, @today)
-          key_date_close_confirm(date, view)
         end
       }
       clickable_states={[:open, :weekday_off, :override_off]}
@@ -82,14 +76,6 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     </aside>
     """
   end
-
-  # Confirm message when an admin clicks a currently-open key date — they're
-  # about to close a florist-relevant holiday. Re-opening is safe, no confirm.
-  defp key_date_close_confirm(date, %{state: :open, key_date_name: name}) when is_binary(name) do
-    "#{name} (#{date}) is a florist key date. Close it?"
-  end
-
-  defp key_date_close_confirm(_date, _view), do: nil
 
   # Visual language: a florist's printed planner. Closed dates are crossed
   # out with a diagonal strike — the cell itself is marked as cancelled, not

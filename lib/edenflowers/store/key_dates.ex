@@ -34,17 +34,6 @@ defmodule Edenflowers.Store.KeyDates do
     end)
   end
 
-  @doc """
-  The display name of the key date if `date` is a florist key date, else `nil`.
-  Used by admin guard rails to name dates in confirm prompts.
-  """
-  @spec name_for(Date.t()) :: String.t() | nil
-  def name_for(%Date{} = date) do
-    Enum.find_value(@holidays, fn %{rule: rule, name: name} ->
-      if materialise(rule, date.year) == date, do: name
-    end)
-  end
-
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)
 
   defp materialise({:nth_weekday, month, weekday, n}, year) do
