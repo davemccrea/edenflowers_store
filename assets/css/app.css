@@ -296,16 +296,24 @@ body.ready {
   animation: quantity-pulse 400ms ease-out;
 }
 
+/* Cart line-item row entrance — applied transiently by JS.transition (phx-mounted) in
+   line_items_component.ex. The --enter-delay is set per-row via inline style so rows
+   stagger; the JS.transition time: arg must cover delay + duration so the class isn't
+   stripped early. Reduced-motion handling lives on the element via motion-reduce: utilities. */
+.line-item-row-enter {
+  transition-property: opacity, translate;
+  transition-duration: 260ms;
+  transition-timing-function: ease-out;
+  transition-delay: var(--enter-delay, 0ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .quantity-pulse {
     animation: none;
   }
 
-  /* Line-item row entrance — see phx-mounted in line_items_component.ex. */
-  .line-item-row {
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
+  .line-item-row-enter {
+    transition-property: opacity;
   }
 }
 

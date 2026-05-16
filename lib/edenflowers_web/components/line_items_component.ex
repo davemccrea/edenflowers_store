@@ -13,13 +13,14 @@ defmodule EdenflowersWeb.LineItemsComponent do
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
           <li
-            :for={line_item <- @order.line_items}
+            :for={{line_item, index} <- Enum.with_index(@order.line_items)}
             id={"#{@id}-row-#{line_item.id}"}
-            class="line-item-row flex translate-y-3 flex-row gap-4 text-base opacity-0"
+            class="line-item-row flex translate-y-6 flex-row gap-4 text-base opacity-0 motion-reduce:translate-y-0"
+            style={"--enter-delay: #{index * 60}ms"}
             phx-mounted={
               JS.transition(
-                {"transition-all duration-200 ease-out", "opacity-0 translate-y-3", "opacity-100 translate-y-0"},
-                time: 200
+                {"line-item-row-enter", "opacity-0 translate-y-6", "opacity-100 translate-y-0"},
+                time: 260 + index * 60
               )
             }
           >
@@ -73,7 +74,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -92,7 +93,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -104,10 +105,8 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  phx-value-id={line_item.id}
-                  phx-target={@myself}
+                  class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                  phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
@@ -118,10 +117,8 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  phx-value-id={line_item.id}
-                  phx-target={@myself}
+                  class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                  phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
@@ -156,6 +153,19 @@ defmodule EdenflowersWeb.LineItemsComponent do
       </script>
     </div>
     """
+  end
+
+  # Exit animation for a line-item row. JS.hide queues the transition; JS.push fires
+  # the server event immediately after, so the removal patch usually lands after the
+  # row has visually faded. Even if the patch wins the race, the row is already
+  # opacity-0 by then, so the DOM yank is invisible.
+  defp remove_row(row_id, line_item_id, target) do
+    JS.hide(
+      to: "##{row_id}",
+      transition: {"transition-all duration-200 ease-in", "opacity-100 translate-y-0", "opacity-0 -translate-y-2"},
+      time: 200
+    )
+    |> JS.push("remove_item", value: %{id: line_item_id}, target: target)
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
