@@ -15,11 +15,12 @@ defmodule EdenflowersWeb.CartDrawerComponent do
         class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
       >
         <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
-          <h1 class="section-title">
-            {~t"Cart"}<span
-              :if={not is_nil(@order.total_items_in_cart)}
-              class="text-base-content/60"
-            > · {@order.total_items_in_cart}</span>
+          <%!-- Asymmetric pr-4: brings the 48px close-button hitbox closer to the drawer's right edge. --%>
+          <h1 class="section-title flex items-baseline gap-2">
+            {~t"Cart"}
+            <span :if={not is_nil(@order.total_items_in_cart)} class="text-base-content/60 tabular-nums">
+              · {@order.total_items_in_cart}
+            </span>
           </h1>
 
           <.icon_button aria_label={~t"Close cart"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>

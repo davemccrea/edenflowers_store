@@ -13,16 +13,9 @@ defmodule EdenflowersWeb.LineItemsComponent do
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
           <li
-            :for={{line_item, index} <- Enum.with_index(@order.line_items)}
+            :for={line_item <- @order.line_items}
             id={"#{@id}-row-#{line_item.id}"}
-            class="line-item-row flex translate-y-6 flex-row gap-4 text-base opacity-0 motion-reduce:translate-y-0"
-            style={"--enter-delay: #{index * 60}ms"}
-            phx-mounted={
-              JS.transition(
-                {"line-item-row-enter", "opacity-0 translate-y-6", "opacity-100 translate-y-0"},
-                time: 260 + index * 60
-              )
-            }
+            class="flex flex-row gap-4 text-base"
           >
             <%= if @link_product and not line_item.is_card do %>
               <.link
@@ -74,7 +67,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                    class="cart-icon-button"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -86,14 +79,14 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     id={"#{@id}-qty-#{line_item.id}"}
                     data-quantity={line_item.quantity}
                     phx-hook="PulseOnChange"
-                    class="tabular-nums"
+                    class="tabular-nums motion-reduce:animate-none"
                   >
                     {line_item.quantity}
                   </span>
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                    class="cart-icon-button"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -105,7 +98,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                  class="cart-icon-button"
                   phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
@@ -117,7 +110,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 transition-transform duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50"
+                  class="cart-icon-button"
                   phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
@@ -147,7 +140,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
   defp remove_row(row_id, line_item_id, target) do
     JS.hide(
       to: "##{row_id}",
-      transition: {"transition-all duration-200 ease-in", "opacity-100 translate-y-0", "opacity-0 -translate-y-2"},
+      transition: {"transition-opacity duration-200 ease-in", "opacity-100", "opacity-0"},
       time: 200
     )
     |> JS.push("remove_item", value: %{id: line_item_id}, target: target)

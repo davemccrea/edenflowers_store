@@ -292,28 +292,45 @@ body.ready {
 }
 
 .quantity-pulse {
+  /* inline-block is load-bearing — transform: scale() is a no-op on inline elements,
+     and this class lands on a <span>. */
   display: inline-block;
   animation: quantity-pulse 400ms ease-out;
 }
 
-/* Cart line-item row entrance — applied transiently by JS.transition (phx-mounted) in
-   line_items_component.ex. The --enter-delay is set per-row via inline style so rows
-   stagger; the JS.transition time: arg must cover delay + duration so the class isn't
-   stripped early. Reduced-motion handling lives on the element via motion-reduce: utilities. */
+/* Cart line-item row entrance — applied transiently to newly-added rows by a
+   listener for the server-pushed `cart:item-added` event (see hooks.js). Using
+   a CSS animation (not a transition) means the timeline only runs while the
+   element is rendered and visible, which dodges the display:none drawer trap.
+   `translate` is set directly so we sidestep Tailwind v4's `--tw-translate-x`
+   composition (translate-y-* alone leaves the x component undefined). */
+@keyframes line-item-enter {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes line-item-enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .line-item-row-enter {
-  transition-property: opacity, translate;
-  transition-duration: 260ms;
-  transition-timing-function: ease-out;
-  transition-delay: var(--enter-delay, 0ms);
+  animation: line-item-enter 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quantity-pulse {
-    animation: none;
-  }
-
   .line-item-row-enter {
-    transition-property: opacity;
+    animation-name: line-item-enter-fade;
   }
 }
 
@@ -471,6 +488,13 @@ body.ready {
   @apply underline underline-offset-[0.2em];
   text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
   text-decoration-thickness: from-font;
+}
+
+@utility cart-icon-button {
+  /* transition-[scale,color] — Tailwind v4 emits `scale:` (not `transform:`) for active:scale-*,
+     so transition-transform wouldn't cover it. opacity is intentionally not transitioned so
+     phx-click-loading feedback is instant. */
+  @apply cursor-pointer p-1 transition-[scale,color] duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50;
 }
 
 #hotfx-shy-header {
