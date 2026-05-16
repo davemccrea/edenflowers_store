@@ -722,7 +722,28 @@ body.ready {
     top: 50%;
     height: 2px;
     border-radius: 9999px;
-    transform: translateY(-50%) rotate(-22deg);
+    transform: translateY(-50%) rotate(45deg);
+    @apply bg-error/75;
+  }
+
+  &:hover::after {
+    @apply bg-error;
+  }
+}
+
+/* Tighter strike for smaller elements (weekday header buttons). Same angle
+   and colour as calendar-strike-after — just a shorter visible span so the
+   slash doesn't overshoot a 3-letter label. */
+@utility calendar-strike-after-tight {
+  &::after {
+    content: "";
+    position: absolute;
+    left: 32%;
+    right: 32%;
+    top: 50%;
+    height: 2px;
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(45deg);
     @apply bg-error/75;
   }
 
@@ -740,7 +761,7 @@ body.ready {
     top: 50%;
     height: 2px;
     border-radius: 9999px;
-    transform: translateY(-50%) rotate(-22deg);
+    transform: translateY(-50%) rotate(45deg);
     @apply bg-error/75;
   }
 }

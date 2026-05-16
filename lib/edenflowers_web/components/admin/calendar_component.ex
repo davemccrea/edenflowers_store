@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
 
   defp weekday_class(state) do
     base =
-      "rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider " <>
+      "relative rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider " <>
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
 
     state_class =
@@ -134,8 +134,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
           "cursor-pointer text-base-content/65 hover:text-base-content/85 hover:bg-primary/10"
 
         :off ->
-          "cursor-pointer bg-base-content/10 text-base-content/65 line-through decoration-2 decoration-error/75 " <>
-            "hover:bg-primary/10 hover:decoration-error"
+          "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after-tight"
 
         :mixed ->
           "cursor-not-allowed text-base-content/85 #{@mixed_tile_class}"
