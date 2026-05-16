@@ -88,7 +88,7 @@ defmodule Edenflowers.Fulfillments do
   @doc """
   Check if the order can be fulfilled on the given date.
 
-  A date can be fufilled except when:
+  A date can be fulfilled except when:
 
     - The date is in the past
     - The date is disabled
@@ -96,17 +96,14 @@ defmodule Edenflowers.Fulfillments do
     - The date is today but the deadline for same day delivery has passed
     - The date is today but same day delivery is disabled
   """
-  @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: {boolean(), atom()}
-  def fulfill_on_date(fulfillment_option = %FulfillmentOption{}, date, now \\ now()) do
-    params = {fulfillment_option, date, now}
-
-    case {date_past?(params), date_disabled?(params), date_enabled?(params), weekday_enabled?(params),
-          fulfill_today?(params)} do
-      {true, _, _, _, _} -> {false, :past}
-      {_, true, _, _, _} -> {false, :date_disabled}
-      {_, _, false, false, _} -> {false, :weekday_disabled}
-      {_, _, _, _, {false, reason}} -> {false, reason}
-      _ -> {true, :ok}
+  @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: :ok | {:error, atom()}
+  def fulfill_on_date(%FulfillmentOption{} = option, date, now \\ now()) do
+    cond do
+      date_past?(date, now) -> {:error, :past}
+      date_disabled?(option, date) -> {:error, :date_disabled}
+      not date_enabled?(option, date) and not weekday_enabled?(option, date) -> {:error, :weekday_disabled}
+      (reason = today_blocked_reason(option, date, now)) != nil -> {:error, reason}
+      true -> :ok
     end
   end
 
@@ -134,10 +131,10 @@ defmodule Edenflowers.Fulfillments do
   @spec customer_cell_state(FulfillmentOption.t(), Date.t(), DateTime.t()) :: customer_cell_state()
   def customer_cell_state(fulfillment_option, date, now \\ now()) do
     case fulfill_on_date(fulfillment_option, date, now) do
-      {true, _} -> :open
-      {false, :date_disabled} -> :closed
-      {false, :weekday_disabled} -> :closed
-      {false, _past_or_same_day} -> :past
+      :ok -> :open
+      {:error, :date_disabled} -> :closed
+      {:error, :weekday_disabled} -> :closed
+      {:error, _past_or_same_day} -> :past
     end
   end
 
@@ -153,36 +150,26 @@ defmodule Edenflowers.Fulfillments do
       Date.compare(date, today) == :lt -> :past
       date in option.disabled_dates -> :date_disabled
       date in option.enabled_dates -> :open
-      weekday_enabled?({option, date, nil}) -> :open
+      weekday_enabled?(option, date) -> :open
       true -> :weekday_disabled
     end
   end
 
-  defp date_past?({_, date, now}) do
-    Date.compare(date, now) == :lt
+  defp date_past?(date, now), do: Date.compare(date, now) == :lt
+
+  defp date_disabled?(option, date), do: date in option.disabled_dates
+
+  defp date_enabled?(option, date), do: date in option.enabled_dates
+
+  defp weekday_enabled?(option, date), do: Weekday.from_date(date) in option.available_days
+
+  defp today_blocked_reason(%{same_day: false}, date, now) do
+    if date_today?(date, now), do: :same_day_delivery_disabled
   end
 
-  defp date_disabled?({%{disabled_dates: disabled_dates}, date, _}) do
-    Enum.member?(disabled_dates, date)
-  end
-
-  defp date_enabled?({%{enabled_dates: enabled_dates}, date, _}) do
-    Enum.member?(enabled_dates, date)
-  end
-
-  defp weekday_enabled?({%{available_days: available_days}, date, _now}) do
-    Weekday.from_date(date) in available_days
-  end
-
-  defp fulfill_today?({%{same_day: false, order_deadline: _order_deadline}, date, now}) do
-    if date_today?(date, now) do
-      {false, :same_day_delivery_disabled}
-    end
-  end
-
-  defp fulfill_today?({%{same_day: true, order_deadline: order_deadline}, date, now}) do
+  defp today_blocked_reason(%{same_day: true, order_deadline: order_deadline}, date, now) do
     if date_today?(date, now) and Time.compare(now, order_deadline) == :gt do
-      {false, :order_deadline_passed}
+      :order_deadline_passed
     end
   end
 

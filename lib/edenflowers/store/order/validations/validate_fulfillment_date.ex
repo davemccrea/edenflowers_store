@@ -26,8 +26,8 @@ defmodule Edenflowers.Store.Order.Validations.ValidateFulfillmentDate do
     case FulfillmentOption.get_by_id(option_id, authorize?: false) do
       {:ok, option} ->
         case Fulfillments.fulfill_on_date(option, date) do
-          {true, _} -> :ok
-          {false, reason} -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
+          :ok -> :ok
+          {:error, reason} -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
         end
 
       _ ->
