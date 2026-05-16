@@ -133,10 +133,8 @@ defmodule EdenflowersWeb.LineItemsComponent do
     """
   end
 
-  # Exit animation for a line-item row. JS.hide queues the transition; JS.push fires
-  # the server event immediately after, so the removal patch usually lands after the
-  # row has visually faded. Even if the patch wins the race, the row is already
-  # opacity-0 by then, so the DOM yank is invisible.
+  # JS.hide and JS.push fire in parallel, but the row reaches opacity-0 before
+  # the server's removal patch lands, so the DOM yank is invisible.
   defp remove_row(row_id, line_item_id, target) do
     JS.hide(
       to: "##{row_id}",

@@ -35,12 +35,10 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
 
   defp handle_line_item_changed(_, socket), do: {:cont, socket}
 
-  # The cart drawer's line-item entrance animation fires only for genuinely new
-  # rows. The :add_to_cart action is an upsert configured as `create`, so its
-  # `action.type` is always :create even when it takes the update path; the
-  # only reliable insert-vs-update signal at this layer is whether the id was
-  # already in the previously-loaded line items. If it was, the quantity bump
-  # falls through to PulseOnChange and no row-level animation runs.
+  # `:add_to_cart` is an upsert configured as `create`, so `action.type` is
+  # always `:create` even on the update path. The only reliable insert-vs-update
+  # signal here is whether the id was in the previously-loaded line items;
+  # known ids fall through to PulseOnChange for the quantity bump.
   defp maybe_animate_new_line_item(socket, "add_to_cart", %{data: %{id: id}}, previous_ids) do
     if id in previous_ids do
       socket

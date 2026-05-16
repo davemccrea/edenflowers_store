@@ -274,8 +274,6 @@ body.ready {
   }
 }
 
-/* Cart line-item quantity pulse — driven by the .PulseOnChange hook in line_items_component.ex.
-   The hook adds .quantity-pulse to the quantity <span> whenever its data-quantity attribute changes. */
 @keyframes quantity-pulse {
   0% {
     transform: scale(1);
@@ -298,12 +296,9 @@ body.ready {
   animation: quantity-pulse 400ms ease-out;
 }
 
-/* Cart line-item row entrance — applied transiently to newly-added rows by a
-   listener for the server-pushed `cart:item-added` event (see hooks.js). Using
-   a CSS animation (not a transition) means the timeline only runs while the
-   element is rendered and visible, which dodges the display:none drawer trap.
-   `translate` is set directly so we sidestep Tailwind v4's `--tw-translate-x`
-   composition (translate-y-* alone leaves the x component undefined). */
+/* `translate` is set directly rather than via Tailwind's `translate-y-*` —
+   Tailwind v4 composes through `--tw-translate-x`, which leaves the x axis
+   undefined when only the y utility is applied. */
 @keyframes line-item-enter {
   from {
     opacity: 0;

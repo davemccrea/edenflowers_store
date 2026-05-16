@@ -174,18 +174,6 @@ Hooks.CharacterCount = {
   },
 };
 
-/**
- * Re-runs the `.quantity-pulse` CSS animation each time the element's
- * data-quantity changes. Used on cart line-item quantity counters so the
- * digit visibly pulses when +/- is clicked, even though the same DOM node
- * is reused across LiveView morphs.
- *
- * Markup contract:
- *   <span phx-hook="PulseOnChange" data-quantity={quantity}>{quantity}</span>
- *
- * The matching keyframes live in app.css (`.quantity-pulse` /
- * `@keyframes quantity-pulse`).
- */
 Hooks.PulseOnChange = {
   mounted() {
     this.last = this.el.dataset.quantity;
@@ -844,15 +832,6 @@ Hooks.HotFxShyHeader = {
   },
 };
 
-/**
- * Cart line-item entrance — listens for the server-pushed `cart:item-added`
- * event (see Order add handlers) and adds `.line-item-row-enter` to the new
- * row so its CSS @keyframes animation runs. Class is removed on `animationend`
- * so the row stays static after, and a stray re-fire wouldn't double-animate.
- *
- * The event payload is `{ id: <line_item_id> }`. The row's DOM id pattern is
- * established by LineItemsComponent: `cart-line-items-row-#{line_item.id}`.
- */
 window.addEventListener("phx:cart:item-added", (event) => {
   const id = event.detail?.id;
   if (!id) return;
