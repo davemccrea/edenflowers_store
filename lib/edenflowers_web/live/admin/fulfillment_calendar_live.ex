@@ -29,14 +29,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
      socket
      |> assign(:page_title, "Fulfillment Calendar")
      |> assign(:options, options)
-     |> assign(:scope, :all)}
+     |> assign(:scope, :all)
+     |> assign(:today, today())}
   end
 
   @impl true
   def render(assigns) do
-    today = @timezone |> DateTime.now!() |> DateTime.to_date()
-    assigns = assign(assigns, :today, today)
-
     ~H"""
     <div class="container mx-auto py-10">
       <header class="mb-8 max-w-2xl">
@@ -122,6 +120,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     assign(socket, :options, Enum.map(options, &Map.get(updated_by_id, &1.id, &1)))
   end
+
+  defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
   defp scope_button_class(true) do
     "rounded border border-primary bg-primary text-primary-content px-3.5 py-1.5 text-sm font-medium " <>
