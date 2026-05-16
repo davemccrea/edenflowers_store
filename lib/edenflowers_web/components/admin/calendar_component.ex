@@ -48,6 +48,12 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
           weekday_class(FulfillmentCalendar.weekday_state(@scope, @options, weekday))
         end
       }
+      on_week_click={:fulfillment_week_toggled}
+      week_class={
+        fn week ->
+          week_class(scope_week_state(@scope, @options, week, @today))
+        end
+      }
     >
       <:day_decoration :let={%{date: day, state: state}}>
         <.key_date_icon date={day} muted?={state == :past} />
@@ -65,11 +71,18 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     <aside class="text-sm md:max-w-xs md:pt-2">
       <h2 class="eyebrow text-base-content/55 mb-3">Legend</h2>
       <ul class="text-base-content/85 space-y-2 leading-snug">
-        <li class="flex items-center"><span class={legend_swatch(:closed)}></span> Closed</li>
         <li class="flex items-center">
-          <span class={legend_swatch(:override)}></span> Override (contradicts weekday rule)
+          <span class={legend_swatch(:closed)}></span>
+          <span>Closed for bookings <span class="text-base-content/55">— not selectable by customers</span></span>
         </li>
-        <li class="flex items-center"><span class={legend_swatch(:mixed)}></span> Mixed (options disagree)</li>
+        <li class="flex items-center">
+          <span class={legend_swatch(:override)}></span>
+          <span>Manually changed <span class="text-base-content/55">— your override on this date</span></span>
+        </li>
+        <li class="flex items-center">
+          <span class={legend_swatch(:mixed)}></span>
+          <span>Varies by option <span class="text-base-content/55">— switch to a single option to edit</span></span>
+        </li>
       </ul>
     </aside>
     """
@@ -83,6 +96,33 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :open
       option -> Fulfillments.admin_cell_state(option, date, today)
+    end
+  end
+
+  # Aggregate week state across the current scope. From the button's POV three
+  # outcomes matter: everything open, everything closed, anything else (mixed),
+  # or whole week in the past. Cross-option disagreement just folds into :mixed
+  # — the bulk gesture is the gesture for that case.
+  defp scope_week_state(scope, options, week, today) do
+    targets =
+      case scope do
+        :all -> options
+        id -> Enum.filter(options, &(&1.id == id))
+      end
+
+    case targets do
+      [] ->
+        :all_open
+
+      list ->
+        states = Enum.map(list, &FulfillmentCalendar.week_state(&1, week, today))
+
+        cond do
+          Enum.all?(states, &(&1 == :all_past)) -> :all_past
+          Enum.all?(states, &(&1 == :all_open)) -> :all_open
+          Enum.all?(states, &(&1 == :all_closed)) -> :all_closed
+          true -> :mixed
+        end
     end
   end
 
@@ -121,6 +161,25 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     "#{base} #{state_class}#{today_class}#{override_class}"
   end
 
+  defp week_class(state) do
+    base =
+      "flex items-center justify-center rounded text-base-content/55 " <>
+        "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
+
+    case state do
+      :all_past ->
+        "#{base} cursor-not-allowed text-base-content/20"
+
+      :all_closed ->
+        # Click re-opens what's closed by override. Muted to signal that the
+        # default direction is "open" — the opposite of every other state.
+        "#{base} cursor-pointer text-base-content/35 hover:bg-primary/10 hover:text-base-content/65"
+
+      _open_or_mixed ->
+        "#{base} cursor-pointer hover:bg-primary/10 hover:text-base-content/85"
+    end
+  end
+
   defp weekday_class(state) do
     base =
       "relative rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider " <>
@@ -137,7 +196,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
           "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after-tight"
 
         :mixed ->
-          "cursor-not-allowed text-base-content/85 #{@mixed_tile_class}"
+          "cursor-pointer text-base-content/85 hover:bg-primary/10 #{@mixed_tile_class}"
       end
 
     "#{base} #{state_class}"

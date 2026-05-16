@@ -92,6 +92,18 @@ defmodule EdenflowersWeb.CalendarComponent do
       "Optional (weekday_atom -> css_classes). Applied to each weekday header. Only meaningful when " <>
         "`on_weekday_click` is set. Defaults to a neutral button look."
 
+  attr :on_week_click, :any,
+    default: nil,
+    doc:
+      "Optional. When set, each week gets a leading button that emits `{tag, [Date.t()]}` " <>
+        "with the week's 7 dates. When unset, no button is rendered."
+
+  attr :week_class, :any,
+    default: nil,
+    doc:
+      "Optional ([Date.t()] -> css_classes). Applied to each week button. Only meaningful when " <>
+        "`on_week_click` is set. Defaults to a neutral button look."
+
   attr :error, :boolean, default: false
 
   slot :day_decoration,
@@ -151,8 +163,9 @@ defmodule EdenflowersWeb.CalendarComponent do
 
       <div
         aria-hidden={if @on_weekday_click, do: nil, else: "true"}
-        class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6"
+        class={["border-base-content/20 mt-2 grid border-b text-center text-sm leading-6", if(@on_week_click, do: "grid-cols-[1.5rem_repeat(7,_1fr)] gap-x-1", else: "grid-cols-7")]}
       >
+        <span :if={@on_week_click} aria-hidden="true"></span>
         <%= for week_day <- List.first(@week_rows) do %>
           <%= if @on_weekday_click do %>
             <button
@@ -174,7 +187,23 @@ defmodule EdenflowersWeb.CalendarComponent do
       </div>
 
       <div id={"#{@id}-grid"} class="mt-1 flex flex-col gap-0.5">
-        <div :for={week <- @week_rows} class="grid grid-cols-7 gap-0.5">
+        <div
+          :for={week <- @week_rows}
+          class={if @on_week_click,
+      do: "grid-cols-[1.5rem_repeat(7,_1fr)] grid gap-x-1 gap-y-0.5",
+      else: "grid grid-cols-7 gap-0.5"}
+        >
+          <button
+            :if={@on_week_click}
+            type="button"
+            phx-target={@myself}
+            phx-click="week-click"
+            phx-value-week={Enum.map_join(week, ",", &Date.to_iso8601/1)}
+            aria-label={week_aria_label(week)}
+            class={@week_class.(week)}
+          >
+            <.icon name="hero-arrows-right-left" class="h-3 w-3" />
+          </button>
           <%= for day <- week do %>
             <%= if current_month?(day, @view_date) do %>
               <% state = @cell_state.(day) %>
@@ -238,6 +267,15 @@ defmodule EdenflowersWeb.CalendarComponent do
   def handle_event("weekday-click", %{"weekday" => weekday_string}, socket) do
     if tag = socket.assigns.on_weekday_click do
       send(self(), {tag, String.to_existing_atom(weekday_string)})
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("week-click", %{"week" => week_string}, socket) do
+    if tag = socket.assigns.on_week_click do
+      week = week_string |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
+      send(self(), {tag, week})
     end
 
     {:noreply, socket}
@@ -321,6 +359,12 @@ defmodule EdenflowersWeb.CalendarComponent do
   defp weekday_aria_label(date) do
     full = Localize.DateTime.to_string!(date, format: "EEEE")
     ~t"Toggle " <> full
+  end
+
+  defp week_aria_label(week) do
+    first = Localize.DateTime.to_string!(List.first(week), format: "d MMM")
+    last = Localize.DateTime.to_string!(List.last(week), format: "d MMM")
+    ~t"Toggle week" <> " #{first} – #{last}"
   end
 
   defp day_aria_label(day, today_date, selected_date, selectable?) do

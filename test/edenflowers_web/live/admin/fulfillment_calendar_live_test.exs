@@ -94,12 +94,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       refute :monday in reloaded_pickup.available_days
     end
 
-    test "is a no-op when the weekday is :mixed", %{
+    test "closes the weekday everywhere when options disagree and at least one has it on", %{
       conn: conn,
       delivery: delivery,
       pickup: pickup
     } do
-      # Saturday: delivery=off, pickup=on → :mixed
+      # Saturday: delivery=off, pickup=on. The smart toggle aggregates: any
+      # option has Saturday on → click closes Saturday everywhere.
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
 
       view
@@ -112,7 +113,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
 
       refute :saturday in reloaded_delivery.available_days
-      assert :saturday in reloaded_pickup.available_days
+      refute :saturday in reloaded_pickup.available_days
     end
 
     test "toggling a weekday updates only the scoped option", %{
@@ -161,6 +162,73 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
       assert future in reloaded.disabled_dates
+    end
+  end
+
+  describe "reset" do
+    test "wipes overrides and reopens every weekday for the scoped option", %{
+      conn: conn,
+      delivery: delivery
+    } do
+      # Seed delivery with an override and a non-default weekday rule.
+      {:ok, _} =
+        FulfillmentOption.update_calendar(
+          delivery,
+          %{
+            available_days: [:monday],
+            enabled_dates: [~D[2026-12-25]],
+            disabled_dates: [~D[2026-12-26]]
+          },
+          authorize?: false
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+
+      view
+      |> element(~s|button[phx-click="set-scope"][phx-value-scope="#{delivery.id}"]|)
+      |> render_click()
+
+      view
+      |> element(~s|button[phx-click="reset-calendar"]|)
+      |> render_click()
+
+      drain(view)
+
+      reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+
+      assert Enum.sort(reloaded.available_days) ==
+               [:friday, :monday, :saturday, :sunday, :thursday, :tuesday, :wednesday]
+
+      assert reloaded.enabled_dates == []
+      assert reloaded.disabled_dates == []
+    end
+
+    test "resets every option when scope is :all", %{
+      conn: conn,
+      delivery: delivery,
+      pickup: pickup
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+
+      view
+      |> element(~s|button[phx-click="reset-calendar"]|)
+      |> render_click()
+
+      drain(view)
+
+      reloaded_delivery = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+      reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
+
+      for option <- [reloaded_delivery, reloaded_pickup] do
+        assert :sunday in option.available_days
+        assert option.enabled_dates == []
+        assert option.disabled_dates == []
+      end
+    end
+
+    test "renders a data-confirm attribute on the reset button", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/admin/fulfillment-calendar")
+      assert html =~ "Are you sure you want to reset the calendar?"
     end
   end
 

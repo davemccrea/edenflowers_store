@@ -24,7 +24,9 @@ defmodule Edenflowers.Store.FulfillmentOption do
     define :get_by_id, action: :by_id, args: [:id]
     define :update_calendar, action: :update_calendar
     define :toggle_date, action: :toggle_date, args: [:date]
-    define :toggle_weekday, action: :toggle_weekday, args: [:weekday]
+    define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
+    define :set_week, action: :set_week, args: [:week, :today, :direction]
+    define :reset_calendar, action: :reset_calendar
   end
 
   actions do
@@ -93,11 +95,27 @@ defmodule Edenflowers.Store.FulfillmentOption do
       change Edenflowers.Store.FulfillmentOption.Changes.ToggleDate
     end
 
-    update :toggle_weekday do
-      description "Toggle a single weekday on or off, also pruning now-redundant overrides per FulfillmentCalendar."
+    update :set_weekday do
+      description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per FulfillmentCalendar."
       require_atomic? false
       argument :weekday, :atom, allow_nil?: false
-      change Edenflowers.Store.FulfillmentOption.Changes.ToggleWeekday
+      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
+      change Edenflowers.Store.FulfillmentOption.Changes.SetWeekday
+    end
+
+    update :set_week do
+      description "Set every non-past date in `week` to :open or :closed, idempotently."
+      require_atomic? false
+      argument :week, {:array, :date}, allow_nil?: false
+      argument :today, :date, allow_nil?: false
+      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:open, :closed]]
+      change Edenflowers.Store.FulfillmentOption.Changes.SetWeek
+    end
+
+    update :reset_calendar do
+      description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
+      require_atomic? false
+      change Edenflowers.Store.FulfillmentOption.Changes.ResetCalendar
     end
   end
 

@@ -75,7 +75,18 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
           />
         </div>
 
-        <.admin_calendar_legend />
+        <div class="flex flex-col gap-4">
+          <.admin_calendar_legend />
+          <button
+            type="button"
+            phx-click="reset-calendar"
+            data-confirm={reset_confirm_message()}
+            aria-label="Reset calendar to defaults"
+            class={reset_button_class()}
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
     """
@@ -90,18 +101,40 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     {:noreply, assign(socket, :scope, id)}
   end
 
+  def handle_event("reset-calendar", _, socket) do
+    {:noreply, apply_to_scope(socket, &FulfillmentOption.reset_calendar!(&1, actor: &2))}
+  end
+
   @impl true
   def handle_info({:fulfillment_date_toggled, date}, socket) do
     {:noreply, apply_to_scope(socket, &FulfillmentOption.toggle_date!(&1, date, actor: &2))}
   end
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
-    if FulfillmentCalendar.weekday_state(socket.assigns.scope, socket.assigns.options, weekday) == :mixed do
-      {:noreply, socket}
-    else
-      {:noreply, apply_to_scope(socket, &FulfillmentOption.toggle_weekday!(&1, weekday, actor: &2))}
+    targets = scoped_options(socket)
+    direction = FulfillmentCalendar.weekday_toggle_direction(targets, weekday)
+
+    {:noreply, apply_to_scope(socket, &FulfillmentOption.set_weekday!(&1, weekday, direction, actor: &2))}
+  end
+
+  def handle_info({:fulfillment_week_toggled, week}, socket) do
+    %{today: today} = socket.assigns
+    targets = scoped_options(socket)
+
+    case FulfillmentCalendar.week_toggle_direction(targets, week, today) do
+      nil ->
+        # Whole week is in the past — nothing to do.
+        {:noreply, socket}
+
+      direction ->
+        {:noreply, apply_to_scope(socket, &FulfillmentOption.set_week!(&1, week, today, direction, actor: &2))}
     end
   end
+
+  defp scoped_options(%{assigns: %{scope: :all, options: options}}), do: options
+
+  defp scoped_options(%{assigns: %{scope: id, options: options}}),
+    do: Enum.filter(options, &(&1.id == id))
 
   defp apply_to_scope(socket, fun) do
     %{scope: scope, options: options, current_user: actor} = socket.assigns
@@ -118,6 +151,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   end
 
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
+
+  defp reset_confirm_message, do: "Are you sure you want to reset the calendar? This action is destructive."
+
+  defp reset_button_class do
+    "self-start rounded px-3.5 py-1.5 text-sm text-base-content/55 " <>
+      "hover:text-base-content/85 hover:bg-error/10 " <>
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
+  end
 
   defp scope_button_class(true) do
     "rounded border border-primary bg-primary text-primary-content px-3.5 py-1.5 text-sm font-medium " <>

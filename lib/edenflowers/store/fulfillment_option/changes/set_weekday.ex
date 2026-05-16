@@ -1,8 +1,9 @@
-defmodule Edenflowers.Store.FulfillmentOption.Changes.ToggleWeekday do
+defmodule Edenflowers.Store.FulfillmentOption.Changes.SetWeekday do
   @moduledoc """
-  Applies the weekday-toggle semantics from `FulfillmentCalendar.toggle_weekday/2`
-  to the changeset. Delegates to the pure function so the calculation stays
-  unit-testable without a DB roundtrip.
+  Applies the directional per-weekday rule change from
+  `FulfillmentCalendar.set_weekday/3` to the changeset. Delegates to the
+  pure function so the calculation stays unit-testable without a DB
+  roundtrip.
   """
   use Ash.Resource.Change
 
@@ -11,10 +12,11 @@ defmodule Edenflowers.Store.FulfillmentOption.Changes.ToggleWeekday do
   @impl true
   def change(changeset, _opts, _context) do
     weekday = Ash.Changeset.get_argument(changeset, :weekday)
+    direction = Ash.Changeset.get_argument(changeset, :direction)
     option = changeset.data
 
     %{available_days: available, enabled_dates: enabled, disabled_dates: disabled} =
-      FulfillmentCalendar.toggle_weekday(option, weekday)
+      FulfillmentCalendar.set_weekday(option, weekday, direction)
 
     changeset
     |> Ash.Changeset.force_change_attribute(:available_days, available)
