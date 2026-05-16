@@ -364,7 +364,8 @@ defmodule EdenflowersWeb.CheckoutLive do
       class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
     >
       <span>{render_slot(@inner_block)}</span>
-      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
+      <%!-- 250ms gate so sub-threshold submits never flash a spinner. --%>
+      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading opacity-0 transition-opacity duration-0 phx-submit-loading:opacity-100 phx-submit-loading:delay-[250ms]"></span>
     </button>
     """
   end
