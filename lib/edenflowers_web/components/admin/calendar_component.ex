@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
           cell_class(day, state, opts, scope_override?(@scope, @options, day))
         end
       }
-      clickable_states={[:open, :weekday_off, :override_off]}
+      clickable_states={[:open, :weekday_disabled, :date_disabled]}
       on_click={:fulfillment_date_toggled}
       on_weekday_click={:fulfillment_weekday_toggled}
       weekday_class={
@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   defp scope_cell_state(option_id, options, date, today) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :open
-      option -> Fulfillments.cell_state(option, date, today, audience: :admin)
+      option -> Fulfillments.admin_cell_state(option, date, today)
     end
   end
 
@@ -114,8 +114,8 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     state_class =
       case state do
         :open -> "cursor-pointer text-base-content/85 hover:bg-primary/10"
-        :weekday_off -> closed_class
-        :override_off -> closed_class
+        :weekday_disabled -> closed_class
+        :date_disabled -> closed_class
         :past -> "cursor-not-allowed text-base-content/35"
         :mixed -> "cursor-not-allowed text-base-content/65 #{@mixed_tile_class}"
       end

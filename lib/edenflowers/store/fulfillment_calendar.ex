@@ -9,7 +9,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   ## Click semantics
 
   - Clicking a **weekday header** toggles that weekday in `available_days`.
-    This is the default rule for that day of the week.
+    This is the default rule for that weekday.
 
   - Clicking a **date cell** toggles an *override*:
     - If the date's weekday is currently available, the click adds the date
@@ -32,10 +32,10 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   @type scope :: :all | String.t()
 
   @typedoc """
-  `Fulfillments.cell_state/4` outputs plus `:mixed`, which only happens in the
-  admin "All options" view when options disagree on a date.
+  `Fulfillments.admin_cell_state/3` outputs plus `:mixed`, which only happens
+  in the admin "All options" view when options disagree on a date.
   """
-  @type cell_state :: Fulfillments.cell_state() | :mixed
+  @type cell_state :: Fulfillments.admin_cell_state() | :mixed
 
   @doc """
   Whether the date's state is set by an explicit override rather than its
@@ -58,7 +58,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
 
   def cell_state_for_options(options, date, today) when is_list(options) do
     options
-    |> Enum.map(&Fulfillments.cell_state(&1, date, today, audience: :admin))
+    |> Enum.map(&Fulfillments.admin_cell_state(&1, date, today))
     |> Enum.uniq()
     |> case do
       [single] -> single

@@ -54,29 +54,31 @@ defmodule EdenflowersWeb.CalendarComponent do
   attr :cell_state, :any,
     default: nil,
     doc:
-      "(Date.t() -> :open | :past | :weekday_off | :override_off). " <>
-        "Drives both clickability (only :open is clickable) and styling. " <>
-        "Defaults to always-:open."
+      "(Date.t() -> atom). The caller picks the vocabulary; this component only " <>
+        "uses the returned atom to look up styling (`cell_class`) and clickability " <>
+        "(`clickable_states`). Customer checkout uses `:open | :closed | :past`; " <>
+        "the admin editor uses `:open | :past | :weekday_disabled | :date_disabled | :mixed`. " <>
+        "Defaults to always-`:open`."
 
   attr :cell_class, :any,
     default: nil,
     doc:
       "Optional (Date.t(), cell_state, opts -> css_classes). Overrides default per-state styling. " <>
         "`opts` is a keyword list with `:selected?` and `:today?` so the override can compose with " <>
-        "the standard selected/today affordances. Defaults to a single closed style for all non-:open states."
+        "the standard selected/today affordances. Defaults to a single closed style for all non-`:open` states."
 
   attr :clickable_states, :any,
     default: nil,
     doc:
       "List of cell states that propagate a click. Defaults to `[:open]` (checkout's " <>
-        "guarantee that only valid dates reach the parent). Admin editors typically pass " <>
-        "`[:open, :weekday_off, :override_off]` so every cell can be toggled."
+        "guarantee that only valid dates reach the parent). Admin editors pass the set " <>
+        "of toggleable admin states so every editable cell propagates a click."
 
   attr :on_click, :any,
     default: :date_selected,
     doc:
       "Message tag (atom) sent to the parent as `{tag, date}` on a valid click. " <>
-        "Defaults to `:date_selected` (the legacy checkout contract)."
+        "Defaults to `:date_selected`, which the checkout LiveView handles."
 
   attr :on_weekday_click, :any,
     default: nil,
@@ -264,9 +266,9 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   @doc false
-  # Default per-state styling. All non-:open states collapse to a single closed style
+  # Default per-state styling. All non-`:open` states collapse to a single closed style
   # so customers see one "unavailable" look. The admin editor passes its own `cell_class`
-  # to distinguish weekday-off vs override-off vs past.
+  # to distinguish `:weekday_disabled`, `:date_disabled`, and `:past`.
   def default_cell_class(_day, state, opts) do
     selected? = Keyword.get(opts, :selected?, false)
     today? = Keyword.get(opts, :today?, false)

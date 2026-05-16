@@ -209,7 +209,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                             }
                             selected_date={@form[:fulfillment_date].value}
                             module={EdenflowersWeb.CalendarComponent}
-                            cell_state={fn date -> Fulfillments.cell_state(@order.fulfillment_option, date) end}
+                            cell_state={fn date -> Fulfillments.customer_cell_state(@order.fulfillment_option, date) end}
                           >
                             <:day_decoration :let={day}>
                               <.icon

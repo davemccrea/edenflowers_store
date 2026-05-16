@@ -4,7 +4,7 @@ defmodule Edenflowers.Store.KeyDatesTest do
   alias Edenflowers.Store.KeyDates
 
   describe "for_year/1" do
-    test "materialises the five known holidays for 2026" do
+    test "materialises the five known key dates for 2026" do
       by_name = KeyDates.for_year(2026) |> Map.new(fn %{name: n, date: d} -> {n, d} end)
 
       assert by_name["Valentine's Day"] == ~D[2026-02-14]
@@ -35,7 +35,7 @@ defmodule Edenflowers.Store.KeyDatesTest do
   end
 
   describe "icon_for/1" do
-    test "returns the icon for each holiday in 2026" do
+    test "returns the icon for each key date in 2026" do
       assert KeyDates.icon_for(~D[2026-02-14]) == "hero-heart-solid"
       assert KeyDates.icon_for(~D[2026-03-08]) == "hero-sparkles-solid"
       assert KeyDates.icon_for(~D[2026-05-10]) == "hero-heart-solid"
@@ -49,7 +49,7 @@ defmodule Edenflowers.Store.KeyDatesTest do
       assert KeyDates.icon_for(~D[2027-05-10]) == nil
     end
 
-    test "returns nil for non-holiday dates" do
+    test "returns nil for non-key dates" do
       assert KeyDates.icon_for(~D[2026-06-15]) == nil
     end
   end

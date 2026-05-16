@@ -57,7 +57,7 @@ defmodule Edenflowers.FulfillmentsTest do
       assert {false, :past} = Fulfillments.fulfill_on_date(fulfillment_option, ~D[2023-09-14], now)
     end
 
-    test "returns :day_of_week_disabled when day of week is disabled", %{tax_rate_id: tax_rate_id} do
+    test "returns :weekday_disabled when day of week is disabled", %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
         generate(
           fulfillment_option(
@@ -69,7 +69,7 @@ defmodule Edenflowers.FulfillmentsTest do
       now = DateTime.from_naive!(~N[2023-09-09 20:15:00], "Europe/Helsinki")
 
       # 10th Sept 2023 is a Sunday
-      assert {false, :day_of_week_disabled} = Fulfillments.fulfill_on_date(fulfillment_option, ~D[2023-09-10], now)
+      assert {false, :weekday_disabled} = Fulfillments.fulfill_on_date(fulfillment_option, ~D[2023-09-10], now)
     end
 
     test "returns :same_day_delivery_disabled when same day fulfillment is not enabled", %{tax_rate_id: tax_rate_id} do
@@ -132,24 +132,20 @@ defmodule Edenflowers.FulfillmentsTest do
     end
   end
 
-  describe "cell_state/3" do
-    setup %{tax_rate_id: tax_rate_id} do
-      [tax_rate_id: tax_rate_id]
-    end
-
+  describe "customer_cell_state/3" do
     test ":open when fulfillable", %{tax_rate_id: tax_rate_id} do
       fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-      assert :open == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-05], now)
+      assert :open == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-05], now)
     end
 
     test ":past when date is before today", %{tax_rate_id: tax_rate_id} do
       fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-      assert :past == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-01], now)
+      assert :past == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-01], now)
     end
 
-    test ":weekday_off when weekday is disabled and no explicit enable", %{tax_rate_id: tax_rate_id} do
+    test ":closed when weekday is disabled and no explicit enable", %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
         generate(
           fulfillment_option(
@@ -160,15 +156,15 @@ defmodule Edenflowers.FulfillmentsTest do
 
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
       # 2024-04-07 is a Sunday
-      assert :weekday_off == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-07], now)
+      assert :closed == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-07], now)
     end
 
-    test ":override_off when date is explicitly disabled", %{tax_rate_id: tax_rate_id} do
+    test ":closed when date is explicitly disabled", %{tax_rate_id: tax_rate_id} do
       fulfillment_option =
         generate(fulfillment_option(tax_rate_id: tax_rate_id, disabled_dates: [~D[2024-04-10]]))
 
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-      assert :override_off == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-10], now)
+      assert :closed == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-10], now)
     end
 
     test ":past when same-day disabled and date is today", %{tax_rate_id: tax_rate_id} do
@@ -176,7 +172,7 @@ defmodule Edenflowers.FulfillmentsTest do
         generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: false, order_deadline: ~T[14:00:00]))
 
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-      assert :past == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-02], now)
+      assert :past == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-02], now)
     end
 
     test ":past when order deadline has passed", %{tax_rate_id: tax_rate_id} do
@@ -184,7 +180,60 @@ defmodule Edenflowers.FulfillmentsTest do
         generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: true, order_deadline: ~T[14:00:00]))
 
       now = DateTime.from_naive!(~N[2024-04-02 15:00:00], "Europe/Helsinki")
-      assert :past == Fulfillments.cell_state(fulfillment_option, ~D[2024-04-02], now)
+      assert :past == Fulfillments.customer_cell_state(fulfillment_option, ~D[2024-04-02], now)
+    end
+  end
+
+  describe "admin_cell_state/3" do
+    test ":open when weekday rule allows the date", %{tax_rate_id: tax_rate_id} do
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      assert :open == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-05], ~D[2024-04-02])
+    end
+
+    test ":past when date is before today", %{tax_rate_id: tax_rate_id} do
+      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      assert :past == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-01], ~D[2024-04-02])
+    end
+
+    test ":weekday_disabled when weekday is disabled and no explicit enable", %{tax_rate_id: tax_rate_id} do
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      # 2024-04-07 is a Sunday
+      assert :weekday_disabled == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-07], ~D[2024-04-02])
+    end
+
+    test ":date_disabled when date is explicitly disabled", %{tax_rate_id: tax_rate_id} do
+      fulfillment_option =
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, disabled_dates: [~D[2024-04-10]]))
+
+      assert :date_disabled == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-10], ~D[2024-04-02])
+    end
+
+    test ":open when date is explicitly enabled on an otherwise-closed weekday", %{tax_rate_id: tax_rate_id} do
+      # 2024-04-07 is a Sunday
+      fulfillment_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
+            enabled_dates: [~D[2024-04-07]]
+          )
+        )
+
+      assert :open == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-07], ~D[2024-04-02])
+    end
+
+    test "today is not collapsed to :past — same-day rules don't apply to admin", %{tax_rate_id: tax_rate_id} do
+      fulfillment_option =
+        generate(fulfillment_option(tax_rate_id: tax_rate_id, same_day: false, order_deadline: ~T[14:00:00]))
+
+      assert :open == Fulfillments.admin_cell_state(fulfillment_option, ~D[2024-04-02], ~D[2024-04-02])
     end
   end
 end
