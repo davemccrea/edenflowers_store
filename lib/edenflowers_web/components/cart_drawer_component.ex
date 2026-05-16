@@ -40,21 +40,39 @@ defmodule EdenflowersWeb.CartDrawerComponent do
             :if={Enum.any?(@order.line_items)}
             navigate={~p"/checkout"}
             variant="primary"
+            class="translate-y-3 opacity-0"
             phx-click={JS.exec("phx-hide", to: "#cart-drawer")}
+            phx-mounted={entrance_transition()}
           >
             {~t"Checkout"}
           </.button>
 
-          <.live_component
+          <div
             :if={Enum.any?(@order.line_items)}
-            id="cart-drawer-promo"
-            module={EdenflowersWeb.PromoCodeComponent}
-            order={@order}
-            current_user={@current_user}
-          />
+            class="translate-y-3 opacity-0"
+            phx-mounted={entrance_transition()}
+          >
+            <.live_component
+              id="cart-drawer-promo"
+              module={EdenflowersWeb.PromoCodeComponent}
+              order={@order}
+              current_user={@current_user}
+            />
+          </div>
         </div>
       </.drawer>
     </div>
     """
+  end
+
+  # Shared with the line-item row entrance in LineItemsComponent — coordinates the
+  # fade-in of Checkout button + Promo component when the cart transitions from empty
+  # to one item. phx-mounted only fires on newly inserted nodes, so subsequent adds
+  # (which don't re-mount these) skip the animation automatically.
+  defp entrance_transition do
+    JS.transition(
+      {"transition-all duration-200 ease-out", "opacity-0 translate-y-3", "opacity-100 translate-y-0"},
+      time: 200
+    )
   end
 end

@@ -12,7 +12,17 @@ defmodule EdenflowersWeb.LineItemsComponent do
     <div id={@id}>
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
-          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-base">
+          <li
+            :for={line_item <- @order.line_items}
+            id={"#{@id}-row-#{line_item.id}"}
+            class="line-item-row flex translate-y-3 flex-row gap-4 text-base opacity-0"
+            phx-mounted={
+              JS.transition(
+                {"transition-all duration-200 ease-out", "opacity-0 translate-y-3", "opacity-100 translate-y-0"},
+                time: 200
+              )
+            }
+          >
             <%= if @link_product and not line_item.is_card do %>
               <.link
                 navigate={~p"/product/#{line_item.product_id}"}
@@ -71,7 +81,14 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
                   </button>
-                  <span class="tabular-nums">{line_item.quantity}</span>
+                  <span
+                    id={"#{@id}-qty-#{line_item.id}"}
+                    data-quantity={line_item.quantity}
+                    phx-hook=".PulseOnChange"
+                    class="tabular-nums"
+                  >
+                    {line_item.quantity}
+                  </span>
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
@@ -122,6 +139,21 @@ defmodule EdenflowersWeb.LineItemsComponent do
           </.button>
         </div>
       <% end %>
+      <script :type={Phoenix.LiveView.ColocatedHook} name=".PulseOnChange">
+        export default {
+          mounted() { this.last = this.el.dataset.quantity },
+          updated() {
+            const next = this.el.dataset.quantity
+            if (next !== this.last) {
+              this.el.classList.remove("quantity-pulse")
+              // Force reflow so the browser sees the class removal before re-adding it; otherwise the animation won't restart.
+              void this.el.offsetWidth
+              this.el.classList.add("quantity-pulse")
+              this.last = next
+            }
+          }
+        }
+      </script>
     </div>
     """
   end
