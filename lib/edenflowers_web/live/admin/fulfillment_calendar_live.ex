@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     updated_by_id =
       Map.new(targets, fn option ->
-        {:ok, updated} = FulfillmentOption.update_calendar(option, fun.(option), actor: actor)
+        updated = FulfillmentOption.update_calendar!(option, fun.(option), actor: actor)
         {option.id, updated}
       end)
 
