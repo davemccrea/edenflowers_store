@@ -744,29 +744,40 @@ Hooks.FlashHandler = {
   },
 
   disconnected() {
+    if (this.disconnectedTimer) return;
     if (document.getElementById("flash-disconnected")) return;
-    const msg = this.el.getAttribute("data-disconnected-message");
-    const div = document.createElement("div");
-    div.id = "flash-disconnected";
-    div.className = "toast-item";
-    div.dataset.key = "warning";
-    // role="alert" implies aria-live="assertive" but some AT/browser combos
-    // miss it on dynamically-added nodes — set both explicitly.
-    div.setAttribute("role", "alert");
-    div.setAttribute("aria-live", "assertive");
-    div.setAttribute("aria-atomic", "true");
-    div.innerHTML = `
-      <div class="toast-item__head">
-        <p class="toast-item__eyebrow">Notice</p>
-      </div>
-      <p class="toast-item__body"></p>`;
-    // Note: the disconnected banner has no dismiss button — it's auto-removed
-    // when the socket reconnects (see reconnected() below).
-    div.querySelector(".toast-item__body").textContent = msg;
-    this.el.appendChild(div);
+    // Delay the banner so brief disconnects (tab switch, transient network
+    // blip) don't flash a toast that resolves a moment later.
+    this.disconnectedTimer = setTimeout(() => {
+      this.disconnectedTimer = null;
+      if (document.getElementById("flash-disconnected")) return;
+      const msg = this.el.getAttribute("data-disconnected-message");
+      const div = document.createElement("div");
+      div.id = "flash-disconnected";
+      div.className = "toast-item";
+      div.dataset.key = "warning";
+      // role="alert" implies aria-live="assertive" but some AT/browser combos
+      // miss it on dynamically-added nodes — set both explicitly.
+      div.setAttribute("role", "alert");
+      div.setAttribute("aria-live", "assertive");
+      div.setAttribute("aria-atomic", "true");
+      div.innerHTML = `
+        <div class="toast-item__head">
+          <p class="toast-item__eyebrow">Notice</p>
+        </div>
+        <p class="toast-item__body"></p>`;
+      // Note: the disconnected banner has no dismiss button — it's auto-removed
+      // when the socket reconnects (see reconnected() below).
+      div.querySelector(".toast-item__body").textContent = msg;
+      this.el.appendChild(div);
+    }, 2000);
   },
 
   reconnected() {
+    if (this.disconnectedTimer) {
+      clearTimeout(this.disconnectedTimer);
+      this.disconnectedTimer = null;
+    }
     const banner = document.getElementById("flash-disconnected");
     if (!banner) return;
     this.dismiss(banner, null);
