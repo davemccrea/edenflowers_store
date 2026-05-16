@@ -1,0 +1,19 @@
+defmodule Edenflowers.Weekday do
+  @moduledoc """
+  Maps `Date.day_of_week/1` integers to atoms used by `FulfillmentOption.available_days`.
+  """
+
+  @type t :: :monday | :tuesday | :wednesday | :thursday | :friday | :saturday | :sunday
+
+  @spec from_date(Date.t()) :: t()
+  def from_date(%Date{} = date), do: from_integer(Date.day_of_week(date))
+
+  @spec from_integer(1..7) :: t()
+  def from_integer(1), do: :monday
+  def from_integer(2), do: :tuesday
+  def from_integer(3), do: :wednesday
+  def from_integer(4), do: :thursday
+  def from_integer(5), do: :friday
+  def from_integer(6), do: :saturday
+  def from_integer(7), do: :sunday
+end

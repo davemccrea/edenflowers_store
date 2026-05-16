@@ -105,28 +105,22 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     end
   end
 
-  defp apply_to_scope(%{assigns: %{scope: :all, options: options, current_user: actor}} = socket, fun) do
-    options
-    |> Enum.map(&persist(&1, fun.(&1), actor))
-    |> reload(socket)
-  end
+  defp apply_to_scope(socket, fun) do
+    %{scope: scope, options: options, current_user: actor} = socket.assigns
 
-  defp apply_to_scope(%{assigns: %{scope: id, options: options, current_user: actor}} = socket, fun) do
-    case Enum.find(options, &(&1.id == id)) do
-      nil -> socket
-      option -> reload([persist(option, fun.(option), actor)], socket)
-    end
-  end
+    targets =
+      case scope do
+        :all -> options
+        id -> Enum.filter(options, &(&1.id == id))
+      end
 
-  defp persist(option, attrs, actor) do
-    {:ok, updated} = FulfillmentOption.update_calendar(option, attrs, actor: actor)
-    updated
-  end
+    updated_by_id =
+      Map.new(targets, fn option ->
+        {:ok, updated} = FulfillmentOption.update_calendar(option, fun.(option), actor: actor)
+        {option.id, updated}
+      end)
 
-  defp reload(updated_options, socket) do
-    by_id = Map.new(updated_options, &{&1.id, &1})
-    options = Enum.map(socket.assigns.options, &Map.get(by_id, &1.id, &1))
-    assign(socket, :options, options)
+    assign(socket, :options, Enum.map(options, &Map.get(updated_by_id, &1.id, &1)))
   end
 
   defp scope_button_class(true) do

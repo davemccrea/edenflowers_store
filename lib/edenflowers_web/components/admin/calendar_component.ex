@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   """
   use EdenflowersWeb, :html
 
+  alias Edenflowers.Fulfillments
   alias Edenflowers.Store.{FulfillmentCalendar, KeyDates}
 
   # Shared swatch shape for the "options disagree" state. Used by cells, the
@@ -31,11 +32,10 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       field={nil}
       module={EdenflowersWeb.CalendarComponent}
       selected_date={nil}
-      cell_state={fn date -> FulfillmentCalendar.view_model(@scope, @options, date, @today).state end}
+      cell_state={fn date -> scope_cell_state(@scope, @options, date, @today) end}
       cell_class={
         fn day, state, opts ->
-          view = FulfillmentCalendar.view_model(@scope, @options, day, @today)
-          cell_class(day, state, opts, view.override?)
+          cell_class(day, state, opts, scope_override?(@scope, @options, day))
         end
       }
       clickable_states={[:open, :weekday_off, :override_off]}
@@ -75,6 +75,29 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       </ul>
     </aside>
     """
+  end
+
+  defp scope_cell_state(:all, options, date, today) do
+    FulfillmentCalendar.cell_state_for_options(options, date, today)
+  end
+
+  defp scope_cell_state(option_id, options, date, today) do
+    case Enum.find(options, &(&1.id == option_id)) do
+      nil -> :open
+      option -> Fulfillments.cell_state(option, date, today, audience: :admin)
+    end
+  end
+
+  # `:all` collapses to `false` — across options, "some override, some don't"
+  # can't be summarized by a single corner mark. Same behaviour the old
+  # `view_model` enforced.
+  defp scope_override?(:all, _options, _date), do: false
+
+  defp scope_override?(option_id, options, date) do
+    case Enum.find(options, &(&1.id == option_id)) do
+      nil -> false
+      option -> FulfillmentCalendar.override?(option, date)
+    end
   end
 
   # Visual language: a florist's printed planner. Closed dates are crossed

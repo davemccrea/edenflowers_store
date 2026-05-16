@@ -23,34 +23,12 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   no override is stored once a date matches its weekday default.
   """
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.{Fulfillments, Weekday}
   alias Edenflowers.Store.FulfillmentOption
 
   @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 
   @type cell_state :: Fulfillments.cell_state() | :mixed
-
-  @doc """
-  Cell state for a single option, from the admin's point of view.
-
-  Differs from `Fulfillments.cell_state/2` (the customer's view) in one way:
-  same-day operational rules (deadlines, `same_day: false`) do not collapse
-  today into `:past`. Today reflects whatever the availability rules say,
-  so the admin can toggle it like any other date.
-
-  `today` is passed in so this function stays pure — easy to test, and the
-  view-model can compute it once per render rather than per cell.
-  """
-  @spec cell_state(FulfillmentOption.t(), Date.t(), Date.t()) :: cell_state()
-  def cell_state(%FulfillmentOption{} = option, %Date{} = date, %Date{} = today) do
-    cond do
-      Date.compare(date, today) == :lt -> :past
-      date in option.disabled_dates -> :override_off
-      date in option.enabled_dates -> :open
-      weekday_available?(option, date) -> :open
-      true -> :weekday_off
-    end
-  end
 
   @doc """
   Whether the date's state is set by an explicit override rather than its
@@ -73,7 +51,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
 
   def cell_state_for_options(options, date, today) when is_list(options) do
     options
-    |> Enum.map(&cell_state(&1, date, today))
+    |> Enum.map(&Fulfillments.cell_state(&1, date, today, audience: :admin))
     |> Enum.uniq()
     |> case do
       [single] -> single
@@ -108,29 +86,6 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :on
       option -> if weekday in option.available_days, do: :on, else: :off
-    end
-  end
-
-  @doc """
-  Single-date admin view: cell state and override flag together so the render
-  function makes one call per cell instead of two.
-
-  `override?` is intentionally `false` when scope is `:all` — across options,
-  "some override, some don't" can't be summarized by one dot.
-  """
-  @type cell_view :: %{state: cell_state(), override?: boolean()}
-  @spec view_model(:all | String.t(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_view()
-  def view_model(:all, options, date, today) do
-    %{state: cell_state_for_options(options, date, today), override?: false}
-  end
-
-  def view_model(option_id, options, date, today) do
-    case Enum.find(options, &(&1.id == option_id)) do
-      nil ->
-        %{state: :open, override?: false}
-
-      option ->
-        %{state: cell_state(option, date, today), override?: override?(option, date)}
     end
   end
 
@@ -188,25 +143,13 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
         [weekday | option.available_days]
       end
 
-    enabled = Enum.reject(option.enabled_dates, &(weekday_atom(&1) in available))
-    disabled = Enum.reject(option.disabled_dates, &(weekday_atom(&1) not in available))
+    enabled = Enum.reject(option.enabled_dates, &(Weekday.from_date(&1) in available))
+    disabled = Enum.reject(option.disabled_dates, &(Weekday.from_date(&1) not in available))
 
     %{available_days: available, enabled_dates: enabled, disabled_dates: disabled}
   end
 
   defp weekday_available?(option, date) do
-    weekday_atom(date) in option.available_days
-  end
-
-  defp weekday_atom(date) do
-    case Date.day_of_week(date) do
-      1 -> :monday
-      2 -> :tuesday
-      3 -> :wednesday
-      4 -> :thursday
-      5 -> :friday
-      6 -> :saturday
-      7 -> :sunday
-    end
+    Weekday.from_date(date) in option.available_days
   end
 end

@@ -1,5 +1,6 @@
 defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Weekday
   import Decimal, only: [is_decimal: 1]
 
   defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
@@ -94,6 +95,8 @@ defmodule Edenflowers.Fulfillments do
     - The day of week is disabled and the date is not in the enabled dates
     - The date is today but the deadline for same day delivery has passed
     - The date is today but same day delivery is disabled
+
+  `now` must be a DateTime — same-day deadline checks need the time of day.
   """
   @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: {boolean(), atom()}
   def fulfill_on_date(fulfillment_option = %FulfillmentOption{}, date, now \\ now()) do
@@ -112,21 +115,47 @@ defmodule Edenflowers.Fulfillments do
   @type cell_state :: :open | :past | :weekday_off | :override_off
 
   @doc """
-  Map `fulfill_on_date/3` into a coarse-grained cell state for the calendar UI.
+  Coarse-grained cell state for the calendar UI. Used by both the customer
+  checkout calendar and the admin date-toggle editor so styling can't drift
+  from the actual selectability rules.
 
-  Both the customer-facing checkout calendar and the admin date-toggle editor
-  consume this so the styling stays in sync with the actual selectability rules.
+  Two audiences:
 
-  Same-day reasons collapse to `:past` — from the user's perspective, "today is
-  unavailable" reads exactly like "the past": a date you can't pick.
+  - `:customer` (default) — `now` must be a `DateTime`. Same-day deadline rules
+    apply: today collapses to `:past` once the order deadline has passed or
+    when `same_day: false`. From the customer's perspective, "can't pick today"
+    looks identical to "the past".
+
+  - `:admin` — `now` is a `Date`. Same-day rules are skipped because the admin
+    is editing rules, not booking against them. Today reflects whatever the
+    weekday/override rules say so it can be toggled like any other date.
   """
-  @spec cell_state(FulfillmentOption.t(), Date.t(), DateTime.t()) :: cell_state()
-  def cell_state(fulfillment_option, date, now \\ now()) do
+  @spec cell_state(FulfillmentOption.t(), Date.t(), DateTime.t() | Date.t(), keyword()) :: cell_state()
+  def cell_state(fulfillment_option, date, now \\ now(), opts \\ [])
+
+  def cell_state(fulfillment_option, date, now, opts) when is_list(opts) do
+    case Keyword.get(opts, :audience, :customer) do
+      :admin -> admin_cell_state(fulfillment_option, date, now)
+      :customer -> customer_cell_state(fulfillment_option, date, now)
+    end
+  end
+
+  defp customer_cell_state(fulfillment_option, date, now) do
     case fulfill_on_date(fulfillment_option, date, now) do
       {true, _} -> :open
       {false, :date_disabled} -> :override_off
       {false, :day_of_week_disabled} -> :weekday_off
       {false, _past_or_same_day} -> :past
+    end
+  end
+
+  defp admin_cell_state(option, date, today) do
+    cond do
+      Date.compare(date, today) == :lt -> :past
+      date in option.disabled_dates -> :override_off
+      date in option.enabled_dates -> :open
+      weekday_enabled?({option, date, nil}) -> :open
+      true -> :weekday_off
     end
   end
 
@@ -143,8 +172,7 @@ defmodule Edenflowers.Fulfillments do
   end
 
   defp weekday_enabled?({%{available_days: available_days}, date, _now}) do
-    day = date |> Date.day_of_week() |> day_of_week_to_atom()
-    day in available_days
+    Weekday.from_date(date) in available_days
   end
 
   defp fulfill_today?({%{same_day: false, order_deadline: _order_deadline}, date, now}) do
@@ -160,14 +188,6 @@ defmodule Edenflowers.Fulfillments do
   end
 
   defp date_today?(date, now), do: Date.compare(date, now) == :eq
-
-  defp day_of_week_to_atom(1), do: :monday
-  defp day_of_week_to_atom(2), do: :tuesday
-  defp day_of_week_to_atom(3), do: :wednesday
-  defp day_of_week_to_atom(4), do: :thursday
-  defp day_of_week_to_atom(5), do: :friday
-  defp day_of_week_to_atom(6), do: :saturday
-  defp day_of_week_to_atom(7), do: :sunday
 
   defp now(), do: DateTime.now!("Europe/Helsinki")
 end

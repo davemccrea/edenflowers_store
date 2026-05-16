@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   use EdenflowersWeb, :live_component
   require Logger
 
+  alias Edenflowers.Weekday
   alias EdenflowersWeb.CalendarComponent.Keymap
 
   @week_begins :default
@@ -21,7 +22,6 @@ defmodule EdenflowersWeb.CalendarComponent do
      |> assign(on_click: :date_selected)
      |> assign(on_weekday_click: nil)
      |> assign(weekday_class: &default_weekday_class/1)
-     |> assign(cell_confirm: fn _ -> nil end)
      |> update_calendar_view(today_date)}
   end
 
@@ -90,12 +90,6 @@ defmodule EdenflowersWeb.CalendarComponent do
       "Optional (weekday_atom -> css_classes). Applied to each weekday header. Only meaningful when " <>
         "`on_weekday_click` is set. Defaults to a neutral button look."
 
-  attr :cell_confirm, :any,
-    default: nil,
-    doc:
-      "Optional (Date.t() -> String.t() | nil). When the function returns a string, the cell's click " <>
-        "is gated by a browser confirm dialog with that message. Returning `nil` clicks straight through."
-
   attr :error, :boolean, default: false
   slot :day_decoration, required: false
 
@@ -156,9 +150,9 @@ defmodule EdenflowersWeb.CalendarComponent do
               type="button"
               phx-target={@myself}
               phx-click="weekday-click"
-              phx-value-weekday={Atom.to_string(weekday_atom(week_day))}
+              phx-value-weekday={Atom.to_string(Weekday.from_date(week_day))}
               aria-label={weekday_aria_label(week_day)}
-              class={@weekday_class.(weekday_atom(week_day))}
+              class={@weekday_class.(Weekday.from_date(week_day))}
             >
               {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
             </button>
@@ -181,7 +175,6 @@ defmodule EdenflowersWeb.CalendarComponent do
                 phx-target={@myself}
                 phx-click="select"
                 phx-value-date={day}
-                data-confirm={@cell_confirm.(day)}
                 data-key-targets={key_targets_json(day, @today_date)}
                 type="button"
                 aria-label={day_aria_label(day, @today_date, @selected_date, selectable?)}
@@ -302,7 +295,6 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> maybe_default(:on_click, :date_selected)
     |> maybe_default(:clickable_states, [:open])
     |> maybe_default(:weekday_class, &default_weekday_class/1)
-    |> maybe_default(:cell_confirm, fn _ -> nil end)
   end
 
   @doc false
@@ -314,18 +306,6 @@ defmodule EdenflowersWeb.CalendarComponent do
     case Map.get(assigns, key) do
       nil -> Map.put(assigns, key, default)
       _value -> assigns
-    end
-  end
-
-  defp weekday_atom(date) do
-    case Date.day_of_week(date) do
-      1 -> :monday
-      2 -> :tuesday
-      3 -> :wednesday
-      4 -> :thursday
-      5 -> :friday
-      6 -> :saturday
-      7 -> :sunday
     end
   end
 
