@@ -12,6 +12,9 @@ defmodule Edenflowers.Store.KeyDates do
   @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
   @type key_date :: %{date: Date.t(), name: String.t(), icon: String.t(), colour_class: String.t()}
 
+  @typedoc "The visual decoration for a key date, returned by `lookup_for/1`."
+  @type decoration :: %{icon: String.t(), colour_class: String.t()}
+
   @weekdays %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
 
   # `colour_class` is the Tailwind text colour applied to the heart in the
@@ -35,18 +38,34 @@ defmodule Edenflowers.Store.KeyDates do
     end)
   end
 
-  @spec icon_for(Date.t()) :: String.t() | nil
-  def icon_for(%Date{} = date) do
-    Enum.find_value(@key_dates, fn %{rule: rule, icon: icon} ->
-      if materialise(rule, date.year) == date, do: icon
+  @doc """
+  Combined icon + colour lookup for a date. Returns `nil` for non-key dates.
+  One traversal serves both pieces of the decoration so per-cell rendering
+  doesn't scan the key-date list twice.
+  """
+  @spec lookup_for(Date.t()) :: decoration() | nil
+  def lookup_for(%Date{} = date) do
+    Enum.find_value(@key_dates, fn %{rule: rule, icon: icon, colour_class: colour_class} ->
+      if materialise(rule, date.year) == date, do: %{icon: icon, colour_class: colour_class}
     end)
   end
 
-  @spec colour_class_for(Date.t()) :: String.t() | nil
-  def colour_class_for(%Date{} = date) do
-    Enum.find_value(@key_dates, fn %{rule: rule, colour_class: colour_class} ->
-      if materialise(rule, date.year) == date, do: colour_class
-    end)
+  @doc "Whether `date` is one of the florist key dates."
+  @spec key_date?(Date.t()) :: boolean()
+  def key_date?(%Date{} = date), do: lookup_for(date) != nil
+
+  @doc """
+  Key dates falling on `weekday` for the current and following year. The
+  two-year lookahead matches the calendar's visible horizon.
+  """
+  @spec dates_for_weekday(Edenflowers.Weekday.t()) :: [Date.t()]
+  def dates_for_weekday(weekday) do
+    year = Date.utc_today().year
+
+    [year, year + 1]
+    |> Enum.flat_map(&for_year/1)
+    |> Enum.map(& &1.date)
+    |> Enum.filter(&(Edenflowers.Weekday.from_date(&1) == weekday))
   end
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)

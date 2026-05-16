@@ -17,4 +17,13 @@ defmodule Edenflowers.Weekday do
   def from_integer(5), do: :friday
   def from_integer(6), do: :saturday
   def from_integer(7), do: :sunday
+
+  @spec to_integer(t()) :: 1..7
+  def to_integer(:monday), do: 1
+  def to_integer(:tuesday), do: 2
+  def to_integer(:wednesday), do: 3
+  def to_integer(:thursday), do: 4
+  def to_integer(:friday), do: 5
+  def to_integer(:saturday), do: 6
+  def to_integer(:sunday), do: 7
 end

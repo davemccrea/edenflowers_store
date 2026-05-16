@@ -62,9 +62,6 @@ defmodule Edenflowers.Store.FulfillmentOption do
         :max_dist_km,
         :same_day,
         :order_deadline,
-        :available_days,
-        :enabled_dates,
-        :disabled_dates,
         :tax_rate_id
       ]
     ]

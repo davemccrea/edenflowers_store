@@ -995,9 +995,11 @@ defmodule Edenflowers.Store.OrderTest do
       closed_date = Date.add(Date.utc_today(), 3)
 
       {:ok, _} =
-        pickup_option
-        |> Ash.Changeset.for_update(:update, %{disabled_dates: [closed_date]})
-        |> Ash.update(authorize?: false)
+        Edenflowers.Store.FulfillmentOption.update_calendar(
+          pickup_option,
+          %{disabled_dates: [closed_date]},
+          authorize?: false
+        )
 
       assert {:error, error} =
                order

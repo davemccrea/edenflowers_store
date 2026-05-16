@@ -33,37 +33,40 @@ defmodule Edenflowers.Store.KeyDatesTest do
     end
   end
 
-  describe "icon_for/1" do
-    test "returns the icon for each key date in 2026" do
-      assert KeyDates.icon_for(~D[2026-02-14]) == "hero-heart"
-      assert KeyDates.icon_for(~D[2026-03-08]) == "hero-heart"
-      assert KeyDates.icon_for(~D[2026-05-10]) == "hero-heart"
-      assert KeyDates.icon_for(~D[2026-11-08]) == "hero-heart"
+  describe "lookup_for/1" do
+    test "returns the icon and colour for each key date in 2026" do
+      for date <- [~D[2026-02-14], ~D[2026-03-08], ~D[2026-05-10], ~D[2026-11-08]] do
+        assert %{icon: "hero-heart", colour_class: "text-" <> _} = KeyDates.lookup_for(date)
+      end
     end
 
     test "tracks the right year — Mother's Day shifts across years" do
-      assert KeyDates.icon_for(~D[2027-05-09]) == "hero-heart"
-      assert KeyDates.icon_for(~D[2028-05-14]) == "hero-heart"
-      assert KeyDates.icon_for(~D[2027-05-10]) == nil
+      assert %{icon: "hero-heart"} = KeyDates.lookup_for(~D[2027-05-09])
+      assert %{icon: "hero-heart"} = KeyDates.lookup_for(~D[2028-05-14])
+      assert KeyDates.lookup_for(~D[2027-05-10]) == nil
     end
 
     test "returns nil for non-key dates" do
-      assert KeyDates.icon_for(~D[2026-06-15]) == nil
+      assert KeyDates.lookup_for(~D[2026-06-15]) == nil
     end
-  end
 
-  describe "colour_class_for/1" do
     test "returns a distinct colour class for each key date" do
       colours =
         [~D[2026-02-14], ~D[2026-03-08], ~D[2026-05-10], ~D[2026-11-08]]
-        |> Enum.map(&KeyDates.colour_class_for/1)
+        |> Enum.map(&KeyDates.lookup_for/1)
+        |> Enum.map(& &1.colour_class)
 
-      assert Enum.all?(colours, &is_binary/1)
       assert Enum.uniq(colours) == colours
     end
+  end
 
-    test "returns nil for non-key dates" do
-      assert KeyDates.colour_class_for(~D[2026-06-15]) == nil
+  describe "key_date?/1" do
+    test "true for a known key date" do
+      assert KeyDates.key_date?(~D[2026-02-14])
+    end
+
+    test "false for an ordinary date" do
+      refute KeyDates.key_date?(~D[2026-06-15])
     end
   end
 end

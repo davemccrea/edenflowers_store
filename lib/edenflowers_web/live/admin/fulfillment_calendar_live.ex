@@ -131,19 +131,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     end
   end
 
-  defp scoped_options(%{assigns: %{scope: :all, options: options}}), do: options
-
-  defp scoped_options(%{assigns: %{scope: id, options: options}}),
-    do: Enum.filter(options, &(&1.id == id))
+  defp scoped_options(%{assigns: %{scope: scope, options: options}}),
+    do: FulfillmentCalendar.scoped_options(scope, options)
 
   defp apply_to_scope(socket, fun) do
-    %{scope: scope, options: options, current_user: actor} = socket.assigns
-
-    targets =
-      case scope do
-        :all -> options
-        id -> Enum.filter(options, &(&1.id == id))
-      end
+    %{options: options, current_user: actor} = socket.assigns
+    targets = scoped_options(socket)
 
     updated_by_id = Map.new(targets, fn option -> {option.id, fun.(option, actor)} end)
 

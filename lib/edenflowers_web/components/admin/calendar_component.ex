@@ -11,7 +11,6 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
 
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Fulfillments
   alias Edenflowers.Store.FulfillmentCalendar
 
   # Shared "options disagree" tile — diagonal stripes via the calendar-mixed
@@ -34,7 +33,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       field={nil}
       module={EdenflowersWeb.CalendarComponent}
       selected_date={nil}
-      cell_state={fn date -> scope_cell_state(@scope, @options, date, @today) end}
+      cell_state={fn date -> FulfillmentCalendar.cell_state_for_scope(@scope, @options, date, @today) end}
       cell_class={
         fn day, state, opts ->
           cell_class(day, state, opts, scope_override?(@scope, @options, day))
@@ -88,29 +87,12 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
     """
   end
 
-  defp scope_cell_state(:all, options, date, today) do
-    FulfillmentCalendar.cell_state_for_options(options, date, today)
-  end
-
-  defp scope_cell_state(option_id, options, date, today) do
-    case Enum.find(options, &(&1.id == option_id)) do
-      nil -> :open
-      option -> Fulfillments.admin_cell_state(option, date, today)
-    end
-  end
-
   # Aggregate week state across the current scope. From the button's POV three
   # outcomes matter: everything open, everything closed, anything else (mixed),
   # or whole week in the past. Cross-option disagreement just folds into :mixed
   # — the bulk gesture is the gesture for that case.
   defp scope_week_state(scope, options, week, today) do
-    targets =
-      case scope do
-        :all -> options
-        id -> Enum.filter(options, &(&1.id == id))
-      end
-
-    case targets do
+    case FulfillmentCalendar.scoped_options(scope, options) do
       [] ->
         :all_open
 

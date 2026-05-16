@@ -23,8 +23,9 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   no override is stored once a date matches its weekday default.
   """
 
-  alias Edenflowers.{Fulfillments, Weekday}
+  alias Edenflowers.Fulfillments
   alias Edenflowers.Store.{FulfillmentOption, KeyDates}
+  alias Edenflowers.Weekday
 
   @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 
@@ -46,6 +47,32 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   @spec override?(FulfillmentOption.t(), Date.t()) :: boolean()
   def override?(%FulfillmentOption{} = option, %Date{} = date) do
     date in option.enabled_dates or date in option.disabled_dates
+  end
+
+  @doc """
+  Narrow `options` to the current scope. `:all` returns everything; a UUID
+  string returns the single option (or `[]` when not found).
+  """
+  @spec scoped_options(scope(), [FulfillmentOption.t()]) :: [FulfillmentOption.t()]
+  def scoped_options(:all, options), do: options
+  def scoped_options(option_id, options), do: Enum.filter(options, &(&1.id == option_id))
+
+  @doc """
+  Cell state for the current scope. `:all` aggregates across every option
+  (collapsing disagreement to `:mixed`); a single-option scope returns that
+  option's admin cell state. Returns `:open` when the scoped id is unknown
+  so the cell renders sensibly rather than blowing up.
+  """
+  @spec cell_state_for_scope(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
+  def cell_state_for_scope(:all, options, %Date{} = date, %Date{} = today) do
+    cell_state_for_options(options, date, today)
+  end
+
+  def cell_state_for_scope(option_id, options, %Date{} = date, %Date{} = today) do
+    case Enum.find(options, &(&1.id == option_id)) do
+      nil -> :open
+      option -> Fulfillments.admin_cell_state(option, date, today)
+    end
   end
 
   @doc """
@@ -78,6 +105,8 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
   sensible default rather than disappearing.
   """
   @spec weekday_state(scope(), [FulfillmentOption.t()], Weekday.t()) :: :on | :off | :mixed
+  def weekday_state(:all, [], _weekday), do: :on
+
   def weekday_state(:all, options, weekday) do
     options
     |> Enum.map(&(weekday in &1.available_days))
@@ -169,24 +198,13 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
     virtual_option = struct(original_option, new_attrs)
 
     weekday
-    |> key_dates_on_weekday()
+    |> KeyDates.dates_for_weekday()
     |> Enum.reduce(new_attrs, fn date, attrs ->
       old_open? = open?(original_option, date)
       new_open? = open?(virtual_option, date)
 
       if old_open? == new_open?, do: attrs, else: restore(attrs, date, old_open?)
     end)
-  end
-
-  # Key dates on `weekday` within the relevant lookahead. KeyDates lookups
-  # are per-year, so we cover this year and next.
-  defp key_dates_on_weekday(weekday) do
-    year = Date.utc_today().year
-
-    [year, year + 1]
-    |> Enum.flat_map(&KeyDates.for_year/1)
-    |> Enum.map(& &1.date)
-    |> Enum.filter(&(Weekday.from_date(&1) == weekday))
   end
 
   # Past-agnostic openness — would the rule + overrides leave this date open?
@@ -249,7 +267,7 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
     actionable =
       week
       |> Enum.reject(&(Date.compare(&1, today) == :lt))
-      |> Enum.reject(&KeyDates.icon_for/1)
+      |> Enum.reject(&KeyDates.key_date?/1)
 
     case actionable do
       [] ->
@@ -282,12 +300,12 @@ defmodule Edenflowers.Store.FulfillmentCalendar do
         }
   def set_week(%FulfillmentOption{} = option, week, %Date{} = today, direction)
       when is_list(week) and direction in [:open, :closed] do
+    initial = %{enabled_dates: option.enabled_dates, disabled_dates: option.disabled_dates}
+
     week
     |> Enum.reject(&(Date.compare(&1, today) == :lt))
-    |> Enum.reject(&KeyDates.icon_for/1)
-    |> Enum.reduce(%{enabled_dates: option.enabled_dates, disabled_dates: option.disabled_dates}, fn date, acc ->
-      set_date(option, acc, date, direction)
-    end)
+    |> Enum.reject(&KeyDates.key_date?/1)
+    |> Enum.reduce(initial, fn date, acc -> set_date(option, acc, date, direction) end)
   end
 
   @doc """

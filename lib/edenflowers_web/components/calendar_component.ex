@@ -273,12 +273,13 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   def handle_event("week-click", %{"week" => week_string}, socket) do
-    if tag = socket.assigns.on_week_click do
-      week = week_string |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
+    with tag when not is_nil(tag) <- socket.assigns.on_week_click,
+         {:ok, week} <- parse_week(week_string) do
       send(self(), {tag, week})
+      {:noreply, socket}
+    else
+      _ -> {:noreply, socket}
     end
-
-    {:noreply, socket}
   end
 
   def handle_event("keydown", %{"key" => key, "viewDate" => view_date}, socket) do
@@ -296,6 +297,21 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   # Helper Functions
+
+  defp parse_week(week_string) do
+    week_string
+    |> String.split(",")
+    |> Enum.reduce_while({:ok, []}, fn iso, {:ok, acc} ->
+      case Date.from_iso8601(iso) do
+        {:ok, date} -> {:cont, {:ok, [date | acc]}}
+        {:error, _} -> {:halt, :error}
+      end
+    end)
+    |> case do
+      {:ok, dates} -> {:ok, Enum.reverse(dates)}
+      :error -> :error
+    end
+  end
 
   defp previous_month_button_class(view_date, today_date) do
     is_disabled = current_month?(view_date, today_date)

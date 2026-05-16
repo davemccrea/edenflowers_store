@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Weekday
 
   setup %{conn: conn} do
     tax_rate = generate(tax_rate())
@@ -165,6 +166,47 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     end
   end
 
+  describe "week toggle" do
+    test "clicking the week-toggle button closes every open cell in that week for the scoped option", %{
+      conn: conn,
+      delivery: delivery
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+
+      view
+      |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
+      |> render_click()
+
+      # Pick a week payload whose dates are all in the future, so the click
+      # actually has something to do.
+      html = render(view)
+      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+
+      week_payload =
+        Regex.scan(~r/phx-click="week-click" phx-value-week="([^"]+)"/, html)
+        |> Enum.map(fn [_, payload] -> payload end)
+        |> Enum.find(fn payload ->
+          dates = payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
+          Enum.all?(dates, &(Date.compare(&1, today) != :lt))
+        end)
+
+      assert week_payload, "expected at least one future week button in the rendered month"
+
+      view
+      |> element(~s|button[phx-click="week-click"][phx-value-week="#{week_payload}"]|)
+      |> render_click()
+
+      drain(view)
+
+      reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+
+      # Delivery is open Mon-Fri; clicking the week-toggle closes Mon-Fri of that week.
+      week_dates = week_payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
+      weekday_cells = Enum.filter(week_dates, &(Date.day_of_week(&1) in 1..5))
+      assert Enum.all?(weekday_cells, &(&1 in reloaded.disabled_dates))
+    end
+  end
+
   describe "reset" do
     test "wipes overrides and reopens every weekday for the scoped option", %{
       conn: conn,
@@ -264,19 +306,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
   # Pick the next future date that lands on a given weekday.
   defp next_weekday(weekday_atom) do
-    target = weekday_index(weekday_atom)
+    target = Weekday.to_integer(weekday_atom)
     today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
     offset = Enum.find(1..21, &(Date.day_of_week(Date.add(today, &1)) == target))
     Date.add(today, offset)
   end
-
-  defp weekday_index(:monday), do: 1
-  defp weekday_index(:tuesday), do: 2
-  defp weekday_index(:wednesday), do: 3
-  defp weekday_index(:thursday), do: 4
-  defp weekday_index(:friday), do: 5
-  defp weekday_index(:saturday), do: 6
-  defp weekday_index(:sunday), do: 7
 
   # seed_generator skips the GenerateTokenChange that normal sign-in would
   # run, so we mint a token by hand and stash it in __metadata__ where

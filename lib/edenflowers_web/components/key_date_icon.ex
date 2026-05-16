@@ -13,16 +13,13 @@ defmodule EdenflowersWeb.KeyDateIcon do
   attr :muted?, :boolean, default: false, doc: "Render at lower opacity (use on faded cells, e.g. past dates)."
 
   def key_date_icon(assigns) do
-    assigns =
-      assigns
-      |> assign(:icon, KeyDates.icon_for(assigns.date))
-      |> assign(:colour_class, KeyDates.colour_class_for(assigns.date))
+    assigns = assign(assigns, :decoration, KeyDates.lookup_for(assigns.date))
 
     ~H"""
     <.icon
-      :if={@icon}
-      name={@icon}
-      class={["pointer-events-none absolute inset-0 m-auto h-9 w-9", @colour_class, @muted? && "opacity-50"]}
+      :if={@decoration}
+      name={@decoration.icon}
+      class={["pointer-events-none absolute inset-0 m-auto h-9 w-9", @decoration.colour_class, @muted? && "opacity-50"]}
     />
     """
   end

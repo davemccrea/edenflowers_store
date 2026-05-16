@@ -2,6 +2,7 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
   use Edenflowers.DataCase
   import Generator
   alias Edenflowers.Store.FulfillmentCalendar
+  alias Edenflowers.Weekday
 
   setup do
     tax_rate = generate(tax_rate())
@@ -319,18 +320,279 @@ defmodule Edenflowers.Store.FulfillmentCalendarTest do
     end
   end
 
+  describe "cell_state_for_scope/4" do
+    test ":all aggregates across options", %{tax_rate_id: tax_rate_id} do
+      open_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      closed_option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      today = ~D[2024-04-01]
+      future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
+
+      assert :mixed ==
+               FulfillmentCalendar.cell_state_for_scope(
+                 :all,
+                 [open_option, closed_option],
+                 future_sunday,
+                 today
+               )
+    end
+
+    test "single-option scope returns that option's admin cell state", %{tax_rate_id: tax_rate_id} do
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      today = ~D[2024-04-01]
+      future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
+
+      assert :weekday_disabled ==
+               FulfillmentCalendar.cell_state_for_scope(option.id, [option], future_sunday, today)
+    end
+
+    test "falls back to :open when the scoped option id is unknown", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      assert :open ==
+               FulfillmentCalendar.cell_state_for_scope("missing-id", [option], ~D[2024-04-10], ~D[2024-04-01])
+    end
+  end
+
+  describe "scoped_options/2" do
+    test ":all returns every option", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      assert [a, b] == FulfillmentCalendar.scoped_options(:all, [a, b])
+    end
+
+    test "an id scope filters to that option", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      assert [b] == FulfillmentCalendar.scoped_options(b.id, [a, b])
+    end
+
+    test "an unknown id returns an empty list", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      assert [] == FulfillmentCalendar.scoped_options("missing-id", [a])
+    end
+  end
+
+  describe "override?/2" do
+    test "true when the date is in enabled_dates", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id, enabled_dates: [~D[2024-04-07]]))
+      assert FulfillmentCalendar.override?(option, ~D[2024-04-07])
+    end
+
+    test "true when the date is in disabled_dates", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id, disabled_dates: [~D[2024-04-10]]))
+      assert FulfillmentCalendar.override?(option, ~D[2024-04-10])
+    end
+
+    test "false for a date governed only by the weekday rule", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      refute FulfillmentCalendar.override?(option, ~D[2024-04-10])
+    end
+  end
+
+  describe "weekday_state/3" do
+    test ":all returns :on when every option has the weekday available", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      assert :on == FulfillmentCalendar.weekday_state(:all, [a, b], :monday)
+    end
+
+    test ":all returns :off when no option has the weekday available", %{tax_rate_id: tax_rate_id} do
+      days = [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
+      b = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
+
+      assert :off == FulfillmentCalendar.weekday_state(:all, [a, b], :sunday)
+    end
+
+    test ":all returns :mixed when options disagree", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      b =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      assert :mixed == FulfillmentCalendar.weekday_state(:all, [a, b], :sunday)
+    end
+
+    test ":all returns :on for an empty options list" do
+      # Regression: with no options, the page renders a default `:on` header.
+      # Returning :mixed here previously made empty pages render with a "varies"
+      # treatment despite there being nothing to vary.
+      assert :on == FulfillmentCalendar.weekday_state(:all, [], :sunday)
+    end
+
+    test "single-option scope reads off that option", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      b =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      assert :on == FulfillmentCalendar.weekday_state(a.id, [a, b], :sunday)
+      assert :off == FulfillmentCalendar.weekday_state(b.id, [a, b], :sunday)
+    end
+
+    test "single-option scope falls back to :on when the id is unknown", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      assert :on == FulfillmentCalendar.weekday_state("missing-id", [a], :sunday)
+    end
+  end
+
+  describe "weekday_toggle_direction/2" do
+    test "returns :off when any option has the weekday on", %{tax_rate_id: tax_rate_id} do
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+
+      b =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      assert :off == FulfillmentCalendar.weekday_toggle_direction([a, b], :sunday)
+    end
+
+    test "returns :on when no option has the weekday on", %{tax_rate_id: tax_rate_id} do
+      days = [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+      a = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
+      b = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
+
+      assert :on == FulfillmentCalendar.weekday_toggle_direction([a, b], :sunday)
+    end
+  end
+
+  describe "week_state/3 (without key dates)" do
+    test ":all_open when every actionable cell is open", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      # 2024-04-08 Mon .. 2024-04-14 Sun — a Mon-Sun week with no key dates.
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :all_open == FulfillmentCalendar.week_state(option, week, ~D[2024-04-01])
+    end
+
+    test ":all_closed when every actionable cell is closed", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :all_closed == FulfillmentCalendar.week_state(option, week, ~D[2024-04-01])
+    end
+
+    test ":mixed when some cells are open and some closed", %{tax_rate_id: tax_rate_id} do
+      # Closed on Sunday only.
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+          )
+        )
+
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :mixed == FulfillmentCalendar.week_state(option, week, ~D[2024-04-01])
+    end
+
+    test ":all_past when every cell is before today", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :all_past == FulfillmentCalendar.week_state(option, week, ~D[2024-04-15])
+    end
+  end
+
+  describe "week_toggle_direction/3" do
+    test "returns nil when no option has any actionable cell", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      # Today after the week → every cell is past.
+      assert nil == FulfillmentCalendar.week_toggle_direction([option], week, ~D[2024-04-15])
+    end
+
+    test "returns :closed when any option has open or mixed cells", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :closed == FulfillmentCalendar.week_toggle_direction([option], week, ~D[2024-04-01])
+    end
+
+    test "returns :open when every option's week is fully closed", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :open == FulfillmentCalendar.week_toggle_direction([option], week, ~D[2024-04-01])
+    end
+  end
+
+  describe "set_week/4 (without key dates)" do
+    test ":closed adds overrides for every open weekday in the week", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      # Mon 2024-04-08 .. Sun 2024-04-14, no key dates in that range.
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+
+      result = FulfillmentCalendar.set_week(option, week, ~D[2024-04-01], :closed)
+
+      for date <- week, do: assert(date in result.disabled_dates)
+      assert result.enabled_dates == []
+    end
+
+    test ":open clears off-overrides without writing redundant on-overrides", %{tax_rate_id: tax_rate_id} do
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate_id,
+            disabled_dates: [~D[2024-04-08], ~D[2024-04-09]]
+          )
+        )
+
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+
+      result = FulfillmentCalendar.set_week(option, week, ~D[2024-04-01], :open)
+
+      assert result.disabled_dates == []
+      # No redundant enabled_dates entries — the weekday rule already opens these.
+      assert result.enabled_dates == []
+    end
+
+    test "ignores past cells", %{tax_rate_id: tax_rate_id} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      # Today mid-week — only Wed..Sun get overrides.
+      today = ~D[2024-04-10]
+
+      result = FulfillmentCalendar.set_week(option, week, today, :closed)
+
+      refute ~D[2024-04-08] in result.disabled_dates
+      refute ~D[2024-04-09] in result.disabled_dates
+      assert ~D[2024-04-10] in result.disabled_dates
+      assert ~D[2024-04-14] in result.disabled_dates
+    end
+  end
+
   defp next_weekday(date, weekday) do
-    target = weekday_to_int(weekday)
+    target = Weekday.to_integer(weekday)
 
     Stream.iterate(date, &Date.add(&1, 1))
     |> Enum.find(&(Date.day_of_week(&1) == target))
   end
-
-  defp weekday_to_int(:monday), do: 1
-  defp weekday_to_int(:tuesday), do: 2
-  defp weekday_to_int(:wednesday), do: 3
-  defp weekday_to_int(:thursday), do: 4
-  defp weekday_to_int(:friday), do: 5
-  defp weekday_to_int(:saturday), do: 6
-  defp weekday_to_int(:sunday), do: 7
 end
