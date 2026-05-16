@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <span
                     id={"#{@id}-qty-#{line_item.id}"}
                     data-quantity={line_item.quantity}
-                    phx-hook=".PulseOnChange"
+                    phx-hook="PulseOnChange"
                     class="tabular-nums"
                   >
                     {line_item.quantity}
@@ -136,21 +136,6 @@ defmodule EdenflowersWeb.LineItemsComponent do
           </.button>
         </div>
       <% end %>
-      <script :type={Phoenix.LiveView.ColocatedHook} name=".PulseOnChange">
-        export default {
-          mounted() { this.last = this.el.dataset.quantity },
-          updated() {
-            const next = this.el.dataset.quantity
-            if (next !== this.last) {
-              this.el.classList.remove("quantity-pulse")
-              // Force reflow so the browser sees the class removal before re-adding it; otherwise the animation won't restart.
-              void this.el.offsetWidth
-              this.el.classList.add("quantity-pulse")
-              this.last = next
-            }
-          }
-        }
-      </script>
     </div>
     """
   end

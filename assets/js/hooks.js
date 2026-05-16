@@ -174,6 +174,35 @@ Hooks.CharacterCount = {
   },
 };
 
+/**
+ * Re-runs the `.quantity-pulse` CSS animation each time the element's
+ * data-quantity changes. Used on cart line-item quantity counters so the
+ * digit visibly pulses when +/- is clicked, even though the same DOM node
+ * is reused across LiveView morphs.
+ *
+ * Markup contract:
+ *   <span phx-hook="PulseOnChange" data-quantity={quantity}>{quantity}</span>
+ *
+ * The matching keyframes live in app.css (`.quantity-pulse` /
+ * `@keyframes quantity-pulse`).
+ */
+Hooks.PulseOnChange = {
+  mounted() {
+    this.last = this.el.dataset.quantity;
+  },
+
+  updated() {
+    const next = this.el.dataset.quantity;
+    if (next === this.last) return;
+    this.el.classList.remove("quantity-pulse");
+    // Force reflow so the browser registers the class removal before we
+    // re-add it; otherwise the animation won't restart on rapid clicks.
+    void this.el.offsetWidth;
+    this.el.classList.add("quantity-pulse");
+    this.last = next;
+  },
+};
+
 Hooks.FocusElement = {
   mounted() {
     // Focus on the first form element when the page loads (step 1)
