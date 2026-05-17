@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
                live(conn, ~p"/admin/fulfillment-calendar")
 
-      assert to == "/sign-in"
+      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillment-calendar"
     end
 
     test "redirects non-admin authenticated users to /sign-in" do
@@ -299,7 +299,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
                live(conn, ~p"/admin/fulfillment-calendar")
 
-      assert to == "/sign-in"
+      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillment-calendar"
     end
   end
 
