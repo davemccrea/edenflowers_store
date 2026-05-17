@@ -1,6 +1,6 @@
 ---
 name: phoenix-framework
-description: "Use when working with Phoenix controllers, LiveViews, or web layer."
+description: "Expert on the Phoenix Framework."
 metadata:
   managed-by: usage-rules
 ---
