@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+## Project
+
+- Call `source .env` before running mix.
+
 ## Coding Standards
 
 - Do not add comments that reiterate what the code does.
