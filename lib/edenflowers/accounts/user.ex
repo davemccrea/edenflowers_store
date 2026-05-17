@@ -187,6 +187,10 @@ defmodule Edenflowers.Accounts.User do
     belongs_to :newsletter_promo, Edenflowers.Store.Promotion
   end
 
+  calculations do
+    calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+  end
+
   identities do
     identity :unique_email, [:email]
   end
