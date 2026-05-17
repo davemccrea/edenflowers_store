@@ -427,6 +427,8 @@ defmodule Edenflowers.Store.Order do
   end
 
   calculations do
+    calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
+
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
 
