@@ -1,6 +1,8 @@
 defmodule Generator do
   use Ash.Generator
 
+  alias Edenflowers.Accounts.User
+
   alias Edenflowers.Store.{
     TaxRate,
     Promotion,
@@ -11,6 +13,20 @@ defmodule Generator do
     LineItem,
     FulfillmentOption
   }
+
+  # seed_generator bypasses actions so we can set :admin directly
+  # (the attribute is writable?: false on the resource).
+  def admin_user(opts \\ []) do
+    seed_generator(
+      %User{
+        email: sequence(:admin_email, &"admin#{&1}@example.com"),
+        name: "Admin",
+        admin: true
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
 
   def tax_rate(opts \\ []) do
     changeset_generator(
