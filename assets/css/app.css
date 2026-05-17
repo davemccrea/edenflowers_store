@@ -768,3 +768,101 @@ body.ready {
   background-color: #fafaf9;
   background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23294735' fill-opacity='0.04'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
+
+/* Admin fulfillment calendar — decorations
+   Two visual primitives layered onto cells / legend swatches:
+   - strike: a short diagonal line through the centre, marking a closed cell.
+   - corner: a top-right triangle, marking an override that contradicts the weekday rule.
+   Each is offered on both pseudo-elements so cells can use one slot for the
+   strike and the other for the corner without colliding. */
+@utility calendar-strike-after {
+  &::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    height: 2px;
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(45deg);
+    @apply bg-error/75;
+  }
+
+  &:hover::after {
+    @apply bg-error;
+  }
+}
+
+/* Tighter strike for smaller elements (weekday header buttons). Same angle
+   and colour as calendar-strike-after — just a shorter visible span so the
+   slash doesn't overshoot a 3-letter label. */
+@utility calendar-strike-after-tight {
+  &::after {
+    content: "";
+    position: absolute;
+    left: 32%;
+    right: 32%;
+    top: 50%;
+    height: 2px;
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(45deg);
+    @apply bg-error/75;
+  }
+
+  &:hover::after {
+    @apply bg-error;
+  }
+}
+
+@utility calendar-strike-before {
+  &::before {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    height: 2px;
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(45deg);
+    @apply bg-error/75;
+  }
+}
+
+@utility calendar-corner-before {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    @apply bg-primary/75;
+  }
+}
+
+@utility calendar-corner-after {
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    @apply bg-primary/75;
+  }
+}
+
+/* Mixed state — options disagree at the current scope. 45° stripes are the
+   universal "indeterminate / pending" pattern; distinct from closed (strike),
+   open (plain), and past (faded), and pure background so the digit reads on top. */
+@utility calendar-mixed {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
+  );
+}

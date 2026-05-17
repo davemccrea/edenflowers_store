@@ -312,7 +312,7 @@ Hooks.CalendarHook = {
     // Read targets from the currently-focused cell, not the root: each cell's
     // targets are relative to its own date (ArrowDown from May 1 -> May 8,
     // ArrowDown from May 8 -> May 15, etc).
-    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
+    const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
     if (!viewDateEl) return;
 
     const targets = this.parseKeyTargets(viewDateEl);
@@ -376,7 +376,7 @@ Hooks.CalendarHook = {
       return;
     }
 
-    const dateEl = this.getElement(`calendar-day-${date}`);
+    const dateEl = this.getElement(`${this.id}-day-${date}`);
     if (dateEl) {
       /** @type {HTMLElement} */ (dateEl).focus();
     }
@@ -406,14 +406,14 @@ Hooks.CalendarHook = {
    */
   setTabIndex(nextDate = null) {
     // Remove focus from view date
-    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
+    const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
     if (viewDateEl) {
       viewDateEl.setAttribute("tabindex", "-1");
     }
 
     // Set focus on next date
     if (nextDate) {
-      const nextDateEl = this.getElement(`calendar-day-${nextDate}`);
+      const nextDateEl = this.getElement(`${this.id}-day-${nextDate}`);
       if (nextDateEl) {
         nextDateEl.setAttribute("tabindex", "0");
       }
