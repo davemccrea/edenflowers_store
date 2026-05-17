@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}

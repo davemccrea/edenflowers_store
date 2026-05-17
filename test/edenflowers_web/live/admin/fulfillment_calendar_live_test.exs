@@ -278,8 +278,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     test "redirects unauthenticated users to /sign-in" do
       conn = Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})
 
-      assert {:error, {:redirect, %{to: "/sign-in"}}} =
+      assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
                live(conn, ~p"/admin/fulfillment-calendar")
+
+      assert to == "/sign-in"
     end
 
     test "redirects non-admin authenticated users to /sign-in" do
@@ -294,8 +296,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
         |> Plug.Test.init_test_session(%{})
         |> Helpers.store_in_session(regular_user)
 
-      assert {:error, {:redirect, %{to: "/sign-in"}}} =
+      assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
                live(conn, ~p"/admin/fulfillment-calendar")
+
+      assert to == "/sign-in"
     end
   end
 
