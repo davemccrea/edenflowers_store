@@ -4,8 +4,9 @@ defmodule EdenflowersWeb.CheckoutLive do
   require Logger
 
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
+  import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -200,31 +201,22 @@ defmodule EdenflowersWeb.CheckoutLive do
                             {~t"Pickup Date *"}
                           <% end %>
                         </label>
-                        <.live_component
-                          id="calendar"
-                          error={
-                            Phoenix.Component.used_input?(@form[:fulfillment_date]) and
-                              Enum.any?(@form[:fulfillment_date].errors)
-                          }
-                          selected_date={@form[:fulfillment_date].value}
-                          module={EdenflowersWeb.CalendarComponent}
-                          selectable?={
-                            fn date ->
-                              {fulfillable?, _reason} =
-                                Fulfillments.fulfill_on_date(@order.fulfillment_option, date)
-
-                              fulfillable?
-                            end
-                          }
-                        >
-                          <:day_decoration :let={day}>
-                            <.icon
-                              :if={icon = KeyDates.icon_for(day)}
-                              name={icon}
-                              class="text-error absolute top-0 right-0 left-0 m-auto h-3 w-3 translate-y-0.5"
-                            />
-                          </:day_decoration>
-                        </.live_component>
+                        <div class="sm:max-w-md">
+                          <.live_component
+                            id="calendar"
+                            error={
+                              Phoenix.Component.used_input?(@form[:fulfillment_date]) and
+                                Enum.any?(@form[:fulfillment_date].errors)
+                            }
+                            selected_date={@form[:fulfillment_date].value}
+                            module={EdenflowersWeb.CalendarComponent}
+                            cell_state={fn date -> Fulfillments.customer_cell_state(@order.fulfillment_option, date) end}
+                          >
+                            <:day_decoration :let={%{date: day, state: state}}>
+                              <.key_date_icon date={day} muted?={state == :past} />
+                            </:day_decoration>
+                          </.live_component>
+                        </div>
                         <.field_errors field={@form[:fulfillment_date]} />
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
@@ -553,7 +545,10 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       {:error, form} ->
         forward_delivery_address_error(form)
-        {:noreply, assign(socket, form: form)}
+        # If `submit_delivery` rejected the date, an admin may have just closed
+        # it. Reload the order so the calendar re-paints with fresh availability,
+        # then re-assign the failed form so the customer still sees the error.
+        {:noreply, socket |> reload_order() |> assign(form: form)}
     end
   end
 
