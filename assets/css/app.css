@@ -164,6 +164,16 @@ summary {
   }
 }
 
+/* Submit spinner: 300ms delay on show, instant on hide. */
+.phx-submit-loading\:loading-spinner {
+  opacity: 0;
+  transition: opacity 0s;
+}
+.phx-submit-loading .phx-submit-loading\:loading-spinner {
+  opacity: 1;
+  transition-delay: 300ms;
+}
+
 /* Gate clicks during reconnect/loading so a tap on a CTA mid-flap doesn't
    queue an ambiguous action. Keyboard focus and scrolling are unaffected;
    the flash group stays interactive so toasts can be dismissed. */
