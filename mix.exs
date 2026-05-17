@@ -16,7 +16,7 @@ defmodule Edenflowers.MixProject do
       listeners: [Phoenix.CodeReloader],
       usage_rules: [
         skills: [
-          location: ".claude/skills",
+          location: ".agents/skills",
           package_skills: [:gettext_sigils],
           build: [
             "ash-framework": [
