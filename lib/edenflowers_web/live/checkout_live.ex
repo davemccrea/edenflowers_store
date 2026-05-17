@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Store.{Order, FulfillmentOption, ProductVariant, ProductVariantSize}
+  alias Edenflowers.Store.{Order, FulfillmentOption, KeyDates, ProductVariant, ProductVariantSize}
   alias Edenflowers.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -606,7 +606,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("remove_card", _, socket) do
     order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
-    {:noreply, assign_forms(socket, order)}
+    {:noreply, assign_forms(socket, order, drop: ["card_message"])}
   end
 
   # Stripe events
@@ -625,18 +625,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Info Events
   # ===========
 
+  # No PaymentIntent sync here: the `pay` handler updates the amount
+  # synchronously before pushing `stripe:process_payment`, so Stripe always
+  # charges the cart total at the moment of click.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    actor = actor(socket)
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor)
-
-    # Cart changed while the customer is on the payment step. The PaymentIntent's
-    # amount must follow the new total, otherwise `confirmPayment` would charge
-    # the previous amount.
-    if order.state == :payment and not is_nil(order.payment_intent_id) do
-      {:noreply, sync_payment_intent(assign(socket, order: order), order)}
-    else
-      {:noreply, assign(socket, order: order)}
-    end
+    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    {:noreply, assign(socket, order: order)}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
@@ -704,8 +698,19 @@ defmodule EdenflowersWeb.CheckoutLive do
   # some validations read off the order's loaded relationships (e.g. line_items);
   # the params side has to be preserved so selecting a card doesn't wipe values
   # the customer is still editing.
-  defp assign_forms(socket, order) do
-    form_params = if form = socket.assigns[:form], do: form.params, else: %{}
+  #
+  # Pass `drop: ["field_name", ...]` to discard specific params that the
+  # action just invalidated (e.g. clearing `card_message` when the card is
+  # removed) — otherwise the stale typed value would shadow the now-nil
+  # attribute on the rebuilt form.
+  defp assign_forms(socket, order, opts \\ []) do
+    drop = Keyword.get(opts, :drop, [])
+
+    form_params =
+      case socket.assigns[:form] do
+        nil -> %{}
+        form -> Map.drop(form.params, drop)
+      end
 
     socket
     |> assign(order: order)
@@ -842,21 +847,6 @@ defmodule EdenflowersWeb.CheckoutLive do
         Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
 
         stripe_unavailable(socket)
-    end
-  end
-
-  # Re-sync the existing PaymentIntent's amount with the current order total
-  # without changing the client_secret (so the already-mounted Elements UI keeps
-  # working).
-  defp sync_payment_intent(socket, order) do
-    case stripe_api().update_payment_intent(order) do
-      {:ok, _payment_intent} ->
-        socket
-
-      {:error, reason} ->
-        Logger.error("Failed to sync payment intent amount for order #{order.id}: #{inspect(reason)}")
-
-        put_flash(socket, :error, ~t"Cart changed but payment couldn't be updated. Please retry.")
     end
   end
 
