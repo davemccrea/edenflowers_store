@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     id={"#{@id}-qty-#{line_item.id}"}
                     data-quantity={line_item.quantity}
                     phx-hook="PulseOnChange"
-                    class="tabular-nums motion-reduce:animate-none"
+                    class="tabular-nums"
                   >
                     {line_item.quantity}
                   </span>
