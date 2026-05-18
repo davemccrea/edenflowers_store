@@ -169,7 +169,6 @@ defmodule EdenflowersWeb.CoreComponents do
       {@rest}
       disabled={@disabled}
       type="submit"
-      aria-busy="true"
       class="btn btn-primary btn-lg mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
     >
       <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
