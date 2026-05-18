@@ -146,6 +146,43 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  Renders a form submit button with a label↔spinner swap on submit.
+
+  The loading state is driven by LiveView's automatic `.phx-submit-loading`
+  class on the form — no `loading` prop, because a static prop would not
+  reflect the in-flight submit state. The label and spinner share one grid
+  cell, so the button width is stable across idle/loading (no layout shift).
+  Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
+
+  ## Examples
+
+      <.form_button>{~t"Next"}</.form_button>
+      <.form_button disabled={true} id="payment-button">{~t"Pay"}</.form_button>
+  """
+  attr :rest, :global
+  attr :disabled, :boolean, default: false
+  slot :inner_block
+
+  def form_button(assigns) do
+    ~H"""
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      aria-busy="true"
+      class="btn btn-primary btn-lg mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
+    >
+      <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
+      <span
+        class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
+        aria-hidden="true"
+      >
+      </span>
+    </button>
+    """
+  end
+
+  @doc """
   Renders an input with label and error messages.
 
   A `Phoenix.HTML.FormField` may be passed as argument,
