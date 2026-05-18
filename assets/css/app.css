@@ -164,6 +164,28 @@ summary {
   }
 }
 
+/* Submit button: label↔spinner swap with 300ms-delayed reveal.
+   Both children share one grid cell so the button width stays stable.
+   Under 300ms the spinner never appears — fast submits look instant.
+   The explicit `transition: opacity 0s` on the base rule is the swap-back
+   path: when `.phx-submit-loading` is removed mid-transition, the more
+   specific selectors stop matching and opacity snaps without delay. */
+.form-button-label,
+.form-button-spinner {
+  transition: opacity 0s;
+}
+.form-button-spinner {
+  opacity: 0;
+}
+.phx-submit-loading .form-button-label {
+  opacity: 0;
+  transition: opacity 0s 300ms;
+}
+.phx-submit-loading .form-button-spinner {
+  opacity: 1;
+  transition: opacity 0s 300ms;
+}
+
 /* Gate clicks during reconnect/loading so a tap on a CTA mid-flap doesn't
    queue an ambiguous action. Keyboard focus and scrolling are unaffected;
    the flash group stays interactive so toasts can be dismissed. */
@@ -248,32 +270,6 @@ body.ready {
   scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
 }
 
-/* Toast (flash) — see core_components.ex (flash_group/1). */
-@keyframes toast-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-  }
-  60% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes toast-slide-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(0.5rem);
-  }
-}
-
 @keyframes quantity-pulse {
   0% {
     transform: scale(1);
@@ -326,88 +322,6 @@ body.ready {
 @media (prefers-reduced-motion: reduce) {
   .line-item-row-enter {
     animation-name: line-item-enter-fade;
-  }
-}
-
-.toast-item {
-  position: relative;
-  width: 22rem;
-  background: oklch(99% 0.003 80);
-  color: oklch(25% 0.015 60);
-  border: 1px solid oklch(21% 0.006 286);
-  border-radius: 0;
-  box-shadow:
-    0 18px 32px -16px oklch(30% 0.04 60 / 0.18),
-    0 4px 10px -4px oklch(30% 0.04 60 / 0.08);
-  animation: toast-slide-in 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.toast-item[data-dismissing] {
-  animation: toast-slide-out 220ms cubic-bezier(0.55, 0, 0.68, 0.06) forwards;
-}
-
-.toast-item[data-key="error"] {
-  --toast-ground: oklch(93% 0.04 30);
-}
-.toast-item[data-key="warning"] {
-  --toast-ground: oklch(94% 0.05 85);
-}
-.toast-item[data-key="success"] {
-  --toast-ground: oklch(94% 0.04 155);
-}
-.toast-item[data-key="info"] {
-  --toast-ground: oklch(94% 0.025 220);
-}
-
-.toast-item__head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.75rem 0.55rem 1.25rem;
-  background: var(--toast-ground, oklch(94% 0.04 155));
-  border-bottom: 1px solid oklch(21% 0.006 286);
-}
-
-.toast-item__eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: oklch(28% 0.02 60);
-  line-height: 1.3;
-  flex: 1;
-}
-
-.toast-item__body {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: oklch(35% 0.015 60);
-  padding: 0.85rem 1.25rem 1rem;
-}
-
-.toast-item__dismiss {
-  display: grid;
-  place-items: center;
-  padding: 0.25rem;
-  color: oklch(35% 0.02 60);
-  cursor: pointer;
-  transition: color 150ms ease;
-}
-.toast-item__dismiss:hover {
-  color: oklch(15% 0.02 60);
-}
-.toast-item__dismiss .hero-x-mark,
-.toast-item__dismiss .hero-x-mark-mini {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .toast-item,
-  .toast-item[data-dismissing] {
-    animation: none;
   }
 }
 
