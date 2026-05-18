@@ -18,37 +18,14 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   end
 
   defp handle_line_item_changed(
-         %Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id, event: event, payload: payload},
+         %Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id},
          socket
        ) do
     actor = socket.assigns[:current_user]
-    previous_ids = line_item_ids(socket.assigns.order)
     order = Order.get_for_checkout!(order_id, actor: actor)
 
-    socket =
-      socket
-      |> assign(order: order)
-      |> maybe_animate_new_line_item(event, payload, previous_ids)
-
-    {:halt, socket}
+    {:halt, assign(socket, order: order)}
   end
 
   defp handle_line_item_changed(_, socket), do: {:cont, socket}
-
-  # `:add_to_cart` is an upsert configured as `create`, so `action.type` is
-  # always `:create` even on the update path. The only reliable insert-vs-update
-  # signal here is whether the id was in the previously-loaded line items;
-  # known ids fall through to PulseOnChange for the quantity bump.
-  defp maybe_animate_new_line_item(socket, "add_to_cart", %{data: %{id: id}}, previous_ids) do
-    if id in previous_ids do
-      socket
-    else
-      push_event(socket, "cart:item-added", %{id: id})
-    end
-  end
-
-  defp maybe_animate_new_line_item(socket, _event, _payload, _previous_ids), do: socket
-
-  defp line_item_ids(%{line_items: items}) when is_list(items), do: Enum.map(items, & &1.id)
-  defp line_item_ids(_), do: []
 end

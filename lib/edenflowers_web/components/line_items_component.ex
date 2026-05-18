@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
           <li
             :for={line_item <- @order.line_items}
             id={"#{@id}-row-#{line_item.id}"}
+            phx-mounted={JS.add_class("line-item-row-enter")}
             class="flex flex-row gap-4 text-base"
           >
             <%= if @link_product and not line_item.is_card do %>

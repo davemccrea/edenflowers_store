@@ -761,19 +761,4 @@ Hooks.HotFxShyHeader = {
   },
 };
 
-window.addEventListener("phx:cart:item-added", (event) => {
-  const id = event.detail?.id;
-  if (!id) return;
-  requestAnimationFrame(() => {
-    const row = document.getElementById(`cart-line-items-row-${id}`);
-    if (!row) return;
-    row.classList.add("line-item-row-enter");
-    row.addEventListener(
-      "animationend",
-      () => row.classList.remove("line-item-row-enter"),
-      { once: true },
-    );
-  });
-});
-
 export default Hooks;
