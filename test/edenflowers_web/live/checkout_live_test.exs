@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.CheckoutLiveTest do
   use EdenflowersWeb.ConnCase, async: true
+  use Oban.Testing, repo: Edenflowers.Repo
 
   import PhoenixTest
 
@@ -77,6 +78,50 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :contact_details
       assert is_nil(reloaded.customer_email)
+    end
+
+    test "newsletter checkbox is unchecked by default", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox'][checked]")
+    end
+
+    test "checking the newsletter box subscribes the user and enqueues the welcome email", %{
+      conn: conn,
+      order: order
+    } do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Subscriber")
+      |> fill_in("Email *", with: "subscriber@example.com")
+      |> check("Subscribe to our newsletter and get 15% off your first order.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("subscriber@example.com", authorize?: false)
+      assert user.newsletter_opt_in == true
+
+      assert_enqueued(
+        worker: Edenflowers.Workers.SendNewsletterPromoEmail,
+        args: %{"email" => "subscriber@example.com"}
+      )
+    end
+
+    test "leaving the newsletter box unchecked does not opt the user in", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Bystander")
+      |> fill_in("Email *", with: "bystander@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("bystander@example.com", authorize?: false)
+      assert user.newsletter_opt_in == false
+
+      refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
     end
   end
 
