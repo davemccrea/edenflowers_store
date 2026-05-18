@@ -369,9 +369,9 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-2">
-              <h3 class="eyebrow text-base-content/60">Minimosen</h3>
-              <p class="footer-line whitespace-nowrap">Kauppapuistikko 21</p>
-              <p class="footer-line whitespace-nowrap">65100 Vaasa</p>
+              <h3 class="eyebrow text-base-content/60">Minimossen</h3>
+              <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
+              <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
             </div>
 
             <div class="footer-grid__hours space-y-2">
