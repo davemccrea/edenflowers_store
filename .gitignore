@@ -47,3 +47,4 @@ images
 *.dump
 
 /priv/heroku_import/
+PLAN.md
