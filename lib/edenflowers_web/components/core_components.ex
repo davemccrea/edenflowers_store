@@ -48,51 +48,55 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders flash messages as toast notifications.
+  Renders flash notices.
 
-  Also handles the disconnected/reconnected banner via the FlashHandler hook.
+  ## Examples
+
+      <.flash kind={:info} flash={@flash} />
+      <.flash
+        id="welcome-back"
+        kind={:info}
+        phx-mounted={show("#welcome-back") |> JS.remove_attribute("hidden")}
+        hidden
+      >
+        Welcome Back!
+      </.flash>
   """
-  def flash_group(assigns) do
+  attr :id, :string, doc: "the optional id of flash container"
+  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+
+  slot :inner_block, doc: "the optional inner block that renders the flash message"
+
+  def flash(assigns) do
+    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
+
     ~H"""
     <div
-      id="flash-group"
-      class="z-[100] fixed inset-x-0 bottom-6 flex flex-col items-center gap-3 px-4"
-      role="region"
-      aria-label={~t"Notifications"}
-      phx-hook="FlashHandler"
-      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
-      data-reconnected-message={~t"Reconnected"}
+      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
+      id={@id}
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      role="alert"
+      class="toast toast-top toast-end z-50"
+      {@rest}
     >
-      <div
-        :for={{key, msg} <- @flash}
-        id={"flash-#{key}"}
-        class="toast-item"
-        data-key={key}
-        data-duration="5000"
-        role={flash_role(key)}
-      >
-        <div class="toast-item__head">
-          <p class="toast-item__eyebrow">{flash_label(key)}</p>
-          <button class="toast-item__dismiss" aria-label={~t"Dismiss"} data-dismiss>
-            <.icon name="hero-x-mark" />
-          </button>
+      <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
         </div>
-        <p class="toast-item__body">{msg}</p>
+        <div class="flex-1" />
+        <button type="button" class="group cursor-pointer self-start" aria-label={~t"close"}>
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        </button>
       </div>
     </div>
     """
   end
-
-  # Errors interrupt; everything else waits politely. WCAG 4.1.3.
-  defp flash_role("error"), do: "alert"
-  defp flash_role(_), do: "status"
-
-  # Severity → eyebrow label. Restrained, conventional words — the message
-  # itself does the heavy lifting; the eyebrow just orients the reader.
-  defp flash_label("error"), do: ~t"Couldn't complete"
-  defp flash_label("warning"), do: ~t"Notice"
-  defp flash_label("success"), do: ~t"Confirmed"
-  defp flash_label(_), do: ~t"Note"
 
   @doc """
   Renders a button with navigation support.
