@@ -1095,6 +1095,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <div
       id={@id}
+      phx-hook="DrawerScrollLock"
       phx-window-keydown={JS.exec("phx-hide", to: "##{@id}")}
       phx-key="Escape"
       phx-show={
