@@ -164,6 +164,28 @@ summary {
   }
 }
 
+/* Submit button: label↔spinner swap with 300ms-delayed reveal.
+   Both children share one grid cell so the button width stays stable.
+   Under 300ms the spinner never appears — fast submits look instant.
+   The explicit `transition: opacity 0s` on the base rule is the swap-back
+   path: when `.phx-submit-loading` is removed mid-transition, the more
+   specific selectors stop matching and opacity snaps without delay. */
+.form-button-label,
+.form-button-spinner {
+  transition: opacity 0s;
+}
+.form-button-spinner {
+  opacity: 0;
+}
+.phx-submit-loading .form-button-label {
+  opacity: 0;
+  transition: opacity 0s 300ms;
+}
+.phx-submit-loading .form-button-spinner {
+  opacity: 1;
+  transition: opacity 0s 300ms;
+}
+
 /* Gate clicks during reconnect/loading so a tap on a CTA mid-flap doesn't
    queue an ambiguous action. Keyboard focus and scrolling are unaffected;
    the flash group stays interactive so toasts can be dismissed. */
