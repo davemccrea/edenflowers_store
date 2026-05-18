@@ -256,9 +256,9 @@ defmodule EdenflowersWeb.OtpSignInLive do
 
   defp request_error_toast(socket, form) do
     if rate_limited?(form) do
-      put_flash(socket, :warning, ~t"Too many requests. Please wait a few minutes and try again.")
+      put_flash(socket, :error, ~t"Too many requests. Please wait a few minutes and try again.")
     else
-      put_flash(socket, :warning, ~t"We couldn't send your sign-in code. Please try again in a moment.")
+      put_flash(socket, :error, ~t"We couldn't send your sign-in code. Please try again in a moment.")
     end
   end
 

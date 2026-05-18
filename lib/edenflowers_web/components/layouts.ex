@@ -118,7 +118,8 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
-        <.flash_group flash={@flash} />
+        <.flash kind={:info} flash={@flash} />
+        <.flash kind={:error} flash={@flash} />
         {render_slot(@inner_block)}
       </main>
 
@@ -351,7 +352,8 @@ defmodule EdenflowersWeb.Layouts do
     </div>
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-      <.flash_group flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
 
       {render_slot(@inner_block)}
     </main>
