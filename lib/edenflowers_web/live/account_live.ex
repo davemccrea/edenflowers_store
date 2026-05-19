@@ -11,17 +11,25 @@ defmodule EdenflowersWeb.AccountLive do
     open_orders = Order.get_open_orders!(actor: actor)
     past_orders = Order.get_past_orders!(actor: actor)
 
+    user_with_name = Ash.load!(actor, [:first_name], actor: actor, authorize?: false)
+
     {:ok,
      socket
      |> assign(:open_orders, open_orders)
-     |> assign(:past_orders, past_orders)}
+     |> assign(:past_orders, past_orders)
+     |> assign(:user_first_name, user_first_name(user_with_name))}
   end
 
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">{~t"Your account"}</h1>
+        <header class="mb-16 max-w-3xl md:mb-20">
+          <p :if={@current_user && @current_user.email} class="text-base-content/70 mb-2">
+            {to_string(@current_user.email)}
+          </p>
+          <h1 class="page-title">{greeting(@user_first_name)}</h1>
+        </header>
 
         <%= cond do %>
           <% Enum.any?(@open_orders) or Enum.any?(@past_orders) -> %>
@@ -54,6 +62,12 @@ defmodule EdenflowersWeb.AccountLive do
               <.link navigate={~p"/store"} class="link-underline-static-body">{~t"Visit the store"}</.link>
             </p>
         <% end %>
+
+        <div class="mt-16 max-w-3xl">
+          <.link href={~p"/sign-out"} class="link-underline-static-body text-base-content/70 text-sm">
+            {~t"Sign out"}
+          </.link>
+        </div>
       </.container>
     </Layouts.app>
     """
@@ -99,6 +113,12 @@ defmodule EdenflowersWeb.AccountLive do
 
   defp status_classes(:pending), do: "bg-warning/15 text-warning-content"
   defp status_classes(:fulfilled), do: "bg-success/15 text-success-content"
+
+  defp greeting(nil), do: ~t"Your account"
+  defp greeting(first_name), do: ~t"Hej {name}" |> String.replace("{name}", first_name)
+
+  defp user_first_name(%{first_name: name}) when is_binary(name) and name != "", do: name
+  defp user_first_name(_), do: nil
 
   defp format_ordered_at(nil), do: ""
 
