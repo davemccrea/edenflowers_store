@@ -795,7 +795,7 @@ msgstr ""
 msgid "Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:117
+#: lib/edenflowers_web/live/account_live.ex:193
 #: lib/edenflowers_web/live/order_live.ex:18
 #, elixir-autogen, elixir-format
 msgid "Your account"
@@ -973,6 +973,7 @@ msgid "Home delivery"
 msgstr "Kotiintoimitus"
 
 #: lib/edenflowers_web/components/checkout_components.ex:135
+#: lib/edenflowers_web/live/account_live.ex:240
 #, elixir-autogen, elixir-format, fuzzy
 msgid "In-store pickup"
 msgstr "Nouto myymälästä"
@@ -1007,12 +1008,12 @@ msgstr ""
 msgid "You must sign in to access this page."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:112
+#: lib/edenflowers_web/live/account_live.ex:188
 #, elixir-autogen, elixir-format
 msgid "Fulfilled"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:38
+#: lib/edenflowers_web/live/account_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "Open orders"
 msgstr ""
@@ -1023,22 +1024,22 @@ msgstr ""
 msgid "Order {ref}"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:50
+#: lib/edenflowers_web/live/account_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Past orders"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:111
+#: lib/edenflowers_web/live/account_live.ex:187
 #, elixir-autogen, elixir-format
 msgid "Pending"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:62
+#: lib/edenflowers_web/live/account_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Visit the store"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:61
+#: lib/edenflowers_web/live/account_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "You haven't placed any orders yet."
 msgstr ""
@@ -1053,12 +1054,68 @@ msgstr ""
 msgid "{name} + {count} more"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:118
+#: lib/edenflowers_web/live/account_live.ex:194
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Hej {name}"
 msgstr "Hei %{name},"
 
-#: lib/edenflowers_web/live/account_live.ex:68
+#: lib/edenflowers_web/live/account_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Sign out"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:232
+#, elixir-autogen, elixir-format
+msgid "Arriving on {date}"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:223
+#, elixir-autogen, elixir-format
+msgid "Arriving today"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:226
+#, elixir-autogen, elixir-format
+msgid "Arriving tomorrow"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:112
+#: lib/edenflowers_web/live/account_live.ex:112
+#, elixir-autogen, elixir-format
+msgid "Gift order"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:139
+#, elixir-autogen, elixir-format
+msgid "Message Jennie"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:133
+#, elixir-autogen, elixir-format
+msgid "Notes for courier"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:222
+#, elixir-autogen, elixir-format
+msgid "Ready for pickup today"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:225
+#, elixir-autogen, elixir-format
+msgid "Ready for pickup tomorrow"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:229
+#, elixir-autogen, elixir-format
+msgid "Ready for pickup {date}"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:252
+#, elixir-autogen, elixir-format
+msgid "for yourself"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:250
+#, elixir-autogen, elixir-format, fuzzy
+msgid "to {name}"
 msgstr ""
