@@ -94,6 +94,7 @@ msgstr "Edellinen kuukausi"
 msgid "Store"
 msgstr "Kauppa"
 
+#: lib/edenflowers_web/live/account_live.ex:132
 #: lib/edenflowers_web/live/checkout_live.ex:312
 #, elixir-autogen, elixir-format
 msgid "Total"
@@ -331,17 +332,17 @@ msgstr "Osoite"
 #: lib/edenflowers/email/templates/newsletter_promo.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "As a welcome gift, here is your 15% off promo code for your first order:"
-msgstr ""
+msgstr "Tervetuliaislahjaksi, tässä on 15% alennuskoodi ensimmäiseen tilaukseesi:"
 
 #: lib/edenflowers_web/live/checkout_live.ex:370
 #, elixir-autogen, elixir-format
 msgid "Card Message"
-msgstr ""
+msgstr "Kortin viesti"
 
 #: lib/edenflowers_web/live/checkout_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "Cart is empty"
-msgstr ""
+msgstr "Ostoskori on tyhjä"
 
 #: lib/edenflowers/store/order/validations/validate_minimum_cart_total.ex:29
 #, elixir-autogen, elixir-format
@@ -795,7 +796,7 @@ msgstr ""
 msgid "Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:193
+#: lib/edenflowers_web/live/account_live.ex:253
 #: lib/edenflowers_web/live/order_live.ex:18
 #, elixir-autogen, elixir-format
 msgid "Your account"
@@ -973,7 +974,7 @@ msgid "Home delivery"
 msgstr "Kotiintoimitus"
 
 #: lib/edenflowers_web/components/checkout_components.ex:135
-#: lib/edenflowers_web/live/account_live.ex:240
+#: lib/edenflowers_web/live/account_live.ex:303
 #, elixir-autogen, elixir-format, fuzzy
 msgid "In-store pickup"
 msgstr "Nouto myymälästä"
@@ -1008,41 +1009,32 @@ msgstr ""
 msgid "You must sign in to access this page."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:188
-#, elixir-autogen, elixir-format
-msgid "Fulfilled"
-msgstr ""
-
-#: lib/edenflowers_web/live/account_live.ex:44
+#: lib/edenflowers_web/live/account_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "Open orders"
-msgstr ""
+msgstr "Avoimet tilaukset"
 
 #: lib/edenflowers/store/order/calculations/display_title.ex:45
 #: lib/edenflowers/store/order/calculations/display_title.ex:58
+#: lib/edenflowers_web/live/account_live.ex:432
 #, elixir-autogen, elixir-format
 msgid "Order {ref}"
-msgstr ""
+msgstr "Tilaus {ref}"
 
-#: lib/edenflowers_web/live/account_live.ex:56
+#: lib/edenflowers_web/live/account_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "Past orders"
-msgstr ""
+msgstr "Aiemmat tilaukset"
 
-#: lib/edenflowers_web/live/account_live.ex:187
-#, elixir-autogen, elixir-format
-msgid "Pending"
-msgstr ""
-
-#: lib/edenflowers_web/live/account_live.ex:68
+#: lib/edenflowers_web/live/account_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Visit the store"
-msgstr ""
+msgstr "Vieraile kaupassa"
 
-#: lib/edenflowers_web/live/account_live.ex:67
+#: lib/edenflowers_web/live/account_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "You haven't placed any orders yet."
-msgstr ""
+msgstr "Et ole vielä tehnyt tilauksia."
 
 #: lib/edenflowers_web/components/core_components.ex:93
 #, elixir-autogen, elixir-format
@@ -1054,68 +1046,135 @@ msgstr ""
 msgid "{name} + {count} more"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:194
-#, elixir-autogen, elixir-format, fuzzy
+#: lib/edenflowers_web/live/account_live.ex:254
+#, elixir-autogen, elixir-format
 msgid "Hej {name}"
-msgstr "Hei %{name},"
+msgstr "Hej {name}"
 
-#: lib/edenflowers_web/live/account_live.ex:74
+#: lib/edenflowers_web/live/account_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Sign out"
-msgstr ""
+msgstr "Kirjaudu ulos"
 
-#: lib/edenflowers_web/live/account_live.ex:232
+#: lib/edenflowers_web/live/account_live.ex:292
 #, elixir-autogen, elixir-format
 msgid "Arriving on {date}"
-msgstr ""
+msgstr "Saapuu {date}"
 
-#: lib/edenflowers_web/live/account_live.ex:223
+#: lib/edenflowers_web/live/account_live.ex:283
 #, elixir-autogen, elixir-format
 msgid "Arriving today"
-msgstr ""
+msgstr "Saapuu tänään"
 
-#: lib/edenflowers_web/live/account_live.ex:226
+#: lib/edenflowers_web/live/account_live.ex:286
 #, elixir-autogen, elixir-format
 msgid "Arriving tomorrow"
-msgstr ""
+msgstr "Saapuu huomenna"
 
-#: lib/edenflowers_web/live/account_live.ex:112
-#: lib/edenflowers_web/live/account_live.ex:112
+#: lib/edenflowers_web/live/account_live.ex:124
+#: lib/edenflowers_web/live/account_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Gift order"
-msgstr ""
+msgstr "Lahja"
 
-#: lib/edenflowers_web/live/account_live.ex:139
+#: lib/edenflowers_web/live/account_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Message Jennie"
-msgstr ""
+msgstr "Viesti Jennie"
 
-#: lib/edenflowers_web/live/account_live.ex:133
+#: lib/edenflowers_web/live/account_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "Notes for courier"
-msgstr ""
+msgstr "Viesti kuljettajalle"
 
-#: lib/edenflowers_web/live/account_live.ex:222
+#: lib/edenflowers_web/live/account_live.ex:282
 #, elixir-autogen, elixir-format
 msgid "Ready for pickup today"
-msgstr ""
+msgstr "Noudettavissa tänään"
 
-#: lib/edenflowers_web/live/account_live.ex:225
+#: lib/edenflowers_web/live/account_live.ex:285
 #, elixir-autogen, elixir-format
 msgid "Ready for pickup tomorrow"
-msgstr ""
+msgstr "Noudettavissa huomenna"
 
-#: lib/edenflowers_web/live/account_live.ex:229
+#: lib/edenflowers_web/live/account_live.ex:289
 #, elixir-autogen, elixir-format
 msgid "Ready for pickup {date}"
-msgstr ""
+msgstr "Noudettavissa {date}"
 
-#: lib/edenflowers_web/live/account_live.ex:252
+#: lib/edenflowers_web/live/account_live.ex:423
 #, elixir-autogen, elixir-format
 msgid "for yourself"
-msgstr ""
+msgstr "itsellesi"
 
-#: lib/edenflowers_web/live/account_live.ex:250
-#, elixir-autogen, elixir-format, fuzzy
+#: lib/edenflowers_web/live/account_live.ex:421
+#, elixir-autogen, elixir-format
 msgid "to {name}"
-msgstr ""
+msgstr "{name}:lle"
+
+#: lib/edenflowers_web/live/account_live.ex:164
+#, elixir-autogen, elixir-format
+msgid "Card"
+msgstr "Kortti"
+
+#: lib/edenflowers_web/live/account_live.ex:300
+#, elixir-autogen, elixir-format
+msgid "Deliver to"
+msgstr "Toimitetaan"
+
+#: lib/edenflowers_web/live/account_live.ex:385
+#, elixir-autogen, elixir-format
+msgid "Delivered"
+msgstr "Toimitettu"
+
+#: lib/edenflowers_web/live/account_live.ex:366
+#, elixir-autogen, elixir-format
+msgid "Delivery progress"
+msgstr "Toimituksen eteneminen"
+
+#: lib/edenflowers_web/live/account_live.ex:193
+#, elixir-autogen, elixir-format
+msgid "Get directions"
+msgstr "Reittiohjeet"
+
+#: lib/edenflowers_web/live/account_live.ex:385
+#, elixir-autogen, elixir-format
+msgid "On its way"
+msgstr "Matkalla"
+
+#: lib/edenflowers_web/live/account_live.ex:384
+#, elixir-autogen, elixir-format
+msgid "Picked up"
+msgstr "Noudettu"
+
+#: lib/edenflowers_web/live/account_live.ex:299
+#, elixir-autogen, elixir-format
+msgid "Pickup"
+msgstr "Nouto"
+
+#: lib/edenflowers_web/live/account_live.ex:365
+#, elixir-autogen, elixir-format
+msgid "Pickup progress"
+msgstr "Noudon eteneminen"
+
+#: lib/edenflowers_web/live/account_live.ex:384
+#: lib/edenflowers_web/live/account_live.ex:385
+#, elixir-autogen, elixir-format
+msgid "Placed"
+msgstr "Tilattu"
+
+#: lib/edenflowers_web/live/account_live.ex:384
+#, elixir-autogen, elixir-format
+msgid "Ready for pickup"
+msgstr "Valmis noutoon"
+
+#: lib/edenflowers_web/live/account_live.ex:204
+#: lib/edenflowers_web/live/account_live.ex:246
+#, elixir-autogen, elixir-format
+msgid "View order"
+msgstr "Näytä tilaus"
+
+#: lib/edenflowers_web/live/account_live.ex:175
+#, elixir-autogen, elixir-format
+msgid "View receipt"
+msgstr "Näytä kuitti"
