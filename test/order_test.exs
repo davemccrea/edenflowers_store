@@ -1550,4 +1550,205 @@ defmodule Edenflowers.Store.OrderTest do
       assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.25"))
     end
   end
+
+  describe "Account page read actions" do
+    setup do
+      tax_rate = generate(tax_rate())
+      delivery = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :delivery))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+      user = generate(admin_user(admin: false))
+
+      %{user: user, delivery: delivery, product: product, variant: variant}
+    end
+
+    test ":open_orders returns only the actor's pending placed orders", ctx do
+      place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+      place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :fulfilled)
+
+      other = generate(admin_user(admin: false))
+      place_account_order(other, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+
+      result = Order.get_open_orders!(actor: ctx.user)
+      assert length(result) == 1
+      assert hd(result).user_id == ctx.user.id
+      assert hd(result).fulfillment_status == :pending
+    end
+
+    test ":open_orders sorts ascending by fulfillment_date", ctx do
+      a = place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_date: ~D[2030-01-15])
+      b = place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_date: ~D[2030-01-10])
+      c = place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_date: ~D[2030-01-20])
+
+      result = Order.get_open_orders!(actor: ctx.user)
+      assert Enum.map(result, & &1.id) == [b.id, a.id, c.id]
+    end
+
+    test ":past_orders returns only the actor's fulfilled placed orders", ctx do
+      place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :fulfilled)
+      place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+
+      result = Order.get_past_orders!(actor: ctx.user)
+      assert length(result) == 1
+      assert hd(result).fulfillment_status == :fulfilled
+    end
+
+    test ":past_orders sorts descending by ordered_at", ctx do
+      a =
+        place_account_order(ctx.user, ctx.delivery, ctx.variant,
+          fulfillment_status: :fulfilled,
+          ordered_at: ~U[2030-01-15 12:00:00Z]
+        )
+
+      b =
+        place_account_order(ctx.user, ctx.delivery, ctx.variant,
+          fulfillment_status: :fulfilled,
+          ordered_at: ~U[2030-01-20 12:00:00Z]
+        )
+
+      c =
+        place_account_order(ctx.user, ctx.delivery, ctx.variant,
+          fulfillment_status: :fulfilled,
+          ordered_at: ~U[2030-01-10 12:00:00Z]
+        )
+
+      result = Order.get_past_orders!(actor: ctx.user)
+      assert Enum.map(result, & &1.id) == [b.id, a.id, c.id]
+    end
+
+    test "neither action returns another user's orders", ctx do
+      other = generate(admin_user(admin: false))
+
+      place_account_order(other, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+      place_account_order(other, ctx.delivery, ctx.variant, fulfillment_status: :fulfilled)
+
+      assert Order.get_open_orders!(actor: ctx.user) == []
+      assert Order.get_past_orders!(actor: ctx.user) == []
+    end
+  end
+
+  describe ":display_title calculation" do
+    setup do
+      tax_rate = generate(tax_rate())
+      delivery = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :delivery))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      variant = generate(product_variant(product_id: product.id))
+      user = generate(admin_user(admin: false))
+
+      %{user: user, delivery: delivery, product: product, variant: variant}
+    end
+
+    test "single non-card line item -> product_name", ctx do
+      place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+
+      [reloaded] = Order.get_open_orders!(actor: ctx.user)
+      assert reloaded.display_title == ctx.product.name
+    end
+
+    test "multiple non-card line items -> 'first + N more'", ctx do
+      order = place_account_order(ctx.user, ctx.delivery, ctx.variant, fulfillment_status: :pending)
+
+      second_variant = generate(product_variant(product_id: ctx.product.id, size: :small))
+
+      Ash.Seed.seed!(Edenflowers.Store.LineItem, %{
+        order_id: order.id,
+        product_id: ctx.product.id,
+        product_variant_id: second_variant.id,
+        quantity: 1,
+        unit_price: Decimal.new("20.00"),
+        tax_rate: Decimal.new("0.255"),
+        product_name: "Second item",
+        product_image_slug: "second.png",
+        is_card: false,
+        inserted_at: ~U[2030-02-01 12:00:00Z]
+      })
+
+      [reloaded] = Order.get_open_orders!(actor: ctx.user)
+      assert reloaded.display_title =~ " + 1 more"
+    end
+
+    test "card-only line items -> 'Order {ref}' fallback", ctx do
+      order = build_account_placed_order(ctx.user, ctx.delivery, fulfillment_status: :pending)
+      add_account_line_item(order, ctx.variant, true)
+
+      [reloaded] = Order.get_open_orders!(actor: ctx.user)
+      assert reloaded.display_title =~ "Order"
+      assert reloaded.display_title =~ order.order_reference
+    end
+
+    test "sort stability — earliest inserted_at item wins regardless of insertion order", ctx do
+      order = build_account_placed_order(ctx.user, ctx.delivery, fulfillment_status: :pending)
+
+      Ash.Seed.seed!(Edenflowers.Store.LineItem, %{
+        order_id: order.id,
+        product_id: ctx.variant.product_id,
+        product_variant_id: ctx.variant.id,
+        quantity: 1,
+        unit_price: ctx.variant.price,
+        tax_rate: Decimal.new("0.255"),
+        product_name: "Later",
+        product_image_slug: "later.png",
+        is_card: false,
+        inserted_at: ~U[2030-02-02 12:00:00Z]
+      })
+
+      earlier_variant = generate(product_variant(product_id: ctx.product.id, size: :small))
+
+      Ash.Seed.seed!(Edenflowers.Store.LineItem, %{
+        order_id: order.id,
+        product_id: ctx.product.id,
+        product_variant_id: earlier_variant.id,
+        quantity: 1,
+        unit_price: Decimal.new("20.00"),
+        tax_rate: Decimal.new("0.255"),
+        product_name: "Earlier",
+        product_image_slug: "earlier.png",
+        is_card: false,
+        inserted_at: ~U[2030-02-01 12:00:00Z]
+      })
+
+      [reloaded] = Order.get_open_orders!(actor: ctx.user)
+      assert reloaded.display_title =~ "Earlier"
+    end
+  end
+
+  defp place_account_order(user, fulfillment_option, variant, overrides) do
+    order = build_account_placed_order(user, fulfillment_option, overrides)
+    add_account_line_item(order, variant, false)
+    order
+  end
+
+  defp build_account_placed_order(user, fulfillment_option, overrides) do
+    base = %{
+      state: :placed,
+      order_reference: "EF-" <> (:crypto.strong_rand_bytes(3) |> Base.encode16()),
+      user_id: user.id,
+      customer_name: user.name,
+      customer_email: to_string(user.email),
+      fulfillment_option_id: fulfillment_option.id,
+      fulfillment_method: fulfillment_option.fulfillment_method,
+      fulfillment_fee: Decimal.new("4.50"),
+      fulfillment_tax_percentage: Decimal.new("0.255"),
+      fulfillment_date: Date.add(Date.utc_today(), 3),
+      ordered_at: DateTime.utc_now()
+    }
+
+    generate(order(Map.merge(base, Map.new(overrides))))
+  end
+
+  defp add_account_line_item(order, variant, is_card?) do
+    product = Ash.get!(Edenflowers.Store.Product, variant.product_id, authorize?: false)
+
+    Ash.Seed.seed!(Edenflowers.Store.LineItem, %{
+      order_id: order.id,
+      product_id: variant.product_id,
+      product_variant_id: variant.id,
+      quantity: 1,
+      unit_price: variant.price,
+      tax_rate: Decimal.new("0.255"),
+      product_name: product.name,
+      product_image_slug: variant.image_slug,
+      is_card: is_card?
+    })
+  end
 end
