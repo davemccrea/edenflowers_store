@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.StoreLive do
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     locale = current_locale_atom()
 
     categories =
@@ -14,20 +14,22 @@ defmodule EdenflowersWeb.StoreLive do
       |> Enum.map(&AshTranslation.translate(&1, locale))
       |> Enum.with_index(1)
 
-    category_slug = Map.get(params, "category")
+    {:ok, assign(socket, categories: categories)}
+  end
 
-    # Redirect to bouquets if no category is specified
-    if is_nil(category_slug) do
-      {:ok, push_navigate(socket, to: ~p"/store/bouquets")}
-    else
-      {products, selected_category} = load_products(category_slug)
+  def handle_params(params, _uri, socket) do
+    case Map.get(params, "category") do
+      nil ->
+        {:noreply, push_patch(socket, to: ~p"/store/bouquets")}
 
-      {:ok,
-       assign(socket,
-         products: products,
-         categories: categories,
-         selected_category: selected_category
-       )}
+      category_slug ->
+        case load_products(category_slug) do
+          {:ok, products, selected_category} ->
+            {:noreply, assign(socket, products: products, selected_category: selected_category)}
+
+          :error ->
+            {:noreply, push_patch(socket, to: ~p"/store/bouquets")}
+        end
     end
   end
 
@@ -35,12 +37,10 @@ defmodule EdenflowersWeb.StoreLive do
     case ProductCategory.get_by_slug(category_slug) do
       {:ok, category} ->
         translated_category = AshTranslation.translate(category, current_locale_atom())
-
-        {Product.get_by_category!(category.id), translated_category}
+        {:ok, Product.get_by_category!(category.id), translated_category}
 
       {:error, _} ->
-        # If invalid slug, redirect to bouquets will happen on next mount
-        {[], nil}
+        :error
     end
   end
 
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.StoreLive do
               data-active={@selected_category.id == category.id && "true"}
             >
               <.link
-                navigate={~p"/store/#{category.slug}"}
+                patch={~p"/store/#{category.slug}"}
                 class="category-index__link group"
                 aria-current={@selected_category.id == category.id && "page"}
               >
