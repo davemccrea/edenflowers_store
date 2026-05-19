@@ -44,7 +44,8 @@ defmodule Edenflowers.Store.Order do
     define :get_by_id, action: :by_id, args: [:id]
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
-    define :get_all_completed, action: :completed
+    define :get_open_orders, action: :open_orders
+    define :get_past_orders, action: :past_orders
     define :submit_contact_details, action: :submit_contact_details
     define :submit_gift_options, action: :submit_gift_options
     define :submit_delivery, action: :submit_delivery
@@ -111,8 +112,14 @@ defmodule Edenflowers.Store.Order do
       prepare build(load: @checkout_load)
     end
 
-    read :completed do
-      filter expr(state == :placed)
+    read :open_orders do
+      filter expr(state == :placed and fulfillment_status == :pending)
+      prepare build(sort: [fulfillment_date: :asc], load: [:grand_total, :display_title, :line_items])
+    end
+
+    read :past_orders do
+      filter expr(state == :placed and fulfillment_status == :fulfilled)
+      prepare build(sort: [ordered_at: :desc], load: [:grand_total, :display_title, :line_items])
     end
 
     # Create Actions
@@ -428,6 +435,8 @@ defmodule Edenflowers.Store.Order do
 
   calculations do
     calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
+
+    calculate :display_title, :string, Edenflowers.Store.Order.Calculations.DisplayTitle
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
