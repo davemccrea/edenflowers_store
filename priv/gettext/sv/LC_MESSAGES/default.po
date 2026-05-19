@@ -795,7 +795,7 @@ msgstr ""
 msgid "Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:24
+#: lib/edenflowers_web/live/account_live.ex:117
 #: lib/edenflowers_web/live/order_live.ex:18
 #, elixir-autogen, elixir-format
 msgid "Your account"
@@ -1007,12 +1007,12 @@ msgstr ""
 msgid "You must sign in to access this page."
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:98
+#: lib/edenflowers_web/live/account_live.ex:112
 #, elixir-autogen, elixir-format
 msgid "Fulfilled"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:30
+#: lib/edenflowers_web/live/account_live.ex:38
 #, elixir-autogen, elixir-format
 msgid "Open orders"
 msgstr ""
@@ -1023,22 +1023,22 @@ msgstr ""
 msgid "Order {ref}"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:42
+#: lib/edenflowers_web/live/account_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Past orders"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:97
+#: lib/edenflowers_web/live/account_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Pending"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:54
+#: lib/edenflowers_web/live/account_live.ex:62
 #, elixir-autogen, elixir-format
 msgid "Visit the store"
 msgstr ""
 
-#: lib/edenflowers_web/live/account_live.ex:53
+#: lib/edenflowers_web/live/account_live.ex:61
 #, elixir-autogen, elixir-format
 msgid "You haven't placed any orders yet."
 msgstr ""
@@ -1051,4 +1051,14 @@ msgstr ""
 #: lib/edenflowers/store/order/calculations/display_title.ex:51
 #, elixir-autogen, elixir-format
 msgid "{name} + {count} more"
+msgstr ""
+
+#: lib/edenflowers_web/live/account_live.ex:118
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Hej {name}"
+msgstr "Hej %{name},"
+
+#: lib/edenflowers_web/live/account_live.ex:68
+#, elixir-autogen, elixir-format
+msgid "Sign out"
 msgstr ""
