@@ -1019,7 +1019,7 @@ msgstr ""
 
 #: lib/edenflowers_web/live/checkout_live.ex:105
 #, elixir-autogen, elixir-format
-msgid "Subscribe to our newsletter and get 15% off your first order."
+msgid "Subscribe to the newsletter and get 15% off your first order."
 msgstr ""
 
 #: lib/edenflowers/store/order/validations/validate_fulfillment_date.ex:40

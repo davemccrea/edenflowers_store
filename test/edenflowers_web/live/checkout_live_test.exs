@@ -20,6 +20,8 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   import Mox
   import ExUnit.CaptureLog
 
+  alias AshAuthentication.Jwt
+  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Store.Order
 
   setup :verify_on_exit!
@@ -96,7 +98,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> visit("/checkout")
       |> fill_in("Your Name *", with: "Subscriber")
       |> fill_in("Email *", with: "subscriber@example.com")
-      |> check("Subscribe to our newsletter and get 15% off your first order.")
+      |> check("Subscribe to the newsletter and get 15% off your first order.")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
 
@@ -122,6 +124,39 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert user.newsletter_opt_in == false
 
       refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
+    end
+
+    test "newsletter checkbox is hidden for an already-subscribed user", %{conn: conn, order: order} do
+      subscriber = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> Helpers.store_in_session(subscriber)
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # Legacy rows can have a NULL newsletter_opt_in (the column default only
+    # applies to rows created through Ash after it was added). The calc
+    # `newsletter_opt_in == true` then resolves to nil, which used to crash the
+    # render with an ArgumentError from `not nil`.
+    test "checkout renders for a user with a null newsletter_opt_in", %{conn: conn, order: order} do
+      user = generate(admin_user(admin: false))
+
+      {:ok, _} =
+        Ecto.Adapters.SQL.query(
+          Edenflowers.Repo,
+          "UPDATE users SET newsletter_opt_in = NULL WHERE id = $1",
+          [Ecto.UUID.dump!(user.id)]
+        )
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> Helpers.store_in_session(with_token(user))
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
     end
   end
 
@@ -594,5 +629,12 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
     end
+  end
+
+  # seed_generator skips the GenerateTokenChange that normal sign-in would run,
+  # so we mint a token by hand and stash it where store_in_session/2 looks.
+  defp with_token(user) do
+    {:ok, token, _claims} = Jwt.token_for_user(user)
+    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end
