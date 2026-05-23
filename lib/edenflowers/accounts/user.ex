@@ -75,6 +75,10 @@ defmodule Edenflowers.Accounts.User do
     define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
   end
 
+  preparations do
+    prepare build(load: [:newsletter_subscribed?])
+  end
+
   actions do
     defaults [:read]
 
@@ -189,6 +193,7 @@ defmodule Edenflowers.Accounts.User do
 
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+    calculate :newsletter_subscribed?, :boolean, expr(newsletter_opt_in == true)
   end
 
   identities do
