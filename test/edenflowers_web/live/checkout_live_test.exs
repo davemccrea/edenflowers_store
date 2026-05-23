@@ -20,8 +20,6 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   import Mox
   import ExUnit.CaptureLog
 
-  alias AshAuthentication.Jwt
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Store.Order
 
   setup :verify_on_exit!
@@ -126,51 +124,57 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
     end
 
-    test "newsletter checkbox is hidden for an already-subscribed user", %{conn: conn, order: order} do
-      subscriber = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
-
+    # Reproduces the reported bug: a guest who opted in and advanced past step 1
+    # must not see an empty checkbox on returning — the order carries the
+    # hide decision so it survives a refresh and the actor's inability to read
+    # the subscribed user's record.
+    test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(subscriber)
       |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Returning Guest")
+      |> fill_in("Email *", with: "returning@example.com")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
 
-    test "newsletter checkbox is hidden for a user who already used their promo", %{conn: conn, order: order} do
-      user = generate(admin_user(admin: false, newsletter_opt_in: false))
-      promo = generate(promotion(usage_limit: 1))
-      {:ok, _} = Edenflowers.Store.Promotion.increment_usage(promo, authorize?: false)
-      {:ok, _} = Edenflowers.Accounts.User.set_newsletter_promo(user, promo.id, authorize?: false)
-
+    # A guest who declined the offer should still see the box on return, since
+    # nothing was stamped.
+    test "newsletter checkbox stays visible after a guest declines and returns to step 1", %{
+      conn: conn,
+      order: order
+    } do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(with_token(user))
       |> visit("/checkout")
-      |> assert_has("[data-testid='checkout-step-1']")
-      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
-    end
-
-    # Legacy rows can have a NULL newsletter_opt_in (the column default only
-    # applies to rows created through Ash after it was added). The calc
-    # `newsletter_opt_in == true` then resolves to nil, which used to crash the
-    # render with an ArgumentError from `not nil`.
-    test "checkout renders for a user with a null newsletter_opt_in", %{conn: conn, order: order} do
-      user = generate(admin_user(admin: false))
-
-      {:ok, _} =
-        Ecto.Adapters.SQL.query(
-          Edenflowers.Repo,
-          "UPDATE users SET newsletter_opt_in = NULL WHERE id = $1",
-          [Ecto.UUID.dump!(user.id)]
-        )
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(with_token(user))
-      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Undecided Guest")
+      |> fill_in("Email *", with: "undecided@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
       |> assert_has("[data-testid='checkout-step-1']")
       |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # An order whose customer email resolves to an already-subscribed user gets
+    # the box hidden on submit, even if the box itself was left unticked.
+    test "newsletter checkbox is hidden once the order's user is already subscribed", %{conn: conn, order: order} do
+      generate(admin_user(admin: false, email: "subscribed@example.com", newsletter_opt_in: true))
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Already Subscribed")
+      |> fill_in("Email *", with: "subscribed@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
   end
 
@@ -643,12 +647,5 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
     end
-  end
-
-  # seed_generator skips the GenerateTokenChange that normal sign-in would run,
-  # so we mint a token by hand and stash it where store_in_session/2 looks.
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end
