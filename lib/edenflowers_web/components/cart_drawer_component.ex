@@ -5,6 +5,9 @@ defmodule EdenflowersWeb.CartDrawerComponent do
     {:ok, assign(socket, assigns)}
   end
 
+  defp checkout_cta(state) when state in [:gift_options, :delivery, :payment], do: ~t"Continue Checkout"
+  defp checkout_cta(_), do: ~t"Checkout"
+
   def render(assigns) do
     ~H"""
     <div id={@id}>
@@ -42,7 +45,7 @@ defmodule EdenflowersWeb.CartDrawerComponent do
             variant="primary"
             phx-click={JS.exec("phx-hide", to: "#cart-drawer")}
           >
-            {~t"Checkout"}
+            {checkout_cta(@order.state)}
           </.button>
 
           <.live_component
