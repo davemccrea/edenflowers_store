@@ -352,24 +352,6 @@ defmodule EdenflowersWeb.CheckoutLive do
       else: []
   end
 
-  attr :rest, :global
-  attr :disabled, :boolean, default: false
-  slot :inner_block
-
-  defp form_button(assigns) do
-    ~H"""
-    <button
-      {@rest}
-      disabled={@disabled}
-      type="submit"
-      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
-    >
-      <span>{render_slot(@inner_block)}</span>
-      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
-    </button>
-    """
-  end
-
   attr :order, :map, required: true
   attr :form, :map, required: true
   attr :id, :string, required: true
