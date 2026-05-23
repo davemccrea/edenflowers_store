@@ -75,10 +75,6 @@ defmodule Edenflowers.Accounts.User do
     define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
   end
 
-  preparations do
-    prepare build(load: [:newsletter_subscribed?, :newsletter_promo_used?])
-  end
-
   actions do
     defaults [:read]
 
@@ -175,6 +171,10 @@ defmodule Edenflowers.Accounts.User do
     policy action(:subscribe_to_newsletter) do
       authorize_if always()
     end
+  end
+
+  preparations do
+    prepare build(load: [:newsletter_subscribed?, :newsletter_promo_used?])
   end
 
   attributes do
