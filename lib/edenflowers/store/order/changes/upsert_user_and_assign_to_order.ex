@@ -7,6 +7,11 @@ defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
   their name is updated. The user is then associated with the order
   via the user_id field.
 
+  If the `newsletter_opt_in` argument is true, the user is opted in to the
+  newsletter and the same welcome/promo email worker the footer signup uses
+  is enqueued. Opting in is one-way here — unchecking the box on a later
+  visit does not unsubscribe an already-subscribed user.
+
   If user creation fails, an error is added to the changeset.
   """
   use Ash.Resource.Change
@@ -14,6 +19,7 @@ defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
   import Edenflowers.Actors
 
   alias Edenflowers.Accounts.User
+  alias Edenflowers.Workers.SendNewsletterPromoEmail
 
   @impl true
   def init(opts), do: {:ok, opts}
@@ -23,11 +29,12 @@ defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
     Ash.Changeset.before_action(changeset, fn changeset ->
       customer_email = Ash.Changeset.get_argument_or_attribute(changeset, :customer_email)
       customer_name = Ash.Changeset.get_argument_or_attribute(changeset, :customer_name)
+      newsletter_opt_in = Ash.Changeset.get_argument(changeset, :newsletter_opt_in) || false
 
-      case User.upsert(customer_email, customer_name, actor: system_actor()) do
-        {:ok, user} ->
-          Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
-
+      with {:ok, user} <- User.upsert(customer_email, customer_name, actor: system_actor()),
+           {:ok, user} <- maybe_opt_in_to_newsletter(user, newsletter_opt_in, changeset) do
+        Ash.Changeset.force_change_attributes(changeset, user_id: user.id)
+      else
         {:error, error} ->
           Logger.info("Failed to upsert user for order: #{inspect(error)}")
 
@@ -36,5 +43,24 @@ defmodule Edenflowers.Store.Order.Changes.UpsertUserAndAssignToOrder do
           })
       end
     end)
+  end
+
+  defp maybe_opt_in_to_newsletter(user, false, _changeset), do: {:ok, user}
+
+  defp maybe_opt_in_to_newsletter(user, true, changeset) do
+    case User.update_newsletter_preference(user, true, actor: system_actor()) do
+      {:ok, user} ->
+        enqueue_newsletter_email(user.email, changeset)
+        {:ok, user}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp enqueue_newsletter_email(email, changeset) do
+    locale = Ash.Changeset.get_attribute(changeset, :locale) || Gettext.get_locale(EdenflowersWeb.Gettext)
+
+    SendNewsletterPromoEmail.enqueue(%{"email" => to_string(email), "locale" => locale})
   end
 end

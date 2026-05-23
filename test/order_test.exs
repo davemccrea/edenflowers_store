@@ -753,6 +753,67 @@ defmodule Edenflowers.Store.OrderTest do
     end
   end
 
+  describe "Newsletter opt-in during checkout" do
+    alias Edenflowers.Accounts.User
+    alias Edenflowers.Workers.SendNewsletterPromoEmail
+
+    test "checkbox checked subscribes the user and enqueues the welcome email worker" do
+      order = Order.create_for_checkout!(authorize?: false)
+
+      assert {:ok, _order} =
+               order
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
+                 customer_name: "Subscriber",
+                 customer_email: "subscriber@example.com",
+                 newsletter_opt_in: true
+               })
+               |> Ash.update(authorize?: false)
+
+      {:ok, user} = User.get_by_email("subscriber@example.com", authorize?: false)
+      assert user.newsletter_opt_in == true
+
+      assert_enqueued(
+        worker: SendNewsletterPromoEmail,
+        args: %{"email" => "subscriber@example.com", "locale" => order.locale}
+      )
+    end
+
+    test "checkbox unchecked leaves newsletter_opt_in false and enqueues no job" do
+      order = Order.create_for_checkout!(authorize?: false)
+
+      assert {:ok, _order} =
+               order
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
+                 customer_name: "Bystander",
+                 customer_email: "bystander@example.com",
+                 newsletter_opt_in: false
+               })
+               |> Ash.update(authorize?: false)
+
+      {:ok, user} = User.get_by_email("bystander@example.com", authorize?: false)
+      assert user.newsletter_opt_in == false
+
+      refute_enqueued(worker: SendNewsletterPromoEmail)
+    end
+
+    test "omitting the argument defaults to no opt-in" do
+      order = Order.create_for_checkout!(authorize?: false)
+
+      assert {:ok, _order} =
+               order
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
+                 customer_name: "Default",
+                 customer_email: "default@example.com"
+               })
+               |> Ash.update(authorize?: false)
+
+      {:ok, user} = User.get_by_email("default@example.com", authorize?: false)
+      assert user.newsletter_opt_in == false
+
+      refute_enqueued(worker: SendNewsletterPromoEmail)
+    end
+  end
+
   describe "Promotion minimum cart total validation" do
     test "applies promotion when cart total meets minimum requirement" do
       tax_rate = generate(tax_rate(percentage: "0.255"))

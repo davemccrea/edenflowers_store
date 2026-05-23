@@ -125,6 +125,8 @@ defmodule Edenflowers.Store.Order do
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
 
+      argument :newsletter_opt_in, :boolean, default: false
+
       validate {Validations.ValidateCustomerEmail, []}
       change {Changes.UpsertUserAndAssignToOrder, []}
       change transition_state(:gift_options)
