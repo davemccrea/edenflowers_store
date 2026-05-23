@@ -37,7 +37,7 @@ msgstr ""
 #: lib/edenflowers_web/components/cart_drawer_component.ex:22
 #: lib/edenflowers_web/components/layouts.ex:341
 #: lib/edenflowers_web/components/layouts.ex:343
-#: lib/edenflowers_web/live/checkout_live.ex:271
+#: lib/edenflowers_web/live/checkout_live.ex:273
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr ""
@@ -65,17 +65,17 @@ msgstr ""
 
 #: lib/edenflowers_web/components/checkout_components.ex:122
 #: lib/edenflowers_web/components/checkout_components.ex:135
-#: lib/edenflowers_web/live/checkout_live.ex:287
+#: lib/edenflowers_web/live/checkout_live.ex:289
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:303
+#: lib/edenflowers_web/live/checkout_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:292
+#: lib/edenflowers_web/live/checkout_live.ex:294
 #, elixir-autogen, elixir-format
 msgid "Free"
 msgstr ""
@@ -95,7 +95,7 @@ msgstr ""
 msgid "Store"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:319
+#: lib/edenflowers_web/live/checkout_live.ex:321
 #, elixir-autogen, elixir-format
 msgid "Total"
 msgstr ""
@@ -134,7 +134,7 @@ msgstr ""
 msgid "Payment"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:677
+#: lib/edenflowers_web/live/checkout_live.ex:679
 #, elixir-autogen, elixir-format
 msgid "Phone Number"
 msgstr ""
@@ -160,12 +160,12 @@ msgstr ""
 msgid "Decrement"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:206
+#: lib/edenflowers_web/live/checkout_live.ex:208
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Delivery Date *"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:166
+#: lib/edenflowers_web/live/checkout_live.ex:168
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Delivery Method *"
 msgstr ""
@@ -231,22 +231,22 @@ msgstr ""
 msgid "Outside delivery range"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:257
+#: lib/edenflowers_web/live/checkout_live.ex:259
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Pay"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:208
+#: lib/edenflowers_web/live/checkout_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "Pickup Date *"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:132
+#: lib/edenflowers_web/live/checkout_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Recipient *"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:143
+#: lib/edenflowers_web/live/checkout_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Recipient Name *"
 msgstr ""
@@ -324,12 +324,12 @@ msgstr ""
 msgid "Hi"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:198
+#: lib/edenflowers_web/live/checkout_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "045 1505141"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:676
+#: lib/edenflowers_web/live/checkout_live.ex:678
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Address *"
 msgstr ""
@@ -339,7 +339,7 @@ msgstr ""
 msgid "As a welcome gift, here is your 15% off promo code for your first order:"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:395
+#: lib/edenflowers_web/live/checkout_live.ex:397
 #, elixir-autogen, elixir-format
 msgid "Card Message"
 msgstr ""
@@ -354,12 +354,12 @@ msgstr ""
 msgid "Cart total must be at least %{utils_format_money} to use this promotion"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:413
+#: lib/edenflowers_web/live/checkout_live.ex:415
 #, elixir-autogen, elixir-format
 msgid "Change card"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:190
+#: lib/edenflowers_web/live/checkout_live.ex:192
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Delivery Instructions"
 msgstr ""
@@ -399,40 +399,40 @@ msgstr ""
 msgid "It looks like you're already subscribed to the Eden Flowers newsletter."
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:519
+#: lib/edenflowers_web/live/checkout_live.ex:521
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:518
+#: lib/edenflowers_web/live/checkout_live.ex:520
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:111
-#: lib/edenflowers_web/live/checkout_live.ex:151
-#: lib/edenflowers_web/live/checkout_live.ex:231
+#: lib/edenflowers_web/live/checkout_live.ex:113
+#: lib/edenflowers_web/live/checkout_live.ex:153
+#: lib/edenflowers_web/live/checkout_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:577
+#: lib/edenflowers_web/live/checkout_live.ex:579
 #, elixir-autogen, elixir-format
 msgid "Payment processing error. Please try again."
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:429
-#: lib/edenflowers_web/live/checkout_live.ex:432
+#: lib/edenflowers_web/live/checkout_live.ex:431
+#: lib/edenflowers_web/live/checkout_live.ex:434
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Remove card"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:471
+#: lib/edenflowers_web/live/checkout_live.ex:473
 #, elixir-autogen, elixir-format
 msgid "Select a Card"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:517
+#: lib/edenflowers_web/live/checkout_live.ex:519
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr ""
@@ -502,17 +502,17 @@ msgstr ""
 msgid "Your password has successfully been reset"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:193
+#: lib/edenflowers_web/live/checkout_live.ex:195
 #, elixir-autogen, elixir-format
 msgid "e.g. Door code 1234, leave at the front door"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:669
+#: lib/edenflowers_web/live/checkout_live.ex:671
 #, elixir-autogen, elixir-format
 msgid "%{name}'s Address *"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:670
+#: lib/edenflowers_web/live/checkout_live.ex:672
 #, elixir-autogen, elixir-format
 msgid "%{name}'s Phone Number"
 msgstr ""
@@ -627,14 +627,14 @@ msgstr ""
 msgid "Notifications"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:627
+#: lib/edenflowers_web/live/checkout_live.ex:629
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:262
-#: lib/edenflowers_web/live/checkout_live.ex:567
-#: lib/edenflowers_web/live/checkout_live.ex:863
+#: lib/edenflowers_web/live/checkout_live.ex:264
+#: lib/edenflowers_web/live/checkout_live.ex:569
+#: lib/edenflowers_web/live/checkout_live.ex:865
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr ""
@@ -700,12 +700,12 @@ msgid "For %{name}"
 msgstr ""
 
 #: lib/edenflowers_web/components/checkout_components.ex:129
-#: lib/edenflowers_web/live/checkout_live.ex:134
+#: lib/edenflowers_web/live/checkout_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "For me"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:134
+#: lib/edenflowers_web/live/checkout_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "For somebody else"
 msgstr ""
@@ -740,7 +740,7 @@ msgstr ""
 msgid "If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:314
+#: lib/edenflowers_web/live/checkout_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Incl. VAT"
 msgstr ""
@@ -791,7 +791,7 @@ msgstr ""
 msgid "See the FAQ"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:453
+#: lib/edenflowers_web/live/checkout_live.ex:455
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Select a card"
 msgstr ""
@@ -1017,11 +1017,6 @@ msgstr ""
 msgid "Same-day fulfillment is not available"
 msgstr ""
 
-#: lib/edenflowers_web/live/checkout_live.ex:105
-#, elixir-autogen, elixir-format
-msgid "Subscribe to the newsletter and get 15% off your first order."
-msgstr ""
-
 #: lib/edenflowers/store/order/validations/validate_fulfillment_date.ex:40
 #, elixir-autogen, elixir-format
 msgid "The order deadline for today has passed"
@@ -1045,4 +1040,9 @@ msgstr ""
 #: lib/edenflowers_web/live_user_auth.ex:57
 #, elixir-autogen, elixir-format
 msgid "You must sign in to access this page."
+msgstr ""
+
+#: lib/edenflowers_web/live/checkout_live.ex:106
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Subscribe to the newsletter to receive 15% off your first order by email."
 msgstr ""

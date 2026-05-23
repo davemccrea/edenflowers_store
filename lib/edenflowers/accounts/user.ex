@@ -76,7 +76,7 @@ defmodule Edenflowers.Accounts.User do
   end
 
   preparations do
-    prepare build(load: [:newsletter_subscribed?])
+    prepare build(load: [:newsletter_subscribed?, :newsletter_promo_used?])
   end
 
   actions do
@@ -194,6 +194,7 @@ defmodule Edenflowers.Accounts.User do
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
     calculate :newsletter_subscribed?, :boolean, expr(newsletter_opt_in == true)
+    calculate :newsletter_promo_used?, :boolean, expr(newsletter_promo.usage > 0)
   end
 
   identities do

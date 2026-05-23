@@ -98,7 +98,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> visit("/checkout")
       |> fill_in("Your Name *", with: "Subscriber")
       |> fill_in("Email *", with: "subscriber@example.com")
-      |> check("Subscribe to the newsletter and get 15% off your first order.")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
 
@@ -132,6 +132,20 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> Helpers.store_in_session(subscriber)
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    test "newsletter checkbox is hidden for a user who already used their promo", %{conn: conn, order: order} do
+      user = generate(admin_user(admin: false, newsletter_opt_in: false))
+      promo = generate(promotion(usage_limit: 1))
+      {:ok, _} = Edenflowers.Store.Promotion.increment_usage(promo, authorize?: false)
+      {:ok, _} = Edenflowers.Accounts.User.set_newsletter_promo(user, promo.id, authorize?: false)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> Helpers.store_in_session(with_token(user))
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")

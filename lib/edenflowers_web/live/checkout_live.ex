@@ -102,8 +102,8 @@ defmodule EdenflowersWeb.CheckoutLive do
                     />
 
                     <.input
-                      :if={!(@current_user && @current_user.newsletter_subscribed?)}
-                      label={~t"Subscribe to the newsletter and get 15% off your first order."}
+                      :if={!(@current_user && (@current_user.newsletter_subscribed? || @current_user.newsletter_promo_used?))}
+                      label={~t"Subscribe to the newsletter to receive 15% off your first order by email."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
                       class="checkbox checkbox-sm"
