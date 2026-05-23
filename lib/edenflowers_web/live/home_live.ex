@@ -138,6 +138,30 @@ defmodule EdenflowersWeb.HomeLive do
         </div>
       </section>
 
+      <%!-- Client logos --%>
+      <section class="not-last:border-b">
+        <div class="container py-14 md:py-20">
+          <p class="eyebrow text-base-content/50 mb-10 text-center">{~t"In good company"}</p>
+          <ul class="flex flex-wrap items-center justify-center gap-x-14 gap-y-8 md:gap-x-20">
+            <li>
+              <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
+                <img src="/images/logo-dermosil.svg" alt="Dermosil" class="h-7 w-auto opacity-50 grayscale hover:opacity-70 transition-opacity" />
+              </a>
+            </li>
+            <li>
+              <a href="https://sfp.fi/" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
+                <img src="/images/logo-sfp.svg" alt="SFP RKP" class="h-8 w-auto opacity-50 grayscale hover:opacity-70 transition-opacity" />
+              </a>
+            </li>
+            <li>
+              <a href="https://evl.fi/en/" target="_blank" rel="noopener noreferrer" aria-label="Evangelical Lutheran Church of Finland">
+                <img src="/images/logo-evl.svg" alt="Evangelical Lutheran Church of Finland" class="h-7 w-auto opacity-50 grayscale hover:opacity-70 transition-opacity" />
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <%!-- Other services --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
