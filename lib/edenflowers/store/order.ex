@@ -381,6 +381,11 @@ defmodule Edenflowers.Store.Order do
     attribute :customer_name, :string
     attribute :customer_email, :string
 
+    # Stamped at submit time from the resolved user's subscription state so the
+    # opt-in checkbox stays hidden when the customer returns to step 1 — the
+    # checkout actor can't read another user's record to recompute it live.
+    attribute :newsletter_offer_hidden?, :boolean, default: false, public?: false
+
     # Step 2 - Gift Options
     attribute :gift, :boolean, default: false
     attribute :card_message, :string
