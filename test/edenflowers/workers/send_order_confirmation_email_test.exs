@@ -44,4 +44,33 @@ defmodule Edenflowers.Workers.SendOrderConfirmationEmailTest do
     assert reloaded.receipt_emailed_at != nil
     assert reloaded.receipt_sha256 =~ ~r/^[0-9a-f]{64}$/
   end
+
+  test "renders the email in the order's locale" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+
+    order =
+      generate(
+        order(
+          locale: "fi",
+          customer_name: "Anna Lindqvist",
+          customer_email: "anna@example.com",
+          order_reference: "EF-TEST-OC2",
+          ordered_at: ~U[2026-05-15 12:00:00Z],
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-05-20],
+          fulfillment_fee: "0"
+        )
+      )
+
+    _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+    assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
+
+    assert_email_sent(fn email ->
+      assert email.subject =~ "Tilausvahvistus"
+      assert not (email.subject =~ "Order Confirmation")
+    end)
+  end
 end
