@@ -161,6 +161,71 @@ defmodule EdenflowersWeb.HomeLive do
           </div>
         </div>
       </section>
+
+      <%!-- Client logos --%>
+      <section class="not-last:border-b">
+        <div class="container py-20 md:py-28">
+          <p class="eyebrow text-base-content/50 mb-12 text-center">{~t"In good company"}</p>
+          <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
+            <li>
+              <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
+                <img
+                  src="/images/logo-dermosil.svg"
+                  alt="Dermosil"
+                  width="230"
+                  height="33"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-7 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a href="https://sfp.fi/" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
+                <img
+                  src="/images/logo-sfp.svg"
+                  alt="SFP RKP"
+                  width="182"
+                  height="40"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://evl.fi/en/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Evangelical Lutheran Church of Finland"
+              >
+                <img
+                  src="/images/logo-evl.svg"
+                  alt="Evangelical Lutheran Church of Finland"
+                  width="363"
+                  height="81"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a href="https://bnf.fi/" target="_blank" rel="noopener noreferrer" aria-label="Bonnier News Finland">
+                <.image
+                  src="local:///logo-bonnier-news.png"
+                  alt="Bonnier News Finland"
+                  width={104}
+                  height={32}
+                  crop_type="fit"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
     </Layouts.app>
     """
   end
