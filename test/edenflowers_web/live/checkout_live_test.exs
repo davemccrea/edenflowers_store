@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   import Phoenix.LiveViewTest,
     only: [
       live: 2,
+      render: 1,
       render_click: 3,
       render_change: 2,
       element: 2,
@@ -324,6 +325,30 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       {pickup_pos, _} = :binary.match(html, pickup_id)
 
       assert delivery_pos < pickup_pos
+    end
+
+    test "switching fulfillment option clears the previously selected date", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      pickup_option =
+        Edenflowers.Store.FulfillmentOption.list!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      # User picks a date on the delivery calendar. The checkout LiveView
+      # stores that date in the form params via the `:date_selected` message.
+      selected_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+      send(view.pid, {:date_selected, selected_date})
+
+      assert render(view) =~ ~s(value="#{selected_date}")
+
+      # User then switches to a different fulfillment option. The new option
+      # has its own calendar, so the date that was valid for delivery may not
+      # be valid for pickup and must be cleared from the form.
+      view
+      |> element("#checkout-form-3a")
+      |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
+
+      refute render(view) =~ ~s(value="#{selected_date}")
     end
   end
 
