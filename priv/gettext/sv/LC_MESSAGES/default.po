@@ -1015,3 +1015,8 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr ""
+
+#: lib/edenflowers_web/live/home_live.ex:141
+#, elixir-autogen, elixir-format
+msgid "In good company"
+msgstr "I gott sällskap"
