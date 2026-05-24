@@ -39,6 +39,7 @@ npm-debug.log
 .elixir-tools
 .env
 images
+!/priv/static/images
 
 .DS_Store
 
