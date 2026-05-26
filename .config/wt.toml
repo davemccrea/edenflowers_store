@@ -2,10 +2,10 @@
 [[pre-start]]
 copy = "wt step copy-ignored"
 
+# Append worktree-specific DATABASE_NAME and PORT to this worktree's .env
+[[pre-start]]
+env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} >> .env && echo export PORT={{ branch | hash_port }} >> .env'"
+
 # Create, migrate, and seed a per-worktree database
 [[pre-start]]
-db = "bash -c 'source .env && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} mix ash.setup --quiet && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} mix run priv/repo/seeds.exs'"
-
-# Dev server on a unique port, killed automatically when the worktree is removed
-[post-start]
-server = "bash -c 'source .env && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} PORT={{ branch | hash_port }} wt step tether -- iex -S mix phx.server'"
+db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix ash.setup --quiet && mix run priv/repo/seeds.exs'"
