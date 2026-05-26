@@ -23,6 +23,11 @@ if config_env() in [:prod, :dev] do
 
   config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+  if config_env() == :dev do
+    config :edenflowers, Edenflowers.Repo,
+      database: System.get_env("DATABASE_NAME", "edenflowers_dev")
+  end
+
   config :edenflowers,
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")

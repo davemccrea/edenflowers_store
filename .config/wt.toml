@@ -1,0 +1,11 @@
+# Copy gitignored files from main (deps/, _build/, .env) to avoid recompiling
+[[pre-start]]
+copy = "wt step copy-ignored"
+
+# Create, migrate, and seed a per-worktree database
+[[pre-start]]
+db = "bash -c 'source .env && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} mix ash.setup --quiet && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} mix run priv/repo/seeds.exs'"
+
+# Dev server on a unique port, killed automatically when the worktree is removed
+[post-start]
+server = "bash -c 'source .env && DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} PORT={{ branch | hash_port }} wt step tether -- iex -S mix phx.server'"
