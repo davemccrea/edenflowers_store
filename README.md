@@ -41,25 +41,23 @@ It drops the database, deletes all existing migrations and resource snapshots, r
 - `mix gettext.extract` — extract gettext() calls to .pot files
 - `mix gettext.merge priv/gettext` — update all locale-specific .po files
 
-### Git workflow
+### Worktrees
+
+The project uses [worktrunk](https://worktrunk.dev) to manage parallel worktrees. Each worktree gets its own Postgres database and a unique port, configured automatically via hooks in `.config/wt.toml`.
 
 ```bash
-# Create a feature branch
-git checkout -b feature/my-feature
-
-# Push and create a PR
-git push -u origin feature/my-feature
-gh pr create --title "My feature title" --body ""
-
-# To open a PR with no real commits yet, use an empty commit
-git commit --allow-empty -m "Start my feature"
-git push
-
-# After PR is merged, clean up
-git checkout main
-git pull
-git branch -d feature/my-feature
+wt switch --create feature/my-feature  # create worktree, copy deps, create + seed db
+wt list                                 # show all worktrees and their status
+wt remove                               # remove current worktree
 ```
+
+On creation, the hooks copy `deps/` and `_build/` from the main worktree (no recompile needed), append `DATABASE_NAME` and `PORT` to the worktree's `.env`, and create + seed a fresh database. To start the server in the new worktree:
+
+```bash
+source .env && iex -S mix phx.server
+```
+
+`DATABASE_NAME` and `PORT` are already set in `.env`, so no extra configuration is needed.
 
 ## Deployment
 
