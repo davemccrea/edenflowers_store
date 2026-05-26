@@ -154,6 +154,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       |> render_click()
 
       future = next_weekday(:monday)
+      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+
+      if future.month != today.month do
+        view
+        |> element("#admin-fulfillment-calendar-next-month")
+        |> render_click()
+      end
 
       view
       |> element(~s|button[phx-click="select"][phx-value-date="#{Date.to_iso8601(future)}"]|)
@@ -177,20 +184,33 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
       |> render_click()
 
-      # Pick a week payload whose dates are all in the future, so the click
-      # actually has something to do.
-      html = render(view)
+      # Pick a week payload whose weekday dates are all strictly in the future,
+      # so the click actually has something to disable. Navigate to next month
+      # if no such week exists in the current view (e.g. running near month-end).
       today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+      tomorrow = Date.add(today, 1)
 
-      week_payload =
+      find_future_week = fn html ->
         Regex.scan(~r/phx-click="week-click" phx-value-week="([^"]+)"/, html)
         |> Enum.map(fn [_, payload] -> payload end)
         |> Enum.find(fn payload ->
           dates = payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
-          Enum.all?(dates, &(Date.compare(&1, today) != :lt))
+          weekdays = Enum.filter(dates, &(Date.day_of_week(&1) in 1..5))
+          weekdays != [] and Enum.all?(weekdays, &(Date.compare(&1, tomorrow) != :lt))
         end)
+      end
 
-      assert week_payload, "expected at least one future week button in the rendered month"
+      week_payload =
+        case find_future_week.(render(view)) do
+          nil ->
+            view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
+            find_future_week.(render(view))
+
+          payload ->
+            payload
+        end
+
+      assert week_payload, "expected at least one future week button in the rendered view"
 
       view
       |> element(~s|button[phx-click="week-click"][phx-value-week="#{week_payload}"]|)
