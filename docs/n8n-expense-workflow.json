@@ -1,0 +1,225 @@
+{
+  "name": "Expense Capture — Papra → Claude → Google Sheets",
+  "nodes": [
+    {
+      "id": "node-0001",
+      "name": "Papra Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "papra-expense",
+        "responseMode": "immediatelyAfterWebhook",
+        "options": {}
+      },
+      "notes": "Copy the generated webhook URL into Papra's webhook settings (Settings → Webhooks). Trigger: document.created"
+    },
+    {
+      "id": "node-0002",
+      "name": "Fetch Document Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [420, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.PAPRA_BASE_URL }}/api/documents/{{ $json.body.documentId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "papra-api-key",
+          "name": "Papra API Key"
+        }
+      },
+      "notes": "Adjust $json.body.documentId to match the actual field name in Papra's webhook payload. Credential: add header 'Authorization' with value 'Bearer <your-papra-api-key>'."
+    },
+    {
+      "id": "node-0003",
+      "name": "Fetch File Binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [640, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.fileUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "papra-api-key",
+          "name": "Papra API Key"
+        }
+      },
+      "notes": "Adjust $json.fileUrl to match the field name Papra returns for the download URL. If Papra returns a pre-signed URL, remove the credential reference."
+    },
+    {
+      "id": "node-0004",
+      "name": "Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const binaryData = $input.item.binary;\nconst fileKey = Object.keys(binaryData)[0];\nconst base64Data = binaryData[fileKey].data;\nconst mimeType = binaryData[fileKey].mimeType || 'image/jpeg';\n\n// Retrieve document ID from the earlier metadata fetch\nconst documentId = $('Fetch Document Metadata').item.json.id;\n\nconst prompt = `You are an accounting assistant. Extract the following fields from this receipt or invoice. Return valid JSON only — no prose, no markdown fences.\n\nFields:\n- vendor_name: string\n- vendor_vat_number: string or null\n- date: ISO 8601 date (YYYY-MM-DD)\n- total_amount: number including VAT\n- vat_amount: number or null\n- currency: ISO 4217 code e.g. EUR\n- category: one of [office_supplies, travel, meals, software, marketing, utilities, professional_services, other]\n- description: short string describing what was purchased\n- confidence: one of [high, medium, low] reflecting overall certainty across all fields\n\nUse null for any field that cannot be determined.`;\n\nconst payload = {\n  model: 'claude-sonnet-4-6',\n  max_tokens: 1024,\n  messages: [\n    {\n      role: 'user',\n      content: [\n        {\n          type: 'image',\n          source: {\n            type: 'base64',\n            media_type: mimeType,\n            data: base64Data\n          }\n        },\n        {\n          type: 'text',\n          text: prompt\n        }\n      ]\n    }\n  ]\n};\n\nreturn { json: { documentId, claudePayload: JSON.stringify(payload) } };"
+      }
+    },
+    {
+      "id": "node-0005",
+      "name": "Call Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1080, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $vars.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.claudePayload }}",
+        "options": {}
+      },
+      "notes": "Set ANTHROPIC_API_KEY in n8n Variables (Settings → Variables). Alternatively, create an HTTP Header Auth credential named 'Anthropic API Key' and switch authentication to genericCredentialType."
+    },
+    {
+      "id": "node-0006",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst text = response.content[0].text;\n\n// Strip markdown code fences if Claude adds them\nconst jsonMatch = text.match(/```(?:json)?\\n?([\\s\\S]*?)\\n?```/) || [null, text];\nconst jsonStr = jsonMatch[1].trim();\n\nlet extracted;\ntry {\n  extracted = JSON.parse(jsonStr);\n} catch (e) {\n  throw new Error('Failed to parse Claude response as JSON. Raw response: ' + text);\n}\n\nconst documentId = $('Build Claude Request').item.json.documentId;\n\nreturn {\n  json: {\n    document_id: documentId,\n    date: extracted.date ?? null,\n    vendor_name: extracted.vendor_name ?? null,\n    description: extracted.description ?? null,\n    total_amount: extracted.total_amount ?? null,\n    vat_amount: extracted.vat_amount ?? null,\n    currency: extracted.currency ?? null,\n    category: extracted.category ?? null,\n    vendor_vat_number: extracted.vendor_vat_number ?? null,\n    confidence: extracted.confidence ?? 'low',\n    processed_at: new Date().toISOString(),\n    reviewed: false\n  }\n};"
+      }
+    },
+    {
+      "id": "node-0007",
+      "name": "Append Row to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1520, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Expenses",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-oauth",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Replace YOUR_SPREADSHEET_ID with your sheet's ID (from the URL). Create a sheet named 'Expenses' with column headers matching the field names output by Parse Claude Response."
+    },
+    {
+      "id": "node-0008",
+      "name": "Tag Document as Processed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1740, 300],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $vars.PAPRA_BASE_URL }}/api/documents/{{ $('Parse Claude Response').item.json.document_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "{ \"tags\": [\"processed\"] }",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "papra-api-key",
+          "name": "Papra API Key"
+        }
+      },
+      "notes": "Adjust the PATCH endpoint and body shape to match Papra's actual API for updating document tags."
+    }
+  ],
+  "connections": {
+    "Papra Webhook": {
+      "main": [
+        [{ "node": "Fetch Document Metadata", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Document Metadata": {
+      "main": [
+        [{ "node": "Fetch File Binary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch File Binary": {
+      "main": [
+        [{ "node": "Build Claude Request", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Claude Request": {
+      "main": [
+        [{ "node": "Call Claude API", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Claude API": {
+      "main": [
+        [{ "node": "Parse Claude Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Claude Response": {
+      "main": [
+        [{ "node": "Append Row to Sheet", "type": "main", "index": 0 }]
+      ]
+    },
+    "Append Row to Sheet": {
+      "main": [
+        [{ "node": "Tag Document as Processed", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
