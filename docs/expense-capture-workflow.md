@@ -1,127 +1,97 @@
 # Expense capture workflow
 
 Experimental add-on for capturing business receipts and invoices, extracting
-structured data via LLM, and writing it to a spreadsheet for accounting review.
-Not a core business concern — kept simple and outside the Phoenix app.
+structured data via an LLM, and storing it in the `Edenflowers.Expenses`
+domain for review. Not a core business concern.
 
-## Goal
+## Decision: Phoenix-native, no n8n
 
-Forward/upload a receipt or invoice → structured row appears in a Google Sheet
-(or Airtable) with vendor, date, amount, VAT, and category filled in
-automatically. Low-confidence extractions are flagged for manual review.
+An earlier draft of this plan orchestrated the flow through n8n (Papra webhook
+→ n8n → Claude → Google Sheets). We dropped n8n: the processing is simple
+enough to live in Phoenix, where it's testable, versioned, and reuses the
+existing `StripeHandler` → Oban worker pattern. Papra is still the capture UI
+and document store. The superseded n8n workflow JSON
+(`docs/n8n-expense-workflow.json`) is kept only for historical reference.
 
 ## Stack
 
-- **Papra** — document store and capture UI. Handles upload, email ingestion
-  (forward receipts to a unique address), storage, and tagging.
-- **n8n** — orchestration. Triggered by Papra webhook on new document; calls
-  Claude; writes structured data to the sheet.
-- **Claude API** — extraction. Vision-capable, so works on both PDFs and
-  scanned/photographed receipts.
-- **Google Sheets** — structured output store. Easy to review, correct, and
-  export to the accountant.
+- **Papra** — document store and capture UI (upload, email ingestion, storage,
+  tagging). Self-hosted.
+- **Phoenix** — receives Papra's `document:created` webhook, fetches the
+  document, calls Claude, and writes to the `Expenses` domain.
+- **Claude API via ReqLLM** — structured extraction (vision-capable, handles
+  PDFs and photos).
 
 ## Flow
 
 ```
 Receipt/invoice
   → Papra (upload UI or email forward)
-  → Papra webhook (new document event)
-  → n8n workflow
-      ├── fetch document from Papra API
-      ├── call Claude API (vision or text)
-      ├── parse structured JSON response
-      ├── write row to Google Sheets
-      └── tag document in Papra as "processed"
+  → Papra "document:created" webhook (HMAC-SHA256 signed)
+  → EdenflowersWeb.Plugs.PapraWebhook   (verify signature, enqueue, 200)
+  → EdenflowersWeb.PapraHandler         (parse payload → enqueue job)
+  → Edenflowers.Workers.ProcessExpenseDocument
+      ├── Edenflowers.Papra.fetch_document/2   (download bytes)
+      ├── Edenflowers.Claude.extract_expense/2 (ReqLLM.generate_object)
+      └── Expense.ingest/1                     (upsert into Postgres)
 ```
 
-## n8n workflow steps
+## Components
 
-1. **Webhook trigger** — Papra fires on document creation. Payload includes
-   document ID.
-2. **Fetch document** — HTTP request to Papra API to get file binary or OCR
-   text (whichever Papra exposes).
-3. **Claude extraction** — HTTP request node to Claude API. Use
-   `claude-sonnet-4-6` (vision-capable). Pass the file as base64 image or
-   extracted text depending on format.
-4. **Structured output parser** — n8n's JSON parser with retry on malformed
-   response. Schema: see below.
-5. **Write to Google Sheets** — Sheets node appends one row per document.
-6. **Tag in Papra** — HTTP request back to Papra API to apply tag `processed`.
-
-## Claude prompt
-
-```
-You are an accounting assistant. Extract the following fields from this receipt
-or invoice image. Return valid JSON only, no prose.
-
-Fields:
-- vendor_name: string
-- vendor_vat_number: string or null
-- date: ISO 8601 date string (YYYY-MM-DD)
-- total_amount: number (include VAT)
-- vat_amount: number or null
-- currency: ISO 4217 code (e.g. "EUR")
-- category: one of ["office_supplies", "travel", "meals", "software",
-  "marketing", "utilities", "professional_services", "other"]
-- description: short string, what was purchased
-- confidence: one of ["high", "medium", "low"]
-
-If a field cannot be determined, use null. confidence reflects your overall
-certainty across all fields.
-```
-
-## Google Sheets schema
-
-| Column          | Source              | Notes                          |
-| --------------- | ------------------- | ------------------------------ |
-| document_id     | Papra webhook       | For idempotency and linking    |
-| date            | Claude              |                                |
-| vendor_name     | Claude              |                                |
-| description     | Claude              |                                |
-| total_amount    | Claude              |                                |
-| vat_amount      | Claude              |                                |
-| currency        | Claude              |                                |
-| category        | Claude              |                                |
-| vendor_vat_no   | Claude              |                                |
-| confidence      | Claude              | Flag "low" rows for review     |
-| papra_link      | n8n constructed     | Direct link to doc in Papra    |
-| processed_at    | n8n                 | Timestamp of extraction        |
-| reviewed        | Manual              | Checkbox column, default false |
+| Module | Responsibility |
+| --- | --- |
+| `EdenflowersWeb.Plugs.PapraWebhook` | Endpoint plug (before `Plug.Parsers`). Verifies HMAC-SHA256 over the raw body, dispatches to the handler, returns fast. Mirrors `Stripe.WebhookPlug`. |
+| `EdenflowersWeb.PapraHandler` | Thin handler. Parses `document:created`, enqueues the worker. Mirrors `StripeHandler`. |
+| `Edenflowers.Papra` | Thin Papra API client. `fetch_document/2` returns the raw bytes + content type. |
+| `Edenflowers.Claude` | Wraps `ReqLLM.generate_object/4`. Holds the prompt and output schema. Returns a raw map — no casting. |
+| `Edenflowers.Workers.ProcessExpenseDocument` | Oban worker. Fetch → extract → ingest, with per-stage logging. Unique on `document_id`. |
+| `Edenflowers.Expenses.Expense` | Ash resource. `:ingest` upserts on `document_id` and coerces all types. |
 
 ## Idempotency
 
-Before writing, check whether `document_id` already exists in the sheet.
-If it does, skip — prevents duplicate rows on webhook retries.
+Two layers, so an at-least-once webhook redelivery never duplicates:
 
-## Handling images vs PDFs
+1. The Oban worker is `unique: [keys: [:document_id], period: :infinity]`, so a
+   second `document:created` collapses to the existing job.
+2. `Expense.ingest` is an upsert on the `unique_document_id` identity.
 
-- If Papra returns OCR text, send that as the prompt content (cheaper,
-  faster).
-- If only the raw file is available, send as a base64-encoded image using
-  Claude's vision input. Works for JPEG, PNG, and PDF (Claude handles PDF
-  pages natively).
+## Type coercion lives in Ash
+
+`Edenflowers.Claude` returns a raw map (`date` as an ISO string, amounts as
+floats, `currency`/`category`/`confidence` as lowercase strings). The
+`:ingest` action coerces these into `Date`, `Decimal`, and the `Currency` /
+`Category` / `Confidence` enums. The worker does no casting.
 
 ## Confidence-based review
 
-- `high` — row written as-is, `reviewed` checkbox left unchecked.
-- `medium` — same, but highlight row yellow in the sheet (conditional
-  formatting on the `confidence` column).
-- `low` — highlight row red. Consider an n8n step that sends a Slack/email
-  nudge to review it.
+`confidence` (`:high` / `:medium` / `:low`) is required and stored. Review
+happens in AshAdmin; `reviewed_at` is null until an admin runs
+`:mark_reviewed`. A future "needs review" report can filter on
+`confidence == :low and is_nil(reviewed_at)`.
+
+## Configuration (runtime.exs, all non-raising)
+
+| Env var | Used by |
+| --- | --- |
+| `PAPRA_BASE_URL` | `Edenflowers.Papra` |
+| `PAPRA_API_KEY` | `Edenflowers.Papra` (Bearer auth) |
+| `PAPRA_WEBHOOK_SECRET` | `PapraWebhook` plug (fails closed if unset) |
+| `ANTHROPIC_API_KEY` | `Edenflowers.Claude` (via ReqLLM) |
+
+Left non-raising on purpose: a missing key must not block app boot for an
+experimental feature. The webhook fails closed; the worker logs and retries.
+
+## To verify on first run
+
+- **Papra signature scheme.** The plug verifies an HMAC-SHA256 *hex* digest of
+  the raw body in the `x-signature` header. If your Papra is on the Standard
+  Webhooks scheme (v0.8+), the signed content is `<id>.<timestamp>.<body>`
+  with different headers/encoding — adjust `verify_signature/3`.
+- **ReqLLM specifics.** Confirm the model slug (`anthropic:claude-sonnet-4-6`),
+  the response accessor (`ReqLLM.Response.object/1`), and that the per-call
+  `api_key:` option is honoured.
 
 ## What this does not do
 
-- No Phoenix involvement — entirely external to the app.
-- No automatic accounting entries — the sheet is a review layer, not a
-  ledger.
-- No re-extraction on update — if a document is replaced in Papra, manually
-  delete the old sheet row and re-trigger.
-
-## Future extensions (if needed)
-
-- Deduplicate across months (same vendor, same amount, same date — likely
-  uploaded twice).
-- Export sheet to CSV on a schedule and email to accountant.
-- Move structured storage into Phoenix/Postgres if a review UI becomes
-  worthwhile.
+- No automatic accounting entries — `Expenses` is a review layer, not a ledger.
+- No CSV/Excel export yet — straightforward to add from the Ash resource later.

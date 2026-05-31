@@ -95,17 +95,6 @@ defmodule EdenflowersWeb.Router do
     )
   end
 
-  pipeline :ingest do
-    plug :accepts, ["json"]
-    plug EdenflowersWeb.Plugs.RequireIngestApiKey
-  end
-
-  scope "/api", EdenflowersWeb do
-    pipe_through :ingest
-
-    post "/expenses", ExpenseController, :create
-  end
-
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:edenflowers, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put

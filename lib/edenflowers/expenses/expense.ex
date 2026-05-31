@@ -44,7 +44,7 @@ defmodule Edenflowers.Expenses.Expense do
     defaults [:read, :destroy]
 
     create :ingest do
-      description "Upserts an expense record from the n8n ingestion pipeline."
+      description "Upserts an expense record extracted from a receipt/invoice document."
       upsert? true
       upsert_identity :unique_document_id
       upsert_fields [:vendor_name, :vendor_vat_number, :date, :total_amount, :vat_amount, :currency, :category, :description, :confidence, :processed_at]
@@ -59,9 +59,10 @@ defmodule Edenflowers.Expenses.Expense do
         :currency,
         :category,
         :description,
-        :confidence,
-        :processed_at
+        :confidence
       ]
+
+      change set_attribute(:processed_at, &DateTime.utc_now/0)
     end
 
     update :mark_reviewed do
