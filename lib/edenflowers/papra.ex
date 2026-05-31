@@ -1,3 +1,9 @@
+defmodule Edenflowers.Papra.Behaviour do
+  @callback fetch_document(organization_id :: String.t(), document_id :: String.t()) ::
+              {:ok, %{body: binary(), content_type: String.t()}}
+              | {:error, term()}
+end
+
 defmodule Edenflowers.Papra do
   @moduledoc """
   Thin client for the Papra document archiving API.
@@ -7,6 +13,9 @@ defmodule Edenflowers.Papra do
   `document:created` webhook arrives carrying only the document's ID.
   """
 
+  @behaviour Edenflowers.Papra.Behaviour
+
+  @impl true
   def fetch_document(organization_id, document_id) do
     url =
       "#{base_url()}/api/organizations/#{organization_id}/documents/#{document_id}/file"

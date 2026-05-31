@@ -13,9 +13,10 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Claude
-  alias Edenflowers.Papra
   alias Edenflowers.Expenses.Expense
+
+  defp papra, do: Application.get_env(:edenflowers, :papra_client, Edenflowers.Papra)
+  defp claude, do: Application.get_env(:edenflowers, :claude_client, Edenflowers.Claude)
 
   def enqueue(%{"document_id" => document_id} = args) do
     args
@@ -38,7 +39,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   end
 
   defp fetch(document_id, organization_id) do
-    case Papra.fetch_document(organization_id, document_id) do
+    case papra().fetch_document(organization_id, document_id) do
       {:ok, document} ->
         {:ok, document}
 
@@ -49,7 +50,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   end
 
   defp extract(document_id, %{body: body, content_type: content_type}) do
-    case Claude.extract_expense(body, content_type) do
+    case claude().extract_expense(body, content_type) do
       {:ok, fields} ->
         {:ok, fields}
 

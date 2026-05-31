@@ -1,3 +1,8 @@
+defmodule Edenflowers.Claude.Behaviour do
+  @callback extract_expense(file_binary :: binary(), content_type :: String.t()) ::
+              {:ok, map()} | {:error, term()}
+end
+
 defmodule Edenflowers.Claude do
   @moduledoc """
   Extracts structured expense data from a receipt or invoice document using
@@ -8,6 +13,8 @@ defmodule Edenflowers.Claude do
   coercion (string → Date, float → Decimal, string → enum). This module does
   no casting of its own.
   """
+
+  @behaviour Edenflowers.Claude.Behaviour
 
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
@@ -41,6 +48,7 @@ defmodule Edenflowers.Claude do
   Set confidence to reflect your overall certainty across all fields.
   """
 
+  @impl true
   def extract_expense(file_binary, content_type) do
     context =
       Context.new([
