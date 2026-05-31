@@ -61,6 +61,10 @@ if config_env() in [:prod, :dev] do
          System.get_env("MAINTENANCE_BYPASS_SECRET")
 
   config :edenflowers,
+         :ingest_api_key,
+         System.get_env("INGEST_API_KEY") || raise("environment variable INGEST_API_KEY is missing.")
+
+  config :edenflowers,
          :mailer_from_address,
          {System.get_env("MAILER_FROM_NAME", "Jennie"), System.get_env("MAILER_FROM_EMAIL", "info@edenflowers.fi")}
 
