@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.PapraHandler do
   end
 
   def handle_event(%{"type" => type}) do
-    Logger.debug("Ignoring Papra event: #{type}")
+    Logger.info("Ignoring Papra event: #{type}")
     :ok
   end
 

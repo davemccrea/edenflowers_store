@@ -70,9 +70,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     log =
       capture_log(fn ->
         assert {:error, _} =
-                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args,
-                   expected_failure: true
-                 )
+                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
       end)
 
     assert log =~ @document_id
@@ -90,9 +88,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     log =
       capture_log(fn ->
         assert {:error, _} =
-                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args,
-                   expected_failure: true
-                 )
+                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
       end)
 
     assert log =~ @document_id

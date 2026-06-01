@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.PapraHandlerTest do
   describe "unhandled events" do
     test "returns :ok and logs for unrecognised event types" do
       log =
-        capture_log([level: :debug], fn ->
+        capture_log(fn ->
           assert :ok =
                    EdenflowersWeb.PapraHandler.handle_event(%{
                      "type" => "document:tag:added",
