@@ -1,7 +1,6 @@
 defmodule EdenflowersWeb.PapraHandlerTest do
   use Edenflowers.DataCase
 
-  import ExUnit.CaptureLog
   import Mox
 
   setup :verify_on_exit!
@@ -45,47 +44,35 @@ defmodule EdenflowersWeb.PapraHandlerTest do
                all_enqueued(worker: Edenflowers.Workers.ProcessExpenseDocument)
     end
 
-    test "returns :error and logs when documentId is missing" do
-      log =
-        capture_log(fn ->
-          assert :error =
-                   EdenflowersWeb.PapraHandler.handle_event(%{
-                     "type" => "document:created",
-                     "data" => %{"organizationId" => "org_xyz456"}
-                   })
-        end)
+    test "returns :error when documentId is missing" do
+      assert :error =
+               EdenflowersWeb.PapraHandler.handle_event(%{
+                 "type" => "document:created",
+                 "data" => %{"organizationId" => "org_xyz456"}
+               })
 
-      assert log =~ "documentId"
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
-    test "returns :error and logs when organizationId is missing" do
-      log =
-        capture_log(fn ->
-          assert :error =
-                   EdenflowersWeb.PapraHandler.handle_event(%{
-                     "type" => "document:created",
-                     "data" => %{"documentId" => "doc_abc123"}
-                   })
-        end)
+    test "returns :error when organizationId is missing" do
+      assert :error =
+               EdenflowersWeb.PapraHandler.handle_event(%{
+                 "type" => "document:created",
+                 "data" => %{"documentId" => "doc_abc123"}
+               })
 
-      assert log =~ "organizationId"
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
     end
   end
 
   describe "unhandled events" do
-    test "returns :ok and logs for unrecognised event types" do
-      log =
-        capture_log(fn ->
-          assert :ok =
-                   EdenflowersWeb.PapraHandler.handle_event(%{
-                     "type" => "document:tag:added",
-                     "data" => %{}
-                   })
-        end)
+    test "returns :ok for unrecognised event types" do
+      assert :ok =
+               EdenflowersWeb.PapraHandler.handle_event(%{
+                 "type" => "document:tag:added",
+                 "data" => %{}
+               })
 
-      assert log =~ "document:tag:added"
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
     end
   end

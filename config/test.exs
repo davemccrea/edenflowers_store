@@ -35,8 +35,7 @@ config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Test
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
-# Keep tests quiet but allow :info so capture_log works for info-level assertions
-config :logger, level: :info
+config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

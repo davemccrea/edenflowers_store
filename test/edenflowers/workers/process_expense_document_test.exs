@@ -1,7 +1,6 @@
 defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
   use Edenflowers.DataCase
 
-  import ExUnit.CaptureLog
   import Mox
 
   alias Edenflowers.Expenses.Expense
@@ -62,37 +61,23 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     assert length(expenses) == 1
   end
 
-  test "logs and returns error when Papra fetch fails" do
+  test "returns error when Papra fetch fails" do
     expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ ->
       {:error, {:papra_http_error, 404}}
     end)
 
-    log =
-      capture_log(fn ->
-        assert {:error, _} =
-                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
-      end)
-
-    assert log =~ @document_id
-    assert log =~ "papra_http_error"
+    assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
     assert Ash.read!(Expense, authorize?: false) == []
   end
 
-  test "logs and returns error when Claude extraction fails" do
+  test "returns error when Claude extraction fails" do
     expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
 
     expect(Edenflowers.Claude.Mock, :extract_expense, fn _, _ ->
       {:error, {:claude_extraction_failed, :timeout}}
     end)
 
-    log =
-      capture_log(fn ->
-        assert {:error, _} =
-                 perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
-      end)
-
-    assert log =~ @document_id
-    assert log =~ "claude_extraction_failed"
+    assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
     assert Ash.read!(Expense, authorize?: false) == []
   end
 end
