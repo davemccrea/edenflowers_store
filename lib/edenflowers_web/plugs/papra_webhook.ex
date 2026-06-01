@@ -7,19 +7,15 @@ defmodule EdenflowersWeb.Plugs.PapraWebhook do
   the placement of `Stripe.WebhookPlug`. Only requests whose path matches the
   `:at` option are handled; everything else passes through untouched.
 
-  ## Signature scheme
+  ## Signature scheme (Standard Webhooks)
 
-  This verifies an HMAC-SHA256 hex digest of the raw body, sent in the
-  `x-signature` header — the scheme described in Papra's webhook docs. If your
-  Papra instance uses the Standard Webhooks scheme (v0.8+), the signed content
-  is `"<id>.<timestamp>.<body>"` and the header/encoding differ; adjust
-  `verify_signature/3` to match. The secret being unset (`nil`) fails closed —
-  every delivery is rejected.
+  Papra signs webhooks per the Standard Webhooks spec. The signed content is
+  `"<webhook-id>.<webhook-timestamp>.<raw-body>"` and the HMAC-SHA256 digest
+  is base64-encoded, sent in the `webhook-signature` header as `"v1,<digest>"`.
+  The secret being unset (`nil`) fails closed — every delivery is rejected.
   """
   import Plug.Conn
   require Logger
-
-  @signature_header "x-signature"
 
   def init(opts) do
     %{
@@ -63,16 +59,17 @@ defmodule EdenflowersWeb.Plugs.PapraWebhook do
   end
 
   defp verify_signature(conn, raw_body, secret) do
-    expected = :crypto.mac(:hmac, :sha256, secret, raw_body) |> Base.encode16(case: :lower)
+    with [msg_id] <- get_req_header(conn, "webhook-id"),
+         [timestamp] <- get_req_header(conn, "webhook-timestamp"),
+         [sig_header] <- get_req_header(conn, "webhook-signature") do
+      signed = "#{msg_id}.#{timestamp}.#{raw_body}"
+      expected = "v1," <> (:crypto.mac(:hmac, :sha256, secret, signed) |> Base.encode64())
 
-    case get_req_header(conn, @signature_header) do
-      [signature] ->
-        if Plug.Crypto.secure_compare(expected, signature),
-          do: :ok,
-          else: {:error, :invalid_signature}
-
-      _ ->
-        {:error, :invalid_signature}
+      if Plug.Crypto.secure_compare(expected, sig_header),
+        do: :ok,
+        else: {:error, :invalid_signature}
+    else
+      _ -> {:error, :invalid_signature}
     end
   end
 
