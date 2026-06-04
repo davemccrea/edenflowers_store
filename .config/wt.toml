@@ -6,6 +6,14 @@ copy = "wt step copy-ignored"
 [[pre-start]]
 env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} >> .env && echo export PORT={{ branch | hash_port }} >> .env'"
 
+# Fetch and compile any dependencies added/changed since the main worktree snapshot was copied
+[[pre-start]]
+deps = "bash -c 'source .env && mix deps.get && mix deps.compile'"
+
+# Download translation locales
+[[pre-start]]
+locales = "bash -c 'source .env && mix localize.download_locales'"
+
 # Create, migrate, and seed a per-worktree database
 [[pre-start]]
 db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix ash.setup --quiet && mix run priv/repo/seeds.exs'"
