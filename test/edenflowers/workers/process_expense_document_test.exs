@@ -1,6 +1,7 @@
 defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
   use Edenflowers.DataCase
 
+  import ExUnit.CaptureLog
   import Mox
 
   alias Edenflowers.Expenses.Expense
@@ -66,7 +67,10 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
       {:error, {:papra_http_error, 404}}
     end)
 
-    assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    capture_log(fn ->
+      assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    end)
+
     assert Ash.read!(Expense, authorize?: false) == []
   end
 
@@ -77,7 +81,10 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
       {:error, {:claude_extraction_failed, :timeout}}
     end)
 
-    assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    capture_log(fn ->
+      assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    end)
+
     assert Ash.read!(Expense, authorize?: false) == []
   end
 end
