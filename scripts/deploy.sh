@@ -82,6 +82,14 @@ if [[ -f .env ]]; then
   set +a
 fi
 
+section "Installing deps"
+mix deps.get
+ok "deps installed"
+
+section "Downloading locales"
+mix localize.download_locales
+ok "locales downloaded"
+
 section "Running precommit checks"
 mix precommit
 
