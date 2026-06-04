@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.PapraHandlerTest do
   use Edenflowers.DataCase
 
+  import ExUnit.CaptureLog
   import Mox
 
   setup :verify_on_exit!
@@ -46,21 +47,25 @@ defmodule EdenflowersWeb.PapraHandlerTest do
     end
 
     test "returns :error when documentId is missing" do
-      assert :error =
-               EdenflowersWeb.PapraHandler.handle_event(%{
-                 "type" => "document:tag:added",
-                 "data" => %{"organizationId" => "org_xyz456", "tagName" => "receipt"}
-               })
+      capture_log(fn ->
+        assert :error =
+                 EdenflowersWeb.PapraHandler.handle_event(%{
+                   "type" => "document:tag:added",
+                   "data" => %{"organizationId" => "org_xyz456", "tagName" => "receipt"}
+                 })
+      end)
 
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
     test "returns :error when organizationId is missing" do
-      assert :error =
-               EdenflowersWeb.PapraHandler.handle_event(%{
-                 "type" => "document:tag:added",
-                 "data" => %{"documentId" => "doc_abc123", "tagName" => "receipt"}
-               })
+      capture_log(fn ->
+        assert :error =
+                 EdenflowersWeb.PapraHandler.handle_event(%{
+                   "type" => "document:tag:added",
+                   "data" => %{"documentId" => "doc_abc123", "tagName" => "receipt"}
+                 })
+      end)
 
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
     end

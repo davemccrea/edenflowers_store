@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
   use ExUnit.Case, async: true
 
+  import ExUnit.CaptureLog
   import Plug.Conn
 
   alias EdenflowersWeb.Plugs.PapraWebhook
@@ -37,37 +38,46 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
 
     test "rejects a request with a wrong secret" do
       body = ~s({"type":"document:created","data":{"documentId":"d1","organizationId":"o1"}})
-      conn = signed_conn(body, "wrong-secret") |> PapraWebhook.call(opts())
-      assert conn.status == 401
+      capture_log(fn ->
+        conn = signed_conn(body, "wrong-secret") |> PapraWebhook.call(opts())
+        assert conn.status == 401
+      end)
     end
 
     test "rejects a request missing webhook-id" do
       body = ~s({"type":"document:created","data":{}})
 
-      conn =
-        Plug.Test.conn(:post, @path, body)
-        |> put_req_header("webhook-timestamp", "1234567890")
-        |> put_req_header("webhook-signature", "v1,fakesig")
-        |> PapraWebhook.call(opts())
+      capture_log(fn ->
+        conn =
+          Plug.Test.conn(:post, @path, body)
+          |> put_req_header("webhook-timestamp", "1234567890")
+          |> put_req_header("webhook-signature", "v1,fakesig")
+          |> PapraWebhook.call(opts())
 
-      assert conn.status == 401
+        assert conn.status == 401
+      end)
     end
 
     test "rejects a request missing webhook-signature" do
-      conn =
-        Plug.Test.conn(:post, @path, ~s({}))
-        |> put_req_header("webhook-id", "msg_123")
-        |> put_req_header("webhook-timestamp", "1234567890")
-        |> PapraWebhook.call(opts())
+      capture_log(fn ->
+        conn =
+          Plug.Test.conn(:post, @path, ~s({}))
+          |> put_req_header("webhook-id", "msg_123")
+          |> put_req_header("webhook-timestamp", "1234567890")
+          |> PapraWebhook.call(opts())
 
-      assert conn.status == 401
+        assert conn.status == 401
+      end)
     end
 
     test "rejects when secret is nil" do
       body = ~s({"type":"document:created","data":{}})
       nil_opts = PapraWebhook.init(at: @path, handler: StubHandler, secret: nil)
-      conn = signed_conn(body) |> PapraWebhook.call(nil_opts)
-      assert conn.status == 401
+
+      capture_log(fn ->
+        conn = signed_conn(body) |> PapraWebhook.call(nil_opts)
+        assert conn.status == 401
+      end)
     end
   end
 
@@ -86,8 +96,11 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
   describe "payload handling" do
     test "returns 400 for invalid JSON" do
       invalid = "not json"
-      conn = signed_conn(invalid) |> PapraWebhook.call(opts())
-      assert conn.status == 400
+
+      capture_log(fn ->
+        conn = signed_conn(invalid) |> PapraWebhook.call(opts())
+        assert conn.status == 400
+      end)
     end
 
     test "returns 422 when the handler returns :error" do

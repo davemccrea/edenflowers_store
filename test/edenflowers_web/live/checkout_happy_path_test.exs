@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.CheckoutHappyPathTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
   import Generator
   import Mox
@@ -532,10 +533,12 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       }
     })
 
-    html =
-      view
-      |> element("#checkout-form-4")
-      |> render_submit()
+    {html, _log} =
+      with_log(fn ->
+        view
+        |> element("#checkout-form-4")
+        |> render_submit()
+      end)
 
     assert html =~ "Payment processing error"
 
