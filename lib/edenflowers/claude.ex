@@ -30,8 +30,7 @@ defmodule Edenflowers.Claude do
     currency: [type: :string, doc: "ISO 4217 currency code, lowercase (e.g. eur, sek)."],
     category: [
       type: :string,
-      doc:
-        "One of: office_supplies, travel, meals, software, marketing, utilities, professional_services, other."
+      doc: "One of: office_supplies, travel, meals, software, marketing, utilities, professional_services, other."
     ],
     description: [type: :string, doc: "Short description of what was purchased."],
     confidence: [

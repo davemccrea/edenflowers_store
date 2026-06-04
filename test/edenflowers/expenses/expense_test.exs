@@ -59,7 +59,10 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert {:error, error} =
                Expense.ingest(Map.delete(@valid_attrs, :document_id), actor: system_actor())
 
-      assert error |> Ash.Error.to_ash_error() |> Map.get(:errors) |> Enum.any?(fn e ->
+      assert error
+             |> Ash.Error.to_ash_error()
+             |> Map.get(:errors)
+             |> Enum.any?(fn e ->
                Map.get(e, :field) == :document_id
              end)
     end
@@ -95,7 +98,8 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
 
       {:ok, corrected} =
-        Expense.correct(expense,
+        Expense.correct(
+          expense,
           %{vendor_name: "Corrected Vendor", category: "travel"},
           actor: admin_actor()
         )

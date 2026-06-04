@@ -24,8 +24,7 @@ if config_env() in [:prod, :dev] do
   config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
   if config_env() == :dev do
-    config :edenflowers, Edenflowers.Repo,
-      database: System.get_env("DATABASE_NAME", "edenflowers_dev")
+    config :edenflowers, Edenflowers.Repo, database: System.get_env("DATABASE_NAME", "edenflowers_dev")
   end
 
   config :edenflowers,
@@ -60,13 +59,21 @@ if config_env() in [:prod, :dev] do
          :maintenance_bypass_secret,
          System.get_env("MAINTENANCE_BYPASS_SECRET")
 
-  # Expense capture (experimental). Left non-raising on purpose: a missing key
-  # must not block app boot. The Papra webhook fails closed without its secret,
-  # and ProcessExpenseDocument logs and retries if the API keys are absent.
-  config :edenflowers, :papra_base_url, System.get_env("PAPRA_BASE_URL")
-  config :edenflowers, :papra_api_key, System.get_env("PAPRA_API_KEY")
-  config :edenflowers, :papra_webhook_secret, System.get_env("PAPRA_WEBHOOK_SECRET")
-  config :edenflowers, :anthropic_api_key, System.get_env("ANTHROPIC_API_KEY")
+  config :edenflowers,
+         :papra_base_url,
+         System.get_env("PAPRA_BASE_URL") || raise("environment variable PAPRA_BASE_URL is missing.")
+
+  config :edenflowers,
+         :papra_api_key,
+         System.get_env("PAPRA_API_KEY") || raise("environment variable PAPRA_API_KEY is missing.")
+
+  config :edenflowers,
+         :papra_webhook_secret,
+         System.get_env("PAPRA_WEBHOOK_SECRET") || raise("environment variable PAPRA_WEBHOOK_SECRET is missing.")
+
+  config :edenflowers,
+         :anthropic_api_key,
+         System.get_env("ANTHROPIC_API_KEY") || raise("environment variable ANTHROPIC_API_KEY is missing.")
 
   config :edenflowers,
          :mailer_from_address,

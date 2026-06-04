@@ -47,7 +47,19 @@ defmodule Edenflowers.Expenses.Expense do
       description "Upserts an expense record extracted from a receipt/invoice document."
       upsert? true
       upsert_identity :unique_document_id
-      upsert_fields [:vendor_name, :vendor_vat_number, :date, :total_amount, :vat_amount, :currency, :category, :description, :confidence, :processed_at]
+
+      upsert_fields [
+        :vendor_name,
+        :vendor_vat_number,
+        :date,
+        :total_amount,
+        :vat_amount,
+        :currency,
+        :category,
+        :description,
+        :confidence,
+        :processed_at
+      ]
 
       accept [
         :document_id,
