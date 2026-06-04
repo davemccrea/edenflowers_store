@@ -1,7 +1,7 @@
 defmodule Edenflowers.Workers.ProcessExpenseDocument do
   @moduledoc """
-  Turns a Papra `document:created` event into a stored expense record:
-  fetches the document bytes from Papra, extracts structured fields via
+  Turns a Papra `document:tag:added` (receipt tag) event into a stored expense
+  record: fetches the document bytes from Papra, extracts structured fields via
   Claude, and ingests them into the `Edenflowers.Expenses` domain.
 
   Unique on `document_id` so at-least-once webhook delivery collapses to a

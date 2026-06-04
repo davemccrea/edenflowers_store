@@ -14,7 +14,9 @@ defmodule EdenflowersWeb.PapraHandler do
 
   alias Edenflowers.Workers.ProcessExpenseDocument
 
-  def handle_event(%{"type" => "document:created", "data" => data}) when is_map(data) do
+  @receipt_tag "receipt"
+
+  def handle_event(%{"type" => "document:tag:added", "data" => %{"tagName" => @receipt_tag} = data}) do
     with {:ok, document_id} <- fetch(data, "documentId"),
          {:ok, organization_id} <- fetch(data, "organizationId"),
          {:ok, _job} <-
@@ -25,7 +27,7 @@ defmodule EdenflowersWeb.PapraHandler do
       :ok
     else
       {:error, {:missing_field, field}} ->
-        Logger.warning("Papra document:created event missing #{field}")
+        Logger.warning("Papra document:tag:added event missing #{field}")
         :error
 
       {:error, {:enqueue_failed, document_id, changeset}} ->
