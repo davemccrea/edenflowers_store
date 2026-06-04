@@ -38,6 +38,7 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
 
     test "rejects a request with a wrong secret" do
       body = ~s({"type":"document:created","data":{"documentId":"d1","organizationId":"o1"}})
+
       capture_log(fn ->
         conn = signed_conn(body, "wrong-secret") |> PapraWebhook.call(opts())
         assert conn.status == 401
