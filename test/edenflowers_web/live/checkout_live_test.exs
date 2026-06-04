@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert_redirect: 2
     ]
 
+  import ExUnit.CaptureLog
   import Generator
   import Mox
 
@@ -644,7 +645,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
-      assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+      capture_log(fn ->
+        assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+      end)
 
       reloaded = Order.get_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []
@@ -660,8 +663,10 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
       {:ok, view, _html} = live(conn, "/checkout")
 
-      Order.remove_line_item!(order, non_card_line_item.id, authorize?: false)
-      assert_redirect(view, "/")
+      capture_log(fn ->
+        Order.remove_line_item!(order, non_card_line_item.id, authorize?: false)
+        assert_redirect(view, "/")
+      end)
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
