@@ -35,7 +35,7 @@ defmodule Edenflowers.Papra do
   defp content_type(response) do
     case Req.Response.get_header(response, "content-type") do
       [value | _] -> value |> String.split(";") |> hd() |> String.trim()
-      _ -> "application/octet-stream"
+      _ -> "application/pdf"
     end
   end
 
