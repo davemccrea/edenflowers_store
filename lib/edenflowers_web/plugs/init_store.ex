@@ -1,6 +1,5 @@
 defmodule EdenflowersWeb.Plugs.InitStore do
   import Plug.Conn
-  require Logger
   alias Edenflowers.Store.Order
 
   def init(opts), do: opts
