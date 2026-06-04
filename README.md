@@ -16,6 +16,21 @@ The hooks live in `.githooks/` (versioned with the repo). `pre-commit` formats s
 
 - `iex -S mix phx.server` — start the server at [`localhost:4000`](http://localhost:4000)
 
+### Papra expense capture
+
+Expenses are captured via [Papra](https://papra.app), a document archiving service. Upload a document to Papra and tag it `receipt` — this fires a `document:tag:added` webhook to `/webhook/papra`. The app fetches the document, sends it to Claude for data extraction, and records the expense.
+
+Four environment variables are needed. Add them to `.env`:
+
+```bash
+PAPRA_BASE_URL=https://app.papra.app   # or your self-hosted instance URL
+PAPRA_API_KEY=...                       # API key from Papra account settings
+PAPRA_WEBHOOK_SECRET=...               # signing secret shown in Papra webhook config
+ANTHROPIC_API_KEY=...                  # Claude API key for receipt extraction
+```
+
+To test locally, expose the dev server with a tunnel (e.g. `ngrok http 4000`) and point the Papra webhook URL at `https://<tunnel-host>/webhook/papra`. Copy the signing secret from Papra into `PAPRA_WEBHOOK_SECRET`.
+
 ### Stripe webhooks in dev
 
 Order finalization and the confirmation email both depend on `payment_intent.succeeded`. In a second terminal, run `stripe listen --forward-to localhost:4000/webhook/stripe` and export the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.

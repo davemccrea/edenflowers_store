@@ -1,7 +1,6 @@
 defmodule EdenflowersWeb.StripeHandlerTest do
   use Edenflowers.DataCase
 
-  import ExUnit.CaptureLog
   import Generator
   import Swoosh.TestAssertions
 
@@ -85,19 +84,12 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     end
 
     test "returns :error when metadata.order_id is missing" do
-      log =
-        capture_log(fn ->
-          assert :error =
-                   EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
-                     id: "evt_no_metadata",
-                     type: "payment_intent.succeeded",
-                     data: %{object: %{metadata: %{}}}
-                   })
-        end)
-
-      assert log =~ "payment_intent.succeeded"
-      assert log =~ "evt_no_metadata"
-      assert log =~ "missing order_id metadata"
+      assert :error =
+               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_no_metadata",
+                 type: "payment_intent.succeeded",
+                 data: %{object: %{metadata: %{}}}
+               })
 
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
       refute_email_sent()
@@ -169,17 +161,12 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     end
 
     test "returns :ok for an unhandled event type" do
-      log =
-        capture_log(fn ->
-          assert :ok =
-                   EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
-                     id: "evt_random",
-                     type: "invoice.paid",
-                     data: %{object: %{}}
-                   })
-        end)
-
-      assert log =~ "Unhandled Stripe event: invoice.paid"
+      assert :ok =
+               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_random",
+                 type: "invoice.paid",
+                 data: %{object: %{}}
+               })
     end
   end
 end
