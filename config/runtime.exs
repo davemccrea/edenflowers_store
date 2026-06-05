@@ -72,6 +72,10 @@ if config_env() in [:prod, :dev] do
          System.get_env("PAPRA_WEBHOOK_SECRET") || raise("environment variable PAPRA_WEBHOOK_SECRET is missing.")
 
   config :edenflowers,
+         :papra_organization_id,
+         System.get_env("PAPRA_ORGANIZATION_ID") || raise("environment variable PAPRA_ORGANIZATION_ID is missing.")
+
+  config :edenflowers,
          :anthropic_api_key,
          System.get_env("ANTHROPIC_API_KEY") || raise("environment variable ANTHROPIC_API_KEY is missing.")
 
