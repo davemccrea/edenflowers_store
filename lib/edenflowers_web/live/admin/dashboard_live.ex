@@ -41,14 +41,14 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-      <div class="px-8 py-8 max-w-4xl">
+      <.admin_page width="wide">
         <.admin_page_header title="Dashboard" />
 
-        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div class="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
           <.orders_widget orders_by_date={@orders_by_date} open_order_count={@open_order_count} today={@today} />
           <.expenses_widget unreviewed_expenses={@unreviewed_expenses} low_confidence_count={@low_confidence_count} />
         </div>
-      </div>
+      </.admin_page>
     </Layouts.admin>
     """
   end
@@ -59,30 +59,33 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp orders_widget(assigns) do
     ~H"""
-    <div class="bg-base-200 border border-base-300/60 rounded-lg p-5">
-      <div class="flex items-start justify-between mb-4">
-        <h2 class="text-base font-semibold text-base-content">Open Orders</h2>
-        <.count_badge count={@open_order_count} active={@open_order_count > 0} />
-      </div>
-
+    <.widget title="Open Orders" count={@open_order_count}>
       <div :if={@orders_by_date == []} class="py-4 text-center">
         <p class="text-sm text-base-content/40">No open orders right now</p>
       </div>
 
-      <div :if={@orders_by_date != []} class="space-y-4">
-        <div :for={{date, orders} <- @orders_by_date}>
-          <p class="eyebrow text-base-content/40 mb-1.5">
+      <%!-- A schedule, not a list: a left rule threads the date groups into an agenda. --%>
+      <ol :if={@orders_by_date != []} class="relative space-y-5 border-l border-base-300/70 pl-5">
+        <li :for={{date, orders} <- @orders_by_date} class="relative">
+          <span class={[
+            "absolute -left-[1.4rem] top-1 h-2 w-2 rounded-full ring-4 ring-base-100",
+            if(date == @today, do: "bg-primary", else: "bg-base-300")
+          ]} />
+          <p class={[
+            "eyebrow mb-1.5",
+            if(date == @today, do: "text-primary", else: "text-base-content/40")
+          ]}>
             {format_order_date(date, @today)}
           </p>
           <ul class="space-y-1.5">
-            <li :for={order <- orders} class="flex items-center justify-between text-sm">
-              <span class="text-base-content">{order.customer_name || "—"}</span>
-              <span class="text-base-content/40 font-mono text-xs">{order.order_reference}</span>
+            <li :for={order <- orders} class="flex items-baseline justify-between gap-3 text-sm">
+              <span class="text-base-content truncate">{order.customer_name || "—"}</span>
+              <span class="text-base-content/40 font-mono text-xs shrink-0">{order.order_reference}</span>
             </li>
           </ul>
-        </div>
-      </div>
-    </div>
+        </li>
+      </ol>
+    </.widget>
     """
   end
 
@@ -91,16 +94,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp expenses_widget(assigns) do
     ~H"""
-    <div class="bg-base-200 border border-base-300/60 rounded-lg p-5">
-      <div class="flex items-start justify-between mb-4">
-        <h2 class="text-base font-semibold text-base-content">Unreviewed Expenses</h2>
-        <.count_badge count={length(@unreviewed_expenses)} active={length(@unreviewed_expenses) > 0} />
-      </div>
-
+    <.widget title="Unreviewed Expenses" count={length(@unreviewed_expenses)}>
       <div :if={@unreviewed_expenses == []} class="py-4 text-center">
         <p class="text-sm text-base-content/40">All caught up</p>
       </div>
 
+      <%!-- A triage queue: the warning leads, rows carry a right-aligned amount column. --%>
       <div :if={@unreviewed_expenses != []}>
         <div
           :if={@low_confidence_count > 0}
@@ -114,18 +113,25 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           </span>
         </div>
 
-        <ul class="space-y-1.5">
+        <ul class="divide-y divide-base-300/50">
           <li
             :for={expense <- Enum.take(@unreviewed_expenses, 5)}
-            class="flex items-center justify-between text-sm"
+            class="flex items-center justify-between gap-3 py-2 text-sm first:pt-0"
           >
-            <span class={[
-              "text-base-content",
-              expense.confidence == :low && "text-warning font-medium"
-            ]}>
-              {expense.vendor_name || "Unknown"}
+            <span class="flex min-w-0 items-center gap-2">
+              <span
+                :if={expense.confidence == :low}
+                class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
+                title="Low confidence"
+              />
+              <span class={[
+                "truncate text-base-content",
+                expense.confidence == :low && "font-medium"
+              ]}>
+                {expense.vendor_name || "Unknown"}
+              </span>
             </span>
-            <span class="text-base-content/40 tabular-nums text-xs">
+            <span class="shrink-0 font-mono text-xs tabular-nums text-base-content/55">
               {expense.total_amount} {expense.currency |> to_string() |> String.upcase()}
             </span>
           </li>
@@ -141,7 +147,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           </.link>
         </div>
       </div>
-    </div>
+    </.widget>
     """
   end
 

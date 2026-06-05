@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-      <div class="px-8 py-8 max-w-2xl">
+      <.admin_page width="narrow">
         <.admin_page_header
           title={@expense.vendor_name || "Unknown vendor"}
           back={~p"/admin/expenses"}
@@ -44,6 +44,23 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </:actions>
         </.admin_page_header>
 
+        <%!-- Hero: the two facts a reviewer is verifying — the amount, and how much to trust it. --%>
+        <section class="mb-10 flex items-end justify-between gap-6 border-b border-base-300/70 pb-8">
+          <div>
+            <p class="eyebrow text-base-content/40 mb-1">Total Amount</p>
+            <p class="font-mono text-4xl font-semibold tabular-nums tracking-tight text-base-content">
+              {@expense.total_amount}
+              <span class="text-2xl text-base-content/50">
+                {@expense.currency |> to_string() |> String.upcase()}
+              </span>
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="eyebrow text-base-content/40 mb-1.5">Confidence</p>
+            <.confidence_badge confidence={@expense.confidence} />
+          </div>
+        </section>
+
         <section class="mb-10 grid grid-cols-2 gap-x-6 gap-y-5 text-sm">
           <div>
             <dt class="text-xs font-medium text-base-content/45 tracking-wide mb-0.5">Document</dt>
@@ -59,11 +76,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </dd>
           </div>
           <.detail_row label="Date" value={@expense.date} />
-          <.detail_row label="Total Amount" value={"#{@expense.total_amount} #{@expense.currency |> to_string() |> String.upcase()}"} />
           <.detail_row label="VAT Amount" value={@expense.vat_amount} />
           <.detail_row label="VAT Number" value={@expense.vendor_vat_number} />
           <.detail_row label="Category" value={@expense.category} />
-          <.detail_row label="Confidence" value={@expense.confidence} />
           <.detail_row
             label="Processed"
             value={@expense.processed_at && Calendar.strftime(@expense.processed_at, "%d %b %Y, %H:%M UTC")}
@@ -112,7 +127,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </div>
           </.form>
         </section>
-      </div>
+      </.admin_page>
     </Layouts.admin>
     """
   end
