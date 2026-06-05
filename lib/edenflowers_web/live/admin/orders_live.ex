@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Store.Order
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 

@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         >
           <:col :let={expense} field="date" sort label="Date">
             <span class="whitespace-nowrap tabular-nums">
-              {Format.date(expense.date, @locale)}
+              {Format.date(expense.date, @locale) || "—"}
             </span>
           </:col>
           <:col :let={expense} field="vendor_name" label="Vendor">
@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col :let={expense} field="total_amount" sort label="Amount">
             <span class="whitespace-nowrap tabular-nums">
-              {Format.amount(expense.total_amount, expense.currency, @locale)}
+              {Format.amount(expense.total_amount, expense.currency, @locale) || "—"}
             </span>
           </:col>
           <:col

@@ -184,6 +184,6 @@ defmodule EdenflowersWeb.AddressInputComponent do
   defp format_delivery_amount(nil), do: ""
 
   defp format_delivery_amount(amount) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Utils.format_money(amount)
+    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Format.money(amount)
   end
 end
