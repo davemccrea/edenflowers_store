@@ -86,10 +86,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           :for={{date, orders} <- @orders_by_date}
           class={[date == @today && "bg-primary/5 ring-primary/15 rounded-lg pb-1 ring-1"]}
         >
-          <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", if(date == @today, do: "text-emerald-600 font-bold", else: "text-base-content/65")]}>
+          <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", if(date == @today, do: "font-bold text-emerald-600", else: "text-base-content/65")]}>
             <span :if={date == @today} aria-hidden="true" class="relative flex h-2 w-2">
-              <span class="bg-emerald-500/75 motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full" />
-              <span class="bg-emerald-500 relative inline-flex h-2 w-2 rounded-full" />
+              <span class="bg-emerald-500/75 absolute inline-flex h-full w-full rounded-full motion-safe:animate-ping" />
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
             {format_order_date(date, @today, @locale)}
           </p>
@@ -113,44 +113,49 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp order_row(assigns) do
     ~H"""
-    <li class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2">
-      <div class="min-w-0">
-        <div class="flex min-w-0 items-center gap-2">
-          <span class="text-base-content truncate font-medium">{@order.customer_name || "—"}</span>
-          <span
-            :if={@order.gift}
-            class="badge badge-soft badge-sm badge-neutral inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
-            title={gift_title(@order)}
-          >
-            <.icon name="hero-gift" class="h-3 w-3" />
-            <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
-            <span :if={is_nil(@order.recipient_name)}>Gift</span>
-            <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
-          </span>
+    <li>
+      <.link
+        navigate={~p"/admin/orders/#{@order.id}"}
+        class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2 transition-colors hover:bg-base-200/60 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+      >
+        <div class="min-w-0">
+          <div class="flex min-w-0 items-center gap-2">
+            <span class="text-base-content truncate font-medium">{@order.customer_name || "—"}</span>
+            <span
+              :if={@order.gift}
+              class="badge badge-soft badge-sm badge-neutral inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
+              title={gift_title(@order)}
+            >
+              <.icon name="hero-gift" class="h-3 w-3" />
+              <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
+              <span :if={is_nil(@order.recipient_name)}>Gift</span>
+              <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
+            </span>
+          </div>
+
+          <%!-- The prep facts lead: what to make (item count) reads stronger than
+               the order value, which is an accounting number on a worklist. --%>
+          <p class="mt-0.5 flex items-center gap-1 text-xs">
+            <.icon
+              name={fulfillment_icon(@order.fulfillment_method)}
+              class="text-base-content/65 h-3.5 w-3.5 shrink-0"
+            />
+            <span class="text-base-content/65 whitespace-nowrap">{fulfillment_label(@order.fulfillment_method)}</span>
+            <span :if={@order.distance_km} aria-hidden="true" class="text-base-content/40">·</span>
+            <span :if={@order.distance_km} class="text-base-content/65 whitespace-nowrap tabular-nums">
+              {@order.distance_km} km
+            </span>
+            <span aria-hidden="true" class="text-base-content/40">·</span>
+            <span class="text-base-content/85 whitespace-nowrap font-medium">
+              {item_count_label(@order.non_card_line_item_count)}
+            </span>
+          </p>
         </div>
 
-        <%!-- The prep facts lead: what to make (item count) reads stronger than
-             the order value, which is an accounting number on a worklist. --%>
-        <p class="mt-0.5 flex items-center gap-1 text-xs">
-          <.icon
-            name={fulfillment_icon(@order.fulfillment_method)}
-            class="text-base-content/65 h-3.5 w-3.5 shrink-0"
-          />
-          <span class="text-base-content/65 whitespace-nowrap">{fulfillment_label(@order.fulfillment_method)}</span>
-          <span :if={@order.distance_km} aria-hidden="true" class="text-base-content/40">·</span>
-          <span :if={@order.distance_km} class="text-base-content/65 whitespace-nowrap tabular-nums">
-            {@order.distance_km} km
-          </span>
-          <span aria-hidden="true" class="text-base-content/40">·</span>
-          <span class="text-base-content/85 whitespace-nowrap font-medium">
-            {item_count_label(@order.non_card_line_item_count)}
-          </span>
-        </p>
-      </div>
-
-      <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
-        {Format.currency(@order.grand_total, @locale)}
-      </span>
+        <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
+          {Format.currency(@order.grand_total, @locale)}
+        </span>
+      </.link>
     </li>
     """
   end
