@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             <span class="text-base-content truncate font-medium">{@order.customer_name || "—"}</span>
             <span
               :if={@order.gift}
-              class="badge badge-soft badge-xs badge-accent inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
+              class="badge badge-soft badge-sm badge-accent inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
               title={gift_title(@order)}
             >
               <.icon name="hero-gift" class="h-3 w-3" />

@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   set :pagination_container_class, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
   set :pagination_info_class, "text-sm"
-  set :pagination_count_class, "text-base-content/50 block text-xs sm:ml-2 sm:inline"
+  set :pagination_count_class, "text-base-content/65 block text-xs sm:ml-2 sm:inline"
   set :pagination_nav_class, "flex flex-wrap items-center gap-1 sm:flex-nowrap"
   set :page_size_container_class, "flex items-center gap-2"
 end
