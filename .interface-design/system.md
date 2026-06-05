@@ -84,6 +84,37 @@ scan: use ✓ (`hero-check`, `text-success`) / muted `—` (`text-base-content/3
 word-badge down a column, and don't place a status pill adjacent to another pill
 column (e.g. Confidence) — they read as a false group.
 
+## Dates, times, money — always via Localize
+
+Never hand-roll `Calendar.strftime` or `"#{amount} #{currency}"`. Route every
+date, datetime, and money value through `Edenflowers.Localize.Format` (CLDR),
+the same path the receipt and email use:
+
+- `Format.date(date, locale)` — CLDR short date.
+- `Format.datetime(dt, locale)` — shifts UTC → `Europe/Helsinki`, CLDR short.
+- `Format.amount(value, currency, locale)` — accepts the lowercase expense
+  currency atoms (`:eur`/`:sek`), upcases to ISO for CLDR.
+
+Resolve the locale once in `mount` with `Localize.get_locale()` and assign it.
+Bare `:date` attributes carry no timezone — format them, but never shift them.
+Only `:utc_datetime` values get the Helsinki shift.
+
+## Forms
+
+Admin forms use **medium (DaisyUI default) controls** for density — the operator
+wants the whole record visible, not storefront-sized inputs. Set every control
+explicitly so the form is internally consistent: `class="input w-full"`,
+`class="select w-full"`, `class="textarea w-full"`.
+
+Watch the `core_components.input` defaults: text inputs default to `input-lg`
+but selects/textareas to medium. So "just omit `class`" produces a *mismatched*
+form (tall text inputs, shorter selects). Always pass the explicit medium class
+on admin forms rather than relying on the per-type default.
+
+The detail-page hero `total_amount` may duplicate the form's amount field —
+that one duplication is fine (read-anchor vs. editor); don't render any *other*
+field twice. The form is the display for editable data.
+
 ## Information hierarchy
 
 Lead with the fact the human is verifying. On the expense detail page the

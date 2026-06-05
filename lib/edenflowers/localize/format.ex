@@ -9,6 +9,16 @@ defmodule Edenflowers.Localize.Format do
     Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
   end
 
+  @doc """
+  Like `currency/2` but for an explicit currency. Accepts the lowercase
+  currency atoms stored on expenses (`:eur`, `:sek`) and upcases them to the
+  ISO codes CLDR expects.
+  """
+  def amount(value, currency, locale) do
+    iso = currency |> to_string() |> String.upcase() |> String.to_existing_atom()
+    Localize.Number.to_string!(value, locale: locale, currency: iso)
+  end
+
   def date(date, locale) do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end

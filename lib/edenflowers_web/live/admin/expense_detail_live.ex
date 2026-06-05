@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Localize.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -15,6 +16,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
     {:ok,
      socket
      |> assign(:page_title, "Expense — #{expense.vendor_name || id}")
+     |> assign(:locale, Localize.get_locale())
      |> assign(:expense, expense)
      |> assign(:form, build_form(expense, socket.assigns.current_user))}
   end
@@ -49,10 +51,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           <div>
             <p class="eyebrow text-base-content/40 mb-1">Total Amount</p>
             <p class="font-mono text-4xl font-semibold tabular-nums tracking-tight text-base-content">
-              {@expense.total_amount}
-              <span class="text-2xl text-base-content/50">
-                {@expense.currency |> to_string() |> String.upcase()}
-              </span>
+              {Format.amount(@expense.total_amount, @expense.currency, @locale)}
             </p>
           </div>
           <div class="text-right">
@@ -61,47 +60,35 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </div>
         </section>
 
-        <section class="mb-10 grid grid-cols-2 gap-x-6 gap-y-5 text-sm">
-          <div>
-            <dt class="text-xs font-medium text-base-content/45 tracking-wide mb-0.5">Document</dt>
-            <dd>
-              <a
-                href={Edenflowers.Papra.document_url(@expense.document_id)}
-                target="_blank"
-                rel="noopener"
-                class="link link-primary text-sm"
-              >
-                {@expense.document_id}
-              </a>
-            </dd>
-          </div>
-          <.detail_row label="Date" value={@expense.date} />
-          <.detail_row label="VAT Amount" value={@expense.vat_amount} />
-          <.detail_row label="VAT Number" value={@expense.vendor_vat_number} />
-          <.detail_row label="Category" value={@expense.category} />
-          <.detail_row
-            label="Processed"
-            value={@expense.processed_at && Calendar.strftime(@expense.processed_at, "%d %b %Y, %H:%M UTC")}
-          />
-          <.detail_row
-            label="Reviewed"
-            value={@expense.reviewed_at && Calendar.strftime(@expense.reviewed_at, "%d %b %Y, %H:%M UTC")}
-          />
-          <div class="col-span-2">
-            <.detail_row label="Description" value={@expense.description} />
-          </div>
+        <%!-- System facts the reviewer can't edit — kept out of the form. --%>
+        <section class="mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/45">
+          <span>
+            Document
+            <a
+              href={Edenflowers.Papra.document_url(@expense.document_id)}
+              target="_blank"
+              rel="noopener"
+              class="link link-primary"
+            >
+              {@expense.document_id}
+            </a>
+          </span>
+          <span :if={@expense.processed_at} aria-hidden="true">·</span>
+          <span :if={@expense.processed_at}>Processed {Format.datetime(@expense.processed_at, @locale)}</span>
+          <span :if={@expense.reviewed_at} aria-hidden="true">·</span>
+          <span :if={@expense.reviewed_at}>Reviewed {Format.datetime(@expense.reviewed_at, @locale)}</span>
         </section>
 
         <section>
-          <h2 class="text-sm font-semibold text-base-content/45 mb-4">Correct Extracted Data</h2>
+          <h2 class="text-sm font-semibold text-base-content/45 mb-4">Extracted Data</h2>
           <.form for={@form} phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-2 gap-4">
-              <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input input-bordered input-sm w-full" />
-              <.input field={@form[:vendor_vat_number]} type="text" label="VAT Number" class="input input-bordered input-sm w-full" />
-              <.input field={@form[:date]} type="date" label="Date" class="input input-bordered input-sm w-full" />
-              <.input field={@form[:currency]} type="select" label="Currency" options={["EUR": :eur, "SEK": :sek]} class="select select-bordered select-sm w-full" />
-              <.input field={@form[:total_amount]} type="text" label="Total Amount" class="input input-bordered input-sm w-full" />
-              <.input field={@form[:vat_amount]} type="text" label="VAT Amount" class="input input-bordered input-sm w-full" />
+              <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input w-full" />
+              <.input field={@form[:vendor_vat_number]} type="text" label="VAT Number" class="input w-full" />
+              <.input field={@form[:date]} type="date" label="Date" class="input w-full" />
+              <.input field={@form[:currency]} type="select" label="Currency" options={["EUR": :eur, "SEK": :sek]} class="select w-full" />
+              <.input field={@form[:total_amount]} type="text" label="Total Amount" class="input w-full" />
+              <.input field={@form[:vat_amount]} type="text" label="VAT Amount" class="input w-full" />
               <.input
                 field={@form[:category]}
                 type="select"
@@ -116,14 +103,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   "Professional Services": :professional_services,
                   "Other": :other
                 ]}
-                class="select select-bordered select-sm w-full"
+                class="select w-full"
               />
               <div class="col-span-2">
-                <.input field={@form[:description]} type="textarea" label="Description" class="textarea textarea-bordered textarea-sm w-full" />
+                <.input field={@form[:description]} type="textarea" label="Description" class="textarea w-full" />
               </div>
             </div>
             <div class="mt-6">
-              <button type="submit" class="btn btn-primary btn-sm">Save Corrections</button>
+              <button type="submit" class="btn btn-primary">Save Corrections</button>
             </div>
           </.form>
         </section>
@@ -169,15 +156,4 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
     AshPhoenix.Form.for_update(expense, :correct, actor: actor) |> to_form()
   end
 
-  attr :label, :string, required: true
-  attr :value, :any, required: true
-
-  defp detail_row(assigns) do
-    ~H"""
-    <div>
-      <dt class="text-xs font-medium text-base-content/45 tracking-wide mb-0.5">{@label}</dt>
-      <dd class="text-base-content">{@value || "—"}</dd>
-    </div>
-    """
-  end
 end
