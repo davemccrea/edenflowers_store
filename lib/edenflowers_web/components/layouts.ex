@@ -242,7 +242,7 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="mt-auto px-3 pt-4 border-t border-base-300/70">
-        <p class="px-3 mb-1 text-xs text-base-content/35">System</p>
+        <p class="px-3 mb-1 text-xs text-base-content/65">System</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
