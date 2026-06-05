@@ -21,7 +21,7 @@ defmodule Edenflowers.MixProject do
           build: [
             "ash-framework": [
               description: "Expert on the Ash Framework ecosystem.",
-              usage_rules: [:ash, ~r/^ash_/]
+              usage_rules: [:ash, ~r/^ash_/, :spark, :reactor, :cinder]
             ],
             "phoenix-framework": [
               description: "Expert on the Phoenix Framework.",
@@ -34,6 +34,14 @@ defmodule Edenflowers.MixProject do
             igniter: [
               description: "Expert on Igniter.",
               usage_rules: [:igniter]
+            ],
+            "req-llm": [
+              description: "Expert on ReqLLM for making LLM API requests.",
+              usage_rules: [:req_llm, :llm_db]
+            ],
+            localize: [
+              description: "Expert on Localize for internationalisation.",
+              usage_rules: [:localize]
             ]
           ]
         ]
