@@ -396,6 +396,7 @@ orders = [
     recipient_name: "Aino Virtanen",
     recipient_phone_number: "+358 40 123 4567",
     delivery_address: "Hovioikeudenpuistikko 16, 65100 Vaasa",
+    distance: 3380,
     gift: false,
     locale: "fi",
     items: [{"Bouquet 1", :medium, 1}, {"Plant 2", :small, 1}]
@@ -408,6 +409,7 @@ orders = [
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "+358 50 987 6543",
     delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
+    distance: 12000,
     gift: true,
     card_message: "Happy birthday, with love.",
     # A gift order carries a card: a line item flagged is_card, built from a
@@ -432,6 +434,7 @@ orders = [
     recipient_name: "Johan Nyström",
     recipient_phone_number: "+358 44 222 1188",
     delivery_address: "Vaasanpuistikko 11, 65100 Vaasa",
+    distance: 500,
     gift: false,
     items: [{"Bouquet 4", :medium, 1}, {"Bouquet 5", :medium, 1}]
   },
@@ -443,6 +446,7 @@ orders = [
     recipient_name: "Liisa Mäkinen",
     recipient_phone_number: "+358 41 555 0099",
     delivery_address: "Rauhankatu 8, 65100 Vaasa",
+    distance: 10500,
     gift: false,
     locale: "fi",
     # Cart total well above the promo's €30 minimum so the discount applies.
@@ -475,6 +479,7 @@ orders = [
     recipient_name: "Hanna Järvinen",
     recipient_phone_number: "+358 45 321 7654",
     delivery_address: "Pitkäkatu 42, 65100 Vaasa",
+    distance: 7200,
     gift: false,
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
@@ -499,6 +504,7 @@ for order_attrs <- orders do
       recipient_name: order_attrs[:recipient_name],
       recipient_phone_number: order_attrs[:recipient_phone_number],
       delivery_address: order_attrs[:delivery_address],
+      distance: order_attrs[:distance],
       fulfillment_date: Date.add(today, order_attrs.days_out),
       fulfillment_option_id: fulfillment_option.id,
       fulfillment_option_name: fulfillment_option.name,

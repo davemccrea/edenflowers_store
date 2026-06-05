@@ -10,7 +10,7 @@ defmodule Edenflowers.Store.Order do
 
   require Ash.Resource.Change.Builtins
 
-  alias __MODULE__.{Changes, Validations}
+  alias __MODULE__.{Calculations, Changes, Validations}
   alias Edenflowers.Store.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -129,6 +129,7 @@ defmodule Edenflowers.Store.Order do
                   :fulfillment_method,
                   :grand_total,
                   :non_card_line_item_count,
+                  :distance_km,
                   :gift,
                   :recipient_name,
                   :card_message
@@ -477,6 +478,10 @@ defmodule Edenflowers.Store.Order do
 
   calculations do
     calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
+
+    # `distance` is snapshotted in metres; expose it as a kilometre string for
+    # display, and only for deliveries.
+    calculate :distance_km, :string, Calculations.DistanceKm
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
