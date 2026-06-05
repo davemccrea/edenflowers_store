@@ -63,8 +63,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
           </button>
         </section>
 
-        <div class="flex flex-col gap-8 md:flex-row md:items-start">
-          <div class="w-full max-w-xl">
+        <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
+          <div class="w-full min-w-0 max-w-xl">
             <.admin_calendar
               id="admin-fulfillment-calendar"
               scope={@scope}
@@ -73,7 +73,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
             />
           </div>
 
-          <div class="flex flex-col gap-4">
+          <div class="min-w-0 flex flex-col gap-4">
             <.admin_calendar_legend />
             <button
               type="button"
