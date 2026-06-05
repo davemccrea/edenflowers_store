@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
   describe "scope" do
     test "defaults to :all and switches when a chip is clicked", %{conn: conn, delivery: delivery} do
-      {:ok, view, html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, html} = live(conn, ~p"/admin/fulfillments")
 
       assert html =~ "All options"
       assert html =~ "Delivery"
@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     # impossible at the CSS layer — but this catches accidental removal of the
     # utility class from either element.
     test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
 
       # Sundays are closed for the delivery option set up in `setup`, so any
       # rendered Sunday in the current month carries the closed strike.
@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       delivery: delivery,
       pickup: pickup
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     } do
       # Saturday: delivery=off, pickup=on. The smart toggle aggregates: any
       # option has Saturday on → click closes Saturday everywhere.
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="saturday"]|)
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       delivery: delivery,
       pickup: pickup
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
@@ -147,7 +147,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       conn: conn,
       delivery: delivery
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       conn: conn,
       delivery: delivery
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
@@ -244,7 +244,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
           authorize?: false
         )
 
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-click="set-scope"][phx-value-scope="#{delivery.id}"]|)
@@ -270,7 +270,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       delivery: delivery,
       pickup: pickup
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     end
 
     test "renders a data-confirm attribute on the reset button", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/fulfillment-calendar")
+      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
       assert html =~ "Are you sure you want to reset the calendar?"
     end
   end
@@ -299,9 +299,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       conn = Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})
 
       assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
-               live(conn, ~p"/admin/fulfillment-calendar")
+               live(conn, ~p"/admin/fulfillments")
 
-      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillment-calendar"
+      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillments"
     end
 
     test "redirects non-admin authenticated users to /sign-in" do
@@ -317,9 +317,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
         |> Helpers.store_in_session(regular_user)
 
       assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
-               live(conn, ~p"/admin/fulfillment-calendar")
+               live(conn, ~p"/admin/fulfillments")
 
-      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillment-calendar"
+      assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillments"
     end
   end
 
