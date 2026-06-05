@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :cinder, default_theme: "daisy_ui"
+
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,

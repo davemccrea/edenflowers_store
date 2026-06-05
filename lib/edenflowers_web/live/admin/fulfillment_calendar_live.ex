@@ -15,6 +15,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
 
+  alias EdenflowersWeb.Layouts
+
   alias Edenflowers.Store.{FulfillmentCalendar, FulfillmentOption}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
@@ -36,6 +38,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path}>
     <div class="container mx-auto py-10">
       <header class="mb-8 max-w-2xl">
         <p class="eyebrow text-base-content/55 mb-2">Availability</p>
@@ -89,6 +92,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
         </div>
       </div>
     </div>
+    </Layouts.admin>
     """
   end
 
