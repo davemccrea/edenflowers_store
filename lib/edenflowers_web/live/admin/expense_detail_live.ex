@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Admin.Components
+
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
 
@@ -21,21 +23,30 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-      <div class="container mx-auto py-10 max-w-2xl">
-        <div class="mb-8">
-          <.link navigate={~p"/admin/expenses"} class="text-sm text-base-content/55 hover:text-base-content/80">
-            ← Back to Expenses
-          </.link>
-        </div>
+      <div class="px-8 py-8 max-w-2xl">
+        <.admin_page_header
+          title={@expense.vendor_name || "Unknown vendor"}
+          back={~p"/admin/expenses"}
+          back_label="Expenses"
+        >
+          <:actions>
+            <span :if={not is_nil(@expense.reviewed_at)} class="badge badge-soft badge-success gap-1">
+              <.icon name="hero-check" class="h-3 w-3" /> Reviewed
+            </span>
+            <button
+              :if={is_nil(@expense.reviewed_at)}
+              type="button"
+              phx-click="mark_reviewed"
+              class="btn btn-primary btn-sm"
+            >
+              Mark as Reviewed
+            </button>
+          </:actions>
+        </.admin_page_header>
 
-        <header class="mb-8">
-          <p class="eyebrow text-base-content/55 mb-2">Expense</p>
-          <h1 class="page-title">{@expense.vendor_name || "Unknown vendor"}</h1>
-        </header>
-
-        <section class="mb-10 grid grid-cols-2 gap-4 text-sm">
+        <section class="mb-10 grid grid-cols-2 gap-x-6 gap-y-5 text-sm">
           <div>
-            <dt class="text-xs text-base-content/55 uppercase tracking-wide mb-0.5">Document</dt>
+            <dt class="text-xs font-medium text-base-content/45 tracking-wide mb-0.5">Document</dt>
             <dd>
               <a
                 href={Edenflowers.Papra.document_url(@expense.document_id)}
@@ -48,84 +59,52 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </dd>
           </div>
           <.detail_row label="Date" value={@expense.date} />
-          <.detail_row label="Total Amount" value={"#{@expense.total_amount} #{@expense.currency}"} />
+          <.detail_row label="Total Amount" value={"#{@expense.total_amount} #{@expense.currency |> to_string() |> String.upcase()}"} />
           <.detail_row label="VAT Amount" value={@expense.vat_amount} />
           <.detail_row label="VAT Number" value={@expense.vendor_vat_number} />
           <.detail_row label="Category" value={@expense.category} />
           <.detail_row label="Confidence" value={@expense.confidence} />
-          <.detail_row label="Processed" value={@expense.processed_at} />
-          <.detail_row label="Reviewed" value={if @expense.reviewed_at, do: @expense.reviewed_at, else: "Not reviewed"} />
+          <.detail_row
+            label="Processed"
+            value={@expense.processed_at && Calendar.strftime(@expense.processed_at, "%d %b %Y, %H:%M UTC")}
+          />
+          <.detail_row
+            label="Reviewed"
+            value={@expense.reviewed_at && Calendar.strftime(@expense.reviewed_at, "%d %b %Y, %H:%M UTC")}
+          />
           <div class="col-span-2">
             <.detail_row label="Description" value={@expense.description} />
           </div>
         </section>
 
-        <section class="mb-10">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold">Mark as Reviewed</h2>
-          </div>
-          <button
-            :if={is_nil(@expense.reviewed_at)}
-            type="button"
-            phx-click="mark_reviewed"
-            class="btn btn-primary btn-sm"
-          >
-            Mark as Reviewed
-          </button>
-          <p :if={not is_nil(@expense.reviewed_at)} class="text-sm text-base-content/55">
-            Reviewed at {Calendar.strftime(@expense.reviewed_at, "%Y-%m-%d %H:%M UTC")}
-          </p>
-        </section>
-
         <section>
-          <h2 class="text-base font-semibold mb-4">Correct Extracted Data</h2>
+          <h2 class="text-sm font-semibold text-base-content/45 mb-4">Correct Extracted Data</h2>
           <.form for={@form} phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text">Vendor Name</span></label>
-                <.input field={@form[:vendor_name]} type="text" class="input input-bordered input-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">VAT Number</span></label>
-                <.input field={@form[:vendor_vat_number]} type="text" class="input input-bordered input-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">Date</span></label>
-                <.input field={@form[:date]} type="date" class="input input-bordered input-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">Currency</span></label>
-                <.input field={@form[:currency]} type="select" options={["EUR": :eur, "SEK": :sek]} class="select select-bordered select-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">Total Amount</span></label>
-                <.input field={@form[:total_amount]} type="text" class="input input-bordered input-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">VAT Amount</span></label>
-                <.input field={@form[:vat_amount]} type="text" class="input input-bordered input-sm w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text">Category</span></label>
-                <.input
-                  field={@form[:category]}
-                  type="select"
-                  options={[
-                    "Office Supplies": :office_supplies,
-                    "Travel": :travel,
-                    "Meals": :meals,
-                    "Software": :software,
-                    "Marketing": :marketing,
-                    "Utilities": :utilities,
-                    "Professional Services": :professional_services,
-                    "Other": :other
-                  ]}
-                  class="select select-bordered select-sm w-full"
-                />
-              </div>
-              <div class="form-control col-span-2">
-                <label class="label"><span class="label-text">Description</span></label>
-                <.input field={@form[:description]} type="textarea" class="textarea textarea-bordered textarea-sm w-full" />
+              <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input input-bordered input-sm w-full" />
+              <.input field={@form[:vendor_vat_number]} type="text" label="VAT Number" class="input input-bordered input-sm w-full" />
+              <.input field={@form[:date]} type="date" label="Date" class="input input-bordered input-sm w-full" />
+              <.input field={@form[:currency]} type="select" label="Currency" options={["EUR": :eur, "SEK": :sek]} class="select select-bordered select-sm w-full" />
+              <.input field={@form[:total_amount]} type="text" label="Total Amount" class="input input-bordered input-sm w-full" />
+              <.input field={@form[:vat_amount]} type="text" label="VAT Amount" class="input input-bordered input-sm w-full" />
+              <.input
+                field={@form[:category]}
+                type="select"
+                label="Category"
+                options={[
+                  "Office Supplies": :office_supplies,
+                  "Travel": :travel,
+                  "Meals": :meals,
+                  "Software": :software,
+                  "Marketing": :marketing,
+                  "Utilities": :utilities,
+                  "Professional Services": :professional_services,
+                  "Other": :other
+                ]}
+                class="select select-bordered select-sm w-full"
+              />
+              <div class="col-span-2">
+                <.input field={@form[:description]} type="textarea" label="Description" class="textarea textarea-bordered textarea-sm w-full" />
               </div>
             </div>
             <div class="mt-6">
@@ -181,7 +160,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   defp detail_row(assigns) do
     ~H"""
     <div>
-      <dt class="text-xs text-base-content/55 uppercase tracking-wide mb-0.5">{@label}</dt>
+      <dt class="text-xs font-medium text-base-content/45 tracking-wide mb-0.5">{@label}</dt>
       <dd class="text-base-content">{@value || "—"}</dd>
     </div>
     """
