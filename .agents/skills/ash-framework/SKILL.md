@@ -65,6 +65,7 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash.generate_resource_diagrams` - Generates Mermaid Resource Diagrams for each Ash domain
 - `mix ash.gettext.extract` - Extracts Ash error messages into a .pot file
 - `mix ash.install` - Installs Ash into a project. Should be called with `mix igniter.install ash`
+- `mix ash.manifest.dump` - Dump the Ash app manifest as JSON
 - `mix ash.migrate` - Runs all migration tasks for any extension on any resource/domain in your application.
 - `mix ash.patch.extend` - Adds an extension or extensions to the given domain/resource
 - `mix ash.reset` - Runs all tear down & setup tasks for any extension on any resource/domain in your application.
@@ -80,6 +81,7 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash_authentication.add_strategy.api_key` - Adds API key authentication to your user resource
 - `mix ash_authentication.add_strategy.apple` - Adds Apple Sign In authentication to your user resource
 - `mix ash_authentication.add_strategy.auth0` - Adds Auth0 OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.dynamic_oidc` - Adds a data-driven OIDC strategy + OidcConnection resource
 - `mix ash_authentication.add_strategy.github` - Adds GitHub OAuth authentication to your user resource
 - `mix ash_authentication.add_strategy.google` - Adds Google OAuth authentication to your user resource
 - `mix ash_authentication.add_strategy.magic_link` - Adds magic link authentication to your user resource
@@ -103,6 +105,7 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash_authentication_phoenix.add_strategy.password` - Adds Phoenix integration for the password authentication strategy
 - `mix ash_authentication_phoenix.add_strategy.recovery_code` - Adds Phoenix integration for the recovery code authentication strategy
 - `mix ash_authentication_phoenix.add_strategy.totp` - Adds Phoenix integration for the TOTP authentication strategy
+- `mix ash_authentication_phoenix.add_strategy.webauthn` - Adds Phoenix integration for the WebAuthn authentication strategy
 - `mix ash_authentication_phoenix.install` - Installs AshAuthenticationPhoenix. Invoke with `mix igniter.install ash_authentication_phoenix`
 - `mix ash_authentication_phoenix.setup` - Ensures Phoenix authentication infrastructure (routes, controller, sign-in page) exists
 - `mix ash_authentication_phoenix.upgrade`
