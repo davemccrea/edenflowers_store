@@ -15,9 +15,77 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :confidence, :atom, required: true
+
+  @doc "Extraction-confidence pill, shared by the expenses table and detail view."
+  def confidence_badge(assigns) do
+    ~H"""
+    <span class={[
+      "badge badge-soft badge-sm",
+      case @confidence do
+        :low -> "badge-error"
+        :medium -> "badge-warning"
+        :high -> "badge-success"
+        _ -> "badge-ghost"
+      end
+    ]}>
+      {@confidence}
+    </span>
+    """
+  end
+
+  attr :width, :string, default: "wide", values: ~w(wide narrow full)
+  slot :inner_block, required: true
+
+  @doc """
+  Page shell for admin screens: owns horizontal/vertical padding and the
+  content max-width so individual LiveViews don't each invent their own.
+
+  `width` is a semantic choice, not a measurement:
+    * `wide`   — dashboards, calendars, anything multi-column
+    * `narrow` — focused single-record views (detail/edit)
+    * `full`   — data tables that should use the whole canvas
+  """
+  def admin_page(assigns) do
+    ~H"""
+    <div class={[
+      "px-8 py-8",
+      case @width do
+        "wide" -> "max-w-4xl"
+        "narrow" -> "max-w-2xl"
+        "full" -> nil
+      end
+    ]}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  attr :title, :string, required: true
+  attr :count, :integer, default: nil, doc: "shown as a count badge beside the title"
+  slot :inner_block, required: true
+
+  @doc """
+  Surface shell for a dashboard widget. Owns the card treatment (border,
+  radius, padding) and the title row so every widget agrees on its frame —
+  the *content* is free to differ.
+  """
+  def widget(assigns) do
+    ~H"""
+    <section class="bg-base-100 border border-base-300/70 rounded-lg p-5">
+      <div class="flex items-start justify-between mb-4">
+        <h2 class="text-base font-semibold text-base-content">{@title}</h2>
+        <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
+      </div>
+      {render_slot(@inner_block)}
+    </section>
+    """
+  end
+
   attr :title, :string, required: true
   attr :back, :string, default: nil, doc: "path for a back-navigation link"
   attr :back_label, :string, default: nil
+  slot :subtitle, doc: "supporting text rendered under the title, inside the header rule"
   slot :actions
 
   def admin_page_header(assigns) do
@@ -30,7 +98,12 @@ defmodule EdenflowersWeb.Admin.Components do
         </.link>
       </div>
       <div class="flex items-start justify-between gap-4">
-        <h1 class="font-sans text-2xl font-semibold text-base-content tracking-tight">{@title}</h1>
+        <div class="min-w-0">
+          <h1 class="font-sans text-2xl font-semibold text-base-content tracking-tight">{@title}</h1>
+          <p :if={@subtitle != []} class="mt-1.5 text-sm leading-relaxed text-base-content/55">
+            {render_slot(@subtitle)}
+          </p>
+        </div>
         <div :if={@actions != []} class="flex items-center gap-2 shrink-0 mt-0.5">
           {render_slot(@actions)}
         </div>
