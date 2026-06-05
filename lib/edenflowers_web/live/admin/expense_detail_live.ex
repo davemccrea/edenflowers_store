@@ -47,10 +47,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </.admin_page_header>
 
         <%!-- Hero: the two facts a reviewer is verifying — the amount, and how much to trust it. --%>
-        <section class="mb-10 flex items-end justify-between gap-6 border-b border-base-300/70 pb-8">
+        <section class="border-base-300/70 mb-10 flex items-end justify-between gap-6 border-b pb-8">
           <div>
             <p class="eyebrow text-base-content/65 mb-1">Total Amount</p>
-            <p class="font-mono text-4xl font-semibold tabular-nums tracking-tight text-base-content">
+            <p class="font-mono text-base-content text-4xl font-semibold tabular-nums tracking-tight">
               {Format.amount(@expense.total_amount, @expense.currency, @locale)}
             </p>
           </div>
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </section>
 
         <%!-- System facts the reviewer can't edit — kept out of the form. --%>
-        <section class="mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/65">
+        <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span>
             Document
             <a
@@ -80,13 +80,18 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </section>
 
         <section>
-          <h2 class="text-sm font-semibold text-base-content/65 mb-4">Extracted Data</h2>
           <.form for={@form} phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-2 gap-4">
               <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input w-full" />
               <.input field={@form[:vendor_vat_number]} type="text" label="VAT Number" class="input w-full" />
               <.input field={@form[:date]} type="date" label="Date" class="input w-full" />
-              <.input field={@form[:currency]} type="select" label="Currency" options={["EUR": :eur, "SEK": :sek]} class="select w-full" />
+              <.input
+                field={@form[:currency]}
+                type="select"
+                label="Currency"
+                options={[EUR: :eur, SEK: :sek]}
+                class="select w-full"
+              />
               <.input field={@form[:total_amount]} type="text" label="Total Amount" class="input w-full" />
               <.input field={@form[:vat_amount]} type="text" label="VAT Amount" class="input w-full" />
               <.input
@@ -95,13 +100,13 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 label="Category"
                 options={[
                   "Office Supplies": :office_supplies,
-                  "Travel": :travel,
-                  "Meals": :meals,
-                  "Software": :software,
-                  "Marketing": :marketing,
-                  "Utilities": :utilities,
+                  Travel: :travel,
+                  Meals: :meals,
+                  Software: :software,
+                  Marketing: :marketing,
+                  Utilities: :utilities,
                   "Professional Services": :professional_services,
-                  "Other": :other
+                  Other: :other
                 ]}
                 class="select w-full"
               />
@@ -155,5 +160,4 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   defp build_form(expense, actor) do
     AshPhoenix.Form.for_update(expense, :correct, actor: actor) |> to_form()
   end
-
 end

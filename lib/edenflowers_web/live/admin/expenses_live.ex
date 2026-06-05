@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, :live_view
+  use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components
 
@@ -18,6 +19,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   end
 
   @impl true
+  def handle_params(params, uri, socket) do
+    {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
@@ -29,10 +35,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           resource={Expense}
           actor={@current_user}
           theme={EdenflowersWeb.Admin.CinderTheme}
+          url_state={@url_state}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label="Date">
-            <span class="tabular-nums whitespace-nowrap">
+            <span class="whitespace-nowrap tabular-nums">
               {Format.date(expense.date, @locale)}
             </span>
           </:col>
@@ -40,7 +47,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             <span class="font-medium">{expense.vendor_name || "—"}</span>
           </:col>
           <:col :let={expense} field="total_amount" sort label="Amount">
-            <span class="tabular-nums whitespace-nowrap">
+            <span class="whitespace-nowrap tabular-nums">
               {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </:col>
@@ -52,7 +59,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
             <span :if={expense.reviewed_at} class="inline-flex" title="Reviewed">
-              <.icon name="hero-check" class="h-4 w-4 text-base-content" />
+              <.icon name="hero-check" class="text-base-content h-4 w-4" />
               <span class="sr-only">Reviewed</span>
             </span>
             <span :if={is_nil(expense.reviewed_at)} class="text-base-content/30" aria-hidden="true">
