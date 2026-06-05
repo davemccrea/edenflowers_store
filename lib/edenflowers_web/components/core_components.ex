@@ -1147,7 +1147,6 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.focus(to: "##{@id}-top")
-        |> JS.add_class("overflow-hidden", to: "html")
       }
       phx-hide={
         %JS{}
@@ -1157,7 +1156,6 @@ defmodule EdenflowersWeb.CoreComponents do
           transition: {@transition, @transition_in, @transition_out},
           time: @time
         )
-        |> JS.remove_class("overflow-hidden", to: "html")
         |> JS.pop_focus()
       }
       class="z-100 relative"
@@ -1168,7 +1166,7 @@ defmodule EdenflowersWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         aria-label={@label}
-        class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
+        class={"js-scroll-lock-dialog #{@placement_class} fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>
