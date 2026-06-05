@@ -35,6 +35,46 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: { ...Hooks, ...colocatedHooks },
 });
 
+const scrollLockDialogSelector = ".js-scroll-lock-dialog";
+
+const scrollLockDialogIsVisible = (dialog) => {
+  if (
+    !dialog.isConnected ||
+    dialog.hidden ||
+    dialog.classList.contains("hidden") ||
+    dialog.getAttribute("aria-hidden") === "true"
+  ) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(dialog);
+  return style.display !== "none" && style.visibility !== "hidden";
+};
+
+const syncModalDialogScrollLock = () => {
+  const anyVisibleDialog = Array.from(
+    document.querySelectorAll(scrollLockDialogSelector),
+  ).some(scrollLockDialogIsVisible);
+
+  document.documentElement.classList.toggle(
+    "overflow-hidden",
+    anyVisibleDialog,
+  );
+};
+
+const modalDialogObserver = new MutationObserver(syncModalDialogScrollLock);
+
+modalDialogObserver.observe(document.body, {
+  subtree: true,
+  childList: true,
+  attributes: true,
+  attributeFilter: ["class", "style", "hidden", "aria-hidden"],
+});
+
+window.addEventListener("phx:page-loading-stop", syncModalDialogScrollLock);
+window.addEventListener("pageshow", syncModalDialogScrollLock);
+syncModalDialogScrollLock();
+
 // Show progress bar on live navigation and form submits
 topbar.config({
   barColors: { 0: "oklch(36.84% 0.0478 156.76)" },
