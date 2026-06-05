@@ -69,6 +69,21 @@ Use `<.admin_page width=...>` — never hand-roll `max-w-*`:
 - **`<.confidence_badge confidence>`** — shared by the expenses table and detail
   view. low→error, medium→warning, high→success.
 
+## Data tables (Cinder)
+
+Use `theme={EdenflowersWeb.Admin.CinderTheme}` — NOT the raw `"daisy_ui"`
+string. The custom theme `extends :daisy_ui` and only remaps the filter-panel
+header, because the storefront redefines DaisyUI's `card-title` as a large serif
+heading (`assets/css/app.css`) and the admin must not inherit it. If another
+Cinder class collides with a storefront utility, override it there too — never
+edit the global utility.
+
+**Status columns are glyphs, not labels.** A column read top-to-bottom is a
+scan: use ✓ (`hero-check`, `text-success`) / muted `—` (`text-base-content/30`,
+`aria-hidden`), with an `sr-only` label on the positive state. Don't repeat a
+word-badge down a column, and don't place a status pill adjacent to another pill
+column (e.g. Confidence) — they read as a false group.
+
 ## Information hierarchy
 
 Lead with the fact the human is verifying. On the expense detail page the
