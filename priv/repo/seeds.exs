@@ -14,6 +14,9 @@ alias Edenflowers.Accounts.User
 alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
+alias Edenflowers.Store.{Order, LineItem}
+
+require Ash.Query
 alias Edenflowers.Expenses.Expense
 
 # Admin user. `admin` is writable?: false on the resource so normal Ash actions
@@ -326,4 +329,199 @@ for {document_id, vendor, vat, date, total, vat_amount, currency, category, desc
     confidence: confidence
   })
   |> Ash.create!(authorize?: false)
+end
+
+# Placed orders. Checkout drives orders through a state machine and seals them
+# once placed, so normal Ash actions can't construct a finished order. Ash.Seed
+# writes attributes directly, bypassing transitions and policies — the right
+# escape hatch for fixtures, the same as the admin user above.
+#
+# Line item unit_price/tax_rate are snapshots; at checkout PopulateFromVariant
+# copies them off the chosen variant. We mirror that here so the dashboard's
+# subtotal/tax aggregates add up.
+home_delivery =
+  FulfillmentOption
+  |> Ash.Query.filter(fulfillment_method == :delivery)
+  |> Ash.read_first!(authorize?: false)
+
+store_pickup =
+  FulfillmentOption
+  |> Ash.Query.filter(fulfillment_method == :pickup)
+  |> Ash.read_first!(authorize?: false)
+
+summer_promo =
+  Promotion
+  |> Ash.Query.filter(code == "SUMMER15")
+  |> Ash.read_first!(authorize?: false)
+
+# Pick a handful of variants to build carts from, loading the tax rate so we can
+# snapshot it onto the line items.
+variants =
+  ProductVariant
+  |> Ash.Query.load(product: [:tax_rate])
+  |> Ash.read!(authorize?: false)
+
+variant_for = fn product_name, size ->
+  Enum.find(variants, fn v -> v.product.name == product_name and v.size == size end)
+end
+
+# Each order varies a different axis: fulfillment method, gift vs. not, a
+# promotion, a larger multi-item cart, locales, and one already fulfilled so the
+# dashboard's open/completed split has data on both sides.
+orders = [
+  %{
+    customer_name: "Aino Virtanen",
+    customer_email: "aino.virtanen@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: ~D[2026-06-08],
+    recipient_name: "Aino Virtanen",
+    recipient_phone_number: "+358 40 123 4567",
+    delivery_address: "Hovioikeudenpuistikko 16, 65100 Vaasa",
+    gift: false,
+    locale: "fi",
+    items: [{"Bouquet 1", :medium, 1}, {"Plant 2", :small, 1}]
+  },
+  %{
+    customer_name: "Mikael Lindholm",
+    customer_email: "mikael.lindholm@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: ~D[2026-06-09],
+    recipient_name: "Sofia Lindholm",
+    recipient_phone_number: "+358 50 987 6543",
+    delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
+    gift: true,
+    card_message: "Happy birthday, with love.",
+    # A gift order carries a card: a line item flagged is_card, built from a
+    # variant in the Cards category. Checkout enforces one card per order
+    # (SwapCardLineItem), so at most one card entry here.
+    card: {"Card 1", :medium},
+    items: [{"Bouquet 3", :large, 1}]
+  },
+  %{
+    customer_name: "Elina Korhonen",
+    customer_email: "elina.korhonen@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: ~D[2026-06-10],
+    gift: false,
+    items: [{"Plant 1", :medium, 2}, {"Bouquet 2", :small, 1}]
+  },
+  %{
+    customer_name: "Johan Nyström",
+    customer_email: "johan.nystrom@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: ~D[2026-06-12],
+    recipient_name: "Johan Nyström",
+    recipient_phone_number: "+358 44 222 1188",
+    delivery_address: "Vaasanpuistikko 11, 65100 Vaasa",
+    gift: false,
+    items: [{"Bouquet 4", :medium, 1}, {"Bouquet 5", :medium, 1}]
+  },
+  %{
+    customer_name: "Liisa Mäkinen",
+    customer_email: "liisa.makinen@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: ~D[2026-06-13],
+    recipient_name: "Liisa Mäkinen",
+    recipient_phone_number: "+358 41 555 0099",
+    delivery_address: "Rauhankatu 8, 65100 Vaasa",
+    gift: false,
+    locale: "fi",
+    # Cart total well above the promo's €30 minimum so the discount applies.
+    promotion: summer_promo,
+    items: [{"Bouquet 6", :large, 2}, {"Plant 3", :medium, 1}]
+  },
+  %{
+    customer_name: "Erik Sundström",
+    customer_email: "erik.sundstrom@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: ~D[2026-06-14],
+    gift: true,
+    card_message: "Tack för allt!",
+    # A large mixed cart to exercise multi-line aggregates.
+    items: [{"Bouquet 1", :large, 1}, {"Bouquet 4", :small, 2}, {"Plant 1", :large, 1}, {"Plant 4", :small, 1}]
+  },
+  %{
+    customer_name: "Hanna Järvinen",
+    customer_email: "hanna.jarvinen@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: ~D[2026-05-30],
+    recipient_name: "Hanna Järvinen",
+    recipient_phone_number: "+358 45 321 7654",
+    delivery_address: "Pitkäkatu 42, 65100 Vaasa",
+    gift: false,
+    # Already delivered — lands in the dashboard's completed side, not open orders.
+    fulfillment_status: :fulfilled,
+    items: [{"Bouquet 2", :medium, 1}]
+  }
+]
+
+for order_attrs <- orders do
+  fulfillment_option = order_attrs.fulfillment_option
+  promotion = order_attrs[:promotion]
+
+  order =
+    Ash.Seed.seed!(Order, %{
+      order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
+      state: :placed,
+      payment_status: :paid,
+      fulfillment_status: order_attrs[:fulfillment_status] || :pending,
+      ordered_at: DateTime.utc_now(),
+      customer_name: order_attrs.customer_name,
+      customer_email: order_attrs.customer_email,
+      gift: order_attrs.gift,
+      card_message: order_attrs[:card_message],
+      recipient_name: order_attrs[:recipient_name],
+      recipient_phone_number: order_attrs[:recipient_phone_number],
+      delivery_address: order_attrs[:delivery_address],
+      fulfillment_date: order_attrs.fulfillment_date,
+      fulfillment_option_id: fulfillment_option.id,
+      fulfillment_option_name: fulfillment_option.name,
+      fulfillment_method: fulfillment_option.fulfillment_method,
+      fulfillment_fee: fulfillment_option.base_price,
+      fulfillment_tax_percentage: tax_rate.percentage,
+      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      locale: order_attrs[:locale] || "sv-FI",
+      # Snapshot the promotion the same way SnapshotPromotion does at checkout.
+      # LineItem.discount keys off order.discount_rate + promotion_id, so both
+      # the relationship and the frozen columns must be set for totals to match.
+      promotion_id: promotion && promotion.id,
+      discount_rate: promotion && promotion.discount_rate,
+      promotion_name: promotion && promotion.name,
+      promotion_code: promotion && to_string(promotion.code)
+    })
+
+  for {product_name, size, quantity} <- order_attrs.items do
+    variant = variant_for.(product_name, size)
+
+    Ash.Seed.seed!(LineItem, %{
+      order_id: order.id,
+      product_id: variant.product.id,
+      product_variant_id: variant.id,
+      quantity: quantity,
+      unit_price: variant.price,
+      tax_rate: variant.product.tax_rate.percentage,
+      product_name: variant.product.name,
+      product_image_slug: variant.image_slug,
+      variant_size: variant.size,
+      is_card: false
+    })
+  end
+
+  if card = order_attrs[:card] do
+    {card_name, card_size} = card
+    card_variant = variant_for.(card_name, card_size)
+
+    Ash.Seed.seed!(LineItem, %{
+      order_id: order.id,
+      product_id: card_variant.product.id,
+      product_variant_id: card_variant.id,
+      quantity: 1,
+      unit_price: card_variant.price,
+      tax_rate: card_variant.product.tax_rate.percentage,
+      product_name: card_variant.product.name,
+      product_image_slug: card_variant.image_slug,
+      variant_size: card_variant.size,
+      is_card: true
+    })
+  end
 end
