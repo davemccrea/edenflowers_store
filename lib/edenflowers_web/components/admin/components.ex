@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   defp humanize_category(category) do
-    category |> to_string() |> String.replace("_", " ") |> String.capitalize()
+    category |> to_string() |> String.split("_") |> Enum.map_join(" ", &String.capitalize/1)
   end
 
   attr :confidence, :atom, required: true
@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Admin.Components do
     <span class={["badge badge-soft badge-sm capitalize", confidence_badge_class(@confidence)]}>
       <span
         :if={@confidence == :low}
-        class="size-1.5 inline-block rounded-full bg-current"
+        class="inline-block h-1.5 w-1.5 rounded-full bg-current"
         aria-hidden="true"
       />
       {@confidence}
@@ -110,12 +110,12 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :title, :string, required: true
   attr :back, :string, default: nil, doc: "path for a back-navigation link"
   attr :back_label, :string, default: nil
-  slot :subtitle, doc: "supporting text rendered under the title, inside the header rule"
+  slot :subtitle, doc: "supporting text rendered under the title"
   slot :actions
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="border-base-300/70 mb-6 pb-5 sm:mb-8 sm:pb-6">
+    <header class="mb-11 sm:mb-14">
       <div :if={@back} class="mb-4">
         <.link
           navigate={@back}

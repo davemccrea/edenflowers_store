@@ -346,8 +346,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
-      <label>
+    <fieldset class={@hidden && "hidden"}>
+      <label class="flex flex-col">
         <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <textarea
           id={@id}
