@@ -67,14 +67,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
             />
           </div>
 
-          <div class="min-w-0 flex flex-col gap-4">
+          <div class="flex min-w-0 flex-col gap-4">
             <.admin_calendar_legend />
             <button
               type="button"
               phx-click="reset-calendar"
               data-confirm={reset_confirm_message()}
               aria-label="Reset calendar to defaults"
-              class="btn btn-sm btn-ghost text-error hover:bg-error/10 self-start"
+              class="btn btn-sm btn-ghost text-error self-start hover:bg-error/10"
             >
               Reset
             </button>
