@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     product_variant = generate(product_variant(product_id: product.id))
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
-    {:ok, fulfillment_amount} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
+    {:ok, fulfillment_fee} = Edenflowers.Fulfillments.calculate_price(fulfillment_option)
 
     {:ok, user} =
       Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)
@@ -23,12 +23,13 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     order =
       Ash.Seed.seed!(Order, %{
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
+        state: :payment,
         customer_name: "John Smith",
         customer_email: "john.smith@example.com",
         user_id: user.id,
         fulfillment_option_id: fulfillment_option.id,
         fulfillment_date: Date.utc_today(),
-        fulfillment_amount: fulfillment_amount,
+        fulfillment_fee: fulfillment_fee,
         payment_intent_id: "pi_test_#{:rand.uniform(1_000_000)}"
       })
 
@@ -84,19 +85,14 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     end
 
     test "returns :error when metadata.order_id is missing" do
-      log =
-        capture_log(fn ->
-          assert :error =
-                   EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
-                     id: "evt_no_metadata",
-                     type: "payment_intent.succeeded",
-                     data: %{object: %{metadata: %{}}}
-                   })
-        end)
-
-      assert log =~ "payment_intent.succeeded"
-      assert log =~ "evt_no_metadata"
-      assert log =~ "missing order_id metadata"
+      capture_log(fn ->
+        assert :error =
+                 EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                   id: "evt_no_metadata",
+                   type: "payment_intent.succeeded",
+                   data: %{object: %{metadata: %{}}}
+                 })
+      end)
 
       assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
       refute_email_sent()
@@ -113,7 +109,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                })
 
       order = Order.get_by_id!(order.id, authorize?: false)
-      assert order.state == :checkout
+      assert order.state == :payment
       assert order.payment_status == :failed
 
       refute_email_sent()
@@ -152,7 +148,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
                })
 
       order = Order.get_by_id!(order.id, authorize?: false)
-      assert order.state == :checkout
+      assert order.state == :payment
       assert order.payment_status == :failed
     end
   end
@@ -168,17 +164,14 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     end
 
     test "returns :ok for an unhandled event type" do
-      log =
-        capture_log(fn ->
-          assert :ok =
-                   EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
-                     id: "evt_random",
-                     type: "invoice.paid",
-                     data: %{object: %{}}
-                   })
-        end)
-
-      assert log =~ "Unhandled Stripe event: invoice.paid"
+      capture_log(fn ->
+        assert :ok =
+                 EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                   id: "evt_random",
+                   type: "invoice.paid",
+                   data: %{object: %{}}
+                 })
+      end)
     end
   end
 end

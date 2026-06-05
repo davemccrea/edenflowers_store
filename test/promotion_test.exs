@@ -9,7 +9,7 @@ defmodule Edenflowers.Store.PromotionTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "A promotion",
                  code: "CHRISTMAS20",
-                 discount_percentage: "0.20",
+                 discount_rate: "0.20",
                  minimum_cart_total: "30.00",
                  start_date: ~D[2024-12-19],
                  expiration_date: ~D[2024-12-31]
@@ -22,7 +22,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
@@ -37,7 +37,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
@@ -52,7 +52,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
@@ -66,7 +66,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
@@ -80,7 +80,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19]
       })
@@ -95,7 +95,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
@@ -111,7 +111,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
@@ -127,7 +127,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "CHRISTMAS20",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "30.00",
         start_date: ~D[2024-12-19],
         expiration_date: ~D[2024-12-22]
@@ -142,7 +142,7 @@ defmodule Edenflowers.Store.PromotionTest do
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
         code: "EXPIRED",
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "0",
         start_date: Date.add(Date.utc_today(), -10),
         expiration_date: Date.add(Date.utc_today(), -1)
@@ -185,7 +185,7 @@ defmodule Edenflowers.Store.PromotionTest do
       assert promotion.usage == 0
 
       # Create order with promotion
-      order = generate(order(promotion_id: promotion.id, payment_intent_id: "pi_test"))
+      order = generate(order(state: :payment, promotion_id: promotion.id, payment_intent_id: "pi_test"))
 
       # Add line item
       _line_item =
@@ -218,7 +218,7 @@ defmodule Edenflowers.Store.PromotionTest do
         |> Ash.Changeset.for_create(:create, %{
           name: "Limited Promo",
           code: "LIMITED",
-          discount_percentage: "0.10",
+          discount_rate: "0.10",
           minimum_cart_total: "0",
           usage_limit: 5
         })
@@ -242,7 +242,7 @@ defmodule Edenflowers.Store.PromotionTest do
         |> Ash.Changeset.for_create(:create, %{
           name: "Limited Promo 10",
           code: "LIMITED10",
-          discount_percentage: "0.10",
+          discount_rate: "0.10",
           minimum_cart_total: "0",
           usage_limit: 5
         })
@@ -268,7 +268,7 @@ defmodule Edenflowers.Store.PromotionTest do
         |> Ash.Changeset.for_create(:create, %{
           name: "Unlimited Promo",
           code: "UNLIMITED",
-          discount_percentage: "0.10",
+          discount_rate: "0.10",
           minimum_cart_total: "0"
         })
         |> Ash.create(authorize?: false)
@@ -302,7 +302,7 @@ defmodule Edenflowers.Store.PromotionTest do
         |> Ash.Changeset.for_create(:create, %{
           name: "Maxed Out Promo",
           code: "MAXED",
-          discount_percentage: "0.20",
+          discount_rate: "0.20",
           minimum_cart_total: "0",
           usage_limit: 10
         })
@@ -329,14 +329,14 @@ defmodule Edenflowers.Store.PromotionTest do
     end
   end
 
-  describe "Promotion discount_percentage validations" do
-    test "rejects discount_percentage of 0" do
+  describe "Promotion discount_rate validations" do
+    test "rejects discount_rate of 0" do
       assert {:error, error} =
                Promotion
                |> Ash.Changeset.for_create(:create, %{
                  name: "Invalid Promo",
                  code: "ZERO",
-                 discount_percentage: "0",
+                 discount_rate: "0",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
@@ -344,13 +344,13 @@ defmodule Edenflowers.Store.PromotionTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "rejects negative discount_percentage" do
+    test "rejects negative discount_rate" do
       assert {:error, error} =
                Promotion
                |> Ash.Changeset.for_create(:create, %{
                  name: "Invalid Promo",
                  code: "NEGATIVE",
-                 discount_percentage: "-0.10",
+                 discount_rate: "-0.10",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
@@ -358,13 +358,13 @@ defmodule Edenflowers.Store.PromotionTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "rejects discount_percentage above 1.0" do
+    test "rejects discount_rate above 1.0" do
       assert {:error, error} =
                Promotion
                |> Ash.Changeset.for_create(:create, %{
                  name: "Invalid Promo",
                  code: "TOOBIG",
-                 discount_percentage: "1.01",
+                 discount_rate: "1.01",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
@@ -372,32 +372,32 @@ defmodule Edenflowers.Store.PromotionTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "accepts discount_percentage of 1.0 (100% off)" do
+    test "accepts discount_rate of 1.0 (100% off)" do
       assert {:ok, promotion} =
                Promotion
                |> Ash.Changeset.for_create(:create, %{
                  name: "Free Promo",
                  code: "FREE100",
-                 discount_percentage: "1.0",
+                 discount_rate: "1.0",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
 
-      assert Decimal.equal?(promotion.discount_percentage, "1.0")
+      assert Decimal.equal?(promotion.discount_rate, "1.0")
     end
 
-    test "accepts small discount_percentage like 0.01 (1% off)" do
+    test "accepts small discount_rate like 0.01 (1% off)" do
       assert {:ok, promotion} =
                Promotion
                |> Ash.Changeset.for_create(:create, %{
                  name: "Small Promo",
                  code: "TINY",
-                 discount_percentage: "0.01",
+                 discount_rate: "0.01",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
 
-      assert Decimal.equal?(promotion.discount_percentage, "0.01")
+      assert Decimal.equal?(promotion.discount_rate, "0.01")
     end
   end
 
@@ -412,7 +412,7 @@ defmodule Edenflowers.Store.PromotionTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "Second Promo",
                  code: "DUPLICATE",
-                 discount_percentage: "0.15",
+                 discount_rate: "0.15",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)
@@ -428,7 +428,7 @@ defmodule Edenflowers.Store.PromotionTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "Second Promo",
                  code: "CASETEST",
-                 discount_percentage: "0.15",
+                 discount_rate: "0.15",
                  minimum_cart_total: "0"
                })
                |> Ash.create(authorize?: false)

@@ -2,6 +2,9 @@ defmodule EdenflowersWeb.CalendarComponent do
   use EdenflowersWeb, :live_component
   require Logger
 
+  alias Edenflowers.Weekday
+  alias EdenflowersWeb.CalendarComponent.Keymap
+
   @week_begins :default
   @default_timezone "Europe/Helsinki"
 
@@ -10,54 +13,124 @@ defmodule EdenflowersWeb.CalendarComponent do
 
     {:ok,
      socket
-     |> assign(render_count: 0)
      |> assign(selected_date: nil)
      |> assign(week_begins: @week_begins)
      |> assign(today_date: today_date)
-     |> assign(date_callback: Map.get(socket.assigns, :date_callback, fn _ -> :ok end))
-     |> assign(on_select: fn date -> send(self(), {:date_selected, date}) end)
+     |> assign(cell_state: fn _ -> :open end)
+     |> assign(cell_class: &default_cell_class/3)
+     |> assign(clickable_states: [:open])
+     |> assign(on_click: :date_selected)
+     |> assign(on_weekday_click: nil)
+     |> assign(weekday_class: &default_weekday_class/1)
      |> update_calendar_view(today_date)}
   end
 
   def update(assigns, socket) do
     selected_date = parse_date(assigns.selected_date)
-    today_date = socket.assigns.today_date
-    view_date = if selected_date, do: selected_date, else: today_date
+    assigns = normalize_optional_assigns(assigns)
 
-    # Only update the calendar view if the component is being rendered for the first time
-    # TODO: is this even necessary?
     socket =
-      if socket.assigns.render_count == 0,
-        do: update_calendar_view(socket, view_date),
-        else: socket
+      socket
+      |> assign(assigns)
+      |> assign(selected_date: selected_date)
 
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> assign(render_count: socket.assigns.render_count + 1)
-     |> assign(selected_date: selected_date)}
+    # If the parent passes a selected_date outside the current view month
+    # (e.g. form pre-populated on remount), advance the view so the selected
+    # pill is visible. No-op when the selected date is already in view.
+    socket =
+      if selected_date && not current_month?(selected_date, socket.assigns.view_date) do
+        update_calendar_view(socket, selected_date)
+      else
+        socket
+      end
+
+    {:ok, socket}
   end
 
   attr :id, :string, required: true
   attr :field, :any, required: true
   attr :selected_date, :string, required: false
-  attr :date_callback, :any, required: false
+
+  attr :cell_state, :any,
+    default: nil,
+    doc:
+      "(Date.t() -> atom). The caller picks the vocabulary; this component only " <>
+        "uses the returned atom to look up styling (`cell_class`) and clickability " <>
+        "(`clickable_states`). Customer checkout uses `:open | :closed | :past`; " <>
+        "the admin editor uses `:open | :past | :weekday_disabled | :date_disabled | :mixed`. " <>
+        "Defaults to always-`:open`."
+
+  attr :cell_class, :any,
+    default: nil,
+    doc:
+      "Optional (Date.t(), cell_state, opts -> css_classes). Overrides default per-state styling. " <>
+        "`opts` is a keyword list with `:selected?` and `:today?` so the override can compose with " <>
+        "the standard selected/today affordances. Defaults to a single closed style for all non-`:open` states."
+
+  attr :clickable_states, :any,
+    default: nil,
+    doc:
+      "List of cell states that propagate a click. Defaults to `[:open]` (checkout's " <>
+        "guarantee that only valid dates reach the parent). Admin editors pass the set " <>
+        "of toggleable admin states so every editable cell propagates a click."
+
+  attr :on_click, :any,
+    default: :date_selected,
+    doc:
+      "Message tag (atom) sent to the parent as `{tag, date}` on a valid click. " <>
+        "Defaults to `:date_selected`, which the checkout LiveView handles."
+
+  attr :on_weekday_click, :any,
+    default: nil,
+    doc:
+      "Optional. When set, weekday headers become buttons and emit `{tag, weekday_atom}` (e.g. `:sunday`). " <>
+        "When unset, headers remain static labels."
+
+  attr :weekday_class, :any,
+    default: nil,
+    doc:
+      "Optional (weekday_atom -> css_classes). Applied to each weekday header. Only meaningful when " <>
+        "`on_weekday_click` is set. Defaults to a neutral button look."
+
+  attr :on_week_click, :any,
+    default: nil,
+    doc:
+      "Optional. When set, each week gets a leading button that emits `{tag, [Date.t()]}` " <>
+        "with the week's 7 dates. When unset, no button is rendered."
+
+  attr :week_class, :any,
+    default: nil,
+    doc:
+      "Optional ([Date.t()] -> css_classes). Applied to each week button. Only meaningful when " <>
+        "`on_week_click` is set. Defaults to a neutral button look."
+
   attr :error, :boolean, default: false
-  slot :day_decoration, required: false
+
+  slot :day_decoration,
+    required: false,
+    doc:
+      "Optional inner content rendered after the date digit. Receives a map " <>
+        "via `:let` with `:date`, `:state` (the result of `cell_state.(date)`), " <>
+        "and `:selected?`. Decoration components can use those to adapt their " <>
+        "visual to the cell's state — e.g. hide on a selected cell."
 
   def render(assigns) do
     ~H"""
     <div
       id={"#{@id}"}
-      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2 sm:max-w-xs"}
+      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2"}
       phx-hook="CalendarHook"
-      data-view-date={@view_date}
+      data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={get_focusable_dates_json(@view_date)}
     >
+      <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+        {live_region_text(@view_date, @selected_date)}
+      </div>
+
       <div class="flex items-center justify-between">
         <button
           id={"#{@id}-previous-month"}
-          disabled={@view_date.month == @today_date.month}
+          disabled={current_month?(@view_date, @today_date)}
           phx-target={@myself}
           phx-click="previous-month"
           type="button"
@@ -70,62 +143,96 @@ defmodule EdenflowersWeb.CalendarComponent do
           id={"#{@id}-current-month"}
           phx-target={@myself}
           phx-click="current-month"
-          aria-label={~t"Show current month"}
           type="button"
-          class="cursor-pointer"
+          class="cursor-pointer rounded-sm focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
+          <span class="sr-only">— {~t"go to current month"}</span>
         </button>
         <button
           id={"#{@id}-next-month"}
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
+          class="text-base-content flex flex-none cursor-pointer items-center justify-center rounded-sm p-1.5 hover:text-base-content/60 focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
         </button>
       </div>
 
-      <div class="border-base-content/20 mt-2 grid grid-cols-7 border-b text-center text-sm leading-6">
+      <div
+        aria-hidden={if @on_weekday_click, do: nil, else: "true"}
+        class={["border-base-content/20 mt-2 grid border-b text-center text-sm leading-6", if(@on_week_click, do: "grid-cols-[1.5rem_repeat(7,_1fr)] gap-x-1", else: "grid-cols-7")]}
+      >
+        <span :if={@on_week_click} aria-hidden="true"></span>
         <%= for week_day <- List.first(@week_rows) do %>
-          <span>
-            {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
-          </span>
+          <%= if @on_weekday_click do %>
+            <button
+              type="button"
+              phx-target={@myself}
+              phx-click="weekday-click"
+              phx-value-weekday={Atom.to_string(Weekday.from_date(week_day))}
+              aria-label={weekday_aria_label(week_day)}
+              class={@weekday_class.(Weekday.from_date(week_day))}
+            >
+              {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
+            </button>
+          <% else %>
+            <span>
+              {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
+            </span>
+          <% end %>
         <% end %>
       </div>
 
-      <div id={"#{@id}-grid"} role="grid" class="mt-1">
-        <div :for={{week, _index} <- Enum.with_index(@week_rows)} role="row" class="grid grid-cols-7">
+      <div id={"#{@id}-grid"} class="mt-1 flex flex-col gap-0.5">
+        <div
+          :for={week <- @week_rows}
+          class={if @on_week_click,
+      do: "grid-cols-[1.5rem_repeat(7,_1fr)] grid gap-x-1 gap-y-0.5",
+      else: "grid grid-cols-7 gap-0.5"}
+        >
           <button
-            :for={day <- week}
-            id={"#{@id}-day-#{day}"}
-            phx-target={@myself}
-            phx-click="select"
-            phx-value-date={day}
-            data-key-arrow-up={calculate_date_for_key(day, "ArrowUp", @today_date)}
-            data-key-arrow-down={calculate_date_for_key(day, "ArrowDown", @today_date)}
-            data-key-arrow-left={calculate_date_for_key(day, "ArrowLeft", @today_date)}
-            data-key-arrow-right={calculate_date_for_key(day, "ArrowRight", @today_date)}
-            data-key-home={calculate_date_for_key(day, "Home", @today_date)}
-            data-key-end={calculate_date_for_key(day, "End", @today_date)}
-            data-key-page-up={calculate_date_for_key(day, "PageUp", @today_date)}
-            data-key-page-down={calculate_date_for_key(day, "PageDown", @today_date)}
+            :if={@on_week_click}
             type="button"
-            aria-selected={
-              if @selected_date,
-                do: selected?(day, @selected_date),
-                else: selected?(day, @view_date)
-            }
-            tabindex="-1"
-            class={calendar_day_class(day, @view_date, @selected_date, @today_date, @date_callback.(day))}
+            phx-target={@myself}
+            phx-click="week-click"
+            phx-value-week={Enum.map_join(week, ",", &Date.to_iso8601/1)}
+            aria-label={week_aria_label(week)}
+            class={@week_class.(week)}
           >
-            <time datetime={day}>
-              {Localize.DateTime.to_string!(day, format: "d")}
-            </time>
-            {render_slot(@day_decoration, day)}
+            <.icon name="hero-arrows-right-left" class="h-3 w-3" />
           </button>
+          <%= for day <- week do %>
+            <%= if current_month?(day, @view_date) do %>
+              <% state = @cell_state.(day) %>
+              <% selectable? = state in @clickable_states %>
+              <button
+                id={"#{@id}-day-#{day}"}
+                phx-target={@myself}
+                phx-click="select"
+                phx-value-date={day}
+                data-key-targets={key_targets_json(day, @today_date)}
+                type="button"
+                aria-label={day_aria_label(day, @today_date, @selected_date, selectable?)}
+                aria-pressed={if @selected_date && selected?(day, @selected_date), do: "true", else: "false"}
+                aria-current={if day == @today_date, do: "date"}
+                aria-disabled={if not selectable?, do: "true"}
+                tabindex="-1"
+                class={@cell_class.(day, state,
+    selected?: selected?(day, @selected_date),
+    today?: day == @today_date)}
+              >
+                <time datetime={Date.to_iso8601(day)} aria-hidden="true" class="relative z-10">
+                  {Localize.DateTime.to_string!(day, format: "d")}
+                </time>
+                {render_slot(@day_decoration, %{date: day, state: state, selected?: selected?(day, @selected_date)})}
+              </button>
+            <% else %>
+              <div aria-hidden="true" class="aspect-square"></div>
+            <% end %>
+          <% end %>
         </div>
       </div>
     </div>
@@ -135,37 +242,41 @@ defmodule EdenflowersWeb.CalendarComponent do
   # Event Handlers
 
   def handle_event("current-month", _, socket) do
-    date = socket.assigns.today_date
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, socket.assigns.today_date)}
   end
 
   def handle_event("previous-month", _, socket) do
-    date =
-      socket.assigns.view_date
-      |> Date.shift(month: -1)
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, Date.shift(socket.assigns.view_date, month: -1))}
   end
 
   def handle_event("next-month", _, socket) do
-    date =
-      socket.assigns.view_date
-      |> Date.shift(month: 1)
-
-    {:noreply, update_calendar_view(socket, date)}
+    {:noreply, update_calendar_view(socket, Date.shift(socket.assigns.view_date, month: 1))}
   end
 
   def handle_event("select", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string),
          true <- current_month?(date, socket.assigns.view_date),
-         :ok <- socket.assigns.date_callback.(date) do
-      socket.assigns.on_select.(date)
+         true <- socket.assigns.cell_state.(date) in socket.assigns.clickable_states do
+      send(self(), {socket.assigns.on_click, date})
+      {:noreply, update_calendar_view(socket, date)}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
 
-      {:noreply,
-       socket
-       |> assign(selected_date: date)
-       |> update_calendar_view(date)}
+  def handle_event("weekday-click", %{"weekday" => weekday_string}, socket) do
+    if tag = socket.assigns.on_weekday_click do
+      send(self(), {tag, String.to_existing_atom(weekday_string)})
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("week-click", %{"week" => week_string}, socket) do
+    with tag when not is_nil(tag) <- socket.assigns.on_week_click,
+         {:ok, week} <- parse_week(week_string) do
+      send(self(), {tag, week})
+      {:noreply, socket}
     else
       _ -> {:noreply, socket}
     end
@@ -175,7 +286,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     date =
       view_date
       |> Date.from_iso8601!()
-      |> handle_date_navigation(key, socket.assigns.today_date)
+      |> Keymap.next_date(key, socket.assigns.today_date)
 
     {:noreply, update_calendar_view(socket, date)}
   end
@@ -187,9 +298,26 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   # Helper Functions
 
+  defp parse_week(week_string) do
+    week_string
+    |> String.split(",")
+    |> Enum.reduce_while({:ok, []}, fn iso, {:ok, acc} ->
+      case Date.from_iso8601(iso) do
+        {:ok, date} -> {:cont, {:ok, [date | acc]}}
+        {:error, _} -> {:halt, :error}
+      end
+    end)
+    |> case do
+      {:ok, dates} -> {:ok, Enum.reverse(dates)}
+      :error -> :error
+    end
+  end
+
   defp previous_month_button_class(view_date, today_date) do
-    is_disabled = view_date.month == today_date.month
-    base_class = "flex flex-none items-center justify-center p-1.5"
+    is_disabled = current_month?(view_date, today_date)
+
+    base_class =
+      "focus-visible:outline-base-content flex flex-none items-center justify-center rounded-sm p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2"
 
     if is_disabled do
       "#{base_class} text-base-content/20"
@@ -198,29 +326,88 @@ defmodule EdenflowersWeb.CalendarComponent do
     end
   end
 
-  defp calendar_day_class(day, view_date, selected_date, today_date, date_status) do
-    is_current_month = current_month?(day, view_date)
-    is_selected = selected?(day, selected_date)
-    is_today = day == today_date
-    is_disabled = date_status != :ok
+  @doc false
+  # Default per-state styling. All non-`:open` states collapse to a single closed style
+  # so customers see one "unavailable" look. The admin editor passes its own `cell_class`
+  # to distinguish `:weekday_disabled`, `:date_disabled`, and `:past`.
+  def default_cell_class(_day, state, opts) do
+    selected? = Keyword.get(opts, :selected?, false)
+    today? = Keyword.get(opts, :today?, false)
 
-    if !is_current_month do
-      "opacity-0"
-    else
-      class_conditions = [
-        {"relative aspect-square", true},
-        {"underline", is_today},
-        {"cursor-pointer", !is_disabled},
-        {"bg-primary rounded-sm text-primary-content hover:bg-primary/90", is_selected and !is_disabled},
-        {"hover:bg-base-content/20 rounded-sm", !is_selected and !is_disabled},
-        {"cursor-not-allowed text-base-content/20", is_disabled}
-      ]
+    base = "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
 
-      class_conditions
-      |> Enum.filter(fn {_class, condition} -> condition end)
-      |> Enum.map(fn {class, _condition} -> class end)
-      |> Enum.join(" ")
+    state_class =
+      cond do
+        state != :open ->
+          "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
+
+        selected? ->
+          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-base-content"
+
+        true ->
+          "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
+      end
+
+    if today?, do: "#{base} #{state_class} underline", else: "#{base} #{state_class}"
+  end
+
+  defp normalize_optional_assigns(assigns) do
+    assigns
+    |> maybe_default(:cell_state, fn _ -> :open end)
+    |> maybe_default(:cell_class, &default_cell_class/3)
+    |> maybe_default(:on_click, :date_selected)
+    |> maybe_default(:clickable_states, [:open])
+    |> maybe_default(:weekday_class, &default_weekday_class/1)
+  end
+
+  @doc false
+  def default_weekday_class(_weekday) do
+    "hover:bg-base-content/10 focus-visible:outline-base-content cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+  end
+
+  defp maybe_default(assigns, key, default) do
+    case Map.get(assigns, key) do
+      nil -> Map.put(assigns, key, default)
+      _value -> assigns
     end
+  end
+
+  defp weekday_aria_label(date) do
+    full = Localize.DateTime.to_string!(date, format: "EEEE")
+    ~t"Toggle " <> full
+  end
+
+  defp week_aria_label(week) do
+    first = Localize.DateTime.to_string!(List.first(week), format: "d MMM")
+    last = Localize.DateTime.to_string!(List.last(week), format: "d MMM")
+    ~t"Toggle week" <> " #{first} – #{last}"
+  end
+
+  defp day_aria_label(day, today_date, selected_date, selectable?) do
+    base = Localize.DateTime.to_string!(day, format: "EEEE, d MMMM y")
+
+    suffixes =
+      [
+        if(day == today_date, do: ~t"today"),
+        if(selected_date && selected?(day, selected_date), do: ~t"selected"),
+        if(not selectable?, do: ~t"not available")
+      ]
+      |> Enum.reject(&is_nil/1)
+
+    case suffixes do
+      [] -> base
+      list -> base <> ", " <> Enum.join(list, ", ")
+    end
+  end
+
+  defp live_region_text(view_date, nil) do
+    Localize.DateTime.to_string!(view_date, format: "MMMM y")
+  end
+
+  defp live_region_text(view_date, selected_date) do
+    month = Localize.DateTime.to_string!(view_date, format: "MMMM y")
+    date = Localize.DateTime.to_string!(selected_date, format: "EEEE, d MMMM y")
+    "#{month}. #{date} #{~t"selected"}."
   end
 
   defp update_calendar_view(socket, date) do
@@ -229,47 +416,12 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> assign(week_rows: week_rows(date))
   end
 
-  defp calculate_date_for_key(date, key, today_date), do: handle_date_navigation(date, key, today_date)
+  @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
 
-  defp handle_date_navigation(date, key, today_date) do
-    target_date =
-      case key do
-        "ArrowUp" ->
-          Date.add(date, -7)
-
-        "ArrowDown" ->
-          Date.add(date, 7)
-
-        "ArrowLeft" ->
-          Date.add(date, -1)
-
-        "ArrowRight" ->
-          Date.add(date, 1)
-
-        "PageUp" ->
-          Date.shift(date, month: 1)
-
-        "PageDown" ->
-          Date.shift(date, month: -1)
-
-        "Home" ->
-          Date.beginning_of_week(date, @week_begins)
-
-        "End" ->
-          Date.end_of_week(date, @week_begins)
-
-        _ ->
-          Logger.info("key #{key} not configured")
-          date
-      end
-
-    disallow_past_months(target_date, date, today_date)
-  end
-
-  defp disallow_past_months(target_date, focused_date, today_date) do
-    if Date.before?(target_date, Date.beginning_of_month(today_date)),
-      do: focused_date,
-      else: target_date
+  defp key_targets_json(date, today_date) do
+    @nav_keys
+    |> Map.new(fn key -> {key, Date.to_iso8601(Keymap.next_date(date, key, today_date))} end)
+    |> Jason.encode!()
   end
 
   defp week_rows(view_date) do
@@ -293,7 +445,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     last = Date.end_of_month(view_date)
 
     Date.range(first, last)
-    |> Enum.map(&Calendar.strftime(&1, "%Y-%m-%d"))
+    |> Enum.map(&Date.to_iso8601/1)
     |> Jason.encode!()
   end
 

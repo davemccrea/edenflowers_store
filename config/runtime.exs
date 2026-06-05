@@ -23,9 +23,18 @@ if config_env() in [:prod, :dev] do
 
   config :edenflowers, EdenflowersWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+  if config_env() == :dev do
+    config :edenflowers, Edenflowers.Repo, database: System.get_env("DATABASE_NAME", "edenflowers_dev")
+  end
+
   config :edenflowers,
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
+
+  # Only the `mix eden.fetch_map` build-time task needs this — the running app
+  # serves the pre-fetched PNG. Don't raise on absence; non-design contributors
+  # shouldn't need a Mapbox token to start the app.
+  config :edenflowers, :mapbox_token, System.get_env("MAPBOX_TOKEN")
 
   config :imgproxy,
     prefix: System.get_env("IMGPROXY_PREFIX") || raise("environment variable IMGPROXY_PREFIX is missing."),
@@ -33,7 +42,7 @@ if config_env() in [:prod, :dev] do
     salt: System.get_env("IMGPROXY_SALT") || raise("environment variable IMGPROXY_SALT is missing.")
 
   config :stripity_stripe,
-    api_key: System.get_env("STRIPE_API_KEY") || raise("environment variable STRIPE_API_KEY is missing.")
+    api_key: System.get_env("STRIPE_SECRET_KEY") || raise("environment variable STRIPE_SECRET_KEY is missing.")
 
   config :edenflowers,
          :stripe_webhook_secret,
@@ -49,6 +58,42 @@ if config_env() in [:prod, :dev] do
   config :edenflowers,
          :maintenance_bypass_secret,
          System.get_env("MAINTENANCE_BYPASS_SECRET")
+
+  config :edenflowers,
+         :papra_base_url,
+         System.get_env("PAPRA_BASE_URL") || raise("environment variable PAPRA_BASE_URL is missing.")
+
+  config :edenflowers,
+         :papra_api_key,
+         System.get_env("PAPRA_API_KEY") || raise("environment variable PAPRA_API_KEY is missing.")
+
+  config :edenflowers,
+         :papra_webhook_secret,
+         System.get_env("PAPRA_WEBHOOK_SECRET") || raise("environment variable PAPRA_WEBHOOK_SECRET is missing.")
+
+  config :edenflowers,
+         :anthropic_api_key,
+         System.get_env("ANTHROPIC_API_KEY") || raise("environment variable ANTHROPIC_API_KEY is missing.")
+
+  config :edenflowers,
+         :mailer_from_address,
+         {System.get_env("MAILER_FROM_NAME", "Jennie"), System.get_env("MAILER_FROM_EMAIL", "info@edenflowers.fi")}
+
+  # Google Sign-In. If these are unset, the Google strategy still loads but
+  # will fail at request time when someone clicks the button. Set both
+  # GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable. GOOGLE_REDIRECT_URI
+  # defaults to the local dev callback if unset; override in prod.
+  if client_id = System.get_env("GOOGLE_CLIENT_ID") do
+    config :edenflowers, :google_client_id, client_id
+  end
+
+  if client_secret = System.get_env("GOOGLE_CLIENT_SECRET") do
+    config :edenflowers, :google_client_secret, client_secret
+  end
+
+  config :edenflowers,
+         :google_redirect_uri,
+         System.get_env("GOOGLE_REDIRECT_URI", "http://localhost:4000/auth/user/google/callback")
 end
 
 if config_env() == :prod do

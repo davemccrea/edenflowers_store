@@ -1,6 +1,5 @@
 defmodule EdenflowersWeb.Hooks.PutOrder do
   use Phoenix.Component
-  require Logger
 
   alias Edenflowers.Store.Order
 

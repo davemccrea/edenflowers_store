@@ -64,7 +64,9 @@ config :spark,
 config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services]
+  ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services, Edenflowers.Expenses]
+
+config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 
 # Configure the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
@@ -85,6 +87,9 @@ config :edenflowers, EdenflowersWeb.Endpoint,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Local
+
+# Default sender identity. Overridden in runtime.exs from MAILER_FROM_NAME / MAILER_FROM_EMAIL.
+config :edenflowers, :mailer_from_address, {"Jennie", "info@edenflowers.fi"}
 
 # Configure esbuild (the version is required)
 config :esbuild,

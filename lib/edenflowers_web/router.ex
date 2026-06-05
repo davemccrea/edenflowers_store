@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
 
-  import AshAuthentication.Plug.Helpers
+  import AshAdmin.Router
   import Oban.Web.Router
 
   pipeline :browser do
@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.Router do
       default: "en-GB"
 
     plug EdenflowersWeb.Plugs.PutLocaleSession
+    plug EdenflowersWeb.Plugs.CaptureReturnTo
     plug :load_from_session
   end
 
@@ -49,6 +50,7 @@ defmodule EdenflowersWeb.Router do
       live "/condolences", CondolencesLive
       live "/about", AboutLive
       live "/contact", ContactLive
+      live "/faq", FaqLive
       live "/product/:id", ProductLive
       live "/checkout", CheckoutLive
       live "/order/:id", OrderLive
@@ -61,9 +63,9 @@ defmodule EdenflowersWeb.Router do
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
-    # Using a custom live view which only handles magic link strategy
+    # Using a custom live view which handles the OTP strategy in a single page
     sign_in_route(
-      live_view: EdenflowersWeb.MagicLinkRequestLive,
+      live_view: EdenflowersWeb.OtpSignInLive,
       auth_routes_prefix: "/auth",
       on_mount: [
         {EdenflowersWeb.LiveUserAuth, :live_no_user},
@@ -71,27 +73,27 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
     )
-
-    magic_sign_in_route(Edenflowers.Accounts.User, :magic_link,
-      live_view: EdenflowersWeb.MagicLinkCompleteLive,
-      auth_routes_prefix: "/auth",
-      on_mount: [
-        EdenflowersWeb.Hooks.PutLocale,
-        EdenflowersWeb.Hooks.PutCurrentPath
-      ]
-    )
   end
 
-  # TODO: auth
   scope "/admin", EdenflowersWeb do
     pipe_through :browser
-    oban_dashboard("/oban")
+
+    ash_authentication_live_session :admin_routes,
+      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}] do
+      live "/fulfillment-calendar", Admin.FulfillmentCalendarLive
+    end
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", EdenflowersWeb do
-  #   pipe_through :api
-  # end
+  scope "/admin" do
+    pipe_through :browser
+
+    oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
+
+    ash_admin(
+      "/",
+      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
+    )
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:edenflowers, :dev_routes) do

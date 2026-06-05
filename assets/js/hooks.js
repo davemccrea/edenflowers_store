@@ -1,6 +1,163 @@
 // @ts-check
 
+import EmblaCarousel from "../vendor/embla-carousel.esm";
+
 export const Hooks = {};
+
+/**
+ * Carousel for the Featured Blooms section.
+ *
+ * Markup contract (set in HomeLive):
+ *   <div class="embla">
+ *     <div class="embla__viewport" phx-hook="FeaturedCarousel" id="...">
+ *       <ul class="embla__container">
+ *         <li class="embla__slide">...</li>
+ *       </ul>
+ *     </div>
+ *     <button class="embla__prev">…</button>
+ *     <button class="embla__next">…</button>
+ *     <div class="embla__dots"></div>
+ *   </div>
+ */
+Hooks.FeaturedCarousel = {
+  mounted() {
+    // Buttons live in the section heading (sibling of .embla), so we scope
+    // the lookup to the enclosing <section> rather than .embla itself.
+    const scope = this.el.closest("section") || document;
+    this.prevBtn = scope.querySelector(".embla__prev");
+    this.nextBtn = scope.querySelector(".embla__next");
+    this.dotsNode = scope.querySelector(".embla__dots");
+    this.dotNodes = [];
+
+    // Reduced-motion users skip the per-frame focal-point work entirely.
+    // The breakpoint above which the effect is disabled is handled in CSS.
+    this.reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
+    // full page of cards on desktop.
+    this.embla = EmblaCarousel(this.el, {
+      align: "center",
+      containScroll: "trimSnaps",
+      slidesToScroll: 1,
+      breakpoints: {
+        "(min-width: 768px)": { slidesToScroll: "auto" },
+      },
+    });
+
+    this.boundOnSelect = this.onSelect.bind(this);
+    this.boundOnReInit = this.onReInit.bind(this);
+    this.boundOnTween = this.onTween.bind(this);
+
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener("click", () => this.embla.scrollPrev());
+    }
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener("click", () => this.embla.scrollNext());
+    }
+
+    this.buildDots();
+    this.setTweenFactor();
+    this.embla.on("select", this.boundOnSelect);
+    this.embla.on("reInit", this.boundOnReInit);
+    this.embla.on("scroll", this.boundOnTween);
+    this.embla.on("slideFocus", this.boundOnTween);
+    this.onSelect();
+    this.onTween();
+  },
+
+  updated() {
+    if (this.embla) this.embla.reInit();
+  },
+
+  destroyed() {
+    if (this.embla) this.embla.destroy();
+  },
+
+  /**
+   * Compute the focal-point falloff multiplier. Scaling by snapList length
+   * keeps the effect feeling consistent whether there are 3 or 30 snaps —
+   * matches Embla's predefined Tween Scale / Tween Opacity examples.
+   */
+  setTweenFactor() {
+    const TWEEN_FACTOR_BASE = 0.6;
+    this.tweenFactor = TWEEN_FACTOR_BASE * this.embla.scrollSnapList().length;
+  },
+
+  /**
+   * Per-frame focal-point effect: write each slide's distance-from-center
+   * (clamped 0..1) to a CSS custom property so CSS can scale/fade neighbours.
+   * Iterates by snap index and resolves slides via slideRegistry — correct
+   * under slidesToScroll:'auto' grouping at md+. CSS gates which breakpoint
+   * the effect actually applies at.
+   */
+  onTween(eventName) {
+    if (this.reducedMotion) return;
+    const engine = this.embla.internalEngine();
+    const scrollProgress = this.embla.scrollProgress();
+    const slidesInView = this.embla.slidesInView();
+    const slideNodes = this.embla.slideNodes();
+    const isScrollEvent = eventName === "scroll";
+
+    this.embla.scrollSnapList().forEach((scrollSnap, snapIndex) => {
+      const diffToTarget = scrollSnap - scrollProgress;
+
+      engine.slideRegistry[snapIndex].forEach((slideIndex) => {
+        // Per-frame: skip off-screen slides. On reInit / slideFocus / mount
+        // we update everyone so freshly-revealed slides paint correctly.
+        if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
+        const progress = Math.min(Math.abs(diffToTarget * this.tweenFactor), 1);
+        slideNodes[slideIndex].style.setProperty(
+          "--embla-progress",
+          progress.toFixed(3),
+        );
+      });
+    });
+  },
+
+  buildDots() {
+    if (!this.dotsNode) return;
+    // Localized template comes from a data attr on the viewport. Falls back
+    // to English if missing so the carousel still works.
+    // Sentinel "__N__" is replaced client-side. Using %{n} would trigger
+    // Gettext binding-validation warnings server-side at every render.
+    const tpl = this.el.dataset.dotLabelTemplate || "Go to slide __N__";
+    const snapList = this.embla.scrollSnapList();
+    this.dotsNode.innerHTML = snapList
+      .map(
+        (_, i) =>
+          `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`,
+      )
+      .join("");
+    this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
+    this.dotNodes.forEach((node, i) => {
+      node.addEventListener("click", () => this.embla.scrollTo(i));
+    });
+  },
+
+  onSelect() {
+    const selected = this.embla.selectedScrollSnap();
+    this.dotNodes.forEach((node, i) => {
+      const isSelected = i === selected;
+      node.classList.toggle("embla__dot--selected", isSelected);
+      node.setAttribute("aria-current", isSelected ? "true" : "false");
+    });
+    const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
+    this.el
+      .closest("section")
+      ?.classList.toggle("embla--no-scroll", !canScroll);
+    if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
+    if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
+  },
+
+  onReInit() {
+    this.buildDots();
+    this.setTweenFactor();
+    this.onSelect();
+    this.onTween();
+  },
+};
 
 Hooks.CharacterCount = {
   mounted() {
@@ -24,7 +181,7 @@ Hooks.FocusElement = {
       const firstForm = this.el.querySelector('[id$="-form-1"]');
       if (firstForm) {
         const firstInput = firstForm.querySelector(
-          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
         );
         if (firstInput) {
           /** @type {HTMLElement} */ (firstInput).focus();
@@ -46,10 +203,12 @@ Hooks.FocusElement = {
         // preventScroll keeps keyboard focus working without overriding the
         // scroll position we just set above.
         const firstInput = element.querySelector(
-          'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
         );
         if (firstInput) {
-          /** @type {HTMLElement} */ (firstInput).focus({ preventScroll: true });
+          /** @type {HTMLElement} */ (firstInput).focus({
+            preventScroll: true,
+          });
         }
       });
     });
@@ -60,7 +219,24 @@ Hooks.FocusElement = {
  * Navigate the calendar with the keyboard without a round trip to the server for each key press.
  * If the user tries to navigate to a date outside the visible month then the keydown event is
  * forwarded to the server and the server re-renders the view.
+ *
+ * Wire protocol (server <-> hook):
+ *   - data-view-date           : ISO date of the currently focused cell
+ *   - data-focusable-dates     : JSON array of ISO dates focusable client-side (current month)
+ *   - data-key-targets (cell)  : JSON map { "ArrowUp": "2026-05-05", ... } of the date each
+ *                                key would navigate to from this cell
  */
+const NAV_KEYS = [
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+  "PageUp",
+  "PageDown",
+];
+
 Hooks.CalendarHook = {
   mounted() {
     // Validate required elements and attributes
@@ -70,46 +246,66 @@ Hooks.CalendarHook = {
     this.setTabIndex(this.viewDate);
 
     this.calendarGrid.addEventListener("keydown", (event) => {
-      const key = event.key;
-      const keys = {
-        ArrowUp: "data-key-arrow-up",
-        ArrowDown: "data-key-arrow-down",
-        ArrowLeft: "data-key-arrow-left",
-        ArrowRight: "data-key-arrow-right",
-        Home: "data-key-home",
-        End: "data-key-end",
-        PageUp: "data-key-page-up",
-        PageDown: "data-key-page-down",
-      };
-
-      if (key in keys) {
-        event.preventDefault();
-        this.handleKeyDown(key, keys[key]);
+      // Bail on modifier-key combos so browser/SR shortcuts (Ctrl+Home,
+      // Shift+Arrow, etc.) still reach the host.
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
       }
+      if (!NAV_KEYS.includes(event.key)) return;
+      // Only intercept when a day button is the actual focus target — keeps
+      // arrow keys passing through to anything else nested in the grid.
+      if (!event.target.closest(`[id^="${this.id}-day-"]`)) return;
+      event.preventDefault();
+      this.handleKeyDown(event.key);
     });
   },
 
   updated() {
-    this.focusableDates = this.getFocusableDates();
+    this.focusableDates = this.getFocusableDates() || [];
     this.viewDate = this.getViewDate();
     this.setTabIndex(this.viewDate);
+
+    // If the server just moved the view date in response to a cross-month
+    // keyboard nav, restore DOM focus to the newly-promoted cell. Doing this
+    // here (instead of in a pushEventTo callback) avoids racing the morph:
+    // updated() runs after the patch has landed, so the target cell exists.
+    if (this.pendingKeyboardNav) {
+      this.pendingKeyboardNav = false;
+      this.clientFocus(this.viewDate);
+    }
   },
 
   /**
    * Handles the keydown event for the calendar grid.
    * @example
-   * handleKeyDown("ArrowUp", "data-key-arrow-up");
+   * handleKeyDown("ArrowUp");
    * @param {String} key - The key pressed by the user.
-   * @param {String} attribute - The attribute associated with the key.
    * @returns {void}
    */
-  handleKeyDown(key, attribute) {
-    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
+  handleKeyDown(key) {
+    // If focusable dates are missing/empty, every nav would otherwise fall
+    // through to serverFocus and spam the server on each keypress.
+    if (!this.focusableDates.length) return;
+
+    // A server roundtrip is already in flight (held-key repeat across a month
+    // boundary). Drop the event rather than queueing — the user can resume
+    // navigating once focus lands on the newly-promoted cell.
+    if (this.pendingKeyboardNav) return;
+
+    // Read targets from the currently-focused cell, not the root: each cell's
+    // targets are relative to its own date (ArrowDown from May 1 -> May 8,
+    // ArrowDown from May 8 -> May 15, etc).
+    const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
     if (!viewDateEl) return;
 
-    const nextDate = viewDateEl.getAttribute(attribute);
+    const targets = this.parseKeyTargets(viewDateEl);
+    if (!targets) return;
+
+    const nextDate = targets[key];
     if (!nextDate) {
-      this.error(`Attribute '${attribute}' is missing on view date element.`);
+      this.error(
+        `Key '${key}' missing from data-key-targets on view date element.`,
+      );
       return;
     }
 
@@ -122,6 +318,28 @@ Hooks.CalendarHook = {
     this.clientFocus(nextDate);
     this.setTabIndex(nextDate);
     this.viewDate = nextDate;
+  },
+
+  /**
+   * Parses the data-key-targets JSON map from a cell element.
+   * @param {Element} el
+   * @returns {Object<string, string> | null}
+   */
+  parseKeyTargets(el) {
+    const raw = el.getAttribute("data-key-targets");
+    if (!raw) {
+      this.error(
+        "Attribute 'data-key-targets' is missing on view date element.",
+      );
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      this.error(`Failed to parse 'data-key-targets': ${error.message}`);
+      return null;
+    }
   },
 
   //
@@ -141,7 +359,7 @@ Hooks.CalendarHook = {
       return;
     }
 
-    const dateEl = this.getElement(`calendar-day-${date}`);
+    const dateEl = this.getElement(`${this.id}-day-${date}`);
     if (dateEl) {
       /** @type {HTMLElement} */ (dateEl).focus();
     }
@@ -149,20 +367,16 @@ Hooks.CalendarHook = {
 
   /**
    * Used when the focus is to be moved to a date that is not focusable by the client.
+   * The server will rerender into the new month; updated() then restores DOM
+   * focus to the newly-promoted view date via the `pendingKeyboardNav` flag.
    * @example
    * serverFocus("ArrowUp");
    * @param {String} key - The key pressed by the user.
    * @returns {void}
    */
   serverFocus(key) {
-    const payload = {
-      key: key,
-      viewDate: this.viewDate,
-    };
-
-    const callback = () => this.clientFocus(this.viewDate);
-
-    this.pushEventTo(this.el, "keydown", payload, callback);
+    this.pendingKeyboardNav = true;
+    this.pushEventTo(this.el, "keydown", { key, viewDate: this.viewDate });
   },
 
   /**
@@ -175,14 +389,14 @@ Hooks.CalendarHook = {
    */
   setTabIndex(nextDate = null) {
     // Remove focus from view date
-    const viewDateEl = this.getElement(`calendar-day-${this.viewDate}`);
+    const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
     if (viewDateEl) {
       viewDateEl.setAttribute("tabindex", "-1");
     }
 
     // Set focus on next date
     if (nextDate) {
-      const nextDateEl = this.getElement(`calendar-day-${nextDate}`);
+      const nextDateEl = this.getElement(`${this.id}-day-${nextDate}`);
       if (nextDateEl) {
         nextDateEl.setAttribute("tabindex", "0");
       }
@@ -210,10 +424,12 @@ Hooks.CalendarHook = {
 
     // Check for focusable dates
     this.focusableDates = this.getFocusableDates();
-    if (!this.focusableDates || !this.focusableDates.length) {
-      this.error(
-        "Attribute 'data-focusable-dates' is required and must not be empty.",
-      );
+    if (this.focusableDates === null) {
+      this.error("Attribute 'data-focusable-dates' is required.");
+      return false;
+    }
+    if (!this.focusableDates.length) {
+      this.error("Attribute 'data-focusable-dates' must not be empty.");
       return false;
     }
 
@@ -259,10 +475,9 @@ Hooks.CalendarHook = {
 
   getFocusableDates() {
     const focusableDatesAttr = this.el.getAttribute("data-focusable-dates");
-    if (!focusableDatesAttr) {
-      this.error("Attribute 'data-focusable-dates' is required.");
-      return [];
-    }
+    // Distinguish "attribute missing" (null) from "parsed but empty" ([]) so
+    // validateRequirements can emit a single error for the missing-attr case.
+    if (!focusableDatesAttr) return null;
 
     try {
       return JSON.parse(focusableDatesAttr);
@@ -425,9 +640,11 @@ Hooks.Stripe = {
    */
   buildAppearance() {
     const css = getComputedStyle(document.documentElement);
-    const v = (name, fallback = "") => css.getPropertyValue(name).trim() || fallback;
+    const v = (name, fallback = "") =>
+      css.getPropertyValue(name).trim() || fallback;
 
     const baseContent = v("--color-base-content", "#1f2937");
+    const base100 = v("--color-base-100", "#ffffff");
     const primary = v("--color-primary", "#0570de");
     const error = v("--color-error", "#dc2626");
 
@@ -437,7 +654,7 @@ Hooks.Stripe = {
       theme: "flat",
       variables: {
         colorPrimary: primary,
-        colorBackground: v("--color-base-100", "#ffffff"),
+        colorBackground: base100,
         colorText: baseContent,
         colorDanger: error,
         fontFamily: v("--font-sans", "system-ui, sans-serif"),
@@ -448,6 +665,7 @@ Hooks.Stripe = {
       },
       rules: {
         ".Input": {
+          backgroundColor: base100,
           border: `1px solid ${subtleBorder}`,
           boxShadow: "none",
           fontSize: "18px",
@@ -457,16 +675,19 @@ Hooks.Stripe = {
           padding: "10.5px 12px",
         },
         ".Input:focus": {
+          backgroundColor: base100,
           border: `1px solid ${baseContent}`,
           outline: `2px solid ${baseContent}`,
           outlineOffset: "2px",
           boxShadow: "none",
         },
         ".Input--invalid": {
+          backgroundColor: base100,
           border: `1px solid ${error}`,
           boxShadow: "none",
         },
         ".Input--invalid:focus": {
+          backgroundColor: base100,
           border: `1px solid ${error}`,
           outline: `2px solid ${error}`,
           outlineOffset: "2px",
@@ -489,97 +710,6 @@ Hooks.Stripe = {
         },
       },
     };
-  },
-};
-
-Hooks.AlertHandler = {
-  createDisconnectedAlert() {
-    this.disconnectedMessage = this.el.getAttribute(
-      "data-disconnected-message",
-    );
-
-    const disconnectedAlert = `
-      <sl-alert
-        id="alert-disconnected"
-        variant="warning"
-        closable="false"
-      >
-        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
-         ${this.disconnectedMessage}
-      </sl-alert>
-      `;
-
-    this.el.insertAdjacentHTML("beforeend", disconnectedAlert);
-  },
-
-  mounted() {
-    this.createDisconnectedAlert();
-
-    // Toasts are triggered by the server and inserted into the DOM when event is received.
-    this.handleEvent("toast:show", (alert) => {
-      const html = `
-      <sl-alert
-        id="alert-${alert.id}"
-        variant="${alert.variant}"
-        duration="${alert.duration}"
-        ${alert.closable ? "closable" : ""}
-        ${
-          alert.countdown == "rtl" || alert.countdown == "ltr"
-            ? `countdown="${alert.countdown}"`
-            : ""
-        }
-      >
-        <sl-icon slot="icon" name="${alert.icon}"></sl-icon>
-        ${alert.message}
-      </sl-alert>
-      `;
-
-      // Insert the toast into the DOM.
-      this.el.insertAdjacentHTML("beforeend", html);
-
-      const alertEl = this.el.querySelector(`#alert-${alert.id}`);
-      customElements.whenDefined("sl-alert").then(() => {
-        alertEl.toast();
-      });
-    });
-  },
-
-  disconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      customElements.whenDefined("sl-alert").then(() => {
-        /** @type {any} */ (disconnectedAlert).toast();
-      });
-    }
-  },
-
-  reconnected() {
-    const disconnectedAlert = document.querySelector("#alert-disconnected");
-    if (disconnectedAlert) {
-      /** @type {any} */ (disconnectedAlert).hide();
-    }
-
-    this.createDisconnectedAlert();
-  },
-};
-
-Hooks.FlashHandler = {
-  mounted() {
-    customElements.whenDefined("sl-alert").then(() => {
-      for (const flashEl of Array.from(this.el.children)) {
-        flashEl.toast();
-      }
-
-      this.pushEvent("lv:clear-flash", {});
-    });
-  },
-  disconnected() {
-    // TODO: Is it necessary to check for this.el?
-    if (this.el) {
-      for (const flashEl of this.el.children) {
-        flashEl.remove();
-      }
-    }
   },
 };
 

@@ -10,8 +10,23 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Edenflowers.Accounts.User
+alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
+
+# Admin user. `admin` is writable?: false on the resource so normal Ash actions
+# can't set it — raw SQL is the appropriate escape hatch for seed setup.
+admin_email = "mail@dmccrea.me"
+admin_name = "David McCrea"
+
+case Repo.query!("SELECT id FROM users WHERE email = $1", [admin_email]).rows do
+  [] ->
+    Ash.Seed.seed!(User, %{email: admin_email, name: admin_name, admin: true})
+
+  [[_id]] ->
+    Repo.query!("UPDATE users SET admin = true, name = $1 WHERE email = $2", [admin_name, admin_email])
+end
 
 tax_rate =
   TaxRate
@@ -24,6 +39,7 @@ tax_rate =
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
   name: "Home delivery",
+  sort_key: 0,
   fulfillment_method: :delivery,
   rate_type: :dynamic,
   minimum_cart_total: 0,
@@ -39,6 +55,7 @@ FulfillmentOption
 FulfillmentOption
 |> Ash.Changeset.for_create(:create, %{
   name: "In store pickup",
+  sort_key: 1,
   fulfillment_method: :pickup,
   rate_type: :fixed,
   base_price: "0.00",
@@ -52,10 +69,10 @@ bouquets_category =
   |> Ash.Changeset.for_create(:create, %{
     name: "Bouquets",
     slug: "bouquets",
-    draft: false,
+    visibility: :public,
     description: "Handcrafted floral arrangements featuring seasonal blooms in elegant compositions.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Buketter",
         description: "Handgjorda blomsterarrangemang med säsongens blommor i eleganta kompositioner."
       },
@@ -67,15 +84,38 @@ bouquets_category =
   })
   |> Ash.create!(authorize?: false)
 
+plants_category =
+  ProductCategory
+  |> Ash.Changeset.for_create(:create, %{
+    name: "Plants",
+    slug: "plants",
+    visibility: :public,
+    description: "Potted greenery and houseplants for the home, chosen for their character.",
+    translations: %{
+      "sv-FI": %{
+        name: "Växter",
+        description: "Krukväxter och grönska för hemmet, valda för sin karaktär."
+      },
+      fi: %{
+        name: "Kasvit",
+        description: "Ruukkukasveja ja viherkasveja kotiin, valittuna luonteensa mukaan."
+      }
+    }
+  })
+  |> Ash.create!(authorize?: false)
+
+# Cards are surfaced only at checkout via ProductVariant.for_card_drawer.
+# visibility: :hidden keeps the category out of the store ribbon while still
+# allowing its products to be read by that action.
 cards_category =
   ProductCategory
   |> Ash.Changeset.for_create(:create, %{
     name: "Cards",
     slug: "cards",
-    draft: false,
+    visibility: :hidden,
     description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Kort",
         description: "Omsorgsfullt designade gratulationskort för varje tillfälle och känsla."
       },
@@ -92,10 +132,10 @@ pre_loved_category =
   |> Ash.Changeset.for_create(:create, %{
     name: "Pre-Loved",
     slug: "pre-loved",
-    draft: false,
+    visibility: :public,
     description: "Curated vintage and gently used items finding new homes and stories.",
     translations: %{
-      sv: %{
+      "sv-FI": %{
         name: "Begagnat",
         description: "Utvalda vintage- och varsamt använda föremål som hittar nya hem och berättelser."
       },
@@ -141,7 +181,41 @@ for n <- 1..6 do
   end
 end
 
-# Create Card products
+# Create Plant products
+for n <- 1..4 do
+  product =
+    Ash.Changeset.for_create(Product, :create, %{
+      product_category_id: plants_category.id,
+      tax_rate_id: tax_rate.id,
+      name: "Plant #{n}",
+      image_slug: "https://placehold.co/400x400",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+
+  for size <- [:small, :medium, :large] do
+    Ash.Changeset.for_create(ProductVariant, :create, %{
+      product_id: product.id,
+      price:
+        "#{case size do
+          :small -> 18
+          :medium -> 32
+          :large -> 55
+        end}",
+      size: size,
+      image_slug: "https://placehold.co/400x400",
+      stock_trackable: false,
+      stock_quantity: 0,
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+  end
+end
+
+# Create Card products — category is draft, so they don't surface in the store
+# ribbon, but they can still be added during checkout.
 for n <- 1..4 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
@@ -212,7 +286,7 @@ Promotion
   %{
     name: "Summer offer, 15% off",
     code: "SUMMER15",
-    discount_percentage: "0.15",
+    discount_rate: "0.15",
     minimum_cart_total: "30.00",
     start_date: nil,
     expiration_date: ~D[2099-07-01]

@@ -30,7 +30,6 @@ defmodule EdenflowersWeb.CoreComponents do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Phoenix.LiveView.JS
-  alias EdenflowersWeb.LiveToast
 
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
@@ -42,57 +41,59 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def container(assigns) do
     ~H"""
-    <div class={["container my-36", @class]}>
+    <div class={["mt-[calc(var(--header-height)+var(--spacing)*12)] container mb-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
   end
 
   @doc """
-  Renders a component for dynamic, client-side alerts.
+  Renders flash notices.
 
-  This component is typically used for displaying alerts that are not part of
-  the standard Phoenix flash message lifecycle. For example, you might use this
-  for real-time notifications triggered by client-side events or LiveView pushes
-  that require a more persistent or distinct UI treatment than flash messages.
+  ## Examples
+
+      <.flash kind={:info} flash={@flash} />
+      <.flash
+        id="welcome-back"
+        kind={:info}
+        phx-mounted={show("#welcome-back") |> JS.remove_attribute("hidden")}
+        hidden
+      >
+        Welcome Back!
+      </.flash>
   """
-  def alert_group(assigns) do
+  attr :id, :string, doc: "the optional id of flash container"
+  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+
+  slot :inner_block, doc: "the optional inner block that renders the flash message"
+
+  def flash(assigns) do
+    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
+
     ~H"""
     <div
-      id="alert-group"
-      phx-hook="AlertHandler"
-      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
-    />
-    """
-  end
-
-  @doc """
-  Renders the Phoenix flash messages.
-
-  Flash messages are typically used for feedback after an action, such as a successful
-  form submission or an error during an operation. Due to limitations in the Phoenix
-  flash system, only one type of flash message (e.g., one :info or one :error) can be
-  displayed at a time when set directly on the connection.
-
-  It also includes a built-in alert for disconnection/reconnection status.
-  """
-  def flash_group(assigns) do
-    flash = Enum.map(assigns.flash, fn {key, msg} -> LiveToast.new(key, msg) end)
-    assigns = assign(assigns, :flash, flash)
-
-    ~H"""
-    <div id="flash-group" phx-hook="FlashHandler">
-      <sl-alert
-        :for={f <- @flash}
-        id={"flash-#{f.id}"}
-        variant={f.variant}
-        duration={f.duration}
-        closable={f.closable}
-        countdown={f.countdown}
-      >
-        <sl-icon slot="icon" name={f.icon} />
-        {f.message}
-      </sl-alert>
+      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
+      id={@id}
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      role="alert"
+      class="toast toast-top toast-end z-50"
+      {@rest}
+    >
+      <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
+        </div>
+        <div class="flex-1" />
+        <button type="button" class="group cursor-pointer self-start" aria-label={~t"close"}>
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -142,6 +143,42 @@ defmodule EdenflowersWeb.CoreComponents do
       </button>
       """
     end
+  end
+
+  @doc """
+  Renders a form submit button with a label↔spinner swap on submit.
+
+  The loading state is driven by LiveView's automatic `.phx-submit-loading`
+  class on the form — no `loading` prop, because a static prop would not
+  reflect the in-flight submit state. The label and spinner share one grid
+  cell, so the button width is stable across idle/loading (no layout shift).
+  Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
+
+  ## Examples
+
+      <.form_button>{~t"Next"}</.form_button>
+      <.form_button disabled={true} id="payment-button">{~t"Pay"}</.form_button>
+  """
+  attr :rest, :global
+  attr :disabled, :boolean, default: false
+  slot :inner_block
+
+  def form_button(assigns) do
+    ~H"""
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      class="btn btn-primary btn-lg mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
+    >
+      <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
+      <span
+        class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
+        aria-hidden="true"
+      >
+      </span>
+    </button>
+    """
   end
 
   @doc """
@@ -218,9 +255,17 @@ defmodule EdenflowersWeb.CoreComponents do
     default: false,
     doc: "shows a success check icon in the trailing slot (default text-like inputs only)"
 
+  attr :used?, :boolean,
+    default: true,
+    doc: "internal: set from Phoenix.Component.used_input?/1 when a :field is given"
+
+  attr :validate_live?, :boolean,
+    default: false,
+    doc: "opt out of the blur-first debounce and validate from the first keystroke (e.g. search inputs)"
+
   attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
-                phx-blur phx-focus phx-change)
+                phx-blur phx-debounce phx-focus phx-change)
 
   slot :inner_block
 
@@ -229,11 +274,13 @@ defmodule EdenflowersWeb.CoreComponents do
       "Adornment rendered inside the text input on the right (e.g. spinner, icon). Only supported by the default (text-like) input."
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
-    errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
+    used? = Phoenix.Component.used_input?(field)
+    errors = if used?, do: field.errors, else: []
 
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
+    |> assign(:used?, used?)
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
@@ -282,13 +329,17 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -302,10 +353,14 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -356,12 +411,16 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[@errors != [] && "input-error"]}
+          aria-invalid={@errors != []}
+          aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         />
       </label>
       <button class="btn btn-primary join-item z-50">{@button_text}</button>
     </fieldset>
-    <.error :for={msg <- @errors}>{msg}</.error>
+    <div :if={@errors != []} id={"#{@id}-error"}>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
     """
   end
 
@@ -378,6 +437,9 @@ defmodule EdenflowersWeb.CoreComponents do
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            aria-invalid={@errors != []}
+            aria-describedby={@errors != [] && "#{@id}-error"}
+            phx-debounce={if not @used? and not @validate_live?, do: "blur"}
             {@rest}
           />
           <div
@@ -396,7 +458,9 @@ defmodule EdenflowersWeb.CoreComponents do
           </div>
         </div>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -578,11 +642,303 @@ defmodule EdenflowersWeb.CoreComponents do
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: "size-4"
+  attr :class, :any, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  @flower_paths Path.wildcard(Path.join(File.cwd!(), "priv/svg/flower-*.svg")) |> Enum.sort()
+
+  @flowers (for path <- @flower_paths, into: %{} do
+              raw = File.read!(path)
+
+              viewbox =
+                case Regex.run(~r/viewBox="([^"]+)"/, raw, capture: :all_but_first) do
+                  [vb] -> vb
+                  _ -> "0 0 100 100"
+                end
+
+              body =
+                raw
+                |> String.replace(~r/<\?xml[^?]*\?>\s*/, "")
+                |> String.replace(~r|<svg\b[^>]*>|, "")
+                |> String.replace(~r|</svg>\s*\z|, "")
+                |> String.replace("fill:#000000", "fill:currentColor")
+
+              {Path.basename(path, ".svg"), %{viewbox: viewbox, body: Phoenix.HTML.raw(body)}}
+            end)
+
+  for path <- @flower_paths, do: @external_resource(path)
+
+  @doc """
+  Renders a hand-drawn botanical illustration inline.
+
+  Tailwind classes drive size (e.g. `h-10 w-10`) and color (e.g. `text-forest-content`),
+  since the SVG paths use `fill:currentColor`. Pass `name` to pick a specific
+  drawing — the source SVGs ship in the repo at `priv/svg/` and are inlined at
+  compile time.
+
+  ## Examples
+
+      <.flower name="flower-30" class="h-32 w-32 text-primary/80" />
+      <.flower name="flower-09" class="h-10 w-10 text-forest-content/70" />
+  """
+  attr :name, :string, required: true, values: Map.keys(@flowers)
+  attr :class, :any, default: "h-6 w-6"
+
+  def flower(assigns) do
+    %{viewbox: viewbox, body: body} = Map.fetch!(@flowers, assigns.name)
+    assigns = assign(assigns, viewbox: viewbox, body: body)
+
+    ~H"""
+    <svg
+      viewBox={@viewbox}
+      class={@class}
+      aria-hidden="true"
+      focusable="false"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {@body}
+    </svg>
+    """
+  end
+
+  @doc """
+  Renders an optimised responsive image through the configured Imgproxy server.
+
+  `width`/`height` are the **CSS pixel** dimensions the image will occupy on
+  screen — the component automatically emits a `srcset` covering 1×, 1.5×, and
+  2× so retina displays get a crisp source without callers having to remember
+  the rule.
+
+  Output is a `<picture>` with a WebP `<source>` and the original-format `<img>`
+  as fallback. When `priority` is set the image becomes a LCP candidate
+  (`loading="eager"`, `fetchpriority="high"`). Default for non-priority is
+  `loading="lazy"` + `decoding="async"`.
+
+  ## Art direction
+
+  Pass `sources` to swap crops per breakpoint — this replaces the legacy
+  pattern of two `<img>` tags toggled with `hidden`/`block` Tailwind classes:
+
+      <.image
+        src={@product.image_slug}
+        alt=""
+        width={600}
+        height={750}
+        sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
+        sizes="(min-width: 640px) 25vw, 50vw"
+      />
+
+  ## Bypass cases
+
+  Three sources skip the `<picture>` + `srcset` machinery:
+
+    * SVGs (no point rasterising to WebP)
+    * External URLs (no `local:///` prefix — passes through unchanged so
+      placeholder images keep working)
+    * Tiny images (`width <= 64` with no `sources`) — emits a single 2× source
+
+  ## Examples
+
+      <.image src="local:///hero.jpg" alt="" width={1920} height={1080} priority />
+      <.image src={@product.image_slug} alt={@product.name} width={1000} height={1250} priority />
+      <.image src={@slug} alt={~t"Map"} width={1600} height={1880} sizes="(min-width: 768px) 50vw, 100vw" />
+  """
+  attr :src, :string, required: true
+  attr :alt, :string, required: true
+  attr :width, :integer, required: true
+  attr :height, :integer, required: true
+  attr :sizes, :string, default: "100vw"
+  attr :priority, :boolean, default: false
+  attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
+  attr :format, :atom, default: :webp, values: [:webp, :original]
+  attr :quality, :integer, default: 80
+  attr :sources, :list, default: []
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(id data-testid)
+
+  def image(assigns) do
+    cond do
+      svg_src?(assigns.src) ->
+        render_passthrough(assigns, Imgproxy.new(assigns.src) |> to_string())
+
+      external_src?(assigns.src) ->
+        render_passthrough(assigns, assigns.src)
+
+      assigns.width <= 64 and assigns.sources == [] ->
+        render_tiny(assigns)
+
+      true ->
+        render_picture(assigns)
+    end
+  end
+
+  defp svg_src?(src), do: Path.extname(src) |> String.downcase() == ".svg"
+
+  defp external_src?(src),
+    do: not String.starts_with?(src, "local:///")
+
+  defp render_passthrough(assigns, url) do
+    assigns = assign(assigns, :resolved_src, url)
+
+    ~H"""
+    <img
+      src={@resolved_src}
+      alt={@alt}
+      width={@width}
+      height={@height}
+      loading={if @priority, do: "eager", else: "lazy"}
+      decoding="async"
+      fetchpriority={if @priority, do: "high"}
+      class={@class}
+      {@rest}
+    />
+    """
+  end
+
+  defp render_tiny(assigns) do
+    url =
+      assigns.src
+      |> imgproxy_resize(assigns.width * 2, assigns.height * 2, assigns.crop_type, assigns.quality)
+      |> maybe_extension(assigns.format)
+      |> to_string()
+
+    render_passthrough(assigns, url)
+  end
+
+  defp render_picture(assigns) do
+    base_variants =
+      build_variants(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality)
+
+    art_directed =
+      Enum.map(assigns.sources, fn source ->
+        crop = Map.get(source, :crop_type, assigns.crop_type)
+
+        %{
+          media: Map.fetch!(source, :media),
+          variants: build_variants(assigns.src, source.width, source.height, crop, assigns.quality)
+        }
+      end)
+
+    fallback_src = base_variants |> hd() |> Map.fetch!(:url)
+
+    assigns =
+      assign(assigns,
+        base_variants: base_variants,
+        art_directed: art_directed,
+        fallback_src: fallback_src
+      )
+
+    ~H"""
+    <picture>
+      <%= for ad <- @art_directed do %>
+        <%= if @format == :webp do %>
+          <source
+            type="image/webp"
+            media={ad.media}
+            srcset={srcset(ad.variants, :webp)}
+            sizes={@sizes}
+          />
+        <% end %>
+        <source media={ad.media} srcset={srcset(ad.variants, :original)} sizes={@sizes} />
+      <% end %>
+      <source :if={@format == :webp} type="image/webp" srcset={srcset(@base_variants, :webp)} sizes={@sizes} />
+      <img
+        src={@fallback_src}
+        srcset={srcset(@base_variants, :original)}
+        sizes={@sizes}
+        alt={@alt}
+        width={@width}
+        height={@height}
+        loading={if @priority, do: "eager", else: "lazy"}
+        decoding="async"
+        fetchpriority={if @priority, do: "high"}
+        class={@class}
+        {@rest}
+      />
+    </picture>
+    """
+  end
+
+  # Emits 1×, 1.5×, and 2× variants of the declared CSS-pixel size, capped at
+  # 3840w. Below 320w we skip 1.5× — the visible gain is marginal and the
+  # source asset may not be that large.
+  defp build_variants(src, width, height, crop_type, quality) do
+    multipliers = if width <= 320, do: [1.0, 2.0], else: [1.0, 1.5, 2.0]
+
+    multipliers
+    |> Enum.map(fn m ->
+      w = min(round(width * m), 3840)
+      h = min(round(height * m), 3840)
+      img = imgproxy_resize(src, w, h, crop_type, quality)
+      %{width: w, base_url: to_string(img), webp_url: img |> Imgproxy.set_extension("webp") |> to_string()}
+    end)
+    |> Enum.uniq_by(& &1.width)
+    |> Enum.map(&Map.put(&1, :url, &1.base_url))
+  end
+
+  defp imgproxy_resize(src, width, height, crop_type, quality) do
+    src
+    |> Imgproxy.new()
+    |> Imgproxy.resize(width, height, type: crop_type)
+    |> Imgproxy.add_option(:q, [quality])
+  end
+
+  defp maybe_extension(img, :webp), do: Imgproxy.set_extension(img, "webp")
+  defp maybe_extension(img, :original), do: img
+
+  defp srcset(variants, :webp),
+    do: variants |> Enum.map_join(", ", &"#{&1.webp_url} #{&1.width}w")
+
+  defp srcset(variants, :original),
+    do: variants |> Enum.map_join(", ", &"#{&1.base_url} #{&1.width}w")
+
+  @doc """
+  Renders a product card used by both the Featured Blooms carousel (home)
+  and the Store grid. One editorial treatment, no surface chrome — the
+  photograph is the card; the only interactive accent is the brand
+  honey underline on hover. Mobile uses a 4:5 portrait crop for an
+  immersive feel; desktop uses a 1:1 square so cards line up cleanly.
+
+  `from_price?: true` prefixes the price with the "From" preposition,
+  appropriate when the value comes from `cheapest_price` across variants.
+  """
+  attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
+  attr :navigate, :string, required: true
+  attr :from_price?, :boolean, default: true
+  attr :class, :any, default: nil
+
+  def product_card(assigns) do
+    ~H"""
+    <.link navigate={@navigate} class={["group block focus:outline-none", @class]}>
+      <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
+        <.image
+          src={@product.image_slug}
+          alt=""
+          width={600}
+          height={750}
+          sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
+          sizes="(min-width: 640px) 25vw, 50vw"
+          class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
+        />
+      </figure>
+
+      <div class="text-base-content flex flex-col gap-1.5">
+        <h3 class="card-title link-underline-group-hover-display">
+          {@product.name}
+        </h3>
+        <p class="font-serif text-base-content/65 text-base italic leading-none">
+          <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
+            {~t"From"}
+          </span>
+          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+        </p>
+      </div>
+    </.link>
     """
   end
 
@@ -600,10 +956,13 @@ defmodule EdenflowersWeb.CoreComponents do
   def category_tile(assigns) do
     ~H"""
     <.link navigate={@navigate} class="group relative overflow-hidden">
-      <img
+      <.image
         src={@image_src}
-        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
         alt={@label}
+        width={800}
+        height={400}
+        sizes="(min-width: 768px) 33vw, 100vw"
+        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
       />
       <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
       <div class="absolute inset-0 flex items-end p-6">
@@ -616,35 +975,124 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :size, :integer, default: 5
 
   def social_media_links(assigns) do
+    # @size is a Tailwind scale step; multiply by 4 to get CSS pixels
+    # (h-5 = 20px, h-8 = 32px). Stays below the 64px tiny-icon threshold.
+    assigns = assign(assigns, :px, assigns.size * 4)
+
     ~H"""
     <div class="flex flex-row gap-4">
-      <a href="#">
-        <img
+      <a
+        href="https://www.facebook.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Facebook"
+      >
+        <.image
+          src="local:///facebook_logo_bw_128px.png"
+          alt=""
+          width={@px}
+          height={@px}
           class={"h-#{@size} w-#{@size}"}
-          src={
-            "local:///facebook_logo_bw_128px.png"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(128, 128, type: "fill")
-            |> to_string()
-          }
-          alt="Facebook logo"
         />
       </a>
-      <a href="#">
-        <img
+      <a
+        href="https://www.instagram.com/edenflowers.fi/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Eden Flowers on Instagram"
+      >
+        <.image
+          src="local:///instagram_logo_bw_128px.png"
+          alt=""
+          width={@px}
+          height={@px}
           class={"h-#{@size} w-#{@size}"}
-          src={
-            "local:///instagram_logo_bw_128px.png"
-            |> Imgproxy.new()
-            |> Imgproxy.resize(128, 128, type: "fill")
-            |> to_string()
-          }
-          alt="Instagram logo"
         />
       </a>
     </div>
     """
   end
+
+  @doc """
+  Icon-only button. `aria_label` is required so we can't ship a nameless
+  button — keyboard/SR users always get an accessible name.
+  """
+  attr :aria_label, :string, required: true
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(type disabled name value form)
+  slot :inner_block, required: true
+
+  def icon_button(assigns) do
+    assigns = assign_new(assigns, :type, fn -> "button" end)
+
+    ~H"""
+    <button type={@type} class={@class} aria-label={@aria_label} {@rest}>
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Disclosure trigger — a button that controls a collapsible region (drawer,
+  menu, dialog). Sets `aria-expanded` and `aria-controls` so AT users know
+  the relationship. State must be tracked outside this component (LV
+  doesn't know if the drawer is open).
+  """
+  attr :aria_label, :string, required: true
+  attr :controls, :string, required: true, doc: "id of the controlled element"
+  attr :expanded, :boolean, default: false
+  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :rest, :global, include: ~w(phx-click phx-target type)
+  slot :inner_block, required: true
+
+  def disclosure_trigger(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={@class}
+      aria-label={@aria_label}
+      aria-controls={@controls}
+      aria-expanded={to_string(@expanded)}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  @doc """
+  Cart count badge: a button that opens the cart drawer, with a screen-reader
+  accessible name that includes the current count, plus a polite live region
+  that announces updates. Replaces the previous unlabelled badge.
+  """
+  attr :count, :integer, default: 0
+  attr :rest, :global, include: ~w(phx-click)
+  slot :inner_block, required: true, doc: "Visible content (icon, badge, optional text)"
+
+  def cart_count_badge(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+      aria-label={cart_aria_label(@count)}
+      aria-controls="cart-drawer"
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <span class="sr-only" aria-live="polite" aria-atomic="true">
+      {cart_aria_label(@count)}
+    </span>
+    """
+  end
+
+  defp cart_aria_label(count) when is_integer(count) and count > 0,
+    do:
+      Gettext.dngettext(EdenflowersWeb.Gettext, "default", "Cart, %{count} item", "Cart, %{count} items", count, %{
+        count: count
+      })
+
+  defp cart_aria_label(_), do: ~t"Cart, empty"
 
   @placement %{
     "left" => %{
@@ -672,6 +1120,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
   attr :class, :string, default: "bg-base-100 min-w-96"
+  attr :label, :string, default: nil
   slot :inner_block, required: true
 
   def drawer(%{placement: placement} = assigns) do
@@ -698,7 +1147,6 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.focus(to: "##{@id}-top")
-        |> JS.toggle_class("overflow-hidden", to: "html")
       }
       phx-hide={
         %JS{}
@@ -708,7 +1156,6 @@ defmodule EdenflowersWeb.CoreComponents do
           transition: {@transition, @transition_in, @transition_out},
           time: @time
         )
-        |> JS.toggle_class("overflow-hidden", to: "html")
         |> JS.pop_focus()
       }
       class="z-100 relative"
@@ -718,7 +1165,8 @@ defmodule EdenflowersWeb.CoreComponents do
         id={"#{@id}-dialog"}
         role="dialog"
         aria-modal="true"
-        class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
+        aria-label={@label}
+        class={"js-scroll-lock-dialog #{@placement_class} fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>

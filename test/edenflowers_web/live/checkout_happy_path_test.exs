@@ -1,13 +1,15 @@
 defmodule EdenflowersWeb.CheckoutHappyPathTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
   import Generator
   import Mox
   import Swoosh.TestAssertions
-  import ExUnit.CaptureLog
 
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.Order
+
+  @moduletag :typst
 
   setup :verify_on_exit!
 
@@ -28,11 +30,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     order = generate(order())
 
-    LineItem.add_item!(%{
-      order_id: order.id,
-      product_variant_id: variant.id,
-      quantity: 1
-    })
+    Order.add_line_item!(order, variant.id, 1, authorize?: false)
 
     payment_intent = %{
       id: "pi_test_#{:rand.uniform(1_000_000)}",
@@ -65,14 +63,14 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    assert render(view) =~ "Gift Options"
+    assert render(view) =~ "Gift options"
 
     # Step 2: Gift Options (not a gift — defaults are fine)
     view
     |> form("#checkout-form-2", %{"form" => %{"gift" => "false"}})
     |> render_submit()
 
-    assert render(view) =~ "Delivery Information"
+    assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
     # Step 3: pick fulfillment option, then submit the date/phone form
     view
@@ -127,7 +125,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   } do
     # Seed a cards category + card product/variant so the card drawer has
     # something to pick.
-    cards_category = generate(product_category(slug: "cards", draft: false))
+    cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
 
     card_product =
@@ -176,7 +174,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    assert render(view) =~ "Delivery Information"
+    assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
     # Step 3
     view
@@ -309,7 +307,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     assert finalized.here_id == "here-id-123"
     assert finalized.position == "63.0951,21.6165"
     assert finalized.distance == 3000
-    assert Decimal.eq?(finalized.fulfillment_amount, Decimal.new("5.00"))
+    assert Decimal.eq?(finalized.fulfillment_fee, Decimal.new("5.00"))
     assert finalized.delivery_instructions == "Leave at back door"
 
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
@@ -318,7 +316,8 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       assert email.to == [{"", "jane@example.com"}]
       assert email.subject =~ "Order Confirmation"
       assert email.subject =~ finalized.order_reference
-      assert email.text_body =~ "Stadsgatan 3, 65300 Vasa"
+      assert email.text_body =~ finalized.order_reference
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
 
@@ -327,16 +326,22 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     order: order,
     fulfillment_option: fulfillment_option
   } do
-    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+    promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Apply promo from the cart sidebar (available at any step)
+    # Apply promo from the cart drawer (available at any step). The promo
+    # input is collapsed behind a "Have a promo code?" toggle by default,
+    # so click that first to reveal the form.
     view
-    |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
+    |> element("#cart-drawer-promo [data-testid='promo-toggle']")
+    |> render_click()
+
+    view
+    |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
     |> render_submit()
 
-    assert render(view) =~ ~s(data-testid="promo-code-badge")
+    assert render(view) =~ ~s(data-testid="promo-badge")
 
     # Step 1 → 4
     view
@@ -379,30 +384,28 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
 
     finalized =
       Order.get_by_id!(order.id, authorize?: false)
-      |> Ash.load!([:promotion_applied?, :discount_amount, :total, :promotion], authorize?: false)
+      |> Ash.load!([:promotion_applied?, :discount, :grand_total, :promotion], authorize?: false)
 
     assert finalized.state == :placed
     assert finalized.promotion_applied?
     assert to_string(finalized.promotion.code) == "SAVE20"
     # €35.00 line total × 20% = €7.00 discount
-    assert Decimal.eq?(finalized.discount_amount, Decimal.new("7.00"))
+    assert Decimal.eq?(finalized.discount, Decimal.new("7.00"))
 
     # Two jobs run on a promo order: the confirmation email and the
     # promotion-usage increment.
     assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
-      # The template renders the discount line, not the promo code itself.
-      assert email.text_body =~ "Discount"
-      assert email.text_body =~ "-€7.00"
-      assert email.text_body =~ "Total: €28.00"
+      assert email.text_body =~ finalized.order_reference
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
 
   test "applying a promo code preserves unsaved values typed into the current step", %{
     conn: conn
   } do
-    promotion = generate(promotion(code: "SAVE20", discount_percentage: "0.20"))
+    promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -417,19 +420,28 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
     })
     |> render_change()
 
-    # Apply the promo from the cart sidebar.
-    html =
-      view
-      |> form("#checkout-form-promotional", %{"form" => %{"code" => promotion.code}})
-      |> render_submit()
+    # Apply the promo from the cart drawer. The promo input is collapsed
+    # behind a "Have a promo code?" toggle by default, so click that first
+    # to reveal the form.
+    view
+    |> element("#cart-drawer-promo [data-testid='promo-toggle']")
+    |> render_click()
 
-    assert html =~ ~s(data-testid="promo-code-badge")
+    view
+    |> form("#cart-drawer-promo-form", %{"form" => %{"code" => promotion.code}})
+    |> render_submit()
+
+    # Render again so the broadcast-triggered handle_info has been processed
+    # and the parent LiveView has reloaded with the applied promo.
+    html = render(view)
+
+    assert html =~ ~s(data-testid="promo-badge")
     assert html =~ "Jane Doe"
     assert html =~ "jane@example.com"
   end
 
   test "selecting a card preserves the unsaved recipient name on step 2", %{conn: conn} do
-    cards_category = generate(product_category(slug: "cards", draft: false))
+    cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
 
     card_product =
@@ -521,7 +533,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       }
     })
 
-    {html, log} =
+    {html, _log} =
       with_log(fn ->
         view
         |> element("#checkout-form-4")
@@ -529,10 +541,9 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       end)
 
     assert html =~ "Payment processing error"
-    assert log =~ "Failed to update payment intent"
 
     stalled = Order.get_by_id!(order.id, authorize?: false)
-    assert stalled.state == :checkout
+    assert stalled.state == :payment
     assert stalled.payment_status != :paid
 
     assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)

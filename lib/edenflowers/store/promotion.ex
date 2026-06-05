@@ -43,7 +43,7 @@ defmodule Edenflowers.Store.Promotion do
     end
 
     create :create do
-      accept [:name, :code, :discount_percentage, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+      accept [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     end
 
     update :increment_usage do
@@ -52,12 +52,12 @@ defmodule Edenflowers.Store.Promotion do
   end
 
   policies do
-    # System bypass - for webhooks and background jobs
+    # System bypass is scoped to the actions our jobs/webhooks actually invoke.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if always()
+      authorize_if action([:increment_usage, :create_for_newsletter])
+      authorize_if action_type(:read)
     end
 
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
@@ -67,16 +67,15 @@ defmodule Edenflowers.Store.Promotion do
       authorize_if always()
     end
 
-    # Only system/admin via bypass — all others forbidden
     policy action_type([:create, :update, :destroy]) do
-      description "All mutations require admin or system actor (covered by bypass above)."
+      description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
   end
 
   validations do
-    validate compare(:discount_percentage, greater_than: 0)
-    validate compare(:discount_percentage, less_than_or_equal_to: 1)
+    validate compare(:discount_rate, greater_than: 0)
+    validate compare(:discount_rate, less_than_or_equal_to: 1)
   end
 
   attributes do
@@ -88,7 +87,7 @@ defmodule Edenflowers.Store.Promotion do
       constraints allow_empty?: false, trim?: true
     end
 
-    attribute :discount_percentage, :decimal, allow_nil?: false
+    attribute :discount_rate, :decimal, allow_nil?: false
     attribute :minimum_cart_total, :decimal, allow_nil?: false
     attribute :start_date, :date
     attribute :expiration_date, :date

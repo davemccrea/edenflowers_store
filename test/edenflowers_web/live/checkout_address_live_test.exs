@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
   import Generator
   import Mox
 
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Store.Order
 
   setup :verify_on_exit!
 
@@ -13,13 +13,9 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
     product = generate(product())
     variant = generate(product_variant(%{product_id: product.id}))
     delivery_option = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :fixed, base_price: "5.00"))
-    order = generate(order(step: 3, customer_name: "Jane", customer_email: "jane@example.com"))
+    order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
-    LineItem.add_item!(%{
-      order_id: order.id,
-      product_variant_id: variant.id,
-      quantity: 1
-    })
+    Order.add_line_item!(order, variant.id, 1, authorize?: false)
 
     stub(Edenflowers.StripeAPI.Mock, :create_payment_intent, fn _order ->
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
@@ -254,7 +250,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
       assert is_nil(reloaded.geocoded_address)
-      assert is_nil(reloaded.fulfillment_amount)
+      assert is_nil(reloaded.fulfillment_fee)
     end
 
     test "submit persists every geocode field, the sibling form fields, and advances the step", %{
@@ -282,13 +278,13 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.position == "63.0951,21.6165"
       assert reloaded.here_id == "here-id-123"
       assert reloaded.distance == 3000
-      assert Decimal.eq?(reloaded.fulfillment_amount, Decimal.new("5.00"))
+      assert Decimal.eq?(reloaded.fulfillment_fee, Decimal.new("5.00"))
       assert reloaded.recipient_phone_number == "045 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
@@ -323,7 +319,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       })
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end
   end
@@ -363,7 +359,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
       here_id: "here-id-123",
       position: "63.0951,21.6165",
       distance: 3000,
-      fulfillment_amount: Decimal.new("5.00")
+      fulfillment_fee: Decimal.new("5.00")
     })
   end
 end

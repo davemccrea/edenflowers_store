@@ -15,102 +15,134 @@ defmodule EdenflowersWeb.HomeLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="relative overflow-hidden not-last:border-b">
-        <img
-          src={"local:///image_1.jpg" |> Imgproxy.new() |> Imgproxy.resize(1920, 1080, type: "fill") |> to_string()}
-          class="h-[100vh] w-full object-cover"
+        <.image
+          src="local:///image_1.jpg"
           alt=""
-        />
-
-        <%!-- Localised legibility wash: a soft radial darkens the area behind
-             the headline block (mobile bottom-left, desktop centre-left),
-             leaving the rest of the photo bright. --%>
-        <div
-          class="pointer-events-none absolute inset-0 md:hidden"
-          style="background: radial-gradient(closest-corner at 28% 78%, rgba(0,0,0,0.55), rgba(0,0,0,0) 65%);"
-        />
-        <div
-          class="pointer-events-none absolute inset-0 hidden md:block"
-          style="background: radial-gradient(closest-corner at 25% 55%, rgba(0,0,0,0.5), rgba(0,0,0,0) 55%);"
+          width={1920}
+          height={1080}
+          priority
+          class="h-[100vh] w-full object-cover"
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
-          <div class="hero-reveal" style="--reveal-delay: 280ms;">
-            <.button href="#store" variant="primary" size="lg" class="mt-10 w-fit gap-2 px-8">
-              {~t"Shop Now"} <span aria-hidden="true">→</span>
-            </.button>
+          <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
+            <.link
+              navigate={~p"/store"}
+              class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
+            >
+              {~t"Shop Now"}
+            </.link>
           </div>
         </div>
       </section>
 
       <section id="store" class="not-last:border-b">
-        <div class="m-auto py-24 xl:max-w-[70vw]">
-          <h2 class="section-title mb-4 px-2">{~t"Featured Blooms"}</h2>
+        <div class="container py-24 xl:max-w-[70vw]">
+          <div class="mb-4 flex items-end justify-between gap-4 px-2">
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
+
+            <div class="hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                class="embla__prev btn btn-circle btn-ghost"
+                aria-label={~t"Previous slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-left" class="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                class="embla__next btn btn-circle btn-ghost"
+                aria-label={~t"Next slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-right" class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
 
           <div
-            id="product-slider"
-            style="scrollbar-width: thin;"
-            class="flex snap-x snap-mandatory overflow-x-auto px-2 pb-6"
+            class="embla"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label={~t"Featured Blooms"}
           >
-            <ul class="flex space-x-2 py-2">
-              <li :for={product <- @products} class="w-3/8 flex-none snap-center xs:w-1/2 sm:w-72">
-                <.link
-                  navigate={~p"/product/#{product}"}
-                  aria-labelledby={product.name}
-                  class="group flex flex-col"
+            <div
+              id="featured-blooms-viewport"
+              phx-hook="FeaturedCarousel"
+              phx-update="ignore"
+              class="embla__viewport"
+              data-dot-label-template={~t"Go to slide __N__"}
+            >
+              <ul class="embla__container">
+                <li
+                  :for={{product, idx} <- Enum.with_index(@products)}
+                  class="embla__slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <div class="mb-3 overflow-hidden rounded-lg">
-                    <img
-                      src={product.image_slug |> Imgproxy.new() |> Imgproxy.resize(600, 600, type: "fill") |> to_string()}
-                      alt={product.name}
-                      class="aspect-square w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  <div class="text-base-content flex flex-col items-center gap-1">
-                    <h3
-                      id={product.name}
-                      class="card-title underline-offset-4 group-hover:decoration-(--color-accent-alt) group-hover:underline"
-                    >
-                      {product.name}
-                    </h3>
-                    <p class="text-base-content/70 text-sm">
-                      {Edenflowers.Utils.format_money(product.cheapest_price)}
-                    </p>
-                  </div>
-                </.link>
-              </li>
-            </ul>
+                  <.product_card product={product} navigate={~p"/product/#{product}"} />
+                </li>
+              </ul>
+            </div>
+
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
           </div>
         </div>
       </section>
 
+      <section class="bg-cream relative overflow-hidden not-last:border-b" aria-labelledby="location-heading">
+        <.flower
+          name="flower-41"
+          class="text-base-content/15 pointer-events-none absolute top-4 left-4 h-16 w-16 md:top-8 md:left-8 md:h-24 md:w-24"
+        />
+        <div class="grid md:grid-cols-2">
+          <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
+            <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
+            <h2 id="location-heading" class="section-title mb-7">
+              {~t"Made in Vaasa, Finland."}
+            </h2>
+            <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+              {~t"Cut and arranged the same day from a small shop on Kauppapuistikko. Eden Flowers delivers up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
+            </p>
+          </div>
+
+          <.image
+            src="local:///home-vaasa-map.png"
+            alt={~t"Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"}
+            width={1600}
+            height={1880}
+            sizes="(min-width: 768px) 50vw, 100vw"
+            class="aspect-[6/7] max-h-[520px] h-full w-full object-cover md:aspect-auto"
+          />
+        </div>
+      </section>
+
       <%!-- Pull quote --%>
-      <section class="bg-pastel-3 not-last:border-b">
+      <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <blockquote class="pull-quote text-base-content/90 max-w-4xl text-center">
-            {~t"Crafted for those with discerning taste, our flowers blend quality and style and arrive perfectly arranged at your door."}
+          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
+          <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
+            {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
           </blockquote>
           <.link
             navigate={~p"/about"}
-            class="eyebrow text-base-content underline-offset-[6px] hover:decoration-(--color-accent-alt) hover:underline"
+            class="eyebrow text-forest-content link-underline-hover-nav"
           >
             {~t"Learn more"}
           </.link>
         </div>
       </section>
 
-      <%!-- Category tiles --%>
-      <section class="bg-base-200 not-last:border-b">
+      <%!-- Other services --%>
+      <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <h2 class="section-title mb-10">{~t"Start Here"}</h2>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <.category_tile
-              navigate={~p"/store"}
-              label={~t"Store"}
-              image_src="https://placehold.co/800x600/e8e0d8/888?text=Store"
-            />
+          <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <.category_tile
               navigate={~p"/weddings"}
               label={~t"Weddings"}
@@ -127,6 +159,71 @@ defmodule EdenflowersWeb.HomeLive do
               image_src="https://placehold.co/800x600/e8e0d8/888?text=Condolences"
             />
           </div>
+        </div>
+      </section>
+
+      <%!-- Client logos --%>
+      <section class="not-last:border-b">
+        <div class="container py-20 md:py-28">
+          <p class="eyebrow text-base-content/50 mb-12 text-center">{~t"In good company"}</p>
+          <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
+            <li>
+              <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
+                <img
+                  src="/images/logo-dermosil.svg"
+                  alt="Dermosil"
+                  width="230"
+                  height="33"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-7 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a href="https://sfp.fi/" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
+                <img
+                  src="/images/logo-sfp.svg"
+                  alt="SFP RKP"
+                  width="182"
+                  height="40"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://evl.fi/en/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Evangelical Lutheran Church of Finland"
+              >
+                <img
+                  src="/images/logo-evl.svg"
+                  alt="Evangelical Lutheran Church of Finland"
+                  width="363"
+                  height="81"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+            <li>
+              <a href="https://bnf.fi/" target="_blank" rel="noopener noreferrer" aria-label="Bonnier News Finland">
+                <.image
+                  src="local:///logo-bonnier-news.png"
+                  alt="Bonnier News Finland"
+                  width={104}
+                  height={32}
+                  crop_type="fit"
+                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
+                />
+              </a>
+            </li>
+          </ul>
         </div>
       </section>
     </Layouts.app>

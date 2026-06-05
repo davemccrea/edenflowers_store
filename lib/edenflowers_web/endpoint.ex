@@ -15,8 +15,8 @@ defmodule EdenflowersWeb.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [connect_info: [:uri, session: @session_options]],
+    longpoll: [connect_info: [:uri, session: @session_options]]
 
   plug Plug.Static,
     at: "/.well-known",
@@ -59,6 +59,11 @@ defmodule EdenflowersWeb.Endpoint do
     at: "/webhook/stripe",
     handler: EdenflowersWeb.StripeHandler,
     secret: {Application, :get_env, [:edenflowers, :stripe_webhook_secret]}
+
+  plug EdenflowersWeb.Plugs.PapraWebhook,
+    at: "/webhook/papra",
+    handler: EdenflowersWeb.PapraHandler,
+    secret: {Application, :get_env, [:edenflowers, :papra_webhook_secret]}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

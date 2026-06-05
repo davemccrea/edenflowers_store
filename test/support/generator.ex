@@ -1,6 +1,8 @@
 defmodule Generator do
   use Ash.Generator
 
+  alias Edenflowers.Accounts.User
+
   alias Edenflowers.Store.{
     TaxRate,
     Promotion,
@@ -11,6 +13,20 @@ defmodule Generator do
     LineItem,
     FulfillmentOption
   }
+
+  # seed_generator bypasses actions so we can set :admin directly
+  # (the attribute is writable?: false on the resource).
+  def admin_user(opts \\ []) do
+    seed_generator(
+      %User{
+        email: sequence(:admin_email, &"admin#{&1}@example.com"),
+        name: "Admin",
+        admin: true
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
 
   def tax_rate(opts \\ []) do
     changeset_generator(
@@ -32,7 +48,7 @@ defmodule Generator do
       defaults: %{
         name: words(),
         code: sequence(:promotion_code, &"PROMO-#{&1}"),
-        discount_percentage: "0.20",
+        discount_rate: "0.20",
         minimum_cart_total: "0",
         start_date: nil,
         expiration_date: nil,
@@ -89,12 +105,11 @@ defmodule Generator do
   def order(opts \\ []) do
     # For testing orders, we use seed_generator to allow setting any attribute
     # including internal ones that wouldn't normally be accepted in actions
-    # (like fulfillment_amount, payment_intent_id, promotion_id, etc.)
+    # (like fulfillment_fee, payment_intent_id, promotion_id, etc.)
     # We provide a base struct to avoid generating random foreign keys that don't exist
     seed_generator(
       %Order{
-        state: :checkout,
-        step: 1,
+        state: :contact_details,
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16()
       },
       overrides: opts,
@@ -115,12 +130,15 @@ defmodule Generator do
 
   def fulfillment_option(opts \\ []) do
     tax_rate_id = opts[:tax_rate_id] || once(:default_tax_rate_id, fn -> generate(tax_rate()).id end)
+    method = opts[:fulfillment_method] || :pickup
+    sort_key = opts[:sort_key] || if method == :delivery, do: 0, else: 1
 
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
         tax_rate_id: tax_rate_id,
         name: sequence(:fulfillment_option_name, &"Fulfillment Option #{&1}"),
         fulfillment_method: :pickup,
+        sort_key: sort_key,
         rate_type: :fixed,
         minimum_cart_total: 0,
         base_price: "4.50",

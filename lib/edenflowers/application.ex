@@ -15,6 +15,7 @@ defmodule Edenflowers.Application do
       {DNSCluster, query: Application.get_env(:edenflowers, :dns_cluster_query) || :ignore},
       {Oban, Application.fetch_env!(:edenflowers, Oban)},
       {Phoenix.PubSub, name: Edenflowers.PubSub},
+      {Edenflowers.RateLimiter, clean_period: :timer.minutes(1)},
       # Start a worker by calling: Edenflowers.Worker.start_link(arg)
       # {Edenflowers.Worker, arg},
       # Start to serve requests, typically the last entry

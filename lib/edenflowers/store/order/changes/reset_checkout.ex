@@ -12,9 +12,9 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
   alias Edenflowers.Store.LineItem
 
   @reset_attrs %{
-    step: 1,
     customer_name: nil,
     customer_email: nil,
+    newsletter_offer_hidden?: false,
     gift: false,
     recipient_name: nil,
     card_message: nil,
@@ -22,7 +22,7 @@ defmodule Edenflowers.Store.Order.Changes.ResetCheckout do
     delivery_address: nil,
     delivery_instructions: nil,
     fulfillment_date: nil,
-    fulfillment_amount: nil,
+    fulfillment_fee: nil,
     geocoded_address: nil,
     here_id: nil,
     distance: nil,

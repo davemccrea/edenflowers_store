@@ -14,13 +14,6 @@ defmodule Edenflowers.Store.LineItem do
     end
   end
 
-  code_interface do
-    define :add_item, action: :add_to_cart
-    define :remove_item, action: :remove_item
-    define :increment_quantity, action: :increment_quantity
-    define :decrement_quantity, action: :decrement_quantity
-  end
-
   actions do
     defaults [:read]
 
@@ -49,24 +42,24 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   policies do
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if always()
+      authorize_if action_type(:read)
     end
 
-    # Allow creating line items for any order (checkout flow). The card
-    # variant is gated at the order level via Order.add_card.
-    policy action_type(:create) do
-      authorize_if always()
-    end
-
-    # Read/Update/Destroy access:
-    # Multiple authorize_if within one policy = OR (only one needs to pass)
-    policy action_type([:read, :update, :destroy]) do
-      # Guest checkout: Anyone can work with line items for orders in checkout state
-      authorize_if expr(order.state == :checkout)
-      # Placed orders: Only the owner can access their line items
+    policy action_type(:read) do
+      authorize_if expr(order.state != :placed)
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
+    end
+
+    # Filter expressions can't authorize creates (no row to filter yet), so a
+    # custom check resolves the parent order's state at evaluation time.
+    policy action_type(:create) do
+      authorize_if Edenflowers.Store.LineItem.Checks.OrderNotPlaced
+    end
+
+    policy action_type([:update, :destroy]) do
+      forbid_if expr(order.state == :placed)
+      authorize_if always()
     end
   end
 
@@ -79,7 +72,7 @@ defmodule Edenflowers.Store.LineItem do
   end
 
   preparations do
-    prepare build(load: [:line_subtotal], sort: [inserted_at: :asc])
+    prepare build(load: [:subtotal], sort: [inserted_at: :asc])
   end
 
   attributes do
@@ -90,7 +83,7 @@ defmodule Edenflowers.Store.LineItem do
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false
     attribute :is_card, :boolean, default: false, allow_nil?: false
-    attribute :card_size, Edenflowers.Store.ProductVariantSize
+    attribute :variant_size, Edenflowers.Store.ProductVariantSize
     timestamps()
   end
 
@@ -104,31 +97,34 @@ defmodule Edenflowers.Store.LineItem do
     calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
     # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
-    calculate :line_subtotal, :decimal, expr(unit_price * quantity)
+    calculate :subtotal, :decimal, expr(unit_price * quantity)
 
     # This is the final amount for a specific line item, including the subtotal plus taxes and minus any line-specific discounts.
-    calculate :line_total,
+    calculate :total,
               :decimal,
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal - discount_amount,
-                  else: line_subtotal
+                  do: subtotal - discount,
+                  else: subtotal
                 )
               )
 
-    calculate :discount_amount,
+    calculate :discount,
               :decimal,
               expr(
                 if(
                   promotion_applied?,
-                  do: line_subtotal * order.promotion.discount_percentage,
+                  do: subtotal * order.discount_rate,
                   else: 0
                 )
               )
 
     # This is the amount of tax applied to a specific line item.
-    calculate :line_tax_amount, :decimal, expr(line_total * tax_rate)
+    calculate :tax, :decimal, expr(total * tax_rate)
+
+    # `unit_price` is stored tax-inclusive.
+    calculate :unit_price_ex_tax, :decimal, expr(unit_price / (1 + tax_rate))
   end
 
   identities do

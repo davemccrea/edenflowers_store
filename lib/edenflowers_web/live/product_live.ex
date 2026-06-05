@@ -1,13 +1,15 @@
 defmodule EdenflowersWeb.ProductLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Store.{Product, LineItem}
+  alias Edenflowers.Store.{Product, Order}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
+    locale = current_locale_atom()
     {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
+    product_category = product.product_category |> Ash.load!(:translations) |> AshTranslation.translate(locale)
 
     selected_variant =
       case length(product_variants) do
@@ -30,6 +32,7 @@ defmodule EdenflowersWeb.ProductLive do
      socket
      |> assign(order_id: order_id)
      |> assign(product: product)
+     |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)}
   end
@@ -38,161 +41,108 @@ defmodule EdenflowersWeb.ProductLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <.breadcrumb>
-          <:item navigate={~p"/"} label={~t"Home"} />
-          <:item navigate={~p"/store"} label={~t"Store"} />
-          <:item navigate={~p"/store/#{@product.product_category.slug}"} label={@product.product_category.name} />
-          <:item label={@product.name} />
-        </.breadcrumb>
-
-        <div class="grid gap-12 md:grid-cols-2 md:items-start">
-          <%!-- Product Image --%>
-          <figure class="aspect-square bg-base-200 relative w-full overflow-hidden rounded shadow-md">
-            <img
+        <%!-- Magazine spread: photograph left, buy column right (with the
+             description living inside it between price and size). On mobile
+             the grid collapses to image-first, then the buy column. --%>
+        <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
+          <%!-- Photograph: capped at 480px wide on desktop so it sits at
+               a calmer scale; aspect 4:5 matches the mobile grid card. --%>
+          <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
+            <.image
               data-testid="product-image"
-              src={@selected_variant.image_slug |> Imgproxy.new() |> Imgproxy.resize(800, 800, type: "fill") |> to_string()}
+              src={@selected_variant.image_slug}
               alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
+              width={1000}
+              height={1250}
+              sizes="(min-width: 768px) 480px, 100vw"
+              priority
               class="h-full w-full object-cover"
-              width="1"
-              height="1"
-              loading="lazy"
             />
-            <div :if={@product.featured} class="badge badge-primary badge-outline absolute top-4 right-4">
-              {~t"Featured"}
-            </div>
-            <%!-- Optionally add figcaption here if needed --%>
+            <figcaption :if={@product.featured} class="product-mark">
+              <span class="eyebrow text-base-content text-[0.6875rem]">{~t"Favourite"}</span>
+            </figcaption>
           </figure>
 
-          <%!-- Product Details --%>
-          <section aria-labelledby="product-details-heading" class="flex flex-col gap-8">
-            <div class="flex flex-col gap-3">
-              <h1 id="product-details-heading" data-testid="product-name" class="page-title">
+          <div class="flex flex-col gap-8 md:max-w-prose">
+            <header>
+              <.link
+                navigate={~p"/store/#{@product.product_category.slug}"}
+                class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
+              >
+                {@product_category.name}
+              </.link>
+              <h1 id="product-details-heading" data-testid="product-name" class="page-title mb-3">
                 {@product.name}
               </h1>
-              <p data-testid="product-price" class="font-serif text-base-content/80 text-2xl sm:text-3xl">
+              <p data-testid="product-price" class="font-serif text-base-content text-2xl">
                 {Edenflowers.Utils.format_money(@selected_variant.price)}
               </p>
-            </div>
+            </header>
 
-            <div class="text-base-content/80 max-w-prose">
-              <p data-testid="product-description" class="leading-relaxed sm:text-lg">
-                {@product.description}
-              </p>
-            </div>
+            <p data-testid="product-description" class="text-base-content text-lg leading-relaxed">
+              {@product.description}
+            </p>
 
-            <div class="flex flex-col gap-6">
-              <%!-- Size Selection --%>
-              <.form
-                for={%{}}
-                phx-submit="submit"
-                phx-change="change"
-                class="flex flex-col gap-4"
-                data-testid="product-form"
-              >
-                <.input
-                  :let={option}
-                  type="radio-card"
-                  options={
-                    Enum.map(
-                      @product_variants,
-                      &%{name: String.capitalize(to_string(&1.size)), value: &1.id, price: &1.price, size: &1.size}
-                    )
-                  }
-                  name="product_variant_id"
-                  value={@selected_variant.id}
-                  label={~t"Select Size"}
-                  data-testid="variant-selector"
-                >
-                  <div class="flex flex-col">
-                    <span class="font-medium" data-testid={"variant-option-#{option.size}"}>{option.name}</span>
-                    <span class="text-base-content/60 text-sm">
-                      {Edenflowers.Utils.format_money(option.price)}
+            <.form
+              for={%{}}
+              phx-submit="submit"
+              phx-change="change"
+              class="flex flex-col gap-6"
+              data-testid="product-form"
+            >
+              <fieldset class="flex flex-col gap-3">
+                <legend class="eyebrow text-base-content/70 mb-1">{~t"Size"}</legend>
+                <input type="hidden" name="product_variant_id" value="" />
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                  <label
+                    :for={variant <- @product_variants}
+                    class="size-option group cursor-pointer"
+                    data-active={(@selected_variant.id == variant.id && "true") || nil}
+                  >
+                    <input
+                      type="radio"
+                      name="product_variant_id"
+                      value={variant.id}
+                      checked={@selected_variant.id == variant.id}
+                      class="sr-only"
+                      data-testid={"variant-option-#{variant.size}"}
+                    />
+                    <span class="size-option__label font-serif text-xl">
+                      {String.capitalize(to_string(variant.size))}
                     </span>
-                  </div>
-                </.input>
+                    <span class="size-option__price text-base-content/75 ml-2 text-sm">
+                      {Edenflowers.Utils.format_money(variant.price)}
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
 
-                <.button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
-                  data-testid="add-to-cart-button"
-                >
-                  <span class="flex items-center gap-2">
-                    <.icon name="hero-shopping-bag" class="h-5 w-5" />
-                    {~t"Add to Cart"}
-                  </span>
-                </.button>
-              </.form>
-            </div>
-          </section>
-        </div>
+              <.button
+                type="submit"
+                variant="primary"
+                size="lg"
+                phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
+                data-testid="add-to-cart-button"
+                class="w-full"
+              >
+                {~t"Add to cart"}
+              </.button>
+            </.form>
 
-        <%!-- Visual Divider --%>
-        <div class="my-24 flex items-center justify-center" role="separator">
-          <div class="bg-base-300 h-px w-full max-w-3xl"></div>
-          <div class="text-base-content/40 mx-4">
-            <.icon name="hero-sparkles" class="h-6 w-6" />
+            <p class="text-base-content/75 text-base">
+              {~t"Have a question?"}
+              <.link navigate={~p"/faq"} class="link-underline-hover-nav whitespace-nowrap">
+                {~t"See the FAQ"}
+              </.link>
+            </p>
           </div>
-          <div class="bg-base-300 h-px w-full max-w-3xl"></div>
         </div>
-
-        <%!-- FAQs Section --%>
-        <section aria-labelledby="faq-heading" class="m-auto max-w-4xl">
-          <h2 id="faq-heading" class="section-title mb-12 text-center">{~t"Frequently Asked Questions"}</h2>
-
-          <div class="space-y-4">
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" checked="checked" />
-              <div class="collapse-title font-medium">{~t"How long will my flowers stay fresh?"}</div>
-              <div class="collapse-content text-base-content/80">
-                <p>
-                  {~t"Our flowers are carefully selected and arranged to last 5-7 days with proper care. We recommend changing the water every 2-3 days, trimming the stems, and keeping them away from direct sunlight and drafts."}
-                </p>
-              </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"What is your delivery policy?"}</div>
-              <div class="collapse-content text-base-content/80">
-                <p>
-                  {~t"We offer same-day delivery for orders placed before 2 PM on weekdays. For weekend deliveries, please place your order by Friday 2 PM. All our deliveries are carefully handled to ensure your flowers arrive in perfect condition."}
-                </p>
-              </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"Can I include a personal message with my order?"}</div>
-              <div class="collapse-content text-base-content/80">
-                <p>
-                  {~t"Yes! You can add a personal message during checkout. We'll include it on a beautiful card with your delivery. Messages can be up to 200 characters."}
-                </p>
-              </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"Do you offer subscription services?"}</div>
-              <div class="collapse-content text-base-content/80">
-                <p>
-                  {~t"Yes, we offer weekly, bi-weekly, and monthly subscription services. You can customize your subscription to match your preferences and schedule. Subscribers receive a 10% discount on all orders."}
-                </p>
-              </div>
-            </div>
-            <div class="collapse collapse-arrow bg-base-100 border-base-300 rounded-lg border">
-              <input type="radio" name="my-accordion-2" />
-              <div class="collapse-title font-medium">{~t"What happens if I'm not home for delivery?"}</div>
-              <div class="collapse-content text-base-content/80">
-                <p>
-                  {~t"Our delivery team will attempt to leave your flowers in a safe, shaded location. If no suitable location is available, they will leave a note with instructions for redelivery. You can also specify delivery instructions during checkout."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </.container>
     </Layouts.app>
     """
   end
+
+  defp current_locale_atom, do: Localize.get_locale().cldr_locale_id
 
   def handle_event("change", %{"product_variant_id" => id}, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
@@ -200,11 +150,7 @@ defmodule EdenflowersWeb.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    LineItem.add_item(%{
-      order_id: socket.assigns.order_id,
-      product_variant_id: socket.assigns.selected_variant.id,
-      quantity: 1
-    })
+    Order.add_line_item(socket.assigns.order, socket.assigns.selected_variant.id, 1)
 
     {:noreply, socket}
   end

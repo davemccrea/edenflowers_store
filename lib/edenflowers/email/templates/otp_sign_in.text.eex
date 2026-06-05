@@ -1,0 +1,11 @@
+<%= gettext("Hi") %>,
+
+<%= gettext("Use this code to sign in to your Eden Flowers account:") %>
+
+    <%= @otp_code %>
+
+<%= gettext("It expires in 10 minutes. If you didn't request this, you can safely ignore this email.") %>
+
+<%= gettext("Best regards") %>,
+
+Eden Flowers

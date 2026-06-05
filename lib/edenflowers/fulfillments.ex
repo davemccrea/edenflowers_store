@@ -1,5 +1,6 @@
 defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Weekday
   import Decimal, only: [is_decimal: 1]
 
   defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
@@ -11,7 +12,7 @@ defmodule Edenflowers.Fulfillments do
           position: String.t(),
           here_id: String.t(),
           distance: integer(),
-          fulfillment_amount: Decimal.t()
+          fulfillment_fee: Decimal.t()
         }
 
   @spec calculate_delivery(String.t(), FulfillmentOption.t()) ::
@@ -19,14 +20,14 @@ defmodule Edenflowers.Fulfillments do
   def calculate_delivery(delivery_address, fulfillment_option) do
     with {:ok, {geocoded_address, position, here_id}} <- here_api().get_address(delivery_address),
          {:ok, distance} <- here_api().get_distance(position),
-         {:ok, fulfillment_amount} <- calculate_price(fulfillment_option, distance) do
+         {:ok, fulfillment_fee} <- calculate_price(fulfillment_option, distance) do
       {:ok,
        %{
          geocoded_address: geocoded_address,
          position: position,
          here_id: here_id,
          distance: distance,
-         fulfillment_amount: fulfillment_amount
+         fulfillment_fee: fulfillment_fee
        }}
     end
   end
@@ -87,66 +88,92 @@ defmodule Edenflowers.Fulfillments do
   @doc """
   Check if the order can be fulfilled on the given date.
 
-  A date can be fufilled except when:
+  A date can be fulfilled except when:
 
     - The date is in the past
     - The date is disabled
-    - The day of week is disabled and the date is not in the enabled dates
+    - The weekday is disabled and the date is not in the enabled dates
     - The date is today but the deadline for same day delivery has passed
     - The date is today but same day delivery is disabled
   """
-  @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: {boolean(), atom()}
-  def fulfill_on_date(fulfillment_option = %FulfillmentOption{}, date, now \\ now()) do
-    params = {fulfillment_option, date, now}
-
-    case {date_past?(params), date_disabled?(params), date_enabled?(params), weekday_enabled?(params),
-          fulfill_today?(params)} do
-      {true, _, _, _, _} -> {false, :past}
-      {_, true, _, _, _} -> {false, :date_disabled}
-      {_, _, false, false, _} -> {false, :day_of_week_disabled}
-      {_, _, _, _, {false, reason}} -> {false, reason}
-      _ -> {true, :ok}
+  @spec fulfill_on_date(FulfillmentOption.t(), Date.t(), DateTime.t()) :: :ok | {:error, atom()}
+  def fulfill_on_date(%FulfillmentOption{} = option, date, now \\ now()) do
+    cond do
+      date_past?(date, now) -> {:error, :past}
+      date_disabled?(option, date) -> {:error, :date_disabled}
+      not date_enabled?(option, date) and not weekday_enabled?(option, date) -> {:error, :weekday_disabled}
+      (reason = today_blocked_reason(option, date, now)) != nil -> {:error, reason}
+      true -> :ok
     end
   end
 
-  defp date_past?({_, date, now}) do
-    Date.compare(date, now) == :lt
-  end
+  @typedoc """
+  Customer-facing calendar cell state. The customer can't act on the why-not,
+  so every unavailable date — whether the weekday is off or the date is
+  explicitly in `disabled_dates` — reads as `:closed`.
+  """
+  @type customer_cell_state :: :open | :closed | :past
 
-  defp date_disabled?({%{disabled_dates: disabled_dates}, date, _}) do
-    Enum.member?(disabled_dates, date)
-  end
+  @typedoc """
+  Admin-facing calendar cell state. The admin is editing the rules, so the
+  distinction between `:weekday_disabled` (the weekday rule closes the date)
+  and `:date_disabled` (an explicit override closes the date) matters —
+  clicking each produces a different update.
+  """
+  @type admin_cell_state :: :open | :past | :weekday_disabled | :date_disabled
 
-  defp date_enabled?({%{enabled_dates: enabled_dates}, date, _}) do
-    Enum.member?(enabled_dates, date)
-  end
-
-  defp weekday_enabled?({%{available_days: available_days}, date, _now}) do
-    day = date |> Date.day_of_week() |> day_of_week_to_atom()
-    day in available_days
-  end
-
-  defp fulfill_today?({%{same_day: false, order_deadline: _order_deadline}, date, now}) do
-    if date_today?(date, now) do
-      {false, :same_day_delivery_disabled}
+  @doc """
+  Customer-facing cell state for the checkout calendar. `now` must be a
+  `DateTime` because same-day deadline rules apply: today collapses to `:past`
+  once the order deadline has passed or when `same_day: false`. From the
+  customer's perspective, "can't pick today" looks identical to "the past".
+  """
+  @spec customer_cell_state(FulfillmentOption.t(), Date.t(), DateTime.t()) :: customer_cell_state()
+  def customer_cell_state(fulfillment_option, date, now \\ now()) do
+    case fulfill_on_date(fulfillment_option, date, now) do
+      :ok -> :open
+      {:error, :date_disabled} -> :closed
+      {:error, :weekday_disabled} -> :closed
+      {:error, _past_or_same_day} -> :past
     end
   end
 
-  defp fulfill_today?({%{same_day: true, order_deadline: order_deadline}, date, now}) do
+  @doc """
+  Admin-facing cell state for the date-toggle editor. `today` is a `Date`;
+  same-day deadline rules are skipped because the admin is editing rules, not
+  booking against them. Today reflects whatever the weekday rule and any
+  per-date override say, so it can be toggled like any other date.
+  """
+  @spec admin_cell_state(FulfillmentOption.t(), Date.t(), Date.t()) :: admin_cell_state()
+  def admin_cell_state(option, date, today) do
+    cond do
+      Date.compare(date, today) == :lt -> :past
+      date in option.disabled_dates -> :date_disabled
+      date in option.enabled_dates -> :open
+      weekday_enabled?(option, date) -> :open
+      true -> :weekday_disabled
+    end
+  end
+
+  defp date_past?(date, now), do: Date.compare(date, now) == :lt
+
+  defp date_disabled?(option, date), do: date in option.disabled_dates
+
+  defp date_enabled?(option, date), do: date in option.enabled_dates
+
+  defp weekday_enabled?(option, date), do: Weekday.from_date(date) in option.available_days
+
+  defp today_blocked_reason(%{same_day: false}, date, now) do
+    if date_today?(date, now), do: :same_day_delivery_disabled
+  end
+
+  defp today_blocked_reason(%{same_day: true, order_deadline: order_deadline}, date, now) do
     if date_today?(date, now) and Time.compare(now, order_deadline) == :gt do
-      {false, :order_deadline_passed}
+      :order_deadline_passed
     end
   end
 
   defp date_today?(date, now), do: Date.compare(date, now) == :eq
-
-  defp day_of_week_to_atom(1), do: :monday
-  defp day_of_week_to_atom(2), do: :tuesday
-  defp day_of_week_to_atom(3), do: :wednesday
-  defp day_of_week_to_atom(4), do: :thursday
-  defp day_of_week_to_atom(5), do: :friday
-  defp day_of_week_to_atom(6), do: :saturday
-  defp day_of_week_to_atom(7), do: :sunday
 
   defp now(), do: DateTime.now!("Europe/Helsinki")
 end

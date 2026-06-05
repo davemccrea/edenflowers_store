@@ -4,7 +4,7 @@ defmodule Edenflowers.MixProject do
   def project do
     [
       app: :edenflowers,
-      version: "0.2.8",
+      version: "0.4.3",
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -16,12 +16,12 @@ defmodule Edenflowers.MixProject do
       listeners: [Phoenix.CodeReloader],
       usage_rules: [
         skills: [
-          location: ".claude/skills",
+          location: ".agents/skills",
           package_skills: [:gettext_sigils],
           build: [
             "ash-framework": [
               description: "Expert on the Ash Framework ecosystem.",
-              usage_rules: [:ash, ~r/^ash_/]
+              usage_rules: [:ash, ~r/^ash_/, :spark, :reactor, :cinder]
             ],
             "phoenix-framework": [
               description: "Expert on the Phoenix Framework.",
@@ -34,6 +34,14 @@ defmodule Edenflowers.MixProject do
             igniter: [
               description: "Expert on Igniter.",
               usage_rules: [:igniter]
+            ],
+            "req-llm": [
+              description: "Expert on ReqLLM for making LLM API requests.",
+              usage_rules: [:req_llm, :llm_db]
+            ],
+            localize: [
+              description: "Expert on Localize for internationalisation.",
+              usage_rules: [:localize]
             ]
           ]
         ]
@@ -67,9 +75,11 @@ defmodule Edenflowers.MixProject do
   defp deps do
     [
       {:usage_rules, "~> 1.1", only: [:dev]},
-      {:ash_authentication_phoenix, "~> 2.16.0"},
+      {:ash_authentication_phoenix, "~> 3.0.0-rc.4"},
       {:simple_sat, "~> 0.1"},
-      {:ash_authentication, "~> 4.0"},
+      {:ash_authentication, "~> 5.0.0-rc.8"},
+      {:ash_rate_limiter, "~> 2.0"},
+      {:hammer, "~> 7.0"},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.11"},
       {:ash_postgres, "~> 2.0"},
@@ -94,6 +104,7 @@ defmodule Edenflowers.MixProject do
        github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
+      {:req_llm, "~> 1.6"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
@@ -108,11 +119,12 @@ defmodule Edenflowers.MixProject do
       {:phoenix_test, "~> 0.8", only: :test, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
-      {:localize, "~> 0.27.0"},
-      {:localize_web, "~> 0.5.1"},
+      {:localize, "~> 0.38.0"},
+      {:localize_web, "~> 0.6.0"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},
-      {:imgproxy, "~> 3.1"}
+      {:imgproxy, "~> 3.1"},
+      {:ash_admin, "~> 1.0"}
     ]
   end
 

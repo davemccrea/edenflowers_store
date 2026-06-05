@@ -3,9 +3,9 @@ defmodule EdenflowersWeb.AddressInputComponent do
   Delivery address input with asynchronous geocoding on blur.
 
   Geocoding runs on blur for the visual feedback ("3.0 km • 5.00") but
-  the result is *not* trusted by the server. On submit, `save_step_3`
+  the result is *not* trusted by the server. On submit, `submit_delivery`
   re-derives `geocoded_address`, `position`, `here_id`, `distance`, and
-  `fulfillment_amount` server-side via `CalculateFulfillmentCost`, so a
+  `fulfillment_fee` server-side via `CalculateFulfillmentCost`, so a
   client cannot inject those values.
 
   Error display is component-owned. `{:required, _}` is raised the
@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         id="address-input-field"
         name="delivery_address"
         value={@typed}
-        label={~t"Address *"}
+        label={@label}
         type="text"
         errors={errors(@error, @touched)}
         phx-change="typing"
@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         data-testid="address-distance"
         class="mt-1.5 text-sm"
       >
-        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_amount)}
+        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_fee)}
       </p>
     </div>
     """
@@ -155,7 +155,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         position: order.position,
         here_id: order.here_id,
         distance: order.distance,
-        fulfillment_amount: order.fulfillment_amount
+        fulfillment_fee: order.fulfillment_fee
       }
     }
   end

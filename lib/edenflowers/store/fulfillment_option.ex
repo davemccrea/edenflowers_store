@@ -20,7 +20,13 @@ defmodule Edenflowers.Store.FulfillmentOption do
 
   code_interface do
     define :list, action: :read
+    define :list_for_checkout, action: :list_for_checkout
     define :get_by_id, action: :by_id, args: [:id]
+    define :update_calendar, action: :update_calendar
+    define :toggle_date, action: :toggle_date, args: [:date]
+    define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
+    define :set_week, action: :set_week, args: [:week, :today, :direction]
+    define :reset_calendar, action: :reset_calendar
   end
 
   actions do
@@ -29,6 +35,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
       :destroy,
       create: [
         :name,
+        :sort_key,
         :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
@@ -45,6 +52,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
       ],
       update: [
         :name,
+        :sort_key,
         :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
@@ -54,9 +62,6 @@ defmodule Edenflowers.Store.FulfillmentOption do
         :max_dist_km,
         :same_day,
         :order_deadline,
-        :available_days,
-        :enabled_dates,
-        :disabled_dates,
         :tax_rate_id
       ]
     ]
@@ -65,6 +70,49 @@ defmodule Edenflowers.Store.FulfillmentOption do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
       get? true
+    end
+
+    read :list_for_checkout do
+      prepare build(sort: [sort_key: :asc, name: :asc])
+    end
+
+    update :update_calendar do
+      description "Admin-only update narrowed to the calendar overrides. " <>
+                    "Prevents accidental writes to pricing or fulfillment-method attrs."
+
+      accept [:available_days, :enabled_dates, :disabled_dates]
+    end
+
+    update :toggle_date do
+      description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in FulfillmentCalendar."
+      # The change reads the existing option to compute the new override sets,
+      # so it can't be expressed as a single DB expression.
+      require_atomic? false
+      argument :date, :date, allow_nil?: false
+      change Edenflowers.Store.FulfillmentOption.Changes.ToggleDate
+    end
+
+    update :set_weekday do
+      description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per FulfillmentCalendar."
+      require_atomic? false
+      argument :weekday, :atom, allow_nil?: false
+      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
+      change Edenflowers.Store.FulfillmentOption.Changes.SetWeekday
+    end
+
+    update :set_week do
+      description "Set every non-past date in `week` to :open or :closed, idempotently."
+      require_atomic? false
+      argument :week, {:array, :date}, allow_nil?: false
+      argument :today, :date, allow_nil?: false
+      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:open, :closed]]
+      change Edenflowers.Store.FulfillmentOption.Changes.SetWeek
+    end
+
+    update :reset_calendar do
+      description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
+      require_atomic? false
+      change Edenflowers.Store.FulfillmentOption.Changes.ResetCalendar
     end
   end
 
@@ -99,6 +147,7 @@ defmodule Edenflowers.Store.FulfillmentOption do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, public?: true
+    attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
 
     attribute :minimum_cart_total, :decimal, default: 0, public?: true
 

@@ -1,12 +1,15 @@
 defmodule EdenflowersWeb.CheckoutLiveTest do
   use EdenflowersWeb.ConnCase, async: true
+  use Oban.Testing, repo: Edenflowers.Repo
 
   import PhoenixTest
 
   import Phoenix.LiveViewTest,
     only: [
       live: 2,
+      render: 1,
       render_click: 3,
+      render_change: 2,
       element: 2,
       render_blur: 2,
       render_submit: 2,
@@ -14,10 +17,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       assert_redirect: 2
     ]
 
+  import ExUnit.CaptureLog
   import Generator
   import Mox
 
-  alias Edenflowers.Store.{Order, LineItem}
+  alias Edenflowers.Store.Order
 
   setup :verify_on_exit!
 
@@ -28,12 +32,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     order = generate(order())
 
-    {:ok, _line_item} =
-      LineItem.add_item(%{
-        order_id: order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+    {:ok, _order} = Order.add_line_item(order, variant.id, 1, authorize?: false)
 
     order = Order.get_for_checkout!(order.id, actor: nil)
 
@@ -65,7 +64,118 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> fill_in("Your Name *", with: "John Doe")
       |> fill_in("Email *", with: "john@example.com")
       |> click_button("Next")
-      |> assert_has("h1", text: "Gift Options")
+      |> assert_has("h2", text: "Gift options")
+    end
+
+    test "rejects an invalid email and stays on step 1", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "John Doe")
+      |> fill_in("Email *", with: "notanemail")
+      |> click_button("Next")
+      |> assert_has("p", text: "Must be a valid email address")
+
+      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      assert reloaded.state == :contact_details
+      assert is_nil(reloaded.customer_email)
+    end
+
+    test "newsletter checkbox is unchecked by default", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox'][checked]")
+    end
+
+    test "checking the newsletter box subscribes the user and enqueues the welcome email", %{
+      conn: conn,
+      order: order
+    } do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Subscriber")
+      |> fill_in("Email *", with: "subscriber@example.com")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("subscriber@example.com", authorize?: false)
+      assert user.newsletter_opt_in == true
+
+      assert_enqueued(
+        worker: Edenflowers.Workers.SendNewsletterPromoEmail,
+        args: %{"email" => "subscriber@example.com"}
+      )
+    end
+
+    test "leaving the newsletter box unchecked does not opt the user in", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Bystander")
+      |> fill_in("Email *", with: "bystander@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("bystander@example.com", authorize?: false)
+      assert user.newsletter_opt_in == false
+
+      refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
+    end
+
+    # Reproduces the reported bug: a guest who opted in and advanced past step 1
+    # must not see an empty checkbox on returning — the order carries the
+    # hide decision so it survives a refresh and the actor's inability to read
+    # the subscribed user's record.
+    test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Returning Guest")
+      |> fill_in("Email *", with: "returning@example.com")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # A guest who declined the offer should still see the box on return, since
+    # nothing was stamped.
+    test "newsletter checkbox stays visible after a guest declines and returns to step 1", %{
+      conn: conn,
+      order: order
+    } do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Undecided Guest")
+      |> fill_in("Email *", with: "undecided@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # An order whose customer email resolves to an already-subscribed user gets
+    # the box hidden on submit, even if the box itself was left unticked.
+    test "newsletter checkbox is hidden once the order's user is already subscribed", %{conn: conn, order: order} do
+      generate(admin_user(admin: false, email: "subscribed@example.com", newsletter_opt_in: true))
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Already Subscribed")
+      |> fill_in("Email *", with: "subscribed@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
   end
 
@@ -85,7 +195,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "successfully submits and progresses to step 3", %{session: session} do
       session
       |> click_button("Next")
-      |> assert_has("h1", text: "Delivery Information")
+      |> assert_has("h2", text: "Delivery")
     end
 
     test "does not show 'Select a card' button when gift is false", %{session: session} do
@@ -95,13 +205,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "shows 'Add a card' button when order is a gift",
          %{conn: conn, variant: variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -125,13 +231,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
           )
         )
 
-      step_3_order = generate(order(step: 3, customer_name: "Jane", customer_email: "jane@example.com"))
+      step_3_order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
-      LineItem.add_item!(%{
-        order_id: step_3_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(step_3_order, variant.id, 1, authorize?: false)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: step_3_order.id})
 
@@ -209,7 +311,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(step_3_order.id, actor: nil)
       assert reloaded.fulfillment_option_id == delivery_option.id
       assert reloaded.fulfillment_method == :delivery
-      assert reloaded.step == 4
+      assert reloaded.state == :payment
     end
 
     test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
@@ -224,12 +326,36 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
       assert delivery_pos < pickup_pos
     end
+
+    test "switching fulfillment option clears the previously selected date", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      pickup_option =
+        Edenflowers.Store.FulfillmentOption.list!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      # User picks a date on the delivery calendar. The checkout LiveView
+      # stores that date in the form params via the `:date_selected` message.
+      selected_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+      send(view.pid, {:date_selected, selected_date})
+
+      assert render(view) =~ ~s(value="#{selected_date}")
+
+      # User then switches to a different fulfillment option. The new option
+      # has its own calendar, so the date that was valid for delivery may not
+      # be valid for pickup and must be cleared from the form.
+      view
+      |> element("#checkout-form-3a")
+      |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
+
+      refute render(view) =~ ~s(value="#{selected_date}")
+    end
   end
 
   describe "Card selection" do
     setup %{order: order} do
       # Create a "cards" category with a card product (with a variant)
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       tax_rate_ = generate(tax_rate())
 
       card_product =
@@ -247,18 +373,13 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     end
 
     test "saving step 2 with gift=false removes card line items", %{
-      order: order,
       card_variant: card_variant
     } do
-      order =
-        order
-        |> Ash.Changeset.for_update(:set_gift, %{gift: true})
-        |> Ash.update!(authorize?: false)
-
+      order = generate(order(state: :gift_options, gift: true))
       Order.add_card!(order, card_variant.id, authorize?: false)
 
       order
-      |> Ash.Changeset.for_update(:save_step_2, %{gift: false})
+      |> Ash.Changeset.for_update(:submit_gift_options, %{gift: false})
       |> Ash.update!(authorize?: false)
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
@@ -267,13 +388,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "shows card message textarea when a card line item exists",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -284,15 +401,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       |> assert_has("[data-testid='remove-card-button']")
     end
 
-    test "card row in cart sidebar is read-only (no quantity or remove controls)",
+    test "card row in cart sidebar has a remove control but no quantity controls",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       card =
         Order.add_card!(gift_order, card_variant.id, authorize?: false).line_items
@@ -301,26 +414,20 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      # The card line item is still rendered in the cart so the customer can
-      # see it on the totals breakdown.
+      # The card line item is rendered in the cart so the customer can see it
+      # on the totals breakdown and remove it if they change their mind.
       |> assert_has("#checkout-line-items", text: card_product.name)
-      # But its row does not expose +/- or trash controls — those would let
-      # the customer accidentally end up with quantity > 1 cards or remove
-      # the card from a place that contradicts the dedicated step-2 UI.
+      |> assert_has("#checkout-line-items-remove-#{card.id}")
+      # Cards are always quantity 1, so the +/- controls do not apply.
       |> refute_has("#checkout-line-items-increment-#{card.id}")
       |> refute_has("#checkout-line-items-decrement-#{card.id}")
-      |> refute_has("#checkout-line-items-remove-#{card.id}")
     end
 
     test "select_card event adds a card line item to the order",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -333,13 +440,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "remove_card event removes the card from the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true))
+      gift_order = generate(order(state: :gift_options, gift: true))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -355,13 +458,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "save_form_2 persists card_message on the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       # recipient_name is required when gift=true, so seed it on the order directly
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test Recipient"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test Recipient"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -377,13 +476,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "card_message is preserved across re-renders while on step 2",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Original"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -397,13 +492,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "renders maxlength matching the selected card's size limit",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -420,13 +511,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -447,13 +534,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       large_variant =
         generate(product_variant(product_id: card_product.id, size: :large, draft: false))
 
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -470,13 +553,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
 
     test "submitting an oversize message renders the inline error",
          %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(step: 2, gift: true, recipient_name: "Test"))
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -493,13 +572,9 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "remove_card clears card_message on the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order =
-        generate(order(step: 2, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
+        generate(order(state: :gift_options, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
 
-      LineItem.add_item!(%{
-        order_id: gift_order.id,
-        product_variant_id: variant.id,
-        quantity: 1
-      })
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
       Order.add_card!(gift_order, card_variant.id, authorize?: false)
 
@@ -511,11 +586,34 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(gift_order.id, actor: nil)
       assert is_nil(reloaded.card_message)
     end
+
+    test "re-adding a card after removal renders an empty card_message field",
+         %{conn: conn, variant: variant, card_variant: card_variant} do
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
+
+      Order.add_line_item!(gift_order, variant.id, 1, authorize?: false)
+
+      Order.add_card!(gift_order, card_variant.id, authorize?: false)
+
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      view
+      |> element("[data-testid='checkout-form-2']")
+      |> render_change(%{"form" => %{"card_message" => "Stale message"}})
+
+      render_click(view, "remove_card", %{})
+      html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
+
+      assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
+    end
   end
 
   describe "Cart-empty reset" do
     setup %{order: order} do
-      cards_category = generate(product_category(slug: "cards", draft: false))
+      cards_category = generate(product_category(slug: "cards", visibility: :public))
       tax_rate_ = generate(tax_rate())
 
       card_product =
@@ -533,23 +631,28 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       # details filled in, then removed every product, leaving only a card.
       Order.add_card!(order, card_variant.id, authorize?: false)
       [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
-      LineItem.remove_item!(non_card_line_item)
+      # Bypass Order.remove_line_item to fabricate the stale state this guard
+      # is meant to catch — a card-only cart with leftover checkout fields.
+      Ash.destroy!(non_card_line_item, action: :remove_item, authorize?: false)
 
       stale =
         order
-        |> Ash.Changeset.for_update(:save_step_1, %{
+        |> Ash.Changeset.for_update(:submit_contact_details, %{
           customer_name: "Stale Customer",
           customer_email: "stale@example.com"
         })
         |> Ash.update!(authorize?: false)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
-      assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+
+      capture_log(fn ->
+        assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+      end)
 
       reloaded = Order.get_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []
       assert is_nil(reloaded.customer_name)
-      assert reloaded.step == 1
+      assert reloaded.state == :contact_details
     end
 
     test "removing the last non-card line item mid-checkout resets the order and redirects",
@@ -560,8 +663,10 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
       {:ok, view, _html} = live(conn, "/checkout")
 
-      LineItem.remove_item!(non_card_line_item)
-      assert_redirect(view, "/")
+      capture_log(fn ->
+        Order.remove_line_item!(order, non_card_line_item.id, authorize?: false)
+        assert_redirect(view, "/")
+      end)
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
