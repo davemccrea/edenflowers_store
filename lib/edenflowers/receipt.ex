@@ -7,7 +7,7 @@ defmodule Edenflowers.Receipt do
   Use `load_for_receipt/1` to load the aggregates `generate/1` expects.
   """
 
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
   alias Edenflowers.Store.Order
 
   @typst_bin "typst"

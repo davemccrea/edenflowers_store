@@ -1,23 +1,35 @@
-defmodule Edenflowers.Localize.Format do
+defmodule Edenflowers.Format do
   @moduledoc """
-  Locale-aware formatting helpers shared between the order-confirmation
-  email body and the PDF receipt payload. All functions return strings
-  formatted via CLDR for the supplied locale.
+  Locale-aware value formatting. The single home for turning a domain value
+  (money, date, datetime, percentage) into a display string via CLDR — shared
+  by the storefront, the admin, the order-confirmation email, and the PDF
+  receipt payload.
+
+  Functions take an explicit `locale` so the email/receipt can format for the
+  order's captured locale rather than the request's. `money/1` is the
+  storefront convenience that resolves the ambient locale itself.
   """
 
-  def currency(amount, locale) do
-    Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
-  end
+  @doc "EUR money in the ambient locale, treating a missing value as zero. For storefront prices/totals."
+  def money(value), do: currency(value || 0, Localize.get_locale())
+
+  def currency(amount, locale), do: amount(amount, :eur, locale)
 
   @doc """
-  Like `currency/2` but for an explicit currency. Accepts the lowercase
-  currency atoms stored on expenses (`:eur`, `:sek`) and upcases them to the
-  ISO codes CLDR expects.
+  Money in an explicit currency. Accepts the lowercase currency atoms stored
+  on expenses (`:eur`, `:sek`) and upcases them to the ISO codes CLDR expects.
+
+  An amount needs both a value and a currency to format; returns `nil` if
+  either is missing, since LLM-extracted expenses can leave either unset.
   """
+  def amount(value, currency, _locale) when is_nil(value) or is_nil(currency), do: nil
+
   def amount(value, currency, locale) do
     iso = currency |> to_string() |> String.upcase() |> String.to_existing_atom()
     Localize.Number.to_string!(value, locale: locale, currency: iso)
   end
+
+  def date(nil, _locale), do: nil
 
   def date(date, locale) do
     Localize.Date.to_string!(date, locale: locale, format: :short)
