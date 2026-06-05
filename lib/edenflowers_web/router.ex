@@ -84,6 +84,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutCurrentPath
       ] do
       live "/", EdenflowersWeb.Admin.DashboardLive
+      live "/orders", EdenflowersWeb.Admin.OrdersLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive

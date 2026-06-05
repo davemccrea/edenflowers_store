@@ -144,6 +144,7 @@ defmodule EdenflowersWeb.Layouts do
   def admin(assigns) do
     primary_nav = [
       {"/admin", "Dashboard", true, "hero-squares-2x2"},
+      {"/admin/orders", "Orders", true, "hero-shopping-bag"},
       {"/admin/expenses", "Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", "Calendar", true, "hero-calendar-days"}
     ]
@@ -161,7 +162,12 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <div class="min-h-screen lg:flex">
       <%!-- Mobile: slide-in drawer --%>
-      <.drawer id="admin-nav-drawer" placement="left" label="Admin navigation" class="bg-base-200 border-r border-base-300 w-64 flex flex-col h-full">
+      <.drawer
+        id="admin-nav-drawer"
+        placement="left"
+        label="Admin navigation"
+        class="bg-base-200 border-base-300 flex h-full w-64 flex-col border-r"
+      >
         <.admin_sidebar_content
           primary_nav={@primary_nav}
           system_nav={@system_nav}
@@ -170,8 +176,8 @@ defmodule EdenflowersWeb.Layouts do
         />
       </.drawer>
 
-      <%!-- Desktop: persistent sidebar --%>
-      <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-base-200 border-r border-base-300 min-h-screen">
+      <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
+      <aside class="bg-base-200 border-base-300 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
         <.admin_sidebar_content
           primary_nav={@primary_nav}
           system_nav={@system_nav}
@@ -180,29 +186,29 @@ defmodule EdenflowersWeb.Layouts do
         />
       </aside>
 
-      <div class="flex flex-col flex-1 min-w-0">
+      <div class="flex min-w-0 flex-1 flex-col">
         <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
              The trailing spacer matches the button cell so the center column is
              truly centered on the bar, not on the leftover space. --%>
-        <div class="lg:hidden grid grid-cols-[auto_1fr_auto] items-center px-2 py-2.5 bg-base-200 border-b border-base-300/70">
+        <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-300/70 grid items-center border-b px-2 py-2.5 lg:hidden">
           <button
             type="button"
             phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label="Open navigation menu"
-            class="p-2 -m-px rounded-md text-base-content/60 hover:text-base-content active:bg-base-300/50 transition-colors cursor-pointer"
+            class="text-base-content/60 -m-px cursor-pointer rounded-md p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
             <.icon name="hero-bars-3" class="h-5 w-5" />
           </button>
           <.link
             navigate={~p"/admin"}
-            class="justify-self-center text-primary logo-wordmark text-base tracking-[0.12em] active:text-primary/70 transition-colors"
+            class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-base transition-colors active:text-primary/70"
           >
             Eden Flowers
           </.link>
           <span class="w-9" aria-hidden="true"></span>
         </div>
 
-        <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
+        <main id="main-content" tabindex="-1" class="flex-grow pb-12 outline-hidden">
           <.flash kind={:info} flash={@flash} />
           <.flash kind={:error} flash={@flash} />
           {render_slot(@inner_block)}
@@ -219,8 +225,8 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_sidebar_content(assigns) do
     ~H"""
-    <div class="flex flex-col h-full py-5">
-      <div class="flex items-center justify-between mb-6 px-5">
+    <div class="flex h-full flex-col py-5">
+      <div class="mb-6 flex items-center justify-between px-5">
         <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
           Eden Flowers
         </.link>
@@ -231,11 +237,11 @@ defmodule EdenflowersWeb.Layouts do
           aria-label="Close navigation menu"
           class="cursor-pointer"
         >
-          <.icon name="hero-x-mark" class="h-5 w-5 text-base-content/40 hover:text-base-content/70" />
+          <.icon name="hero-x-mark" class="text-base-content/40 h-5 w-5 hover:text-base-content/70" />
         </button>
       </div>
 
-      <nav class="flex-1 px-3 space-y-0.5">
+      <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3">
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @primary_nav}
           path={path}
@@ -247,8 +253,8 @@ defmodule EdenflowersWeb.Layouts do
         />
       </nav>
 
-      <div class="mt-auto px-3 pt-4 border-t border-base-300/70">
-        <p class="px-3 mb-1 text-xs text-base-content/65">System</p>
+      <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
+        <p class="text-base-content/65 mb-1 px-3 text-xs">System</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
@@ -277,13 +283,9 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.link
       {if @live?, do: [navigate: @path], else: [href: @path]}
-      class={[
-        "flex items-center gap-3 px-3 py-2 text-sm transition-colors rounded-r",
-        if(@active,
-          do: "border-l-2 border-primary text-base-content font-medium bg-base-300/50",
-          else: "border-l-2 border-transparent text-base-content/60 hover:bg-base-300/40 hover:text-base-content"
-        )
-      ]}
+      class={["flex items-center gap-3 rounded-r px-3 py-2 text-sm transition-colors", if(@active,
+    do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
+    else: "text-base-content/60 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
     >
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/40")]} />
       {@label}
