@@ -299,22 +299,37 @@ Promotion
 |> Ash.create!(authorize?: false)
 
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
-  {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies, "Printer paper and pens", :high},
-  {"doc-002", "Finnair Oyj", "FI23456789", ~D[2026-01-15], "312.00", "0.00", :eur, :travel, "Flight to Helsinki for supplier meeting", :high},
-  {"doc-003", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :meals, "Team lunch", :medium},
-  {"doc-004", "Adobe Systems", nil, ~D[2026-02-01], "54.99", "0.00", :eur, :software, "Adobe Creative Cloud monthly subscription", :high},
-  {"doc-005", "Vaasan Energia", "FI45678901", ~D[2026-02-10], "189.30", "38.63", :eur, :utilities, "Electricity bill — February", :high},
-  {"doc-006", "Meta Platforms Ireland", nil, ~D[2026-02-14], "120.00", "0.00", :eur, :marketing, "Instagram ad campaign — Valentine's Day", :high},
-  {"doc-007", "Tilitoimisto Laskenta Oy", "FI56789012", ~D[2026-02-28], "450.00", "91.85", :eur, :professional_services, "Monthly bookkeeping", :high},
-  {"doc-008", "Tokmanni", "FI67890123", ~D[2026-03-05], "23.80", "4.86", :eur, :office_supplies, "Cleaning supplies", :medium},
-  {"doc-009", "VR Group", "FI78901234", ~D[2026-03-12], "44.60", "0.00", :eur, :travel, "Train tickets Vaasa–Tampere", :high},
-  {"doc-010", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :meals, "Working lunch during stocktake", :low},
-  {"doc-011", "Google Ireland Limited", nil, ~D[2026-04-01], "29.99", "0.00", :eur, :software, "Google Workspace monthly", :high},
-  {"doc-012", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :other, "Bulk flower stock — spring delivery", :high},
-  {"doc-013", "Elisa Oyj", "FI90123456", ~D[2026-04-07], "39.90", "8.15", :eur, :utilities, "Business mobile subscription", :high},
-  {"doc-014", "Sanoma Media Finland", "FI01234567", ~D[2026-04-18], "600.00", "122.46", :eur, :marketing, "Print ad in local newspaper", :medium},
-  {"doc-015", "Vaasan kaupunki", "FI11223344", ~D[2026-05-01], "210.00", "0.00", :eur, :other, "Annual business licence fee", :high}
-] do
+      {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies,
+       "Printer paper and pens", :high},
+      {"doc-002", "Finnair Oyj", "FI23456789", ~D[2026-01-15], "312.00", "0.00", :eur, :travel,
+       "Flight to Helsinki for supplier meeting", :high},
+      {"doc-003", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :meals, "Team lunch",
+       :medium},
+      {"doc-004", "Adobe Systems", nil, ~D[2026-02-01], "54.99", "0.00", :eur, :software,
+       "Adobe Creative Cloud monthly subscription", :high},
+      {"doc-005", "Vaasan Energia", "FI45678901", ~D[2026-02-10], "189.30", "38.63", :eur, :utilities,
+       "Electricity bill — February", :high},
+      {"doc-006", "Meta Platforms Ireland", nil, ~D[2026-02-14], "120.00", "0.00", :eur, :marketing,
+       "Instagram ad campaign — Valentine's Day", :high},
+      {"doc-007", "Tilitoimisto Laskenta Oy", "FI56789012", ~D[2026-02-28], "450.00", "91.85", :eur,
+       :professional_services, "Monthly bookkeeping", :high},
+      {"doc-008", "Tokmanni", "FI67890123", ~D[2026-03-05], "23.80", "4.86", :eur, :office_supplies,
+       "Cleaning supplies", :medium},
+      {"doc-009", "VR Group", "FI78901234", ~D[2026-03-12], "44.60", "0.00", :eur, :travel,
+       "Train tickets Vaasa–Tampere", :high},
+      {"doc-010", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :meals, "Working lunch during stocktake",
+       :low},
+      {"doc-011", "Google Ireland Limited", nil, ~D[2026-04-01], "29.99", "0.00", :eur, :software,
+       "Google Workspace monthly", :high},
+      {"doc-012", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :other,
+       "Bulk flower stock — spring delivery", :high},
+      {"doc-013", "Elisa Oyj", "FI90123456", ~D[2026-04-07], "39.90", "8.15", :eur, :utilities,
+       "Business mobile subscription", :high},
+      {"doc-014", "Sanoma Media Finland", "FI01234567", ~D[2026-04-18], "600.00", "122.46", :eur, :marketing,
+       "Print ad in local newspaper", :medium},
+      {"doc-015", "Vaasan kaupunki", "FI11223344", ~D[2026-05-01], "210.00", "0.00", :eur, :other,
+       "Annual business licence fee", :high}
+    ] do
   Expense
   |> Ash.Changeset.for_create(:ingest, %{
     document_id: document_id,
@@ -365,6 +380,10 @@ variant_for = fn product_name, size ->
   Enum.find(variants, fn v -> v.product.name == product_name and v.size == size end)
 end
 
+# Fulfillment dates are relative to whenever the seed runs, so the dashboard's
+# "Today"/"Tomorrow" grouping always has data. `days_out` is an offset from today.
+today = Date.utc_today()
+
 # Each order varies a different axis: fulfillment method, gift vs. not, a
 # promotion, a larger multi-item cart, locales, and one already fulfilled so the
 # dashboard's open/completed split has data on both sides.
@@ -373,7 +392,7 @@ orders = [
     customer_name: "Aino Virtanen",
     customer_email: "aino.virtanen@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: ~D[2026-06-08],
+    days_out: 0,
     recipient_name: "Aino Virtanen",
     recipient_phone_number: "+358 40 123 4567",
     delivery_address: "Hovioikeudenpuistikko 16, 65100 Vaasa",
@@ -385,7 +404,7 @@ orders = [
     customer_name: "Mikael Lindholm",
     customer_email: "mikael.lindholm@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: ~D[2026-06-09],
+    days_out: 0,
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "+358 50 987 6543",
     delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
@@ -401,7 +420,7 @@ orders = [
     customer_name: "Elina Korhonen",
     customer_email: "elina.korhonen@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: ~D[2026-06-10],
+    days_out: 1,
     gift: false,
     items: [{"Plant 1", :medium, 2}, {"Bouquet 2", :small, 1}]
   },
@@ -409,7 +428,7 @@ orders = [
     customer_name: "Johan Nyström",
     customer_email: "johan.nystrom@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: ~D[2026-06-12],
+    days_out: 3,
     recipient_name: "Johan Nyström",
     recipient_phone_number: "+358 44 222 1188",
     delivery_address: "Vaasanpuistikko 11, 65100 Vaasa",
@@ -420,7 +439,7 @@ orders = [
     customer_name: "Liisa Mäkinen",
     customer_email: "liisa.makinen@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: ~D[2026-06-13],
+    days_out: 4,
     recipient_name: "Liisa Mäkinen",
     recipient_phone_number: "+358 41 555 0099",
     delivery_address: "Rauhankatu 8, 65100 Vaasa",
@@ -434,9 +453,14 @@ orders = [
     customer_name: "Erik Sundström",
     customer_email: "erik.sundstrom@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: ~D[2026-06-14],
+    days_out: 5,
+    # A gift order: checkout's submit_gift_options requires recipient_name when
+    # gift is true, and a card message rides on a card line item. Mirror both so
+    # this fixture matches an order that actually passed through checkout.
     gift: true,
+    recipient_name: "Astrid Sundström",
     card_message: "Tack för allt!",
+    card: {"Card 2", :medium},
     # A large mixed cart to exercise multi-line aggregates.
     items: [{"Bouquet 1", :large, 1}, {"Bouquet 4", :small, 2}, {"Plant 1", :large, 1}, {"Plant 4", :small, 1}]
   },
@@ -444,12 +468,14 @@ orders = [
     customer_name: "Hanna Järvinen",
     customer_email: "hanna.jarvinen@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: ~D[2026-05-30],
+    # Ordered a few days back and already delivered — lands in the dashboard's
+    # completed side, not open orders. Both dates sit in the past, in order.
+    ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
+    days_out: -2,
     recipient_name: "Hanna Järvinen",
     recipient_phone_number: "+358 45 321 7654",
     delivery_address: "Pitkäkatu 42, 65100 Vaasa",
     gift: false,
-    # Already delivered — lands in the dashboard's completed side, not open orders.
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
   }
@@ -465,7 +491,7 @@ for order_attrs <- orders do
       state: :placed,
       payment_status: :paid,
       fulfillment_status: order_attrs[:fulfillment_status] || :pending,
-      ordered_at: DateTime.utc_now(),
+      ordered_at: order_attrs[:ordered_at] || DateTime.utc_now(),
       customer_name: order_attrs.customer_name,
       customer_email: order_attrs.customer_email,
       gift: order_attrs.gift,
@@ -473,7 +499,7 @@ for order_attrs <- orders do
       recipient_name: order_attrs[:recipient_name],
       recipient_phone_number: order_attrs[:recipient_phone_number],
       delivery_address: order_attrs[:delivery_address],
-      fulfillment_date: order_attrs.fulfillment_date,
+      fulfillment_date: Date.add(today, order_attrs.days_out),
       fulfillment_option_id: fulfillment_option.id,
       fulfillment_option_name: fulfillment_option.name,
       fulfillment_method: fulfillment_option.fulfillment_method,

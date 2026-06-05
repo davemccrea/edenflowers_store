@@ -63,11 +63,28 @@ Use `<.admin_page width=...>` — never hand-roll `max-w-*`:
   sibling `<p>` with negative margin.
 - **`<.widget title count>`** — dashboard card surface. Owns the frame so every
   widget agrees on border/radius/padding; the **content differs per widget's
-  job** (Open Orders = timeline/agenda; Unreviewed Expenses = triage queue with
+  job** (Upcoming Orders = prep-ledger; Unreviewed Expenses = triage queue with
   amount column). Two widgets must never share the same internal layout.
 - **`<.count_badge count active>`** — pill; `primary/10` when active, muted when 0.
 - **`<.confidence_badge confidence>`** — shared by the expenses table and detail
   view. low→error, medium→warning, high→success.
+- **`<.payment_status_badge status>` / `<.fulfillment_status_badge status>`** —
+  order status pills (paid/fulfilled→success, failed→error, refunded→warning,
+  pending→ghost). These ARE word-badges in a column — the exception to the
+  "status columns are glyphs" rule below, because an order's payment/fulfillment
+  state is a value the operator filters on, not a binary done/not-done glance.
+
+### Dashboard widget signatures (don't converge them)
+
+- **Upcoming Orders = a prep-ledger.** A florist preps to the fulfillment day, so
+  date is the organising axis: each day is a row-group under an `eyebrow` header.
+  **Today** is the signature — a `bg-primary/5 ring-1 ring-primary/15` tinted band
+  given presence; days ahead are plain `divide-y` rows. Rows are full-width
+  (`grid` that collapses `[1fr_auto]`→4-track at `sm:`) so a one-order day wastes
+  no horizontal space. NOT a card grid (sparse days leave dead space) and NOT
+  ungrouped (date is the floral worklist's spine). Gift orders carry an accent
+  badge with the recipient; a trailing pencil inside that badge = "card to write"
+  (presence only — never the message text).
 
 ## Data tables (Cinder)
 

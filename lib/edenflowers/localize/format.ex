@@ -23,6 +23,16 @@ defmodule Edenflowers.Localize.Format do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end
 
+  @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\". For agenda labels."
+  def day_month(date, locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "d MMM")
+  end
+
+  @doc "Localized weekday with day-and-month, e.g. \"Monday 8 Jun\" / \"måndag 8 juni\"."
+  def weekday_day_month(date, locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMM")
+  end
+
   def datetime(datetime, locale, time_zone \\ "Europe/Helsinki") do
     shifted = DateTime.shift_zone!(datetime, time_zone)
     {:ok, date_part} = Localize.Date.to_string(shifted, locale: locale, format: :short)
