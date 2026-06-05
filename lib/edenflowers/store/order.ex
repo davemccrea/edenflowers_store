@@ -140,6 +140,8 @@ defmodule Edenflowers.Store.Order do
     # separate from :open/:completed so table-shaped loads and sorting don't leak
     # into the dashboard/domain split.
     read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+
       filter expr(state == :placed)
 
       prepare build(

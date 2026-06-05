@@ -38,6 +38,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           search={[label: "Customer", placeholder: "Search by name…"]}
           url_state={@url_state}
           show_filters={:toggle}
+          page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
         >
           <:col :let={order} field="customer_name" search label="Customer">
