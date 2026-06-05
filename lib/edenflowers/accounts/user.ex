@@ -193,6 +193,7 @@ defmodule Edenflowers.Accounts.User do
 
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+    calculate :initials, :string, {Edenflowers.Accounts.Calculations.Initials, source: :name}
     calculate :newsletter_subscribed?, :boolean, expr(newsletter_opt_in == true)
     calculate :newsletter_promo_used?, :boolean, expr(newsletter_promo.usage > 0)
   end

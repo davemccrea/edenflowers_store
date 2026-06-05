@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.admin flash={@flash} current_path={@current_path}>
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="full">
         <.admin_page_header title="Orders" />
 
