@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Store.Order
   alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Localize.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -30,6 +31,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     {:ok,
      socket
      |> assign(:page_title, "Dashboard")
+     |> assign(:locale, Localize.get_locale())
      |> assign(:orders_by_date, orders_by_date)
      |> assign(:open_order_count, length(open_orders))
      |> assign(:unreviewed_expenses, unreviewed_expenses)
@@ -46,7 +48,11 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
         <div class="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
           <.orders_widget orders_by_date={@orders_by_date} open_order_count={@open_order_count} today={@today} />
-          <.expenses_widget unreviewed_expenses={@unreviewed_expenses} low_confidence_count={@low_confidence_count} />
+          <.expenses_widget
+            unreviewed_expenses={@unreviewed_expenses}
+            low_confidence_count={@low_confidence_count}
+            locale={@locale}
+          />
         </div>
       </.admin_page>
     </Layouts.admin>
@@ -91,6 +97,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   attr :unreviewed_expenses, :list, required: true
   attr :low_confidence_count, :integer, required: true
+  attr :locale, :any, required: true
 
   defp expenses_widget(assigns) do
     ~H"""
@@ -132,7 +139,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               </span>
             </span>
             <span class="shrink-0 font-mono text-xs tabular-nums text-base-content/55">
-              {expense.total_amount} {expense.currency |> to_string() |> String.upcase()}
+              {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </li>
         </ul>
