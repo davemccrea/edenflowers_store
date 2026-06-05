@@ -5,12 +5,16 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Localize.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, "Expenses")}
+    {:ok,
+     socket
+     |> assign(:page_title, "Expenses")
+     |> assign(:locale, Localize.get_locale())}
   end
 
   @impl true
@@ -29,7 +33,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         >
           <:col :let={expense} field="date" sort label="Date">
             <span class="tabular-nums whitespace-nowrap">
-              {Calendar.strftime(expense.date, "%d %b %Y")}
+              {Format.date(expense.date, @locale)}
             </span>
           </:col>
           <:col :let={expense} field="vendor_name" label="Vendor">
@@ -37,7 +41,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col :let={expense} field="total_amount" sort label="Amount">
             <span class="tabular-nums whitespace-nowrap">
-              {expense.total_amount} {expense.currency |> to_string() |> String.upcase()}
+              {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </:col>
           <:col :let={expense} field="category" filter label="Category">
@@ -48,7 +52,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
             <span :if={expense.reviewed_at} class="inline-flex" title="Reviewed">
-              <.icon name="hero-check" class="h-4 w-4 text-success" />
+              <.icon name="hero-check" class="h-4 w-4 text-base-content" />
               <span class="sr-only">Reviewed</span>
             </span>
             <span :if={is_nil(expense.reviewed_at)} class="text-base-content/30" aria-hidden="true">
