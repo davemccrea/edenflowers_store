@@ -65,9 +65,9 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp orders_widget(assigns) do
     ~H"""
-    <.widget title="Open Orders" count={@open_order_count}>
+    <.widget title="Upcoming Orders" count={@open_order_count}>
       <div :if={@orders_by_date == []} class="py-4 text-center">
-        <p class="text-sm text-base-content/65">No open orders right now</p>
+        <p class="text-sm text-base-content/65">No upcoming orders right now</p>
       </div>
 
       <%!-- A schedule, not a list: a left rule threads the date groups into an agenda. --%>
@@ -89,7 +89,11 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           <ul class="space-y-1.5">
             <li :for={order <- orders} class="flex items-baseline justify-between gap-3 text-sm">
               <span class="text-base-content truncate">{order.customer_name || "—"}</span>
-              <span class="text-base-content/65 font-mono text-xs shrink-0">{order.order_reference}</span>
+              <span class="flex items-center gap-1.5 text-base-content/65 shrink-0">
+                <.icon name={fulfillment_icon(order.fulfillment_method)} class="h-3.5 w-3.5" />
+                <span class="sr-only">{fulfillment_label(order.fulfillment_method)}</span>
+                <span class="font-mono text-xs">{order.order_reference}</span>
+              </span>
             </li>
           </ul>
         </li>
@@ -161,6 +165,14 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     </.widget>
     """
   end
+
+  defp fulfillment_icon(:delivery), do: "hero-truck"
+  defp fulfillment_icon(:pickup), do: "hero-building-storefront"
+  defp fulfillment_icon(_), do: "hero-question-mark-circle"
+
+  defp fulfillment_label(:delivery), do: "Delivery"
+  defp fulfillment_label(:pickup), do: "Pickup"
+  defp fulfillment_label(_), do: "Fulfillment method unknown"
 
   defp format_order_date(date, today) do
     cond do
