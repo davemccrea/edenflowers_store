@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def admin_page(assigns) do
     ~H"""
-    <div class={["px-8 py-8", admin_page_width_class(@width)]}>
+    <div class={["px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8", admin_page_width_class(@width)]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -97,8 +97,8 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section class="bg-base-100 border-base-300/70 rounded-lg border p-5">
-      <div class="mb-4 flex items-start justify-between">
+    <section class="bg-base-100 border-base-300/70 rounded-lg border p-4 sm:p-5">
+      <div class="mb-4 flex items-start justify-between gap-3">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
       </div>
@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="border-base-300/70 mb-8 border-b pb-6">
+    <header class="border-base-300/70 mb-6 pb-5 sm:mb-8 sm:pb-6">
       <div :if={@back} class="mb-4">
         <.link
           navigate={@back}
@@ -125,14 +125,16 @@ defmodule EdenflowersWeb.Admin.Components do
           {@back_label || "Back"}
         </.link>
       </div>
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
-          <h1 class="font-sans text-base-content text-2xl font-semibold tracking-tight">{@title}</h1>
+          <h1 class="font-sans text-base-content text-xl font-semibold tracking-tight sm:text-2xl">
+            {@title}
+          </h1>
           <p :if={@subtitle != []} class="text-base-content/65 mt-1.5 text-sm leading-relaxed">
             {render_slot(@subtitle)}
           </p>
         </div>
-        <div :if={@actions != []} class="mt-0.5 flex shrink-0 items-center gap-2">
+        <div :if={@actions != []} class="flex flex-wrap items-center gap-2 sm:mt-0.5 sm:shrink-0 sm:justify-end">
           {render_slot(@actions)}
         </div>
       </div>
