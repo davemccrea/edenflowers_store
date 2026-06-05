@@ -101,6 +101,15 @@ defmodule EdenflowersWeb.CheckoutLive do
                       data-testid="customer-email-input"
                     />
 
+                    <.input
+                      :if={!@order.newsletter_offer_hidden?}
+                      label={~t"Subscribe to the newsletter to receive 15% off your first order by email."}
+                      field={@form[:newsletter_opt_in]}
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      data-testid="newsletter-opt-in-checkbox"
+                    />
+
                     <.form_button data-testid="step-1-next-button">{~t"Next"}</.form_button>
                   </.form>
                 </section>
@@ -343,24 +352,6 @@ defmodule EdenflowersWeb.CheckoutLive do
       else: []
   end
 
-  attr :rest, :global
-  attr :disabled, :boolean, default: false
-  slot :inner_block
-
-  defp form_button(assigns) do
-    ~H"""
-    <button
-      {@rest}
-      disabled={@disabled}
-      type="submit"
-      class="btn btn-primary btn-lg mt-2 flex flex-row gap-2 phx-submit-loading:btn-disabled"
-    >
-      <span>{render_slot(@inner_block)}</span>
-      <span class="phx-submit-loading:loading-spinner phx-submit-loading:loading"></span>
-    </button>
-    """
-  end
-
   attr :order, :map, required: true
   attr :form, :map, required: true
   attr :id, :string, required: true
@@ -589,7 +580,12 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    {:noreply, reload_order(socket)}
+    # Delivery and pickup are served by different fulfillment calendars, so a
+    # date that was valid for the previous option may not be valid for the
+    # new one. The action clears `:fulfillment_date` on the order; drop the
+    # stale form param so the rebuilt form doesn't shadow that nil with the
+    # date the customer had typed in.
+    {:noreply, reload_order(socket, drop: ["fulfillment_date"])}
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
@@ -752,12 +748,12 @@ defmodule EdenflowersWeb.CheckoutLive do
   # Order
   # =====
 
-  defp reload_order(socket) do
+  defp reload_order(socket, opts \\ []) do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
-    |> assign_forms(order)
+    |> assign_forms(order, opts)
     |> ensure_stripe_for_state(order)
   end
 

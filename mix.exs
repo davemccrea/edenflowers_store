@@ -4,7 +4,7 @@ defmodule Edenflowers.MixProject do
   def project do
     [
       app: :edenflowers,
-      version: "0.3.5",
+      version: "0.4.3",
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -21,7 +21,7 @@ defmodule Edenflowers.MixProject do
           build: [
             "ash-framework": [
               description: "Expert on the Ash Framework ecosystem.",
-              usage_rules: [:ash, ~r/^ash_/]
+              usage_rules: [:ash, ~r/^ash_/, :spark, :reactor, :cinder]
             ],
             "phoenix-framework": [
               description: "Expert on the Phoenix Framework.",
@@ -34,6 +34,14 @@ defmodule Edenflowers.MixProject do
             igniter: [
               description: "Expert on Igniter.",
               usage_rules: [:igniter]
+            ],
+            "req-llm": [
+              description: "Expert on ReqLLM for making LLM API requests.",
+              usage_rules: [:req_llm, :llm_db]
+            ],
+            localize: [
+              description: "Expert on Localize for internationalisation.",
+              usage_rules: [:localize]
             ]
           ]
         ]
@@ -96,6 +104,7 @@ defmodule Edenflowers.MixProject do
        github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
+      {:req_llm, "~> 1.6"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
@@ -110,7 +119,7 @@ defmodule Edenflowers.MixProject do
       {:phoenix_test, "~> 0.8", only: :test, runtime: false},
       {:tz, "~> 0.28"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
-      {:localize, "~> 0.27.0"},
+      {:localize, "~> 0.38.0"},
       {:localize_web, "~> 0.6.0"},
       {:stripity_stripe, "~> 3.2"},
       {:tidewave, "~> 0.1", only: [:dev]},

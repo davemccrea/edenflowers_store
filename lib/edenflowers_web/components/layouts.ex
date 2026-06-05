@@ -118,7 +118,8 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
-        <.flash_group flash={@flash} />
+        <.flash kind={:info} flash={@flash} />
+        <.flash kind={:error} flash={@flash} />
         {render_slot(@inner_block)}
       </main>
 
@@ -351,7 +352,8 @@ defmodule EdenflowersWeb.Layouts do
     </div>
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-      <.flash_group flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
 
       {render_slot(@inner_block)}
     </main>
@@ -426,7 +428,16 @@ defmodule EdenflowersWeb.Layouts do
           </.locale_picker>
 
           <span class="text-xs">
-            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus: 2944459-6 •
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus:
+            <a
+              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              href="https://tietopalvelu.ytj.fi/yritys/2944459-6"
+              target="_blank"
+              rel="noopener"
+            >
+              2944459-6
+            </a>
+            •
             <a
               class="text-base-content link-underline-hover-nav whitespace-nowrap"
               href="https://github.com/davemccrea/edenflowers_store"

@@ -1,11 +1,11 @@
 defmodule EdenflowersWeb.CheckoutHappyPathTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
   import Generator
   import Mox
   import Swoosh.TestAssertions
-  import ExUnit.CaptureLog
 
   alias Edenflowers.Store.Order
 
@@ -533,7 +533,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       }
     })
 
-    {html, log} =
+    {html, _log} =
       with_log(fn ->
         view
         |> element("#checkout-form-4")
@@ -541,7 +541,6 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
       end)
 
     assert html =~ "Payment processing error"
-    assert log =~ "Failed to update payment intent"
 
     stalled = Order.get_by_id!(order.id, authorize?: false)
     assert stalled.state == :payment

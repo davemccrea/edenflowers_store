@@ -173,6 +173,10 @@ defmodule Edenflowers.Accounts.User do
     end
   end
 
+  preparations do
+    prepare build(load: [:newsletter_subscribed?, :newsletter_promo_used?])
+  end
+
   attributes do
     uuid_primary_key :id
 
@@ -189,6 +193,8 @@ defmodule Edenflowers.Accounts.User do
 
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+    calculate :newsletter_subscribed?, :boolean, expr(newsletter_opt_in == true)
+    calculate :newsletter_promo_used?, :boolean, expr(newsletter_promo.usage > 0)
   end
 
   identities do

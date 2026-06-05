@@ -1,7 +1,12 @@
 defmodule Edenflowers.Workers.SendNewsletterPromoEmail do
   use Oban.Worker,
     queue: :default,
-    unique: [fields: [:args], keys: [:email], period: 300, states: [:available, :scheduled, :executing, :completed]]
+    unique: [
+      fields: [:args],
+      keys: [:email],
+      period: 3600,
+      states: [:suspended, :scheduled, :available, :executing, :retryable, :completed]
+    ]
 
   import Edenflowers.Actors
 
