@@ -37,6 +37,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           url_state={@url_state}
           show_filters={:toggle}
+          page_size={[default: 25, options: [10, 25, 50, 100]]}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label="Date">
