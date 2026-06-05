@@ -37,32 +37,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           actor={@current_user}
           search={[label: "Customer", placeholder: "Search by name…"]}
           url_state={@url_state}
+          show_filters={:toggle}
           theme={EdenflowersWeb.Admin.CinderTheme}
         >
-          <:controls :let={controls}>
-            <Cinder.Controls.render_header {controls} />
-
-            <div class="space-y-4">
-              <Cinder.Controls.render_search
-                :if={controls.search}
-                search={controls.search}
-                theme={controls.theme}
-                target={controls.target}
-              />
-
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Cinder.Controls.render_filter
-                  :for={{_name, filter} <- controls.filters}
-                  filter={filter}
-                  theme={controls.theme}
-                  target={controls.target}
-                  filter_values={controls.filter_values}
-                  raw_filter_params={controls.raw_filter_params}
-                />
-              </div>
-            </div>
-          </:controls>
-
           <:col :let={order} field="customer_name" search label="Customer">
             <span class="font-medium">{order.customer_name || "—"}</span>
           </:col>

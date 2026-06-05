@@ -47,14 +47,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </.admin_page_header>
 
         <%!-- Hero: the two facts a reviewer is verifying — the amount, and how much to trust it. --%>
-        <section class="border-base-300/70 mb-10 flex items-end justify-between gap-6 border-b pb-8">
-          <div>
+        <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
+          <div class="min-w-0">
             <p class="eyebrow text-base-content/65 mb-1">Total Amount</p>
-            <p class="font-mono text-base-content text-4xl font-semibold tabular-nums tracking-tight">
+            <p class="font-mono text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
               {Format.amount(@expense.total_amount, @expense.currency, @locale)}
             </p>
           </div>
-          <div class="text-right">
+          <div class="sm:text-right">
             <p class="eyebrow text-base-content/65 mb-1.5">Confidence</p>
             <.confidence_badge confidence={@expense.confidence} />
           </div>
@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
         <section>
           <.form for={@form} phx-submit="correct" phx-change="validate">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input w-full" />
               <.input field={@form[:vendor_vat_number]} type="text" label="VAT Number" class="input w-full" />
               <.input field={@form[:date]} type="date" label="Date" class="input w-full" />
@@ -110,12 +110,12 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 ]}
                 class="select w-full"
               />
-              <div class="col-span-2">
+              <div class="sm:col-span-2">
                 <.input field={@form[:description]} type="textarea" label="Description" class="textarea w-full" />
               </div>
             </div>
             <div class="mt-6">
-              <button type="submit" class="btn btn-primary">Save Corrections</button>
+              <button type="submit" class="btn btn-primary w-full sm:w-auto">Save Corrections</button>
             </div>
           </.form>
         </section>
