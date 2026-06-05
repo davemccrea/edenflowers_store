@@ -181,19 +181,25 @@ defmodule EdenflowersWeb.Layouts do
       </aside>
 
       <div class="flex flex-col flex-1 min-w-0">
-        <%!-- Mobile topbar --%>
-        <div class="lg:hidden flex items-center gap-3 px-4 py-3 bg-base-200 border-b border-base-300/70">
+        <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
+             The trailing spacer matches the button cell so the center column is
+             truly centered on the bar, not on the leftover space. --%>
+        <div class="lg:hidden grid grid-cols-[auto_1fr_auto] items-center px-2 py-2.5 bg-base-200 border-b border-base-300/70">
           <button
             type="button"
             phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label="Open navigation menu"
-            class="cursor-pointer"
+            class="p-2 -m-px rounded-md text-base-content/60 hover:text-base-content active:bg-base-300/50 transition-colors cursor-pointer"
           >
-            <.icon name="hero-bars-3" class="h-5 w-5 text-base-content/60" />
+            <.icon name="hero-bars-3" class="h-5 w-5" />
           </button>
-          <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
+          <.link
+            navigate={~p"/admin"}
+            class="justify-self-center text-primary logo-wordmark text-base tracking-[0.12em] active:text-primary/70 transition-colors"
+          >
             Eden Flowers
           </.link>
+          <span class="w-9" aria-hidden="true"></span>
         </div>
 
         <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
