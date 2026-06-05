@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           id="expenses-table"
           resource={Expense}
           actor={@current_user}
-          theme="daisy_ui"
+          theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label="Date">
@@ -47,8 +47,12 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             <.confidence_badge confidence={expense.confidence} />
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
-            <span :if={expense.reviewed_at} class="badge badge-soft badge-success badge-sm">
-              Reviewed
+            <span :if={expense.reviewed_at} class="inline-flex" title="Reviewed">
+              <.icon name="hero-check" class="h-4 w-4 text-success" />
+              <span class="sr-only">Reviewed</span>
+            </span>
+            <span :if={is_nil(expense.reviewed_at)} class="text-base-content/30" aria-hidden="true">
+              —
             </span>
           </:col>
         </Cinder.collection>
