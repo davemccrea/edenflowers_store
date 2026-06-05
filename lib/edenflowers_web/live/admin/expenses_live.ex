@@ -36,6 +36,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           actor={@current_user}
           theme={EdenflowersWeb.Admin.CinderTheme}
           url_state={@url_state}
+          show_filters={:toggle}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label="Date">
@@ -51,10 +52,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </:col>
-          <:col :let={expense} field="category" filter label="Category" prompt="All categories">
+          <:col
+            :let={expense}
+            field="category"
+            filter={[type: :select, label: "Category", prompt: "All"]}
+          >
             <.category_badge category={expense.category} />
           </:col>
-          <:col :let={expense} field="confidence" filter label="Confidence" prompt="Any confidence">
+          <:col :let={expense} field="confidence" filter={[type: :select, label: "Confidence", prompt: "All"]}>
             <.confidence_badge confidence={expense.confidence} />
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
