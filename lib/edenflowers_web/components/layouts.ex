@@ -290,7 +290,7 @@ defmodule EdenflowersWeb.Layouts do
       {if @live?, do: [navigate: @path], else: [href: @path]}
       class={["flex items-center gap-3 rounded-r px-3 py-2 text-sm transition-colors", if(@active,
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
-    else: "text-base-content/60 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
+    else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
     >
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/40")]} />
       {@label}
@@ -324,7 +324,7 @@ defmodule EdenflowersWeb.Layouts do
         </span>
         <span :if={!@compact} class="min-w-0 text-left">
           <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
-          <span class="text-base-content/55 max-w-44 block truncate text-xs">{@email}</span>
+          <span class="text-base-content/65 max-w-44 block truncate text-xs">{@email}</span>
         </span>
         <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/45 h-4 w-4 shrink-0" />
       </button>
@@ -336,7 +336,7 @@ defmodule EdenflowersWeb.Layouts do
         <li class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
             <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
-            <span class="text-base-content/55 block truncate text-xs">{@email}</span>
+            <span class="text-base-content/65 block truncate text-xs">{@email}</span>
           </span>
         </li>
         <li></li>
