@@ -784,29 +784,6 @@ Hooks.FlashHandler = {
   },
 };
 
-/**
- * Releases the body scroll lock that the drawer's `phx-show` JS applies to
- * `<html>`. The drawer lives in the persistent app layout, so its element is
- * never destroyed across LiveView navigations — that means a navigation while
- * the drawer is open (e.g. browser back after emptying the cart) leaves
- * `overflow-hidden` stuck on `<html>` because no `phx-hide` ever fires.
- *
- * Listening on `phx:page-loading-start` covers patches, live_redirects, and
- * browser back/forward (popstate). The `destroyed()` callback is a belt-and-
- * braces for the case where something does tear the drawer down.
- */
-Hooks.DrawerScrollLock = {
-  mounted() {
-    this.release = () => document.documentElement.classList.remove("overflow-hidden");
-    window.addEventListener("phx:page-loading-start", this.release);
-  },
-
-  destroyed() {
-    window.removeEventListener("phx:page-loading-start", this.release);
-    this.release();
-  },
-};
-
 Hooks.HotFxShyHeader = {
   mounted() {
     this.hideJS = this.el.getAttribute("data-hide");
