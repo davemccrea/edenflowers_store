@@ -40,11 +40,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-    <div class="px-8 py-8 max-w-4xl">
-      <.admin_page_header title="Fulfillment Calendar" />
-      <p class="text-base-content/55 -mt-4 mb-8 text-sm leading-relaxed">
-        Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
-      </p>
+    <.admin_page width="wide">
+      <.admin_page_header title="Fulfillment Calendar">
+        <:subtitle>
+          Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
+        </:subtitle>
+      </.admin_page_header>
 
       <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
         <button
@@ -89,7 +90,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
           </button>
         </div>
       </div>
-    </div>
+    </.admin_page>
     </Layouts.admin>
     """
   end

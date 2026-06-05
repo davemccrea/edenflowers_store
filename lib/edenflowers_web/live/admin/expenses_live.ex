@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-      <div class="px-8 py-8">
+      <.admin_page width="full">
         <.admin_page_header title="Expenses" />
 
         <Cinder.collection
@@ -52,24 +52,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </span>
           </:col>
         </Cinder.collection>
-      </div>
+      </.admin_page>
     </Layouts.admin>
-    """
-  end
-
-  defp confidence_badge(assigns) do
-    ~H"""
-    <span class={[
-      "badge badge-soft badge-sm",
-      case @confidence do
-        :low -> "badge-error"
-        :medium -> "badge-warning"
-        :high -> "badge-success"
-        _ -> "badge-ghost"
-      end
-    ]}>
-      {@confidence}
-    </span>
     """
   end
 
