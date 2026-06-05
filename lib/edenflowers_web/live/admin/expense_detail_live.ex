@@ -49,19 +49,19 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         <%!-- Hero: the two facts a reviewer is verifying — the amount, and how much to trust it. --%>
         <section class="mb-10 flex items-end justify-between gap-6 border-b border-base-300/70 pb-8">
           <div>
-            <p class="eyebrow text-base-content/40 mb-1">Total Amount</p>
+            <p class="eyebrow text-base-content/65 mb-1">Total Amount</p>
             <p class="font-mono text-4xl font-semibold tabular-nums tracking-tight text-base-content">
               {Format.amount(@expense.total_amount, @expense.currency, @locale)}
             </p>
           </div>
           <div class="text-right">
-            <p class="eyebrow text-base-content/40 mb-1.5">Confidence</p>
+            <p class="eyebrow text-base-content/65 mb-1.5">Confidence</p>
             <.confidence_badge confidence={@expense.confidence} />
           </div>
         </section>
 
         <%!-- System facts the reviewer can't edit — kept out of the form. --%>
-        <section class="mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/45">
+        <section class="mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/65">
           <span>
             Document
             <a
@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </section>
 
         <section>
-          <h2 class="text-sm font-semibold text-base-content/45 mb-4">Extracted Data</h2>
+          <h2 class="text-sm font-semibold text-base-content/65 mb-4">Extracted Data</h2>
           <.form for={@form} phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-2 gap-4">
               <.input field={@form[:vendor_name]} type="text" label="Vendor Name" class="input w-full" />

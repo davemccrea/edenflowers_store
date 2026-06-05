@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <span class={[
       "text-sm font-semibold tabular-nums px-2 py-0.5 rounded-full",
-      if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/40")
+      if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")
     ]}>
       {@count}
     </span>
@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <header class="mb-8 pb-6 border-b border-base-300/70">
       <div :if={@back} class="mb-4">
-        <.link navigate={@back} class="inline-flex items-center gap-1 text-xs text-base-content/40 hover:text-base-content/70 transition-colors">
+        <.link navigate={@back} class="inline-flex items-center gap-1 text-xs text-base-content/65 hover:text-base-content transition-colors">
           <.icon name="hero-chevron-left" class="h-3 w-3" />
           {@back_label || "Back"}
         </.link>
@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
           <h1 class="font-sans text-2xl font-semibold text-base-content tracking-tight">{@title}</h1>
-          <p :if={@subtitle != []} class="mt-1.5 text-sm leading-relaxed text-base-content/55">
+          <p :if={@subtitle != []} class="mt-1.5 text-sm leading-relaxed text-base-content/65">
             {render_slot(@subtitle)}
           </p>
         </div>
