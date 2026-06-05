@@ -118,9 +118,40 @@ defmodule Edenflowers.Store.Order do
 
     read :open do
       filter expr(state == :placed and fulfillment_status == :pending)
+
       prepare build(
                 sort: [fulfillment_date: :asc],
-                load: [:customer_name, :order_reference, :fulfillment_date, :fulfillment_option_name, :fulfillment_method]
+                load: [
+                  :customer_name,
+                  :order_reference,
+                  :fulfillment_date,
+                  :fulfillment_option_name,
+                  :fulfillment_method,
+                  :grand_total,
+                  :non_card_line_item_count,
+                  :gift,
+                  :recipient_name,
+                  :card_message
+                ]
+              )
+    end
+
+    # Read-only table feed for the /admin/orders Cinder collection. Deliberately
+    # separate from :open/:completed so table-shaped loads and sorting don't leak
+    # into the dashboard/domain split.
+    read :admin_list do
+      filter expr(state == :placed)
+
+      prepare build(
+                sort: [ordered_at: :desc],
+                load: [
+                  :customer_name,
+                  :fulfillment_date,
+                  :fulfillment_method,
+                  :grand_total,
+                  :payment_status,
+                  :fulfillment_status
+                ]
               )
     end
 

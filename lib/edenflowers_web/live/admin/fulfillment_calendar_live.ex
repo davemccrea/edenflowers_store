@@ -40,57 +40,53 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-    <.admin_page width="wide">
-      <.admin_page_header title="Fulfillment Calendar">
-        <:subtitle>
-          Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
-        </:subtitle>
-      </.admin_page_header>
+      <.admin_page width="wide">
+        <.admin_page_header title="Fulfillment Calendar"></.admin_page_header>
 
-      <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
-        <button
-          type="button"
-          phx-click="set-scope"
-          phx-value-scope="all"
-          class={["btn btn-sm", if(@scope == :all, do: "btn-primary", else: "btn-ghost")]}
-        >
-          All options
-        </button>
-        <button
-          :for={option <- @options}
-          type="button"
-          phx-click="set-scope"
-          phx-value-scope={option.id}
-          class={["btn btn-sm", if(@scope == option.id, do: "btn-primary", else: "btn-ghost")]}
-        >
-          {option.name}
-        </button>
-      </section>
-
-      <div class="flex flex-col gap-8 md:flex-row md:items-start">
-        <div class="w-full max-w-xl">
-          <.admin_calendar
-            id="admin-fulfillment-calendar"
-            scope={@scope}
-            options={@options}
-            today={@today}
-          />
-        </div>
-
-        <div class="flex flex-col gap-4">
-          <.admin_calendar_legend />
+        <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
           <button
             type="button"
-            phx-click="reset-calendar"
-            data-confirm={reset_confirm_message()}
-            aria-label="Reset calendar to defaults"
-            class="btn btn-sm btn-ghost text-error hover:bg-error/10"
+            phx-click="set-scope"
+            phx-value-scope="all"
+            class={["btn btn-sm", if(@scope == :all, do: "btn-primary", else: "btn-ghost")]}
           >
-            Reset
+            All options
           </button>
+          <button
+            :for={option <- @options}
+            type="button"
+            phx-click="set-scope"
+            phx-value-scope={option.id}
+            class={["btn btn-sm", if(@scope == option.id, do: "btn-primary", else: "btn-ghost")]}
+          >
+            {option.name}
+          </button>
+        </section>
+
+        <div class="flex flex-col gap-8 md:flex-row md:items-start">
+          <div class="w-full max-w-xl">
+            <.admin_calendar
+              id="admin-fulfillment-calendar"
+              scope={@scope}
+              options={@options}
+              today={@today}
+            />
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <.admin_calendar_legend />
+            <button
+              type="button"
+              phx-click="reset-calendar"
+              data-confirm={reset_confirm_message()}
+              aria-label="Reset calendar to defaults"
+              class="btn btn-sm btn-ghost text-error hover:bg-error/10"
+            >
+              Reset
+            </button>
+          </div>
         </div>
-      </div>
-    </.admin_page>
+      </.admin_page>
     </Layouts.admin>
     """
   end

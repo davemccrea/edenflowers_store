@@ -6,10 +6,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def count_badge(assigns) do
     ~H"""
-    <span class={[
-      "text-sm font-semibold tabular-nums px-2 py-0.5 rounded-full",
-      if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")
-    ]}>
+    <span class={["rounded-full px-2 py-0.5 text-sm font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
       {@count}
     </span>
     """
@@ -36,21 +33,35 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Extraction-confidence pill, shared by the expenses table and detail view."
   def confidence_badge(assigns) do
     ~H"""
-    <span class={[
-      "badge badge-soft badge-sm capitalize",
-      case @confidence do
-        :low -> "badge-error"
-        :medium -> "badge-warning"
-        :high -> "badge-success"
-        _ -> "badge-ghost"
-      end
-    ]}>
+    <span class={["badge badge-soft badge-sm capitalize", confidence_badge_class(@confidence)]}>
       <span
         :if={@confidence == :low}
-        class="inline-block size-1.5 rounded-full bg-current"
+        class="size-1.5 inline-block rounded-full bg-current"
         aria-hidden="true"
       />
       {@confidence}
+    </span>
+    """
+  end
+
+  attr :status, :atom, required: true
+
+  @doc "Payment-status pill for an order: paid reads as success, failed as error, refunds and pending stay neutral."
+  def payment_status_badge(assigns) do
+    ~H"""
+    <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
+      {@status}
+    </span>
+    """
+  end
+
+  attr :status, :atom, required: true
+
+  @doc "Fulfillment-status pill for an order: fulfilled reads as success, pending stays neutral."
+  def fulfillment_status_badge(assigns) do
+    ~H"""
+    <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
+      {@status}
     </span>
     """
   end
@@ -69,14 +80,7 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def admin_page(assigns) do
     ~H"""
-    <div class={[
-      "px-8 py-8",
-      case @width do
-        "wide" -> "max-w-4xl"
-        "narrow" -> "max-w-2xl"
-        "full" -> nil
-      end
-    ]}>
+    <div class={["px-8 py-8", admin_page_width_class(@width)]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -93,9 +97,9 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section class="bg-base-100 border border-base-300/70 rounded-lg p-5">
-      <div class="flex items-start justify-between mb-4">
-        <h2 class="text-base font-semibold text-base-content">{@title}</h2>
+    <section class="bg-base-100 border-base-300/70 rounded-lg border p-5">
+      <div class="mb-4 flex items-start justify-between">
+        <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
       </div>
       {render_slot(@inner_block)}
@@ -111,25 +115,45 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="mb-8 pb-6 border-b border-base-300/70">
+    <header class="border-base-300/70 mb-8 border-b pb-6">
       <div :if={@back} class="mb-4">
-        <.link navigate={@back} class="inline-flex items-center gap-1 text-xs text-base-content/65 hover:text-base-content transition-colors">
+        <.link
+          navigate={@back}
+          class="text-base-content/65 inline-flex items-center gap-1 text-xs transition-colors hover:text-base-content"
+        >
           <.icon name="hero-chevron-left" class="h-3 w-3" />
           {@back_label || "Back"}
         </.link>
       </div>
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <h1 class="font-sans text-2xl font-semibold text-base-content tracking-tight">{@title}</h1>
-          <p :if={@subtitle != []} class="mt-1.5 text-sm leading-relaxed text-base-content/65">
+          <h1 class="font-sans text-base-content text-2xl font-semibold tracking-tight">{@title}</h1>
+          <p :if={@subtitle != []} class="text-base-content/65 mt-1.5 text-sm leading-relaxed">
             {render_slot(@subtitle)}
           </p>
         </div>
-        <div :if={@actions != []} class="flex items-center gap-2 shrink-0 mt-0.5">
+        <div :if={@actions != []} class="mt-0.5 flex shrink-0 items-center gap-2">
           {render_slot(@actions)}
         </div>
       </div>
     </header>
     """
   end
+
+  defp confidence_badge_class(:low), do: "badge-error"
+  defp confidence_badge_class(:medium), do: "badge-warning"
+  defp confidence_badge_class(:high), do: "badge-success"
+  defp confidence_badge_class(_), do: "badge-ghost"
+
+  defp payment_status_badge_class(:paid), do: "badge-success"
+  defp payment_status_badge_class(:failed), do: "badge-error"
+  defp payment_status_badge_class(:refunded), do: "badge-warning"
+  defp payment_status_badge_class(_), do: "badge-ghost"
+
+  defp fulfillment_status_badge_class(:fulfilled), do: "badge-success"
+  defp fulfillment_status_badge_class(_), do: "badge-ghost"
+
+  defp admin_page_width_class("wide"), do: "max-w-4xl"
+  defp admin_page_width_class("narrow"), do: "max-w-2xl"
+  defp admin_page_width_class("full"), do: nil
 end
