@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Store.Order
   alias Edenflowers.Expenses.Expense
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -72,24 +72,37 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   defp orders_widget(assigns) do
     ~H"""
     <.widget title="Upcoming Orders" count={@open_order_count}>
-      <div :if={@orders_by_date == []} class="py-4 text-center">
-        <p class="text-base-content/65 text-sm">No upcoming orders right now</p>
+      <div :if={@orders_by_date == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
+        <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
+        <p class="text-sm">No upcoming orders right now</p>
       </div>
 
       <%!-- A prep worklist, not a grid: one continuous ledger of day-groups.
-           Today needs no container — it's first, and its heading carries the
-           cue (primary, bold, a leading dot) against the muted future days.
+           Today is the operational priority, so it carries presence — a tinted,
+           ringed band — not just a coloured heading. Future days are plain rows.
            Rows fill the full width so a one-order day wastes no space. --%>
       <div :if={@orders_by_date != []} class="space-y-3">
-        <section :for={{date, orders} <- @orders_by_date}>
-          <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", if(date == @today, do: "text-primary font-bold", else: "text-base-content/65")]}>
-            <span :if={date == @today} aria-hidden="true" class="bg-primary h-1.5 w-1.5 rounded-full" />
+        <section
+          :for={{date, orders} <- @orders_by_date}
+          class={[date == @today && "bg-primary/5 ring-primary/15 rounded-lg pb-1 ring-1"]}
+        >
+          <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", if(date == @today, do: "text-emerald-600 font-bold", else: "text-base-content/65")]}>
+            <span :if={date == @today} aria-hidden="true" class="relative flex h-2 w-2">
+              <span class="bg-emerald-500/75 motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full" />
+              <span class="bg-emerald-500 relative inline-flex h-2 w-2 rounded-full" />
+            </span>
             {format_order_date(date, @today, @locale)}
           </p>
-          <ul class="divide-base-300/50 divide-y">
+          <ul class={["divide-y", if(date == @today, do: "divide-primary/10", else: "divide-base-300/50")]}>
             <.order_row :for={order <- orders} order={order} locale={@locale} />
           </ul>
         </section>
+      </div>
+
+      <div :if={@orders_by_date != []} class="border-base-300/70 mt-4 border-t pt-3">
+        <.link navigate={~p"/admin/orders"} class="text-primary text-sm hover:underline">
+          View all orders →
+        </.link>
       </div>
     </.widget>
     """
@@ -100,39 +113,44 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp order_row(assigns) do
     ~H"""
-    <li>
-      <.link
-        navigate={~p"/admin/orders"}
-        class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2 transition-colors hover:bg-base-200/60 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
-      >
-        <div class="min-w-0">
-          <div class="flex min-w-0 items-center gap-2">
-            <span class="text-base-content truncate font-medium">{@order.customer_name || "—"}</span>
-            <span
-              :if={@order.gift}
-              class="badge badge-soft badge-sm badge-accent inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
-              title={gift_title(@order)}
-            >
-              <.icon name="hero-gift" class="h-3 w-3" />
-              <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
-              <span :if={is_nil(@order.recipient_name)}>Gift</span>
-              <.icon :if={present?(@order.card_message)} name="hero-pencil-square" class="h-3 w-3" />
-              <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
-            </span>
-          </div>
-
-          <p class="text-base-content/65 mt-0.5 flex items-center gap-1 text-xs">
-            <.icon name={fulfillment_icon(@order.fulfillment_method)} class="h-3.5 w-3.5 shrink-0" />
-            <span class="whitespace-nowrap">{fulfillment_label(@order.fulfillment_method)}</span>
-            <span aria-hidden="true" class="text-base-content/40">·</span>
-            <span class="whitespace-nowrap">{item_count_label(@order.non_card_line_item_count)}</span>
-          </p>
+    <li class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2">
+      <div class="min-w-0">
+        <div class="flex min-w-0 items-center gap-2">
+          <span class="text-base-content truncate font-medium">{@order.customer_name || "—"}</span>
+          <span
+            :if={@order.gift}
+            class="badge badge-soft badge-sm badge-neutral inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
+            title={gift_title(@order)}
+          >
+            <.icon name="hero-gift" class="h-3 w-3" />
+            <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
+            <span :if={is_nil(@order.recipient_name)}>Gift</span>
+            <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
+          </span>
         </div>
 
-        <span class="font-mono text-base-content shrink-0 text-right text-sm tabular-nums">
-          {Format.currency(@order.grand_total, @locale)}
-        </span>
-      </.link>
+        <%!-- The prep facts lead: what to make (item count) reads stronger than
+             the order value, which is an accounting number on a worklist. --%>
+        <p class="mt-0.5 flex items-center gap-1 text-xs">
+          <.icon
+            name={fulfillment_icon(@order.fulfillment_method)}
+            class="text-base-content/65 h-3.5 w-3.5 shrink-0"
+          />
+          <span class="text-base-content/65 whitespace-nowrap">{fulfillment_label(@order.fulfillment_method)}</span>
+          <span :if={@order.distance_km} aria-hidden="true" class="text-base-content/40">·</span>
+          <span :if={@order.distance_km} class="text-base-content/65 whitespace-nowrap tabular-nums">
+            {@order.distance_km} km
+          </span>
+          <span aria-hidden="true" class="text-base-content/40">·</span>
+          <span class="text-base-content/85 whitespace-nowrap font-medium">
+            {item_count_label(@order.non_card_line_item_count)}
+          </span>
+        </p>
+      </div>
+
+      <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
+        {Format.currency(@order.grand_total, @locale)}
+      </span>
     </li>
     """
   end
@@ -155,8 +173,9 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   defp expenses_widget(assigns) do
     ~H"""
     <.widget title="Unreviewed Expenses" count={length(@expenses_to_review)}>
-      <div :if={@expenses_to_review == []} class="py-4 text-center">
-        <p class="text-base-content/65 text-sm">All caught up</p>
+      <div :if={@expenses_to_review == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
+        <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
+        <p class="text-sm">All caught up</p>
       </div>
 
       <%!-- A triage queue: the warning leads, rows carry a right-aligned amount column. --%>
@@ -166,7 +185,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           class="bg-warning/10 border-warning/20 mb-3 flex items-center gap-2 rounded border px-3 py-2 text-sm"
         >
           <.icon name="hero-exclamation-triangle" class="text-warning h-3.5 w-3.5 shrink-0" />
-          <span class="text-base-content/80">
+          <span class="text-base-content/85">
             {if @low_confidence_count == 1,
               do: "1 expense needs attention",
               else: "#{@low_confidence_count} expenses need attention"}
@@ -190,8 +209,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
                   <span :if={expense.confidence == :low} class="sr-only">(low confidence)</span>
                 </span>
               </span>
-              <span class="font-mono text-base-content/65 shrink-0 text-xs tabular-nums">
-                {Format.amount(expense.total_amount, expense.currency, @locale)}
+              <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
+                {Format.amount(expense.total_amount, expense.currency, @locale) || "—"}
               </span>
             </.link>
           </li>
@@ -201,7 +220,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           +{length(@expenses_to_review) - 5} more
         </div>
 
-        <div class="border-base-300/50 mt-4 border-t pt-3">
+        <div class="border-base-300/70 mt-4 border-t pt-3">
           <.link navigate={~p"/admin/expenses"} class="text-primary text-sm hover:underline">
             Review all →
           </.link>
@@ -221,7 +240,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp format_order_date(date, today, locale) do
     cond do
-      date == today -> "Today · #{Format.day_month(date, locale)}"
+      date == today -> "Today"
       date == Date.add(today, 1) -> "Tomorrow · #{Format.day_month(date, locale)}"
       true -> Format.weekday_day_month(date, locale)
     end

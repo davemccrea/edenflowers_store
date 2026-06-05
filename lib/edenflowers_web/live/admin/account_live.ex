@@ -34,17 +34,17 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </div>
           </div>
 
-          <dl class="divide-base-300/70 divide-y">
+          <dl class="divide-base-300/50 divide-y">
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/60 text-sm">{~t"Name"}</dt>
+              <dt class="text-base-content/65 text-sm">{~t"Name"}</dt>
               <dd class="text-base-content text-sm">{display_name(@current_user)}</dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/60 text-sm">{~t"Email"}</dt>
+              <dt class="text-base-content/65 text-sm">{~t"Email"}</dt>
               <dd class="text-base-content break-all text-sm">{user_email(@current_user)}</dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/60 text-sm">{~t"Access"}</dt>
+              <dt class="text-base-content/65 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
           </dl>

@@ -43,24 +43,18 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
       <.admin_page width="wide">
         <.admin_page_header title="Fulfillment Calendar"></.admin_page_header>
 
-        <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
-          <button
-            type="button"
-            phx-click="set-scope"
-            phx-value-scope="all"
-            class={["btn btn-sm", if(@scope == :all, do: "btn-primary", else: "btn-ghost")]}
-          >
-            All options
-          </button>
-          <button
-            :for={option <- @options}
-            type="button"
-            phx-click="set-scope"
-            phx-value-scope={option.id}
-            class={["btn btn-sm", if(@scope == option.id, do: "btn-primary", else: "btn-ghost")]}
-          >
-            {option.name}
-          </button>
+        <section class="mb-6 max-w-xs">
+          <form id="scope-form" phx-change="set-scope">
+            <label class="flex flex-col">
+              <span class="fieldset-label mb-1">Fulfillment option</span>
+              <select name="scope" class="select w-full">
+                <option value="all" selected={@scope == :all}>All options</option>
+                <option :for={option <- @options} value={option.id} selected={@scope == option.id}>
+                  {option.name}
+                </option>
+              </select>
+            </label>
+          </form>
         </section>
 
         <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
@@ -80,7 +74,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
               phx-click="reset-calendar"
               data-confirm={reset_confirm_message()}
               aria-label="Reset calendar to defaults"
-              class="btn btn-sm btn-ghost text-error hover:bg-error/10"
+              class="btn btn-sm btn-ghost text-error hover:bg-error/10 self-start"
             >
               Reset
             </button>

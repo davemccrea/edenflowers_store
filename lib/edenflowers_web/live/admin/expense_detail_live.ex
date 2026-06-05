@@ -5,20 +5,27 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    expense = Ash.get!(Expense, id, actor: socket.assigns.current_user)
+    case Ash.get(Expense, id, actor: socket.assigns.current_user) do
+      {:ok, expense} ->
+        {:ok,
+         socket
+         |> assign(:page_title, "Expense — #{expense.vendor_name || id}")
+         |> assign(:locale, Localize.get_locale())
+         |> assign(:expense, expense)
+         |> assign(:form, build_form(expense, socket.assigns.current_user))}
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Expense — #{expense.vendor_name || id}")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:expense, expense)
-     |> assign(:form, build_form(expense, socket.assigns.current_user))}
+      {:error, _} ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Expense not found.")
+         |> push_navigate(to: ~p"/admin/expenses")}
+    end
   end
 
   @impl true
@@ -32,7 +39,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           back_label="Expenses"
         >
           <:actions>
-            <span :if={not is_nil(@expense.reviewed_at)} class="badge badge-soft badge-success gap-1">
+            <span :if={not is_nil(@expense.reviewed_at)} class="badge badge-soft badge-sm badge-success gap-1">
               <.icon name="hero-check" class="h-3 w-3" /> Reviewed
             </span>
             <button
@@ -50,8 +57,8 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
           <div class="min-w-0">
             <p class="eyebrow text-base-content/65 mb-1">Total Amount</p>
-            <p class="font-mono text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
-              {Format.amount(@expense.total_amount, @expense.currency, @locale)}
+            <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
+              {Format.amount(@expense.total_amount, @expense.currency, @locale) || "—"}
             </p>
           </div>
           <div class="sm:text-right">
@@ -114,8 +121,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 <.input field={@form[:description]} type="textarea" label="Description" class="textarea w-full" />
               </div>
             </div>
+            <%!-- Outline, not primary: "Mark as Reviewed" is the page's single
+                 primary CTA. Saving a correction is the secondary path. --%>
             <div class="mt-6">
-              <button type="submit" class="btn btn-primary w-full sm:w-auto">Save Corrections</button>
+              <button type="submit" class="btn btn-outline btn-sm w-full sm:w-auto">Save Corrections</button>
             </div>
           </.form>
         </section>
