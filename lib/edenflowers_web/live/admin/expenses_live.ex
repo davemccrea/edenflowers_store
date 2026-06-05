@@ -44,10 +44,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </:col>
-          <:col :let={expense} field="category" filter label="Category">
-            {format_category(expense.category)}
+          <:col :let={expense} field="category" filter label="Category" prompt="All categories">
+            <.category_badge category={expense.category} />
           </:col>
-          <:col :let={expense} field="confidence" filter label="Confidence">
+          <:col :let={expense} field="confidence" filter label="Confidence" prompt="Any confidence">
             <.confidence_badge confidence={expense.confidence} />
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
@@ -63,10 +63,5 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       </.admin_page>
     </Layouts.admin>
     """
-  end
-
-  defp format_category(nil), do: "—"
-  defp format_category(cat) do
-    cat |> to_string() |> String.replace("_", " ") |> String.capitalize()
   end
 end
