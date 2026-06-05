@@ -139,6 +139,7 @@ defmodule EdenflowersWeb.Layouts do
 
   attr :flash, :map, required: true
   attr :current_path, :string, required: true
+  attr :current_user, :map, required: true
   slot :inner_block, required: true
 
   def admin(assigns) do
@@ -205,7 +206,11 @@ defmodule EdenflowersWeb.Layouts do
           >
             Eden Flowers
           </.link>
-          <span class="w-9" aria-hidden="true"></span>
+          <.admin_account_menu current_user={@current_user} compact={true} />
+        </div>
+
+        <div class="border-base-300/70 hidden items-center justify-end border-b px-8 py-3 lg:flex">
+          <.admin_account_menu current_user={@current_user} />
         </div>
 
         <main id="main-content" tabindex="-1" class="flex-grow pb-12 outline-hidden">
@@ -295,6 +300,93 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_nav_active?(current_path, path, _exact = true), do: current_path == path
   defp admin_nav_active?(current_path, path, _exact = false), do: String.starts_with?(current_path, path)
+
+  attr :current_user, :map, required: true
+  attr :compact, :boolean, default: false
+
+  defp admin_account_menu(assigns) do
+    assigns =
+      assigns
+      |> assign(:display_name, admin_user_display_name(assigns.current_user))
+      |> assign(:email, admin_user_email(assigns.current_user))
+      |> assign(:initials, admin_user_initials(assigns.current_user))
+
+    ~H"""
+    <div class="dropdown dropdown-end">
+      <button
+        type="button"
+        tabindex="0"
+        aria-label={~t"Admin account menu"}
+        class={["inline-flex cursor-pointer items-center rounded-md transition-colors hover:bg-base-300/50 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+      >
+        <span class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+          {@initials}
+        </span>
+        <span :if={!@compact} class="min-w-0 text-left">
+          <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
+          <span class="text-base-content/55 max-w-44 block truncate text-xs">{@email}</span>
+        </span>
+        <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/45 h-4 w-4 shrink-0" />
+      </button>
+
+      <ul
+        tabindex="0"
+        class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 rounded-md border p-1 shadow"
+      >
+        <li class="px-3 py-2">
+          <span class="block p-0 hover:bg-transparent">
+            <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
+            <span class="text-base-content/55 block truncate text-xs">{@email}</span>
+          </span>
+        </li>
+        <li></li>
+        <li>
+          <.link navigate={~p"/admin/account"}>
+            <.icon name="hero-user-circle" class="h-4 w-4" />
+            {~t"Account"}
+          </.link>
+        </li>
+        <li>
+          <.link href={~p"/sign-out"} method="delete">
+            <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
+            {~t"Sign out"}
+          </.link>
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  defp admin_user_display_name(user) do
+    user
+    |> Map.get(:first_name)
+    |> case do
+      first_name when is_binary(first_name) ->
+        first_name = String.trim(first_name)
+        if first_name == "", do: admin_user_email(user), else: first_name
+
+      _ ->
+        admin_user_email(user)
+    end
+  end
+
+  defp admin_user_email(user), do: user |> Map.get(:email) |> to_string()
+
+  defp admin_user_initials(user) do
+    user
+    |> Map.get(:initials)
+    |> case do
+      initials when is_binary(initials) ->
+        initials = String.trim(initials)
+        if initials == "", do: fallback_admin_initial(user), else: initials
+
+      _ ->
+        fallback_admin_initial(user)
+    end
+  end
+
+  defp fallback_admin_initial(user),
+    do: user |> admin_user_email() |> String.first() |> Kernel.||("A") |> String.upcase()
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
