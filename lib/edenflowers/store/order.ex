@@ -30,6 +30,20 @@ defmodule Edenflowers.Store.Order do
     :line_items
   ]
 
+  @admin_show_load [
+    :customer_name,
+    :grand_total,
+    :items_subtotal,
+    :items_tax,
+    :tax,
+    :fulfillment_tax,
+    :discount,
+    :distance_km,
+    :promotion,
+    :fulfillment_option,
+    line_items: [:subtotal]
+  ]
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -44,6 +58,7 @@ defmodule Edenflowers.Store.Order do
     define :get_by_id, action: :by_id, args: [:id]
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
+    define :get_for_admin, action: :admin_show, args: [:id]
     define :get_all_completed, action: :completed
     define :get_all_open, action: :open
     define :submit_contact_details, action: :submit_contact_details
@@ -54,6 +69,7 @@ defmodule Edenflowers.Store.Order do
     define :return_to_delivery, action: :return_to_delivery
     define :finalize_checkout, action: :finalize_checkout
     define :mark_payment_failed, action: :mark_payment_failed
+    define :mark_fulfilled, action: :mark_fulfilled
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :mark_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
@@ -156,6 +172,13 @@ defmodule Edenflowers.Store.Order do
                   :fulfillment_status
                 ]
               )
+    end
+
+    read :admin_show do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id) and state == :placed)
+      get? true
+      prepare build(load: @admin_show_load)
     end
 
     # Create Actions
@@ -275,6 +298,12 @@ defmodule Edenflowers.Store.Order do
       change set_attribute(:payment_status, :failed)
     end
 
+    update :mark_fulfilled do
+      validate attribute_equals(:fulfillment_status, :pending)
+      change set_attribute(:fulfillment_status, :fulfilled)
+      change load(@admin_show_load)
+    end
+
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {Validations.ValidateMinimumCartTotal, []}
@@ -359,6 +388,7 @@ defmodule Edenflowers.Store.Order do
     end
 
     bypass actor_attribute_equals(:admin, true) do
+      authorize_if action(:mark_fulfilled)
       authorize_if action_type(:read)
     end
 
