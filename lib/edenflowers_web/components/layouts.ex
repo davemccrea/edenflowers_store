@@ -137,6 +137,51 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
+  attr :flash, :map, required: true
+  attr :current_path, :string, required: true
+  slot :inner_block, required: true
+
+  def admin(assigns) do
+    nav = [
+      {"/admin/expenses", "Expenses", true},
+      {"/admin/fulfillments", "Calendar", true},
+      {"/admin/oban", "Oban", false},
+      {"/admin/ash", "AshAdmin", false}
+    ]
+
+    assigns = assign(assigns, :nav, nav)
+
+    ~H"""
+    <div class="min-h-screen flex flex-col">
+      <div class="navbar bg-base-200 border-b border-base-300">
+        <div class="navbar-start">
+          <.link navigate={~p"/"} class="text-primary logo-wordmark text-lg px-4">
+            Eden Flowers
+          </.link>
+        </div>
+        <div class="navbar-end">
+          <ul class="menu menu-horizontal px-2">
+            <li :for={{path, label, live?} <- @nav}>
+              <.link
+                {if live?, do: [navigate: path], else: [href: path]}
+                class={if String.starts_with?(@current_path, path) && path != "/admin" || @current_path == path, do: "font-semibold"}
+              >
+                {label}
+              </.link>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
+        <.flash kind={:info} flash={@flash} />
+        <.flash kind={:error} flash={@flash} />
+        {render_slot(@inner_block)}
+      </main>
+    </div>
+    """
+  end
+
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
   attr :order, :map, required: true

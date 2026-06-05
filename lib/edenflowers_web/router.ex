@@ -75,22 +75,24 @@ defmodule EdenflowersWeb.Router do
     )
   end
 
-  scope "/admin", EdenflowersWeb do
+  scope "/admin" do
     pipe_through :browser
 
     ash_authentication_live_session :admin_routes,
-      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}] do
-      live "/fulfillment-calendar", Admin.FulfillmentCalendarLive
+      on_mount: [
+        {EdenflowersWeb.LiveUserAuth, :live_admin_required},
+        EdenflowersWeb.Hooks.PutCurrentPath
+      ] do
+      live "/", EdenflowersWeb.Admin.DashboardLive
+      live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
+      live "/expenses", EdenflowersWeb.Admin.ExpensesLive
+      live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
     end
-  end
-
-  scope "/admin" do
-    pipe_through :browser
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 
     ash_admin(
-      "/",
+      "/ash",
       AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
     )
   end

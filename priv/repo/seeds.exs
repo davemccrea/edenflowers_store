@@ -14,6 +14,7 @@ alias Edenflowers.Accounts.User
 alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
+alias Edenflowers.Expenses.Expense
 
 # Admin user. `admin` is writable?: false on the resource so normal Ash actions
 # can't set it — raw SQL is the appropriate escape hatch for seed setup.
@@ -293,3 +294,36 @@ Promotion
   }
 )
 |> Ash.create!(authorize?: false)
+
+for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
+  {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies, "Printer paper and pens", :high},
+  {"doc-002", "Finnair Oyj", "FI23456789", ~D[2026-01-15], "312.00", "0.00", :eur, :travel, "Flight to Helsinki for supplier meeting", :high},
+  {"doc-003", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :meals, "Team lunch", :medium},
+  {"doc-004", "Adobe Systems", nil, ~D[2026-02-01], "54.99", "0.00", :eur, :software, "Adobe Creative Cloud monthly subscription", :high},
+  {"doc-005", "Vaasan Energia", "FI45678901", ~D[2026-02-10], "189.30", "38.63", :eur, :utilities, "Electricity bill — February", :high},
+  {"doc-006", "Meta Platforms Ireland", nil, ~D[2026-02-14], "120.00", "0.00", :eur, :marketing, "Instagram ad campaign — Valentine's Day", :high},
+  {"doc-007", "Tilitoimisto Laskenta Oy", "FI56789012", ~D[2026-02-28], "450.00", "91.85", :eur, :professional_services, "Monthly bookkeeping", :high},
+  {"doc-008", "Tokmanni", "FI67890123", ~D[2026-03-05], "23.80", "4.86", :eur, :office_supplies, "Cleaning supplies", :medium},
+  {"doc-009", "VR Group", "FI78901234", ~D[2026-03-12], "44.60", "0.00", :eur, :travel, "Train tickets Vaasa–Tampere", :high},
+  {"doc-010", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :meals, "Working lunch during stocktake", :low},
+  {"doc-011", "Google Ireland Limited", nil, ~D[2026-04-01], "29.99", "0.00", :eur, :software, "Google Workspace monthly", :high},
+  {"doc-012", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :other, "Bulk flower stock — spring delivery", :high},
+  {"doc-013", "Elisa Oyj", "FI90123456", ~D[2026-04-07], "39.90", "8.15", :eur, :utilities, "Business mobile subscription", :high},
+  {"doc-014", "Sanoma Media Finland", "FI01234567", ~D[2026-04-18], "600.00", "122.46", :eur, :marketing, "Print ad in local newspaper", :medium},
+  {"doc-015", "Vaasan kaupunki", "FI11223344", ~D[2026-05-01], "210.00", "0.00", :eur, :other, "Annual business licence fee", :high}
+] do
+  Expense
+  |> Ash.Changeset.for_create(:ingest, %{
+    document_id: document_id,
+    vendor_name: vendor,
+    vendor_vat_number: vat,
+    date: date,
+    total_amount: total,
+    vat_amount: vat_amount,
+    currency: currency,
+    category: category,
+    description: description,
+    confidence: confidence
+  })
+  |> Ash.create!(authorize?: false)
+end
