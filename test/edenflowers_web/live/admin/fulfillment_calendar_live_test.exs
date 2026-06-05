@@ -43,18 +43,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   end
 
   describe "scope" do
-    test "defaults to :all and switches when a chip is clicked", %{conn: conn, delivery: delivery} do
+    test "defaults to :all and switches when an option is selected", %{conn: conn, delivery: delivery} do
       {:ok, view, html} = live(conn, ~p"/admin/fulfillments")
 
       assert html =~ "All options"
       assert html =~ "Delivery"
       assert html =~ "Pickup"
 
-      view
-      |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
-      |> render_click()
-
-      assert render(view) =~ "Delivery"
+      assert choose_scope(view, delivery.id) =~ ~r/value="#{delivery.id}"[^>]*selected/
     end
   end
 
@@ -124,9 +120,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     } do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      view
-      |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
-      |> render_click()
+      choose_scope(view, delivery.id)
 
       view
       |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
@@ -149,9 +143,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     } do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      view
-      |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
-      |> render_click()
+      choose_scope(view, delivery.id)
 
       future = next_weekday(:monday)
       today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
@@ -180,9 +172,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     } do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      view
-      |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
-      |> render_click()
+      choose_scope(view, delivery.id)
 
       # Pick a week payload whose weekday dates are all strictly in the future,
       # so the click actually has something to disable. Navigate to next month
@@ -246,9 +236,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      view
-      |> element(~s|button[phx-click="set-scope"][phx-value-scope="#{delivery.id}"]|)
-      |> render_click()
+      choose_scope(view, delivery.id)
 
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
@@ -321,6 +309,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillments"
     end
+  end
+
+  # Switch the calendar scope via the select (name="scope"); "all" or an option id.
+  defp choose_scope(view, scope) do
+    view
+    |> form("#scope-form", %{"scope" => to_string(scope)})
+    |> render_change()
   end
 
   # The component sends results to the parent via send(self(), ...), which
