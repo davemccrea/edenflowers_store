@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
+  import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Layouts
 
@@ -39,21 +40,18 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-    <div class="container mx-auto py-10">
-      <header class="mb-8 max-w-2xl">
-        <p class="eyebrow text-base-content/55 mb-2">Availability</p>
-        <h1 class="page-title">Fulfillment Calendar</h1>
-        <p class="text-base-content/70 mt-3 text-sm leading-relaxed">
-          Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
-        </p>
-      </header>
+    <div class="px-8 py-8 max-w-4xl">
+      <.admin_page_header title="Fulfillment Calendar" />
+      <p class="text-base-content/55 -mt-4 mb-8 text-sm leading-relaxed">
+        Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
+      </p>
 
       <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
         <button
           type="button"
           phx-click="set-scope"
           phx-value-scope="all"
-          class={scope_button_class(@scope == :all)}
+          class={["btn btn-sm", if(@scope == :all, do: "btn-primary", else: "btn-ghost")]}
         >
           All options
         </button>
@@ -62,7 +60,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
           type="button"
           phx-click="set-scope"
           phx-value-scope={option.id}
-          class={scope_button_class(@scope == option.id)}
+          class={["btn btn-sm", if(@scope == option.id, do: "btn-primary", else: "btn-ghost")]}
         >
           {option.name}
         </button>
@@ -85,7 +83,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
             phx-click="reset-calendar"
             data-confirm={reset_confirm_message()}
             aria-label="Reset calendar to defaults"
-            class={reset_button_class()}
+            class="btn btn-sm btn-ghost text-error hover:bg-error/10"
           >
             Reset
           </button>
@@ -150,23 +148,4 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
   defp reset_confirm_message, do: "Are you sure you want to reset the calendar? This action is destructive."
-
-  defp reset_button_class do
-    "self-start rounded px-3.5 py-1.5 text-sm text-base-content/55 " <>
-      "hover:text-base-content/85 hover:bg-error/10 " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
-
-  defp scope_button_class(true) do
-    "rounded border border-primary bg-primary text-primary-content px-3.5 py-1.5 text-sm font-medium " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
-
-  # Inactive chip uses the same hover (`bg-primary/10`) as cells and weekday
-  # headers in CalendarComponent so the whole page reads as one interaction system.
-  defp scope_button_class(false) do
-    "rounded border border-base-content/20 px-3.5 py-1.5 text-sm text-base-content/65 " <>
-      "hover:border-primary/40 hover:text-base-content/85 hover:bg-primary/10 " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
 end
