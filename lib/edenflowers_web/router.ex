@@ -88,6 +88,7 @@ defmodule EdenflowersWeb.Router do
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
+      live "/account", EdenflowersWeb.Admin.AccountLive
     end
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
