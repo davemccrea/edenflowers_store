@@ -67,26 +67,29 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <.widget title="Open Orders" count={@open_order_count}>
       <div :if={@orders_by_date == []} class="py-4 text-center">
-        <p class="text-sm text-base-content/40">No open orders right now</p>
+        <p class="text-sm text-base-content/65">No open orders right now</p>
       </div>
 
       <%!-- A schedule, not a list: a left rule threads the date groups into an agenda. --%>
       <ol :if={@orders_by_date != []} class="relative space-y-5 border-l border-base-300/70 pl-5">
         <li :for={{date, orders} <- @orders_by_date} class="relative">
-          <span class={[
-            "absolute -left-[1.4rem] top-1 h-2 w-2 rounded-full ring-4 ring-base-100",
-            if(date == @today, do: "bg-primary", else: "bg-base-300")
-          ]} />
+          <span
+            aria-hidden="true"
+            class={[
+              "absolute -left-[1.4rem] top-1 h-2 w-2 rounded-full ring-4 ring-base-100",
+              if(date == @today, do: "bg-primary", else: "bg-base-300")
+            ]}
+          />
           <p class={[
             "eyebrow mb-1.5",
-            if(date == @today, do: "text-primary", else: "text-base-content/40")
+            if(date == @today, do: "text-primary", else: "text-base-content/65")
           ]}>
             {format_order_date(date, @today)}
           </p>
           <ul class="space-y-1.5">
             <li :for={order <- orders} class="flex items-baseline justify-between gap-3 text-sm">
               <span class="text-base-content truncate">{order.customer_name || "—"}</span>
-              <span class="text-base-content/40 font-mono text-xs shrink-0">{order.order_reference}</span>
+              <span class="text-base-content/65 font-mono text-xs shrink-0">{order.order_reference}</span>
             </li>
           </ul>
         </li>
@@ -103,7 +106,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <.widget title="Unreviewed Expenses" count={length(@unreviewed_expenses)}>
       <div :if={@unreviewed_expenses == []} class="py-4 text-center">
-        <p class="text-sm text-base-content/40">All caught up</p>
+        <p class="text-sm text-base-content/65">All caught up</p>
       </div>
 
       <%!-- A triage queue: the warning leads, rows carry a right-aligned amount column. --%>
@@ -128,23 +131,24 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             <span class="flex min-w-0 items-center gap-2">
               <span
                 :if={expense.confidence == :low}
+                aria-hidden="true"
                 class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
-                title="Low confidence"
               />
               <span class={[
                 "truncate text-base-content",
                 expense.confidence == :low && "font-medium"
               ]}>
                 {expense.vendor_name || "Unknown"}
+                <span :if={expense.confidence == :low} class="sr-only">(low confidence)</span>
               </span>
             </span>
-            <span class="shrink-0 font-mono text-xs tabular-nums text-base-content/55">
+            <span class="shrink-0 font-mono text-xs tabular-nums text-base-content/65">
               {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
           </li>
         </ul>
 
-        <div :if={length(@unreviewed_expenses) > 5} class="mt-2 text-xs text-base-content/35">
+        <div :if={length(@unreviewed_expenses) > 5} class="mt-2 text-xs text-base-content/65">
           +{length(@unreviewed_expenses) - 5} more
         </div>
 

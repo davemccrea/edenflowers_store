@@ -68,19 +68,19 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   def admin_calendar_legend(assigns) do
     ~H"""
     <aside class="text-sm md:max-w-xs md:pt-2">
-      <h2 class="eyebrow text-base-content/55 mb-3">Legend</h2>
+      <h2 class="eyebrow text-base-content/65 mb-3">Legend</h2>
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-center">
           <span class={legend_swatch(:closed)}></span>
-          <span>Closed for bookings <span class="text-base-content/55">— not selectable by customers</span></span>
+          <span>Closed for bookings <span class="text-base-content/65">— not selectable by customers</span></span>
         </li>
         <li class="flex items-center">
           <span class={legend_swatch(:override)}></span>
-          <span>Manually changed <span class="text-base-content/55">— your override on this date</span></span>
+          <span>Manually changed <span class="text-base-content/65">— your override on this date</span></span>
         </li>
         <li class="flex items-center">
           <span class={legend_swatch(:mixed)}></span>
-          <span>Varies by option <span class="text-base-content/55">— switch to a single option to edit</span></span>
+          <span>Varies by option <span class="text-base-content/65">— switch to a single option to edit</span></span>
         </li>
       </ul>
     </aside>
@@ -145,7 +145,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
 
   defp week_class(state) do
     base =
-      "flex items-center justify-center rounded text-base-content/55 " <>
+      "flex items-center justify-center rounded text-base-content/65 " <>
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
 
     case state do
@@ -155,7 +155,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       :all_closed ->
         # Click re-opens what's closed by override. Muted to signal that the
         # default direction is "open" — the opposite of every other state.
-        "#{base} cursor-pointer text-base-content/35 hover:bg-primary/10 hover:text-base-content/65"
+        "#{base} cursor-pointer text-base-content/65 hover:bg-primary/10 hover:text-base-content"
 
       _open_or_mixed ->
         "#{base} cursor-pointer hover:bg-primary/10 hover:text-base-content/85"
