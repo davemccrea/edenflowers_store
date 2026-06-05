@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           show_filters={:toggle}
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
+          click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
           <:col :let={order} field="customer_name" search label="Customer">
             <span class="font-medium">{order.customer_name || "—"}</span>
