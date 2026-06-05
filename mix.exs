@@ -66,6 +66,7 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:cinder, "~> 0.14"},
       {:usage_rules, "~> 1.1", only: [:dev]},
       {:ash_authentication_phoenix, "~> 3.0.0-rc.4"},
       {:simple_sat, "~> 0.1"},

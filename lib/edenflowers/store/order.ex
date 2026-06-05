@@ -45,6 +45,7 @@ defmodule Edenflowers.Store.Order do
     define :get_by_order_reference, action: :by_order_reference, args: [:order_reference]
     define :get_for_checkout, action: :for_checkout, args: [:id]
     define :get_all_completed, action: :completed
+    define :get_all_open, action: :open
     define :submit_contact_details, action: :submit_contact_details
     define :submit_gift_options, action: :submit_gift_options
     define :submit_delivery, action: :submit_delivery
@@ -113,6 +114,11 @@ defmodule Edenflowers.Store.Order do
 
     read :completed do
       filter expr(state == :placed)
+    end
+
+    read :open do
+      filter expr(state == :placed and fulfillment_status == :pending)
+      prepare build(sort: [fulfillment_date: :asc], load: [:customer_name, :order_reference, :fulfillment_date, :fulfillment_option_name])
     end
 
     # Create Actions

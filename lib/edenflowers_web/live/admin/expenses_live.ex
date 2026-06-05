@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Admin.Components
+
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Expenses.Expense
 
@@ -15,39 +17,64 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path}>
-      <div class="container mx-auto py-10">
-        <header class="mb-8">
-          <p class="eyebrow text-base-content/55 mb-2">Finance</p>
-          <h1 class="page-title">Expenses</h1>
-        </header>
+      <div class="px-8 py-8">
+        <.admin_page_header title="Expenses" />
 
         <Cinder.collection
           id="expenses-table"
           resource={Expense}
           actor={@current_user}
+          theme="daisy_ui"
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label="Date">
-            {expense.date}
+            <span class="tabular-nums whitespace-nowrap">
+              {Calendar.strftime(expense.date, "%d %b %Y")}
+            </span>
           </:col>
           <:col :let={expense} field="vendor_name" label="Vendor">
-            {expense.vendor_name}
+            <span class="font-medium">{expense.vendor_name || "—"}</span>
           </:col>
           <:col :let={expense} field="total_amount" sort label="Amount">
-            {expense.total_amount} {expense.currency}
+            <span class="tabular-nums whitespace-nowrap">
+              {expense.total_amount} {expense.currency |> to_string() |> String.upcase()}
+            </span>
           </:col>
           <:col :let={expense} field="category" filter label="Category">
-            {expense.category}
+            {format_category(expense.category)}
           </:col>
           <:col :let={expense} field="confidence" filter label="Confidence">
-            {expense.confidence}
+            <.confidence_badge confidence={expense.confidence} />
           </:col>
           <:col :let={expense} field="reviewed_at" label="Reviewed">
-            {if expense.reviewed_at, do: "✓", else: ""}
+            <span :if={expense.reviewed_at} class="badge badge-soft badge-success badge-sm">
+              Reviewed
+            </span>
           </:col>
         </Cinder.collection>
       </div>
     </Layouts.admin>
     """
+  end
+
+  defp confidence_badge(assigns) do
+    ~H"""
+    <span class={[
+      "badge badge-soft badge-sm",
+      case @confidence do
+        :low -> "badge-error"
+        :medium -> "badge-warning"
+        :high -> "badge-success"
+        _ -> "badge-ghost"
+      end
+    ]}>
+      {@confidence}
+    </span>
+    """
+  end
+
+  defp format_category(nil), do: "—"
+  defp format_category(cat) do
+    cat |> to_string() |> String.replace("_", " ") |> String.capitalize()
   end
 end
