@@ -142,45 +142,151 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def admin(assigns) do
-    nav = [
-      {"/admin/expenses", "Expenses", true},
-      {"/admin/fulfillments", "Calendar", true},
-      {"/admin/oban", "Oban", false},
-      {"/admin/ash", "AshAdmin", false}
+    primary_nav = [
+      {"/admin", "Dashboard", true, "hero-squares-2x2"},
+      {"/admin/expenses", "Expenses", true, "hero-document-text"},
+      {"/admin/fulfillments", "Calendar", true, "hero-calendar-days"}
     ]
 
-    assigns = assign(assigns, :nav, nav)
+    system_nav = [
+      {"/admin/oban", "Oban", false, "hero-cpu-chip"},
+      {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
+    ]
+
+    assigns =
+      assigns
+      |> assign(:primary_nav, primary_nav)
+      |> assign(:system_nav, system_nav)
 
     ~H"""
-    <div class="min-h-screen flex flex-col">
-      <div class="navbar bg-base-200 border-b border-base-300">
-        <div class="navbar-start">
-          <.link navigate={~p"/"} class="text-primary logo-wordmark text-lg px-4">
+    <div class="min-h-screen lg:flex">
+      <%!-- Mobile: slide-in drawer --%>
+      <.drawer id="admin-nav-drawer" placement="left" label="Admin navigation" class="bg-base-200 border-r border-base-300 w-64 flex flex-col h-full">
+        <.admin_sidebar_content
+          primary_nav={@primary_nav}
+          system_nav={@system_nav}
+          current_path={@current_path}
+          closeable={true}
+        />
+      </.drawer>
+
+      <%!-- Desktop: persistent sidebar --%>
+      <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-base-200 border-r border-base-300 min-h-screen">
+        <.admin_sidebar_content
+          primary_nav={@primary_nav}
+          system_nav={@system_nav}
+          current_path={@current_path}
+          closeable={false}
+        />
+      </aside>
+
+      <div class="flex flex-col flex-1 min-w-0">
+        <%!-- Mobile topbar --%>
+        <div class="lg:hidden flex items-center gap-3 px-4 py-3 bg-base-200 border-b border-base-300/70">
+          <button
+            type="button"
+            phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
+            aria-label="Open navigation menu"
+            class="cursor-pointer"
+          >
+            <.icon name="hero-bars-3" class="h-5 w-5 text-base-content/60" />
+          </button>
+          <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
             Eden Flowers
           </.link>
         </div>
-        <div class="navbar-end">
-          <ul class="menu menu-horizontal px-2">
-            <li :for={{path, label, live?} <- @nav}>
-              <.link
-                {if live?, do: [navigate: path], else: [href: path]}
-                class={if String.starts_with?(@current_path, path) && path != "/admin" || @current_path == path, do: "font-semibold"}
-              >
-                {label}
-              </.link>
-            </li>
-          </ul>
-        </div>
-      </div>
 
-      <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-        <.flash kind={:info} flash={@flash} />
-        <.flash kind={:error} flash={@flash} />
-        {render_slot(@inner_block)}
-      </main>
+        <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
+          <.flash kind={:info} flash={@flash} />
+          <.flash kind={:error} flash={@flash} />
+          {render_slot(@inner_block)}
+        </main>
+      </div>
     </div>
     """
   end
+
+  attr :primary_nav, :list, required: true
+  attr :system_nav, :list, required: true
+  attr :current_path, :string, required: true
+  attr :closeable, :boolean, required: true
+
+  defp admin_sidebar_content(assigns) do
+    ~H"""
+    <div class="flex flex-col h-full py-5">
+      <div class="flex items-center justify-between mb-6 px-5">
+        <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
+          Eden Flowers
+        </.link>
+        <button
+          :if={@closeable}
+          type="button"
+          phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
+          aria-label="Close navigation menu"
+          class="cursor-pointer"
+        >
+          <.icon name="hero-x-mark" class="h-5 w-5 text-base-content/40 hover:text-base-content/70" />
+        </button>
+      </div>
+
+      <nav class="flex-1 px-3 space-y-0.5">
+        <.admin_nav_item
+          :for={{path, label, live?, icon} <- @primary_nav}
+          path={path}
+          label={label}
+          live?={live?}
+          icon={icon}
+          current_path={@current_path}
+          exact={path == "/admin"}
+        />
+      </nav>
+
+      <div class="mt-auto px-3 pt-4 border-t border-base-300/70">
+        <p class="px-3 mb-1 text-xs text-base-content/35">System</p>
+        <.admin_nav_item
+          :for={{path, label, live?, icon} <- @system_nav}
+          path={path}
+          label={label}
+          live?={live?}
+          icon={icon}
+          current_path={@current_path}
+          exact={false}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr :path, :string, required: true
+  attr :label, :string, required: true
+  attr :live?, :boolean, required: true
+  attr :icon, :string, required: true
+  attr :current_path, :string, required: true
+  attr :exact, :boolean, default: false
+
+  defp admin_nav_item(assigns) do
+    assigns =
+      assign(assigns, :active, admin_nav_active?(assigns.current_path, assigns.path, assigns.exact))
+
+    ~H"""
+    <.link
+      {if @live?, do: [navigate: @path], else: [href: @path]}
+      class={[
+        "flex items-center gap-3 px-3 py-2 text-sm transition-colors rounded-r",
+        if(@active,
+          do: "border-l-2 border-primary text-base-content font-medium bg-base-300/50",
+          else: "border-l-2 border-transparent text-base-content/60 hover:bg-base-300/40 hover:text-base-content"
+        )
+      ]}
+    >
+      <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/40")]} />
+      {@label}
+    </.link>
+    """
+  end
+
+  defp admin_nav_active?(current_path, path, _exact = true), do: current_path == path
+  defp admin_nav_active?(current_path, path, _exact = false), do: String.starts_with?(current_path, path)
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
