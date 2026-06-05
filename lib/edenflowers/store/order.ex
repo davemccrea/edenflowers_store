@@ -118,7 +118,10 @@ defmodule Edenflowers.Store.Order do
 
     read :open do
       filter expr(state == :placed and fulfillment_status == :pending)
-      prepare build(sort: [fulfillment_date: :asc], load: [:customer_name, :order_reference, :fulfillment_date, :fulfillment_option_name])
+      prepare build(
+                sort: [fulfillment_date: :asc],
+                load: [:customer_name, :order_reference, :fulfillment_date, :fulfillment_option_name, :fulfillment_method]
+              )
     end
 
     # Create Actions
