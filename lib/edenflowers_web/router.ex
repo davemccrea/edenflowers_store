@@ -85,6 +85,7 @@ defmodule EdenflowersWeb.Router do
       ] do
       live "/", EdenflowersWeb.Admin.DashboardLive
       live "/orders", EdenflowersWeb.Admin.OrdersLive
+      live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
