@@ -15,13 +15,29 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :category, :atom, default: nil
+
+  @doc "Neutral tag for an expense category. Humanises the enum and renders an em-dash when unset."
+  def category_badge(assigns) do
+    ~H"""
+    <span :if={@category} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
+      {humanize_category(@category)}
+    </span>
+    <span :if={is_nil(@category)} class="text-base-content/30" aria-hidden="true">—</span>
+    """
+  end
+
+  defp humanize_category(category) do
+    category |> to_string() |> String.replace("_", " ") |> String.capitalize()
+  end
+
   attr :confidence, :atom, required: true
 
   @doc "Extraction-confidence pill, shared by the expenses table and detail view."
   def confidence_badge(assigns) do
     ~H"""
     <span class={[
-      "badge badge-soft badge-sm",
+      "badge badge-soft badge-sm capitalize",
       case @confidence do
         :low -> "badge-error"
         :medium -> "badge-warning"
@@ -29,6 +45,11 @@ defmodule EdenflowersWeb.Admin.Components do
         _ -> "badge-ghost"
       end
     ]}>
+      <span
+        :if={@confidence == :low}
+        class="inline-block size-1.5 rounded-full bg-current"
+        aria-hidden="true"
+      />
       {@confidence}
     </span>
     """
