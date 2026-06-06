@@ -4,7 +4,7 @@ defmodule Edenflowers.DispatchTest do
 
   alias Edenflowers.Dispatch
   alias Edenflowers.HereTourPlanning.{Assignment, Plan, Stop}
-  alias Edenflowers.Store.{DeliveryRoute, DeliveryStop, DeliveryTrip}
+  alias Edenflowers.Store.{DeliveryAttempt, DeliveryRoute, DeliveryStop, DeliveryTrip, Order}
   alias Edenflowers.Workers.SendDriverRouteEmail
 
   @date ~D[2026-06-07]
@@ -136,6 +136,86 @@ defmodule Edenflowers.DispatchTest do
       assert DeliveryRoute.for_date!(@date, actor: %{admin: true}) |> length() == route_count_before
       assert DeliveryStop |> Ash.read!(authorize?: false) |> length() == 1
       assert DeliveryTrip |> Ash.read!(authorize?: false) |> length() == 1
+    end
+  end
+
+  describe "record_outcome/2" do
+    defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+
+    defp publish_stop(date) do
+      driver = generate(driver())
+      order = generate_delivery_order(date)
+      admin = generate(admin_user())
+
+      assignment = %Assignment{
+        vehicle_id: driver.id,
+        stops: [%Stop{order_id: order.id, sequence: 1, leg_distance: 1000, leg_duration: 600}],
+        total_distance: 1000,
+        total_driving_duration: 600,
+        total_service_duration: 300
+      }
+
+      {:ok, _} =
+        Dispatch.publish(%Plan{assignments: [assignment]}, %{delivery_date: date, published_by_user_id: admin.id})
+
+      {DeliveryStop |> Ash.read!(authorize?: false) |> hd(), order}
+    end
+
+    defp generate_delivery_order(date) do
+      generate(
+        order(
+          state: :placed,
+          payment_status: :paid,
+          fulfillment_status: :pending,
+          fulfillment_method: :delivery,
+          fulfillment_date: date,
+          position: "63.1,21.6"
+        )
+      )
+    end
+
+    test "a delivered outcome creates an attempt and fulfils the order" do
+      {stop, order} = publish_stop(store_today())
+
+      {:ok, attempt} =
+        Dispatch.record_outcome(stop.id, %{
+          outcome: :delivered,
+          delivered_method: :handed_to_recipient,
+          actor_kind: :driver_link
+        })
+
+      assert attempt.outcome == :delivered
+      assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :fulfilled
+    end
+
+    test "records an admin-entered outcome with the acting admin" do
+      {stop, _order} = publish_stop(store_today())
+      admin = generate(admin_user())
+
+      {:ok, attempt} =
+        Dispatch.record_outcome(stop.id, %{
+          outcome: :failed,
+          failure_reason: :recipient_unavailable,
+          actor_kind: :admin,
+          recorded_by_user_id: admin.id
+        })
+
+      assert attempt.actor_kind == :admin
+      assert attempt.recorded_by_user_id == admin.id
+    end
+
+    test "rejects an outcome once the route's date has passed" do
+      {stop, order} = publish_stop(Date.add(store_today(), -1))
+
+      assert {:error, :expired} =
+               Dispatch.record_outcome(stop.id, %{
+                 outcome: :delivered,
+                 delivered_method: :handed_to_recipient,
+                 actor_kind: :driver_link
+               })
+
+      assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :pending
+      assert DeliveryAttempt |> Ash.read!(authorize?: false) == []
     end
   end
 end

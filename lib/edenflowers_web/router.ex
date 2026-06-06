@@ -31,6 +31,16 @@ defmodule EdenflowersWeb.Router do
     plug :set_actor, :user
   end
 
+  # Secret driver links are bearer credentials in the URL. Suppress the Referer
+  # header so the token can't leak to third parties via outbound navigation.
+  pipeline :no_referrer do
+    plug :put_no_referrer
+  end
+
+  defp put_no_referrer(conn, _opts) do
+    Plug.Conn.put_resp_header(conn, "referrer-policy", "no-referrer")
+  end
+
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
@@ -60,6 +70,12 @@ defmodule EdenflowersWeb.Router do
     get "/checkout/complete/:id", CheckoutCompleteController, :index
     get "/locale/:locale", LocaleController, :index
 
+    # Public, unauthenticated driver route reached by secret token.
+    scope "/deliveries" do
+      pipe_through :no_referrer
+      live "/:token", DeliveryRouteLive
+    end
+
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
@@ -88,6 +104,7 @@ defmodule EdenflowersWeb.Router do
       live "/orders", EdenflowersWeb.Admin.OrdersLive
       live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
       live "/deliveries", EdenflowersWeb.Admin.DeliveriesLive
+      live "/deliveries/route/:id", EdenflowersWeb.Admin.RouteLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive

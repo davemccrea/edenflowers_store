@@ -22,6 +22,7 @@ defmodule Edenflowers.Dispatch do
   alias Edenflowers.Repo
 
   alias Edenflowers.Store.{
+    DeliveryAttempt,
     DeliveryBatch,
     DeliveryRoute,
     DeliveryStop,
@@ -70,6 +71,105 @@ defmodule Edenflowers.Dispatch do
         {:error, reason}
     end
   end
+
+  @timezone "Europe/Helsinki"
+
+  @doc """
+  Records a delivery attempt against a stop.
+
+  In one transaction it creates the immutable attempt and, for a delivered
+  outcome, marks the order fulfilled. Mutations are rejected once the route's
+  date has passed (the secret link's expiry). After commit it broadcasts progress
+  to the route and the day's monitoring topic.
+
+  `attrs` carries `:outcome`, the outcome-specific `:delivered_method` or
+  `:failure_reason`, an optional `:note`, `:actor_kind` (`:driver_link` |
+  `:admin`), an optional `:recorded_by_user_id`, and optional photo metadata.
+  """
+  def record_outcome(stop_id, attrs) do
+    case load_stop(stop_id) do
+      nil -> {:error, :not_found}
+      stop -> record_outcome_for(stop, attrs)
+    end
+  end
+
+  defp record_outcome_for(stop, attrs) do
+    route = stop.delivery_trip.delivery_route
+
+    if route.delivery_date != store_today() do
+      {:error, :expired}
+    else
+      result =
+        Repo.transaction(fn ->
+          with {:ok, attempt} <- create_attempt(stop, attrs),
+               :ok <- maybe_mark_delivered(stop, attrs) do
+            attempt
+          else
+            {:error, reason} -> Repo.rollback(reason)
+          end
+        end)
+
+      case result do
+        {:ok, attempt} ->
+          broadcast({:route_progress, route.id}, "delivery_route:#{route.id}")
+          broadcast({:route_progress, route.id}, "deliveries:#{route.delivery_date}")
+          {:ok, attempt}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+  end
+
+  defp load_stop(stop_id) do
+    require Ash.Query
+
+    DeliveryStop
+    |> Ash.Query.filter(id == ^stop_id)
+    |> Ash.Query.load([:order, delivery_trip: [:delivery_route]])
+    |> Ash.read_one(authorize?: false)
+    |> case do
+      {:ok, stop} -> stop
+      _ -> nil
+    end
+  end
+
+  defp create_attempt(stop, attrs) do
+    params =
+      attrs
+      |> Map.take([
+        :outcome,
+        :delivered_method,
+        :failure_reason,
+        :note,
+        :actor_kind,
+        :recorded_by_user_id,
+        :photo_path,
+        :photo_media_type,
+        :photo_original_filename,
+        :photo_byte_size
+      ])
+      |> Map.put(:delivery_stop_id, stop.id)
+      |> Map.put(:recorded_at, DateTime.utc_now())
+
+    DeliveryAttempt
+    |> Ash.Changeset.for_create(:create, params, actor: @system)
+    |> insert()
+  end
+
+  defp maybe_mark_delivered(%{order: order}, %{outcome: :delivered}) do
+    order
+    |> Ash.Changeset.for_update(:mark_delivered, %{}, actor: @system)
+    |> run_update()
+    |> case do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp maybe_mark_delivered(_stop, _attrs), do: :ok
+
+  defp store_today, do: DateTime.now!(@timezone) |> DateTime.to_date()
 
   defp create_batch(date, user_id) do
     DeliveryBatch
@@ -257,6 +357,13 @@ defmodule Edenflowers.Dispatch do
   # batch to avoid Ash's in-transaction "missed notifications" warning.
   defp insert(changeset) do
     case Ash.create(changeset, return_notifications?: true) do
+      {:ok, record, _notifications} -> {:ok, record}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp run_update(changeset) do
+    case Ash.update(changeset, return_notifications?: true) do
       {:ok, record, _notifications} -> {:ok, record}
       {:error, reason} -> {:error, reason}
     end
