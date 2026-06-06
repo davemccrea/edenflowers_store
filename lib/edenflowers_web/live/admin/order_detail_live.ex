@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               :if={@order.fulfillment_status == :pending}
               type="button"
               phx-click="mark_fulfilled"
-              data-confirm={~t"Mark this order as fulfilled? This action is irreversible and cannot be undone."}
+              data-confirm={~t"Mark this order as fulfilled?"}
               class="btn btn-primary btn-sm shrink-0"
             >
               {~t"Mark as fulfilled"}
