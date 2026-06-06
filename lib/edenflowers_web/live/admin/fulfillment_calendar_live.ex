@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Fulfillment Calendar")
+     |> assign(:page_title, ~t"Fulfillment Calendar")
      |> assign(:options, options)
      |> assign(:scope, :all)
      |> assign(:today, today())}
@@ -41,14 +41,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="wide">
-        <.admin_page_header title="Fulfillment Calendar"></.admin_page_header>
+        <.admin_page_header title={~t"Fulfillment Calendar"}></.admin_page_header>
 
         <section class="mb-6 max-w-xs">
           <form id="scope-form" phx-change="set-scope">
             <label class="flex flex-col">
-              <span class="fieldset-label mb-1">Fulfillment option</span>
+              <span class="fieldset-label mb-1">{~t"Fulfillment option"}</span>
               <select name="scope" class="select w-full">
-                <option value="all" selected={@scope == :all}>All options</option>
+                <option value="all" selected={@scope == :all}>{~t"All options"}</option>
                 <option :for={option <- @options} value={option.id} selected={@scope == option.id}>
                   {option.name}
                 </option>
@@ -73,10 +73,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
               type="button"
               phx-click="reset-calendar"
               data-confirm={reset_confirm_message()}
-              aria-label="Reset calendar to defaults"
+              aria-label={~t"Reset calendar to defaults"}
               class="btn btn-sm btn-ghost text-error self-start hover:bg-error/10"
             >
-              Reset
+              {~t"Reset"}
             </button>
           </div>
         </div>
@@ -138,5 +138,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
-  defp reset_confirm_message, do: "Are you sure you want to reset the calendar? This action is destructive."
+  defp reset_confirm_message,
+    do: ~t"Are you sure you want to reset the calendar? This action is destructive."
 end

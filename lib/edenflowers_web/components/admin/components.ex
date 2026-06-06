@@ -25,7 +25,17 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   defp humanize_category(category) do
-    category |> to_string() |> String.split("_") |> Enum.map_join(" ", &String.capitalize/1)
+    case category do
+      :office_supplies -> ~t"Office Supplies"
+      :travel -> ~t"Travel"
+      :meals -> ~t"Meals"
+      :software -> ~t"Software"
+      :marketing -> ~t"Marketing"
+      :utilities -> ~t"Utilities"
+      :professional_services -> ~t"Professional Services"
+      :other -> ~t"Other"
+      _ -> to_string(category)
+    end
   end
 
   attr :confidence, :atom, required: true
@@ -39,7 +49,7 @@ defmodule EdenflowersWeb.Admin.Components do
         class="inline-block h-1.5 w-1.5 rounded-full bg-current"
         aria-hidden="true"
       />
-      {@confidence}
+      {confidence_label(@confidence)}
     </span>
     """
   end
@@ -50,7 +60,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def payment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
-      {@status}
+      {payment_status_label(@status)}
     </span>
     """
   end
@@ -61,7 +71,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def fulfillment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
-      {@status}
+      {fulfillment_status_label(@status)}
     </span>
     """
   end
@@ -122,7 +132,7 @@ defmodule EdenflowersWeb.Admin.Components do
           class="text-base-content/65 inline-flex items-center gap-1 text-xs transition-colors hover:text-base-content"
         >
           <.icon name="hero-chevron-left" class="h-3 w-3" />
-          {@back_label || "Back"}
+          {@back_label || ~t"Back"}
         </.link>
       </div>
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -147,13 +157,28 @@ defmodule EdenflowersWeb.Admin.Components do
   defp confidence_badge_class(:high), do: "badge-success"
   defp confidence_badge_class(_), do: "badge-ghost"
 
+  defp confidence_label(:low), do: ~t"Low"
+  defp confidence_label(:medium), do: ~t"Medium"
+  defp confidence_label(:high), do: ~t"High"
+  defp confidence_label(value), do: to_string(value)
+
   defp payment_status_badge_class(:paid), do: "badge-success"
   defp payment_status_badge_class(:failed), do: "badge-error"
   defp payment_status_badge_class(:refunded), do: "badge-warning"
   defp payment_status_badge_class(_), do: "badge-ghost"
 
+  defp payment_status_label(:paid), do: ~t"Paid"
+  defp payment_status_label(:failed), do: ~t"Failed"
+  defp payment_status_label(:refunded), do: ~t"Refunded"
+  defp payment_status_label(:pending), do: ~t"Pending"
+  defp payment_status_label(value), do: to_string(value)
+
   defp fulfillment_status_badge_class(:fulfilled), do: "badge-success"
   defp fulfillment_status_badge_class(_), do: "badge-ghost"
+
+  defp fulfillment_status_label(:fulfilled), do: ~t"Fulfilled"
+  defp fulfillment_status_label(:pending), do: ~t"Pending"
+  defp fulfillment_status_label(value), do: to_string(value)
 
   defp admin_page_width_class("wide"), do: "max-w-4xl"
   defp admin_page_width_class("narrow"), do: "max-w-2xl"

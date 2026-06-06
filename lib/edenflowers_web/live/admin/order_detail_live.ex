@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <li :for={line_item <- @line_items} class="flex gap-4 py-4 first:pt-0 last:pb-0">
         <.image
           src={line_item.product_image_slug}
-          alt={"Image of #{line_item.product_name}"}
+          alt={~t"Image of #{line_item.product_name}"}
           width={64}
           height={64}
           sizes="64px"
@@ -412,7 +412,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           loading="lazy"
           class="block h-44 w-full object-cover"
         />
-        <div class="bg-base-100 group-hover:bg-base-200/50 flex items-center justify-center gap-1.5 px-3 py-2 text-sm transition-colors">
+        <div class="bg-base-100 flex items-center justify-center gap-1.5 px-3 py-2 text-sm transition-colors group-hover:bg-base-200/50">
           <.icon name="hero-map-pin" class="text-base-content/60 h-4 w-4" />
           <span class="link link-primary">{~t"Get directions"}</span>
           <.icon name="hero-arrow-top-right-on-square" class="text-base-content/40 h-3.5 w-3.5" />
