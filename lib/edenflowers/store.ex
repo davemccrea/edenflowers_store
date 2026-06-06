@@ -18,5 +18,11 @@ defmodule Edenflowers.Store do
     resource Edenflowers.Store.OpeningHours
     resource Edenflowers.Store.Order
     resource Edenflowers.Store.LineItem
+    resource Edenflowers.Store.Driver
+    resource Edenflowers.Store.DeliveryBatch
+    resource Edenflowers.Store.DeliveryRoute
+    resource Edenflowers.Store.DeliveryTrip
+    resource Edenflowers.Store.DeliveryStop
+    resource Edenflowers.Store.DeliveryAttempt
   end
 end

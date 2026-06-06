@@ -12,7 +12,8 @@ defmodule Generator do
     ProductVariant,
     Order,
     LineItem,
-    FulfillmentOption
+    FulfillmentOption,
+    Driver
   }
 
   # seed_generator bypasses actions so we can set :admin directly
@@ -151,6 +152,19 @@ defmodule Generator do
         available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
         enabled_dates: [],
         disabled_dates: []
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  def driver(opts \\ []) do
+    changeset_generator(Driver, :create,
+      defaults: %{
+        name: sequence(:driver_name, &"Driver #{&1}"),
+        email: sequence(:driver_email, &"driver#{&1}@example.com"),
+        preferred_locale: "en-GB",
+        active: true
       },
       overrides: opts,
       authorize?: false
