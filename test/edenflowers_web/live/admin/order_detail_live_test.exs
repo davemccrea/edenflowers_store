@@ -24,12 +24,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "h1", "Ada Lovelace")
-    assert has_element?(view, "header", order.order_reference)
+    assert has_element?(view, "h1", order.order_reference)
+    assert has_element?(view, "header", "Ada Lovelace")
     assert has_element?(view, "header", "Payment")
     assert has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
     assert has_element?(view, "#order-fulfillment-summary", "2026")
+    assert has_element?(view, "#order-people", "Ada Lovelace")
+    assert has_element?(view, "#order-people", "ada@example.com")
+    assert has_element?(view, ~s|#order-people a[href^="https://app.fastmail.com/mail/search:"]|)
+    assert has_element?(view, "#order-timeline", "Order placed")
     assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
@@ -51,14 +55,46 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
-  test "shows recipient gift context and fulfillment option in the operational summary", %{conn: conn} do
+  test "shows recipient gift context in the people block and method in the summary", %{conn: conn} do
     order = placed_order(gift: true, recipient_name: "Grace Hopper")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-fulfillment-summary", "Grace Hopper")
-    assert has_element?(view, "#order-fulfillment-summary", "Gift")
+    assert has_element?(view, "#order-people", "Grace Hopper")
+    assert has_element?(view, "#order-people", "Gift")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
+    # Gift is also surfaced prominently in the header, matching the dashboard.
+    assert has_element?(view, "header", "Grace Hopper")
+  end
+
+  test "timeline reflects a refunded payment as a received-but-refunded state", %{conn: conn} do
+    order = placed_order(payment_status: :refunded)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-timeline", "Refunded")
+  end
+
+  test "omits the recipient block when there is no distinct recipient", %{conn: conn} do
+    order = placed_order()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-people", "Customer")
+    refute has_element?(view, "#order-people", "Recipient")
+  end
+
+  test "offers a directions link for a delivery order even without geocoded coordinates", %{conn: conn} do
+    order =
+      placed_order(
+        fulfillment_method: :delivery,
+        delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
+        position: nil
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-fulfillment-summary a[href*='maps/dir']", "Get directions")
   end
 
   test "redirects missing orders back to the admin orders table", %{conn: conn} do
