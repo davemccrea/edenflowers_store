@@ -74,24 +74,15 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-start">
           <span class={legend_swatch(:closed)}></span>
-          <span>
-            {~t"Closed for bookings"}
-            <span class="text-base-content/65">{~t"— not selectable by customers"}</span>
-          </span>
+          <span>{~t"Unavailable to customers"}</span>
         </li>
         <li class="flex items-start">
           <span class={legend_swatch(:override)}></span>
-          <span>
-            {~t"Manually changed"}
-            <span class="text-base-content/65">{~t"— your override on this date"}</span>
-          </span>
+          <span>{~t"Differs from the weekly schedule"}</span>
         </li>
         <li class="flex items-start">
           <span class={legend_swatch(:mixed)}></span>
-          <span>
-            {~t"Varies by option"}
-            <span class="text-base-content/65">{~t"— switch to a single option to edit"}</span>
-          </span>
+          <span>{~t"Options have different settings"}</span>
         </li>
       </ul>
     </aside>
