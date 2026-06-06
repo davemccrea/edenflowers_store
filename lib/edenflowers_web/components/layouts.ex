@@ -152,6 +152,7 @@ defmodule EdenflowersWeb.Layouts do
     primary_nav = [
       {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
       {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
+      {"/admin/deliveries", ~t"Deliveries", true, "hero-truck"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"}
     ]

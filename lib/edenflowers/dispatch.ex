@@ -33,6 +33,12 @@ defmodule Edenflowers.Dispatch do
 
   @system %{system: true}
 
+  # The shop is the start of every route, matching HereAPI's geocoding origin.
+  @shop %{lat: 63.1243488, lng: 21.5974075}
+
+  @doc "Shop coordinates — the start location for every optimized route."
+  def shop_position, do: @shop
+
   @doc """
   Publishes `plan` for `delivery_date`.
 
