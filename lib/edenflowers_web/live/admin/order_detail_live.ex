@@ -162,40 +162,36 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </main>
 
           <aside class="space-y-6">
-            <.detail_section id="order-people" title={~t"People"}>
-              <div class="divide-base-300/70 divide-y">
-                <.person_block label={~t"Customer"} name={@order.customer_name}>
-                  <:contact :if={@order.customer_email}>
-                    <a
-                      href={fastmail_search_url(@order.customer_email)}
-                      target="_blank"
-                      rel="noopener"
-                      class="link link-primary inline-flex items-center gap-1.5"
-                      title={~t"Search Fastmail for this address"}
-                    >
-                      <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
-                      <span class="break-all">{@order.customer_email}</span>
-                    </a>
-                  </:contact>
-                </.person_block>
+            <.detail_section id="order-customer" title={~t"Customer"}>
+              <.person_block name={@order.customer_name}>
+                <:contact :if={@order.customer_email}>
+                  <a
+                    href={fastmail_search_url(@order.customer_email)}
+                    target="_blank"
+                    rel="noopener"
+                    class="link link-primary inline-flex items-center gap-1.5"
+                    title={~t"Search Fastmail for this address"}
+                  >
+                    <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
+                    <span class="break-all">{@order.customer_email}</span>
+                  </a>
+                </:contact>
+                <:contact :if={!@order.gift && present?(@order.recipient_phone_number)}>
+                  <.phone_link phone_number={@order.recipient_phone_number} />
+                </:contact>
+              </.person_block>
+            </.detail_section>
 
-                <.person_block
-                  :if={present?(@order.recipient_name)}
-                  label={~t"Recipient"}
-                  name={@order.recipient_name}
-                  gift={@order.gift}
-                >
-                  <:contact :if={present?(@order.recipient_phone_number)}>
-                    <a
-                      href={"tel:#{@order.recipient_phone_number}"}
-                      class="link link-primary inline-flex items-center gap-1.5"
-                    >
-                      <.icon name="hero-phone" class="h-3.5 w-3.5 shrink-0" />
-                      {@order.recipient_phone_number}
-                    </a>
-                  </:contact>
-                </.person_block>
-              </div>
+            <.detail_section
+              :if={@order.gift && present?(@order.recipient_name)}
+              id="order-recipient"
+              title={~t"Recipient"}
+            >
+              <.person_block name={@order.recipient_name}>
+                <:contact :if={present?(@order.recipient_phone_number)}>
+                  <.phone_link phone_number={@order.recipient_phone_number} />
+                </:contact>
+              </.person_block>
             </.detail_section>
 
             <.detail_section id="order-timeline" title={~t"Timeline"}>
@@ -293,27 +289,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  attr :label, :string, required: true
   attr :name, :string, default: nil
-  attr :gift, :boolean, default: false
   slot :contact
 
   defp person_block(assigns) do
     ~H"""
-    <div class="py-3 first:pt-0 last:pb-0">
-      <div class="mb-1 flex items-center gap-1.5">
-        <p class="eyebrow text-base-content/65">{@label}</p>
-        <span
-          :if={@gift}
-          class="badge badge-soft badge-sm badge-neutral ml-auto inline-flex items-center gap-1"
-        >
-          <span aria-hidden="true">🎁</span>
-          <span>{~t"Gift"}</span>
-        </span>
-      </div>
+    <div>
       <p class="text-base-content text-base font-medium">{@name || "—"}</p>
       <div :for={contact <- @contact} class="mt-1.5 text-sm">{render_slot(contact)}</div>
     </div>
+    """
+  end
+
+  attr :phone_number, :string, required: true
+
+  defp phone_link(assigns) do
+    ~H"""
+    <a
+      href={"tel:#{@phone_number}"}
+      class="link link-primary inline-flex items-center gap-1.5"
+    >
+      <.icon name="hero-phone" class="h-3.5 w-3.5 shrink-0" />
+      {@phone_number}
+    </a>
     """
   end
 
