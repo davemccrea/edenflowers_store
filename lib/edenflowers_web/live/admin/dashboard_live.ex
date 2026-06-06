@@ -77,10 +77,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         <p class="text-sm">No upcoming orders right now</p>
       </div>
 
-      <%!-- A prep worklist, not a grid: one continuous ledger of day-groups.
-           Today is the operational priority, so it carries presence — a tinted,
-           ringed band — not just a coloured heading. Future days are plain rows.
-           Rows fill the full width so a one-order day wastes no space. --%>
       <div :if={@orders_by_date != []} class="space-y-3">
         <section
           :for={{date, orders} <- @orders_by_date}
@@ -126,20 +122,15 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               class="badge badge-soft badge-sm badge-neutral inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
               title={gift_title(@order)}
             >
-              <.icon name="hero-gift" class="h-3 w-3" />
+              <span aria-hidden="true">🎁</span>
               <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
               <span :if={is_nil(@order.recipient_name)}>Gift</span>
               <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
             </span>
           </div>
 
-          <%!-- The prep facts lead: what to make (item count) reads stronger than
-               the order value, which is an accounting number on a worklist. --%>
           <p class="mt-0.5 flex items-center gap-1 text-xs">
-            <.icon
-              name={fulfillment_icon(@order.fulfillment_method)}
-              class="text-base-content/65 h-3.5 w-3.5 shrink-0"
-            />
+            <span aria-hidden="true" class="shrink-0 leading-none">{fulfillment_emoji(@order.fulfillment_method)}</span>
             <span class="text-base-content/65 whitespace-nowrap">{fulfillment_label(@order.fulfillment_method)}</span>
             <span :if={@order.distance_km} aria-hidden="true" class="text-base-content/40">·</span>
             <span :if={@order.distance_km} class="text-base-content/65 whitespace-nowrap tabular-nums">
@@ -183,7 +174,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         <p class="text-sm">All caught up</p>
       </div>
 
-      <%!-- A triage queue: the warning leads, rows carry a right-aligned amount column. --%>
       <div :if={@expenses_to_review != []}>
         <div
           :if={@low_confidence_count > 0}
@@ -235,9 +225,9 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     """
   end
 
-  defp fulfillment_icon(:delivery), do: "hero-truck"
-  defp fulfillment_icon(:pickup), do: "hero-building-storefront"
-  defp fulfillment_icon(_), do: "hero-question-mark-circle"
+  defp fulfillment_emoji(:delivery), do: "🚚"
+  defp fulfillment_emoji(:pickup), do: "🛍️"
+  defp fulfillment_emoji(_), do: "❓"
 
   defp fulfillment_label(:delivery), do: "Delivery"
   defp fulfillment_label(:pickup), do: "Pickup"
