@@ -22,13 +22,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   test "renders a placed order detail page", %{conn: conn} do
     order = placed_order()
 
-    {:ok, _view, html} = live(conn, ~p"/admin/orders/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert html =~ order.order_reference
-    assert html =~ "Ada Lovelace"
-    assert html =~ "Product"
-    assert html =~ "pi_test_order_detail"
-    assert html =~ "Mark as fulfilled"
+    assert has_element?(view, "h1", "Ada Lovelace")
+    assert has_element?(view, "header", order.order_reference)
+    assert has_element?(view, "header", "Payment")
+    assert has_element?(view, "header", "Fulfillment")
+    assert has_element?(view, "#order-fulfillment-summary", "Pickup")
+    assert has_element?(view, "#order-fulfillment-summary", "2026")
+    assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
+    refute has_element?(view, "#order-technical-details")
+    assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
   end
 
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
@@ -36,15 +40,25 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    html =
-      view
-      |> element(~s|button[phx-click="mark_fulfilled"]|)
-      |> render_click()
+    view
+    |> element(~s|button[phx-click="mark_fulfilled"]|)
+    |> render_click()
 
-    assert html =~ "Fulfilled"
+    refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+    assert has_element?(view, ".badge-success", "fulfilled")
 
     reloaded = Order.get_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
+  end
+
+  test "shows recipient gift context and fulfillment option in the operational summary", %{conn: conn} do
+    order = placed_order(gift: true, recipient_name: "Grace Hopper")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-fulfillment-summary", "Grace Hopper")
+    assert has_element?(view, "#order-fulfillment-summary", "Gift")
+    assert has_element?(view, "#order-fulfillment-summary", "Pickup")
   end
 
   test "redirects missing orders back to the admin orders table", %{conn: conn} do
@@ -53,15 +67,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert {:error, {:live_redirect, %{to: "/admin/orders"}}} = live(conn, ~p"/admin/orders/#{missing_id}")
   end
 
-  defp placed_order do
+  defp placed_order(overrides \\ []) do
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "42.00"))
     fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id, name: "Pickup"))
 
-    order =
-      generate(
-        order(
+    attrs =
+      Keyword.merge(
+        [
           state: :placed,
           order_reference: "EF-DETAIL",
           customer_name: "Ada Lovelace",
@@ -77,8 +91,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
           payment_intent_id: "pi_test_order_detail",
           ordered_at: DateTime.utc_now(),
           locale: "en-GB"
-        )
+        ],
+        overrides
       )
+
+    order = generate(order(attrs))
 
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
     order
