@@ -30,9 +30,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
     assert has_element?(view, "#order-fulfillment-summary", "2026")
-    assert has_element?(view, "#order-people", "Ada Lovelace")
-    assert has_element?(view, "#order-people", "ada@example.com")
-    assert has_element?(view, ~s|#order-people a[href^="https://app.fastmail.com/mail/search:"]|)
+    assert has_element?(view, "#order-customer", "Ada Lovelace")
+    assert has_element?(view, "#order-customer", "ada@example.com")
+    assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
     assert has_element?(view, "#order-timeline", "Order placed")
     assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
     refute has_element?(view, "#order-technical-details")
@@ -55,13 +55,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
-  test "shows recipient gift context in the people block and method in the summary", %{conn: conn} do
-    order = placed_order(gift: true, recipient_name: "Grace Hopper")
+  test "shows customer and recipient as separate sections for a gift order", %{conn: conn} do
+    order =
+      placed_order(
+        gift: true,
+        recipient_name: "Grace Hopper",
+        recipient_phone_number: "040 123 4567"
+      )
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-people", "Grace Hopper")
-    assert has_element?(view, "#order-people", "Gift")
+    assert has_element?(view, "#order-customer", "Ada Lovelace")
+    assert has_element?(view, "#order-recipient", "Grace Hopper")
+    assert has_element?(view, ~s|#order-recipient a[href="tel:040 123 4567"]|)
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
     # Gift is also surfaced prominently in the header, matching the dashboard.
     assert has_element?(view, "header", "Grace Hopper")
@@ -75,13 +81,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-timeline", "Refunded")
   end
 
-  test "omits the recipient block when there is no distinct recipient", %{conn: conn} do
-    order = placed_order()
+  test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
+    order = placed_order(recipient_phone_number: "040 123 4567")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-people", "Customer")
-    refute has_element?(view, "#order-people", "Recipient")
+    assert has_element?(view, "#order-customer", "Customer")
+    assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
+    refute has_element?(view, "#order-recipient")
   end
 
   test "offers a directions link for a delivery order even without geocoded coordinates", %{conn: conn} do
