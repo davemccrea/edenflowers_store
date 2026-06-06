@@ -514,7 +514,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp maps_dir_url(destination) do
     "https://www.google.com/maps/dir/?api=1" <>
       "&origin=#{URI.encode_www_form(@shop_origin)}" <>
-      "&destination=#{URI.encode_www_form(destination)}"
+      "&destination=#{URI.encode_www_form(destination)}" <>
+      "&travelmode=driving"
   end
 
   defp fastmail_search_url(email) do

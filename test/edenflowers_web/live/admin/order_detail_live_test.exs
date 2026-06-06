@@ -94,7 +94,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-fulfillment-summary a[href*='maps/dir']", "Get directions")
+    assert has_element?(
+             view,
+             "#order-fulfillment-summary a[href*='maps/dir'][href*='travelmode=driving']",
+             "Get directions"
+           )
+  end
+
+  test "uses driving directions for a geocoded delivery order", %{conn: conn} do
+    order =
+      placed_order(
+        fulfillment_method: :delivery,
+        delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
+        position: "63.0951,21.6165"
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(
+             view,
+             "#order-fulfillment-summary a[href*='destination=63.0951%2C21.6165'][href*='travelmode=driving']"
+           )
   end
 
   test "redirects missing orders back to the admin orders table", %{conn: conn} do
