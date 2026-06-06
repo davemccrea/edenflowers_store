@@ -6,13 +6,13 @@ defmodule EdenflowersWeb.DeliveryRouteShared do
   only in how they authorize and who is recorded as the actor.
   """
   import Phoenix.Component, only: [assign: 3]
-  import Phoenix.LiveView, only: [put_flash: 3]
+  import Phoenix.LiveView, only: [put_flash: 3, consume_uploaded_entries: 3]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Ash.Query
 
-  alias Edenflowers.Dispatch
+  alias Edenflowers.{Dispatch, ProofPhotos}
   alias Edenflowers.Store.DeliveryRoute
 
   @order_load [
@@ -106,7 +106,13 @@ defmodule EdenflowersWeb.DeliveryRouteShared do
   the dialog on success; surfaces validation and expiry as flashes.
   """
   def submit_outcome(params, socket, actor_info) do
-    attrs = params |> parse_outcome_params() |> Map.merge(actor_info)
+    photo = consume_photo(socket)
+
+    attrs =
+      params
+      |> parse_outcome_params()
+      |> Map.merge(actor_info)
+      |> Map.merge(photo || %{})
 
     case Dispatch.record_outcome(socket.assigns.active_stop_id, attrs) do
       {:ok, _attempt} ->
@@ -122,7 +128,21 @@ defmodule EdenflowersWeb.DeliveryRouteShared do
         |> put_flash(:error, ~t"This route has expired.")
 
       {:error, _reason} ->
+        # The original was written before the failed transaction — remove the orphan.
+        ProofPhotos.delete(photo[:photo_path])
         put_flash(socket, :error, ~t"Could not record the outcome. Check the form and try again.")
+    end
+  end
+
+  # Writes the one optional proof photo (if any) and returns its attempt metadata.
+  defp consume_photo(socket) do
+    socket
+    |> consume_uploaded_entries(:photo, fn %{path: tmp_path}, entry ->
+      {:ok, ProofPhotos.store(tmp_path, entry)}
+    end)
+    |> case do
+      [{:ok, metadata}] -> metadata
+      _ -> nil
     end
   end
 

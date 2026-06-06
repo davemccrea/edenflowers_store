@@ -24,6 +24,7 @@ defmodule EdenflowersWeb.DeliveryRouteComponents do
   attr :expired?, :boolean, default: false
   attr :active_stop, :any, default: nil
   attr :outcome, :string, default: "delivered"
+  attr :uploads, :any, default: nil
   attr :locale, :string, required: true
 
   def route_page(assigns) do
@@ -50,7 +51,7 @@ defmodule EdenflowersWeb.DeliveryRouteComponents do
         </li>
       </ol>
 
-      <.outcome_dialog :if={@active_stop} stop={@active_stop} outcome={@outcome} />
+      <.outcome_dialog :if={@active_stop} stop={@active_stop} outcome={@outcome} uploads={@uploads} />
     </div>
     """
   end
@@ -197,6 +198,7 @@ defmodule EdenflowersWeb.DeliveryRouteComponents do
 
   attr :stop, :any, required: true
   attr :outcome, :string, required: true
+  attr :uploads, :any, required: true
 
   defp outcome_dialog(assigns) do
     ~H"""
@@ -251,6 +253,26 @@ defmodule EdenflowersWeb.DeliveryRouteComponents do
             <textarea name="note" rows="2" class="textarea textarea-bordered textarea-sm"></textarea>
           </label>
 
+          <div :if={@uploads} class="form-control">
+            <span class="label-text mb-1">{~t"Proof photo (optional)"}</span>
+            <.live_file_input upload={@uploads.photo} class="file-input file-input-bordered file-input-sm w-full" />
+
+            <div :for={entry <- @uploads.photo.entries} class="mt-2 flex items-center gap-2">
+              <.live_img_preview entry={entry} class="h-16 w-16 rounded object-cover" />
+              <button
+                type="button"
+                class="btn btn-xs btn-ghost"
+                phx-click="cancel_upload"
+                phx-value-ref={entry.ref}
+              >
+                {~t"Remove"}
+              </button>
+              <p :for={err <- upload_errors(@uploads.photo, entry)} class="text-error text-xs">
+                {upload_error_label(err)}
+              </p>
+            </div>
+          </div>
+
           <div class="modal-action">
             <button type="button" class="btn btn-sm btn-ghost" phx-click="close_outcome">
               {~t"Cancel"}
@@ -267,6 +289,11 @@ defmodule EdenflowersWeb.DeliveryRouteComponents do
     stop.order.line_items
     |> Enum.reject(& &1.is_card)
   end
+
+  defp upload_error_label(:too_large), do: ~t"File is too large (max 20 MB)"
+  defp upload_error_label(:not_accepted), do: ~t"This file type is not accepted"
+  defp upload_error_label(:too_many_files), do: ~t"Only one photo is allowed"
+  defp upload_error_label(_), do: ~t"Could not upload this file"
 
   defp failure_reason_label(:recipient_unavailable), do: ~t"Recipient unavailable"
   defp failure_reason_label(:could_not_access_address), do: ~t"Could not access address"

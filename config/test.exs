@@ -66,3 +66,6 @@ config :edenflowers, :here_tour_planning, Edenflowers.HereTourPlanning.Mock
 config :edenflowers, :papra_client, Edenflowers.Papra.Mock
 config :edenflowers, :claude_client, Edenflowers.Claude.Mock
 config :edenflowers, :papra_webhook_secret, "test-webhook-secret"
+
+# Proof photos write to a throwaway tmp dir in tests.
+config :edenflowers, :proof_photo_root, Path.join(System.tmp_dir!(), "edenflowers_test_proof_photos")

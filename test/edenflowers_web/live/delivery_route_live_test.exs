@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.DeliveryRouteLiveTest do
 
   alias Edenflowers.Dispatch
   alias Edenflowers.HereTourPlanning.{Assignment, Plan, Stop}
-  alias Edenflowers.Store.{DeliveryStop, Order}
+  alias Edenflowers.Store.{DeliveryAttempt, DeliveryStop, Order}
 
   defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
@@ -126,6 +126,33 @@ defmodule EdenflowersWeb.DeliveryRouteLiveTest do
     |> render_submit()
 
     assert render(view) =~ "Route complete"
+  end
+
+  test "records a delivered outcome with a proof photo written to disk", %{conn: conn} do
+    %{token: token, stop: stop} = publish_route(today())
+
+    {:ok, view, _html} = live(conn, ~p"/deliveries/#{token}")
+
+    view |> element("button[phx-value-stop-id='#{stop.id}']") |> render_click()
+
+    photo =
+      file_input(view, "form[phx-submit=record_outcome]", :photo, [
+        %{name: "proof.jpg", content: "FAKEJPEGBYTES", type: "image/jpeg"}
+      ])
+
+    render_upload(photo, "proof.jpg")
+
+    view
+    |> form("form[phx-submit=record_outcome]", %{outcome: "delivered", delivered_method: "handed_to_recipient"})
+    |> render_submit()
+
+    attempt = DeliveryAttempt |> Ash.read!(authorize?: false) |> hd()
+    assert attempt.photo_path
+    assert attempt.photo_media_type == "image/jpeg"
+    assert attempt.photo_original_filename == "proof.jpg"
+
+    root = Application.fetch_env!(:edenflowers, :proof_photo_root)
+    assert File.exists?(Path.join(root, attempt.photo_path))
   end
 
   test "an expired route is read-only with no record action", %{conn: conn} do

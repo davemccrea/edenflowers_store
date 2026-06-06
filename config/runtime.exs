@@ -101,6 +101,12 @@ if config_env() in [:prod, :dev] do
 end
 
 if config_env() == :prod do
+  # Persistent volume that Phoenix writes proof-photo originals to (read/write)
+  # and imgproxy mounts read-only at its local-files root.
+  config :edenflowers,
+         :proof_photo_root,
+         System.get_env("PROOF_PHOTO_ROOT") || raise("environment variable PROOF_PHOTO_ROOT is missing.")
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """

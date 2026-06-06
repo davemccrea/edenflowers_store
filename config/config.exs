@@ -128,3 +128,7 @@ config :phoenix, :json_library, Jason
 import_config "#{config_env()}.exs"
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+# Persistent-volume root for delivery proof-photo originals. Overridden per
+# environment; prod reads it from PROOF_PHOTO_ROOT in runtime.exs.
+config :edenflowers, :proof_photo_root, Path.expand("priv/uploads")

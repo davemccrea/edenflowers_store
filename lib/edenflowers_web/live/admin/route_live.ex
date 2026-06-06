@@ -35,6 +35,11 @@ defmodule EdenflowersWeb.Admin.RouteLive do
          |> assign(:active_stop, nil)
          |> assign(:outcome, "delivered")
          |> assign(:expired?, route.delivery_date != today())
+         |> allow_upload(:photo,
+           accept: Edenflowers.ProofPhotos.accept(),
+           max_entries: 1,
+           max_file_size: Edenflowers.ProofPhotos.max_size()
+         )
          |> Shared.assign_route(route)}
     end
   end
@@ -54,6 +59,10 @@ defmodule EdenflowersWeb.Admin.RouteLive do
 
   def handle_event("change_outcome", %{"outcome" => outcome}, socket) do
     {:noreply, assign(socket, :outcome, outcome)}
+  end
+
+  def handle_event("cancel_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :photo, ref)}
   end
 
   def handle_event("record_outcome", params, socket) do
@@ -90,6 +99,7 @@ defmodule EdenflowersWeb.Admin.RouteLive do
         expired?={@expired?}
         active_stop={@active_stop}
         outcome={@outcome}
+        uploads={@uploads}
         locale={@locale}
       />
     </Layouts.admin>
