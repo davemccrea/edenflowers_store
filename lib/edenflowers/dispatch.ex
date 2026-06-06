@@ -324,6 +324,13 @@ defmodule Edenflowers.Dispatch do
   end
 
   defp after_commit(%Edenflowers.Dispatch.Result{batch: batch, routes: routes}) do
+    new_routes = Enum.count(routes, & &1.new?)
+
+    Logger.info(
+      "Dispatch published batch=#{batch.id} date=#{batch.delivery_date} " <>
+        "routes=#{length(routes)} new_routes=#{new_routes}"
+    )
+
     Enum.each(routes, fn entry ->
       if entry.new? and entry.raw_token do
         enqueue_email(entry)
