@@ -1,0 +1,47 @@
+{
+  "tours": [
+    {
+      "typeId": "driver-a",
+      "vehicleId": "driver-a_1",
+      "stops": [
+        {
+          "location": { "lat": 63.1243488, "lng": 21.5974075 },
+          "time": { "arrival": "2026-06-07T08:00:00+03:00", "departure": "2026-06-07T08:00:00+03:00" },
+          "distance": 0,
+          "activities": [{ "jobId": "departure", "type": "departure" }]
+        },
+        {
+          "location": { "lat": 63.1, "lng": 21.6 },
+          "time": { "arrival": "2026-06-07T08:08:00+03:00", "departure": "2026-06-07T08:13:00+03:00" },
+          "distance": 2000,
+          "activities": [{ "jobId": "order-1", "type": "delivery" }]
+        },
+        {
+          "location": { "lat": 63.11, "lng": 21.61 },
+          "time": { "arrival": "2026-06-07T08:20:00+03:00", "departure": "2026-06-07T08:25:00+03:00" },
+          "distance": 5000,
+          "activities": [{ "jobId": "order-2", "type": "delivery" }]
+        }
+      ]
+    },
+    {
+      "typeId": "driver-b",
+      "vehicleId": "driver-b_1",
+      "stops": [
+        {
+          "location": { "lat": 63.1243488, "lng": 21.5974075 },
+          "time": { "arrival": "2026-06-07T08:00:00+03:00", "departure": "2026-06-07T08:00:00+03:00" },
+          "distance": 0,
+          "activities": [{ "jobId": "departure", "type": "departure" }]
+        },
+        {
+          "location": { "lat": 63.08, "lng": 21.55 },
+          "time": { "arrival": "2026-06-07T08:12:00+03:00", "departure": "2026-06-07T08:17:00+03:00" },
+          "distance": 4000,
+          "activities": [{ "jobId": "order-3", "type": "delivery" }]
+        }
+      ]
+    }
+  ],
+  "unassigned": []
+}

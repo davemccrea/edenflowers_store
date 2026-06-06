@@ -1,0 +1,34 @@
+{
+  "statistic": {
+    "cost": 12.5,
+    "distance": 7000,
+    "duration": 1800
+  },
+  "tours": [
+    {
+      "typeId": "driver-a",
+      "vehicleId": "driver-a_1",
+      "stops": [
+        {
+          "location": { "lat": 63.1243488, "lng": 21.5974075 },
+          "time": { "arrival": "2026-06-07T08:00:00+03:00", "departure": "2026-06-07T08:00:00+03:00" },
+          "distance": 0,
+          "activities": [{ "jobId": "departure", "type": "departure" }]
+        },
+        {
+          "location": { "lat": 63.1, "lng": 21.6 },
+          "time": { "arrival": "2026-06-07T08:10:00+03:00", "departure": "2026-06-07T08:15:00+03:00" },
+          "distance": 3000,
+          "activities": [{ "jobId": "order-1", "type": "delivery" }]
+        },
+        {
+          "location": { "lat": 63.09, "lng": 21.62 },
+          "time": { "arrival": "2026-06-07T08:25:00+03:00", "departure": "2026-06-07T08:30:00+03:00" },
+          "distance": 7000,
+          "activities": [{ "jobId": "order-2", "type": "delivery" }]
+        }
+      ]
+    }
+  ],
+  "unassigned": []
+}
