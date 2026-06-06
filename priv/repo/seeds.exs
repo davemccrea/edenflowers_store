@@ -413,7 +413,7 @@ orders = [
     customer_name: "Aino Virtanen",
     customer_email: "aino.virtanen@example.fi",
     fulfillment_option: home_delivery,
-    days_out: 0,
+    fulfillment_date: today,
     recipient_name: "Aino Virtanen",
     recipient_phone_number: "+358 40 123 4567",
     delivery_address: "Gerbyntie 16, 65230 Vaasa",
@@ -429,7 +429,7 @@ orders = [
     customer_name: "Mikael Lindholm",
     customer_email: "mikael.lindholm@example.fi",
     fulfillment_option: home_delivery,
-    days_out: 0,
+    fulfillment_date: today,
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "+358 50 987 6543",
     delivery_address: "Sundomintie 130, 65410 Sundom",
@@ -549,7 +549,9 @@ for order_attrs <- orders do
       position: order_attrs[:position],
       here_id: order_attrs[:here_id],
       distance: order_attrs[:distance],
-      fulfillment_date: fulfillment_date_for.(fulfillment_option, order_attrs.days_out),
+      fulfillment_date:
+        order_attrs[:fulfillment_date] ||
+          fulfillment_date_for.(fulfillment_option, order_attrs.days_out),
       fulfillment_option_id: fulfillment_option.id,
       fulfillment_option_name: fulfillment_option.name,
       fulfillment_method: fulfillment_option.fulfillment_method,
