@@ -81,6 +81,7 @@ defmodule EdenflowersWeb.Router do
     ash_authentication_live_session :admin_routes,
       on_mount: [
         {EdenflowersWeb.LiveUserAuth, :live_admin_required},
+        EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ] do
       live "/", EdenflowersWeb.Admin.DashboardLive
