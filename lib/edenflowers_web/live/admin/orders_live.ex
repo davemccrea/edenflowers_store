@@ -42,14 +42,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
-          <:col :let={order} field="customer_name" search label={~t"Customer"}>
-            <span class="font-medium">{order.customer_name || "—"}</span>
-          </:col>
-          <:col :let={order} field="ordered_at" sort={[cycle: [:desc, :asc]]} label={~t"Date"}>
-            <span class="whitespace-nowrap tabular-nums">
-              {Format.datetime(order.ordered_at, @locale)}
-            </span>
-          </:col>
           <:col
             :let={order}
             field="fulfillment_date"
@@ -59,6 +51,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             <span class="whitespace-nowrap tabular-nums">
               {Format.date(order.fulfillment_date, @locale)}
             </span>
+          </:col>
+          <:col :let={order} field="customer_name" search label={~t"Customer"}>
+            <span class="font-medium">{order.customer_name || "—"}</span>
           </:col>
           <:col
             :let={order}
