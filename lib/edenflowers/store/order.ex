@@ -70,6 +70,9 @@ defmodule Edenflowers.Store.Order do
     define :finalize_checkout, action: :finalize_checkout
     define :mark_payment_failed, action: :mark_payment_failed
     define :mark_fulfilled, action: :mark_fulfilled
+    define :mark_delivered, action: :mark_delivered
+    define :reschedule_delivery, action: :reschedule_delivery
+    define :list_dispatch_eligible, action: :dispatch_eligible
     define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
     define :mark_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]
     define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
@@ -179,6 +182,45 @@ defmodule Edenflowers.Store.Order do
       filter expr(id == ^arg(:id) and state == :placed)
       get? true
       prepare build(load: @admin_show_load)
+    end
+
+    # Today's deliverable orders for route planning. An order is excluded once it
+    # is assigned to a stop on a route dated on or after the target date; stops on
+    # earlier (expired) routes don't block it, so a rescheduled failed delivery
+    # becomes eligible again when its new date arrives.
+    read :dispatch_eligible do
+      argument :date, :date,
+        allow_nil?: false,
+        default: fn -> DateTime.now!("Europe/Helsinki") |> DateTime.to_date() end
+
+      filter expr(
+               state == :placed and
+                 payment_status == :paid and
+                 fulfillment_status == :pending and
+                 fulfillment_method == :delivery and
+                 fulfillment_date == ^arg(:date) and
+                 not exists(
+                   delivery_stops,
+                   delivery_trip.delivery_route.delivery_date >= ^arg(:date)
+                 )
+             )
+
+      prepare build(
+                sort: [ordered_at: :asc],
+                load: [
+                  :order_reference,
+                  :customer_name,
+                  :recipient_name,
+                  :recipient_phone_number,
+                  :delivery_address,
+                  :delivery_instructions,
+                  :card_message,
+                  :fulfillment_date,
+                  :position,
+                  :distance,
+                  line_items: [:subtotal]
+                ]
+              )
     end
 
     # Create Actions
@@ -304,6 +346,28 @@ defmodule Edenflowers.Store.Order do
       change load(@admin_show_load)
     end
 
+    # Lean fulfillment used by the delivery-attempt orchestration. Runs inside the
+    # same transaction that creates a successful attempt, so it deliberately omits
+    # the heavier admin-show load that :mark_fulfilled performs.
+    update :mark_delivered do
+      validate attribute_equals(:fulfillment_status, :pending)
+      change set_attribute(:fulfillment_status, :fulfilled)
+    end
+
+    # Reschedules a paid, pending delivery to a new date. Only the fulfillment
+    # date changes; coordinates, recipient data, instructions, and prior attempt
+    # history are untouched. Blocked while the order is on an active route.
+    update :reschedule_delivery do
+      accept [:fulfillment_date]
+      require_atomic? false
+
+      validate attribute_equals(:payment_status, :paid)
+      validate attribute_equals(:fulfillment_status, :pending)
+      validate attribute_equals(:fulfillment_method, :delivery)
+      validate {Validations.ValidateFulfillmentDate, []}
+      validate {Validations.ValidateNotOnActiveRoute, []}
+    end
+
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {Validations.ValidateMinimumCartTotal, []}
@@ -383,12 +447,12 @@ defmodule Edenflowers.Store.Order do
     # System bypass is scoped: anything outside this list (including updates
     # to a :placed order) falls through to the main policies.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:finalize_checkout, :mark_payment_failed, :mark_receipt_emailed])
+      authorize_if action([:finalize_checkout, :mark_payment_failed, :mark_receipt_emailed, :mark_delivered])
       authorize_if action_type(:read)
     end
 
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if action(:mark_fulfilled)
+      authorize_if action([:mark_fulfilled, :mark_delivered, :reschedule_delivery])
       authorize_if action_type(:read)
     end
 
@@ -504,6 +568,7 @@ defmodule Edenflowers.Store.Order do
     belongs_to :fulfillment_option, Edenflowers.Store.FulfillmentOption
     belongs_to :promotion, Edenflowers.Store.Promotion
     has_many :line_items, Edenflowers.Store.LineItem
+    has_many :delivery_stops, Edenflowers.Store.DeliveryStop
   end
 
   calculations do
