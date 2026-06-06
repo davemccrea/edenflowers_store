@@ -53,7 +53,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </:actions>
         </.admin_page_header>
 
-        <%!-- Hero: the two facts a reviewer is verifying — the amount, and how much to trust it. --%>
         <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
           <div class="min-w-0">
             <p class="eyebrow text-base-content/65 mb-1">Total Amount</p>
@@ -67,7 +66,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </div>
         </section>
 
-        <%!-- System facts the reviewer can't edit — kept out of the form. --%>
         <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span>
             Document
@@ -121,8 +119,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 <.input field={@form[:description]} type="textarea" label="Description" class="textarea w-full" />
               </div>
             </div>
-            <%!-- Outline, not primary: "Mark as Reviewed" is the page's single
-                 primary CTA. Saving a correction is the secondary path. --%>
             <div class="mt-6">
               <button type="submit" class="btn btn-outline btn-sm w-full sm:w-auto">Save Corrections</button>
             </div>
