@@ -34,6 +34,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           id="expenses-table"
           resource={Expense}
           actor={@current_user}
+          search={[
+            label: ~t"Expense",
+            placeholder: ~t"Search vendor or description…",
+            fn: &search_expenses/3
+          ]}
           theme={EdenflowersWeb.Admin.CinderTheme}
           url_state={@url_state}
           show_filters={:toggle}
@@ -45,7 +50,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               {Format.date(expense.date, @locale) || "—"}
             </span>
           </:col>
-          <:col :let={expense} field="vendor_name" label={~t"Vendor"}>
+          <:col :let={expense} field="vendor_name" search label={~t"Vendor"}>
             <span class="font-medium">{expense.vendor_name || "—"}</span>
           </:col>
           <:col :let={expense} field="total_amount" sort label={~t"Amount"}>
@@ -80,5 +85,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search_expenses(query, _searchable_columns, search_term) do
+    require Ash.Query
+    import Ash.Expr
+
+    case_insensitive_term = Ash.CiString.new(search_term)
+
+    Ash.Query.filter(
+      query,
+      expr(
+        contains(vendor_name, ^case_insensitive_term) or
+          contains(description, ^case_insensitive_term)
+      )
+    )
   end
 end
