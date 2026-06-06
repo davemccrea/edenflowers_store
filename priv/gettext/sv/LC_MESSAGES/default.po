@@ -1117,7 +1117,7 @@ msgstr "Uppfylld"
 #: lib/edenflowers_web/live/admin/orders_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Fulfillment"
-msgstr "Leverans"
+msgstr "Orderhantering"
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:149
 #, elixir-autogen, elixir-format
