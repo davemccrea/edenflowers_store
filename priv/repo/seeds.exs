@@ -11,10 +11,14 @@
 # and so on) as they will fail if something goes wrong.
 
 alias Edenflowers.Accounts.User
+alias Edenflowers.Actors
+alias Edenflowers.Fulfillments
 alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
 alias Edenflowers.Store.{Order, LineItem}
+alias Edenflowers.Store.Order.Changes.GenerateOrderReference
+alias Edenflowers.Weekday
 
 require Ash.Query
 alias Edenflowers.Expenses.Expense
@@ -380,9 +384,26 @@ variant_for = fn product_name, size ->
   Enum.find(variants, fn v -> v.product.name == product_name and v.size == size end)
 end
 
-# Fulfillment dates are relative to whenever the seed runs, so the dashboard's
-# "Today"/"Tomorrow" grouping always has data. `days_out` is an offset from today.
-today = Date.utc_today()
+# Fulfillment dates are relative to whenever the seed runs. Future dates are
+# resolved through the same availability rules as checkout, so running seeds on
+# a Monday or after a same-day deadline cannot create an impossible order.
+now = DateTime.now!("Europe/Helsinki")
+today = DateTime.to_date(now)
+
+fulfillment_date_for = fn option, days_out ->
+  requested_date = Date.add(today, days_out)
+
+  if days_out < 0 do
+    Stream.iterate(requested_date, &Date.add(&1, -1))
+    |> Enum.find(fn date ->
+      date not in option.disabled_dates and
+        (date in option.enabled_dates or Weekday.from_date(date) in option.available_days)
+    end)
+  else
+    Stream.iterate(requested_date, &Date.add(&1, 1))
+    |> Enum.find(fn date -> Fulfillments.fulfill_on_date(option, date, now) == :ok end)
+  end
+end
 
 # Each order varies a different axis: fulfillment method, gift vs. not, a
 # promotion, a larger multi-item cart, locales, and one already fulfilled so the
@@ -395,8 +416,11 @@ orders = [
     days_out: 0,
     recipient_name: "Aino Virtanen",
     recipient_phone_number: "+358 40 123 4567",
-    delivery_address: "Hovioikeudenpuistikko 16, 65100 Vaasa",
-    distance: 3380,
+    delivery_address: "Gerbyntie 16, 65230 Vaasa",
+    geocoded_address: "Gerbyvägen 16, 65230 Vasa",
+    position: "63.1157,21.61864",
+    here_id: "here:af:streetsection:olhtF0fcY2Tg2P7kFPBnMB:EAIaAjE2",
+    distance: 1651,
     gift: false,
     locale: "fi",
     items: [{"Bouquet 1", :medium, 1}, {"Plant 2", :small, 1}]
@@ -408,8 +432,11 @@ orders = [
     days_out: 0,
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "+358 50 987 6543",
-    delivery_address: "Kauppapuistikko 20, 65100 Vaasa",
-    distance: 12000,
+    delivery_address: "Sundomintie 130, 65410 Sundom",
+    geocoded_address: "Sundomvägen 130, 65410 Vasa",
+    position: "63.03232,21.54662",
+    here_id: "here:af:streetsection:DnEELU-r45CN9NK9d3YMnB:EAIaAzEzMA",
+    distance: 12_711,
     gift: true,
     card_message: "Happy birthday, with love.",
     # A gift order carries a card: a line item flagged is_card, built from a
@@ -433,8 +460,11 @@ orders = [
     days_out: 3,
     recipient_name: "Johan Nyström",
     recipient_phone_number: "+358 44 222 1188",
-    delivery_address: "Vaasanpuistikko 11, 65100 Vaasa",
-    distance: 500,
+    delivery_address: "Västervikintie 17, 65280 Vaasa",
+    geocoded_address: "Västerviksvägen 17, 65280 Vasa",
+    position: "63.13433,21.59774",
+    here_id: "here:af:streetsection:JsgM2SKLxD8mRXEtSARhmA:CgcIBCDIufx9EAEaAjE3",
+    distance: 2254,
     gift: false,
     items: [{"Bouquet 4", :medium, 1}, {"Bouquet 5", :medium, 1}]
   },
@@ -445,8 +475,11 @@ orders = [
     days_out: 4,
     recipient_name: "Liisa Mäkinen",
     recipient_phone_number: "+358 41 555 0099",
-    delivery_address: "Rauhankatu 8, 65100 Vaasa",
-    distance: 10500,
+    delivery_address: "Vanhan Vaasan katu 20, 65370 Vaasa",
+    geocoded_address: "Gamla Vasa gatan 20, 65370 Vasa",
+    position: "63.08621,21.72555",
+    here_id: "here:af:streetsection:HL-snKUH905p0HXizdKhkC:CgcIBCCayoF-EAEaAjIw",
+    distance: 9273,
     gift: false,
     locale: "fi",
     # Cart total well above the promo's €30 minimum so the discount applies.
@@ -478,8 +511,11 @@ orders = [
     days_out: -2,
     recipient_name: "Hanna Järvinen",
     recipient_phone_number: "+358 45 321 7654",
-    delivery_address: "Pitkäkatu 42, 65100 Vaasa",
-    distance: 7200,
+    delivery_address: "Rantamaantie 31, 65350 Vaasa",
+    geocoded_address: "Strandvägen 31, 65350 Vasa",
+    position: "63.07736,21.67323",
+    here_id: "here:af:streetsection:KI1pyE5DUdLEue2Mt7LnjC:EAIaAjMx",
+    distance: 7902,
     gift: false,
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
@@ -489,27 +525,35 @@ orders = [
 for order_attrs <- orders do
   fulfillment_option = order_attrs.fulfillment_option
   promotion = order_attrs[:promotion]
+  user = User.upsert!(order_attrs.customer_email, order_attrs.customer_name, actor: Actors.system_actor())
+
+  {:ok, fulfillment_fee} =
+    Fulfillments.calculate_price(fulfillment_option, order_attrs[:distance] || 0)
 
   order =
     Ash.Seed.seed!(Order, %{
-      order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
+      order_reference: GenerateOrderReference.generate(),
       state: :placed,
       payment_status: :paid,
       fulfillment_status: order_attrs[:fulfillment_status] || :pending,
       ordered_at: order_attrs[:ordered_at] || DateTime.utc_now(),
       customer_name: order_attrs.customer_name,
       customer_email: order_attrs.customer_email,
+      user_id: user.id,
       gift: order_attrs.gift,
       card_message: order_attrs[:card_message],
       recipient_name: order_attrs[:recipient_name],
       recipient_phone_number: order_attrs[:recipient_phone_number],
       delivery_address: order_attrs[:delivery_address],
+      geocoded_address: order_attrs[:geocoded_address],
+      position: order_attrs[:position],
+      here_id: order_attrs[:here_id],
       distance: order_attrs[:distance],
-      fulfillment_date: Date.add(today, order_attrs.days_out),
+      fulfillment_date: fulfillment_date_for.(fulfillment_option, order_attrs.days_out),
       fulfillment_option_id: fulfillment_option.id,
       fulfillment_option_name: fulfillment_option.name,
       fulfillment_method: fulfillment_option.fulfillment_method,
-      fulfillment_fee: fulfillment_option.base_price,
+      fulfillment_fee: fulfillment_fee,
       fulfillment_tax_percentage: tax_rate.percentage,
       payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
       locale: order_attrs[:locale] || "sv-FI",
