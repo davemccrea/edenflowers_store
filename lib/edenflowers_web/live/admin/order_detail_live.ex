@@ -33,14 +33,34 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="wide">
-        <.admin_page_header title={@order.order_reference} back={~p"/admin/orders"} back_label={~t"Orders"}>
+        <.admin_page_header
+          title={@order.customer_name || ~t"Order"}
+          back={~p"/admin/orders"}
+          back_label={~t"Orders"}
+        >
+          <:subtitle>
+            <span>{@order.order_reference}</span>
+            <span :if={@order.ordered_at} aria-hidden="true">·</span>
+            <span :if={@order.ordered_at}>{~t"Ordered"} {Format.datetime(@order.ordered_at, @locale)}</span>
+          </:subtitle>
           <:actions>
-            <span
-              :if={@order.fulfillment_status == :fulfilled}
-              class="badge badge-soft badge-sm badge-success gap-1"
-            >
-              <.icon name="hero-check" class="h-3 w-3" /> {~t"Fulfilled"}
-            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-base-content/55 text-xs">{~t"Payment"}</span>
+              <.payment_status_badge status={@order.payment_status} />
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-base-content/55 text-xs">{~t"Fulfillment"}</span>
+              <.fulfillment_status_badge status={@order.fulfillment_status} />
+            </div>
+          </:actions>
+        </.admin_page_header>
+
+        <section
+          id="order-fulfillment-summary"
+          class="bg-base-100 border-base-300/70 mb-8 rounded-lg border p-4 sm:mb-10 sm:p-6"
+        >
+          <div class="mb-5 flex items-center justify-between gap-4">
+            <h2 class="text-base-content text-base font-semibold">{~t"Fulfillment"}</h2>
             <button
               :if={@order.fulfillment_status == :pending}
               type="button"
@@ -50,28 +70,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             >
               {~t"Mark as fulfilled"}
             </button>
-          </:actions>
-        </.admin_page_header>
-
-        <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
-          <div class="min-w-0">
-            <p class="eyebrow text-base-content/65 mb-1">{~t"Grand total"}</p>
-            <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
-              {money(@order.grand_total, @locale)}
-            </p>
           </div>
-          <div class="flex flex-wrap gap-2 sm:justify-end">
-            <.payment_status_badge status={@order.payment_status} />
-            <.fulfillment_status_badge status={@order.fulfillment_status} />
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1.6fr]">
+            <div>
+              <p class="eyebrow text-base-content/65 mb-1.5">{~t"Fulfillment date"}</p>
+              <p class="text-base-content text-base font-semibold">
+                {Format.date(@order.fulfillment_date, @locale)}
+              </p>
+            </div>
+            <.summary_fact label={~t"Method"}>
+              <span class="inline-flex items-center gap-2">
+                <.icon name={fulfillment_icon(@order.fulfillment_method)} class="text-base-content/60 h-4 w-4" />
+                {fulfillment_description(@order)}
+              </span>
+            </.summary_fact>
+            <.summary_fact
+              :if={@order.fulfillment_method == :delivery && present?(@order.delivery_address)}
+              label={~t"Destination"}
+            >
+              {@order.delivery_address}
+            </.summary_fact>
+            <.summary_fact :if={present?(@order.recipient_name)} label={~t"Recipient"}>
+              <span>
+                {@order.recipient_name}
+                <span :if={@order.gift} class="badge badge-soft badge-sm badge-neutral ml-1.5">{~t"Gift"}</span>
+              </span>
+            </.summary_fact>
+            <.summary_fact :if={present?(@order.recipient_phone_number)} label={~t"Phone"}>
+              <a href={"tel:#{@order.recipient_phone_number}"} class="link link-primary">
+                {@order.recipient_phone_number}
+              </a>
+            </.summary_fact>
+            <.summary_fact :if={present?(@order.delivery_instructions)} label={~t"Instructions"}>
+              {@order.delivery_instructions}
+            </.summary_fact>
+            <.summary_fact :if={@order.distance_km} label={~t"Distance"}>
+              {@order.distance_km} km
+            </.summary_fact>
           </div>
-        </section>
-
-        <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <span>{~t"Reference"} {@order.order_reference}</span>
-          <span :if={@order.ordered_at} aria-hidden="true">·</span>
-          <span :if={@order.ordered_at}>{~t"Ordered"} {Format.datetime(@order.ordered_at, @locale)}</span>
-          <span :if={@order.locale} aria-hidden="true">·</span>
-          <span :if={@order.locale}>{~t"Locale"} {@order.locale}</span>
         </section>
 
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
@@ -80,8 +116,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <.readonly_line_items line_items={@order.line_items} locale={@locale} />
             </.detail_section>
 
-            <.detail_section title={~t"Money"}>
-              <dl class="divide-base-300/70 divide-y text-sm">
+            <.detail_section :if={present?(@order.card_message)} title={~t"Card message"}>
+              <figure class="border-base-300/70 bg-base-200/40 rounded-md border p-4">
+                <blockquote class="text-base-content whitespace-pre-wrap break-words text-sm">
+                  {@order.card_message}
+                </blockquote>
+              </figure>
+            </.detail_section>
+          </main>
+
+          <aside class="space-y-6">
+            <section id="order-payment-summary" class="bg-base-100 border-base-300/70 rounded-lg border p-4">
+              <p class="eyebrow text-base-content/65 mb-1">{~t"Grand total"}</p>
+              <p class="text-base-content mb-4 text-3xl font-semibold tabular-nums tracking-tight">
+                {money(@order.grand_total, @locale)}
+              </p>
+              <dl class="text-sm">
                 <.money_row label={~t"Items subtotal"} amount={@order.items_subtotal} locale={@locale} />
                 <.money_row
                   :if={positive?(@order.discount)}
@@ -90,75 +140,37 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   locale={@locale}
                 />
                 <.money_row label={~t"Fulfillment fee"} amount={@order.fulfillment_fee} locale={@locale} />
-                <.money_row label={~t"Items VAT"} amount={@order.items_tax} locale={@locale} />
-                <.money_row label={~t"Fulfillment VAT"} amount={@order.fulfillment_tax} locale={@locale} />
-                <.money_row label={~t"Total VAT"} amount={@order.tax} locale={@locale} />
-                <.money_row label={~t"Grand total"} amount={@order.grand_total} locale={@locale} strong />
+                <.money_row label={~t"VAT"} amount={@order.tax} locale={@locale} />
               </dl>
-            </.detail_section>
-          </main>
+              <a
+                :if={@order.payment_intent_id}
+                href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
+                target="_blank"
+                rel="noopener"
+                class="btn btn-outline btn-sm mt-4 w-full"
+              >
+                {~t"View payment in Stripe"}
+                <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+              </a>
+            </section>
 
-          <aside class="space-y-6">
-            <.detail_section title={~t"Customer"}>
+            <section>
+              <h2 class="text-base-content mb-3 text-base font-semibold">{~t"Customer"}</h2>
               <dl class="space-y-3 text-sm">
-                <.fact label={~t"Name"} value={@order.customer_name} />
-                <div>
+                <div :if={present?(@order.customer_name)}>
+                  <dt class="text-base-content/55">{~t"Name"}</dt>
+                  <dd class="text-base-content">{@order.customer_name}</dd>
+                </div>
+                <div :if={@order.customer_email}>
                   <dt class="text-base-content/55">{~t"Email"}</dt>
                   <dd class="text-base-content mt-0.5 break-words">
-                    <a :if={@order.customer_email} href={"mailto:#{@order.customer_email}"} class="link link-primary">
+                    <a href={"mailto:#{@order.customer_email}"} class="link link-primary">
                       {@order.customer_email}
                     </a>
-                    <span :if={is_nil(@order.customer_email)} class="text-base-content/30" aria-hidden="true">—</span>
                   </dd>
                 </div>
               </dl>
-            </.detail_section>
-
-            <.detail_section title={~t"Fulfillment"}>
-              <dl class="space-y-3 text-sm">
-                <.fact label={~t"Method"} value={fulfillment_label(@order.fulfillment_method)} />
-                <.fact label={~t"Option"} value={@order.fulfillment_option_name || option_name(@order.fulfillment_option)} />
-                <.fact label={~t"Date"} value={Format.date(@order.fulfillment_date, @locale)} />
-                <.fact label={~t"Recipient"} value={@order.recipient_name} />
-                <.fact label={~t"Phone"} value={@order.recipient_phone_number} />
-                <.fact label={~t"Address"} value={@order.delivery_address} />
-                <.fact label={~t"Instructions"} value={@order.delivery_instructions} />
-                <.fact :if={@order.distance_km} label={~t"Distance"} value={"#{@order.distance_km} km"} />
-                <.fact label={~t"Gift"} value={gift_label(@order.gift)} />
-                <.fact label={~t"Card message"} value={@order.card_message} />
-              </dl>
-            </.detail_section>
-
-            <.detail_section title={~t"Payment"}>
-              <dl class="space-y-3 text-sm">
-                <div>
-                  <dt class="text-base-content/55">{~t"Stripe payment"}</dt>
-                  <dd class="text-base-content mt-0.5 break-words">
-                    <a
-                      :if={@order.payment_intent_id}
-                      href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
-                      target="_blank"
-                      rel="noopener"
-                      class="link link-primary"
-                    >
-                      {@order.payment_intent_id}
-                    </a>
-                    <span :if={is_nil(@order.payment_intent_id)} class="text-base-content/30" aria-hidden="true">—</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt class="text-base-content/55">{~t"Status"}</dt>
-                  <dd class="mt-1"><.payment_status_badge status={@order.payment_status} /></dd>
-                </div>
-              </dl>
-            </.detail_section>
-
-            <.detail_section title={~t"Receipt"}>
-              <dl class="space-y-3 text-sm">
-                <.fact label={~t"Emailed"} value={datetime_or_dash(@order.receipt_emailed_at, @locale)} />
-                <.fact label={~t"SHA-256"} value={@order.receipt_sha256} />
-              </dl>
-            </.detail_section>
+            </section>
           </aside>
         </div>
       </.admin_page>
@@ -225,13 +237,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :label, :string, required: true
-  attr :value, :any, default: nil
+  slot :inner_block, required: true
 
-  defp fact(assigns) do
+  defp summary_fact(assigns) do
     ~H"""
     <div>
-      <dt class="text-base-content/55">{@label}</dt>
-      <dd class="text-base-content mt-0.5 whitespace-pre-wrap break-words">{present(@value)}</dd>
+      <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
+      <div class="text-base-content text-sm font-medium leading-relaxed">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -243,7 +255,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-3", @strong && "font-semibold"]}>
+    <div class={["flex items-center justify-between gap-4 py-1.5", @strong && "border-base-300/70 mt-1.5 border-t pt-3 font-semibold"]}>
       <dt class="text-base-content/65">{@label}</dt>
       <dd class="text-base-content tabular-nums">{money(@amount, @locale)}</dd>
     </div>
@@ -252,12 +264,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp money(amount, locale), do: Format.currency(amount || 0, locale)
 
-  defp datetime_or_dash(nil, _locale), do: nil
-  defp datetime_or_dash(datetime, locale), do: Format.datetime(datetime, locale)
-
-  defp present(nil), do: Phoenix.HTML.raw(~s|<span class="text-base-content/30" aria-hidden="true">—</span>|)
-  defp present(""), do: present(nil)
-  defp present(value), do: value
+  defp present?(nil), do: false
+  defp present?(""), do: false
+  defp present?(_), do: true
 
   defp positive?(nil), do: false
   defp positive?(value), do: Decimal.compare(value, 0) == :gt
@@ -273,10 +282,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp fulfillment_label(:pickup), do: ~t"Pickup"
   defp fulfillment_label(_), do: nil
 
-  defp option_name(%{name: name}), do: name
-  defp option_name(_), do: nil
+  defp fulfillment_icon(:delivery), do: "hero-truck"
+  defp fulfillment_icon(:pickup), do: "hero-building-storefront"
+  defp fulfillment_icon(_), do: "hero-question-mark-circle"
 
-  defp gift_label(true), do: ~t"Yes"
-  defp gift_label(false), do: ~t"No"
-  defp gift_label(_), do: nil
+  defp fulfillment_description(order) do
+    [fulfillment_label(order.fulfillment_method), order.fulfillment_option_name]
+    |> Enum.reject(&(not present?(&1)))
+    |> Enum.join(" · ")
+  end
 end
