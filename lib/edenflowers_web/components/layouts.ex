@@ -144,10 +144,10 @@ defmodule EdenflowersWeb.Layouts do
 
   def admin(assigns) do
     primary_nav = [
-      {"/admin", "Dashboard", true, "hero-squares-2x2"},
-      {"/admin/orders", "Orders", true, "hero-shopping-bag"},
-      {"/admin/expenses", "Expenses", true, "hero-document-text"},
-      {"/admin/fulfillments", "Calendar", true, "hero-calendar-days"}
+      {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
+      {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
+      {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
+      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"}
     ]
 
     system_nav = [
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Layouts do
       <.drawer
         id="admin-nav-drawer"
         placement="left"
-        label="Admin navigation"
+        label={~t"Admin navigation"}
         class="bg-base-200 border-base-300 flex h-full w-64 flex-col border-r"
       >
         <.admin_sidebar_content
@@ -195,7 +195,7 @@ defmodule EdenflowersWeb.Layouts do
           <button
             type="button"
             phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
-            aria-label="Open navigation menu"
+            aria-label={~t"Open navigation menu"}
             class="text-base-content/60 -m-px cursor-pointer rounded-md p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
             <.icon name="hero-bars-3" class="h-5 w-5" />
@@ -239,7 +239,7 @@ defmodule EdenflowersWeb.Layouts do
           :if={@closeable}
           type="button"
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
-          aria-label="Close navigation menu"
+          aria-label={~t"Close navigation menu"}
           class="cursor-pointer"
         >
           <.icon name="hero-x-mark" class="text-base-content/40 h-5 w-5 hover:text-base-content/70" />
@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
-        <p class="text-base-content/65 mb-1 px-3 text-xs">System</p>
+        <p class="text-base-content/65 mb-1 px-3 text-xs">{~t"System"}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}

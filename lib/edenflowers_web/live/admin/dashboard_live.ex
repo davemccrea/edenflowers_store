@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Dashboard")
+     |> assign(:page_title, ~t"Dashboard")
      |> assign(:locale, Localize.get_locale())
      |> assign(:orders_by_date, orders_by_date)
      |> assign(:open_order_count, length(open_orders))
@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="wide">
-        <.admin_page_header title="Dashboard" />
+        <.admin_page_header title={~t"Dashboard"} />
 
         <div class="space-y-5">
           <.orders_widget
@@ -71,10 +71,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp orders_widget(assigns) do
     ~H"""
-    <.widget title="Upcoming Orders" count={@open_order_count}>
+    <.widget title={~t"Upcoming Orders"} count={@open_order_count}>
       <div :if={@orders_by_date == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
         <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
-        <p class="text-sm">No upcoming orders right now</p>
+        <p class="text-sm">{~t"No upcoming orders right now"}</p>
       </div>
 
       <div :if={@orders_by_date != []} class="space-y-3">
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
       <div :if={@orders_by_date != []} class="border-base-300/70 mt-4 border-t pt-3">
         <.link navigate={~p"/admin/orders"} class="text-primary text-sm hover:underline">
-          View all orders →
+          {~t"View all orders"} →
         </.link>
       </div>
     </.widget>
@@ -124,8 +124,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             >
               <span aria-hidden="true">🎁</span>
               <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
-              <span :if={is_nil(@order.recipient_name)}>Gift</span>
-              <span :if={present?(@order.card_message)} class="sr-only">— card to write</span>
+              <span :if={is_nil(@order.recipient_name)}>{~t"Gift"}</span>
+              <span :if={present?(@order.card_message)} class="sr-only">{~t"— card to write"}</span>
             </span>
           </div>
 
@@ -152,12 +152,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   end
 
   defp gift_title(%{card_message: msg, recipient_name: name}) do
-    base = if name, do: "Gift for #{name}", else: "Gift"
-    if present?(msg), do: base <> " · card to write", else: base
+    base = if name, do: ~t"Gift for #{name}", else: ~t"Gift"
+    if present?(msg), do: ~t"#{base} · card to write", else: base
   end
 
-  defp item_count_label(1), do: "1 item"
-  defp item_count_label(count), do: "#{count || 0} items"
+  defp item_count_label(1), do: ~t"1 item"
+  defp item_count_label(count), do: ~t"#{count || 0} items"
 
   defp present?(nil), do: false
   defp present?(value), do: String.trim(value) != ""
@@ -168,10 +168,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp expenses_widget(assigns) do
     ~H"""
-    <.widget title="Unreviewed Expenses" count={length(@expenses_to_review)}>
+    <.widget title={~t"Unreviewed Expenses"} count={length(@expenses_to_review)}>
       <div :if={@expenses_to_review == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
         <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
-        <p class="text-sm">All caught up</p>
+        <p class="text-sm">{~t"All caught up"}</p>
       </div>
 
       <div :if={@expenses_to_review != []}>
@@ -182,8 +182,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           <.icon name="hero-exclamation-triangle" class="text-warning h-3.5 w-3.5 shrink-0" />
           <span class="text-base-content/85">
             {if @low_confidence_count == 1,
-              do: "1 expense needs attention",
-              else: "#{@low_confidence_count} expenses need attention"}
+              do: ~t"1 expense needs attention",
+              else: ~t"#{@low_confidence_count} expenses need attention"}
           </span>
         </div>
 
@@ -200,8 +200,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
                   class="bg-warning h-1.5 w-1.5 shrink-0 rounded-full"
                 />
                 <span class={["text-base-content truncate", expense.confidence == :low && "font-medium"]}>
-                  {expense.vendor_name || "Unknown"}
-                  <span :if={expense.confidence == :low} class="sr-only">(low confidence)</span>
+                  {expense.vendor_name || ~t"Unknown"}
+                  <span :if={expense.confidence == :low} class="sr-only">{~t"(low confidence)"}</span>
                 </span>
               </span>
               <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
@@ -212,12 +212,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         </ul>
 
         <div :if={length(@expenses_to_review) > 5} class="text-base-content/65 mt-2 text-xs">
-          +{length(@expenses_to_review) - 5} more
+          {~t"+#{length(@expenses_to_review) - 5} more"}
         </div>
 
         <div class="border-base-300/70 mt-4 border-t pt-3">
           <.link navigate={~p"/admin/expenses"} class="text-primary text-sm hover:underline">
-            Review all →
+            {~t"Review all"} →
           </.link>
         </div>
       </div>
@@ -229,14 +229,14 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   defp fulfillment_emoji(:pickup), do: "🛍️"
   defp fulfillment_emoji(_), do: "❓"
 
-  defp fulfillment_label(:delivery), do: "Delivery"
-  defp fulfillment_label(:pickup), do: "Pickup"
-  defp fulfillment_label(_), do: "Fulfillment method unknown"
+  defp fulfillment_label(:delivery), do: ~t"Delivery"
+  defp fulfillment_label(:pickup), do: ~t"Pickup"
+  defp fulfillment_label(_), do: ~t"Fulfillment method unknown"
 
   defp format_order_date(date, today, locale) do
     cond do
-      date == today -> "Today"
-      date == Date.add(today, 1) -> "Tomorrow · #{Format.day_month(date, locale)}"
+      date == today -> ~t"Today"
+      date == Date.add(today, 1) -> ~t"Tomorrow · #{Format.day_month(date, locale)}"
       true -> Format.weekday_day_month(date, locale)
     end
   end
