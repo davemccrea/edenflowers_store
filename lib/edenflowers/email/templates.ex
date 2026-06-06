@@ -13,7 +13,8 @@ defmodule Edenflowers.Email.Templates do
     {:newsletter_promo, [:assigns]},
     {:newsletter_already_subscribed, [:assigns]},
     {:newsletter_resubscribed, [:_assigns]},
-    {:otp_sign_in, [:assigns]}
+    {:otp_sign_in, [:assigns]},
+    {:driver_route, [:assigns]}
   ]
 
   for {name, args} <- @templates do

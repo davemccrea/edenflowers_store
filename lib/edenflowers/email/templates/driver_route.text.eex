@@ -1,0 +1,17 @@
+<%= gettext("Hi %{name}", name: @driver_name) %>,
+
+<%= gettext("You have a delivery route for %{date}.", date: @date_str) %>
+
+<%= gettext("Stops: %{count}", count: @stop_count) %>
+<%= gettext("Approximate distance: %{distance}", distance: @distance_str) %>
+<%= gettext("Approximate driving and service time: %{duration}", duration: @duration_str) %>
+
+<%= gettext("Open your route here:") %>
+
+    <%= @url %>
+
+<%= gettext("This link works only for today and expires at midnight.") %>
+
+<%= gettext("Best regards") %>,
+
+Eden Flowers

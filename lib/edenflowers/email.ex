@@ -55,6 +55,20 @@ defmodule Edenflowers.Email do
     |> text_body(Templates.newsletter_resubscribed(%{}))
   end
 
+  @doc """
+  Builds a driver's daily route email in the driver's preferred language. The
+  secret link in `assigns.url` is the only place the raw route token appears.
+  """
+  def driver_route(driver, assigns) do
+    Gettext.with_locale(EdenflowersWeb.Gettext, driver.preferred_locale, fn ->
+      new()
+      |> from(@from_address)
+      |> to(to_string(driver.email))
+      |> subject(~t"Your Eden Flowers delivery route")
+      |> text_body(Templates.driver_route(assigns))
+    end)
+  end
+
   def otp_sign_in(email_address, otp_code) do
     new()
     |> from(@from_address)

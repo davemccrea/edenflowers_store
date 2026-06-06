@@ -52,6 +52,14 @@ defmodule Edenflowers.Format do
     "#{date_part} #{time_part}"
   end
 
+  @doc "Metres as an approximate kilometre string, e.g. `7000` -> `\"7.0 km\"`."
+  def km(nil), do: nil
+  def km(metres), do: "#{Float.round(metres / 1000, 1)} km"
+
+  @doc "Seconds as approximate whole minutes, e.g. `1800` -> `\"30 min\"`."
+  def minutes(nil), do: nil
+  def minutes(seconds), do: "#{round(seconds / 60)} min"
+
   # `fractional_digits: 1` — default rounds 25.5% (Finnish VAT) to "26%".
   def percentage(rate, locale) do
     Localize.Number.to_string!(rate, locale: locale, format: :percent, fractional_digits: 1)
