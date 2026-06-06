@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Format
+  alias Edenflowers.{Format, ProofPhotos}
   alias Edenflowers.Store.Order
   alias Edenflowers.StripeAPI
   alias EdenflowersWeb.Layouts
@@ -12,6 +12,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # The shop's address — used as the origin for delivery directions.
   @shop_origin "Muurahaistie 1, 65230 Vaasa"
+
+  @timezone "Europe/Helsinki"
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -22,7 +24,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:page_title, ~t"Order #{order.order_reference}")
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
-         |> assign(:order, order)}
+         |> assign(:reschedule_open, false)
+         |> assign_order(load_delivery(order, socket.assigns.current_user))}
 
       _ ->
         {:ok,
@@ -31,6 +34,40 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> push_navigate(to: ~p"/admin/orders")}
     end
   end
+
+  defp load_delivery(order, actor) do
+    Ash.load!(order, [delivery_stops: [:attempts, delivery_trip: [:delivery_route]]], actor: actor)
+  end
+
+  defp assign_order(socket, order) do
+    socket
+    |> assign(:order, order)
+    |> assign(:attempts, order_attempts(order))
+    |> assign(:reschedulable?, reschedulable?(order))
+  end
+
+  defp order_attempts(order) do
+    order.delivery_stops
+    |> Enum.flat_map(& &1.attempts)
+    |> Enum.sort_by(& &1.recorded_at, {:desc, DateTime})
+  end
+
+  defp reschedulable?(order) do
+    order.payment_status == :paid and
+      order.fulfillment_status == :pending and
+      order.fulfillment_method == :delivery and
+      not on_active_route?(order)
+  end
+
+  defp on_active_route?(order) do
+    today = today()
+
+    Enum.any?(order.delivery_stops, fn stop ->
+      Date.compare(stop.delivery_trip.delivery_route.delivery_date, today) != :lt
+    end)
+  end
+
+  defp today, do: DateTime.now!(@timezone) |> DateTime.to_date()
 
   @impl true
   def render(assigns) do
@@ -72,16 +109,48 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           <div class="mb-5 flex items-center justify-between gap-4">
             <h2 class="text-base-content text-base font-semibold">{~t"Fulfillment"}</h2>
-            <button
-              :if={@order.fulfillment_status == :pending}
-              type="button"
-              phx-click="mark_fulfilled"
-              data-confirm={~t"Mark this order as fulfilled?"}
-              class="btn btn-primary btn-sm shrink-0"
-            >
-              {~t"Mark as fulfilled"}
-            </button>
+            <div class="flex shrink-0 items-center gap-2">
+              <button
+                :if={@reschedulable?}
+                type="button"
+                phx-click="toggle_reschedule"
+                class="btn btn-outline btn-sm"
+              >
+                {~t"Reschedule delivery"}
+              </button>
+              <button
+                :if={@order.fulfillment_status == :pending}
+                type="button"
+                phx-click="mark_fulfilled"
+                data-confirm={~t"Mark this order as fulfilled?"}
+                class="btn btn-primary btn-sm"
+              >
+                {~t"Mark as fulfilled"}
+              </button>
+            </div>
           </div>
+
+          <form
+            :if={@reschedule_open}
+            phx-submit="reschedule"
+            class="bg-base-200/50 mb-5 flex flex-wrap items-end gap-3 rounded-md p-3"
+          >
+            <label class="form-control">
+              <span class="label-text mb-1">{~t"New delivery date"}</span>
+              <input
+                type="date"
+                name="fulfillment_date"
+                value={@order.fulfillment_date}
+                min={today()}
+                class="input input-bordered input-sm"
+                required
+              />
+            </label>
+            <button type="submit" class="btn btn-primary btn-sm">{~t"Save"}</button>
+            <button type="button" phx-click="toggle_reschedule" class="btn btn-ghost btn-sm">
+              {~t"Cancel"}
+            </button>
+          </form>
 
           <div class="mb-6">
             <p class="eyebrow text-base-content/65 mb-1">{~t"Date"}</p>
@@ -135,6 +204,38 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
             <.detail_section title={~t"Line items"}>
               <.readonly_line_items line_items={@order.line_items} locale={@locale} />
+            </.detail_section>
+
+            <.detail_section :if={@attempts != []} title={~t"Delivery attempts"}>
+              <ul class="space-y-3">
+                <li :for={attempt <- @attempts} class="border-base-300/70 rounded-md border p-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class={["badge badge-sm", (attempt.outcome == :delivered && "badge-success") || "badge-error"]}>
+                      {attempt_outcome_label(attempt)}
+                    </span>
+                    <span class="text-base-content/60 text-xs">
+                      {Format.datetime(attempt.recorded_at, @locale)}
+                    </span>
+                  </div>
+                  <p class="text-base-content/80 mt-1.5 text-sm">{attempt_detail(attempt)}</p>
+                  <p :if={attempt.note} class="text-base-content/70 mt-1 text-sm italic">
+                    {attempt.note}
+                  </p>
+                  <p :if={attempt.actor_kind == :admin} class="text-base-content/50 mt-1 text-xs">
+                    {~t"Recorded by an admin"}
+                  </p>
+                  <a
+                    :if={attempt.photo_path}
+                    href={ProofPhotos.signed_url(attempt.photo_path)}
+                    target="_blank"
+                    rel="noopener"
+                    class="link link-primary mt-2 inline-flex items-center gap-1 text-xs"
+                  >
+                    <.icon name="hero-photo" class="h-4 w-4" />
+                    {~t"View proof photo"}
+                  </a>
+                </li>
+              </ul>
             </.detail_section>
 
             <.detail_section id="order-payment-summary" title={~t"Payment"}>
@@ -226,11 +327,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply,
          socket
-         |> assign(:order, order)
+         |> assign_order(load_delivery(order, socket.assigns.current_user))
          |> put_flash(:info, ~t"Order marked as fulfilled.")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
+    end
+  end
+
+  def handle_event("toggle_reschedule", _params, socket) do
+    {:noreply, assign(socket, :reschedule_open, not socket.assigns.reschedule_open)}
+  end
+
+  def handle_event("reschedule", %{"fulfillment_date" => date}, socket) do
+    case Order.reschedule_delivery(socket.assigns.order, %{fulfillment_date: date}, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply,
+         socket
+         |> assign(:reschedule_open, false)
+         |> assign_order(load_delivery(order, socket.assigns.current_user))
+         |> put_flash(:info, ~t"Delivery rescheduled.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not reschedule the delivery.")}
     end
   end
 
@@ -486,6 +605,24 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp fulfillment_relative(_date, _locale, _status), do: nil
 
   defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+
+  defp attempt_outcome_label(%{outcome: :delivered}), do: ~t"Delivered"
+  defp attempt_outcome_label(%{outcome: :failed}), do: ~t"Failed"
+
+  defp attempt_detail(%{outcome: :delivered, delivered_method: method}), do: delivered_method_label(method)
+  defp attempt_detail(%{outcome: :failed, failure_reason: reason}), do: failure_reason_label(reason)
+
+  defp delivered_method_label(:handed_to_recipient), do: ~t"Handed to recipient"
+  defp delivered_method_label(:left_in_safe_place), do: ~t"Left in a safe place"
+  defp delivered_method_label(:other), do: ~t"Other"
+  defp delivered_method_label(_), do: ~t"Delivered"
+
+  defp failure_reason_label(:recipient_unavailable), do: ~t"Recipient unavailable"
+  defp failure_reason_label(:could_not_access_address), do: ~t"Could not access address"
+  defp failure_reason_label(:could_not_find_address), do: ~t"Could not find address"
+  defp failure_reason_label(:recipient_refused), do: ~t"Recipient refused delivery"
+  defp failure_reason_label(:other), do: ~t"Other"
+  defp failure_reason_label(_), do: ~t"Failed"
 
   # `position` is stored as a `"lat,lng"` string by HERE geocoding.
   defp parse_position(nil), do: nil

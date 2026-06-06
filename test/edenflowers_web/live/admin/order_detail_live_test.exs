@@ -130,6 +130,97 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert {:error, {:live_redirect, %{to: "/admin/orders"}}} = live(conn, ~p"/admin/orders/#{missing_id}")
   end
 
+  test "reschedules an eligible delivery order to a new date", %{conn: conn} do
+    order = placed_order(fulfillment_method: :delivery, position: "63.1,21.6", fulfillment_date: ~D[2026-06-10])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "button[phx-click=toggle_reschedule]")
+
+    view |> element("button[phx-click=toggle_reschedule]") |> render_click()
+
+    view
+    |> form("form[phx-submit=reschedule]", %{fulfillment_date: "2026-06-20"})
+    |> render_submit()
+
+    assert Order.get_by_id!(order.id, authorize?: false).fulfillment_date == ~D[2026-06-20]
+  end
+
+  test "does not offer rescheduling for a pickup order", %{conn: conn} do
+    order = placed_order(fulfillment_method: :pickup)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    refute has_element?(view, "button[phx-click=toggle_reschedule]")
+  end
+
+  test "shows delivery attempt history", %{conn: conn} do
+    order = placed_order(fulfillment_method: :delivery, position: "63.1,21.6")
+    record_failed_attempt(order)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "h2", "Delivery attempts")
+    assert render(view) =~ "Recipient unavailable"
+  end
+
+  defp record_failed_attempt(order) do
+    system = %{system: true}
+    driver = generate(driver())
+    admin = generate(admin_user())
+
+    route =
+      Ash.create!(Edenflowers.Store.DeliveryRoute, %{delivery_date: ~D[2026-06-09], driver_id: driver.id},
+        action: :create,
+        actor: system
+      )
+
+    batch =
+      Ash.create!(
+        Edenflowers.Store.DeliveryBatch,
+        %{delivery_date: ~D[2026-06-09], published_by_user_id: admin.id, published_at: DateTime.utc_now()},
+        action: :create,
+        actor: system
+      )
+
+    trip =
+      Ash.create!(
+        Edenflowers.Store.DeliveryTrip,
+        %{
+          delivery_route_id: route.id,
+          batch_id: batch.id,
+          sequence: 1,
+          distance: 1,
+          driving_duration: 1,
+          service_duration: 1,
+          published_at: DateTime.utc_now()
+        },
+        action: :create,
+        actor: system
+      )
+
+    stop =
+      Ash.create!(
+        Edenflowers.Store.DeliveryStop,
+        %{delivery_trip_id: trip.id, order_id: order.id, sequence: 1, leg_distance: 1, leg_duration: 1},
+        action: :create,
+        actor: system
+      )
+
+    Ash.create!(
+      Edenflowers.Store.DeliveryAttempt,
+      %{
+        delivery_stop_id: stop.id,
+        outcome: :failed,
+        failure_reason: :recipient_unavailable,
+        recorded_at: DateTime.utc_now(),
+        actor_kind: :driver_link
+      },
+      action: :create,
+      actor: system
+    )
+  end
+
   defp placed_order(overrides \\ []) do
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
