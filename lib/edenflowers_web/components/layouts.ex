@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Layouts do
           aria-label={~t"Close navigation menu"}
           class="cursor-pointer"
         >
-          <.icon name="hero-x-mark" class="text-base-content/40 h-5 w-5 hover:text-base-content/70" />
+          <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
         </button>
       </div>
 
@@ -278,9 +278,9 @@ defmodule EdenflowersWeb.Layouts do
       <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
         <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
           <span class="text-base-content/65 flex items-center gap-3 rounded-r border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
-            <.icon name="hero-globe-alt" class="text-base-content/40 h-4 w-4 shrink-0" />
+            <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />
             <span class="flex-1 text-left">{@current_locale}</span>
-            <.icon name="hero-chevron-up-down" class="text-base-content/40 h-4 w-4 shrink-0" />
+            <.icon name="hero-chevron-up-down" class="text-base-content/60 h-4 w-4 shrink-0" />
           </span>
         </.locale_picker>
 
@@ -317,7 +317,7 @@ defmodule EdenflowersWeb.Layouts do
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
     else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
     >
-      <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/40")]} />
+      <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
       {@label}
     </.link>
     """
@@ -351,7 +351,7 @@ defmodule EdenflowersWeb.Layouts do
           <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
           <span class="text-base-content/65 max-w-44 block truncate text-xs">{@email}</span>
         </span>
-        <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/45 h-4 w-4 shrink-0" />
+        <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/60 h-4 w-4 shrink-0" />
       </button>
 
       <ul

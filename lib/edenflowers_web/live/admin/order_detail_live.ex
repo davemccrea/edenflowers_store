@@ -44,7 +44,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span :if={present?(@order.customer_name)}>{@order.customer_name}</span>
+              <span :if={present?(@order.customer_name)} class="text-base-content/85 font-medium">
+                {@order.customer_name}
+              </span>
               <.gift_badge :if={@order.gift} order={@order} />
               <span :if={@order.ordered_at} aria-hidden="true">·</span>
               <span :if={@order.ordered_at}>{~t"Ordered"} {Format.datetime(@order.ordered_at, @locale)}</span>
@@ -53,11 +55,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <:actions>
             <div class="flex items-center gap-4">
               <div class="flex flex-col items-start gap-1">
-                <span class="eyebrow text-base-content/55">{~t"Payment"}</span>
+                <span class="eyebrow text-base-content/65">{~t"Payment"}</span>
                 <.payment_status_badge status={@order.payment_status} />
               </div>
               <div class="flex flex-col items-start gap-1">
-                <span class="eyebrow text-base-content/55">{~t"Fulfillment"}</span>
+                <span class="eyebrow text-base-content/65">{~t"Fulfillment"}</span>
                 <.fulfillment_status_badge status={@order.fulfillment_status} />
               </div>
             </div>
@@ -84,7 +86,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <div class="mb-6">
             <p class="eyebrow text-base-content/65 mb-1">{~t"Date"}</p>
             <div class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-              <p class="text-base-content text-lg font-semibold">
+              <p class="text-base-content text-sm font-medium tabular-nums">
                 {Format.date(@order.fulfillment_date, @locale)}
               </p>
               <.relative_date_badge
@@ -347,7 +349,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <p class={["text-sm leading-tight", (@status == :pending && "text-base-content/65") || "text-base-content"]}>
           {@label}
         </p>
-        <p class="text-base-content/55 text-xs">{render_slot(@inner_block)}</p>
+        <p class="text-base-content/65 text-xs">{render_slot(@inner_block)}</p>
       </div>
       <hr :if={!@last} class={timeline_connector_class(@status)} />
     </li>
@@ -358,11 +360,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp timeline_icon(:error), do: "hero-x-circle-solid"
   defp timeline_icon(:pending), do: "hero-clock"
 
-  defp timeline_icon_class(:done), do: "text-success"
-  defp timeline_icon_class(:error), do: "text-error"
-  defp timeline_icon_class(:pending), do: "text-base-content/30"
+  defp timeline_icon_class(:done), do: "text-success-content"
+  defp timeline_icon_class(:error), do: "text-error-content"
+  defp timeline_icon_class(:pending), do: "text-base-content/60"
 
-  defp timeline_connector_class(:done), do: "bg-success"
+  defp timeline_connector_class(:done), do: "bg-success-content"
   defp timeline_connector_class(_), do: ""
 
   # A refund still means payment was received, so it reads as done; a failure is a
@@ -413,7 +415,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <div class="bg-base-100 flex items-center justify-center gap-1.5 px-3 py-2 text-sm transition-colors group-hover:bg-base-200/50">
           <.icon name="hero-map-pin" class="text-base-content/60 h-4 w-4" />
           <span class="link link-primary">{~t"Get directions"}</span>
-          <.icon name="hero-arrow-top-right-on-square" class="text-base-content/40 h-3.5 w-3.5" />
+          <.icon name="hero-arrow-top-right-on-square" class="text-base-content/60 h-3.5 w-3.5" />
         </div>
       </a>
     </div>
@@ -428,8 +430,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp money_row(assigns) do
     ~H"""
     <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-300/70 text-base-content mt-1.5 border-t pt-3 text-base font-semibold"]}>
-      <dt class="text-base-content/65">{@label}</dt>
-      <dd class="text-base-content tabular-nums">{money(@amount, @locale)}</dd>
+      <dt class={if @strong, do: "text-base-content", else: "text-base-content/75"}>
+        {@label}
+      </dt>
+      <dd class={["tabular-nums", if(@strong, do: "text-base-content", else: "text-base-content/90")]}>
+        {money(@amount, @locale)}
+      </dd>
     </div>
     """
   end

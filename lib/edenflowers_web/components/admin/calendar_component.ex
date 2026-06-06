@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
         :open -> "cursor-pointer text-base-content/85 hover:bg-primary/10"
         :weekday_disabled -> closed_class
         :date_disabled -> closed_class
-        :past -> "cursor-not-allowed text-base-content/45"
+        :past -> "cursor-not-allowed text-base-content/60"
         :mixed -> "cursor-not-allowed text-base-content/85 #{@mixed_tile_class}"
       end
 

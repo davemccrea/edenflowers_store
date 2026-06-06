@@ -39,7 +39,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           back_label={~t"Expenses"}
         >
           <:actions>
-            <span :if={not is_nil(@expense.reviewed_at)} class="badge badge-soft badge-sm badge-success gap-1">
+            <span
+              :if={not is_nil(@expense.reviewed_at)}
+              class="badge badge-sm badge-success admin-badge-success gap-1"
+            >
               <.icon name="hero-check" class="h-3 w-3" /> {~t"Reviewed"}
             </span>
             <button

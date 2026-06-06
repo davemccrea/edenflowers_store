@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Extraction-confidence pill, shared by the expenses table and detail view."
   def confidence_badge(assigns) do
     ~H"""
-    <span class={["badge badge-soft badge-sm capitalize", confidence_badge_class(@confidence)]}>
+    <span class={["badge badge-sm capitalize", confidence_badge_class(@confidence)]}>
       <span
         :if={@confidence == :low}
         class="inline-block h-1.5 w-1.5 rounded-full bg-current"
@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Payment-status pill for an order: paid reads as success, failed as error, refunds and pending stay neutral."
   def payment_status_badge(assigns) do
     ~H"""
-    <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
+    <span class={["badge badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
       {payment_status_label(@status)}
     </span>
     """
@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Fulfillment-status pill for an order: fulfilled reads as success, pending stays neutral."
   def fulfillment_status_badge(assigns) do
     ~H"""
-    <span class={["badge badge-soft badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
+    <span class={["badge badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
       {fulfillment_status_label(@status)}
     </span>
     """
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="mb-11 sm:mb-14">
+    <header class="mb-8 sm:mb-10">
       <div :if={@back} class="mb-4">
         <.link
           navigate={@back}
@@ -152,20 +152,20 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  defp confidence_badge_class(:low), do: "badge-error"
-  defp confidence_badge_class(:medium), do: "badge-warning"
-  defp confidence_badge_class(:high), do: "badge-success"
-  defp confidence_badge_class(_), do: "badge-ghost"
+  defp confidence_badge_class(:low), do: "badge-error admin-badge-error"
+  defp confidence_badge_class(:medium), do: "badge-warning admin-badge-warning"
+  defp confidence_badge_class(:high), do: "badge-success admin-badge-success"
+  defp confidence_badge_class(_), do: "admin-badge-neutral"
 
   defp confidence_label(:low), do: ~t"Low"
   defp confidence_label(:medium), do: ~t"Medium"
   defp confidence_label(:high), do: ~t"High"
   defp confidence_label(value), do: to_string(value)
 
-  defp payment_status_badge_class(:paid), do: "badge-success"
-  defp payment_status_badge_class(:failed), do: "badge-error"
-  defp payment_status_badge_class(:refunded), do: "badge-warning"
-  defp payment_status_badge_class(_), do: "badge-ghost"
+  defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"
+  defp payment_status_badge_class(:failed), do: "badge-error admin-badge-error"
+  defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-warning"
+  defp payment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp payment_status_label(:paid), do: ~t"Paid"
   defp payment_status_label(:failed), do: ~t"Failed"
@@ -173,8 +173,8 @@ defmodule EdenflowersWeb.Admin.Components do
   defp payment_status_label(:pending), do: ~t"Pending"
   defp payment_status_label(value), do: to_string(value)
 
-  defp fulfillment_status_badge_class(:fulfilled), do: "badge-success"
-  defp fulfillment_status_badge_class(_), do: "badge-ghost"
+  defp fulfillment_status_badge_class(:fulfilled), do: "badge-success admin-badge-success"
+  defp fulfillment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp fulfillment_status_label(:fulfilled), do: ~t"Fulfilled"
   defp fulfillment_status_label(:pending), do: ~t"Pending"
