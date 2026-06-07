@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
      |> assign(:optimization_strategy, :cheapest)
      |> assign(:optimizing?, false)
      |> assign(:publishing?, false)
+     |> assign(:composer_collapsed?, false)
      |> assign(:subscribed_route_ids, MapSet.new())
      |> assign(:routes, nil)
      |> assign(:plan_error, nil)
@@ -47,6 +48,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     |> assign(:selected_driver_ids, default_driver_selection(drivers))
     |> assign(:routes, nil)
     |> assign(:plan_error, nil)
+    |> assign(:composer_collapsed?, false)
     |> subscribe_to_routes(published_routes)
   end
 
@@ -62,251 +64,177 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       <.admin_page width="full">
         <.admin_page_header title={~t"Plan deliveries"}>
           <:subtitle>{~t"Choose today's orders and the drivers available, then optimize the routes."}</:subtitle>
-          <:actions>
-            <button
-              type="button"
-              phx-click="optimize"
-              disabled={not can_optimize?(assigns)}
-              class="btn btn-primary btn-sm"
-            >
-              <span :if={@optimizing?} class="loading loading-spinner loading-xs"></span>
-              {if @optimizing?, do: ~t"Optimizing…", else: ~t"Optimize"}
-            </button>
-          </:actions>
         </.admin_page_header>
-
-        <section :if={@published_routes != []} class="mb-8 space-y-4">
-          <h2 class="text-sm font-semibold">{~t"Published routes"}</h2>
-
-          <article
-            :for={route <- @published_routes}
-            id={"route-monitor-#{route.id}"}
-            class="border-base-300/70 bg-base-200/40 rounded-lg border p-4"
-          >
-            <header class="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="font-medium">{route.driver.name}</h3>
-                  <span
-                    :if={route_complete?(route)}
-                    class="badge badge-sm badge-success admin-badge-success"
-                  >
-                    {~t"Completed"}
-                  </span>
-                </div>
-                <p class="text-base-content/65 mt-1 text-sm">
-                  {length(route.route_stops)} {~t"stops"}
-                </p>
-              </div>
-
-              <div class="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  id={"copy-route-#{route.id}"}
-                  phx-hook="CopyToClipboard"
-                  data-clipboard-text={driver_link(route.driver)}
-                  data-copied-label={~t"Copied!"}
-                  class="btn btn-ghost btn-xs"
-                >
-                  <.icon name="hero-link" class="h-4 w-4" />
-                  <span data-copy-label>{~t"Copy link"}</span>
-                </button>
-                <a
-                  href={~p"/d/#{route.driver.link_token}"}
-                  target="_blank"
-                  rel="noopener"
-                  class="btn btn-ghost btn-xs"
-                >
-                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                  {~t"Open driver view"}
-                </a>
-              </div>
-            </header>
-
-            <% progress = route_progress(route) %>
-            <div
-              id={"route-progress-#{route.id}"}
-              class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm"
-            >
-              <span id={"route-delivered-#{route.id}"}>
-                <span class="font-medium">{progress.delivered}</span>
-                <span class="text-base-content/65">{~t"Delivered"}</span>
-              </span>
-              <span id={"route-failed-#{route.id}"}>
-                <span class="font-medium">{progress.failed}</span>
-                <span class="text-base-content/65">{~t"Failed"}</span>
-              </span>
-              <span id={"route-remaining-#{route.id}"}>
-                <span class="font-medium">{progress.remaining}</span>
-                <span class="text-base-content/65">{~t"Remaining"}</span>
-              </span>
-            </div>
-
-            <ol class="divide-base-300/70 divide-y">
-              <li
-                :for={stop <- route.route_stops}
-                id={"monitor-stop-#{stop.id}"}
-                class="flex items-baseline justify-between gap-3 py-2"
-              >
-                <span class="flex items-baseline gap-2">
-                  <span class="text-base-content/50 w-5 text-sm">{stop.sequence}.</span>
-                  <span class="font-medium">{stop.order_reference}</span>
-                  <span class="text-base-content/65 text-sm">{stop.recipient_name}</span>
-                </span>
-                <span class="flex items-center gap-3 whitespace-nowrap text-sm">
-                  <span class={stop_status_class(stop.status)}>
-                    {stop_status_label(stop.status)}
-                  </span>
-                  <span class="text-base-content/65">{format_distance(stop.leg_distance_m)}</span>
-                </span>
-              </li>
-            </ol>
-          </article>
-        </section>
 
         <div
           :if={@eligible_orders == []}
-          class="border-base-300/70 rounded-lg border border-dashed p-10 text-center"
+          class="border-base-300/70 bg-base-100 mb-12 flex flex-col items-center gap-3 rounded-xl border border-dashed p-12 text-center"
         >
+          <.icon name="hero-check-circle" class="text-base-content/30 h-8 w-8" />
           <p class="text-base-content/65 text-sm">
             {~t"No deliveries to plan today."}
           </p>
         </div>
 
-        <div :if={@eligible_orders != []} class="grid gap-6 lg:grid-cols-3">
-          <section class="lg:col-span-2">
-            <h2 class="mb-2 text-sm font-semibold">
-              {~t"Orders"} ({MapSet.size(@selected_order_ids)}/{length(@eligible_orders)})
-            </h2>
-            <div class="border-base-300/70 overflow-x-auto rounded-lg border">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th class="w-10">
-                      <input
-                        type="checkbox"
-                        id="toggle-all-orders"
-                        class="checkbox checkbox-sm"
-                        phx-click="toggle_all_orders"
-                        checked={all_orders_selected?(assigns)}
-                        aria-label={~t"Select all orders"}
-                      />
-                    </th>
-                    <th>{~t"Order"}</th>
-                    <th>{~t"Recipient"}</th>
-                    <th class="text-right">{~t"Distance"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr :for={order <- @eligible_orders}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        class="checkbox checkbox-sm"
-                        id={"order-#{order.id}"}
-                        phx-click="toggle_order"
-                        phx-value-id={order.id}
-                        checked={MapSet.member?(@selected_order_ids, order.id)}
-                      />
-                    </td>
-                    <td class="font-medium">{order.order_reference}</td>
-                    <td>{order.recipient_name || order.customer_name}</td>
-                    <td class="text-right">
-                      <span :if={order.distance_km}>{format_distance_km(order.distance_km)}</span>
-                      <span :if={is_nil(order.distance_km)} class="text-base-content/30">—</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+        <section :if={@eligible_orders != []} class="mb-12">
+          <.stage_header title={~t"Compose the run"} />
 
-          <section class="space-y-6">
-            <fieldset>
-              <legend class="mb-2 text-sm font-semibold">{~t"Optimization"}</legend>
-              <form id="optimization-strategy" phx-change="change_optimization">
-                <div class="border-base-300/70 divide-base-300/70 divide-y rounded-lg border">
-                  <label class="flex cursor-pointer items-start gap-3 p-3">
-                    <input
-                      type="radio"
-                      class="radio radio-sm radio-primary mt-0.5"
-                      name="optimization[strategy]"
+          <div class="border-base-300/70 bg-base-100 mb-6 flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <dl class="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+              <.route_stat
+                label={~t"Orders"}
+                value={"#{MapSet.size(@selected_order_ids)} / #{length(@eligible_orders)}"}
+              />
+              <.route_stat
+                label={~t"Drivers"}
+                value={"#{MapSet.size(@selected_driver_ids)} / #{length(@drivers)}"}
+              />
+              <.route_stat label={~t"Strategy"} value={strategy_label(@optimization_strategy)} />
+            </dl>
+            <div class="flex items-center gap-2">
+              <button
+                :if={@routes}
+                type="button"
+                phx-click="toggle_composer"
+                aria-expanded={to_string(not @composer_collapsed?)}
+                aria-controls="composer-body"
+                class="btn btn-ghost btn-sm"
+              >
+                <.icon
+                  name={if @composer_collapsed?, do: "hero-chevron-down", else: "hero-chevron-up"}
+                  class="h-4 w-4"
+                />
+                {if @composer_collapsed?, do: ~t"Edit selection", else: ~t"Hide selection"}
+              </button>
+              <button
+                type="button"
+                phx-click="optimize"
+                disabled={not can_optimize?(assigns)}
+                class={["btn btn-sm shrink-0 sm:btn-md", if(@routes, do: "btn-outline", else: "btn-primary")]}
+              >
+                <span :if={@optimizing?} class="loading loading-spinner loading-xs"></span>
+                {if @optimizing?, do: ~t"Optimizing…", else: ~t"Optimize"}
+              </button>
+            </div>
+          </div>
+
+          <div
+            :if={is_nil(@routes) or not @composer_collapsed?}
+            id="composer-body"
+            class="grid gap-6 lg:grid-cols-3"
+          >
+            <div class="lg:col-span-2">
+              <p class="eyebrow text-base-content/65 mb-2">{~t"Orders"}</p>
+              <div class="border-base-300/70 admin-table-scroll bg-base-100 overflow-x-auto rounded-xl border">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th class="w-10">
+                        <input
+                          type="checkbox"
+                          id="toggle-all-orders"
+                          class="checkbox checkbox-sm"
+                          phx-click="toggle_all_orders"
+                          checked={all_orders_selected?(assigns)}
+                          aria-label={~t"Select all orders"}
+                        />
+                      </th>
+                      <th>{~t"Order"}</th>
+                      <th>{~t"Recipient"}</th>
+                      <th class="text-right">{~t"Distance"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      :for={order <- @eligible_orders}
+                      class={["transition-colors hover:bg-base-200/50", MapSet.member?(@selected_order_ids, order.id) && "bg-primary/5"]}
+                    >
+                      <td>
+                        <input
+                          type="checkbox"
+                          class="checkbox checkbox-sm"
+                          id={"order-#{order.id}"}
+                          phx-click="toggle_order"
+                          phx-value-id={order.id}
+                          checked={MapSet.member?(@selected_order_ids, order.id)}
+                        />
+                      </td>
+                      <td class="text-base-content/65 tabular-nums">{order.order_reference}</td>
+                      <td class="font-medium">{order.recipient_name || order.customer_name}</td>
+                      <td class="text-right tabular-nums">
+                        <span :if={order.distance_km}>{format_distance_km(order.distance_km)}</span>
+                        <span :if={is_nil(order.distance_km)} class="text-base-content/30">—</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <fieldset>
+                <legend class="eyebrow text-base-content/65 mb-2">{~t"Optimization"}</legend>
+                <form id="optimization-strategy" phx-change="change_optimization">
+                  <div class="border-base-300/70 divide-base-300/70 bg-base-100 divide-y overflow-hidden rounded-xl border">
+                    <.optimization_option
                       value="cheapest"
+                      title={~t"Cheapest"}
+                      desc={~t"least total driving distance."}
                       checked={@optimization_strategy == :cheapest}
                     />
-                    <span>
-                      <span class="block text-sm font-medium">{~t"Cheapest"}</span>
-                      <span class="text-base-content/65 block text-xs">
-                        {~t"least total driving distance."}
-                      </span>
-                    </span>
-                  </label>
-                  <label class="flex cursor-pointer items-start gap-3 p-3">
-                    <input
-                      type="radio"
-                      class="radio radio-sm radio-primary mt-0.5"
-                      name="optimization[strategy]"
+                    <.optimization_option
                       value="balanced"
+                      title={~t"Balanced"}
+                      desc={~t"equalizes total route duration across drivers."}
                       checked={@optimization_strategy == :balanced}
                     />
-                    <span>
-                      <span class="block text-sm font-medium">{~t"Balanced"}</span>
-                      <span class="text-base-content/65 block text-xs">
-                        {~t"equalizes total route duration across drivers."}
-                      </span>
-                    </span>
-                  </label>
-                  <label class="flex cursor-pointer items-start gap-3 p-3">
-                    <input
-                      type="radio"
-                      class="radio radio-sm radio-primary mt-0.5"
-                      name="optimization[strategy]"
+                    <.optimization_option
                       value="fastest"
+                      title={~t"Fastest"}
+                      desc={~t"minimizes aggregate driving and delivery time."}
                       checked={@optimization_strategy == :fastest}
                     />
-                    <span>
-                      <span class="block text-sm font-medium">{~t"Fastest"}</span>
-                      <span class="text-base-content/65 block text-xs">
-                        {~t"minimizes aggregate driving and delivery time."}
-                      </span>
-                    </span>
-                  </label>
+                  </div>
+                </form>
+              </fieldset>
+
+              <div>
+                <p class="eyebrow text-base-content/65 mb-2">{~t"Drivers"}</p>
+
+                <div
+                  :if={@drivers == []}
+                  class="border-base-300/70 rounded-xl border border-dashed p-6 text-center"
+                >
+                  <p class="text-base-content/65 text-sm">
+                    {~t"No active drivers. Add one before planning."}
+                  </p>
                 </div>
-              </form>
-            </fieldset>
 
-            <div>
-              <h2 class="mb-2 text-sm font-semibold">
-                {~t"Drivers"} ({MapSet.size(@selected_driver_ids)}/{length(@drivers)})
-              </h2>
-
-              <div
-                :if={@drivers == []}
-                class="border-base-300/70 rounded-lg border border-dashed p-6 text-center"
-              >
-                <p class="text-base-content/65 text-sm">
-                  {~t"No active drivers. Add one before planning."}
-                </p>
+                <ul
+                  :if={@drivers != []}
+                  class="border-base-300/70 divide-base-300/70 bg-base-100 divide-y overflow-hidden rounded-xl border"
+                >
+                  <li :for={driver <- @drivers}>
+                    <label
+                      for={"driver-#{driver.id}"}
+                      class="flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:bg-base-200/50"
+                    >
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm"
+                        id={"driver-#{driver.id}"}
+                        phx-click="toggle_driver"
+                        phx-value-id={driver.id}
+                        checked={MapSet.member?(@selected_driver_ids, driver.id)}
+                      />
+                      <span class="text-sm font-medium">{driver.name}</span>
+                    </label>
+                  </li>
+                </ul>
               </div>
-
-              <ul :if={@drivers != []} class="border-base-300/70 divide-base-300/70 divide-y rounded-lg border">
-                <li :for={driver <- @drivers}>
-                  <label for={"driver-#{driver.id}"} class="flex cursor-pointer items-center gap-3 p-3">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-sm"
-                      id={"driver-#{driver.id}"}
-                      phx-click="toggle_driver"
-                      phx-value-id={driver.id}
-                      checked={MapSet.member?(@selected_driver_ids, driver.id)}
-                    />
-                    <span class="text-sm font-medium">{driver.name}</span>
-                  </label>
-                </li>
-              </ul>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
         <div :if={@plan_error == :unassigned} class="alert alert-warning mt-6" role="alert">
           <.icon name="hero-exclamation-triangle" class="h-5 w-5" />
@@ -320,75 +248,265 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
           <span>{~t"The optimizer couldn't be reached. Try again."}</span>
         </div>
 
-        <section :if={@routes} class="mt-8 space-y-6">
-          <header class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-sm font-semibold">{~t"Proposed routes"}</h2>
-            <button
-              type="button"
-              phx-click="publish"
-              disabled={@publishing?}
-              class="btn btn-primary btn-sm"
-            >
-              <span :if={@publishing?} class="loading loading-spinner loading-xs"></span>
-              {if @publishing?, do: ~t"Publishing…", else: ~t"Publish run"}
-            </button>
-          </header>
-
-          <article
-            :for={route <- @routes}
-            id={"proposed-route-#{route.draft_id}"}
-            class="border-base-300/70 rounded-lg border p-4"
-          >
-            <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <form
-                id={"route-driver-form-#{route.draft_id}"}
-                phx-change="assign_driver"
-                class="flex items-center gap-2 text-sm"
+        <section :if={@routes} class="mb-12">
+          <.stage_header title={~t"Proposed routes"}>
+            <:actions>
+              <button
+                type="button"
+                phx-click="publish"
+                disabled={@publishing?}
+                class="btn btn-primary btn-sm"
               >
-                <input type="hidden" name="assignment[draft_id]" value={route.draft_id} />
-                <label for={"route-driver-#{route.draft_id}"} class="font-medium">{~t"Driver"}</label>
-                <select
-                  id={"route-driver-#{route.draft_id}"}
-                  name="assignment[driver_id]"
-                  class="select select-sm"
-                >
-                  <option
-                    :for={driver <- selected_drivers(assigns)}
-                    value={driver.id}
-                    selected={driver.id == route.driver_id}
-                  >
-                    {driver.name}
-                  </option>
-                </select>
-              </form>
-              <p class="text-base-content/65 text-sm">
-                {length(route.stops)} {~t"stops"} · {format_distance(route.total_distance_m)} · {~t"drive"} {format_duration(
-                  route.total_driving_s
-                )} · {~t"total"} {format_duration(route.total_duration_s)}
-              </p>
-            </header>
+                <span :if={@publishing?} class="loading loading-spinner loading-xs"></span>
+                {if @publishing?, do: ~t"Publishing…", else: ~t"Publish run"}
+              </button>
+            </:actions>
+          </.stage_header>
 
-            <ol class="divide-base-300/70 divide-y">
-              <li :for={stop <- route.stops} class="flex items-baseline justify-between gap-3 py-2">
-                <span class="flex items-baseline gap-2">
-                  <span class="text-base-content/50 w-5 text-sm">{stop.sequence}.</span>
-                  <span class="font-medium">{order_label(assigns, stop.stop_id)}</span>
-                </span>
-                <span class="text-base-content/65 whitespace-nowrap text-sm">
-                  +{format_distance(stop.leg_from_previous.distance_m)} · +{format_duration(
-                    stop.leg_from_previous.duration_s
-                  )}
-                </span>
-              </li>
-            </ol>
-          </article>
+          <div class="space-y-4">
+            <.proposed_route_card
+              :for={route <- @routes}
+              route={route}
+              drivers={selected_drivers(assigns)}
+              order_by_id={@order_by_id}
+            />
+          </div>
 
-          <div :if={unused_drivers(assigns) != []} class="text-base-content/65 text-sm">
+          <div :if={unused_drivers(assigns) != []} class="text-base-content/65 mt-4 text-sm">
             {~t"Not used by the optimizer:"} {unused_drivers(assigns) |> Enum.map_join(", ", & &1.name)}
+          </div>
+        </section>
+
+        <section :if={@published_routes != []}>
+          <.stage_header title={~t"Published routes"} />
+          <div class="space-y-4">
+            <.published_route_card :for={route <- @published_routes} route={route} />
           </div>
         </section>
       </.admin_page>
     </Layouts.admin>
+    """
+  end
+
+  # Section heading with room for a right-aligned action (the publish button on the
+  # review stage).
+  attr :title, :string, required: true
+  slot :actions
+
+  defp stage_header(assigns) do
+    ~H"""
+    <div class="border-base-300/70 mb-5 flex flex-wrap items-end justify-between gap-3 border-b pb-3">
+      <h2 class="text-base-content text-lg font-semibold tracking-tight">{@title}</h2>
+      <div :if={@actions != []} class="flex items-center gap-2">{render_slot(@actions)}</div>
+    </div>
+    """
+  end
+
+  # Label-over-value metric used in the run command bar and on each proposed route.
+  attr :label, :string, required: true
+  attr :value, :any, required: true
+
+  defp route_stat(assigns) do
+    ~H"""
+    <div class="flex items-baseline gap-1.5">
+      <dt class="text-base-content/65">{@label}</dt>
+      <dd class="text-base-content tabular-nums">{@value}</dd>
+    </div>
+    """
+  end
+
+  # One optimization strategy. The checked option carries a faint primary wash so the
+  # active choice is legible without leaning on the radio dot alone.
+  attr :value, :string, required: true
+  attr :title, :string, required: true
+  attr :desc, :string, required: true
+  attr :checked, :boolean, required: true
+
+  defp optimization_option(assigns) do
+    ~H"""
+    <label class={["flex cursor-pointer items-start gap-3 p-3.5 transition-colors", if(@checked, do: "bg-primary/5", else: "hover:bg-base-200/50")]}>
+      <input
+        type="radio"
+        class="radio radio-sm radio-primary mt-0.5"
+        name="optimization[strategy]"
+        value={@value}
+        checked={@checked}
+      />
+      <span class="min-w-0">
+        <span class={["block text-sm font-medium", @checked && "text-primary"]}>{@title}</span>
+        <span class="text-base-content/65 mt-0.5 block text-xs leading-relaxed">{@desc}</span>
+      </span>
+    </label>
+    """
+  end
+
+  # A live, published route: progress meter, the delivered/failed/remaining tallies the
+  # monitor broadcasts patch, and the ordered stops drawn as a spine.
+  attr :route, :map, required: true
+
+  defp published_route_card(assigns) do
+    ~H"""
+    <article
+      id={"route-monitor-#{@route.id}"}
+      class="admin-rise border-base-300/70 bg-base-200/40 rounded-xl border p-5"
+    >
+      <header class="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span :if={not route_complete?(@route)} aria-hidden="true" class="relative flex h-2 w-2">
+              <span class="bg-primary/60 absolute inline-flex h-full w-full rounded-full motion-safe:animate-ping" />
+              <span class="bg-primary relative inline-flex h-2 w-2 rounded-full" />
+            </span>
+            <h3 class="text-base font-semibold">{@route.driver.name}</h3>
+            <span :if={route_complete?(@route)} class="badge badge-sm badge-success admin-badge-success">
+              {~t"Completed"}
+            </span>
+          </div>
+          <p class="text-base-content/65 mt-1 text-sm">
+            {length(@route.route_stops)} {~t"stops"}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            id={"copy-route-#{@route.id}"}
+            phx-hook="CopyToClipboard"
+            data-clipboard-text={driver_link(@route.driver)}
+            data-copied-label={~t"Copied!"}
+            class="btn btn-ghost btn-xs"
+          >
+            <.icon name="hero-link" class="h-4 w-4" />
+            <span data-copy-label>{~t"Copy link"}</span>
+          </button>
+          <a
+            href={~p"/d/#{@route.driver.link_token}"}
+            target="_blank"
+            rel="noopener"
+            class="btn btn-ghost btn-xs"
+          >
+            <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+            {~t"Open driver view"}
+          </a>
+        </div>
+      </header>
+
+      <% progress = route_progress(@route) %>
+      <% total = max(length(@route.route_stops), 1) %>
+      <div class="bg-base-300/50 mb-3 flex h-1.5 w-full overflow-hidden rounded-full">
+        <div class="bg-success h-full" style={"width:#{percent(progress.delivered, total)}%"} />
+        <div class="bg-error h-full" style={"width:#{percent(progress.failed, total)}%"} />
+      </div>
+
+      <dl id={"route-progress-#{@route.id}"} class="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <div id={"route-delivered-#{@route.id}"} class="flex items-baseline gap-1.5">
+          <dd class="font-medium tabular-nums">{progress.delivered}</dd>
+          <dt class="text-base-content/65">{~t"Delivered"}</dt>
+        </div>
+        <div id={"route-failed-#{@route.id}"} class="flex items-baseline gap-1.5">
+          <dd class="font-medium tabular-nums">{progress.failed}</dd>
+          <dt class="text-base-content/65">{~t"Failed"}</dt>
+        </div>
+        <div id={"route-remaining-#{@route.id}"} class="flex items-baseline gap-1.5">
+          <dd class="font-medium tabular-nums">{progress.remaining}</dd>
+          <dt class="text-base-content/65">{~t"Remaining"}</dt>
+        </div>
+      </dl>
+
+      <ol class="border-base-300/70 relative ml-1.5 border-l">
+        <li
+          :for={stop <- @route.route_stops}
+          id={"monitor-stop-#{stop.id}"}
+          class="relative flex items-baseline justify-between gap-3 py-2.5 pl-6"
+        >
+          <span class="border-base-300 bg-base-100 text-base-content/65 absolute top-1.5 -left-3 flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium tabular-nums">
+            {stop.sequence}
+          </span>
+          <span class="min-w-0">
+            <span class="font-medium">{stop.recipient_name || stop.order_reference}</span>
+            <span
+              :if={stop.recipient_name}
+              class="text-base-content/65 ml-2 text-sm tabular-nums"
+            >
+              {stop.order_reference}
+            </span>
+          </span>
+          <span class="flex items-center gap-3 whitespace-nowrap text-sm">
+            <span class={stop_status_class(stop.status)}>{stop_status_label(stop.status)}</span>
+            <span class="text-base-content/65 tabular-nums">{format_distance(stop.leg_distance_m)}</span>
+          </span>
+        </li>
+      </ol>
+    </article>
+    """
+  end
+
+  # A proposed (not yet published) route: an editable driver assignment, the run metrics,
+  # and the ordered stops with their per-leg cost.
+  attr :route, :map, required: true
+  attr :drivers, :list, required: true
+  attr :order_by_id, :map, required: true
+
+  defp proposed_route_card(assigns) do
+    ~H"""
+    <article
+      id={"proposed-route-#{@route.draft_id}"}
+      class="admin-rise border-base-300/70 bg-base-100 rounded-xl border p-5"
+    >
+      <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <form
+          id={"route-driver-form-#{@route.draft_id}"}
+          phx-change="assign_driver"
+          class="flex items-center gap-2"
+        >
+          <input type="hidden" name="assignment[draft_id]" value={@route.draft_id} />
+          <label for={"route-driver-#{@route.draft_id}"} class="eyebrow text-base-content/65">
+            {~t"Driver"}
+          </label>
+          <select
+            id={"route-driver-#{@route.draft_id}"}
+            name="assignment[driver_id]"
+            class="select select-sm font-medium"
+          >
+            <option
+              :for={driver <- @drivers}
+              value={driver.id}
+              selected={driver.id == @route.driver_id}
+            >
+              {driver.name}
+            </option>
+          </select>
+        </form>
+        <dl class="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm">
+          <.route_stat label={~t"Stops"} value={length(@route.stops)} />
+          <.route_stat label={~t"Distance"} value={format_distance(@route.total_distance_m)} />
+          <.route_stat label={~t"Drive"} value={format_duration(@route.total_driving_s)} />
+          <.route_stat label={~t"Total"} value={format_duration(@route.total_duration_s)} />
+        </dl>
+      </header>
+
+      <ol class="border-base-300/70 relative ml-1.5 border-l">
+        <li
+          :for={stop <- @route.stops}
+          class="relative flex items-baseline justify-between gap-3 py-2.5 pl-6"
+        >
+          <span class="border-base-300 bg-base-100 text-base-content/65 absolute top-1.5 -left-3 flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium tabular-nums">
+            {stop.sequence}
+          </span>
+          <% order = @order_by_id[stop.stop_id] %>
+          <% name = order_recipient_name(order) %>
+          <span class="min-w-0">
+            <span class="font-medium">{name || order_reference_or_id(order, stop.stop_id)}</span>
+            <span :if={name} class="text-base-content/65 ml-2 text-sm tabular-nums">
+              {order.order_reference}
+            </span>
+          </span>
+          <span class="text-base-content/65 whitespace-nowrap text-sm tabular-nums">
+            +{format_distance(stop.leg_from_previous.distance_m)} · +{format_duration(stop.leg_from_previous.duration_s)}
+          </span>
+        </li>
+      </ol>
+    </article>
     """
   end
 
@@ -410,6 +528,10 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
 
   def handle_event("toggle_driver", %{"id" => id}, socket) do
     {:noreply, socket |> update(:selected_driver_ids, &toggle(&1, id)) |> discard_draft()}
+  end
+
+  def handle_event("toggle_composer", _params, socket) do
+    {:noreply, update(socket, :composer_collapsed?, &(not &1))}
   end
 
   def handle_event(
@@ -467,7 +589,13 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   def handle_info(:run_optimize, socket) do
     case Solver.solve(build_problem(socket)) do
       {:ok, routes} ->
-        {:noreply, assign(socket, optimizing?: false, routes: identify_draft_routes(routes), plan_error: nil)}
+        {:noreply,
+         assign(socket,
+           optimizing?: false,
+           routes: identify_draft_routes(routes),
+           plan_error: nil,
+           composer_collapsed?: true
+         )}
 
       {:error, :unassigned} ->
         {:noreply, assign(socket, optimizing?: false, routes: nil, plan_error: :unassigned)}
@@ -597,12 +725,18 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     Enum.filter(assigns.drivers, &MapSet.member?(assigns.selected_driver_ids, &1.id))
   end
 
-  defp order_label(assigns, order_id) do
-    case assigns.order_by_id[order_id] do
-      nil -> order_id
-      order -> order.order_reference <> " · " <> (order.recipient_name || order.customer_name || "")
-    end
-  end
+  defp order_recipient_name(nil), do: nil
+  defp order_recipient_name(order), do: order.recipient_name || order.customer_name
+
+  defp order_reference_or_id(nil, fallback), do: fallback
+  defp order_reference_or_id(order, _fallback), do: order.order_reference
+
+  defp strategy_label(:cheapest), do: ~t"Cheapest"
+  defp strategy_label(:balanced), do: ~t"Balanced"
+  defp strategy_label(:fastest), do: ~t"Fastest"
+
+  defp percent(_count, 0), do: 0
+  defp percent(count, total), do: round(count / total * 100)
 
   defp unused_drivers(assigns) do
     used = MapSet.new(assigns.routes || [], & &1.driver_id)

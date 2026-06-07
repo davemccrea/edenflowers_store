@@ -342,6 +342,30 @@ body.ready {
   color: color-mix(in oklab, var(--color-base-content) 78%, transparent);
 }
 
+/* One-time entrance for admin cards revealed after an action (a published run, a
+   freshly solved set of routes). Re-renders that only patch children leave the
+   element in place, so the animation does not re-fire on each update. */
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility admin-rise {
+  animation: admin-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-rise {
+    animation: none;
+  }
+}
+
 /* Keep horizontal overflow discoverable on compact admin tables. */
 .admin-table-scroll {
   position: relative;
