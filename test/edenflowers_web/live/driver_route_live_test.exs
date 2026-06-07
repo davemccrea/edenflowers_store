@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
   import Phoenix.LiveViewTest
 
   alias Edenflowers.Delivery.Route
+  alias Edenflowers.Store.Order
 
   defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
@@ -127,5 +128,50 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
 
     assert html =~ "isn&#39;t valid" or html =~ "isn't valid"
     refute html =~ "Collect from shop"
+  end
+
+  test "recording a delivery collapses the stop and fulfills the order", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    order = generate(order(fulfillment_status: :pending))
+    publish_route(driver, [%{order_reference: "EF-1", order_id: order.id}])
+
+    {:ok, view, _html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    view |> element(~s(button[phx-value-kind="delivered"])) |> render_click()
+    html = view |> form("form", %{choice: "handed_to_recipient", note: ""}) |> render_submit()
+
+    assert html =~ "Delivered"
+    refute html =~ "Mark delivered"
+    assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :fulfilled
+  end
+
+  test "recording a failure shows the reason and leaves the order pending", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    order = generate(order(fulfillment_status: :pending))
+    publish_route(driver, [%{order_reference: "EF-1", order_id: order.id}])
+
+    {:ok, view, _html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    view |> element(~s(button[phx-value-kind="failed"])) |> render_click()
+    html = view |> form("form", %{choice: "recipient_unavailable", note: ""}) |> render_submit()
+
+    assert html =~ "Recipient unavailable"
+    # The failed stop is still actionable for a retry.
+    assert html =~ "Mark delivered"
+    assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :pending
+  end
+
+  test "choosing \"other\" without a note is rejected with a message", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    order = generate(order(fulfillment_status: :pending))
+    publish_route(driver, [%{order_reference: "EF-1", order_id: order.id}])
+
+    {:ok, view, _html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    view |> element(~s(button[phx-value-kind="delivered"])) |> render_click()
+    html = view |> form("form", %{choice: "other", note: ""}) |> render_submit()
+
+    assert html =~ "Please add a note"
+    assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :pending
   end
 end
