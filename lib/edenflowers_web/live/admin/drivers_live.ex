@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Admin.DriversLive do
           <p class="text-base-content/65 text-sm">{~t"No drivers yet. Add one to start planning deliveries."}</p>
         </div>
 
-        <div :if={@drivers != []} class="border-base-300/70 overflow-x-auto rounded-lg border">
+        <div :if={@drivers != []} class="border-base-300/70 rounded-lg border">
           <table class="table">
             <thead>
               <tr>
@@ -70,82 +70,74 @@ defmodule EdenflowersWeb.Admin.DriversLive do
                   </span>
                 </td>
                 <td class="text-right">
-                  <%!-- Popover dropdown (DaisyUI v5): renders in the top layer so the menu
-                        isn't clipped by the table's overflow-x-auto wrapper. --%>
-                  <button
-                    type="button"
-                    popovertarget={"driver-actions-#{driver.id}"}
-                    style={"anchor-name:--driver-actions-#{driver.id}"}
-                    aria-label={~t"Driver actions"}
-                    class="btn btn-ghost btn-xs"
-                  >
-                    <.icon name="hero-ellipsis-horizontal" class="h-4 w-4" />
-                  </button>
-                  <ul
-                    id={"driver-actions-#{driver.id}"}
-                    popover
-                    style={"position-anchor:--driver-actions-#{driver.id}"}
-                    class="dropdown dropdown-end menu bg-base-100 border-base-300 w-52 rounded-md border p-1 shadow"
-                  >
-                    <li>
-                      <button
-                        type="button"
-                        id={"copy-#{driver.id}"}
-                        phx-hook="CopyToClipboard"
-                        data-clipboard-text={driver_link(driver)}
-                        data-copied-label={~t"Copied!"}
-                      >
-                        <.icon name="hero-link" class="h-4 w-4" />
-                        <span data-copy-label>{~t"Copy link"}</span>
-                      </button>
-                    </li>
-                    <li>
-                      <.link navigate={~p"/admin/drivers/#{driver.id}/edit"}>
-                        <.icon name="hero-pencil-square" class="h-4 w-4" />
-                        {~t"Edit"}
-                      </.link>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        phx-click="regenerate_token"
-                        phx-value-id={driver.id}
-                        data-confirm={~t"Regenerate this driver's link? The current link will stop working."}
-                      >
-                        <.icon name="hero-arrow-path" class="h-4 w-4" />
-                        {~t"Regenerate link"}
-                      </button>
-                    </li>
-                    <li :if={driver.active?}>
-                      <button
-                        type="button"
-                        phx-click="deactivate"
-                        phx-value-id={driver.id}
-                        data-confirm={~t"Deactivate this driver? They won't be available for new routes."}
-                      >
-                        <.icon name="hero-pause-circle" class="h-4 w-4" />
-                        {~t"Deactivate"}
-                      </button>
-                    </li>
-                    <li :if={not driver.active?}>
-                      <button type="button" phx-click="activate" phx-value-id={driver.id}>
-                        <.icon name="hero-play-circle" class="h-4 w-4" />
-                        {~t"Reactivate"}
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        phx-click="delete"
-                        phx-value-id={driver.id}
-                        data-confirm={~t"Delete this driver permanently? This cannot be undone."}
-                        class="text-error"
-                      >
-                        <.icon name="hero-trash" class="h-4 w-4" />
-                        {~t"Delete"}
-                      </button>
-                    </li>
-                  </ul>
+                  <div class="dropdown dropdown-end">
+                    <button type="button" tabindex="0" aria-label={~t"Driver actions"} class="btn btn-ghost btn-xs">
+                      <.icon name="hero-ellipsis-horizontal" class="h-4 w-4" />
+                    </button>
+                    <ul
+                      tabindex="0"
+                      class="dropdown-content menu bg-base-100 border-base-300 mt-1 w-52 rounded-md border p-1 shadow"
+                    >
+                      <li>
+                        <button
+                          type="button"
+                          id={"copy-#{driver.id}"}
+                          phx-hook="CopyToClipboard"
+                          data-clipboard-text={driver_link(driver)}
+                          data-copied-label={~t"Copied!"}
+                        >
+                          <.icon name="hero-link" class="h-4 w-4" />
+                          <span data-copy-label>{~t"Copy link"}</span>
+                        </button>
+                      </li>
+                      <li>
+                        <.link navigate={~p"/admin/drivers/#{driver.id}/edit"}>
+                          <.icon name="hero-pencil-square" class="h-4 w-4" />
+                          {~t"Edit"}
+                        </.link>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          phx-click="regenerate_token"
+                          phx-value-id={driver.id}
+                          data-confirm={~t"Regenerate this driver's link? The current link will stop working."}
+                        >
+                          <.icon name="hero-arrow-path" class="h-4 w-4" />
+                          {~t"Regenerate link"}
+                        </button>
+                      </li>
+                      <li :if={driver.active?}>
+                        <button
+                          type="button"
+                          phx-click="deactivate"
+                          phx-value-id={driver.id}
+                          data-confirm={~t"Deactivate this driver? They won't be available for new routes."}
+                        >
+                          <.icon name="hero-pause-circle" class="h-4 w-4" />
+                          {~t"Deactivate"}
+                        </button>
+                      </li>
+                      <li :if={not driver.active?}>
+                        <button type="button" phx-click="activate" phx-value-id={driver.id}>
+                          <.icon name="hero-play-circle" class="h-4 w-4" />
+                          {~t"Reactivate"}
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          phx-click="delete"
+                          phx-value-id={driver.id}
+                          data-confirm={~t"Delete this driver permanently? This cannot be undone."}
+                          class="text-error"
+                        >
+                          <.icon name="hero-trash" class="h-4 w-4" />
+                          {~t"Delete"}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </td>
               </tr>
             </tbody>
