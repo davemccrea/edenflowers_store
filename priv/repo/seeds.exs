@@ -17,6 +17,7 @@ alias Edenflowers.Repo
 alias Edenflowers.Store.ProductCategory
 alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
 alias Edenflowers.Store.{Order, LineItem}
+alias Edenflowers.Store.Driver
 alias Edenflowers.Store.Order.Changes.GenerateOrderReference
 alias Edenflowers.Weekday
 
@@ -301,6 +302,18 @@ Promotion
   }
 )
 |> Ash.create!(authorize?: false)
+
+# Delivery drivers for the dispatch workflow.
+for {name, email, locale} <- [
+      {"Rolf", "rolf@example.com", "sv-FI"},
+      {"Febe", "febe@example.com", "sv-FI"},
+      {"Jennie", "jennie@example.com", "fi"},
+      {"David", "david@example.com", "en-GB"}
+    ] do
+  Driver
+  |> Ash.Changeset.for_create(:create, %{name: name, email: email, preferred_locale: locale})
+  |> Ash.create!(authorize?: false)
+end
 
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
       {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies,
