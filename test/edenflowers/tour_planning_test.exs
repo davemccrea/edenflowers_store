@@ -73,6 +73,45 @@ defmodule Edenflowers.TourPlanningTest do
 
       assert {:error, :unassigned} = TourPlanning.parse_solution(body, problem())
     end
+
+    test "returns {:error, :unassigned} when a requested order is absent from the tours" do
+      body =
+        update_in(solution_body(), ["tours", Access.at(0), "stops"], fn [departure, first, _second] ->
+          [departure, first]
+        end)
+
+      assert {:error, :unassigned} = TourPlanning.parse_solution(body, problem())
+    end
+
+    test "keeps every delivery when HERE groups multiple jobs into one stop" do
+      body =
+        update_in(solution_body(), ["tours", Access.at(0), "stops"], fn [departure, first, second] ->
+          grouped =
+            first
+            |> Map.put("activities", first["activities"] ++ second["activities"])
+
+          [departure, grouped]
+        end)
+
+      assert {:ok, [route]} = TourPlanning.parse_solution(body, problem())
+
+      assert [
+               %{
+                 stop_id: "order-1",
+                 sequence: 1,
+                 leg_from_previous: %{distance_m: 1651, duration_s: 300}
+               },
+               %{
+                 stop_id: "order-2",
+                 sequence: 2,
+                 leg_from_previous: %{distance_m: 0, duration_s: 0}
+               }
+             ] = route.stops
+
+      assert route.total_distance_m == 1651
+      assert route.total_driving_s == 300
+      assert route.total_duration_s == 900
+    end
   end
 
   describe "build_problem/1" do

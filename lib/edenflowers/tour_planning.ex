@@ -79,7 +79,7 @@ defmodule Edenflowers.TourPlanning do
   @vehicle_capacity 1000
 
   @impl true
-  def solve(%{stops: _stops, drivers: _drivers} = problem_input) do
+  def solve(%{stops: _, drivers: _} = problem_input) do
     with {:ok, body} <- post(build_problem(problem_input)) do
       parse_solution(body, problem_input)
     end
@@ -153,22 +153,18 @@ defmodule Edenflowers.TourPlanning do
   when the solver couldn't place every order. Public so the spike task can parse a raw
   response it has already fetched.
   """
-  def parse_solution(body, %{stops: stops, drivers: drivers}) do
-    case body do
-      %{"unassigned" => [_ | _]} -> {:error, :unassigned}
-      _ -> parse_tours(body, stops, drivers)
-    end
-  end
+  def parse_solution(%{"unassigned" => [_ | _]}, _problem), do: {:error, :unassigned}
+  def parse_solution(body, %{stops: stops}), do: parse_tours(body, stops)
 
   # Translate HERE tours into the behaviour's output. Each tour's first stop is the
   # shop departure (no job activity); delivery stops carry a cumulative distance from
   # the start, so per-leg distance is the diff between consecutive stops.
-  defp parse_tours(%{"tours" => tours}, stops, drivers) do
+  defp parse_tours(%{"tours" => tours}, stops) do
     handling_by_id = Map.new(stops, fn s -> {s.id, s.handling_seconds} end)
 
     routes =
       Enum.map(tours, fn tour ->
-        driver_id = driver_id_from_type(tour["typeId"], drivers)
+        driver_id = driver_id_from_type(tour["typeId"])
         solved_stops = solved_stops(tour["stops"] || [])
         total_distance = solved_stops |> Enum.map(& &1.leg_from_previous.distance_m) |> Enum.sum()
         total_driving = solved_stops |> Enum.map(& &1.leg_from_previous.duration_s) |> Enum.sum()
@@ -183,48 +179,72 @@ defmodule Edenflowers.TourPlanning do
         }
       end)
 
-    {:ok, routes}
+    validate_assigned_stops(routes, stops)
   end
 
-  defp parse_tours(_body, _stops, _drivers), do: {:error, :tour_planning_failed}
+  defp parse_tours(_body, _stops), do: {:error, :tour_planning_failed}
+
+  defp validate_assigned_stops(routes, requested_stops) do
+    requested_ids = MapSet.new(requested_stops, & &1.id)
+    assigned_ids = routes |> Enum.flat_map(& &1.stops) |> Enum.map(& &1.stop_id)
+    assigned_id_set = MapSet.new(assigned_ids)
+
+    cond do
+      assigned_id_set == requested_ids and length(assigned_ids) == MapSet.size(requested_ids) ->
+        {:ok, routes}
+
+      MapSet.subset?(assigned_id_set, requested_ids) ->
+        {:error, :unassigned}
+
+      true ->
+        {:error, :tour_planning_failed}
+    end
+  end
 
   # Walk the tour's stops in order, threading the previous stop so each delivery's leg
   # is measured from whatever came before it (the shop departure for the first). HERE
   # reports a cumulative distance per stop, so a leg's distance is the diff; a leg's
   # driving time is this stop's arrival minus the previous stop's departure.
   defp solved_stops(here_stops) do
-    {solved, _prev} =
-      Enum.reduce(here_stops, {[], nil}, fn here_stop, {acc, prev} ->
-        case delivery_job_id(here_stop) do
-          nil ->
-            {acc, here_stop}
+    {solved, _previous_stop} =
+      Enum.flat_map_reduce(here_stops, nil, fn here_stop, previous_stop ->
+        case delivery_job_ids(here_stop) do
+          [] ->
+            {[], here_stop}
 
-          job_id ->
-            leg = %{
-              distance_m: max(cumulative_distance(here_stop) - cumulative_distance(prev), 0),
-              duration_s: leg_seconds(prev, here_stop)
+          job_ids ->
+            first_leg = %{
+              distance_m: max(cumulative_distance(here_stop) - cumulative_distance(previous_stop), 0),
+              duration_s: leg_seconds(previous_stop, here_stop)
             }
 
-            {[{job_id, leg} | acc], here_stop}
+            stops_at_location =
+              job_ids
+              |> Enum.with_index()
+              |> Enum.map(fn
+                {job_id, 0} -> {job_id, first_leg}
+                {job_id, _} -> {job_id, %{distance_m: 0, duration_s: 0}}
+              end)
+
+            {stops_at_location, here_stop}
         end
       end)
 
     solved
-    |> Enum.reverse()
     |> Enum.with_index(1)
     |> Enum.map(fn {{job_id, leg}, sequence} ->
       %{stop_id: job_id, sequence: sequence, leg_from_previous: leg}
     end)
   end
 
-  defp delivery_job_id(%{"activities" => activities}) do
-    Enum.find_value(activities, fn
-      %{"type" => "delivery", "jobId" => job_id} -> job_id
-      _ -> nil
+  defp delivery_job_ids(%{"activities" => activities}) do
+    Enum.flat_map(activities, fn
+      %{"type" => "delivery", "jobId" => job_id} -> [job_id]
+      _ -> []
     end)
   end
 
-  defp delivery_job_id(_), do: nil
+  defp delivery_job_ids(_), do: []
 
   defp cumulative_distance(%{"distance" => distance}) when is_integer(distance), do: distance
   defp cumulative_distance(_), do: 0
@@ -240,8 +260,8 @@ defmodule Edenflowers.TourPlanning do
 
   defp leg_seconds(_prev, _current), do: 0
 
-  defp driver_id_from_type("driver-" <> rest, _drivers), do: rest
-  defp driver_id_from_type(type_id, _drivers), do: type_id
+  defp driver_id_from_type("driver-" <> rest), do: rest
+  defp driver_id_from_type(type_id), do: type_id
 
   defp latlng(position) do
     [lat, lng] = String.split(position, ",", parts: 2)
