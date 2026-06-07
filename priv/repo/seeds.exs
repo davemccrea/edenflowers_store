@@ -423,6 +423,7 @@ orders = [
     distance: 1651,
     gift: false,
     locale: "fi",
+    delivery_instructions: "Soita ovikelloa. Asunto 2. krs.",
     items: [{"Bouquet 1", :medium, 1}, {"Plant 2", :small, 1}]
   },
   %{
@@ -438,6 +439,8 @@ orders = [
     here_id: "here:af:streetsection:DnEELU-r45CN9NK9d3YMnB:EAIaAzEzMA",
     distance: 12_670,
     gift: true,
+    locale: "en-GB",
+    delivery_instructions: "Leave with the neighbour if no one answers.",
     card_message: "Happy birthday, with love.",
     # A gift order carries a card: a line item flagged is_card, built from a
     # variant in the Cards category. Checkout enforces one card per order
@@ -460,12 +463,14 @@ orders = [
     days_out: 3,
     recipient_name: "Johan Nyström",
     recipient_phone_number: "+358 44 222 1188",
-    delivery_address: "Västervikintie 17, 65280 Vaasa",
+    delivery_address: "Västerviksvägen 17, 65280 Vasa",
     geocoded_address: "Västerviksvägen 17, 65280 Vasa",
     position: "63.13433,21.59774",
     here_id: "here:af:streetsection:JsgM2SKLxD8mRXEtSARhmA:CgcIBCDIufx9EAEaAjE3",
     distance: 2254,
     gift: false,
+    locale: "sv-FI",
+    delivery_instructions: "Portkod 4471. Ring på dörren.",
     items: [{"Bouquet 4", :medium, 1}, {"Bouquet 5", :medium, 1}]
   },
   %{
@@ -482,6 +487,7 @@ orders = [
     distance: 9273,
     gift: false,
     locale: "fi",
+    delivery_instructions: "Jätä naapurille jos en ole kotona.",
     # Cart total well above the promo's €30 minimum so the discount applies.
     promotion: summer_promo,
     items: [{"Bouquet 6", :large, 2}, {"Plant 3", :medium, 1}]
@@ -517,6 +523,8 @@ orders = [
     here_id: "here:af:streetsection:KI1pyE5DUdLEue2Mt7LnjC:EAIaAjMx",
     distance: 7902,
     gift: false,
+    locale: "fi",
+    delivery_instructions: "Talo on tien päässä. Soita portilla.",
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
   },
@@ -536,6 +544,7 @@ orders = [
     distance: 4393,
     gift: false,
     locale: "fi",
+    delivery_instructions: "Ovikoodi 1234. Asunto 5. krs.",
     items: [{"Bouquet 2", :medium, 1}]
   },
   %{
@@ -545,12 +554,14 @@ orders = [
     fulfillment_date: today,
     recipient_name: "Markus Heikkilä",
     recipient_phone_number: "+358 50 233 4455",
-    delivery_address: "Vöyrinkatu 16, 65100 Vaasa",
+    delivery_address: "Vörågatan 16, 65100 Vasa",
     geocoded_address: "Vörågatan 16, 65100 Vasa",
     position: "63.10299,21.61895",
     here_id: "here:af:streetsection:gE69OPmaOizFQONoQF9HWD:EAIaAjE2",
     distance: 2820,
     gift: true,
+    locale: "sv-FI",
+    delivery_instructions: "Lämna hos grannen om jag inte är hemma.",
     card_message: "Grattis på födelsedagen!",
     card: {"Card 1", :medium},
     items: [{"Bouquet 5", :large, 1}]
@@ -568,6 +579,8 @@ orders = [
     here_id: "here:af:streetsection:S5XX77wx2HODk46TG8cx5A:CgcIBCCq1fx9EAEaAjI0",
     distance: 2149,
     gift: false,
+    locale: "fi",
+    delivery_instructions: "Porttikoodi 5588. Soita ovikelloa.",
     items: [{"Plant 2", :medium, 1}, {"Bouquet 1", :small, 1}]
   },
   %{
@@ -577,12 +590,14 @@ orders = [
     fulfillment_date: today,
     recipient_name: "Eeva Nieminen",
     recipient_phone_number: "+358 40 909 1122",
-    delivery_address: "Huutoniementie 14, 65320 Vaasa",
+    delivery_address: "Roparnäsvägen 14, 65320 Vasa",
     geocoded_address: "Roparnäsvägen 14, 65320 Vasa",
     position: "63.08991,21.66855",
     here_id: "here:af:streetsection:-2zTTMwMphgYMZA452172D:CggIBCD9jsXxAhABGgIxNA",
     distance: 5639,
     gift: true,
+    locale: "sv-FI",
+    delivery_instructions: "Lämna utanför dörren om ingen öppnar.",
     card_message: "Tänker på dig.",
     card: {"Card 3", :medium},
     items: [{"Bouquet 6", :medium, 1}]
@@ -601,6 +616,7 @@ orders = [
     distance: 4586,
     gift: false,
     locale: "fi",
+    delivery_instructions: "Soita puhelimeen ennen toimitusta.",
     items: [{"Bouquet 3", :small, 1}, {"Plant 1", :small, 1}]
   }
 ]
@@ -628,6 +644,7 @@ for order_attrs <- orders do
       recipient_name: order_attrs[:recipient_name],
       recipient_phone_number: order_attrs[:recipient_phone_number],
       delivery_address: order_attrs[:delivery_address],
+      delivery_instructions: order_attrs[:delivery_instructions],
       geocoded_address: order_attrs[:geocoded_address],
       position: order_attrs[:position],
       here_id: order_attrs[:here_id],
