@@ -61,6 +61,7 @@ defmodule Edenflowers.Store.Order do
     define :get_for_admin, action: :admin_show, args: [:id]
     define :get_all_completed, action: :completed
     define :get_all_open, action: :open
+    define :list_eligible_for_delivery, action: :eligible_for_delivery
     define :submit_contact_details, action: :submit_contact_details
     define :submit_gift_options, action: :submit_gift_options
     define :submit_delivery, action: :submit_delivery
@@ -179,6 +180,28 @@ defmodule Edenflowers.Store.Order do
       filter expr(id == ^arg(:id) and state == :placed)
       get? true
       prepare build(load: @admin_show_load)
+    end
+
+    # Orders that can be placed on a delivery run: a given day's placed, paid, still-pending
+    # deliveries that carry a geocoded position the optimizer can route to. Slice 5 will
+    # also exclude orders already on a published route (queried from the RouteStop side);
+    # until that resource exists, every matching order is eligible.
+    read :eligible_for_delivery do
+      argument :date, :date do
+        allow_nil? false
+        default fn -> DateTime.now!("Europe/Helsinki") |> DateTime.to_date() end
+      end
+
+      filter expr(
+               state == :placed and payment_status == :paid and
+                 fulfillment_status == :pending and fulfillment_method == :delivery and
+                 fulfillment_date == ^arg(:date) and not is_nil(position)
+             )
+
+      prepare build(
+                sort: [ordered_at: :asc],
+                load: [:customer_name, :recipient_name, :distance_km]
+              )
     end
 
     # Create Actions
