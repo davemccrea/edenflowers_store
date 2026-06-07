@@ -93,6 +93,28 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     assert has_element?(view, "input#driver-#{a.id}[checked]")
   end
 
+  test "the optimize button is disabled when no orders are selected", %{conn: conn} do
+    order = eligible_order()
+    generate(driver(name: "Solo Driver"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    refute has_element?(view, "button[phx-click=optimize][disabled]")
+
+    view |> element("input#order-#{order.id}") |> render_click()
+
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
+  end
+
+  test "the optimize button is disabled when no drivers are selected", %{conn: conn} do
+    eligible_order()
+    generate(driver(name: "Driver A"))
+    generate(driver(name: "Driver B"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
+  end
+
   defp with_token(user) do
     {:ok, token, _claims} = Jwt.token_for_user(user)
     %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}

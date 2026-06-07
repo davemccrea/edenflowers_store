@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Delivery.Driver
   alias Edenflowers.Store.Order
+  alias Edenflowers.TourPlanning.Solver
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -20,8 +21,13 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
      |> assign(:page_title, ~t"Plan deliveries")
      |> assign(:eligible_orders, orders)
      |> assign(:drivers, drivers)
+     |> assign(:order_by_id, Map.new(orders, &{&1.id, &1}))
+     |> assign(:driver_by_id, Map.new(drivers, &{&1.id, &1}))
      |> assign(:selected_order_ids, MapSet.new(Enum.map(orders, & &1.id)))
-     |> assign(:selected_driver_ids, default_driver_selection(drivers))}
+     |> assign(:selected_driver_ids, default_driver_selection(drivers))
+     |> assign(:optimizing?, false)
+     |> assign(:routes, nil)
+     |> assign(:plan_error, nil)}
   end
 
   # With a single active driver there is no choice to make, so pre-select it; otherwise
@@ -36,6 +42,17 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       <.admin_page width="full">
         <.admin_page_header title={~t"Plan deliveries"}>
           <:subtitle>{~t"Choose today's orders and the drivers available, then optimize the routes."}</:subtitle>
+          <:actions>
+            <button
+              type="button"
+              phx-click="optimize"
+              disabled={not can_optimize?(assigns)}
+              class="btn btn-primary btn-sm"
+            >
+              <span :if={@optimizing?} class="loading loading-spinner loading-xs"></span>
+              {if @optimizing?, do: ~t"Optimizing…", else: ~t"Optimize"}
+            </button>
+          </:actions>
         </.admin_page_header>
 
         <div
@@ -117,6 +134,49 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             </ul>
           </section>
         </div>
+
+        <div :if={@plan_error == :unassigned} class="alert alert-warning mt-6" role="alert">
+          <.icon name="hero-exclamation-triangle" class="h-5 w-5" />
+          <span>
+            {~t"Some orders couldn't be placed with the selected drivers. Adjust the orders or drivers and optimize again."}
+          </span>
+        </div>
+
+        <div :if={@plan_error == :failed} class="alert alert-error mt-6" role="alert">
+          <.icon name="hero-exclamation-triangle" class="h-5 w-5" />
+          <span>{~t"The optimizer couldn't be reached. Try again."}</span>
+        </div>
+
+        <section :if={@routes} class="mt-8 space-y-6">
+          <h2 class="text-sm font-semibold">{~t"Proposed routes"}</h2>
+
+          <article :for={route <- @routes} class="border-base-300/70 rounded-lg border p-4">
+            <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="font-medium">{driver_name(assigns, route.driver_id)}</h3>
+              <p class="text-base-content/65 text-sm">
+                {length(route.stops)} {~t"stops"} · {format_km(route.total_distance_m)} km ·
+                {~t"drive"} {format_duration(route.total_driving_s)} ·
+                {~t"total"} {format_duration(route.total_duration_s)}
+              </p>
+            </header>
+
+            <ol class="divide-base-300/70 divide-y">
+              <li :for={stop <- route.stops} class="flex items-baseline justify-between gap-3 py-2">
+                <span class="flex items-baseline gap-2">
+                  <span class="text-base-content/50 w-5 text-sm">{stop.sequence}.</span>
+                  <span class="font-medium">{order_label(assigns, stop.stop_id)}</span>
+                </span>
+                <span class="text-base-content/65 text-sm whitespace-nowrap">
+                  +{format_km(stop.leg_from_previous.distance_m)} km · +{format_duration(stop.leg_from_previous.duration_s)}
+                </span>
+              </li>
+            </ol>
+          </article>
+
+          <div :if={unused_drivers(assigns) != []} class="text-base-content/65 text-sm">
+            {~t"Not used by the optimizer:"} {unused_drivers(assigns) |> Enum.map_join(", ", & &1.name)}
+          </div>
+        </section>
       </.admin_page>
     </Layouts.admin>
     """
@@ -124,11 +184,95 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
 
   @impl true
   def handle_event("toggle_order", %{"id" => id}, socket) do
-    {:noreply, update(socket, :selected_order_ids, &toggle(&1, id))}
+    {:noreply, socket |> update(:selected_order_ids, &toggle(&1, id)) |> discard_draft()}
   end
 
   def handle_event("toggle_driver", %{"id" => id}, socket) do
-    {:noreply, update(socket, :selected_driver_ids, &toggle(&1, id))}
+    {:noreply, socket |> update(:selected_driver_ids, &toggle(&1, id)) |> discard_draft()}
+  end
+
+  def handle_event("optimize", _params, socket) do
+    if can_optimize?(socket.assigns) do
+      send(self(), :run_optimize)
+      {:noreply, assign(socket, optimizing?: true, routes: nil, plan_error: nil)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # The solve runs in handle_info, not the click handler, so the disabled button and
+  # spinner render first — the optimizer call (a real HTTP round-trip in production) then
+  # blocks this process until it returns.
+  @impl true
+  def handle_info(:run_optimize, socket) do
+    case Solver.solve(build_problem(socket)) do
+      {:ok, routes} ->
+        {:noreply, assign(socket, optimizing?: false, routes: routes, plan_error: nil)}
+
+      {:error, :unassigned} ->
+        {:noreply, assign(socket, optimizing?: false, routes: nil, plan_error: :unassigned)}
+
+      {:error, _reason} ->
+        {:noreply, assign(socket, optimizing?: false, routes: nil, plan_error: :failed)}
+    end
+  end
+
+  defp build_problem(socket) do
+    handling = Application.get_env(:edenflowers, :delivery_handling_seconds, 300)
+
+    stops =
+      socket.assigns.eligible_orders
+      |> Enum.filter(&MapSet.member?(socket.assigns.selected_order_ids, &1.id))
+      |> Enum.map(&%{id: &1.id, position: &1.position, handling_seconds: handling})
+
+    drivers =
+      socket.assigns.drivers
+      |> Enum.filter(&MapSet.member?(socket.assigns.selected_driver_ids, &1.id))
+      |> Enum.map(&%{id: &1.id})
+
+    %{stops: stops, drivers: drivers}
+  end
+
+  defp can_optimize?(assigns) do
+    not assigns.optimizing? and MapSet.size(assigns.selected_order_ids) > 0 and
+      MapSet.size(assigns.selected_driver_ids) > 0
+  end
+
+  # A draft describes one specific set of orders and drivers; once that set changes it no
+  # longer applies, so clear it and let the florist re-optimize.
+  defp discard_draft(socket), do: assign(socket, routes: nil, plan_error: nil)
+
+  defp driver_name(assigns, driver_id) do
+    case assigns.driver_by_id[driver_id] do
+      nil -> driver_id
+      driver -> driver.name
+    end
+  end
+
+  defp order_label(assigns, order_id) do
+    case assigns.order_by_id[order_id] do
+      nil -> order_id
+      order -> order.order_reference <> " · " <> (order.recipient_name || order.customer_name || "")
+    end
+  end
+
+  defp unused_drivers(assigns) do
+    used = MapSet.new(assigns.routes || [], & &1.driver_id)
+
+    assigns.drivers
+    |> Enum.filter(&MapSet.member?(assigns.selected_driver_ids, &1.id))
+    |> Enum.reject(&MapSet.member?(used, &1.id))
+  end
+
+  defp format_km(metres), do: :erlang.float_to_binary(metres / 1000, decimals: 1)
+
+  defp format_duration(seconds) do
+    minutes = div(seconds, 60)
+
+    cond do
+      minutes >= 60 -> "#{div(minutes, 60)}h #{rem(minutes, 60)}m"
+      true -> "#{minutes}m"
+    end
   end
 
   defp toggle(set, id) do
