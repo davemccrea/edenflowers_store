@@ -69,51 +69,83 @@ defmodule EdenflowersWeb.Admin.DriversLive do
                     {~t"Inactive"}
                   </span>
                 </td>
-                <td>
-                  <div class="flex flex-wrap items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      id={"copy-#{driver.id}"}
-                      phx-hook="CopyToClipboard"
-                      data-clipboard-text={driver_link(driver)}
-                      data-copied-label={~t"Copied!"}
-                      class="btn btn-ghost btn-xs"
-                    >
-                      <.icon name="hero-link" class="h-3.5 w-3.5" />
-                      <span data-copy-label>{~t"Copy link"}</span>
-                    </button>
-                    <.link navigate={~p"/admin/drivers/#{driver.id}/edit"} class="btn btn-ghost btn-xs">
-                      {~t"Edit"}
-                    </.link>
-                    <button
-                      type="button"
-                      phx-click="regenerate_token"
-                      phx-value-id={driver.id}
-                      data-confirm={~t"Regenerate this driver's link? The current link will stop working."}
-                      class="btn btn-ghost btn-xs"
-                    >
-                      {~t"Regenerate link"}
-                    </button>
-                    <button
-                      :if={driver.active?}
-                      type="button"
-                      phx-click="deactivate"
-                      phx-value-id={driver.id}
-                      data-confirm={~t"Deactivate this driver? They won't be available for new routes."}
-                      class="btn btn-ghost btn-xs text-error"
-                    >
-                      {~t"Deactivate"}
-                    </button>
-                    <button
-                      :if={not driver.active?}
-                      type="button"
-                      phx-click="activate"
-                      phx-value-id={driver.id}
-                      class="btn btn-ghost btn-xs"
-                    >
-                      {~t"Reactivate"}
-                    </button>
-                  </div>
+                <td class="text-right">
+                  <%!-- Popover dropdown (DaisyUI v5): renders in the top layer so the menu
+                        isn't clipped by the table's overflow-x-auto wrapper. --%>
+                  <button
+                    type="button"
+                    popovertarget={"driver-actions-#{driver.id}"}
+                    style={"anchor-name:--driver-actions-#{driver.id}"}
+                    aria-label={~t"Driver actions"}
+                    class="btn btn-ghost btn-xs"
+                  >
+                    <.icon name="hero-ellipsis-horizontal" class="h-4 w-4" />
+                  </button>
+                  <ul
+                    id={"driver-actions-#{driver.id}"}
+                    popover
+                    style={"position-anchor:--driver-actions-#{driver.id}"}
+                    class="dropdown dropdown-end menu bg-base-100 border-base-300 w-52 rounded-md border p-1 shadow"
+                  >
+                    <li>
+                      <button
+                        type="button"
+                        id={"copy-#{driver.id}"}
+                        phx-hook="CopyToClipboard"
+                        data-clipboard-text={driver_link(driver)}
+                        data-copied-label={~t"Copied!"}
+                      >
+                        <.icon name="hero-link" class="h-4 w-4" />
+                        <span data-copy-label>{~t"Copy link"}</span>
+                      </button>
+                    </li>
+                    <li>
+                      <.link navigate={~p"/admin/drivers/#{driver.id}/edit"}>
+                        <.icon name="hero-pencil-square" class="h-4 w-4" />
+                        {~t"Edit"}
+                      </.link>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        phx-click="regenerate_token"
+                        phx-value-id={driver.id}
+                        data-confirm={~t"Regenerate this driver's link? The current link will stop working."}
+                      >
+                        <.icon name="hero-arrow-path" class="h-4 w-4" />
+                        {~t"Regenerate link"}
+                      </button>
+                    </li>
+                    <li :if={driver.active?}>
+                      <button
+                        type="button"
+                        phx-click="deactivate"
+                        phx-value-id={driver.id}
+                        data-confirm={~t"Deactivate this driver? They won't be available for new routes."}
+                      >
+                        <.icon name="hero-pause-circle" class="h-4 w-4" />
+                        {~t"Deactivate"}
+                      </button>
+                    </li>
+                    <li :if={not driver.active?}>
+                      <button type="button" phx-click="activate" phx-value-id={driver.id}>
+                        <.icon name="hero-play-circle" class="h-4 w-4" />
+                        {~t"Reactivate"}
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        phx-click="delete"
+                        phx-value-id={driver.id}
+                        data-confirm={~t"Delete this driver permanently? This cannot be undone."}
+                        class="text-error"
+                      >
+                        <.icon name="hero-trash" class="h-4 w-4" />
+                        {~t"Delete"}
+                      </button>
+                    </li>
+                  </ul>
                 </td>
               </tr>
             </tbody>
@@ -145,6 +177,18 @@ defmodule EdenflowersWeb.Admin.DriversLive do
   def handle_event("activate", %{"id" => id}, socket) do
     driver = Enum.find(socket.assigns.drivers, &(&1.id == id))
     update_active_status(socket, Driver.activate(driver, actor: socket.assigns.current_user))
+  end
+
+  def handle_event("delete", %{"id" => id}, socket) do
+    driver = Enum.find(socket.assigns.drivers, &(&1.id == id))
+
+    case Driver.destroy(driver, actor: socket.assigns.current_user) do
+      :ok ->
+        {:noreply, socket |> put_flash(:info, ~t"Driver deleted.") |> load_drivers()}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not delete the driver.")}
+    end
   end
 
   defp update_active_status(socket, result) do
