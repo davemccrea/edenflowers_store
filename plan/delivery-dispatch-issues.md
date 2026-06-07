@@ -1,0 +1,373 @@
+# Delivery dispatch — implementation issues
+
+Tracer-bullet slices for the v1 delivery dispatch feature. Source spec:
+[delivery-dispatch-core-requirements.md](./delivery-dispatch-core-requirements.md).
+
+Each slice cuts end-to-end (schema → Ash actions → LiveView/UI → tests) and is
+demoable on its own. The optimizer's principal risk is isolated into an early HITL
+spike (slice 3) so the rest builds against a deterministic mock in parallel.
+
+## Architecture decisions (shared across slices)
+
+These were settled in design and apply to every slice below:
+
+- Delivery state lives in **new resources** (`Driver`, `Route`, `RouteStop`). `Order`
+  stays sealed; it changes only via the existing `mark_fulfilled` bypass. No delivery
+  relationship is added to `Order` — eligibility excludes already-published orders by
+  querying from the `Route`/`RouteStop` side.
+- `RouteStop` **snapshots** recipient/address/instructions/card/products and leg
+  metrics at publish; only the order's cancellation/refund status is read live.
+- A stop holds a **single current outcome** (retry overwrites); no kept attempt history.
+- Status lives on `RouteStop` (`pending | delivered | failed | skipped`); route
+  completion is **derived**, never stored.
+- Optimizer runs **synchronously in the LiveView**, behind a `TourPlanning` behaviour
+  with a config-swappable mock (mirrors `Edenflowers.HereAPI.Mock`). Goal: **minimise
+  total driving distance** (cheapest). Objectives are `minimizeUnassigned → minimizeCost`
+  with cost weighted to distance; HERE decides how many of the selected drivers to use,
+  which falls out of the geometry (open routes). Selected drivers are an availability
+  **pool** / upper bound — unused ones get no route. No balancing logic or tuning dial of
+  our own — working with the API, not against it.
+- The planner is **re-runnable**: each run is an independent global re-solve over
+  still-eligible orders and selected drivers. "Wave" is internal terminology only —
+  not surfaced in the UI; no continuous auto-reoptimization.
+- Each driver has **one stable, unguessable token** (`/d/:token`); the page is
+  day-scoped in content and reused across runs and days. No driver accounts.
+- Live progress via an Ash `pub_sub` notifier on `RouteStop`, per-route topics.
+- Shop (`63.1243488,21.5974075`, Europe/Helsinki) is the **origin only** — not a driver.
+- Every route starts at the shop; a later route's "Collect from shop" header is the
+  return-to-reload instruction.
+
+---
+
+## 1. Driver resource + admin CRUD + stable token
+
+**Type:** AFK · **Blocked by:** None — can start immediately
+
+### What to build
+
+A `Driver` resource and an admin screen to manage drivers end-to-end. A driver has a
+name, phone, email, preferred language, active/inactive status, and a stable
+unguessable link token generated on creation. Admins can add, edit, deactivate (never
+delete), copy a driver's link, and regenerate the token (invalidating the old link).
+
+### Acceptance criteria
+
+- [ ] `Driver` resource with name, phone, email, locale, `active?`, and a unique
+      `link_token` generated at creation (`:crypto.strong_rand_bytes` URL-safe, ~128-bit).
+- [ ] Admin LiveView (under the existing `/admin` scope) lists drivers and supports
+      create / edit / deactivate; deactivation preserves the row and its history.
+- [ ] Copy-link button yields the `/d/:token` URL; regenerate-token action replaces the
+      token and a previously copied link stops resolving.
+- [ ] Deactivated drivers are excluded from new assignment selection but otherwise intact.
+- [ ] Tests cover token uniqueness, regeneration invalidating the old token, and
+      deactivation behaviour.
+
+### User stories
+
+- Admin — managing drivers.
+
+---
+
+## 2. `TourPlanning` behaviour contract + deterministic mock
+
+**Type:** AFK · **Blocked by:** None — can start immediately
+
+### What to build
+
+Define the optimizer boundary the rest of the feature builds against: a behaviour whose
+input is the set of stops (each with a `"lat,lng"` position and a fixed handling
+duration) plus the selected drivers, and whose output is, per driver, an ordered stop
+list with per-leg distance/duration and route totals — plus the set of any unassigned
+orders. Ship a deterministic mock, swapped in via config exactly like
+`config :edenflowers, :here_api, Edenflowers.HereAPI.Mock`.
+
+### Acceptance criteria
+
+- [ ] `Edenflowers.TourPlanning.Behaviour` with a single `solve/1` (or `solve/2`)
+      callback returning `{:ok, [%{driver, ordered_stops, legs, totals}]}` or
+      `{:error, :unassigned}` when not every order can be placed.
+- [ ] Output carries, per stop, the distance/duration from the previous stop, and per
+      route the total distance, driving time, and total duration (driving + Σ handling).
+- [ ] `TourPlanning.Mock` returns deterministic, plausible routes for a given input so
+      downstream LiveView tests are stable and offline.
+- [ ] Resolution via `Application.get_env` so prod points at the real adapter (slice 3)
+      and test/dev point at the mock.
+- [ ] Handling-time-per-stop is a single named config constant.
+
+### User stories
+
+- Enabler for Florist — planning.
+
+---
+
+## 3. HERE Tour Planning adapter + objective spike — DONE
+
+**Type:** HITL · **Blocked by:** #2 · **Status:** complete (validated against live API)
+
+### What was built
+
+The real `Edenflowers.TourPlanning` adapter (synchronous `POST /v3/problems`) and the
+`mix eden.tour_planning_spike [drivers]` validation harness, run against today's seeded
+Vaasa orders. Each driver maps to a vehicle whose shift starts at the shop with no end
+location (open route); each order maps to a delivery job carrying the handling duration.
+
+### Findings (validated)
+
+- HERE requires `capacity` on vehicle types and `demand` on delivery tasks; objective
+  names are camelCase (`minimizeUnassigned`, `minimizeCost`, …); `optimizeTourCount`
+  needs extra params (not a simple drop-in).
+- v1 minimises **total driving distance** via `minimizeUnassigned → minimizeCost` with
+  cost weighted to distance. With open routes the driver count falls out of the geometry:
+  for the seeded set, HERE chose **2 drivers / 21.4 km** (a single driver was 23.6 km —
+  splitting two clusters avoided a long cross-town leg). Deterministic across runs.
+- Selected drivers are an availability pool / upper bound; HERE may leave some unused. No
+  balancing logic or tuning dial of our own.
+- The solution-parsing logic is verified correct against the real response (cumulative
+  distance diffs; leg time from stop arrival/departure; handling added to totals).
+
+### Acceptance criteria
+
+- [x] Adapter builds problem JSON, calls `/v3/problems` via `Req`, parses tours into the
+      behaviour's output shape, including unassigned jobs → `{:error, :unassigned}`.
+- [x] Vehicles start at the shop with no end location; jobs carry handling duration.
+- [x] Least-distance objective + driver-count-from-geometry validated against real Vaasa
+      orders.
+- [x] Failure/non-200 from HERE surfaces as a clean error (no partial result).
+- [x] HERE schema + objective strings confirmed against the live API.
+
+### Follow-ups for slice 4
+
+- Selected drivers are an availability pool; the review must handle HERE using fewer
+  drivers than selected (unused drivers get no route — this is expected, not an error).
+
+### User stories
+
+- Principal risk (optimizer correctness).
+
+---
+
+## 4. Plan a run: eligibility + driver selection + optimize + review
+
+**Type:** AFK · **Blocked by:** #1, #2
+
+### What to build
+
+The deliveries planning page (under `/admin`): it lists today's eligible orders
+pre-selected, lets the florist deselect orders and choose available drivers (with the
+one-driver default), and on "Optimize" calls `TourPlanning` synchronously and renders
+the proposed routes for review — per driver, ordered stops with per-leg distance/time
+and a route total including handling. The draft is ephemeral (re-optimizing on any
+change, discarded on leave). If any order can't be placed, planning is blocked with a
+message — no partial result.
+
+### Acceptance criteria
+
+- [ ] Eligibility read: placed, paid, pending fulfillment, delivery method, dated today
+      (Europe/Helsinki), and not already on a published route — all start selected.
+- [ ] Driver picker lists active drivers as an availability pool; if exactly one active
+      driver exists it is pre-selected. The optimizer may use fewer drivers than selected
+      — unused drivers get no route, which the review shows plainly (not an error).
+- [ ] "Optimize" runs synchronously with the button disabled and a loading state; result
+      assigned to socket only (nothing persisted).
+- [ ] Review shows per driver: ordered stops, per-leg distance/time, total distance,
+      driving time, and total duration (driving + Σ handling). No clock/arrival times.
+- [ ] `{:error, :unassigned}` blocks the run with an explanatory message; changing
+      orders/drivers re-optimizes; navigating away discards the draft.
+- [ ] LiveView tests drive the flow against `TourPlanning.Mock`.
+
+### User stories
+
+- Florist — planning.
+
+---
+
+## 5. Publish a run
+
+**Type:** AFK · **Blocked by:** #4
+
+### What to build
+
+A single, all-or-nothing publish action that turns the reviewed draft into persisted
+`Route` + `RouteStop` rows: one route per driver the optimizer actually used, each stop
+snapshotting the order's recipient/address/instructions/card/products and its leg
+metrics. After publishing, the page shows the published routes alongside the still-usable
+planner, so the florist can run it again later over whatever remains eligible.
+
+### Acceptance criteria
+
+- [ ] Publish persists one `Route` per used driver (with `published_at`, `date`, `driver_id`)
+      and ordered `RouteStop` rows snapshotting recipient name, phone, address,
+      instructions, card message, product names + quantities (no prices), sequence, and
+      per-leg distance/duration.
+- [ ] Publish is atomic — a failure persists nothing.
+- [ ] Published orders drop out of the eligible set, so a second run plans only what's
+      left; published routes render on the page next to the planner.
+- [ ] A driver can hold more than one route for the day (one per run).
+- [ ] Tests cover snapshot fidelity and the eligibility-exclusion after publish.
+
+### User stories
+
+- Florist — planning (publish).
+
+---
+
+## 6. Driver route page (read-only)
+
+**Type:** AFK · **Blocked by:** #1, #5
+
+### What to build
+
+The public, no-login driver page at `/d/:token`. It resolves the driver by token and
+renders all of that driver's published routes for today, each as its own ordered list
+headed by a "Collect from shop" marker. Each stop shows order reference, recipient name,
+tap-to-call phone, full address, delivery instructions, card message, product
+names/quantities (no prices), and approximate distance/time from the previous stop, plus
+a Google Maps directions link using the device's current location as origin. Renders in
+the driver's preferred language. Read-only in this slice — outcome recording is slice 7.
+
+### Acceptance criteria
+
+- [ ] `/d/:token` public LiveView outside the authenticated/admin scope; unknown token →
+      not-found page.
+- [ ] Shows the driver's name, today's date, and every today route as a separate ordered
+      list, each headed by a "Collect from shop" start marker.
+- [ ] Each stop renders all required fields with prices excluded; tap-to-call phone link;
+      Google Maps link of the form `…/maps/dir/?api=1&destination=<lat,lng>` (origin
+      omitted → current location).
+- [ ] Page renders in the driver's locale; on a day with no routes it shows a clear
+      "nothing to deliver" state.
+- [ ] Tests cover token resolution, multi-route rendering, locale, and the empty state.
+
+### User stories
+
+- Driver — delivering (view).
+
+---
+
+## 7. Record an outcome
+
+**Type:** AFK · **Blocked by:** #6
+
+### What to build
+
+Outcome recording on the driver page. For each stop the driver records exactly one
+current outcome: **delivered** (method: handed to recipient / left in a safe place /
+other) or **failed** (reason: recipient unavailable / couldn't access / couldn't find /
+refused / other), with an optional note that becomes required when "other" is chosen. A
+delivered outcome marks the order fulfilled via the existing `mark_fulfilled` bypass; a
+failed outcome leaves the order pending and the stop retryable the same day (retry
+overwrites the outcome). Completed stops collapse out of the way.
+
+### Acceptance criteria
+
+- [ ] Delivered requires a method; failed requires a reason; "other" (either side)
+      requires a note; note otherwise optional.
+- [ ] Delivered sets `RouteStop` status `delivered` and calls `mark_fulfilled` on the
+      order; failed sets status `failed`, order stays pending.
+- [ ] A failed stop can be retried the same day; the new outcome overwrites the previous
+      (no history retained).
+- [ ] Completed (delivered) stops collapse but remain visible and clearly marked.
+- [ ] `RouteStop` carries an Ash `pub_sub` notifier broadcasting on outcome change to a
+      per-route topic.
+- [ ] Tests cover each outcome path, the "other"→note rule, retry overwrite, and the
+      order being marked fulfilled.
+
+### User stories
+
+- Driver — delivering; Recording an outcome.
+
+---
+
+## 8. Live progress monitoring
+
+**Type:** AFK · **Blocked by:** #5, #7
+
+### What to build
+
+The florist's monitoring view on the deliveries page: for every published route it shows
+live progress as drivers record outcomes, subscribing to the per-route `RouteStop`
+topics. Each driver shows a copy-link button, and the florist can open any driver's page
+to see exactly what the driver sees. Route completion is a derived calculation over the
+route's stops. This slice also verifies the re-run flow: planning and publishing a
+second run while the first is still in progress.
+
+### Acceptance criteria
+
+- [ ] Monitor subscribes to the per-route topics of today's published routes and patches
+      a stop's status in place on broadcast (no full reload).
+- [ ] Per-route progress (e.g. delivered/failed/remaining counts) derived from stops;
+      route shows complete when every stop is delivered or skipped.
+- [ ] Copy-link button per driver; "open driver view" opens the `/d/:token` page.
+- [ ] Verified: a second run can be planned and published while the first is live, and
+      its routes/progress appear alongside without disturbing the first.
+- [ ] Tests cover a broadcast updating the monitor and derived completion.
+
+### User stories
+
+- Florist — handoff & monitoring.
+
+---
+
+## 9. Cancellation "do not deliver" + order-page outcome visibility
+
+**Type:** AFK · **Blocked by:** #7
+
+### What to build
+
+Handle an order cancelled/refunded after its route is published: its stop shows "do not
+deliver", is marked `skipped`, and is excluded from blocking route completion, without
+re-ordering the rest of the route. Separately, surface delivery outcome on the order
+detail page — whether the delivery succeeded or failed, when, and why.
+
+### Acceptance criteria
+
+- [ ] A refunded/cancelled order's stop renders a "do not deliver" banner (live status
+      read from the order) and counts as `skipped` for completion.
+- [ ] A skipped stop does not block route completion and the rest of the route is not
+      re-sequenced.
+- [ ] Order detail page shows the current delivery outcome: delivered (method, when) or
+      failed (reason, when), or not-yet-attempted.
+- [ ] Tests cover the cancel-after-publish path and order-page outcome rendering.
+
+### User stories
+
+- Florist — failed deliveries; Cancellations during the day.
+
+---
+
+## 10. Wire the real optimizer into planning + tune handling time
+
+**Type:** AFK · **Blocked by:** #3, #5
+
+### What to build
+
+Flip production config from `TourPlanning.Mock` to the validated HERE adapter and verify
+the full planning → review → publish flow against the real optimizer, tuning the
+handling-time constant against observed results. No new behaviour — this is the
+integration/rollout of the spiked adapter into the live flow.
+
+### Acceptance criteria
+
+- [ ] Production config resolves `TourPlanning` to the HERE adapter; dev/test stay on the
+      mock.
+- [ ] A real planning run produces least-distance, plausible routes for a realistic Vaasa set
+      end-to-end through publish.
+- [ ] Handling-time constant tuned and documented.
+- [ ] Optimizer failure/timeout surfaces cleanly in the planning UI (no partial publish).
+
+### User stories
+
+- Principal risk (optimizer integration).
+
+---
+
+## Dependency graph
+
+```
+1 ──┬─→ 4 ─→ 5 ─→ 6 ─→ 7 ─┬─→ 8
+2 ──┘                      └─→ 9
+2 ─→ 3 ───────────────────────→ 10
+5 ───────────────────────────→ 10
+```
+
+Critical path: 1 → 4 → 5 → 6 → 7 → 8/9, with 2 → 3 → 10 running alongside.

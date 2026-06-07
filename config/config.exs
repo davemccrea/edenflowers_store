@@ -70,6 +70,10 @@ config :edenflowers,
 
 config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 
+# Fixed handling time per delivery stop (seconds), fed to the optimizer as each job's
+# service duration and added to driving time for the route's total duration.
+config :edenflowers, :delivery_handling_seconds, 300
+
 # Configure the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
   url: [host: "localhost"],
