@@ -158,34 +158,42 @@ location (open route); each order maps to a delivery job carrying the handling d
 
 ---
 
-## 4. Plan a run: eligibility + driver selection + optimize + review
+## 4. Plan a run: eligibility + driver selection + optimize + review — DONE
 
-**Type:** AFK · **Blocked by:** #1, #2
+**Type:** AFK · **Blocked by:** #1, #2 · **Status:** complete
 
-### What to build
+### What was built
 
-The deliveries planning page (under `/admin`): it lists today's eligible orders
+The deliveries planning page at `/admin/deliveries`: it lists today's eligible orders
 pre-selected, lets the florist deselect orders and choose available drivers (with the
-one-driver default), and on "Optimize" calls `TourPlanning` synchronously and renders
-the proposed routes for review — per driver, ordered stops with per-leg distance/time
-and a route total including handling. The draft is ephemeral (re-optimizing on any
-change, discarded on leave). If any order can't be placed, planning is blocked with a
-message — no partial result.
+one-driver default), and on "Optimize" calls the configured `TourPlanning.Solver`
+synchronously and renders the proposed routes for review — per driver, ordered stops with
+per-leg distance/time and route totals including handling. The draft is ephemeral
+(discarded whenever the selection changes, and on leave). If any order can't be placed,
+planning is blocked with a message — no partial result.
 
 ### Acceptance criteria
 
-- [ ] Eligibility read: placed, paid, pending fulfillment, delivery method, dated today
-      (Europe/Helsinki), and not already on a published route — all start selected.
-- [ ] Driver picker lists active drivers as an availability pool; if exactly one active
+- [x] Eligibility read (`Order.eligible_for_delivery`): placed, paid, pending fulfillment,
+      delivery method, dated today (Europe/Helsinki), with a geocoded position — all start
+      selected. The "not already on a published route" exclusion lands with slice 5 (it
+      queries the not-yet-existing `RouteStop`); until then every matching order is eligible.
+- [x] Driver picker lists active drivers as an availability pool; if exactly one active
       driver exists it is pre-selected. The optimizer may use fewer drivers than selected
       — unused drivers get no route, which the review shows plainly (not an error).
-- [ ] "Optimize" runs synchronously with the button disabled and a loading state; result
+- [x] "Optimize" runs synchronously with the button disabled and a loading state; result
       assigned to socket only (nothing persisted).
-- [ ] Review shows per driver: ordered stops, per-leg distance/time, total distance,
+- [x] Review shows per driver: ordered stops, per-leg distance/time, total distance,
       driving time, and total duration (driving + Σ handling). No clock/arrival times.
-- [ ] `{:error, :unassigned}` blocks the run with an explanatory message; changing
-      orders/drivers re-optimizes; navigating away discards the draft.
-- [ ] LiveView tests drive the flow against `TourPlanning.Fake`.
+- [x] `{:error, :unassigned}` blocks the run with an explanatory message; changing
+      orders/drivers discards the draft to re-optimize; navigating away discards the draft.
+- [x] LiveView tests drive the flow against `TourPlanning.Fake`.
+
+### Notes for later slices
+
+- Slice 5's publish action reads the draft `routes` off the socket and adds the
+  published-route exclusion to `Order.eligible_for_delivery` (query from the `RouteStop`
+  side, per the shared architecture decision).
 
 ### User stories
 
