@@ -2,7 +2,10 @@ defmodule Edenflowers.Delivery.RouteStop do
   use Ash.Resource,
     domain: Edenflowers.Delivery,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
+
+  alias Edenflowers.Delivery.RouteStop.Changes
 
   postgres do
     table "route_stops"
@@ -15,6 +18,8 @@ defmodule Edenflowers.Delivery.RouteStop do
 
   code_interface do
     define :list_for_date, action: :for_date, args: [:date]
+    define :record_delivered, action: :record_delivered
+    define :record_failed, action: :record_failed
   end
 
   @doc "Order ids already on a published route for the given day — the eligibility exclusion set."
@@ -53,6 +58,40 @@ defmodule Edenflowers.Delivery.RouteStop do
       argument :date, :date, allow_nil?: false
       filter expr(route.date == ^arg(:date))
     end
+
+    # The driver records exactly one current outcome per stop; recording again overwrites it
+    # (no kept history). "Other" demands a note; otherwise the note is optional. A delivered
+    # outcome also marks the order fulfilled via the order's existing bypass.
+    update :record_delivered do
+      accept [:delivery_method, :outcome_note]
+      require_atomic? false
+
+      validate present(:delivery_method)
+
+      validate present(:outcome_note),
+        where: [attribute_equals(:delivery_method, :other)],
+        message: "is required when the method is Other"
+
+      change set_attribute(:status, :delivered)
+      change set_attribute(:failure_reason, nil)
+      change set_attribute(:outcome_recorded_at, &DateTime.utc_now/0)
+      change Changes.MarkOrderFulfilled
+    end
+
+    update :record_failed do
+      accept [:failure_reason, :outcome_note]
+      require_atomic? false
+
+      validate present(:failure_reason)
+
+      validate present(:outcome_note),
+        where: [attribute_equals(:failure_reason, :other)],
+        message: "is required when the reason is Other"
+
+      change set_attribute(:status, :failed)
+      change set_attribute(:delivery_method, nil)
+      change set_attribute(:outcome_recorded_at, &DateTime.utc_now/0)
+    end
   end
 
   policies do
@@ -63,6 +102,15 @@ defmodule Edenflowers.Delivery.RouteStop do
     policy always() do
       forbid_if always()
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+    prefix "route_stop"
+
+    # Per-route topic so the florist's monitor (slice 8) subscribes to one route at a time.
+    publish :record_delivered, ["outcome", :route_id]
+    publish :record_failed, ["outcome", :route_id]
   end
 
   preparations do
@@ -79,6 +127,19 @@ defmodule Edenflowers.Delivery.RouteStop do
       default :pending
       constraints one_of: [:pending, :delivered, :failed, :skipped]
     end
+
+    # The single current outcome. Exactly one of delivery_method / failure_reason is set, matching
+    # status; recording again overwrites both. The note is required only when "other" is chosen.
+    attribute :delivery_method, :atom do
+      constraints one_of: [:handed_to_recipient, :left_in_safe_place, :other]
+    end
+
+    attribute :failure_reason, :atom do
+      constraints one_of: [:recipient_unavailable, :could_not_access, :could_not_find, :refused, :other]
+    end
+
+    attribute :outcome_note, :string
+    attribute :outcome_recorded_at, :utc_datetime
 
     attribute :order_reference, :string, allow_nil?: false
     attribute :recipient_name, :string
