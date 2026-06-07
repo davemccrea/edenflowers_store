@@ -47,22 +47,22 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveMonitorTest do
     assert has_element?(view, "#route-monitor-#{route.id}", "Completed")
   end
 
-  test "each monitored route exposes copy and open-driver actions", %{conn: conn, admin: admin} do
+  test "each driver exposes copy and open-driver actions", %{conn: conn, admin: admin} do
     order = generate(order(fulfillment_status: :pending))
     driver = generate(driver(name: "Dana"))
-    route = publish_route(driver, order, admin)
+    _route = publish_route(driver, order, admin)
     link = EdenflowersWeb.Endpoint.url() <> "/d/" <> driver.link_token
 
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
 
     assert has_element?(
              view,
-             "#copy-route-#{route.id}[phx-hook=CopyToClipboard][data-clipboard-text='#{link}']"
+             "#copy-driver-#{driver.id}[phx-hook=CopyToClipboard][data-clipboard-text='#{link}']"
            )
 
     assert has_element?(
              view,
-             "#route-monitor-#{route.id} a[href='/d/#{driver.link_token}'][target=_blank]",
+             "#driver-routes-#{driver.id} a[href='/d/#{driver.link_token}'][target=_blank]",
              "Open driver view"
            )
   end

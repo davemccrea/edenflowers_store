@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     refute html =~ "Open all stops in Google Maps"
   end
 
-  test "renders every route for the day as its own list", %{conn: conn} do
+  test "renders every route for the day, separated by a return to the store", %{conn: conn} do
     driver = generate(driver(name: "Dana"))
     publish_route(driver, [%{order_reference: "EF-RUN1"}])
     publish_route(driver, [%{order_reference: "EF-RUN2"}])
@@ -104,7 +104,18 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     html = render(view)
     assert html =~ "EF-RUN1"
     assert html =~ "EF-RUN2"
+    assert html =~ "Return to store"
     refute html =~ "Collect from shop"
+  end
+
+  test "a single trip has no return-to-store divider", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    publish_route(driver, [%{order_reference: "EF-ONLY"}])
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    assert html =~ "EF-ONLY"
+    refute html =~ "Return to store"
   end
 
   test "renders in the driver's preferred locale", %{conn: conn} do

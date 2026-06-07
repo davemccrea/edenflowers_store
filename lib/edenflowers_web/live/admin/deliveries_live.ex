@@ -280,7 +280,11 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
         <section :if={@published_routes != []}>
           <.stage_header title={~t"Published routes"} />
           <div class="space-y-4">
-            <.published_route_card :for={route <- @published_routes} route={route} />
+            <.published_driver_card
+              :for={{driver, routes} <- routes_by_driver(@published_routes)}
+              driver={driver}
+              routes={routes}
+            />
           </div>
         </section>
       </.admin_page>
@@ -340,39 +344,36 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     """
   end
 
-  # A live, published route: progress meter, the delivered/failed/remaining tallies the
-  # monitor broadcasts patch, and the ordered stops drawn as a spine.
-  attr :route, :map, required: true
+  # A driver's published work for the day: the shared driver header and link actions, then each
+  # trip as its own progress meter and stop spine. The link points at the driver's whole-day
+  # /d/:token page, so it belongs to the driver rather than any single trip.
+  attr :driver, :map, required: true
+  attr :routes, :list, required: true
 
-  defp published_route_card(assigns) do
+  defp published_driver_card(assigns) do
     ~H"""
     <article
-      id={"route-monitor-#{@route.id}"}
+      id={"driver-routes-#{@driver.id}"}
       class="admin-rise border-base-300/70 bg-base-200/40 rounded-xl border p-5"
     >
       <header class="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <span :if={not route_complete?(@route)} aria-hidden="true" class="relative flex h-2 w-2">
+            <span :if={driver_active?(@routes)} aria-hidden="true" class="relative flex h-2 w-2">
               <span class="bg-primary/60 absolute inline-flex h-full w-full rounded-full motion-safe:animate-ping" />
               <span class="bg-primary relative inline-flex h-2 w-2 rounded-full" />
             </span>
-            <h3 class="text-base font-semibold">{@route.driver.name}</h3>
-            <span :if={route_complete?(@route)} class="badge badge-sm badge-success admin-badge-success">
-              {~t"Completed"}
-            </span>
+            <h3 class="text-base font-semibold">{@driver.name}</h3>
           </div>
-          <p class="text-base-content/65 mt-1 text-sm">
-            {length(@route.route_stops)} {~t"stops"}
-          </p>
+          <p class="text-base-content/65 mt-1 text-sm">{driver_summary(@routes)}</p>
         </div>
 
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
-            id={"copy-route-#{@route.id}"}
+            id={"copy-driver-#{@driver.id}"}
             phx-hook="CopyToClipboard"
-            data-clipboard-text={driver_link(@route.driver)}
+            data-clipboard-text={driver_link(@driver)}
             data-copied-label={~t"Copied!"}
             class="btn btn-ghost btn-xs"
           >
@@ -380,7 +381,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             <span data-copy-label>{~t"Copy link"}</span>
           </button>
           <a
-            href={~p"/d/#{@route.driver.link_token}"}
+            href={~p"/d/#{@driver.link_token}"}
             target="_blank"
             rel="noopener"
             class="btn btn-ghost btn-xs"
@@ -390,6 +391,36 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
           </a>
         </div>
       </header>
+
+      <div class="space-y-4">
+        <div :for={{route, index} <- Enum.with_index(@routes)}>
+          <.return_to_store :if={index > 0} />
+          <.published_trip route={route} number={index + 1} show_number={length(@routes) > 1} />
+        </div>
+      </div>
+    </article>
+    """
+  end
+
+  # One published trip within a driver's day: progress meter, the delivered/failed/remaining
+  # tallies the monitor broadcasts patch, and the ordered stops drawn as a spine. The trip number
+  # is shown only when the driver has more than one trip.
+  attr :route, :map, required: true
+  attr :number, :integer, required: true
+  attr :show_number, :boolean, required: true
+
+  defp published_trip(assigns) do
+    ~H"""
+    <div id={"route-monitor-#{@route.id}"}>
+      <div
+        :if={@show_number or route_complete?(@route)}
+        class="mb-2 flex items-center justify-between gap-2"
+      >
+        <span :if={@show_number} class="eyebrow text-base-content/65">{~t"Trip"} {@number}</span>
+        <span :if={route_complete?(@route)} class="badge badge-sm badge-success admin-badge-success">
+          {~t"Completed"}
+        </span>
+      </div>
 
       <% progress = route_progress(@route) %>
       <% total = max(length(@route.route_stops), 1) %>
@@ -437,7 +468,22 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
           </span>
         </li>
       </ol>
-    </article>
+    </div>
+    """
+  end
+
+  # The driver returns to the shop between trips to load the next run; the divider marks that
+  # boundary so stacked trips don't read as one continuous route.
+  defp return_to_store(assigns) do
+    ~H"""
+    <div class="text-base-content/50 mb-4 flex items-center gap-3">
+      <span class="border-base-300/70 h-px flex-1 border-t border-dashed"></span>
+      <span class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide">
+        <.icon name="hero-arrow-uturn-left" class="h-4 w-4" />
+        {~t"Return to store"}
+      </span>
+      <span class="border-base-300/70 h-px flex-1 border-t border-dashed"></span>
+    </div>
     """
   end
 
@@ -780,6 +826,27 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     Enum.map(stops, fn stop ->
       if stop.id == updated_stop.id, do: updated_stop, else: stop
     end)
+  end
+
+  # Group the day's published routes under their driver, keeping each driver's trips in publish
+  # order (the rows arrive sorted by published_at). A driver picks up more than one trip when
+  # they're included in several runs.
+  defp routes_by_driver(routes) do
+    routes
+    |> Enum.group_by(& &1.driver_id)
+    |> Enum.map(fn {_driver_id, [first | _] = driver_routes} -> {first.driver, driver_routes} end)
+    |> Enum.sort_by(fn {driver, _routes} -> driver.name end)
+  end
+
+  defp driver_active?(routes), do: Enum.any?(routes, &(not route_complete?(&1)))
+
+  defp driver_summary(routes) do
+    total_stops = routes |> Enum.map(&length(&1.route_stops)) |> Enum.sum()
+
+    case length(routes) do
+      1 -> ~t"#{total_stops} stops"
+      trips -> ~t"#{trips} trips · #{total_stops} stops"
+    end
   end
 
   defp route_progress(route) do

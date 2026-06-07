@@ -79,7 +79,8 @@ defmodule EdenflowersWeb.DriverRouteLive do
         <p class="text-base-content/65 text-sm">{~t"Nothing to deliver today."}</p>
       </div>
 
-      <section :for={route <- @routes} class="mb-8">
+      <section :for={{route, index} <- Enum.with_index(@routes)} class="mb-8">
+        <.return_to_store :if={index > 0} />
         <ol class="space-y-4">
           <.stop
             :for={stop <- route.route_stops}
@@ -90,6 +91,21 @@ defmodule EdenflowersWeb.DriverRouteLive do
         </ol>
       </section>
     </main>
+    """
+  end
+
+  # Between trips: the driver drives back to the shop to load the next run before setting off
+  # again, so the day's stops read as separate loops rather than one continuous list.
+  defp return_to_store(assigns) do
+    ~H"""
+    <div class="text-base-content/50 mb-6 flex items-center gap-3">
+      <span class="border-base-300/70 h-px flex-1 border-t border-dashed"></span>
+      <span class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide">
+        <.icon name="hero-arrow-uturn-left" class="h-4 w-4" />
+        {~t"Return to store"}
+      </span>
+      <span class="border-base-300/70 h-px flex-1 border-t border-dashed"></span>
+    </div>
     """
   end
 
