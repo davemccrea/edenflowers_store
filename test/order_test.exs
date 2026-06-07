@@ -132,6 +132,30 @@ defmodule Edenflowers.Store.OrderTest do
       assert order.promotion_applied? == true
     end
 
+    test "distance_km formats delivery distance in kilometres" do
+      order = generate(order(fulfillment_method: :delivery, distance: 12_340))
+
+      order = Ash.load!(order, [:distance_km], authorize?: false)
+
+      assert order.distance_km == "12.3"
+    end
+
+    test "distance_km trims trailing zero from whole kilometre delivery distance" do
+      order = generate(order(fulfillment_method: :delivery, distance: 12_000))
+
+      order = Ash.load!(order, [:distance_km], authorize?: false)
+
+      assert order.distance_km == "12"
+    end
+
+    test "distance_km is nil for pickup orders" do
+      order = generate(order(fulfillment_method: :pickup, distance: 12_000))
+
+      order = Ash.load!(order, [:distance_km], authorize?: false)
+
+      assert is_nil(order.distance_km)
+    end
+
     test "promotion_applied? returns false if no promotion applied" do
       order = Order.create_for_checkout!(authorize?: false, load: [:promotion_applied?])
       assert order.promotion_applied? == false

@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="mb-1">{@label}</span>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -346,8 +346,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
-      <label>
+    <fieldset class={@hidden && "hidden"}>
+      <label class="flex flex-col">
         <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <textarea
           id={@id}
@@ -429,7 +429,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="mb-1">{@label}</span>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <div class="relative">
           <input
             type={@type}
@@ -935,7 +935,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
             {~t"From"}
           </span>
-          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+          {Edenflowers.Format.money(@product.cheapest_price)}
         </p>
       </div>
     </.link>

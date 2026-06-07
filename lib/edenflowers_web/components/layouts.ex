@@ -41,6 +41,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :id, :string, required: true
   attr :current_path, :string, required: true
   attr :placement, :string, default: "top", values: ~w(top bottom)
+  attr :class, :any, default: nil
   slot :inner_block, required: true
 
   def locale_picker(assigns) do
@@ -68,7 +69,7 @@ defmodule EdenflowersWeb.Layouts do
       type="button"
       popovertarget={@id}
       style={"anchor-name: #{@anchor_name}"}
-      class="cursor-pointer bg-transparent p-0"
+      class={["cursor-pointer bg-transparent p-0", @class]}
     >
       {render_slot(@inner_block)}
     </button>
@@ -136,6 +137,281 @@ defmodule EdenflowersWeb.Layouts do
     </div>
     """
   end
+
+  attr :flash, :map, required: true
+  attr :current_path, :string, required: true
+  attr :current_user, :map, required: true
+  slot :inner_block, required: true
+
+  def admin(assigns) do
+    current_locale =
+      Localize.get_locale()
+      |> Localize.Language.display_name!(fallback: true)
+      |> String.capitalize()
+
+    primary_nav = [
+      {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
+      {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
+      {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
+      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"}
+    ]
+
+    system_nav = [
+      {"/admin/oban", "Oban", false, "hero-cpu-chip"},
+      {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
+    ]
+
+    assigns =
+      assigns
+      |> assign(:current_locale, current_locale)
+      |> assign(:primary_nav, primary_nav)
+      |> assign(:system_nav, system_nav)
+
+    ~H"""
+    <div class="min-h-screen lg:flex">
+      <%!-- Mobile: slide-in drawer --%>
+      <.drawer
+        id="admin-nav-drawer"
+        placement="left"
+        label={~t"Admin navigation"}
+        class="bg-base-200 border-base-300 flex h-full w-64 flex-col border-r"
+      >
+        <.admin_sidebar_content
+          primary_nav={@primary_nav}
+          system_nav={@system_nav}
+          current_path={@current_path}
+          current_locale={@current_locale}
+          closeable={true}
+        />
+      </.drawer>
+
+      <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
+      <aside class="bg-base-200 border-base-300 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
+        <.admin_sidebar_content
+          primary_nav={@primary_nav}
+          system_nav={@system_nav}
+          current_path={@current_path}
+          current_locale={@current_locale}
+          closeable={false}
+        />
+      </aside>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
+             The trailing spacer matches the button cell so the center column is
+             truly centered on the bar, not on the leftover space. --%>
+        <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-300/70 grid items-center border-b px-2 py-2.5 lg:hidden">
+          <button
+            type="button"
+            phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
+            aria-label={~t"Open navigation menu"}
+            class="text-base-content/60 -m-px cursor-pointer rounded-md p-2 transition-colors hover:text-base-content active:bg-base-300/50"
+          >
+            <.icon name="hero-bars-3" class="h-5 w-5" />
+          </button>
+          <.link
+            navigate={~p"/admin"}
+            class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-base transition-colors active:text-primary/70"
+          >
+            Eden Flowers
+          </.link>
+          <.admin_account_menu current_user={@current_user} compact={true} />
+        </div>
+
+        <div class="border-base-300/70 hidden items-center justify-end border-b px-8 py-3 lg:flex">
+          <.admin_account_menu current_user={@current_user} />
+        </div>
+
+        <main id="main-content" tabindex="-1" class="flex-grow pb-12 outline-hidden">
+          <.flash kind={:info} flash={@flash} />
+          <.flash kind={:error} flash={@flash} />
+          {render_slot(@inner_block)}
+        </main>
+      </div>
+    </div>
+    """
+  end
+
+  attr :primary_nav, :list, required: true
+  attr :system_nav, :list, required: true
+  attr :current_path, :string, required: true
+  attr :current_locale, :string, required: true
+  attr :closeable, :boolean, required: true
+
+  defp admin_sidebar_content(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :locale_picker_id,
+        if(assigns.closeable, do: "admin-locale-picker-mobile", else: "admin-locale-picker-desktop")
+      )
+
+    ~H"""
+    <div class="flex h-full flex-col py-5">
+      <div class="mb-6 flex items-center justify-between px-5">
+        <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
+          Eden Flowers
+        </.link>
+        <button
+          :if={@closeable}
+          type="button"
+          phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
+          aria-label={~t"Close navigation menu"}
+          class="cursor-pointer"
+        >
+          <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
+        </button>
+      </div>
+
+      <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3">
+        <.admin_nav_item
+          :for={{path, label, live?, icon} <- @primary_nav}
+          path={path}
+          label={label}
+          live?={live?}
+          icon={icon}
+          current_path={@current_path}
+          exact={path == "/admin"}
+        />
+      </nav>
+
+      <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
+        <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
+          <span class="text-base-content/65 flex items-center gap-3 rounded-r border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
+            <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />
+            <span class="flex-1 text-left">{@current_locale}</span>
+            <.icon name="hero-chevron-up-down" class="text-base-content/60 h-4 w-4 shrink-0" />
+          </span>
+        </.locale_picker>
+
+        <p class="text-base-content/65 mb-1 px-3 text-xs">{~t"System"}</p>
+        <.admin_nav_item
+          :for={{path, label, live?, icon} <- @system_nav}
+          path={path}
+          label={label}
+          live?={live?}
+          icon={icon}
+          current_path={@current_path}
+          exact={false}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr :path, :string, required: true
+  attr :label, :string, required: true
+  attr :live?, :boolean, required: true
+  attr :icon, :string, required: true
+  attr :current_path, :string, required: true
+  attr :exact, :boolean, default: false
+
+  defp admin_nav_item(assigns) do
+    assigns =
+      assign(assigns, :active, admin_nav_active?(assigns.current_path, assigns.path, assigns.exact))
+
+    ~H"""
+    <.link
+      {if @live?, do: [navigate: @path], else: [href: @path]}
+      class={["flex items-center gap-3 rounded-r px-3 py-2 text-sm transition-colors", if(@active,
+    do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
+    else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
+    >
+      <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
+      {@label}
+    </.link>
+    """
+  end
+
+  defp admin_nav_active?(current_path, path, _exact = true), do: current_path == path
+  defp admin_nav_active?(current_path, path, _exact = false), do: String.starts_with?(current_path, path)
+
+  attr :current_user, :map, required: true
+  attr :compact, :boolean, default: false
+
+  defp admin_account_menu(assigns) do
+    assigns =
+      assigns
+      |> assign(:display_name, admin_user_display_name(assigns.current_user))
+      |> assign(:email, admin_user_email(assigns.current_user))
+      |> assign(:initials, admin_user_initials(assigns.current_user))
+
+    ~H"""
+    <div class="dropdown dropdown-end">
+      <button
+        type="button"
+        tabindex="0"
+        aria-label={~t"Admin account menu"}
+        class={["inline-flex cursor-pointer items-center rounded-md transition-colors hover:bg-base-300/50 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+      >
+        <span class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+          {@initials}
+        </span>
+        <span :if={!@compact} class="min-w-0 text-left">
+          <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
+          <span class="text-base-content/65 max-w-44 block truncate text-xs">{@email}</span>
+        </span>
+        <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/60 h-4 w-4 shrink-0" />
+      </button>
+
+      <ul
+        tabindex="0"
+        class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 rounded-md border p-1 shadow"
+      >
+        <li class="px-3 py-2">
+          <span class="block p-0 hover:bg-transparent">
+            <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
+            <span class="text-base-content/65 block truncate text-xs">{@email}</span>
+          </span>
+        </li>
+        <li></li>
+        <li>
+          <.link navigate={~p"/admin/account"}>
+            <.icon name="hero-user-circle" class="h-4 w-4" />
+            {~t"Account"}
+          </.link>
+        </li>
+        <li>
+          <.link href={~p"/sign-out"} method="delete">
+            <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
+            {~t"Sign out"}
+          </.link>
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  defp admin_user_display_name(user) do
+    user
+    |> Map.get(:first_name)
+    |> case do
+      first_name when is_binary(first_name) ->
+        first_name = String.trim(first_name)
+        if first_name == "", do: admin_user_email(user), else: first_name
+
+      _ ->
+        admin_user_email(user)
+    end
+  end
+
+  defp admin_user_email(user), do: user |> Map.get(:email) |> to_string()
+
+  defp admin_user_initials(user) do
+    user
+    |> Map.get(:initials)
+    |> case do
+      initials when is_binary(initials) ->
+        initials = String.trim(initials)
+        if initials == "", do: fallback_admin_initial(user), else: initials
+
+      _ ->
+        fallback_admin_initial(user)
+    end
+  end
+
+  defp fallback_admin_initial(user),
+    do: user |> admin_user_email() |> String.first() |> Kernel.||("A") |> String.upcase()
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true

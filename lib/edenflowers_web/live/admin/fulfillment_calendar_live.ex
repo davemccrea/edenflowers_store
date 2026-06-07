@@ -14,6 +14,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
+  import EdenflowersWeb.Admin.Components
+
+  alias EdenflowersWeb.Layouts
 
   alias Edenflowers.Store.{FulfillmentCalendar, FulfillmentOption}
 
@@ -27,7 +30,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Fulfillment Calendar")
+     |> assign(:page_title, ~t"Fulfillment Calendar")
      |> assign(:options, options)
      |> assign(:scope, :all)
      |> assign(:today, today())}
@@ -36,59 +39,49 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="container mx-auto py-10">
-      <header class="mb-8 max-w-2xl">
-        <p class="eyebrow text-base-content/55 mb-2">Availability</p>
-        <h1 class="page-title">Fulfillment Calendar</h1>
-        <p class="text-base-content/70 mt-3 text-sm leading-relaxed">
-          Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
-        </p>
-      </header>
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page width="wide">
+        <.admin_page_header title={~t"Fulfillment Calendar"}></.admin_page_header>
 
-      <section class="mb-6 flex flex-wrap gap-2" aria-label="Fulfillment option scope">
-        <button
-          type="button"
-          phx-click="set-scope"
-          phx-value-scope="all"
-          class={scope_button_class(@scope == :all)}
-        >
-          All options
-        </button>
-        <button
-          :for={option <- @options}
-          type="button"
-          phx-click="set-scope"
-          phx-value-scope={option.id}
-          class={scope_button_class(@scope == option.id)}
-        >
-          {option.name}
-        </button>
-      </section>
+        <section class="mb-6 max-w-xs">
+          <form id="scope-form" phx-change="set-scope">
+            <label class="flex flex-col">
+              <span class="fieldset-label mb-1">{~t"Fulfillment option"}</span>
+              <select name="scope" class="select w-full">
+                <option value="all" selected={@scope == :all}>{~t"All options"}</option>
+                <option :for={option <- @options} value={option.id} selected={@scope == option.id}>
+                  {option.name}
+                </option>
+              </select>
+            </label>
+          </form>
+        </section>
 
-      <div class="flex flex-col gap-8 md:flex-row md:items-start">
-        <div class="w-full max-w-xl">
-          <.admin_calendar
-            id="admin-fulfillment-calendar"
-            scope={@scope}
-            options={@options}
-            today={@today}
-          />
+        <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
+          <div class="w-full min-w-0 max-w-xl">
+            <.admin_calendar
+              id="admin-fulfillment-calendar"
+              scope={@scope}
+              options={@options}
+              today={@today}
+            />
+          </div>
+
+          <div class="flex min-w-0 flex-col gap-4">
+            <.admin_calendar_legend />
+            <button
+              type="button"
+              phx-click="reset-calendar"
+              data-confirm={reset_confirm_message()}
+              aria-label={~t"Reset calendar to defaults"}
+              class="btn btn-sm btn-ghost text-error self-start hover:bg-error/10"
+            >
+              {~t"Reset"}
+            </button>
+          </div>
         </div>
-
-        <div class="flex flex-col gap-4">
-          <.admin_calendar_legend />
-          <button
-            type="button"
-            phx-click="reset-calendar"
-            data-confirm={reset_confirm_message()}
-            aria-label="Reset calendar to defaults"
-            class={reset_button_class()}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-    </div>
+      </.admin_page>
+    </Layouts.admin>
     """
   end
 
@@ -145,24 +138,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
-  defp reset_confirm_message, do: "Are you sure you want to reset the calendar? This action is destructive."
-
-  defp reset_button_class do
-    "self-start rounded px-3.5 py-1.5 text-sm text-base-content/55 " <>
-      "hover:text-base-content/85 hover:bg-error/10 " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
-
-  defp scope_button_class(true) do
-    "rounded border border-primary bg-primary text-primary-content px-3.5 py-1.5 text-sm font-medium " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
-
-  # Inactive chip uses the same hover (`bg-primary/10`) as cells and weekday
-  # headers in CalendarComponent so the whole page reads as one interaction system.
-  defp scope_button_class(false) do
-    "rounded border border-base-content/20 px-3.5 py-1.5 text-sm text-base-content/65 " <>
-      "hover:border-primary/40 hover:text-base-content/85 hover:bg-primary/10 " <>
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
-  end
+  defp reset_confirm_message,
+    do: ~t"Are you sure you want to reset the calendar? This action is destructive."
 end

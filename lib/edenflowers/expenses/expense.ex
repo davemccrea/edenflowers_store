@@ -36,12 +36,18 @@ defmodule Edenflowers.Expenses.Expense do
   code_interface do
     define :ingest, action: :ingest
     define :list, action: :read
+    define :list_needs_review, action: :needs_review
     define :mark_reviewed, action: :mark_reviewed
     define :correct, action: :correct
   end
 
   actions do
     defaults [:read, :destroy]
+
+    read :needs_review do
+      filter expr(is_nil(reviewed_at) and confidence != :high)
+      prepare build(sort: [date: :desc])
+    end
 
     create :ingest do
       description "Upserts an expense record extracted from a receipt/invoice document."

@@ -33,16 +33,20 @@ defmodule EdenflowersWeb.LiveUserAuth do
   end
 
   def on_mount(:live_admin_required, _params, _session, socket) do
-    if socket.assigns[:current_user] && socket.assigns.current_user.admin do
-      {:cont, socket}
+    current_user = socket.assigns[:current_user]
+
+    if current_user && current_user.admin do
+      {:cont, assign(socket, :current_user, Ash.load!(current_user, [:first_name, :initials], actor: current_user))}
     else
       {:halt, bounce_to_sign_in(socket)}
     end
   end
 
   def on_mount(:live_no_user, _params, _session, socket) do
-    if socket.assigns[:current_user] do
-      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+    current_user = socket.assigns[:current_user]
+
+    if current_user do
+      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_redirect(current_user))}
     else
       {:cont, assign(socket, :current_user, nil)}
     end
@@ -81,4 +85,7 @@ defmodule EdenflowersWeb.LiveUserAuth do
       _ -> path
     end
   end
+
+  defp signed_in_redirect(%{admin: true}), do: ~p"/admin"
+  defp signed_in_redirect(_user), do: ~p"/"
 end
