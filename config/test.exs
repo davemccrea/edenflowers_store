@@ -61,8 +61,8 @@ config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 # Use mock HereAPI in tests
 config :edenflowers, :here_api, Edenflowers.HereAPI.Mock
 
-# Use mock TourPlanning in tests
-config :edenflowers, :tour_planning, Edenflowers.TourPlanning.Mock
+# Use deterministic TourPlanning fake in tests
+config :edenflowers, :tour_planning, Edenflowers.TourPlanning.Fake
 
 # Use mocks for expense capture in tests
 config :edenflowers, :papra_client, Edenflowers.Papra.Mock
