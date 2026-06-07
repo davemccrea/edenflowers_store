@@ -35,7 +35,7 @@ defmodule Edenflowers.HereTourPlanningTest do
       assert length(problem.plan.jobs) == 2
       assert Enum.map(problem.plan.jobs, & &1.id) == ["order-1", "order-2"]
 
-      assert [%{type: "minimize-unassigned"} | _] = problem.objectives
+      assert [%{type: "minimizeUnassigned"} | _] = problem.objectives
     end
 
     test "service duration is applied to each delivery place" do

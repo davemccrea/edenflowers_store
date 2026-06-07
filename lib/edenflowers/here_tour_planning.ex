@@ -104,7 +104,7 @@ defmodule Edenflowers.HereTourPlanning do
   end
 
   defp post_problem(problem) do
-    Req.post(@endpoint, params: [apikey: api_key()], json: problem)
+    Req.post(@endpoint, params: [apiKey: api_key()], json: problem)
   end
 
   @doc """
@@ -120,13 +120,13 @@ defmodule Edenflowers.HereTourPlanning do
       plan: %{
         jobs: Enum.map(input.orders, &delivery_job(&1, input))
       },
-      # Balance tour durations first (even completion times across drivers), then
-      # minimize total cost (travel time). `minimize-unassigned` keeps every order
-      # assigned so the parser can reject any leftover.
+      # Objective type names are camelCase in the v3 schema. Keep every order
+      # assigned (so the parser can reject leftovers), then minimize the longest
+      # tour's duration (balanced completion time), then total cost (travel time).
       objectives: [
-        %{type: "minimize-unassigned"},
-        %{type: "balance-duration"},
-        %{type: "minimize-cost"}
+        %{type: "minimizeUnassigned"},
+        %{type: "minimizeDuration"},
+        %{type: "minimizeCost"}
       ]
     }
   end
