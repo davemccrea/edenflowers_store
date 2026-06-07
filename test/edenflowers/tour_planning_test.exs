@@ -115,7 +115,7 @@ defmodule Edenflowers.TourPlanningTest do
   end
 
   describe "build_problem/1" do
-    test "maps drivers to open-route vehicles and stops to delivery jobs" do
+    test "maps drivers to open-route vehicles, stops to jobs, and defaults to cheapest" do
       problem = TourPlanning.build_problem(problem())
 
       assert [vehicle] = problem.fleet.types
@@ -124,6 +124,8 @@ defmodule Edenflowers.TourPlanningTest do
       assert shift.start.location == %{lat: 63.1243488, lng: 21.5974075}
       # Open route: no end location, so the route finishes at the last delivery.
       refute Map.has_key?(shift, :end)
+
+      assert [%{ignoreRouteViolations: ["all"]}] = problem.fleet.profiles
 
       assert [job1, job2] = problem.plan.jobs
       assert job1.id == "order-1"
@@ -134,6 +136,35 @@ defmodule Edenflowers.TourPlanningTest do
                %{type: "minimizeUnassigned"},
                %{type: "minimizeCost"}
              ]
+
+      refute Map.has_key?(problem, :advancedObjectives)
+    end
+
+    test "balanced enables advanced objectives and balances route duration before minimizing cost" do
+      problem = TourPlanning.build_problem(Map.put(problem(), :strategy, :balanced))
+
+      assert problem.advancedObjectives == [
+               [%{type: "minimizeUnassigned"}],
+               [%{type: "maximizeTours"}],
+               [%{type: "balanceDuration", options: %{threshold: 0.1}}],
+               [%{type: "minimizeCost"}]
+             ]
+
+      assert problem.configuration == %{experimentalFeatures: ["advancedObjectives"]}
+      refute Map.has_key?(problem, :objectives)
+    end
+
+    test "fastest maximizes parallel routes before minimizing total duration and cost" do
+      problem = TourPlanning.build_problem(Map.put(problem(), :strategy, :fastest))
+
+      assert problem.objectives == [
+               %{type: "minimizeUnassigned"},
+               %{type: "optimizeTourCount", action: "maximize"},
+               %{type: "minimizeDuration"},
+               %{type: "minimizeCost"}
+             ]
+
+      refute Map.has_key?(problem, :advancedObjectives)
     end
 
     test "every available driver becomes a vehicle (HERE chooses how many to use)" do

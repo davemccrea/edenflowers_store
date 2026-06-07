@@ -237,7 +237,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
         )
       )
 
-    stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+    stub(Edenflowers.HereAPI.Mock, :get_address, fn _query, _locale ->
       {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
     end)
 

@@ -21,7 +21,13 @@ defmodule Edenflowers.TourPlanning.Behaviour do
 
   @type driver_input :: %{id: String.t()}
 
-  @type problem :: %{stops: [stop_input()], drivers: [driver_input()]}
+  @type optimization_strategy :: :cheapest | :balanced | :fastest
+
+  @type problem :: %{
+          optional(:strategy) => optimization_strategy(),
+          stops: [stop_input()],
+          drivers: [driver_input()]
+        }
 
   @typedoc "Distance (metres) and driving time (seconds) for a single leg between two points."
   @type leg :: %{distance_m: non_neg_integer(), duration_s: non_neg_integer()}
@@ -54,15 +60,17 @@ defmodule Edenflowers.TourPlanning do
   Maps each driver to a vehicle whose shift starts at the shop with no end location
   (open route), and each stop to a delivery job carrying its handling time.
 
-  The goal is to minimise **total driving distance** (the cheapest plan). The objectives
-  are `minimizeUnassigned -> minimizeCost` with cost weighted purely to distance, so HERE
-  places every order and then minimises kilometres driven.
+  Supports three per-run optimization strategies:
 
-  Because routes are open (no return to the shop), distance genuinely varies with how the
-  stops cluster: HERE uses more of the available drivers only when splitting clusters
-  actually saves driving, and consolidates otherwise. So the number of drivers used falls
-  out of the geometry — we need no balancing logic or driver-count dial. Selected drivers
-  are an available *pool* (the upper bound); unused drivers simply get no route.
+  * `:cheapest` places every order, then minimizes total driving distance.
+  * `:balanced` uses as many selected drivers as possible, balances route duration,
+    then minimizes cost within those constraints.
+  * `:fastest` uses as many selected drivers as possible, then minimizes the sum of all
+    route durations and cost.
+
+  Routes are open (no return to the shop). Under `:cheapest`, selected drivers are an
+  available pool and HERE may leave some unused. Under `:balanced`, the selected drivers
+  are the intended workforce, limited only by there being fewer deliveries than drivers.
   """
 
   @behaviour Edenflowers.TourPlanning.Behaviour
@@ -107,17 +115,60 @@ defmodule Edenflowers.TourPlanning do
   end
 
   @doc "Builds the HERE Tour Planning problem JSON from the behaviour's problem input."
-  def build_problem(%{stops: stops, drivers: drivers}) do
+  def build_problem(%{stops: stops, drivers: drivers} = problem) do
+    problem
+    |> Map.get(:strategy, :cheapest)
+    |> objectives()
+    |> then(fn objective_fields ->
+      %{
+        fleet: %{
+          types: Enum.map(drivers, &vehicle_type/1),
+          profiles: [
+            %{
+              name: @profile,
+              type: "car",
+              # Last-mile addresses can sit behind pedestrian or no-through road segments.
+              # Drivers can park nearby and complete that final stretch on foot.
+              ignoreRouteViolations: ["all"]
+            }
+          ]
+        },
+        plan: %{jobs: Enum.map(stops, &job/1)}
+      }
+      |> Map.merge(objective_fields)
+    end)
+  end
+
+  # Exact workload balancing is exposed by HERE through advanced objectives (an alpha API).
+  # Keep all strategy-to-payload mapping isolated here so the planner and solver boundary
+  # remain stable if HERE changes the objective schema.
+  defp objectives(:cheapest) do
     %{
-      fleet: %{
-        types: Enum.map(drivers, &vehicle_type/1),
-        profiles: [%{name: @profile, type: "car"}]
-      },
-      plan: %{jobs: Enum.map(stops, &job/1)},
-      # Place every order, then minimise cost — which we weight purely to distance, so
-      # this is "least driving". HERE chooses how many drivers that takes.
       objectives: [
         %{type: "minimizeUnassigned"},
+        %{type: "minimizeCost"}
+      ]
+    }
+  end
+
+  defp objectives(:balanced) do
+    %{
+      configuration: %{experimentalFeatures: ["advancedObjectives"]},
+      advancedObjectives: [
+        [%{type: "minimizeUnassigned"}],
+        [%{type: "maximizeTours"}],
+        [%{type: "balanceDuration", options: %{threshold: 0.1}}],
+        [%{type: "minimizeCost"}]
+      ]
+    }
+  end
+
+  defp objectives(:fastest) do
+    %{
+      objectives: [
+        %{type: "minimizeUnassigned"},
+        %{type: "optimizeTourCount", action: "maximize"},
+        %{type: "minimizeDuration"},
         %{type: "minimizeCost"}
       ]
     }

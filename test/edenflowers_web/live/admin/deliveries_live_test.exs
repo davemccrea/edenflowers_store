@@ -39,14 +39,14 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     assert html =~ "No deliveries to plan today"
   end
 
-  test "lists eligible orders, all pre-selected", %{conn: conn} do
+  test "lists eligible orders without pre-selecting them", %{conn: conn} do
     order = eligible_order(order_reference: "EF-100", recipient_name: "Recipient One")
 
     {:ok, view, html} = live(conn, ~p"/admin/deliveries")
 
     assert html =~ "EF-100"
     assert html =~ "Recipient One"
-    assert has_element?(view, "input#order-#{order.id}[checked]")
+    refute has_element?(view, "input#order-#{order.id}[checked]")
   end
 
   test "pre-selects the only active driver", %{conn: conn} do
@@ -69,15 +69,15 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     refute has_element?(view, "input#driver-#{b.id}[checked]")
   end
 
-  test "toggling an order deselects it", %{conn: conn} do
+  test "toggling an order selects it", %{conn: conn} do
     order = eligible_order()
 
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-    assert has_element?(view, "input#order-#{order.id}[checked]")
+    refute has_element?(view, "input#order-#{order.id}[checked]")
 
     view |> element("input#order-#{order.id}") |> render_click()
 
-    refute has_element?(view, "input#order-#{order.id}[checked]")
+    assert has_element?(view, "input#order-#{order.id}[checked]")
   end
 
   test "toggling a driver selects it", %{conn: conn} do
@@ -98,11 +98,11 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     generate(driver(name: "Solo Driver"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-    refute has_element?(view, "button[phx-click=optimize][disabled]")
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
 
     view |> element("input#order-#{order.id}") |> render_click()
 
-    assert has_element?(view, "button[phx-click=optimize][disabled]")
+    refute has_element?(view, "button[phx-click=optimize][disabled]")
   end
 
   test "the optimize button is disabled when no drivers are selected", %{conn: conn} do

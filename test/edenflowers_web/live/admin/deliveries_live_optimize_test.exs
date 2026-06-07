@@ -21,6 +21,15 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     def solve(_problem), do: {:error, :tour_planning_failed}
   end
 
+  defmodule StrategySolver do
+    @behaviour Edenflowers.TourPlanning.Behaviour
+    @impl true
+    def solve(problem) do
+      send(Application.fetch_env!(:edenflowers, :strategy_test_pid), {:strategy, problem.strategy})
+      Edenflowers.TourPlanning.Fake.solve(problem)
+    end
+  end
+
   setup %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
@@ -55,8 +64,34 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
   end
 
   defp optimize(view) do
+    view |> element("#toggle-all-orders") |> render_click()
     view |> element("button[phx-click=optimize]") |> render_click()
     render(view)
+  end
+
+  test "starts with no orders selected and can select all", %{conn: conn} do
+    first = eligible_order()
+    second = eligible_order()
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+
+    refute has_element?(view, "input#order-#{first.id}[checked]")
+    refute has_element?(view, "input#order-#{second.id}[checked]")
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
+
+    view |> element("#toggle-all-orders") |> render_click()
+
+    assert has_element?(view, "input#order-#{first.id}[checked]")
+    assert has_element?(view, "input#order-#{second.id}[checked]")
+    assert has_element?(view, "#toggle-all-orders[checked]")
+    refute has_element?(view, "button[phx-click=optimize][disabled]")
+
+    view |> element("#toggle-all-orders") |> render_click()
+
+    refute has_element?(view, "input#order-#{first.id}[checked]")
+    refute has_element?(view, "input#order-#{second.id}[checked]")
+    refute has_element?(view, "#toggle-all-orders[checked]")
   end
 
   test "optimizing renders the proposed routes via the fake", %{conn: conn} do
@@ -76,6 +111,44 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     assert html =~ "4.0 km"
   end
 
+  test "lets the florist choose how the run is optimized", %{conn: conn} do
+    put_solver(StrategySolver)
+    Application.put_env(:edenflowers, :strategy_test_pid, self())
+    on_exit(fn -> Application.delete_env(:edenflowers, :strategy_test_pid) end)
+
+    eligible_order()
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+
+    assert has_element?(view, "#optimization-strategy input[value=cheapest][checked]")
+    assert has_element?(view, "#optimization-strategy", "Balanced")
+    assert has_element?(view, "#optimization-strategy", "Fastest")
+    optimize(view)
+    assert_receive {:strategy, :cheapest}
+
+    view
+    |> form("#optimization-strategy")
+    |> render_change(%{"optimization" => %{"strategy" => "balanced"}})
+
+    assert has_element?(view, "#optimization-strategy input[value=balanced][checked]")
+    refute has_element?(view, "section", "Proposed routes")
+
+    view |> element("button[phx-click=optimize]") |> render_click()
+    render(view)
+    assert_receive {:strategy, :balanced}
+
+    view
+    |> form("#optimization-strategy")
+    |> render_change(%{"optimization" => %{"strategy" => "fastest"}})
+
+    assert has_element?(view, "#optimization-strategy input[value=fastest][checked]")
+
+    view |> element("button[phx-click=optimize]") |> render_click()
+    render(view)
+    assert_receive {:strategy, :fastest}
+  end
+
   test "shows unused drivers the optimizer didn't route", %{conn: conn} do
     eligible_order()
     used = generate(driver(name: "Used Driver"))
@@ -89,6 +162,34 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
 
     assert html =~ "Not used by the optimizer"
     assert html =~ "Spare Driver"
+  end
+
+  test "allows every proposed route to be assigned to the same driver", %{conn: conn} do
+    eligible_order(order_reference: "EF-REASSIGN-1")
+    eligible_order(order_reference: "EF-REASSIGN-2")
+    first = generate(driver(name: "Driver A"))
+    second = generate(driver(name: "Driver B"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    view |> element("input#driver-#{first.id}") |> render_click()
+    view |> element("input#driver-#{second.id}") |> render_click()
+    optimize(view)
+
+    for draft_id <- ["0", "1"] do
+      view
+      |> form("#route-driver-form-#{draft_id}")
+      |> render_change(%{
+        "assignment" => %{"draft_id" => draft_id, "driver_id" => first.id}
+      })
+
+      assert has_element?(
+               view,
+               "#route-driver-#{draft_id} option[value='#{first.id}'][selected]"
+             )
+    end
+
+    assert has_element?(view, "#proposed-route-0", "EF-REASSIGN")
+    assert has_element?(view, "#proposed-route-1", "EF-REASSIGN")
   end
 
   test "changing the selection discards the draft", %{conn: conn} do

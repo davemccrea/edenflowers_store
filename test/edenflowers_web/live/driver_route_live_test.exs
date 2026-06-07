@@ -42,7 +42,10 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
         delivery_address: "Some Street 1",
         delivery_instructions: "Ring twice",
         card_message: "Happy Birthday",
-        products: [%{"name" => "Roses", "quantity" => 2}],
+        products: [
+          %{"name" => "Roses", "quantity" => 2},
+          %{"name" => "Gift card", "quantity" => 1}
+        ],
         position: "63.0951,21.6165"
       }
     ])
@@ -50,13 +53,14 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
 
     assert html =~ "Dana"
-    assert html =~ "Collect from shop"
+    refute html =~ "Collect from shop"
     assert html =~ "EF-100"
     assert html =~ "Alice"
     assert html =~ "Some Street 1"
     assert html =~ "Ring twice"
     assert html =~ "Happy Birthday"
     assert html =~ "Roses"
+    assert html =~ "Gift card"
     # Tap-to-call and a current-location directions link (origin omitted).
     assert html =~ ~s(href="tel:+358401112222")
     assert html =~ "https://www.google.com/maps/dir/?api=1&amp;destination=63.0951,21.6165"
@@ -100,8 +104,7 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     html = render(view)
     assert html =~ "EF-RUN1"
     assert html =~ "EF-RUN2"
-    # One "Collect from shop" marker per route.
-    assert html |> String.split("Collect from shop") |> length() == 3
+    refute html =~ "Collect from shop"
   end
 
   test "renders in the driver's preferred locale", %{conn: conn} do
@@ -143,6 +146,39 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     assert html =~ "Delivered"
     refute html =~ "Mark delivered"
     assert Order.get_by_id!(order.id, authorize?: false).fulfillment_status == :fulfilled
+  end
+
+  test "a completed delivery expands to show its details", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    order = generate(order(fulfillment_status: :pending))
+
+    route =
+      publish_route(driver, [
+        %{
+          order_reference: "EF-1",
+          order_id: order.id,
+          recipient_name: "Alice",
+          delivery_address: "Some Street 1"
+        }
+      ])
+
+    [stop] = route.route_stops
+    {:ok, view, _html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    view |> element(~s(button[phx-value-kind="delivered"])) |> render_click()
+    html = view |> form("form", %{choice: "handed_to_recipient", note: ""}) |> render_submit()
+
+    refute html =~ "Alice"
+    refute html =~ "Some Street 1"
+
+    html = view |> element("#completed-stop-toggle-#{stop.id}") |> render_click()
+    assert html =~ "Alice"
+    assert html =~ "Some Street 1"
+    assert has_element?(view, "#completed-stop-toggle-#{stop.id}[aria-expanded=true]")
+
+    html = view |> element("#completed-stop-toggle-#{stop.id}") |> render_click()
+    refute html =~ "Alice"
+    refute html =~ "Some Street 1"
   end
 
   test "recording a failure shows the reason and leaves the order pending", %{conn: conn} do

@@ -38,8 +38,8 @@ ready and drivers become available.
   can plan without hunting.
 - As the florist, I can deselect orders I don't want to send out today.
 - As the florist, I choose which drivers are working today.
-- As the florist, I ask the system to build routes, and it assigns orders to drivers and
-  orders each driver's stops to keep total driving as low as possible.
+- As the florist, I choose whether to keep driving cheap, balance the drivers' working
+  time, or finish the run quickly, then ask the system to build the routes.
 - As the florist, I review the proposed routes (which driver gets which stops, in what
   order, with rough distance and time) before committing.
 - As the florist, I publish, and from then on each route in that wave is fixed.
@@ -108,9 +108,10 @@ ready and drivers become available.
 
 ### Drivers & selection
 
-- The florist selects the active drivers who are **available** for the run. This is a
-  pool (an upper bound), not a mandate: the optimizer uses however many of them give the
-  least total driving and may leave some unused (those simply get no route for the run).
+- The florist selects the active drivers who are **available** for the run. For the
+  cheapest strategy this is a pool (an upper bound), and the optimizer may leave some
+  unused. For the balanced and fastest strategies these are the intended drivers,
+  although some remain unused when there are fewer deliveries than drivers.
 - Defaults that make the common case one click:
   - If only one active driver exists, it's pre-selected.
 - All drivers are treated as equivalent in v1 (no capacity differences).
@@ -125,15 +126,16 @@ ready and drivers become available.
   run, that run's route also starts at the shop — which correctly models the driver
   returning to reload, except that the drive back from their previous run is not counted
   and the run assumes selected drivers are available at the shop.
-- The optimizer's priority is to **minimise total driving distance** (the cheapest
-  plan): assign every order, then minimise kilometres driven. The number of drivers used
-  falls out of the geometry — because routes are open (no return leg), HERE uses more of
-  the available drivers only when splitting clusters actually saves driving, and
-  consolidates otherwise. We add no balancing logic or driver-count dial; the florist's
-  driver selection is just the upper bound. (Validated against the live API: e.g. for one
-  spread-out set, using two drivers was cheaper than one because it avoided a long
-  cross-town leg.) Getting orders to customers *soonest* would instead favour maximum
-  parallelism; that's a candidate for a later revision and is not v1's goal.
+- The florist chooses one optimization strategy per run:
+  - **Deliver cheapest**: assign every order, then minimise total kilometres driven.
+    The number of drivers used falls out of the geometry, so selected drivers form an
+    upper bound and some may remain unused.
+  - **Balanced**: assign every order, use as many selected drivers as possible, balance
+    total route duration (driving plus handling time), then minimise cost as a tie-breaker.
+  - **Fastest**: assign every order, use as many selected drivers as possible, then
+    minimise the sum of all route durations and cost.
+- The strategy is part of the ephemeral draft. Changing it discards any proposed routes
+  and requires re-optimizing.
 - The review shows, per driver: the ordered stops, total route distance, driving
   time, and an approximate total duration that includes a short fixed handling time
   per stop. No clock times or arrival estimates are shown.

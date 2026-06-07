@@ -1,5 +1,5 @@
 defmodule Edenflowers.HereAPI.Behaviour do
-  @callback get_address(query :: String.t()) ::
+  @callback get_address(query :: String.t(), locale :: String.t()) ::
               {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
   @callback get_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
 end
@@ -12,12 +12,10 @@ defmodule Edenflowers.HereAPI do
   require Logger
 
   @origin "63.1243488,21.5974075"
-  # TODO
-  @lang "sv"
 
-  def get_address(query) when is_binary(query) do
+  def get_address(query, locale) when is_binary(query) and is_binary(locale) do
     url =
-      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
+      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{language(locale)}&apiKey=#{api_key()}"
 
     with {:ok, %{status: 200, body: body}} <- Req.get(url),
          %{
@@ -73,6 +71,11 @@ defmodule Edenflowers.HereAPI do
 
     {:ok, total_length}
   end
+
+  defp language("fi"), do: "fi"
+  defp language("sv-FI"), do: "sv"
+  defp language("en-GB"), do: "en"
+  defp language(locale), do: locale |> String.split("-", parts: 2) |> hd()
 
   defp api_key, do: Application.get_env(:edenflowers, :here_api_key)
 end

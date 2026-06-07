@@ -15,10 +15,11 @@ defmodule Edenflowers.Fulfillments do
           fulfillment_fee: Decimal.t()
         }
 
-  @spec calculate_delivery(String.t(), FulfillmentOption.t()) ::
+  @spec calculate_delivery(String.t(), FulfillmentOption.t(), String.t()) ::
           {:ok, delivery_result()} | {:error, atom()}
-  def calculate_delivery(delivery_address, fulfillment_option) do
-    with {:ok, {geocoded_address, position, here_id}} <- here_api().get_address(delivery_address),
+  def calculate_delivery(delivery_address, fulfillment_option, locale) do
+    with {:ok, {geocoded_address, position, here_id}} <-
+           here_api().get_address(delivery_address, locale),
          {:ok, distance} <- here_api().get_distance(position),
          {:ok, fulfillment_fee} <- calculate_price(fulfillment_option, distance) do
       {:ok,

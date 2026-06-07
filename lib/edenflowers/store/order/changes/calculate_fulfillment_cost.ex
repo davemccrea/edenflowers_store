@@ -50,9 +50,10 @@ defmodule Edenflowers.Store.Order.Changes.CalculateFulfillmentCost do
   defp apply_delivery(changeset) do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
+    locale = Ash.Changeset.get_attribute(changeset, :locale)
 
     with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
-         {:ok, result} <- Fulfillments.calculate_delivery(delivery_address, option) do
+         {:ok, result} <- Fulfillments.calculate_delivery(delivery_address, option, locale) do
       Ash.Changeset.force_change_attributes(changeset,
         geocoded_address: result.geocoded_address,
         position: result.position,

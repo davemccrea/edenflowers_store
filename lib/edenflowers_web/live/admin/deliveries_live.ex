@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
      socket
      |> assign(:page_title, ~t"Plan deliveries")
      |> assign(:date, today)
+     |> assign(:optimization_strategy, :cheapest)
      |> assign(:optimizing?, false)
      |> assign(:publishing?, false)
      |> assign(:subscribed_route_ids, MapSet.new())
@@ -29,8 +30,8 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   end
 
   # The eligible set and the published routes are both day-scoped and both shift when a run is
-  # published, so they reload together. Selecting always starts from a clean slate: every still-
-  # eligible order picked, the driver default, no draft.
+  # published, so they reload together. Selecting always starts from a clean slate: no orders,
+  # the driver default, and no draft.
   defp load_planning_data(socket) do
     actor = socket.assigns.current_user
     orders = Order.list_eligible_for_delivery!(%{date: socket.assigns.date}, actor: actor)
@@ -42,8 +43,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     |> assign(:drivers, drivers)
     |> assign(:published_routes, published_routes)
     |> assign(:order_by_id, Map.new(orders, &{&1.id, &1}))
-    |> assign(:driver_by_id, Map.new(drivers, &{&1.id, &1}))
-    |> assign(:selected_order_ids, MapSet.new(Enum.map(orders, & &1.id)))
+    |> assign(:selected_order_ids, MapSet.new())
     |> assign(:selected_driver_ids, default_driver_selection(drivers))
     |> assign(:routes, nil)
     |> assign(:plan_error, nil)
@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                   <span class={stop_status_class(stop.status)}>
                     {stop_status_label(stop.status)}
                   </span>
-                  <span class="text-base-content/65">{format_km(stop.leg_distance_m)} km</span>
+                  <span class="text-base-content/65">{format_distance(stop.leg_distance_m)}</span>
                 </span>
               </li>
             </ol>
@@ -182,7 +182,16 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
               <table class="table">
                 <thead>
                   <tr>
-                    <th class="w-10"></th>
+                    <th class="w-10">
+                      <input
+                        type="checkbox"
+                        id="toggle-all-orders"
+                        class="checkbox checkbox-sm"
+                        phx-click="toggle_all_orders"
+                        checked={all_orders_selected?(assigns)}
+                        aria-label={~t"Select all orders"}
+                      />
+                    </th>
                     <th>{~t"Order"}</th>
                     <th>{~t"Recipient"}</th>
                     <th class="text-right">{~t"Distance"}</th>
@@ -203,7 +212,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                     <td class="font-medium">{order.order_reference}</td>
                     <td>{order.recipient_name || order.customer_name}</td>
                     <td class="text-right">
-                      <span :if={order.distance_km}>{order.distance_km} km</span>
+                      <span :if={order.distance_km}>{format_distance_km(order.distance_km)}</span>
                       <span :if={is_nil(order.distance_km)} class="text-base-content/30">—</span>
                     </td>
                   </tr>
@@ -212,35 +221,90 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             </div>
           </section>
 
-          <section>
-            <h2 class="mb-2 text-sm font-semibold">
-              {~t"Drivers"} ({MapSet.size(@selected_driver_ids)}/{length(@drivers)})
-            </h2>
+          <section class="space-y-6">
+            <fieldset>
+              <legend class="mb-2 text-sm font-semibold">{~t"Optimization"}</legend>
+              <form id="optimization-strategy" phx-change="change_optimization">
+                <div class="border-base-300/70 divide-base-300/70 divide-y rounded-lg border">
+                  <label class="flex cursor-pointer items-start gap-3 p-3">
+                    <input
+                      type="radio"
+                      class="radio radio-sm mt-0.5"
+                      name="optimization[strategy]"
+                      value="cheapest"
+                      checked={@optimization_strategy == :cheapest}
+                    />
+                    <span>
+                      <span class="block text-sm font-medium">{~t"Deliver cheapest"}</span>
+                      <span class="text-base-content/65 block text-xs">
+                        {~t"Minimize total driving. Some selected drivers may be unused."}
+                      </span>
+                    </span>
+                  </label>
+                  <label class="flex cursor-pointer items-start gap-3 p-3">
+                    <input
+                      type="radio"
+                      class="radio radio-sm mt-0.5"
+                      name="optimization[strategy]"
+                      value="balanced"
+                      checked={@optimization_strategy == :balanced}
+                    />
+                    <span>
+                      <span class="block text-sm font-medium">{~t"Balanced"}</span>
+                      <span class="text-base-content/65 block text-xs">
+                        {~t"Balance total route time across the selected drivers."}
+                      </span>
+                    </span>
+                  </label>
+                  <label class="flex cursor-pointer items-start gap-3 p-3">
+                    <input
+                      type="radio"
+                      class="radio radio-sm mt-0.5"
+                      name="optimization[strategy]"
+                      value="fastest"
+                      checked={@optimization_strategy == :fastest}
+                    />
+                    <span>
+                      <span class="block text-sm font-medium">{~t"Fastest"}</span>
+                      <span class="text-base-content/65 block text-xs">
+                        {~t"Minimize total driving and delivery time across all routes."}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </form>
+            </fieldset>
 
-            <div
-              :if={@drivers == []}
-              class="border-base-300/70 rounded-lg border border-dashed p-6 text-center"
-            >
-              <p class="text-base-content/65 text-sm">
-                {~t"No active drivers. Add one before planning."}
-              </p>
+            <div>
+              <h2 class="mb-2 text-sm font-semibold">
+                {~t"Drivers"} ({MapSet.size(@selected_driver_ids)}/{length(@drivers)})
+              </h2>
+
+              <div
+                :if={@drivers == []}
+                class="border-base-300/70 rounded-lg border border-dashed p-6 text-center"
+              >
+                <p class="text-base-content/65 text-sm">
+                  {~t"No active drivers. Add one before planning."}
+                </p>
+              </div>
+
+              <ul :if={@drivers != []} class="border-base-300/70 divide-base-300/70 divide-y rounded-lg border">
+                <li :for={driver <- @drivers}>
+                  <label for={"driver-#{driver.id}"} class="flex cursor-pointer items-center gap-3 p-3">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      id={"driver-#{driver.id}"}
+                      phx-click="toggle_driver"
+                      phx-value-id={driver.id}
+                      checked={MapSet.member?(@selected_driver_ids, driver.id)}
+                    />
+                    <span class="text-sm font-medium">{driver.name}</span>
+                  </label>
+                </li>
+              </ul>
             </div>
-
-            <ul :if={@drivers != []} class="border-base-300/70 divide-base-300/70 divide-y rounded-lg border">
-              <li :for={driver <- @drivers}>
-                <label for={"driver-#{driver.id}"} class="flex cursor-pointer items-center gap-3 p-3">
-                  <input
-                    type="checkbox"
-                    class="checkbox checkbox-sm"
-                    id={"driver-#{driver.id}"}
-                    phx-click="toggle_driver"
-                    phx-value-id={driver.id}
-                    checked={MapSet.member?(@selected_driver_ids, driver.id)}
-                  />
-                  <span class="text-sm font-medium">{driver.name}</span>
-                </label>
-              </li>
-            </ul>
           </section>
         </div>
 
@@ -270,11 +334,35 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             </button>
           </header>
 
-          <article :for={route <- @routes} class="border-base-300/70 rounded-lg border p-4">
+          <article
+            :for={route <- @routes}
+            id={"proposed-route-#{route.draft_id}"}
+            class="border-base-300/70 rounded-lg border p-4"
+          >
             <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 class="font-medium">{driver_name(assigns, route.driver_id)}</h3>
+              <form
+                id={"route-driver-form-#{route.draft_id}"}
+                phx-change="assign_driver"
+                class="flex items-center gap-2 text-sm"
+              >
+                <input type="hidden" name="assignment[draft_id]" value={route.draft_id} />
+                <label for={"route-driver-#{route.draft_id}"} class="font-medium">{~t"Driver"}</label>
+                <select
+                  id={"route-driver-#{route.draft_id}"}
+                  name="assignment[driver_id]"
+                  class="select select-sm"
+                >
+                  <option
+                    :for={driver <- selected_drivers(assigns)}
+                    value={driver.id}
+                    selected={driver.id == route.driver_id}
+                  >
+                    {driver.name}
+                  </option>
+                </select>
+              </form>
               <p class="text-base-content/65 text-sm">
-                {length(route.stops)} {~t"stops"} · {format_km(route.total_distance_m)} km · {~t"drive"} {format_duration(
+                {length(route.stops)} {~t"stops"} · {format_distance(route.total_distance_m)} · {~t"drive"} {format_duration(
                   route.total_driving_s
                 )} · {~t"total"} {format_duration(route.total_duration_s)}
               </p>
@@ -287,7 +375,9 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                   <span class="font-medium">{order_label(assigns, stop.stop_id)}</span>
                 </span>
                 <span class="text-base-content/65 whitespace-nowrap text-sm">
-                  +{format_km(stop.leg_from_previous.distance_m)} km · +{format_duration(stop.leg_from_previous.duration_s)}
+                  +{format_distance(stop.leg_from_previous.distance_m)} · +{format_duration(
+                    stop.leg_from_previous.duration_s
+                  )}
                 </span>
               </li>
             </ol>
@@ -307,8 +397,49 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     {:noreply, socket |> update(:selected_order_ids, &toggle(&1, id)) |> discard_draft()}
   end
 
+  def handle_event("toggle_all_orders", _params, socket) do
+    selected_order_ids =
+      if all_orders_selected?(socket.assigns) do
+        MapSet.new()
+      else
+        MapSet.new(socket.assigns.eligible_orders, & &1.id)
+      end
+
+    {:noreply, socket |> assign(:selected_order_ids, selected_order_ids) |> discard_draft()}
+  end
+
   def handle_event("toggle_driver", %{"id" => id}, socket) do
     {:noreply, socket |> update(:selected_driver_ids, &toggle(&1, id)) |> discard_draft()}
+  end
+
+  def handle_event(
+        "change_optimization",
+        %{"optimization" => %{"strategy" => strategy}},
+        socket
+      )
+      when strategy in ["cheapest", "balanced", "fastest"] do
+    {:noreply,
+     socket
+     |> assign(:optimization_strategy, String.to_existing_atom(strategy))
+     |> discard_draft()}
+  end
+
+  def handle_event(
+        "assign_driver",
+        %{
+          "assignment" => %{
+            "draft_id" => draft_id,
+            "driver_id" => driver_id
+          }
+        },
+        socket
+      ) do
+    if MapSet.member?(socket.assigns.selected_driver_ids, driver_id) do
+      routes = assign_driver(socket.assigns.routes, draft_id, driver_id)
+      {:noreply, assign(socket, :routes, routes)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("optimize", _params, socket) do
@@ -336,7 +467,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   def handle_info(:run_optimize, socket) do
     case Solver.solve(build_problem(socket)) do
       {:ok, routes} ->
-        {:noreply, assign(socket, optimizing?: false, routes: routes, plan_error: nil)}
+        {:noreply, assign(socket, optimizing?: false, routes: identify_draft_routes(routes), plan_error: nil)}
 
       {:error, :unassigned} ->
         {:noreply, assign(socket, optimizing?: false, routes: nil, plan_error: :unassigned)}
@@ -427,10 +558,9 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     }
   end
 
-  # The card is snapshotted as a message, not a product line; the driver never sees prices.
+  # Snapshot every physical item the driver needs to deliver; prices are deliberately excluded.
   defp product_lines(order) do
     order.line_items
-    |> Enum.reject(& &1.is_card)
     |> Enum.map(&%{"name" => &1.product_name, "quantity" => &1.quantity})
   end
 
@@ -447,7 +577,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       |> Enum.filter(&MapSet.member?(socket.assigns.selected_driver_ids, &1.id))
       |> Enum.map(&%{id: &1.id})
 
-    %{stops: stops, drivers: drivers}
+    %{stops: stops, drivers: drivers, strategy: socket.assigns.optimization_strategy}
   end
 
   defp can_optimize?(assigns) do
@@ -455,15 +585,16 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       MapSet.size(assigns.selected_driver_ids) > 0
   end
 
+  defp all_orders_selected?(assigns) do
+    MapSet.size(assigns.selected_order_ids) == length(assigns.eligible_orders)
+  end
+
   # A draft describes one specific set of orders and drivers; once that set changes it no
   # longer applies, so clear it and let the florist re-optimize.
   defp discard_draft(socket), do: assign(socket, routes: nil, plan_error: nil)
 
-  defp driver_name(assigns, driver_id) do
-    case assigns.driver_by_id[driver_id] do
-      nil -> driver_id
-      driver -> driver.name
-    end
+  defp selected_drivers(assigns) do
+    Enum.filter(assigns.drivers, &MapSet.member?(assigns.selected_driver_ids, &1.id))
   end
 
   defp order_label(assigns, order_id) do
@@ -476,9 +607,21 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   defp unused_drivers(assigns) do
     used = MapSet.new(assigns.routes || [], & &1.driver_id)
 
-    assigns.drivers
-    |> Enum.filter(&MapSet.member?(assigns.selected_driver_ids, &1.id))
+    assigns
+    |> selected_drivers()
     |> Enum.reject(&MapSet.member?(used, &1.id))
+  end
+
+  defp identify_draft_routes(routes) do
+    routes
+    |> Enum.with_index()
+    |> Enum.map(fn {route, draft_id} -> Map.put(route, :draft_id, Integer.to_string(draft_id)) end)
+  end
+
+  defp assign_driver(routes, draft_id, driver_id) do
+    Enum.map(routes, fn route ->
+      if route.draft_id == draft_id, do: %{route | driver_id: driver_id}, else: route
+    end)
   end
 
   defp subscribe_to_routes(socket, routes) do
@@ -532,14 +675,28 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   defp stop_status_class(:failed), do: "badge badge-sm badge-error"
   defp stop_status_class(:skipped), do: "badge badge-sm admin-badge-neutral"
 
-  defp format_km(metres), do: :erlang.float_to_binary(metres / 1000, decimals: 1)
+  defp format_distance(metres) do
+    metres
+    |> Kernel./(1000)
+    |> :erlang.float_to_binary(decimals: 1)
+    |> format_distance_value()
+  end
+
+  defp format_distance_km(kilometres), do: kilometres |> to_string() |> format_distance_value()
+
+  defp format_distance_value(distance), do: ~t"#{distance} km"
 
   defp format_duration(seconds) do
     minutes = div(seconds, 60)
 
     cond do
-      minutes >= 60 -> "#{div(minutes, 60)}h #{rem(minutes, 60)}m"
-      true -> "#{minutes}m"
+      minutes >= 60 ->
+        hours = div(minutes, 60)
+        remaining_minutes = rem(minutes, 60)
+        ~t"#{hours} h #{remaining_minutes} min"
+
+      true ->
+        ~t"#{minutes} min"
     end
   end
 

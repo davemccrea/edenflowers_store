@@ -6,15 +6,17 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
   ## Why a Mix task
 
   The optimizer is the feature's principal risk: we need to confirm, against realistic
-  Vaasa delivery sets, that the objective ordering actually expresses "balance how late
-  each driver finishes, then minimise driving" — and confirm HERE's live response field
-  names before the adapter is relied on. This task is the HITL validation harness.
+  Vaasa delivery sets, that each optimization strategy behaves as intended, and confirm
+  HERE's live response field names before the adapter is relied on. This task is the HITL
+  validation harness.
 
   ## Usage
 
       source .env
-      mix eden.tour_planning_spike            # 2 drivers (default)
-      mix eden.tour_planning_spike 3          # 3 drivers
+      mix eden.tour_planning_spike                       # 2 drivers, cheapest
+      mix eden.tour_planning_spike 3                     # 3 drivers, cheapest
+      mix eden.tour_planning_spike 3 balanced            # 3 drivers, balanced duration
+      mix eden.tour_planning_spike 3 fastest             # 3 drivers, least total time
 
   Seed the database first (`mix ecto.setup` / seeds) so there are today-dated delivery
   orders to plan. Add more today deliveries to `priv/repo/seeds.exs` to exercise
@@ -24,10 +26,8 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
 
   - **Raw response**: confirm the field names this adapter parses (`tours[].stops[]`,
     `distance`, `time.arrival`/`departure`, `activities[].jobId`, `unassigned`).
-  - **Per-driver totals**: the spread of `total_duration_s` across drivers is the
-    balance objective working; total distance is the secondary objective.
-  - Compare `balance-duration` vs `minimize-arrival-time` by editing the objectives in
-    `Edenflowers.TourPlanning` and re-running.
+  - **Per-driver totals**: compare route counts, duration spread, and total distance
+    across `cheapest`, `balanced`, and `fastest`.
   """
   use Mix.Task
 
@@ -42,21 +42,21 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
   def run(args) do
     Mix.Task.run("app.start")
 
-    driver_count = parse_driver_count(args)
+    {driver_count, strategy} = parse_args(args)
     stops = todays_delivery_stops()
 
     if stops == [] do
       Mix.shell().error("No today-dated, paid, pending delivery orders with coordinates. Seed first.")
     else
-      run_spike(stops, driver_count)
+      run_spike(stops, driver_count, strategy)
     end
   end
 
-  defp run_spike(stops, driver_count) do
+  defp run_spike(stops, driver_count, strategy) do
     drivers = for n <- 1..driver_count, do: %{id: "spike-#{n}"}
-    problem = %{stops: stops, drivers: drivers}
+    problem = %{stops: stops, drivers: drivers, strategy: strategy}
 
-    Mix.shell().info("Planning #{length(stops)} stops across #{driver_count} drivers...\n")
+    Mix.shell().info("Planning #{length(stops)} stops across #{driver_count} drivers using #{strategy}...\n")
 
     case TourPlanning.post(TourPlanning.build_problem(problem)) do
       {:ok, body} ->
@@ -124,6 +124,12 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
   defp km(metres), do: Float.round(metres / 1000, 1)
   defp min(seconds), do: "#{div(seconds, 60)}m"
 
-  defp parse_driver_count([n | _]), do: String.to_integer(n)
-  defp parse_driver_count(_), do: 2
+  defp parse_args([driver_count, "balanced" | _]),
+    do: {String.to_integer(driver_count), :balanced}
+
+  defp parse_args([driver_count, "fastest" | _]),
+    do: {String.to_integer(driver_count), :fastest}
+
+  defp parse_args([driver_count | _]), do: {String.to_integer(driver_count), :cheapest}
+  defp parse_args(_), do: {2, :cheapest}
 end
