@@ -436,7 +436,7 @@ orders = [
     geocoded_address: "Sundomvägen 130, 65410 Vasa",
     position: "63.03232,21.54662",
     here_id: "here:af:streetsection:DnEELU-r45CN9NK9d3YMnB:EAIaAzEzMA",
-    distance: 12_711,
+    distance: 12_670,
     gift: true,
     card_message: "Happy birthday, with love.",
     # A gift order carries a card: a line item flagged is_card, built from a
@@ -519,6 +519,89 @@ orders = [
     gift: false,
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
+  },
+  # Today-dated deliveries with real Vaasa coordinates (geocoded via HERE), giving the
+  # delivery dispatch planner a realistic set to optimize and balance across drivers.
+  %{
+    customer_name: "Petteri Salo",
+    customer_email: "petteri.salo@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    recipient_name: "Petteri Salo",
+    recipient_phone_number: "+358 40 511 2233",
+    delivery_address: "Hovioikeudenpuistikko 15, 65100 Vaasa",
+    geocoded_address: "Hovrättsesplanaden 15, 65100 Vasa",
+    position: "63.09649,21.6142",
+    here_id: "here:af:streetsection:XrjauWTneB1sJd6FFvKuVD:CgcIBCDevPx9EAEaAjE1",
+    distance: 4393,
+    gift: false,
+    locale: "fi",
+    items: [{"Bouquet 2", :medium, 1}]
+  },
+  %{
+    customer_name: "Anna Heikkilä",
+    customer_email: "anna.heikkila@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    recipient_name: "Markus Heikkilä",
+    recipient_phone_number: "+358 50 233 4455",
+    delivery_address: "Vöyrinkatu 16, 65100 Vaasa",
+    geocoded_address: "Vörågatan 16, 65100 Vasa",
+    position: "63.10299,21.61895",
+    here_id: "here:af:streetsection:gE69OPmaOizFQONoQF9HWD:EAIaAjE2",
+    distance: 2820,
+    gift: true,
+    card_message: "Grattis på födelsedagen!",
+    card: {"Card 1", :medium},
+    items: [{"Bouquet 5", :large, 1}]
+  },
+  %{
+    customer_name: "Johanna Mäki",
+    customer_email: "johanna.maki@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    recipient_name: "Johanna Mäki",
+    recipient_phone_number: "+358 44 677 8899",
+    delivery_address: "Palosaarentie 24, 65200 Vaasa",
+    geocoded_address: "Brändövägen 24, 65200 Vasa",
+    position: "63.10966,21.59723",
+    here_id: "here:af:streetsection:S5XX77wx2HODk46TG8cx5A:CgcIBCCq1fx9EAEaAjI0",
+    distance: 2149,
+    gift: false,
+    items: [{"Plant 2", :medium, 1}, {"Bouquet 1", :small, 1}]
+  },
+  %{
+    customer_name: "Sofia Nieminen",
+    customer_email: "sofia.nieminen@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    recipient_name: "Eeva Nieminen",
+    recipient_phone_number: "+358 40 909 1122",
+    delivery_address: "Huutoniementie 14, 65320 Vaasa",
+    geocoded_address: "Roparnäsvägen 14, 65320 Vasa",
+    position: "63.08991,21.66855",
+    here_id: "here:af:streetsection:-2zTTMwMphgYMZA452172D:CggIBCD9jsXxAhABGgIxNA",
+    distance: 5639,
+    gift: true,
+    card_message: "Tänker på dig.",
+    card: {"Card 3", :medium},
+    items: [{"Bouquet 6", :medium, 1}]
+  },
+  %{
+    customer_name: "Emilia Laine",
+    customer_email: "emilia.laine@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    recipient_name: "Emilia Laine",
+    recipient_phone_number: "+358 44 332 1100",
+    delivery_address: "Kirkkopuistikko 24, 65100 Vaasa",
+    geocoded_address: "Kyrkoesplanaden 24, 65100 Vasa",
+    position: "63.09363,21.60997",
+    here_id: "here:af:streetsection:RhNtwD19twYgBAWydsorXC:CgcIBCDErIF-EAEaAjI0",
+    distance: 4586,
+    gift: false,
+    locale: "fi",
+    items: [{"Bouquet 3", :small, 1}, {"Plant 1", :small, 1}]
   }
 ]
 
