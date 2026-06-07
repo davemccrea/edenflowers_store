@@ -201,29 +201,41 @@ planning is blocked with a message — no partial result.
 
 ---
 
-## 5. Publish a run
+## 5. Publish a run — DONE
 
-**Type:** AFK · **Blocked by:** #4
+**Type:** AFK · **Blocked by:** #4 · **Status:** complete
 
-### What to build
+### What was built
 
-A single, all-or-nothing publish action that turns the reviewed draft into persisted
-`Route` + `RouteStop` rows: one route per driver the optimizer actually used, each stop
-snapshotting the order's recipient/address/instructions/card/products and its leg
-metrics. After publishing, the page shows the published routes alongside the still-usable
-planner, so the florist can run it again later over whatever remains eligible.
+New `Route` and `RouteStop` resources in the `Edenflowers.Delivery` domain, plus a "Publish
+run" action on the planning page. Publishing turns the reviewed draft into persisted rows: one
+`Route` per driver the optimizer used (carrying `date` + `published_at`), each with ordered
+`RouteStop`s that snapshot the order's recipient/phone/address/instructions/card message,
+product names + quantities (prices excluded, card excluded from the product list), position,
+sequence, and per-leg distance/duration. The whole run is created inside one `Ash.transaction`,
+so a failure on any route persists nothing. `Order.eligible_for_delivery` now excludes orders
+already on a published route (queried from the `RouteStop` side, keeping `Order` relationship-
+free), and the page renders today's published routes above the still-usable planner so a second
+run plans only what's left.
 
 ### Acceptance criteria
 
-- [ ] Publish persists one `Route` per used driver (with `published_at`, `date`, `driver_id`)
+- [x] Publish persists one `Route` per used driver (with `published_at`, `date`, `driver_id`)
       and ordered `RouteStop` rows snapshotting recipient name, phone, address,
       instructions, card message, product names + quantities (no prices), sequence, and
       per-leg distance/duration.
-- [ ] Publish is atomic — a failure persists nothing.
-- [ ] Published orders drop out of the eligible set, so a second run plans only what's
+- [x] Publish is atomic — a failure persists nothing.
+- [x] Published orders drop out of the eligible set, so a second run plans only what's
       left; published routes render on the page next to the planner.
-- [ ] A driver can hold more than one route for the day (one per run).
-- [ ] Tests cover snapshot fidelity and the eligibility-exclusion after publish.
+- [x] A driver can hold more than one route for the day (one per run).
+- [x] Tests cover snapshot fidelity and the eligibility-exclusion after publish.
+
+### Notes for later slices
+
+- `RouteStop` already carries the `status` column (`pending | delivered | failed | skipped`,
+  default `pending`) and `position` snapshot; slice 6 reads stops for the `/d/:token` page and
+  slice 7 overwrites `status` on outcome. `RouteStop.published_order_ids/1` is the eligibility
+  exclusion helper; `Route.list_published_for_date/1` loads routes with driver + ordered stops.
 
 ### User stories
 

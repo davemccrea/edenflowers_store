@@ -9,5 +9,7 @@ defmodule Edenflowers.Delivery do
 
   resources do
     resource Edenflowers.Delivery.Driver
+    resource Edenflowers.Delivery.Route
+    resource Edenflowers.Delivery.RouteStop
   end
 end
