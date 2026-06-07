@@ -12,13 +12,15 @@ defmodule EdenflowersWeb.DriverRouteLive do
       {:ok, %Driver{} = driver} ->
         put_driver_locale(driver.locale)
         date = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+        routes = Route.list_for_driver!(driver.id, date, authorize?: false)
 
         {:ok,
          socket
          |> assign(:page_title, driver.name)
          |> assign(:driver, driver)
          |> assign(:date, date)
-         |> assign(:routes, Route.list_for_driver!(driver.id, date, authorize?: false))}
+         |> assign(:routes, routes)
+         |> assign(:directions_url, all_stops_directions_url(routes))}
 
       _ ->
         {:ok, assign(socket, driver: nil, routes: [], date: nil, page_title: ~t"Not found")}
@@ -54,6 +56,17 @@ defmodule EdenflowersWeb.DriverRouteLive do
       <header class="mb-6">
         <h1 class="text-xl font-semibold">{@driver.name}</h1>
         <p class="text-base-content/65 text-sm">{Edenflowers.Format.weekday_day_month(@date, @driver.locale)}</p>
+
+        <a
+          :if={@directions_url}
+          href={@directions_url}
+          target="_blank"
+          rel="noopener"
+          class="btn btn-primary btn-sm mt-4 w-full"
+        >
+          <.icon name="hero-map" class="h-4 w-4" />
+          {~t"Open all stops in Google Maps"}
+        </a>
       </header>
 
       <div
@@ -129,6 +142,27 @@ defmodule EdenflowersWeb.DriverRouteLive do
       </section>
     </main>
     """
+  end
+
+  # One directions link for the whole day: every stop across every route, in order, as Google
+  # Maps waypoints with the last stop as the destination. Origin is omitted so it starts from the
+  # driver's current location (the shop, when they set off). Returns nil if no stop has a position.
+  defp all_stops_directions_url(routes) do
+    positions =
+      routes
+      |> Enum.flat_map(& &1.route_stops)
+      |> Enum.map(& &1.position)
+      |> Enum.reject(&is_nil/1)
+
+    case positions do
+      [] ->
+        nil
+
+      _ ->
+        {waypoints, [destination]} = Enum.split(positions, -1)
+        url = "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=#{destination}"
+        if waypoints == [], do: url, else: url <> "&waypoints=#{Enum.join(waypoints, "|")}"
+    end
   end
 
   defp format_km(metres), do: :erlang.float_to_binary(metres / 1000, decimals: 1)

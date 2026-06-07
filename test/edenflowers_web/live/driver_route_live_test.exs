@@ -61,6 +61,34 @@ defmodule EdenflowersWeb.DriverRouteLiveTest do
     assert html =~ "https://www.google.com/maps/dir/?api=1&amp;destination=63.0951,21.6165"
   end
 
+  test "offers a single Google Maps link chaining every stop in order", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+
+    publish_route(driver, [
+      %{order_reference: "EF-1", position: "63.01,21.01"},
+      %{order_reference: "EF-2", position: "63.02,21.02"}
+    ])
+
+    publish_route(driver, [%{order_reference: "EF-3", position: "63.03,21.03"}])
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    # Last stop across all routes is the destination; the earlier ones are ordered waypoints.
+    assert html =~ "Open all stops in Google Maps"
+
+    assert html =~
+             "https://www.google.com/maps/dir/?api=1&amp;travelmode=driving&amp;destination=63.03,21.03&amp;waypoints=63.01,21.01|63.02,21.02"
+  end
+
+  test "hides the all-stops link when no stop has a position", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    publish_route(driver, [%{order_reference: "EF-1", position: nil}])
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    refute html =~ "Open all stops in Google Maps"
+  end
+
   test "renders every route for the day as its own list", %{conn: conn} do
     driver = generate(driver(name: "Dana"))
     publish_route(driver, [%{order_reference: "EF-RUN1"}])
