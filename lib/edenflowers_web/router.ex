@@ -25,6 +25,18 @@ defmodule EdenflowersWeb.Router do
     plug :load_from_session
   end
 
+  # The public driver page (/d/:token) is reached by drivers with no account. It deliberately
+  # skips the store plugs (cart init, maintenance redirect) and auth — the token is the only gate,
+  # and the page sets its locale from the driver, not the session.
+  pipeline :driver do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :load_from_bearer
@@ -73,6 +85,14 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
     )
+  end
+
+  scope "/d", EdenflowersWeb do
+    pipe_through :driver
+
+    live_session :driver_routes do
+      live "/:token", DriverRouteLive
+    end
   end
 
   scope "/admin" do

@@ -1,0 +1,103 @@
+defmodule EdenflowersWeb.DriverRouteLiveTest do
+  use EdenflowersWeb.ConnCase, async: true
+
+  import Generator
+  import Phoenix.LiveViewTest
+
+  alias Edenflowers.Delivery.Route
+
+  defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+
+  # Publishes a route for the driver with the given stop maps (sequence is inferred from order).
+  defp publish_route(driver, stops, date \\ nil) do
+    stops =
+      stops
+      |> Enum.with_index(1)
+      |> Enum.map(fn {stop, sequence} ->
+        Map.merge(
+          %{
+            sequence: sequence,
+            order_id: generate(order()).id,
+            order_reference: "EF-#{sequence}",
+            leg_distance_m: 2_000,
+            leg_duration_s: 300,
+            products: []
+          },
+          stop
+        )
+      end)
+
+    Route.publish!(%{date: date || today(), driver_id: driver.id, stops: stops}, authorize?: false)
+  end
+
+  test "renders the driver's name, the date, and their stops", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+
+    publish_route(driver, [
+      %{
+        order_reference: "EF-100",
+        recipient_name: "Alice",
+        recipient_phone: "+358401112222",
+        delivery_address: "Some Street 1",
+        delivery_instructions: "Ring twice",
+        card_message: "Happy Birthday",
+        products: [%{"name" => "Roses", "quantity" => 2}],
+        position: "63.0951,21.6165"
+      }
+    ])
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    assert html =~ "Dana"
+    assert html =~ "Collect from shop"
+    assert html =~ "EF-100"
+    assert html =~ "Alice"
+    assert html =~ "Some Street 1"
+    assert html =~ "Ring twice"
+    assert html =~ "Happy Birthday"
+    assert html =~ "Roses"
+    # Tap-to-call and a current-location directions link (origin omitted).
+    assert html =~ ~s(href="tel:+358401112222")
+    assert html =~ "https://www.google.com/maps/dir/?api=1&amp;destination=63.0951,21.6165"
+  end
+
+  test "renders every route for the day as its own list", %{conn: conn} do
+    driver = generate(driver(name: "Dana"))
+    publish_route(driver, [%{order_reference: "EF-RUN1"}])
+    publish_route(driver, [%{order_reference: "EF-RUN2"}])
+
+    {:ok, view, _html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    html = render(view)
+    assert html =~ "EF-RUN1"
+    assert html =~ "EF-RUN2"
+    # One "Collect from shop" marker per route.
+    assert html |> String.split("Collect from shop") |> length() == 3
+  end
+
+  test "renders in the driver's preferred locale", %{conn: conn} do
+    driver = generate(driver(name: "Sven", locale: "sv-FI"))
+    publish_route(driver, [%{order_reference: "EF-SV"}])
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    assert html =~ ~s(lang="sv-FI")
+  end
+
+  test "shows a clear empty state when the driver has nothing to deliver", %{conn: conn} do
+    driver = generate(driver(name: "Idle"))
+
+    {:ok, _view, html} = live(conn, ~p"/d/#{driver.link_token}")
+
+    assert html =~ "Idle"
+    assert html =~ "Nothing to deliver today."
+    refute html =~ "Collect from shop"
+  end
+
+  test "an unknown token shows a not-found page", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/d/not-a-real-token")
+
+    assert html =~ "isn&#39;t valid" or html =~ "isn't valid"
+    refute html =~ "Collect from shop"
+  end
+end

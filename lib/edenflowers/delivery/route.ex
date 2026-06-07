@@ -12,6 +12,7 @@ defmodule Edenflowers.Delivery.Route do
   code_interface do
     define :publish, action: :publish
     define :list_published_for_date, action: :published_for_date, args: [:date]
+    define :list_for_driver, action: :for_driver, args: [:driver_id, :date]
   end
 
   actions do
@@ -35,6 +36,15 @@ defmodule Edenflowers.Delivery.Route do
       filter expr(date == ^arg(:date))
 
       prepare build(sort: [published_at: :asc], load: [:driver, :route_stops])
+    end
+
+    read :for_driver do
+      description "One driver's published routes for a day — the public /d/:token page (read with the token as the gate)."
+      argument :driver_id, :uuid, allow_nil?: false
+      argument :date, :date, allow_nil?: false
+      filter expr(driver_id == ^arg(:driver_id) and date == ^arg(:date))
+
+      prepare build(sort: [published_at: :asc], load: [:route_stops])
     end
   end
 

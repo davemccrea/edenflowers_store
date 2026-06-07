@@ -243,32 +243,42 @@ run plans only what's left.
 
 ---
 
-## 6. Driver route page (read-only)
+## 6. Driver route page (read-only) — DONE
 
-**Type:** AFK · **Blocked by:** #1, #5
+**Type:** AFK · **Blocked by:** #1, #5 · **Status:** complete
 
-### What to build
+### What was built
 
-The public, no-login driver page at `/d/:token`. It resolves the driver by token and
-renders all of that driver's published routes for today, each as its own ordered list
-headed by a "Collect from shop" marker. Each stop shows order reference, recipient name,
-tap-to-call phone, full address, delivery instructions, card message, product
-names/quantities (no prices), and approximate distance/time from the previous stop, plus
-a Google Maps directions link using the device's current location as origin. Renders in
-the driver's preferred language. Read-only in this slice — outcome recording is slice 7.
+The public, no-login `EdenflowersWeb.DriverRouteLive` at `/d/:token`, mounted in its own
+slim `:driver` router pipeline that skips the store plugs (cart init, maintenance redirect)
+and auth — the unguessable token is the only gate, so reads run with `authorize?: false`
+once `Driver.get_by_token/1` resolves a driver. A new driver-scoped read,
+`Route.list_for_driver/2`, loads that driver's published routes for today with their ordered
+stops. Each route renders as its own ordered list headed by a "Collect from shop" marker;
+each stop shows order reference, recipient name, tap-to-call phone, full address, delivery
+instructions, card message, product names/quantities (no prices), and per-leg distance/time,
+plus a current-location Google Maps directions link. The page forces the driver's preferred
+locale (`Localize.put_locale` + the matching Gettext locale), independent of the
+browser/session, and shows a clear empty state on a day with no routes.
 
 ### Acceptance criteria
 
-- [ ] `/d/:token` public LiveView outside the authenticated/admin scope; unknown token →
+- [x] `/d/:token` public LiveView outside the authenticated/admin scope; unknown token →
       not-found page.
-- [ ] Shows the driver's name, today's date, and every today route as a separate ordered
+- [x] Shows the driver's name, today's date, and every today route as a separate ordered
       list, each headed by a "Collect from shop" start marker.
-- [ ] Each stop renders all required fields with prices excluded; tap-to-call phone link;
+- [x] Each stop renders all required fields with prices excluded; tap-to-call phone link;
       Google Maps link of the form `…/maps/dir/?api=1&destination=<lat,lng>` (origin
       omitted → current location).
-- [ ] Page renders in the driver's locale; on a day with no routes it shows a clear
+- [x] Page renders in the driver's locale; on a day with no routes it shows a clear
       "nothing to deliver" state.
-- [ ] Tests cover token resolution, multi-route rendering, locale, and the empty state.
+- [x] Tests cover token resolution, multi-route rendering, locale, and the empty state.
+
+### Notes for later slices
+
+- `Route.list_for_driver/2` is the per-driver day read slice 7 builds outcome recording on;
+  the page is keyed by `:token`, so a stop's status update should patch in place per-route.
+- New `~t` strings are extracted into the catalogs; fi/sv msgstrs are empty pending translation.
 
 ### User stories
 
