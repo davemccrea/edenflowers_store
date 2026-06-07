@@ -744,4 +744,38 @@ Hooks.HotFxShyHeader = {
   },
 };
 
+/**
+ * Copies a string to the clipboard on click and briefly swaps the button's
+ * label to confirm. Markup contract:
+ *   <button phx-hook="CopyToClipboard"
+ *           data-clipboard-text="https://…"
+ *           data-copied-label="Copied!">
+ *     <span data-copy-label>Copy link</span>
+ *   </button>
+ */
+Hooks.CopyToClipboard = {
+  mounted() {
+    this.el.addEventListener("click", async () => {
+      const text = this.el.dataset.clipboardText;
+      if (!text) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_e) {
+        return;
+      }
+
+      const label = this.el.querySelector("[data-copy-label]");
+      if (!label) return;
+
+      const original = label.textContent;
+      label.textContent = this.el.dataset.copiedLabel || "Copied";
+      clearTimeout(this._resetTimer);
+      this._resetTimer = setTimeout(() => {
+        label.textContent = original;
+      }, 1500);
+    });
+  },
+};
+
 export default Hooks;

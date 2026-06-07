@@ -88,6 +88,9 @@ defmodule EdenflowersWeb.Router do
       live "/orders", EdenflowersWeb.Admin.OrdersLive
       live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
+      live "/drivers", EdenflowersWeb.Admin.DriversLive
+      live "/drivers/new", EdenflowersWeb.Admin.DriverFormLive
+      live "/drivers/:id/edit", EdenflowersWeb.Admin.DriverFormLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
       live "/account", EdenflowersWeb.Admin.AccountLive
