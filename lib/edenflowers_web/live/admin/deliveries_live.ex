@@ -229,22 +229,22 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                   <label class="flex cursor-pointer items-start gap-3 p-3">
                     <input
                       type="radio"
-                      class="radio radio-sm mt-0.5"
+                      class="radio radio-sm radio-primary mt-0.5"
                       name="optimization[strategy]"
                       value="cheapest"
                       checked={@optimization_strategy == :cheapest}
                     />
                     <span>
-                      <span class="block text-sm font-medium">{~t"Deliver cheapest"}</span>
+                      <span class="block text-sm font-medium">{~t"Cheapest"}</span>
                       <span class="text-base-content/65 block text-xs">
-                        {~t"Minimize total driving. Some selected drivers may be unused."}
+                        {~t"least total driving distance."}
                       </span>
                     </span>
                   </label>
                   <label class="flex cursor-pointer items-start gap-3 p-3">
                     <input
                       type="radio"
-                      class="radio radio-sm mt-0.5"
+                      class="radio radio-sm radio-primary mt-0.5"
                       name="optimization[strategy]"
                       value="balanced"
                       checked={@optimization_strategy == :balanced}
@@ -252,14 +252,14 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                     <span>
                       <span class="block text-sm font-medium">{~t"Balanced"}</span>
                       <span class="text-base-content/65 block text-xs">
-                        {~t"Balance total route time across the selected drivers."}
+                        {~t"equalizes total route duration across drivers."}
                       </span>
                     </span>
                   </label>
                   <label class="flex cursor-pointer items-start gap-3 p-3">
                     <input
                       type="radio"
-                      class="radio radio-sm mt-0.5"
+                      class="radio radio-sm radio-primary mt-0.5"
                       name="optimization[strategy]"
                       value="fastest"
                       checked={@optimization_strategy == :fastest}
@@ -267,7 +267,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                     <span>
                       <span class="block text-sm font-medium">{~t"Fastest"}</span>
                       <span class="text-base-content/65 block text-xs">
-                        {~t"Minimize total driving and delivery time across all routes."}
+                        {~t"minimizes aggregate driving and delivery time."}
                       </span>
                     </span>
                   </label>
