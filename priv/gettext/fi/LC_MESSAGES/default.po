@@ -1065,7 +1065,7 @@ msgid "Admin"
 msgstr "Ylläpitäjä"
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:130
-#: lib/edenflowers_web/live/driver_route_live.ex:107
+#: lib/edenflowers_web/live/driver_route_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr "Korttiviesti"
@@ -1137,7 +1137,7 @@ msgid "Gift"
 msgstr "Lahja"
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:112
-#: lib/edenflowers_web/live/driver_route_live.ex:102
+#: lib/edenflowers_web/live/driver_route_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Instructions"
 msgstr "Ohjeet"
@@ -1994,27 +1994,32 @@ msgstr ""
 msgid "The routes couldn't be published. Nothing was saved. Try again."
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:69
+#: lib/edenflowers_web/live/driver_route_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "Collect from shop"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:125
+#: lib/edenflowers_web/live/driver_route_live.ex:138
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Directions"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:24
+#: lib/edenflowers_web/live/driver_route_live.ex:26
 #, elixir-autogen, elixir-format
 msgid "Not found"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:63
+#: lib/edenflowers_web/live/driver_route_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Nothing to deliver today."
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:45
+#: lib/edenflowers_web/live/driver_route_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "This delivery link isn't valid."
+msgstr ""
+
+#: lib/edenflowers_web/live/driver_route_live.ex:68
+#, elixir-autogen, elixir-format
+msgid "Open all stops in Google Maps"
 msgstr ""
