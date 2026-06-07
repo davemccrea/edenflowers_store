@@ -330,29 +330,38 @@ its reason and stays actionable for a same-day retry. `RouteStop` now uses an
 
 ---
 
-## 8. Live progress monitoring
+## 8. Live progress monitoring — DONE
 
-**Type:** AFK · **Blocked by:** #5, #7
+**Type:** AFK · **Blocked by:** #5, #7 · **Status:** complete
 
-### What to build
+### What was built
 
-The florist's monitoring view on the deliveries page: for every published route it shows
-live progress as drivers record outcomes, subscribing to the per-route `RouteStop`
-topics. Each driver shows a copy-link button, and the florist can open any driver's page
-to see exactly what the driver sees. Route completion is a derived calculation over the
-route's stops. This slice also verifies the re-run flow: planning and publishing a
-second run while the first is still in progress.
+The published-routes section on `/admin/deliveries` is now the florist's live monitor.
+The LiveView subscribes to each route's `route_stop:outcome:<route_id>` topic when it
+connects and to new route topics after another run is published. An Ash outcome
+notification replaces only the matching stop in the existing socket state; the monitor
+does not reload all routes. Each route derives delivered, failed, and remaining counts
+from its stops and shows complete only when every stop is delivered or skipped. Stop
+rows display their current status. Every route also has a copy-link button and an
+open-in-new-tab link to the driver's `/d/:token` page. Publishing a second run leaves the
+first route and its live progress intact, adds the new route alongside it, and subscribes
+to the new route's outcome broadcasts.
 
 ### Acceptance criteria
 
-- [ ] Monitor subscribes to the per-route topics of today's published routes and patches
+- [x] Monitor subscribes to the per-route topics of today's published routes and patches
       a stop's status in place on broadcast (no full reload).
-- [ ] Per-route progress (e.g. delivered/failed/remaining counts) derived from stops;
+- [x] Per-route progress (e.g. delivered/failed/remaining counts) derived from stops;
       route shows complete when every stop is delivered or skipped.
-- [ ] Copy-link button per driver; "open driver view" opens the `/d/:token` page.
-- [ ] Verified: a second run can be planned and published while the first is live, and
+- [x] Copy-link button per driver; "open driver view" opens the `/d/:token` page.
+- [x] Verified: a second run can be planned and published while the first is live, and
       its routes/progress appear alongside without disturbing the first.
-- [ ] Tests cover a broadcast updating the monitor and derived completion.
+- [x] Tests cover a broadcast updating the monitor and derived completion.
+
+### Notes for later slices
+
+- Completion already treats `skipped` as terminal, ready for slice 9's cancellation flow.
+- New user-facing strings are extracted and translated in Finnish and Swedish.
 
 ### User stories
 
