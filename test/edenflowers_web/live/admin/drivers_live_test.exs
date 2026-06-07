@@ -91,6 +91,21 @@ defmodule EdenflowersWeb.Admin.DriversLiveTest do
     assert html =~ "Active"
   end
 
+  test "deletes a driver", %{conn: conn} do
+    driver = generate(driver(name: "Delete Me"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/drivers")
+
+    html =
+      view
+      |> element("button[phx-click=delete][phx-value-id='#{driver.id}']")
+      |> render_click()
+
+    assert html =~ "Driver deleted."
+    refute html =~ "Delete Me"
+    assert {:error, %Ash.Error.Invalid{}} = Ash.get(Driver, driver.id, actor: admin_actor())
+  end
+
   test "regenerating the link invalidates the old token", %{conn: conn, admin: admin} do
     driver = generate(driver(name: "Rotate"))
     old_token = driver.link_token
