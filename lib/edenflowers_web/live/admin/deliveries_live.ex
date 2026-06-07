@@ -154,9 +154,9 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h3 class="font-medium">{driver_name(assigns, route.driver_id)}</h3>
               <p class="text-base-content/65 text-sm">
-                {length(route.stops)} {~t"stops"} · {format_km(route.total_distance_m)} km ·
-                {~t"drive"} {format_duration(route.total_driving_s)} ·
-                {~t"total"} {format_duration(route.total_duration_s)}
+                {length(route.stops)} {~t"stops"} · {format_km(route.total_distance_m)} km · {~t"drive"} {format_duration(
+                  route.total_driving_s
+                )} · {~t"total"} {format_duration(route.total_duration_s)}
               </p>
             </header>
 
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                   <span class="text-base-content/50 w-5 text-sm">{stop.sequence}.</span>
                   <span class="font-medium">{order_label(assigns, stop.stop_id)}</span>
                 </span>
-                <span class="text-base-content/65 text-sm whitespace-nowrap">
+                <span class="text-base-content/65 whitespace-nowrap text-sm">
                   +{format_km(stop.leg_from_previous.distance_m)} km · +{format_duration(stop.leg_from_previous.duration_s)}
                 </span>
               </li>
