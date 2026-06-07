@@ -39,6 +39,11 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
   end
 
   defp optimize(view) do
+    view |> element("#toggle-all-orders") |> render_click()
+    view |> element("button[phx-click=optimize]") |> render_click()
+  end
+
+  defp optimize_selected(view) do
     view |> element("button[phx-click=optimize]") |> render_click()
   end
 
@@ -81,8 +86,12 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     assert stop.recipient_name == "Alice"
     assert stop.delivery_address == "Some Street 1"
     assert stop.card_message == "Happy Birthday"
-    # The card line item is snapshotted as a message, not a product; prices are excluded.
-    assert stop.products == [%{"name" => "Roses", "quantity" => 2}]
+
+    assert Enum.sort_by(stop.products, & &1["name"]) == [
+             %{"name" => "Gift card", "quantity" => 1},
+             %{"name" => "Roses", "quantity" => 2}
+           ]
+
     assert stop.leg_distance_m == 2_000
 
     # The published order is no longer eligible, and its planning checkbox is gone.
@@ -99,8 +108,8 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
 
     # Publish only the first order.
-    view |> element("input#order-#{second.id}") |> render_click()
-    optimize(view)
+    view |> element("input#order-#{first.id}") |> render_click()
+    optimize_selected(view)
     publish(view)
 
     # The second order remains eligible and selectable for another run.
@@ -108,18 +117,44 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     refute has_element?(view, "input#order-#{first.id}")
   end
 
+  test "publishes multiple proposed routes assigned to the same driver", %{conn: conn, admin: admin} do
+    eligible_order(order_reference: "EF-REASSIGNED-1")
+    eligible_order(order_reference: "EF-REASSIGNED-2")
+    first = generate(driver(name: "Driver A"))
+    second = generate(driver(name: "Driver B"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    view |> element("input#driver-#{first.id}") |> render_click()
+    view |> element("input#driver-#{second.id}") |> render_click()
+    optimize(view)
+
+    for draft_id <- ["0", "1"] do
+      view
+      |> form("#route-driver-form-#{draft_id}")
+      |> render_change(%{
+        "assignment" => %{"draft_id" => draft_id, "driver_id" => first.id}
+      })
+    end
+
+    publish(view)
+
+    routes = Route.list_published_for_date!(today(), actor: admin)
+    assert length(routes) == 2
+    assert Enum.all?(routes, &(&1.driver_id == first.id))
+  end
+
   test "a second published run appears without disturbing the first run's progress", %{
     conn: conn,
     admin: admin
   } do
-    _first = eligible_order(order_reference: "EF-FIRST")
-    second = eligible_order(order_reference: "EF-SECOND")
+    first = eligible_order(order_reference: "EF-FIRST")
+    _second = eligible_order(order_reference: "EF-SECOND")
     generate(driver(name: "Dana"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
 
-    view |> element("input#order-#{second.id}") |> render_click()
-    optimize(view)
+    view |> element("input#order-#{first.id}") |> render_click()
+    optimize_selected(view)
     publish(view)
 
     [first_route] = Route.list_published_for_date!(today(), actor: admin)

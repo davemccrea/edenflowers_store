@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.DriverRouteLive do
          |> assign(:date, date)
          |> assign(:routes, routes)
          |> assign(:recording, nil)
+         |> assign(:expanded_stop_ids, MapSet.new())
          |> assign(:directions_url, all_stops_directions_url(routes))}
 
       _ ->
@@ -54,7 +55,7 @@ defmodule EdenflowersWeb.DriverRouteLive do
 
   def render(assigns) do
     ~H"""
-    <main id="main-content" tabindex="-1" class="mx-auto max-w-2xl px-4 py-6 outline-hidden">
+    <main id="main-content" tabindex="-1" class="mx-auto w-full max-w-xl px-4 py-6 outline-hidden sm:px-6 lg:px-8">
       <header class="mb-6">
         <h1 class="text-xl font-semibold">{@driver.name}</h1>
         <p class="text-base-content/65 text-sm">{Edenflowers.Format.weekday_day_month(@date, @driver.locale)}</p>
@@ -79,13 +80,13 @@ defmodule EdenflowersWeb.DriverRouteLive do
       </div>
 
       <section :for={route <- @routes} class="mb-8">
-        <div class="bg-base-200/60 mb-4 flex items-center gap-3 rounded-lg px-4 py-3">
-          <.icon name="hero-building-storefront" class="text-base-content/60 h-5 w-5 shrink-0" />
-          <span class="text-sm font-medium">{~t"Collect from shop"}</span>
-        </div>
-
         <ol class="space-y-4">
-          <.stop :for={stop <- route.route_stops} stop={stop} recording={@recording} />
+          <.stop
+            :for={stop <- route.route_stops}
+            stop={stop}
+            recording={@recording}
+            expanded?={MapSet.member?(@expanded_stop_ids, stop.id)}
+          />
         </ol>
       </section>
     </main>
@@ -96,16 +97,13 @@ defmodule EdenflowersWeb.DriverRouteLive do
   # shows the full card with the record-outcome controls.
   attr :stop, :map, required: true
   attr :recording, :map, default: nil
+  attr :expanded?, :boolean, default: false
 
   defp stop(%{stop: %{status: :delivered}} = assigns) do
     ~H"""
-    <li class="border-success/40 bg-success/5 flex items-baseline justify-between gap-3 rounded-lg border p-4">
-      <span class="flex items-baseline gap-2">
-        <.icon name="hero-check-circle" class="text-success h-4 w-4 self-center" />
-        <span class="text-base-content/50 text-sm">{@stop.sequence}.</span>
-        <span class="font-medium">{@stop.order_reference}</span>
-      </span>
-      <span class="text-base-content/65 whitespace-nowrap text-sm">{~t"Delivered"}</span>
+    <li class={["border-success/40 bg-success/5 rounded-lg border", @expanded? && "p-4"]}>
+      <.completed_stop_header stop={@stop} expanded?={@expanded?} />
+      <.stop_details :if={@expanded?} stop={@stop} />
     </li>
     """
   end
@@ -113,63 +111,104 @@ defmodule EdenflowersWeb.DriverRouteLive do
   defp stop(assigns) do
     ~H"""
     <li class={["rounded-lg border p-4", if(@stop.status == :failed, do: "border-error/50 bg-error/5", else: "border-base-300/70")]}>
-      <div class="mb-3 flex items-baseline justify-between gap-3">
-        <span class="flex items-baseline gap-2">
-          <span class="text-base-content/50 text-sm">{@stop.sequence}.</span>
-          <span class="font-medium">{@stop.order_reference}</span>
-        </span>
-        <span class="text-base-content/65 whitespace-nowrap text-sm">
-          {format_km(@stop.leg_distance_m)} km · {format_duration(@stop.leg_duration_s)}
-        </span>
-      </div>
-
-      <p :if={@stop.recipient_name} class="font-medium">{@stop.recipient_name}</p>
-
-      <a :if={@stop.recipient_phone} href={"tel:#{@stop.recipient_phone}"} class="link text-sm">
-        {@stop.recipient_phone}
-      </a>
-
-      <p :if={@stop.delivery_address} class="text-base-content/80 mt-2 whitespace-pre-line text-sm">
-        {@stop.delivery_address}
-      </p>
-
-      <div :if={@stop.delivery_instructions} class="bg-base-200/60 mt-3 rounded-md p-3">
-        <p class="text-base-content/50 text-xs font-medium uppercase tracking-wide">{~t"Instructions"}</p>
-        <p class="whitespace-pre-line text-sm">{@stop.delivery_instructions}</p>
-      </div>
-
-      <div :if={@stop.card_message} class="border-base-300/70 mt-3 rounded-md border border-dashed p-3">
-        <p class="text-base-content/50 text-xs font-medium uppercase tracking-wide">{~t"Card message"}</p>
-        <p class="whitespace-pre-line text-sm">{@stop.card_message}</p>
-      </div>
-
-      <ul :if={@stop.products != []} class="text-base-content/80 mt-3 space-y-1 text-sm">
-        <li :for={product <- @stop.products}>
-          {product["quantity"]}× {product["name"]}
-        </li>
-      </ul>
-
-      <a
-        :if={@stop.position}
-        href={"https://www.google.com/maps/dir/?api=1&destination=#{@stop.position}"}
-        target="_blank"
-        rel="noopener"
-        class="btn btn-outline btn-sm mt-4 w-full"
-      >
-        <.icon name="hero-map-pin" class="h-4 w-4" />
-        {~t"Directions"}
-      </a>
-
-      <div
-        :if={@stop.status == :failed}
-        class="text-error mt-4 flex items-center gap-2 text-sm font-medium"
-      >
-        <.icon name="hero-x-circle" class="h-4 w-4" />
-        <span>{~t"Couldn't deliver"}: {reason_label(@stop.failure_reason)}</span>
-      </div>
-
+      <.active_stop_header stop={@stop} />
+      <.stop_details stop={@stop} />
+      <.failed_stop_status :if={@stop.status == :failed} stop={@stop} />
       <.outcome_controls stop={@stop} recording={@recording} />
     </li>
+    """
+  end
+
+  attr :stop, :map, required: true
+  attr :expanded?, :boolean, required: true
+
+  defp completed_stop_header(assigns) do
+    ~H"""
+    <button
+      id={"completed-stop-toggle-#{@stop.id}"}
+      type="button"
+      phx-click="toggle_completed_stop"
+      phx-value-stop={@stop.id}
+      aria-expanded={to_string(@expanded?)}
+      class={["flex w-full cursor-pointer items-baseline justify-between gap-3 text-left", @expanded? && "mb-3", not @expanded? && "p-4"]}
+    >
+      <span class="flex items-baseline gap-2">
+        <.icon name="hero-check-circle" class="text-success h-4 w-4 self-center" />
+        <span class="text-base-content/50 text-sm">{@stop.sequence}.</span>
+        <span class="font-medium">{@stop.order_reference}</span>
+      </span>
+      <span class="text-base-content/65 whitespace-nowrap text-sm">{~t"Delivered"}</span>
+    </button>
+    """
+  end
+
+  attr :stop, :map, required: true
+
+  defp active_stop_header(assigns) do
+    ~H"""
+    <div class="mb-3 flex items-baseline justify-between gap-3">
+      <span class="flex items-baseline gap-2">
+        <span class="text-base-content/50 text-sm">{@stop.sequence}.</span>
+        <span class="font-medium">{@stop.order_reference}</span>
+      </span>
+      <span class="text-base-content/65 whitespace-nowrap text-sm">
+        {format_distance(@stop.leg_distance_m)} · {format_duration(@stop.leg_duration_s)}
+      </span>
+    </div>
+    """
+  end
+
+  attr :stop, :map, required: true
+
+  defp failed_stop_status(assigns) do
+    ~H"""
+    <div class="text-error mt-4 flex items-center gap-2 text-sm font-medium">
+      <.icon name="hero-x-circle" class="h-4 w-4" />
+      <span>{~t"Couldn't deliver"}: {reason_label(@stop.failure_reason)}</span>
+    </div>
+    """
+  end
+
+  attr :stop, :map, required: true
+
+  defp stop_details(assigns) do
+    ~H"""
+    <p :if={@stop.recipient_name} class="font-medium">{@stop.recipient_name}</p>
+
+    <a :if={@stop.recipient_phone} href={"tel:#{@stop.recipient_phone}"} class="link text-sm">
+      {@stop.recipient_phone}
+    </a>
+
+    <p :if={@stop.delivery_address} class="text-base-content/80 mt-2 whitespace-pre-line text-sm">
+      {@stop.delivery_address}
+    </p>
+
+    <div :if={@stop.delivery_instructions} class="bg-base-200/60 mt-3 rounded-md p-3">
+      <p class="text-base-content/50 text-xs font-medium uppercase tracking-wide">{~t"Instructions"}</p>
+      <p class="whitespace-pre-line text-sm">{@stop.delivery_instructions}</p>
+    </div>
+
+    <div :if={@stop.card_message} class="border-base-300/70 mt-3 rounded-md border border-dashed p-3">
+      <p class="text-base-content/50 text-xs font-medium uppercase tracking-wide">{~t"Card message"}</p>
+      <p class="whitespace-pre-line text-sm">{@stop.card_message}</p>
+    </div>
+
+    <ul :if={@stop.products != []} class="text-base-content/80 mt-3 space-y-1 text-sm">
+      <li :for={product <- @stop.products}>
+        {product["quantity"]}× {product["name"]}
+      </li>
+    </ul>
+
+    <a
+      :if={@stop.position}
+      href={"https://www.google.com/maps/dir/?api=1&destination=#{@stop.position}"}
+      target="_blank"
+      rel="noopener"
+      class="btn btn-outline btn-sm mt-4 w-full"
+    >
+      <.icon name="hero-map-pin" class="h-4 w-4" />
+      {~t"Directions"}
+    </a>
     """
   end
 
@@ -234,6 +273,17 @@ defmodule EdenflowersWeb.DriverRouteLive do
 
   def handle_event("cancel_outcome", _params, socket) do
     {:noreply, assign(socket, :recording, nil)}
+  end
+
+  def handle_event("toggle_completed_stop", %{"stop" => stop_id}, socket) do
+    expanded_stop_ids =
+      if MapSet.member?(socket.assigns.expanded_stop_ids, stop_id) do
+        MapSet.delete(socket.assigns.expanded_stop_ids, stop_id)
+      else
+        MapSet.put(socket.assigns.expanded_stop_ids, stop_id)
+      end
+
+    {:noreply, assign(socket, :expanded_stop_ids, expanded_stop_ids)}
   end
 
   def handle_event("save_outcome", %{"choice" => choice, "note" => note}, socket) do
@@ -318,14 +368,22 @@ defmodule EdenflowersWeb.DriverRouteLive do
     end
   end
 
-  defp format_km(metres), do: :erlang.float_to_binary(metres / 1000, decimals: 1)
+  defp format_distance(metres) do
+    distance = :erlang.float_to_binary(metres / 1000, decimals: 1)
+    ~t"#{distance} km"
+  end
 
   defp format_duration(seconds) do
     minutes = div(seconds, 60)
 
     cond do
-      minutes >= 60 -> "#{div(minutes, 60)}h #{rem(minutes, 60)}m"
-      true -> "#{minutes}m"
+      minutes >= 60 ->
+        hours = div(minutes, 60)
+        remaining_minutes = rem(minutes, 60)
+        ~t"#{hours} h #{remaining_minutes} min"
+
+      true ->
+        ~t"#{minutes} min"
     end
   end
 end

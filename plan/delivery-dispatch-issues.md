@@ -21,12 +21,12 @@ These were settled in design and apply to every slice below:
 - Status lives on `RouteStop` (`pending | delivered | failed | skipped`); route
   completion is **derived**, never stored.
 - Optimizer runs **synchronously in the LiveView**, behind a `TourPlanning` behaviour
-  with a config-swappable mock (mirrors `Edenflowers.HereAPI.Mock`). Goal: **minimise
-  total driving distance** (cheapest). Objectives are `minimizeUnassigned → minimizeCost`
-  with cost weighted to distance; HERE decides how many of the selected drivers to use,
-  which falls out of the geometry (open routes). Selected drivers are an availability
-  **pool** / upper bound — unused ones get no route. No balancing logic or tuning dial of
-  our own — working with the API, not against it.
+  with a config-swappable mock (mirrors `Edenflowers.HereAPI.Mock`). Each run chooses
+  **cheapest** uses `minimizeUnassigned → minimizeCost` with distance-weighted cost.
+  **Balanced** maximizes tours, balances route duration, then minimizes cost. **Fastest**
+  maximizes tours, minimizes total duration, then minimizes cost. Under cheapest,
+  selected drivers are an availability pool; under balanced and fastest they are the
+  intended workforce, subject to the number of deliveries.
 - The planner is **re-runnable**: each run is an independent global re-solve over
   still-eligible orders and selected drivers. "Wave" is internal terminology only —
   not surfaced in the UI; no continuous auto-reoptimization.

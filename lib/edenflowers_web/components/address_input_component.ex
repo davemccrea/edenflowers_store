@@ -102,6 +102,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
       true ->
         fulfillment_option = socket.assigns.order.fulfillment_option
+        locale = socket.assigns.order.locale
 
         # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
@@ -109,7 +110,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           Fulfillments.calculate_delivery(address, fulfillment_option)
+           Fulfillments.calculate_delivery(address, fulfillment_option, locale)
          end)}
     end
   end
