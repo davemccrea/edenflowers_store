@@ -9,6 +9,7 @@ defmodule Edenflowers.Store.Order do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Ash.Resource.Change.Builtins
+  require Ash.Query
 
   alias __MODULE__.{Calculations, Changes, Validations}
   alias Edenflowers.Store.FulfillmentOption
@@ -183,9 +184,9 @@ defmodule Edenflowers.Store.Order do
     end
 
     # Orders that can be placed on a delivery run: a given day's placed, paid, still-pending
-    # deliveries that carry a geocoded position the optimizer can route to. Slice 5 will
-    # also exclude orders already on a published route (queried from the RouteStop side);
-    # until that resource exists, every matching order is eligible.
+    # deliveries that carry a geocoded position the optimizer can route to. Orders already on a
+    # published route are excluded, so a second run plans only what's left — the exclusion is
+    # queried from the RouteStop side to keep Order free of any delivery relationship.
     read :eligible_for_delivery do
       argument :date, :date do
         allow_nil? false
@@ -202,6 +203,12 @@ defmodule Edenflowers.Store.Order do
                 sort: [ordered_at: :asc],
                 load: [:customer_name, :recipient_name, :distance_km]
               )
+
+      prepare fn query, _context ->
+        date = Ash.Query.get_argument(query, :date)
+        published = Edenflowers.Delivery.RouteStop.published_order_ids(date)
+        Ash.Query.filter(query, id not in ^published)
+      end
     end
 
     # Create Actions

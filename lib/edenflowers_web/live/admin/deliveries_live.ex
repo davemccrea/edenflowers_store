@@ -3,8 +3,10 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
 
   import EdenflowersWeb.Admin.Components
 
+  require Ash.Query
+
   alias EdenflowersWeb.Layouts
-  alias Edenflowers.Delivery.Driver
+  alias Edenflowers.Delivery.{Driver, Route}
   alias Edenflowers.Store.Order
   alias Edenflowers.TourPlanning.Solver
 
@@ -12,22 +14,38 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    actor = socket.assigns.current_user
-    orders = Order.list_eligible_for_delivery!(%{}, actor: actor)
-    drivers = Driver.list_active!(actor: actor)
+    today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
     {:ok,
      socket
      |> assign(:page_title, ~t"Plan deliveries")
-     |> assign(:eligible_orders, orders)
-     |> assign(:drivers, drivers)
-     |> assign(:order_by_id, Map.new(orders, &{&1.id, &1}))
-     |> assign(:driver_by_id, Map.new(drivers, &{&1.id, &1}))
-     |> assign(:selected_order_ids, MapSet.new(Enum.map(orders, & &1.id)))
-     |> assign(:selected_driver_ids, default_driver_selection(drivers))
+     |> assign(:date, today)
      |> assign(:optimizing?, false)
+     |> assign(:publishing?, false)
      |> assign(:routes, nil)
-     |> assign(:plan_error, nil)}
+     |> assign(:plan_error, nil)
+     |> load_planning_data()}
+  end
+
+  # The eligible set and the published routes are both day-scoped and both shift when a run is
+  # published, so they reload together. Selecting always starts from a clean slate: every still-
+  # eligible order picked, the driver default, no draft.
+  defp load_planning_data(socket) do
+    actor = socket.assigns.current_user
+    orders = Order.list_eligible_for_delivery!(%{date: socket.assigns.date}, actor: actor)
+    drivers = Driver.list_active!(actor: actor)
+    published_routes = Route.list_published_for_date!(socket.assigns.date, actor: actor)
+
+    socket
+    |> assign(:eligible_orders, orders)
+    |> assign(:drivers, drivers)
+    |> assign(:published_routes, published_routes)
+    |> assign(:order_by_id, Map.new(orders, &{&1.id, &1}))
+    |> assign(:driver_by_id, Map.new(drivers, &{&1.id, &1}))
+    |> assign(:selected_order_ids, MapSet.new(Enum.map(orders, & &1.id)))
+    |> assign(:selected_driver_ids, default_driver_selection(drivers))
+    |> assign(:routes, nil)
+    |> assign(:plan_error, nil)
   end
 
   # With a single active driver there is no choice to make, so pre-select it; otherwise
@@ -54,6 +72,38 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
             </button>
           </:actions>
         </.admin_page_header>
+
+        <section :if={@published_routes != []} class="mb-8 space-y-4">
+          <h2 class="text-sm font-semibold">{~t"Published routes"}</h2>
+
+          <article
+            :for={route <- @published_routes}
+            class="border-base-300/70 bg-base-200/40 rounded-lg border p-4"
+          >
+            <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="font-medium">{route.driver.name}</h3>
+              <p class="text-base-content/65 text-sm">
+                {length(route.route_stops)} {~t"stops"}
+              </p>
+            </header>
+
+            <ol class="divide-base-300/70 divide-y">
+              <li
+                :for={stop <- route.route_stops}
+                class="flex items-baseline justify-between gap-3 py-2"
+              >
+                <span class="flex items-baseline gap-2">
+                  <span class="text-base-content/50 w-5 text-sm">{stop.sequence}.</span>
+                  <span class="font-medium">{stop.order_reference}</span>
+                  <span class="text-base-content/65 text-sm">{stop.recipient_name}</span>
+                </span>
+                <span class="text-base-content/65 whitespace-nowrap text-sm">
+                  {format_km(stop.leg_distance_m)} km
+                </span>
+              </li>
+            </ol>
+          </article>
+        </section>
 
         <div
           :if={@eligible_orders == []}
@@ -148,7 +198,18 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
         </div>
 
         <section :if={@routes} class="mt-8 space-y-6">
-          <h2 class="text-sm font-semibold">{~t"Proposed routes"}</h2>
+          <header class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold">{~t"Proposed routes"}</h2>
+            <button
+              type="button"
+              phx-click="publish"
+              disabled={@publishing?}
+              class="btn btn-primary btn-sm"
+            >
+              <span :if={@publishing?} class="loading loading-spinner loading-xs"></span>
+              {if @publishing?, do: ~t"Publishing…", else: ~t"Publish run"}
+            </button>
+          </header>
 
           <article :for={route <- @routes} class="border-base-300/70 rounded-lg border p-4">
             <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -200,6 +261,15 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     end
   end
 
+  def handle_event("publish", _params, socket) do
+    if socket.assigns.routes && not socket.assigns.publishing? do
+      send(self(), :run_publish)
+      {:noreply, assign(socket, publishing?: true)}
+    else
+      {:noreply, socket}
+    end
+  end
+
   # The solve runs in handle_info, not the click handler, so the disabled button and
   # spinner render first — the optimizer call (a real HTTP round-trip in production) then
   # blocks this process until it returns.
@@ -215,6 +285,76 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       {:error, _reason} ->
         {:noreply, assign(socket, optimizing?: false, routes: nil, plan_error: :failed)}
     end
+  end
+
+  # Like the solve, publishing runs in handle_info so the disabled button renders first. It
+  # persists the reviewed draft as Route + RouteStop rows in one transaction, then reloads the
+  # day's eligible orders and published routes from scratch.
+  def handle_info(:run_publish, socket) do
+    case publish_run(socket) do
+      {:ok, _routes} ->
+        {:noreply,
+         socket
+         |> assign(:publishing?, false)
+         |> load_planning_data()
+         |> put_flash(:info, ~t"Routes published.")}
+
+      {:error, _reason} ->
+        {:noreply,
+         socket
+         |> assign(:publishing?, false)
+         |> put_flash(:error, ~t"The routes couldn't be published. Nothing was saved. Try again.")}
+    end
+  end
+
+  # All-or-nothing: every route for the run is created inside one transaction, so a failure on
+  # any of them raises, rolls back the rest, and persists nothing.
+  defp publish_run(socket) do
+    %{routes: routes, date: date, current_user: actor} = socket.assigns
+    orders = load_orders_for_snapshot(routes, actor)
+
+    Ash.transaction(Route, fn ->
+      Enum.each(routes, fn route ->
+        stops = Enum.map(route.stops, &stop_args(&1, Map.fetch!(orders, &1.stop_id)))
+        Route.publish!(%{date: date, driver_id: route.driver_id, stops: stops}, actor: actor)
+      end)
+    end)
+  rescue
+    error -> {:error, error}
+  end
+
+  defp load_orders_for_snapshot(routes, actor) do
+    order_ids = routes |> Enum.flat_map(& &1.stops) |> Enum.map(& &1.stop_id) |> Enum.uniq()
+
+    Order
+    |> Ash.Query.filter(id in ^order_ids)
+    |> Ash.Query.load(:line_items)
+    |> Ash.read!(actor: actor)
+    |> Map.new(&{&1.id, &1})
+  end
+
+  defp stop_args(solved_stop, order) do
+    %{
+      sequence: solved_stop.sequence,
+      order_id: order.id,
+      order_reference: order.order_reference,
+      recipient_name: order.recipient_name,
+      recipient_phone: order.recipient_phone_number,
+      delivery_address: order.delivery_address,
+      delivery_instructions: order.delivery_instructions,
+      card_message: order.card_message,
+      products: product_lines(order),
+      position: order.position,
+      leg_distance_m: solved_stop.leg_from_previous.distance_m,
+      leg_duration_s: solved_stop.leg_from_previous.duration_s
+    }
+  end
+
+  # The card is snapshotted as a message, not a product line; the driver never sees prices.
+  defp product_lines(order) do
+    order.line_items
+    |> Enum.reject(& &1.is_card)
+    |> Enum.map(&%{"name" => &1.product_name, "quantity" => &1.quantity})
   end
 
   defp build_problem(socket) do
