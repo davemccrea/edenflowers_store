@@ -11,6 +11,7 @@ defmodule Edenflowers.Delivery.Route do
 
   code_interface do
     define :publish, action: :publish
+    define :cancel, action: :cancel
     define :list_published_for_date, action: :published_for_date, args: [:date]
     define :list_for_driver, action: :for_driver, args: [:driver_id, :date]
   end
@@ -28,6 +29,13 @@ defmodule Edenflowers.Delivery.Route do
 
       change set_attribute(:published_at, &DateTime.utc_now/0)
       change manage_relationship(:stops, :route_stops, type: :create)
+    end
+
+    destroy :cancel do
+      description "Cancel a planned trip before its driver has recorded any outcomes."
+      require_atomic? false
+
+      validate Edenflowers.Delivery.Route.Validations.AllStopsPending
     end
 
     read :published_for_date do
