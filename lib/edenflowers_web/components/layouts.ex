@@ -154,6 +154,7 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
+      {"/admin/deliveries", ~t"Deliveries", true, "hero-map"},
       {"/admin/drivers", ~t"Drivers", true, "hero-truck"}
     ]
 
