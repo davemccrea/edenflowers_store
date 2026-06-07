@@ -39,28 +39,42 @@ These were settled in design and apply to every slice below:
 
 ---
 
-## 1. Driver resource + admin CRUD + stable token
+## 1. Driver resource + admin CRUD + stable token — DONE
 
-**Type:** AFK · **Blocked by:** None — can start immediately
+**Type:** AFK · **Blocked by:** None · **Status:** complete
 
-### What to build
+### What was built
 
-A `Driver` resource and an admin screen to manage drivers end-to-end. A driver has a
-name, phone, email, preferred language, active/inactive status, and a stable
-unguessable link token generated on creation. Admins can add, edit, deactivate (never
-delete), copy a driver's link, and regenerate the token (invalidating the old link).
+A new `Edenflowers.Delivery` domain holding the `Driver` resource, plus the admin screen
+at `/admin/drivers`. A driver has name, phone, email, preferred language
+(`"en-GB" | "sv-FI" | "fi"`), `active?`, and a stable unguessable `link_token` generated
+on creation. The admin index at `/admin/drivers` links to dedicated create and edit
+LiveView pages and supports deactivate / reactivate, copy-link (client-side
+`CopyToClipboard` hook), and regenerate-token. Driver reads are admin-only except
+`by_token`, which is a public bypass for the future `/d/:token` page.
 
 ### Acceptance criteria
 
-- [ ] `Driver` resource with name, phone, email, locale, `active?`, and a unique
-      `link_token` generated at creation (`:crypto.strong_rand_bytes` URL-safe, ~128-bit).
-- [ ] Admin LiveView (under the existing `/admin` scope) lists drivers and supports
+- [x] `Driver` resource with name, phone, email, locale, `active?`, and a unique
+      `link_token` generated at creation (`:crypto.strong_rand_bytes` URL-safe, ~128-bit,
+      via `Driver.Changes.GenerateToken`).
+- [x] Admin LiveView (under the existing `/admin` scope) lists drivers and supports
       create / edit / deactivate; deactivation preserves the row and its history.
-- [ ] Copy-link button yields the `/d/:token` URL; regenerate-token action replaces the
-      token and a previously copied link stops resolving.
-- [ ] Deactivated drivers are excluded from new assignment selection but otherwise intact.
-- [ ] Tests cover token uniqueness, regeneration invalidating the old token, and
-      deactivation behaviour.
+- [x] Copy-link button yields the `/d/:token` URL (built from the endpoint URL, since the
+      route lands in slice 6); regenerate-token replaces the token and a previously copied
+      link stops resolving.
+- [x] Deactivated drivers are excluded from `list_active` (the assignment pool) but remain
+      in the full list and keep their token/history.
+- [x] Tests cover token uniqueness, regeneration invalidating the old token, deactivation,
+      the `by_token` public read, and the admin CRUD flow (resource + LiveView tests).
+
+### Notes for later slices
+
+- `Driver.get_by_token/1` returns `{:ok, nil}` (not an error) for an unknown token —
+  slice 6's `/d/:token` LiveView should treat `nil` as the not-found case.
+- `Driver.list_active` is the availability pool slice 4's driver picker should read.
+- New UI strings are extracted into the gettext catalogs, including non-fuzzy
+  translations for the driver-not-found error.
 
 ### User stories
 
