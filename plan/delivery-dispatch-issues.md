@@ -5,7 +5,7 @@ Tracer-bullet slices for the v1 delivery dispatch feature. Source spec:
 
 Each slice cuts end-to-end (schema → Ash actions → LiveView/UI → tests) and is
 demoable on its own. The optimizer's principal risk is isolated into an early HITL
-spike (slice 3) so the rest builds against a deterministic mock in parallel.
+spike (slice 3) so the rest builds against a deterministic fake in parallel.
 
 ## Architecture decisions (shared across slices)
 
@@ -82,31 +82,29 @@ LiveView pages and supports deactivate / reactivate, copy-link (client-side
 
 ---
 
-## 2. `TourPlanning` behaviour contract + deterministic mock
+## 2. `TourPlanning` behaviour contract + deterministic fake — DONE
 
-**Type:** AFK · **Blocked by:** None — can start immediately
+**Type:** AFK · **Blocked by:** None · **Status:** complete
 
-### What to build
+### What was built
 
-Define the optimizer boundary the rest of the feature builds against: a behaviour whose
-input is the set of stops (each with a `"lat,lng"` position and a fixed handling
-duration) plus the selected drivers, and whose output is, per driver, an ordered stop
-list with per-leg distance/duration and route totals — plus the set of any unassigned
-orders. Ship a deterministic mock, swapped in via config exactly like
-`config :edenflowers, :here_api, Edenflowers.HereAPI.Mock`.
+The optimizer boundary accepts stops and an available driver pool and returns ordered
+routes with per-leg and aggregate metrics. `TourPlanning.Solver` resolves the configured
+implementation; production and development default to the HERE adapter while tests use
+a deterministic fake that returns stable route fixtures without duplicating optimization.
 
 ### Acceptance criteria
 
-- [ ] `Edenflowers.TourPlanning.Behaviour` with a single `solve/1` (or `solve/2`)
+- [x] `Edenflowers.TourPlanning.Behaviour` with a single `solve/1`
       callback returning `{:ok, [%{driver, ordered_stops, legs, totals}]}` or
       `{:error, :unassigned}` when not every order can be placed.
-- [ ] Output carries, per stop, the distance/duration from the previous stop, and per
+- [x] Output carries, per stop, the distance/duration from the previous stop, and per
       route the total distance, driving time, and total duration (driving + Σ handling).
-- [ ] `TourPlanning.Mock` returns deterministic, plausible routes for a given input so
+- [x] `TourPlanning.Fake` returns deterministic route fixtures for a given input so
       downstream LiveView tests are stable and offline.
-- [ ] Resolution via `Application.get_env` so prod points at the real adapter (slice 3)
-      and test/dev point at the mock.
-- [ ] Handling-time-per-stop is a single named config constant.
+- [x] Resolution via `Application.get_env` so prod points at the real adapter (slice 3)
+      and tests point at the fake.
+- [x] Handling-time-per-stop is a single named config constant.
 
 ### User stories
 
@@ -187,7 +185,7 @@ message — no partial result.
       driving time, and total duration (driving + Σ handling). No clock/arrival times.
 - [ ] `{:error, :unassigned}` blocks the run with an explanatory message; changing
       orders/drivers re-optimizes; navigating away discards the draft.
-- [ ] LiveView tests drive the flow against `TourPlanning.Mock`.
+- [ ] LiveView tests drive the flow against `TourPlanning.Fake`.
 
 ### User stories
 
@@ -355,15 +353,15 @@ detail page — whether the delivery succeeded or failed, when, and why.
 
 ### What to build
 
-Flip production config from `TourPlanning.Mock` to the validated HERE adapter and verify
+Verify production uses the validated HERE adapter and exercise
 the full planning → review → publish flow against the real optimizer, tuning the
 handling-time constant against observed results. No new behaviour — this is the
 integration/rollout of the spiked adapter into the live flow.
 
 ### Acceptance criteria
 
-- [ ] Production config resolves `TourPlanning` to the HERE adapter; dev/test stay on the
-      mock.
+- [ ] Production and development resolve `TourPlanning` to the HERE adapter; tests use
+      the fake.
 - [ ] A real planning run produces least-distance, plausible routes for a realistic Vaasa set
       end-to-end through publish.
 - [ ] Handling-time constant tuned and documented.
