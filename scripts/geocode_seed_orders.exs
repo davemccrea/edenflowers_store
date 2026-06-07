@@ -39,7 +39,7 @@ orders = [
     customer_email: "ville.korhonen@example.fi",
     recipient_name: "Ville Korhonen",
     recipient_phone_number: "+358 41 100 2030",
-    address: "Ristinummentie 10, 65300 Vaasa",
+    address: "Kauppapuistikko 20, 65100 Vaasa",
     gift: false,
     locale: "fi",
     items: [{"Bouquet 4", :medium, 2}]
@@ -60,7 +60,7 @@ orders = [
     customer_email: "lauri.virtanen@example.fi",
     recipient_name: "Lauri Virtanen",
     recipient_phone_number: "+358 50 445 6677",
-    address: "Isolahdentie 18, 65380 Vaasa",
+    address: "Isolahdentie 18, 65230 Vaasa",
     gift: false,
     items: [{"Plant 3", :large, 1}]
   },
@@ -79,7 +79,7 @@ orders = [
     customer_email: "oskari.jarvi@example.fi",
     recipient_name: "Oskari Järvi",
     recipient_phone_number: "+358 40 778 9900",
-    address: "Vamiankatu 6, 65350 Vaasa",
+    address: "Korsholmanpuistikko 12, 65100 Vaasa",
     gift: false,
     items: [{"Bouquet 1", :large, 1}]
   }
