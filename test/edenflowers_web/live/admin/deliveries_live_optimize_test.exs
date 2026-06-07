@@ -69,6 +69,12 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     render(view)
   end
 
+  # A successful optimize collapses the composer to bring the proposed routes forward,
+  # so changing the selection or strategy again means expanding it first.
+  defp expand_composer(view) do
+    view |> element("button[phx-click=toggle_composer]") |> render_click()
+  end
+
   test "starts with no orders selected and can select all", %{conn: conn} do
     first = eligible_order()
     second = eligible_order()
@@ -127,6 +133,8 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     optimize(view)
     assert_receive {:strategy, :cheapest}
 
+    expand_composer(view)
+
     view
     |> form("#optimization-strategy")
     |> render_change(%{"optimization" => %{"strategy" => "balanced"}})
@@ -137,6 +145,8 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     view |> element("button[phx-click=optimize]") |> render_click()
     render(view)
     assert_receive {:strategy, :balanced}
+
+    expand_composer(view)
 
     view
     |> form("#optimization-strategy")
@@ -200,9 +210,24 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
     assert optimize(view) =~ "Proposed routes"
 
+    expand_composer(view)
     view |> element("input#order-#{order.id}") |> render_click()
 
     refute render(view) =~ "Proposed routes"
+  end
+
+  test "optimizing collapses the composer, and it can be reopened", %{conn: conn} do
+    eligible_order()
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    assert has_element?(view, "#composer-body")
+
+    optimize(view)
+    refute has_element?(view, "#composer-body")
+
+    expand_composer(view)
+    assert has_element?(view, "#composer-body")
   end
 
   test "blocks with a message when an order can't be placed", %{conn: conn} do
