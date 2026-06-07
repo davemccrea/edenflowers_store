@@ -73,8 +73,8 @@ LiveView pages and supports deactivate / reactivate, copy-link (client-side
 - `Driver.get_by_token/1` returns `{:ok, nil}` (not an error) for an unknown token —
   slice 6's `/d/:token` LiveView should treat `nil` as the not-found case.
 - `Driver.list_active` is the availability pool slice 4's driver picker should read.
-- New UI strings are extracted into the gettext catalogs, including non-fuzzy
-  translations for the driver-not-found error.
+- The full driver-management UI is translated in English, Finnish, and Swedish with
+  non-fuzzy catalog entries.
 
 ### User stories
 
