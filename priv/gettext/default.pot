@@ -101,6 +101,7 @@ msgstr ""
 msgid "Store"
 msgstr ""
 
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:540
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:151
 #: lib/edenflowers_web/live/admin/orders_live.ex:74
 #: lib/edenflowers_web/live/checkout_live.ex:321
@@ -833,7 +834,7 @@ msgid "Browse the store"
 msgstr ""
 
 #: lib/edenflowers_web/components/checkout_components.ex:116
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:93
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:419
 #, elixir-autogen, elixir-format
 msgid "Completed"
 msgstr ""
@@ -1066,7 +1067,7 @@ msgid "Admin"
 msgstr ""
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:130
-#: lib/edenflowers_web/live/driver_route_live.ex:192
+#: lib/edenflowers_web/live/driver_route_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr ""
@@ -1105,7 +1106,8 @@ msgstr ""
 msgid "Discount (%{name})"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:196
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:144
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:538
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Distance"
@@ -1138,7 +1140,7 @@ msgid "Gift"
 msgstr ""
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:112
-#: lib/edenflowers_web/live/driver_route_live.ex:187
+#: lib/edenflowers_web/live/driver_route_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "Instructions"
 msgstr ""
@@ -1197,7 +1199,8 @@ msgid "Ordered"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:154
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:178
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:85
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:127
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:43
 #: lib/edenflowers_web/live/admin/orders_live.ex:17
 #: lib/edenflowers_web/live/admin/orders_live.ex:31
@@ -1212,7 +1215,7 @@ msgstr ""
 msgid "Pickup"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:195
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:143
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "Recipient"
@@ -1380,8 +1383,8 @@ msgid "Expenses"
 msgstr ""
 
 #: lib/edenflowers_web/components/admin/components.ex:171
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:136
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:602
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:449
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:905
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:379
 #: lib/edenflowers_web/live/admin/orders_live.ex:140
 #, elixir-autogen, elixir-format
@@ -1499,9 +1502,9 @@ msgstr ""
 
 #: lib/edenflowers_web/components/admin/components.ex:36
 #: lib/edenflowers_web/live/admin/expense_detail_live.ex:121
-#: lib/edenflowers_web/live/driver_route_live.ex:329
-#: lib/edenflowers_web/live/driver_route_live.ex:339
-#: lib/edenflowers_web/live/driver_route_live.ex:347
+#: lib/edenflowers_web/live/driver_route_live.ex:345
+#: lib/edenflowers_web/live/driver_route_live.ex:355
+#: lib/edenflowers_web/live/driver_route_live.ex:363
 #, elixir-autogen, elixir-format
 msgid "Other"
 msgstr ""
@@ -1520,7 +1523,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/admin/components.ex:173
 #: lib/edenflowers_web/components/admin/components.ex:180
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:600
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:903
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:212
 #: lib/edenflowers_web/live/admin/orders_live.ex:142
 #, elixir-autogen, elixir-format
@@ -1722,18 +1725,18 @@ msgid "Add driver"
 msgstr ""
 
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:53
-#: lib/edenflowers_web/live/driver_route_live.ex:240
+#: lib/edenflowers_web/live/driver_route_live.ex:256
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:377
 #: lib/edenflowers_web/live/admin/drivers_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Copied!"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:111
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:381
 #: lib/edenflowers_web/live/admin/drivers_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Copy link"
@@ -1770,7 +1773,8 @@ msgid "Driver updated."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:158
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:225
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:89
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:202
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:29
 #: lib/edenflowers_web/live/admin/drivers_live.ex:15
 #: lib/edenflowers_web/live/admin/drivers_live.ex:25
@@ -1852,7 +1856,7 @@ msgid "Regenerate this driver's link? The current link will stop working."
 msgstr ""
 
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:54
-#: lib/edenflowers_web/live/driver_route_live.ex:239
+#: lib/edenflowers_web/live/driver_route_live.ex:255
 #, elixir-autogen, elixir-format
 msgid "Save"
 msgstr ""
@@ -1878,7 +1882,7 @@ msgstr ""
 msgid "Driver not found."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:63
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:66
 #, elixir-autogen, elixir-format
 msgid "Choose today's orders and the drivers available, then optimize the routes."
 msgstr ""
@@ -1913,99 +1917,83 @@ msgstr ""
 msgid "Driver deleted."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:233
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "No active drivers. Add one before planning."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:171
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "No deliveries to plan today."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:331
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:276
 #, elixir-autogen, elixir-format
 msgid "Not used by the optimizer:"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:72
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Optimize"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:72
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Optimizing…"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:194
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Order"
 msgstr ""
 
 #: lib/edenflowers_web/live/admin/deliveries_live.ex:21
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:62
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Plan deliveries"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:269
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Proposed routes"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:258
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Some orders couldn't be placed with the selected drivers. Adjust the orders or drivers and optimize again."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:264
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "The optimizer couldn't be reached. Try again."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:309
-#, elixir-autogen, elixir-format
-msgid "drive"
-msgstr ""
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:97
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:309
-#, elixir-autogen, elixir-format
-msgid "stops"
-msgstr ""
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:311
-#, elixir-autogen, elixir-format
-msgid "total"
-msgstr ""
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:277
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Publish run"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:78
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:281
 #, elixir-autogen, elixir-format
 msgid "Published routes"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:277
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Publishing…"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:422
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:694
 #, elixir-autogen, elixir-format
 msgid "Routes published."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:428
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:700
 #, elixir-autogen, elixir-format
 msgid "The routes couldn't be published. Nothing was saved. Try again."
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:210
+#: lib/edenflowers_web/live/driver_route_live.ex:226
 #, elixir-autogen, elixir-format
 msgid "Directions"
 msgstr ""
@@ -2030,122 +2018,231 @@ msgstr ""
 msgid "Open all stops in Google Maps"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:226
+#: lib/edenflowers_web/live/driver_route_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Choose one…"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:336
-#: lib/edenflowers_web/live/driver_route_live.ex:344
+#: lib/edenflowers_web/live/driver_route_live.ex:352
+#: lib/edenflowers_web/live/driver_route_live.ex:360
 #, elixir-autogen, elixir-format
 msgid "Couldn't access the property"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:167
-#: lib/edenflowers_web/live/driver_route_live.ex:263
+#: lib/edenflowers_web/live/driver_route_live.ex:183
+#: lib/edenflowers_web/live/driver_route_live.ex:279
 #, elixir-autogen, elixir-format
 msgid "Couldn't deliver"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:337
-#: lib/edenflowers_web/live/driver_route_live.ex:345
+#: lib/edenflowers_web/live/driver_route_live.ex:353
+#: lib/edenflowers_web/live/driver_route_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "Couldn't find the address"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:132
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:601
-#: lib/edenflowers_web/live/driver_route_live.ex:140
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:445
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:904
+#: lib/edenflowers_web/live/driver_route_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "Delivered"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:327
+#: lib/edenflowers_web/live/driver_route_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Handed to recipient"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:322
+#: lib/edenflowers_web/live/driver_route_live.ex:338
 #, elixir-autogen, elixir-format
 msgid "How was it delivered?"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:328
+#: lib/edenflowers_web/live/driver_route_live.ex:344
 #, elixir-autogen, elixir-format
 msgid "Left in a safe place"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:255
+#: lib/edenflowers_web/live/driver_route_live.ex:271
 #, elixir-autogen, elixir-format
 msgid "Mark delivered"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:232
+#: lib/edenflowers_web/live/driver_route_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "Note (required if you chose Other)"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:312
+#: lib/edenflowers_web/live/driver_route_live.ex:328
 #, elixir-autogen, elixir-format
 msgid "Please add a note explaining the outcome."
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:338
-#: lib/edenflowers_web/live/driver_route_live.ex:346
+#: lib/edenflowers_web/live/driver_route_live.ex:354
+#: lib/edenflowers_web/live/driver_route_live.ex:362
 #, elixir-autogen, elixir-format
 msgid "Recipient refused"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:335
-#: lib/edenflowers_web/live/driver_route_live.ex:343
+#: lib/edenflowers_web/live/driver_route_live.ex:351
+#: lib/edenflowers_web/live/driver_route_live.ex:359
 #, elixir-autogen, elixir-format
 msgid "Recipient unavailable"
 msgstr ""
 
-#: lib/edenflowers_web/live/driver_route_live.ex:323
+#: lib/edenflowers_web/live/driver_route_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Why couldn't it be delivered?"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:120
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:390
 #, elixir-autogen, elixir-format
 msgid "Open driver view"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:140
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:453
 #, elixir-autogen, elixir-format
 msgid "Remaining"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:603
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:906
 #, elixir-autogen, elixir-format
 msgid "Skipped"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:619
-#: lib/edenflowers_web/live/driver_route_live.ex:373
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:922
+#: lib/edenflowers_web/live/driver_route_live.ex:389
 #, elixir-autogen, elixir-format
 msgid "%{distance} km"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:628
-#: lib/edenflowers_web/live/driver_route_live.ex:383
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:931
+#: lib/edenflowers_web/live/driver_route_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "%{hours} h %{remaining_minutes} min"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:631
-#: lib/edenflowers_web/live/driver_route_live.ex:386
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:934
+#: lib/edenflowers_web/live/driver_route_live.ex:402
 #, elixir-autogen, elixir-format
 msgid "%{minutes} min"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:293
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:520
 #, elixir-autogen, elixir-format
 msgid "Driver"
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:191
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Select all orders"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:877
+#, elixir-autogen, elixir-format
+msgid "%{total_stops} stops"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:878
+#, elixir-autogen, elixir-format
+msgid "%{trips} trips · %{total_stops} stops"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:187
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:811
+#, elixir-autogen, elixir-format
+msgid "Balanced"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:427
+#, elixir-autogen, elixir-format
+msgid "Cancel this trip? Its orders will return to planning."
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:430
+#, elixir-autogen, elixir-format
+msgid "Cancel trip"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:181
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:810
+#, elixir-autogen, elixir-format
+msgid "Cheapest"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:80
+#, elixir-autogen, elixir-format
+msgid "Compose the run"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:539
+#, elixir-autogen, elixir-format
+msgid "Drive"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#, elixir-autogen, elixir-format
+msgid "Edit selection"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:193
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:812
+#, elixir-autogen, elixir-format
+msgid "Fastest"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#, elixir-autogen, elixir-format
+msgid "Hide selection"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:176
+#, elixir-autogen, elixir-format
+msgid "Optimization"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:493
+#: lib/edenflowers_web/live/driver_route_live.ex:105
+#, elixir-autogen, elixir-format
+msgid "Return to store"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:537
+#, elixir-autogen, elixir-format
+msgid "Stops"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Strategy"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:656
+#, elixir-autogen, elixir-format
+msgid "This trip can no longer be cancelled because delivery has started."
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:416
+#, elixir-autogen, elixir-format
+msgid "Trip"
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:652
+#, elixir-autogen, elixir-format
+msgid "Trip cancelled. Its orders are available to plan again."
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "equalizes total route duration across drivers."
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:182
+#, elixir-autogen, elixir-format
+msgid "least total driving distance."
+msgstr ""
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:194
+#, elixir-autogen, elixir-format
+msgid "minimizes aggregate driving and delivery time."
 msgstr ""

@@ -91,4 +91,37 @@ defmodule Edenflowers.Delivery.RouteTest do
     assert Ash.read!(Route, authorize?: false) == []
     assert Ash.read!(RouteStop, authorize?: false) == []
   end
+
+  test "cancel deletes an untouched route and returns its order to eligibility" do
+    order = eligible_order()
+    driver = generate(driver())
+
+    route =
+      Route.publish!(%{date: @today, driver_id: driver.id, stops: [stop_args(order)]},
+        authorize?: false
+      )
+
+    assert :ok = Route.cancel(route, authorize?: false)
+    assert Ash.read!(Route, authorize?: false) == []
+    assert Ash.read!(RouteStop, authorize?: false) == []
+    assert {:ok, [eligible]} = Order.list_eligible_for_delivery(%{date: @today}, authorize?: false)
+    assert eligible.id == order.id
+  end
+
+  test "cancel rejects a route after delivery has started" do
+    order = eligible_order()
+    driver = generate(driver())
+
+    route =
+      Route.publish!(%{date: @today, driver_id: driver.id, stops: [stop_args(order)]},
+        authorize?: false
+      )
+      |> Ash.load!(:route_stops, authorize?: false)
+
+    [stop] = route.route_stops
+    RouteStop.record_failed!(stop, %{failure_reason: :recipient_unavailable}, authorize?: false)
+
+    assert {:error, _error} = Route.cancel(route, authorize?: false)
+    assert Ash.get!(Route, route.id, authorize?: false)
+  end
 end

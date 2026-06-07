@@ -101,6 +101,7 @@ msgstr "Edellinen kuukausi"
 msgid "Store"
 msgstr "Kauppa"
 
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:540
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:151
 #: lib/edenflowers_web/live/admin/orders_live.ex:74
 #: lib/edenflowers_web/live/checkout_live.ex:321
@@ -833,7 +834,7 @@ msgid "Browse the store"
 msgstr ""
 
 #: lib/edenflowers_web/components/checkout_components.ex:116
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:93
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:419
 #, elixir-autogen, elixir-format
 msgid "Completed"
 msgstr "Valmis"
@@ -1066,7 +1067,7 @@ msgid "Admin"
 msgstr "Ylläpitäjä"
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:130
-#: lib/edenflowers_web/live/driver_route_live.ex:192
+#: lib/edenflowers_web/live/driver_route_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr "Korttiviesti"
@@ -1105,7 +1106,8 @@ msgstr "Alennus (%{code})"
 msgid "Discount (%{name})"
 msgstr "Alennus (%{name})"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:196
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:144
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:538
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Distance"
@@ -1138,7 +1140,7 @@ msgid "Gift"
 msgstr "Lahja"
 
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:112
-#: lib/edenflowers_web/live/driver_route_live.ex:187
+#: lib/edenflowers_web/live/driver_route_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "Instructions"
 msgstr "Ohjeet"
@@ -1197,7 +1199,8 @@ msgid "Ordered"
 msgstr "Tilattu"
 
 #: lib/edenflowers_web/components/layouts.ex:154
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:178
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:85
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:127
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:43
 #: lib/edenflowers_web/live/admin/orders_live.ex:17
 #: lib/edenflowers_web/live/admin/orders_live.ex:31
@@ -1212,7 +1215,7 @@ msgstr "Tilaukset"
 msgid "Pickup"
 msgstr "Nouto"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:195
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:143
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "Recipient"
@@ -1380,8 +1383,8 @@ msgid "Expenses"
 msgstr "Kulut"
 
 #: lib/edenflowers_web/components/admin/components.ex:171
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:136
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:602
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:449
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:905
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:379
 #: lib/edenflowers_web/live/admin/orders_live.ex:140
 #, elixir-autogen, elixir-format
@@ -1499,9 +1502,9 @@ msgstr "Tilaus tehty"
 
 #: lib/edenflowers_web/components/admin/components.ex:36
 #: lib/edenflowers_web/live/admin/expense_detail_live.ex:121
-#: lib/edenflowers_web/live/driver_route_live.ex:329
-#: lib/edenflowers_web/live/driver_route_live.ex:339
-#: lib/edenflowers_web/live/driver_route_live.ex:347
+#: lib/edenflowers_web/live/driver_route_live.ex:345
+#: lib/edenflowers_web/live/driver_route_live.ex:355
+#: lib/edenflowers_web/live/driver_route_live.ex:363
 #, elixir-autogen, elixir-format
 msgid "Other"
 msgstr "Muu"
@@ -1520,7 +1523,7 @@ msgstr "Maksun tila"
 
 #: lib/edenflowers_web/components/admin/components.ex:173
 #: lib/edenflowers_web/components/admin/components.ex:180
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:600
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:903
 #: lib/edenflowers_web/live/admin/order_detail_live.ex:212
 #: lib/edenflowers_web/live/admin/orders_live.ex:142
 #, elixir-autogen, elixir-format
@@ -1722,18 +1725,18 @@ msgid "Add driver"
 msgstr "Lisää kuljettaja"
 
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:53
-#: lib/edenflowers_web/live/driver_route_live.ex:240
+#: lib/edenflowers_web/live/driver_route_live.ex:256
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr "Peruuta"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:377
 #: lib/edenflowers_web/live/admin/drivers_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Copied!"
 msgstr "Kopioitu!"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:111
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:381
 #: lib/edenflowers_web/live/admin/drivers_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Copy link"
@@ -1770,7 +1773,8 @@ msgid "Driver updated."
 msgstr "Kuljettaja päivitetty."
 
 #: lib/edenflowers_web/components/layouts.ex:158
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:225
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:89
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:202
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:29
 #: lib/edenflowers_web/live/admin/drivers_live.ex:15
 #: lib/edenflowers_web/live/admin/drivers_live.ex:25
@@ -1852,7 +1856,7 @@ msgid "Regenerate this driver's link? The current link will stop working."
 msgstr "Luodaanko kuljettajan linkki uudelleen? Nykyinen linkki lakkaa toimimasta."
 
 #: lib/edenflowers_web/live/admin/driver_form_live.ex:54
-#: lib/edenflowers_web/live/driver_route_live.ex:239
+#: lib/edenflowers_web/live/driver_route_live.ex:255
 #, elixir-autogen, elixir-format
 msgid "Save"
 msgstr "Tallenna"
@@ -1878,7 +1882,7 @@ msgstr "Ruotsi"
 msgid "Driver not found."
 msgstr "Kuljettajaa ei löytynyt."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:63
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:66
 #, elixir-autogen, elixir-format
 msgid "Choose today's orders and the drivers available, then optimize the routes."
 msgstr "Valitse tämän päivän tilaukset ja käytettävissä olevat kuljettajat ja optimoi sitten reitit."
@@ -1913,99 +1917,83 @@ msgstr ""
 msgid "Driver deleted."
 msgstr ""
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:233
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "No active drivers. Add one before planning."
 msgstr "Ei aktiivisia kuljettajia. Lisää kuljettaja ennen suunnittelua."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:171
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "No deliveries to plan today."
 msgstr "Tänään ei ole suunniteltavia toimituksia."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:331
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:276
 #, elixir-autogen, elixir-format
 msgid "Not used by the optimizer:"
 msgstr "Optimoija ei käyttänyt:"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:72
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Optimize"
 msgstr "Optimoi"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:72
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Optimizing…"
 msgstr "Optimoidaan…"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:194
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Order"
 msgstr "Tilaus"
 
 #: lib/edenflowers_web/live/admin/deliveries_live.ex:21
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:62
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Plan deliveries"
 msgstr "Suunnittele toimitukset"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:269
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Proposed routes"
 msgstr "Ehdotetut reitit"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:258
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Some orders couldn't be placed with the selected drivers. Adjust the orders or drivers and optimize again."
 msgstr "Joitakin tilauksia ei voitu sijoittaa valituille kuljettajille. Muuta tilauksia tai kuljettajia ja optimoi uudelleen."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:264
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "The optimizer couldn't be reached. Try again."
 msgstr "Optimoijaan ei saatu yhteyttä. Yritä uudelleen."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:309
-#, elixir-autogen, elixir-format
-msgid "drive"
-msgstr "ajoaika"
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:97
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:309
-#, elixir-autogen, elixir-format
-msgid "stops"
-msgstr "pysähdystä"
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:311
-#, elixir-autogen, elixir-format
-msgid "total"
-msgstr "yhteensä"
-
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:277
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Publish run"
 msgstr "Julkaise ajokierros"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:78
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:281
 #, elixir-autogen, elixir-format
 msgid "Published routes"
 msgstr "Julkaistut reitit"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:277
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Publishing…"
 msgstr "Julkaistaan…"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:422
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:694
 #, elixir-autogen, elixir-format
 msgid "Routes published."
 msgstr "Reitit julkaistiin."
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:428
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:700
 #, elixir-autogen, elixir-format
 msgid "The routes couldn't be published. Nothing was saved. Try again."
 msgstr "Reittejä ei voitu julkaista. Mitään ei tallennettu. Yritä uudelleen."
 
-#: lib/edenflowers_web/live/driver_route_live.ex:210
+#: lib/edenflowers_web/live/driver_route_live.ex:226
 #, elixir-autogen, elixir-format
 msgid "Directions"
 msgstr "Reittiohjeet"
@@ -2030,122 +2018,231 @@ msgstr "Tämä toimituslinkki ei ole voimassa."
 msgid "Open all stops in Google Maps"
 msgstr "Avaa kaikki pysähdykset Google Mapsissa"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:226
+#: lib/edenflowers_web/live/driver_route_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Choose one…"
 msgstr "Valitse yksi…"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:336
-#: lib/edenflowers_web/live/driver_route_live.ex:344
+#: lib/edenflowers_web/live/driver_route_live.ex:352
+#: lib/edenflowers_web/live/driver_route_live.ex:360
 #, elixir-autogen, elixir-format
 msgid "Couldn't access the property"
 msgstr "Kiinteistölle ei päässyt"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:167
-#: lib/edenflowers_web/live/driver_route_live.ex:263
+#: lib/edenflowers_web/live/driver_route_live.ex:183
+#: lib/edenflowers_web/live/driver_route_live.ex:279
 #, elixir-autogen, elixir-format
 msgid "Couldn't deliver"
 msgstr "Toimitus epäonnistui"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:337
-#: lib/edenflowers_web/live/driver_route_live.ex:345
+#: lib/edenflowers_web/live/driver_route_live.ex:353
+#: lib/edenflowers_web/live/driver_route_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "Couldn't find the address"
 msgstr "Osoitetta ei löytynyt"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:132
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:601
-#: lib/edenflowers_web/live/driver_route_live.ex:140
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:445
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:904
+#: lib/edenflowers_web/live/driver_route_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "Delivered"
 msgstr "Toimitettu"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:327
+#: lib/edenflowers_web/live/driver_route_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Handed to recipient"
 msgstr "Luovutettu vastaanottajalle"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:322
+#: lib/edenflowers_web/live/driver_route_live.ex:338
 #, elixir-autogen, elixir-format
 msgid "How was it delivered?"
 msgstr "Miten toimitus luovutettiin?"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:328
+#: lib/edenflowers_web/live/driver_route_live.ex:344
 #, elixir-autogen, elixir-format
 msgid "Left in a safe place"
 msgstr "Jätetty turvalliseen paikkaan"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:255
+#: lib/edenflowers_web/live/driver_route_live.ex:271
 #, elixir-autogen, elixir-format
 msgid "Mark delivered"
 msgstr "Merkitse toimitetuksi"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:232
+#: lib/edenflowers_web/live/driver_route_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "Note (required if you chose Other)"
 msgstr "Huomautus (pakollinen, jos valitsit Muu)"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:312
+#: lib/edenflowers_web/live/driver_route_live.ex:328
 #, elixir-autogen, elixir-format
 msgid "Please add a note explaining the outcome."
 msgstr "Lisää huomautus, joka selittää lopputuloksen."
 
-#: lib/edenflowers_web/live/driver_route_live.ex:338
-#: lib/edenflowers_web/live/driver_route_live.ex:346
+#: lib/edenflowers_web/live/driver_route_live.ex:354
+#: lib/edenflowers_web/live/driver_route_live.ex:362
 #, elixir-autogen, elixir-format
 msgid "Recipient refused"
 msgstr "Vastaanottaja kieltäytyi"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:335
-#: lib/edenflowers_web/live/driver_route_live.ex:343
+#: lib/edenflowers_web/live/driver_route_live.ex:351
+#: lib/edenflowers_web/live/driver_route_live.ex:359
 #, elixir-autogen, elixir-format
 msgid "Recipient unavailable"
 msgstr "Vastaanottaja ei ollut paikalla"
 
-#: lib/edenflowers_web/live/driver_route_live.ex:323
+#: lib/edenflowers_web/live/driver_route_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Why couldn't it be delivered?"
 msgstr "Miksi toimitus epäonnistui?"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:120
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:390
 #, elixir-autogen, elixir-format
 msgid "Open driver view"
 msgstr "Avaa kuljettajan näkymä"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:140
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:453
 #, elixir-autogen, elixir-format
 msgid "Remaining"
 msgstr "Jäljellä"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:603
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:906
 #, elixir-autogen, elixir-format
 msgid "Skipped"
 msgstr "Ohitettu"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:619
-#: lib/edenflowers_web/live/driver_route_live.ex:373
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:922
+#: lib/edenflowers_web/live/driver_route_live.ex:389
 #, elixir-autogen, elixir-format
 msgid "%{distance} km"
 msgstr "%{distance} km"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:628
-#: lib/edenflowers_web/live/driver_route_live.ex:383
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:931
+#: lib/edenflowers_web/live/driver_route_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "%{hours} h %{remaining_minutes} min"
 msgstr "%{hours} t %{remaining_minutes} min"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:631
-#: lib/edenflowers_web/live/driver_route_live.ex:386
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:934
+#: lib/edenflowers_web/live/driver_route_live.ex:402
 #, elixir-autogen, elixir-format
 msgid "%{minutes} min"
 msgstr "%{minutes} min"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:293
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:520
 #, elixir-autogen, elixir-format
 msgid "Driver"
 msgstr "Kuljettaja"
 
-#: lib/edenflowers_web/live/admin/deliveries_live.ex:191
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Select all orders"
 msgstr "Valitse kaikki tilaukset"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:877
+#, elixir-autogen, elixir-format
+msgid "%{total_stops} stops"
+msgstr "%{total_stops} pysähdystä"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:878
+#, elixir-autogen, elixir-format
+msgid "%{trips} trips · %{total_stops} stops"
+msgstr "%{trips} matkaa · %{total_stops} pysähdystä"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:187
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:811
+#, elixir-autogen, elixir-format
+msgid "Balanced"
+msgstr "Tasapainotettu"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:427
+#, elixir-autogen, elixir-format
+msgid "Cancel this trip? Its orders will return to planning."
+msgstr "Peruutetaanko tämä matka? Sen tilaukset palautuvat suunnitteluun."
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:430
+#, elixir-autogen, elixir-format
+msgid "Cancel trip"
+msgstr "Peruuta matka"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:181
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:810
+#, elixir-autogen, elixir-format
+msgid "Cheapest"
+msgstr "Edullisin"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:80
+#, elixir-autogen, elixir-format
+msgid "Compose the run"
+msgstr "Kokoa ajokierros"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:539
+#, elixir-autogen, elixir-format
+msgid "Drive"
+msgstr "Ajoaika"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#, elixir-autogen, elixir-format
+msgid "Edit selection"
+msgstr "Muokkaa valintaa"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:193
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:812
+#, elixir-autogen, elixir-format
+msgid "Fastest"
+msgstr "Nopein"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:107
+#, elixir-autogen, elixir-format
+msgid "Hide selection"
+msgstr "Piilota valinta"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:176
+#, elixir-autogen, elixir-format
+msgid "Optimization"
+msgstr "Optimointi"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:493
+#: lib/edenflowers_web/live/driver_route_live.ex:105
+#, elixir-autogen, elixir-format
+msgid "Return to store"
+msgstr "Palaa myymälään"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:537
+#, elixir-autogen, elixir-format
+msgid "Stops"
+msgstr "Pysähdykset"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Strategy"
+msgstr "Strategia"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:656
+#, elixir-autogen, elixir-format
+msgid "This trip can no longer be cancelled because delivery has started."
+msgstr "Tätä matkaa ei voi enää peruuttaa, koska toimitus on alkanut."
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:416
+#, elixir-autogen, elixir-format
+msgid "Trip"
+msgstr "Matka"
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:652
+#, elixir-autogen, elixir-format
+msgid "Trip cancelled. Its orders are available to plan again."
+msgstr "Matka peruutettiin. Sen tilaukset voidaan suunnitella uudelleen."
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "equalizes total route duration across drivers."
+msgstr "tasaa reittien kokonaiskeston kuljettajien kesken."
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:182
+#, elixir-autogen, elixir-format
+msgid "least total driving distance."
+msgstr "minimoi kokonaisajomatkan."
+
+#: lib/edenflowers_web/live/admin/deliveries_live.ex:194
+#, elixir-autogen, elixir-format
+msgid "minimizes aggregate driving and delivery time."
+msgstr "minimoi ajo- ja toimitusajan yhteensä."

@@ -412,14 +412,24 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   defp published_trip(assigns) do
     ~H"""
     <div id={"route-monitor-#{@route.id}"}>
-      <div
-        :if={@show_number or route_complete?(@route)}
-        class="mb-2 flex items-center justify-between gap-2"
-      >
+      <div class="mb-2 flex items-center justify-between gap-2">
         <span :if={@show_number} class="eyebrow text-base-content/65">{~t"Trip"} {@number}</span>
-        <span :if={route_complete?(@route)} class="badge badge-sm badge-success admin-badge-success">
-          {~t"Completed"}
-        </span>
+        <div class="ml-auto flex items-center gap-2">
+          <span :if={route_complete?(@route)} class="badge badge-sm badge-success admin-badge-success">
+            {~t"Completed"}
+          </span>
+          <button
+            :if={route_cancellable?(@route)}
+            type="button"
+            id={"cancel-route-#{@route.id}"}
+            phx-click="cancel_route"
+            phx-value-id={@route.id}
+            data-confirm={~t"Cancel this trip? Its orders will return to planning."}
+            class="btn btn-ghost btn-xs text-error"
+          >
+            {~t"Cancel trip"}
+          </button>
+        </div>
       </div>
 
       <% progress = route_progress(@route) %>
@@ -625,6 +635,26 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
       {:noreply, assign(socket, publishing?: true)}
     else
       {:noreply, socket}
+    end
+  end
+
+  def handle_event("cancel_route", %{"id" => route_id}, socket) do
+    case Enum.find(socket.assigns.published_routes, &(&1.id == route_id)) do
+      nil ->
+        {:noreply, socket}
+
+      route ->
+        case Route.cancel(route, actor: socket.assigns.current_user) do
+          :ok ->
+            {:noreply,
+             socket
+             |> load_planning_data()
+             |> put_flash(:info, ~t"Trip cancelled. Its orders are available to plan again.")}
+
+          {:error, _reason} ->
+            {:noreply,
+             put_flash(socket, :error, ~t"This trip can no longer be cancelled because delivery has started.")}
+        end
     end
   end
 
@@ -862,6 +892,10 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   defp route_complete?(route) do
     route.route_stops != [] and
       Enum.all?(route.route_stops, &(&1.status in [:delivered, :skipped]))
+  end
+
+  defp route_cancellable?(route) do
+    route.route_stops != [] and Enum.all?(route.route_stops, &(&1.status == :pending))
   end
 
   defp driver_link(driver), do: EdenflowersWeb.Endpoint.url() <> "/d/" <> driver.link_token

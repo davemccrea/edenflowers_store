@@ -117,6 +117,28 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     refute has_element?(view, "input#order-#{first.id}")
   end
 
+  test "the florist can cancel an untouched trip and plan its order again", %{
+    conn: conn,
+    admin: admin
+  } do
+    order = eligible_order(order_reference: "EF-CANCEL")
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    optimize(view)
+    publish(view)
+
+    [route] = Route.list_published_for_date!(today(), actor: admin)
+
+    view
+    |> element("#cancel-route-#{route.id}")
+    |> render_click()
+
+    assert has_element?(view, "input#order-#{order.id}")
+    refute has_element?(view, "#route-monitor-#{route.id}")
+    assert render(view) =~ "Trip cancelled"
+  end
+
   test "publishes multiple proposed routes assigned to the same driver", %{conn: conn, admin: admin} do
     eligible_order(order_reference: "EF-REASSIGNED-1")
     eligible_order(order_reference: "EF-REASSIGNED-2")
