@@ -2,6 +2,7 @@ defmodule Generator do
   use Ash.Generator
 
   alias Edenflowers.Accounts.User
+  alias Edenflowers.Delivery.Driver
   alias Edenflowers.Store.Order.Changes.GenerateOrderReference
 
   alias Edenflowers.Store.{
@@ -23,6 +24,21 @@ defmodule Generator do
         email: sequence(:admin_email, &"admin#{&1}@example.com"),
         name: "Admin",
         admin: true
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  def driver(opts \\ []) do
+    changeset_generator(
+      Driver,
+      :create,
+      defaults: %{
+        name: sequence(:driver_name, &"Driver #{&1}"),
+        phone: "+358401234567",
+        email: sequence(:driver_email, &"driver#{&1}@example.com"),
+        locale: "en-GB"
       },
       overrides: opts,
       authorize?: false
