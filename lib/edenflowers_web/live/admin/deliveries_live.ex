@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
   require Ash.Query
 
   alias EdenflowersWeb.Layouts
-  alias Edenflowers.Delivery.{Driver, Route}
+  alias Edenflowers.Delivery.{Driver, Route, RouteStop}
   alias Edenflowers.Store.Order
   alias Edenflowers.TourPlanning.Solver
 
@@ -22,6 +22,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
      |> assign(:date, today)
      |> assign(:optimizing?, false)
      |> assign(:publishing?, false)
+     |> assign(:subscribed_route_ids, MapSet.new())
      |> assign(:routes, nil)
      |> assign(:plan_error, nil)
      |> load_planning_data()}
@@ -46,6 +47,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     |> assign(:selected_driver_ids, default_driver_selection(drivers))
     |> assign(:routes, nil)
     |> assign(:plan_error, nil)
+    |> subscribe_to_routes(published_routes)
   end
 
   # With a single active driver there is no choice to make, so pre-select it; otherwise
@@ -78,18 +80,72 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
 
           <article
             :for={route <- @published_routes}
+            id={"route-monitor-#{route.id}"}
             class="border-base-300/70 bg-base-200/40 rounded-lg border p-4"
           >
-            <header class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 class="font-medium">{route.driver.name}</h3>
-              <p class="text-base-content/65 text-sm">
-                {length(route.route_stops)} {~t"stops"}
-              </p>
+            <header class="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-medium">{route.driver.name}</h3>
+                  <span
+                    :if={route_complete?(route)}
+                    class="badge badge-sm badge-success admin-badge-success"
+                  >
+                    {~t"Completed"}
+                  </span>
+                </div>
+                <p class="text-base-content/65 mt-1 text-sm">
+                  {length(route.route_stops)} {~t"stops"}
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  id={"copy-route-#{route.id}"}
+                  phx-hook="CopyToClipboard"
+                  data-clipboard-text={driver_link(route.driver)}
+                  data-copied-label={~t"Copied!"}
+                  class="btn btn-ghost btn-xs"
+                >
+                  <.icon name="hero-link" class="h-4 w-4" />
+                  <span data-copy-label>{~t"Copy link"}</span>
+                </button>
+                <a
+                  href={~p"/d/#{route.driver.link_token}"}
+                  target="_blank"
+                  rel="noopener"
+                  class="btn btn-ghost btn-xs"
+                >
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                  {~t"Open driver view"}
+                </a>
+              </div>
             </header>
+
+            <% progress = route_progress(route) %>
+            <div
+              id={"route-progress-#{route.id}"}
+              class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm"
+            >
+              <span id={"route-delivered-#{route.id}"}>
+                <span class="font-medium">{progress.delivered}</span>
+                <span class="text-base-content/65">{~t"Delivered"}</span>
+              </span>
+              <span id={"route-failed-#{route.id}"}>
+                <span class="font-medium">{progress.failed}</span>
+                <span class="text-base-content/65">{~t"Failed"}</span>
+              </span>
+              <span id={"route-remaining-#{route.id}"}>
+                <span class="font-medium">{progress.remaining}</span>
+                <span class="text-base-content/65">{~t"Remaining"}</span>
+              </span>
+            </div>
 
             <ol class="divide-base-300/70 divide-y">
               <li
                 :for={stop <- route.route_stops}
+                id={"monitor-stop-#{stop.id}"}
                 class="flex items-baseline justify-between gap-3 py-2"
               >
                 <span class="flex items-baseline gap-2">
@@ -97,8 +153,11 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
                   <span class="font-medium">{stop.order_reference}</span>
                   <span class="text-base-content/65 text-sm">{stop.recipient_name}</span>
                 </span>
-                <span class="text-base-content/65 whitespace-nowrap text-sm">
-                  {format_km(stop.leg_distance_m)} km
+                <span class="flex items-center gap-3 whitespace-nowrap text-sm">
+                  <span class={stop_status_class(stop.status)}>
+                    {stop_status_label(stop.status)}
+                  </span>
+                  <span class="text-base-content/65">{format_km(stop.leg_distance_m)} km</span>
                 </span>
               </li>
             </ol>
@@ -307,6 +366,24 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     end
   end
 
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          payload: %Ash.Notifier.Notification{data: %RouteStop{} = updated_stop}
+        },
+        socket
+      ) do
+    published_routes =
+      Enum.map(socket.assigns.published_routes, fn route ->
+        if route.id == updated_stop.route_id do
+          %{route | route_stops: replace_stop(route.route_stops, updated_stop)}
+        else
+          route
+        end
+      end)
+
+    {:noreply, assign(socket, :published_routes, published_routes)}
+  end
+
   # All-or-nothing: every route for the run is created inside one transaction, so a failure on
   # any of them raises, rolls back the rest, and persists nothing.
   defp publish_run(socket) do
@@ -403,6 +480,57 @@ defmodule EdenflowersWeb.Admin.DeliveriesLive do
     |> Enum.filter(&MapSet.member?(assigns.selected_driver_ids, &1.id))
     |> Enum.reject(&MapSet.member?(used, &1.id))
   end
+
+  defp subscribe_to_routes(socket, routes) do
+    if connected?(socket) do
+      subscribed_route_ids =
+        Enum.reduce(routes, socket.assigns.subscribed_route_ids, fn route, subscribed ->
+          if MapSet.member?(subscribed, route.id) do
+            subscribed
+          else
+            EdenflowersWeb.Endpoint.subscribe("route_stop:outcome:#{route.id}")
+            MapSet.put(subscribed, route.id)
+          end
+        end)
+
+      assign(socket, :subscribed_route_ids, subscribed_route_ids)
+    else
+      socket
+    end
+  end
+
+  defp replace_stop(stops, updated_stop) do
+    Enum.map(stops, fn stop ->
+      if stop.id == updated_stop.id, do: updated_stop, else: stop
+    end)
+  end
+
+  defp route_progress(route) do
+    counts = Enum.frequencies_by(route.route_stops, & &1.status)
+
+    %{
+      delivered: Map.get(counts, :delivered, 0),
+      failed: Map.get(counts, :failed, 0),
+      remaining: Map.get(counts, :pending, 0)
+    }
+  end
+
+  defp route_complete?(route) do
+    route.route_stops != [] and
+      Enum.all?(route.route_stops, &(&1.status in [:delivered, :skipped]))
+  end
+
+  defp driver_link(driver), do: EdenflowersWeb.Endpoint.url() <> "/d/" <> driver.link_token
+
+  defp stop_status_label(:pending), do: ~t"Pending"
+  defp stop_status_label(:delivered), do: ~t"Delivered"
+  defp stop_status_label(:failed), do: ~t"Failed"
+  defp stop_status_label(:skipped), do: ~t"Skipped"
+
+  defp stop_status_class(:pending), do: "badge badge-sm admin-badge-neutral"
+  defp stop_status_class(:delivered), do: "badge badge-sm badge-success admin-badge-success"
+  defp stop_status_class(:failed), do: "badge badge-sm badge-error"
+  defp stop_status_class(:skipped), do: "badge badge-sm admin-badge-neutral"
 
   defp format_km(metres), do: :erlang.float_to_binary(metres / 1000, decimals: 1)
 

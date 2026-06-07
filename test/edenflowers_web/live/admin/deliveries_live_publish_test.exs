@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
 
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
-  alias Edenflowers.Delivery.RouteStop
+  alias Edenflowers.Delivery.{Route, RouteStop}
   alias Edenflowers.Store.Order
 
   setup %{conn: conn} do
@@ -107,6 +107,59 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     assert has_element?(view, "input#order-#{second.id}")
     refute has_element?(view, "input#order-#{first.id}")
   end
+
+  test "a second published run appears without disturbing the first run's progress", %{
+    conn: conn,
+    admin: admin
+  } do
+    _first = eligible_order(order_reference: "EF-FIRST")
+    second = eligible_order(order_reference: "EF-SECOND")
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+
+    view |> element("input#order-#{second.id}") |> render_click()
+    optimize(view)
+    publish(view)
+
+    [first_route] = Route.list_published_for_date!(today(), actor: admin)
+    [first_stop] = first_route.route_stops
+
+    RouteStop.record_failed!(
+      first_stop,
+      %{failure_reason: :recipient_unavailable},
+      actor: admin
+    )
+
+    render(view)
+    assert has_element?(view, "#route-failed-#{first_route.id}", "1 Failed")
+
+    optimize(view)
+    publish(view)
+
+    routes = Route.list_published_for_date!(today(), actor: admin)
+    assert length(routes) == 2
+
+    second_route = Enum.find(routes, &(&1.id != first_route.id))
+    assert has_element?(view, "#route-monitor-#{first_route.id}")
+    assert has_element?(view, "#route-failed-#{first_route.id}", "1 Failed")
+    assert has_element?(view, "#route-monitor-#{second_route.id}")
+    assert has_element?(view, "#route-remaining-#{second_route.id}", "1 Remaining")
+
+    [second_stop] = second_route.route_stops
+
+    RouteStop.record_delivered!(
+      second_stop,
+      %{delivery_method: :handed_to_recipient},
+      actor: admin
+    )
+
+    render(view)
+    assert has_element?(view, "#route-delivered-#{second_route.id}", "1 Delivered")
+    assert has_element?(view, "#route-monitor-#{second_route.id}", "Completed")
+  end
+
+  defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
   defp with_token(user) do
     {:ok, token, _claims} = Jwt.token_for_user(user)
