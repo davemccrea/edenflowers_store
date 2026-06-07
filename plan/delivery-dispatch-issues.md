@@ -286,33 +286,43 @@ browser/session, and shows a clear empty state on a day with no routes.
 
 ---
 
-## 7. Record an outcome
+## 7. Record an outcome — DONE
 
-**Type:** AFK · **Blocked by:** #6
+**Type:** AFK · **Blocked by:** #6 · **Status:** complete
 
-### What to build
+### What was built
 
-Outcome recording on the driver page. For each stop the driver records exactly one
-current outcome: **delivered** (method: handed to recipient / left in a safe place /
-other) or **failed** (reason: recipient unavailable / couldn't access / couldn't find /
-refused / other), with an optional note that becomes required when "other" is chosen. A
-delivered outcome marks the order fulfilled via the existing `mark_fulfilled` bypass; a
-failed outcome leaves the order pending and the stop retryable the same day (retry
-overwrites the outcome). Completed stops collapse out of the way.
+Outcome recording on the driver route page. Each pending or failed stop shows "Mark
+delivered" / "Couldn't deliver"; choosing one reveals a form for the matching outcome
+(delivery method or failure reason) plus an optional note. Two new `RouteStop` update
+actions — `record_delivered` and `record_failed` — overwrite the stop's single current
+outcome (no history): they set `status`, the method/reason, an `outcome_recorded_at`
+stamp, and a note, validating that the note is present when "other" is chosen.
+`record_delivered` also marks the order fulfilled via the order's existing bypass
+(idempotent: an already-fulfilled order is left untouched, so retry never fails on the
+order side). A delivered stop collapses to a single confirmed line; a failed stop shows
+its reason and stays actionable for a same-day retry. `RouteStop` now uses an
+`Ash.Notifier.PubSub` notifier broadcasting both actions on the per-route topic
+`route_stop:outcome:<route_id>` for slice 8's monitor.
 
 ### Acceptance criteria
 
-- [ ] Delivered requires a method; failed requires a reason; "other" (either side)
+- [x] Delivered requires a method; failed requires a reason; "other" (either side)
       requires a note; note otherwise optional.
-- [ ] Delivered sets `RouteStop` status `delivered` and calls `mark_fulfilled` on the
+- [x] Delivered sets `RouteStop` status `delivered` and calls `mark_fulfilled` on the
       order; failed sets status `failed`, order stays pending.
-- [ ] A failed stop can be retried the same day; the new outcome overwrites the previous
+- [x] A failed stop can be retried the same day; the new outcome overwrites the previous
       (no history retained).
-- [ ] Completed (delivered) stops collapse but remain visible and clearly marked.
-- [ ] `RouteStop` carries an Ash `pub_sub` notifier broadcasting on outcome change to a
+- [x] Completed (delivered) stops collapse but remain visible and clearly marked.
+- [x] `RouteStop` carries an Ash `pub_sub` notifier broadcasting on outcome change to a
       per-route topic.
-- [ ] Tests cover each outcome path, the "other"→note rule, retry overwrite, and the
+- [x] Tests cover each outcome path, the "other"→note rule, retry overwrite, and the
       order being marked fulfilled.
+
+### Notes for later slices
+
+- Slice 8's monitor subscribes to `route_stop:outcome:<route_id>` per published route.
+- New `~t` strings are extracted into the catalogs; fi/sv msgstrs are empty pending translation.
 
 ### User stories
 
