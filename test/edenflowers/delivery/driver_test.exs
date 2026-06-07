@@ -71,6 +71,23 @@ defmodule Edenflowers.Delivery.DriverTest do
     end
   end
 
+  describe "destroy" do
+    test "hard-deletes the driver", %{admin: admin} do
+      driver = generate(driver())
+
+      assert :ok = Driver.destroy(driver, actor: admin)
+
+      all_ids = Driver.list!(actor: admin) |> Enum.map(& &1.id)
+      refute driver.id in all_ids
+    end
+
+    test "non-admins cannot destroy a driver" do
+      driver = generate(driver())
+
+      assert {:error, %Ash.Error.Forbidden{}} = Driver.destroy(driver, actor: nil)
+    end
+  end
+
   describe "policies" do
     test "non-admins cannot create drivers or see them in a list" do
       generate(driver())
