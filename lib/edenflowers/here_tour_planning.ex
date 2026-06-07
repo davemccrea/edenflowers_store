@@ -84,8 +84,9 @@ defmodule Edenflowers.HereTourPlanning do
            {:ok, plan} <- parse_plan(body, input) do
         {:ok, plan}
       else
-        {:ok, %{status: status}} ->
-          Logger.error("HERE Tour Planning returned status #{status}")
+        {:ok, %{status: status, body: body}} ->
+          # The body is a schema/validation error, not customer data — safe to log.
+          Logger.error("HERE Tour Planning returned status #{status}: #{inspect(body)}")
           {:error, {:here_status, status}}
 
         {:error, reason} ->
@@ -119,9 +120,12 @@ defmodule Edenflowers.HereTourPlanning do
       plan: %{
         jobs: Enum.map(input.orders, &delivery_job(&1, input))
       },
+      # Balance tour durations first (even completion times across drivers), then
+      # minimize total cost (travel time). `minimize-unassigned` keeps every order
+      # assigned so the parser can reject any leftover.
       objectives: [
         %{type: "minimize-unassigned"},
-        %{type: "minimize-duration"},
+        %{type: "balance-duration"},
         %{type: "minimize-cost"}
       ]
     }
