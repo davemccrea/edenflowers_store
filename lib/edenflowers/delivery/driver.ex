@@ -17,13 +17,17 @@ defmodule Edenflowers.Delivery.Driver do
     define :deactivate, action: :deactivate
     define :activate, action: :activate
     define :regenerate_token, action: :regenerate_token
+    define :destroy, action: :destroy
     define :list, action: :read
     define :list_active, action: :list_active
     define :get_by_token, action: :by_token, args: [:token], not_found_error?: false
   end
 
   actions do
-    defaults [:read]
+    # Deactivation is the usual path (it preserves the driver's history); destroy is a
+    # hard delete for drivers created in error. Once slice 5 adds routes referencing a
+    # driver, destroy should be guarded against drivers that hold route history.
+    defaults [:read, :destroy]
 
     read :list_active do
       description "Active drivers, the availability pool for assignment selection."
