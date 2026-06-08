@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
   use Mix.Task
 
   alias Edenflowers.Store.Order
-  alias Edenflowers.TourPlanning
+  alias Edenflowers.TourPlanning.HERE
 
   require Ash.Query
 
@@ -58,10 +58,10 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
 
     Mix.shell().info("Planning #{length(stops)} stops across #{driver_count} drivers using #{strategy}...\n")
 
-    case TourPlanning.post(TourPlanning.build_problem(problem)) do
+    case HERE.post(HERE.build_problem(problem)) do
       {:ok, body} ->
         print_raw(body)
-        print_parsed(TourPlanning.parse_solution(body, problem))
+        print_parsed(HERE.parse_solution(body, problem))
 
       {:error, reason} ->
         Mix.shell().error("HERE request failed: #{inspect(reason)}")

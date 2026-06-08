@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Admin.DeliveryPlanningLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Delivery.{Driver, Route}
   alias Edenflowers.Store.Order
-  alias Edenflowers.TourPlanning.Solver
+  alias Edenflowers.TourPlanning
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -495,7 +495,7 @@ defmodule EdenflowersWeb.Admin.DeliveryPlanningLive do
   # blocks this process until it returns.
   @impl true
   def handle_info(:run_optimize, socket) do
-    case Solver.solve(build_problem(socket)) do
+    case TourPlanning.solve(build_problem(socket)) do
       {:ok, routes} ->
         {:noreply,
          assign(socket,
