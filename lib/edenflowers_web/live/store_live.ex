@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.StoreLive do
       |> Enum.map(&AshTranslation.translate(&1, locale))
       |> Enum.with_index(1)
 
-    {:ok, assign(socket, categories: categories)}
+    {:ok, assign(socket, categories: categories, products: [], selected_category: nil)}
   end
 
   def handle_params(params, _uri, socket) do
@@ -51,19 +51,19 @@ defmodule EdenflowersWeb.StoreLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <p class="eyebrow text-base-content/60 mb-5">{~t"The Store"}</p>
-        <h1 class="page-title mb-12 md:mb-16">{@selected_category.name}</h1>
+        <h1 :if={@selected_category} class="page-title mb-12 md:mb-16">{@selected_category.name}</h1>
 
         <nav aria-label={~t"Categories"} class="category-index mb-20 md:mb-28">
           <ol class="category-index__list">
             <li
               :for={{category, idx} <- @categories}
               class="category-index__item"
-              data-active={@selected_category.id == category.id && "true"}
+              data-active={@selected_category && @selected_category.id == category.id && "true"}
             >
               <.link
                 patch={~p"/store/#{category.slug}"}
                 class="category-index__link group"
-                aria-current={@selected_category.id == category.id && "page"}
+                aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
                 <span class="category-index__numeral" aria-hidden="true">
                   {String.pad_leading(Integer.to_string(idx), 2, "0")}
@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.StoreLive do
             <p class="text-base-content/75 max-w-md leading-relaxed">
               {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
             </p>
-            <.button navigate={~p"/store/bouquets"} variant="secondary" class="mt-2">
+            <.button patch={~p"/store/bouquets"} variant="secondary" class="mt-2">
               {~t"Browse bouquets"}
             </.button>
           </div>
