@@ -4,6 +4,49 @@ import EmblaCarousel from "../vendor/embla-carousel.esm";
 
 export const Hooks = {};
 
+Hooks.UnsavedChanges = {
+  mounted() {
+    this.active = this.el.dataset.active === "true";
+    this.message = this.el.dataset.message || "Your changes won't be saved.";
+
+    this.beforeUnload = (event) => {
+      if (!this.active) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    this.confirmNavigation = (event) => {
+      if (!this.active) return;
+
+      const link = event.target.closest("a[href]");
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) {
+        return;
+      }
+
+      const destination = new URL(link.href, window.location.href);
+      if (destination.href === window.location.href) return;
+
+      if (!window.confirm(this.message)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    window.addEventListener("beforeunload", this.beforeUnload);
+    document.addEventListener("click", this.confirmNavigation, true);
+  },
+
+  updated() {
+    this.active = this.el.dataset.active === "true";
+    this.message = this.el.dataset.message || this.message;
+  },
+
+  destroyed() {
+    window.removeEventListener("beforeunload", this.beforeUnload);
+    document.removeEventListener("click", this.confirmNavigation, true);
+  },
+};
+
 /**
  * Carousel for the Featured Blooms section.
  *

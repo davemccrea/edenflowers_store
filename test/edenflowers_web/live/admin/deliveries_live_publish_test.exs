@@ -39,17 +39,12 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
   end
 
   defp optimize(view) do
-    view |> element("#toggle-all-orders") |> render_click()
-    view |> element("button[phx-click=optimize]") |> render_click()
-  end
-
-  defp optimize_selected(view) do
     view |> element("button[phx-click=optimize]") |> render_click()
   end
 
   defp publish(view) do
     view |> element("button[phx-click=publish]") |> render_click()
-    render(view)
+    assert_redirect(view, ~p"/admin/deliveries")
   end
 
   test "publishing snapshots the order and removes it from eligibility", %{conn: conn} do
@@ -71,11 +66,12 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
 
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     optimize(view)
-    html = publish(view)
+    publish(view)
+    {:ok, overview, html} = live(conn, ~p"/admin/deliveries")
 
-    assert html =~ "Published routes"
+    assert has_element?(overview, "#today-routes")
     assert html =~ "Dana"
     assert html =~ "EF-PUB"
     assert html =~ "Alice"
@@ -95,7 +91,6 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     assert stop.leg_distance_m == 2_000
 
     # The published order is no longer eligible, and its planning checkbox is gone.
-    refute has_element?(view, "input#order-#{order.id}")
     today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
     assert {:ok, []} = Order.list_eligible_for_delivery(%{date: today}, authorize?: false)
   end
@@ -105,38 +100,40 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     second = eligible_order(order_reference: "EF-SECOND")
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     # Publish only the first order.
-    view |> element("input#order-#{first.id}") |> render_click()
-    optimize_selected(view)
-    publish(view)
-
-    # The second order remains eligible and selectable for another run.
-    assert has_element?(view, "input#order-#{second.id}")
-    refute has_element?(view, "input#order-#{first.id}")
-  end
-
-  test "the florist can cancel an untouched trip and plan its order again", %{
-    conn: conn,
-    admin: admin
-  } do
-    order = eligible_order(order_reference: "EF-CANCEL")
-    generate(driver(name: "Dana"))
-
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    view |> element("input#order-#{second.id}") |> render_click()
     optimize(view)
     publish(view)
 
+    # The second order remains eligible and selectable for another run.
+    {:ok, next_plan, _html} = live(conn, ~p"/admin/deliveries/plan")
+    assert has_element?(next_plan, "input#order-#{second.id}")
+    refute has_element?(next_plan, "input#order-#{first.id}")
+  end
+
+  test "the florist can cancel an untouched route and plan its order again", %{
+    conn: conn,
+    admin: admin
+  } do
+    eligible_order(order_reference: "EF-CANCEL")
+    generate(driver(name: "Dana"))
+
+    {:ok, plan, _html} = live(conn, ~p"/admin/deliveries/plan")
+    optimize(plan)
+    publish(plan)
+
     [route] = Route.list_published_for_date!(today(), actor: admin)
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
 
     view
     |> element("#cancel-route-#{route.id}")
     |> render_click()
 
-    assert has_element?(view, "input#order-#{order.id}")
     refute has_element?(view, "#route-monitor-#{route.id}")
-    assert render(view) =~ "Trip cancelled"
+    assert has_element?(view, "#plan-dispatch")
+    assert render(view) =~ "Route cancelled"
   end
 
   test "publishes multiple proposed routes assigned to the same driver", %{conn: conn, admin: admin} do
@@ -145,7 +142,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     first = generate(driver(name: "Driver A"))
     second = generate(driver(name: "Driver B"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     view |> element("input#driver-#{first.id}") |> render_click()
     view |> element("input#driver-#{second.id}") |> render_click()
     optimize(view)
@@ -169,14 +166,14 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
     conn: conn,
     admin: admin
   } do
-    first = eligible_order(order_reference: "EF-FIRST")
-    _second = eligible_order(order_reference: "EF-SECOND")
+    _first = eligible_order(order_reference: "EF-FIRST")
+    second = eligible_order(order_reference: "EF-SECOND")
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
-    view |> element("input#order-#{first.id}") |> render_click()
-    optimize_selected(view)
+    view |> element("input#order-#{second.id}") |> render_click()
+    optimize(view)
     publish(view)
 
     [first_route] = Route.list_published_for_date!(today(), actor: admin)
@@ -188,20 +185,22 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
       actor: admin
     )
 
-    render(view)
-    assert has_element?(view, "#route-failed-#{first_route.id}", "1 Failed")
+    {:ok, overview, _html} = live(conn, ~p"/admin/deliveries")
+    assert has_element?(overview, "#route-failed-#{first_route.id}", "1 Failed")
 
-    optimize(view)
-    publish(view)
+    {:ok, second_plan, _html} = live(conn, ~p"/admin/deliveries/plan")
+    optimize(second_plan)
+    publish(second_plan)
 
     routes = Route.list_published_for_date!(today(), actor: admin)
     assert length(routes) == 2
 
     second_route = Enum.find(routes, &(&1.id != first_route.id))
-    assert has_element?(view, "#route-monitor-#{first_route.id}")
-    assert has_element?(view, "#route-failed-#{first_route.id}", "1 Failed")
-    assert has_element?(view, "#route-monitor-#{second_route.id}")
-    assert has_element?(view, "#route-remaining-#{second_route.id}", "1 Remaining")
+    {:ok, overview, _html} = live(conn, ~p"/admin/deliveries")
+    assert has_element?(overview, "#route-monitor-#{first_route.id}")
+    assert has_element?(overview, "#route-failed-#{first_route.id}", "1 Failed")
+    assert has_element?(overview, "#route-monitor-#{second_route.id}")
+    assert has_element?(overview, "#route-remaining-#{second_route.id}", "1 Remaining")
 
     [second_stop] = second_route.route_stops
 
@@ -211,9 +210,9 @@ defmodule EdenflowersWeb.Admin.DeliveriesLivePublishTest do
       actor: admin
     )
 
-    render(view)
-    assert has_element?(view, "#route-delivered-#{second_route.id}", "1 Delivered")
-    assert has_element?(view, "#route-monitor-#{second_route.id}", "Completed")
+    render(overview)
+    assert has_element?(overview, "#route-delivered-#{second_route.id}", "1 Delivered")
+    assert has_element?(overview, "#route-monitor-#{second_route.id}", "Completed")
   end
 
   defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()

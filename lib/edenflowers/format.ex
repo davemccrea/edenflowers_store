@@ -1,14 +1,16 @@
 defmodule Edenflowers.Format do
   @moduledoc """
   Locale-aware value formatting. The single home for turning a domain value
-  (money, date, datetime, percentage) into a display string via CLDR — shared
-  by the storefront, the admin, the order-confirmation email, and the PDF
-  receipt payload.
+  (money, date, datetime, percentage, distance, duration) into a display
+  string — shared by the storefront, the admin, the order-confirmation email,
+  the PDF receipt payload, and the driver route page.
 
   Functions take an explicit `locale` so the email/receipt can format for the
   order's captured locale rather than the request's. `money/1` is the
   storefront convenience that resolves the ambient locale itself.
   """
+
+  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @doc "EUR money in the ambient locale, treating a missing value as zero. For storefront prices/totals."
   def money(value), do: currency(value || 0, Localize.get_locale())
@@ -55,5 +57,35 @@ defmodule Edenflowers.Format do
   # `fractional_digits: 1` — default rounds 25.5% (Finnish VAT) to "26%".
   def percentage(rate, locale) do
     Localize.Number.to_string!(rate, locale: locale, format: :percent, fractional_digits: 1)
+  end
+
+  @doc "Metres to a kilometres string, e.g. \"2.3 km\"."
+  def format_distance(metres) do
+    metres
+    |> Kernel./(1000)
+    |> :erlang.float_to_binary(decimals: 1)
+    |> then(fn d -> ~t"#{d} km" end)
+  end
+
+  @doc "A decimal kilometre value to a string, e.g. \"2.3 km\"."
+  def format_distance_km(kilometres) do
+    kilometres
+    |> to_string()
+    |> then(fn d -> ~t"#{d} km" end)
+  end
+
+  @doc "Seconds to a human duration, e.g. \"12 min\" or \"1 h 30 min\"."
+  def format_duration(seconds) do
+    minutes = div(seconds, 60)
+
+    cond do
+      minutes >= 60 ->
+        hours = div(minutes, 60)
+        remaining_minutes = rem(minutes, 60)
+        ~t"#{hours} h #{remaining_minutes} min"
+
+      true ->
+        ~t"#{minutes} min"
+    end
   end
 end
