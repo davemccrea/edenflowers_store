@@ -1,7 +1,7 @@
-defmodule Edenflowers.TourPlanningTest do
+defmodule Edenflowers.Geography.TourPlanningTest do
   use ExUnit.Case, async: true
 
-  alias Edenflowers.TourPlanning.HERE
+  alias Edenflowers.Geography.TourPlanning.HERE
 
   # Mirrors the documented HERE Tour Planning v3 solution shape: the first stop in a
   # tour is the shop departure (no delivery activity); each later stop carries a

@@ -31,6 +31,10 @@ if config_env() in [:prod, :dev] do
          :here_api_key,
          System.get_env("HERE_API_KEY") || raise("environment variable HERE_API_KEY is missing.")
 
+  config :edenflowers,
+         :shop_position,
+         System.get_env("SHOP_POSITION") || "63.1243488,21.5974075"
+
   # Only the `mix eden.fetch_map` build-time task needs this — the running app
   # serves the pre-fetched PNG. Don't raise on absence; non-design contributors
   # shouldn't need a Mapbox token to start the app.

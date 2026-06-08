@@ -1,7 +1,7 @@
-defmodule Edenflowers.TourPlanning.FakeTest do
+defmodule Edenflowers.Geography.TourPlanning.FakeTest do
   use ExUnit.Case, async: true
 
-  alias Edenflowers.TourPlanning.Fake
+  alias Edenflowers.Geography.TourPlanning.Fake
 
   @problem %{
     stops: [

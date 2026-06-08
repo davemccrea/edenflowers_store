@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Admin.DeliveryPlanningLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Delivery.{Driver, Route}
   alias Edenflowers.Store.Order
-  alias Edenflowers.TourPlanning
+  alias Edenflowers.Geography.TourPlanning
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -595,7 +595,12 @@ defmodule EdenflowersWeb.Admin.DeliveryPlanningLive do
       |> Enum.filter(&MapSet.member?(socket.assigns.selected_driver_ids, &1.id))
       |> Enum.map(&%{id: &1.id})
 
-    %{stops: stops, drivers: drivers, strategy: socket.assigns.optimization_strategy}
+    %{
+      stops: stops,
+      drivers: drivers,
+      strategy: socket.assigns.optimization_strategy,
+      shop_position: Application.get_env(:edenflowers, :shop_position, "63.1243488,21.5974075")
+    }
   end
 
   defp can_optimize?(assigns) do
