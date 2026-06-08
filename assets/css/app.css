@@ -456,17 +456,15 @@ body.ready {
   line-height: 1.5;
   color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
   max-width: 32ch;
-  display: none;
 }
 
-.category-index__item[data-active="true"] .category-index__description,
-.category-index__item:not([data-active="true"])
-  .category-index__link:hover
-  .category-index__description,
-.category-index__item:not([data-active="true"])
-  .category-index__link:focus-visible
-  .category-index__description {
-  display: block;
+#store-products {
+  transition: opacity 150ms ease;
+}
+
+.phx-page-loading #store-products {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* "Favourite" mark on the product photograph — top-right corner, hairline

@@ -75,27 +75,29 @@ defmodule EdenflowersWeb.StoreLive do
           </ol>
         </nav>
 
-        <%= if Enum.empty?(@products) do %>
-          <div class="bg-cream flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
-            <.flower name="flower-42" class="text-primary/80 h-20 w-20" />
-            <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
-            <p class="text-base-content/75 max-w-md leading-relaxed">
-              {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
-            </p>
-            <.button patch={~p"/store/bouquets"} variant="secondary" class="mt-2">
-              {~t"Browse bouquets"}
-            </.button>
-          </div>
-        <% else %>
-          <ul
-            class="grid gap-x-6 gap-y-16 md:grid-cols-2 md:gap-y-20 xl:grid-cols-3 xl:gap-x-8"
-            role="list"
-          >
-            <li :for={product <- @products}>
-              <.product_card product={product} navigate={~p"/product/#{product}"} />
-            </li>
-          </ul>
-        <% end %>
+        <div id="store-products">
+          <%= if Enum.empty?(@products) do %>
+            <div class="bg-cream flex flex-col items-center gap-5 rounded-lg px-8 py-20 text-center sm:py-24">
+              <.flower name="flower-42" class="text-primary/80 h-20 w-20" />
+              <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
+              <p class="text-base-content/75 max-w-md leading-relaxed">
+                {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
+              </p>
+              <.button patch={~p"/store/bouquets"} variant="secondary" class="mt-2">
+                {~t"Browse bouquets"}
+              </.button>
+            </div>
+          <% else %>
+            <ul
+              class="grid gap-x-6 gap-y-16 md:grid-cols-2 md:gap-y-20 xl:grid-cols-3 xl:gap-x-8"
+              role="list"
+            >
+              <li :for={product <- @products}>
+                <.product_card product={product} navigate={~p"/product/#{product}"} />
+              </li>
+            </ul>
+          <% end %>
+        </div>
       </.container>
     </Layouts.app>
     """
