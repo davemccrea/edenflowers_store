@@ -1,11 +1,10 @@
 defmodule Edenflowers.Fulfillments do
   alias Edenflowers.Store.FulfillmentOption
   alias Edenflowers.Weekday
+  alias Edenflowers.Geography.{Geocoding, Routing}
   import Decimal, only: [is_decimal: 1]
 
-  defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
-
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  @shop_position Application.compile_env(:edenflowers, :shop_position, "63.1243488,21.5974075")
 
   @type delivery_result :: %{
           geocoded_address: String.t(),
@@ -19,8 +18,8 @@ defmodule Edenflowers.Fulfillments do
           {:ok, delivery_result()} | {:error, atom()}
   def calculate_delivery(delivery_address, fulfillment_option, locale) do
     with {:ok, {geocoded_address, position, here_id}} <-
-           here_api().get_address(delivery_address, locale),
-         {:ok, distance} <- here_api().get_distance(position),
+           Geocoding.get_address(delivery_address, locale),
+         {:ok, distance} <- Routing.distance(@shop_position, position),
          {:ok, fulfillment_fee} <- calculate_price(fulfillment_option, distance) do
       {:ok,
        %{
@@ -40,10 +39,10 @@ defmodule Edenflowers.Fulfillments do
   `ValidateDeliveryAddress` validation (missing address).
   """
   @spec delivery_error_message(atom()) :: String.t()
-  def delivery_error_message(:address_required), do: ~t"Delivery address required"
-  def delivery_error_message(:address_not_found), do: ~t"Address not found"
-  def delivery_error_message(:out_of_delivery_range), do: ~t"Outside delivery range"
-  def delivery_error_message(_), do: ~t"There was a problem calculating delivery cost, please try again later"
+  def delivery_error_message(:address_required), do: "Delivery address required"
+  def delivery_error_message(:address_not_found), do: "Address not found"
+  def delivery_error_message(:out_of_delivery_range), do: "Outside delivery range"
+  def delivery_error_message(_), do: "There was a problem calculating delivery cost, please try again later"
 
   @spec calculate_price(FulfillmentOption.t(), number() | %Decimal{}) :: {:ok, %Decimal{}} | {:error, atom()}
   def calculate_price(fulfillment_option, distance \\ Decimal.new("0"))

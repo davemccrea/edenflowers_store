@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Eden.TourPlanningSpike do
   use Mix.Task
 
   alias Edenflowers.Store.Order
-  alias Edenflowers.TourPlanning.HERE
+  alias Edenflowers.Geography.TourPlanning.HERE
 
   require Ash.Query
 

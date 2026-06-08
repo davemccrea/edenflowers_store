@@ -1,4 +1,4 @@
-defmodule Edenflowers.TourPlanning.Behaviour do
+defmodule Edenflowers.Geography.TourPlanning.Behaviour do
   @moduledoc """
   The optimizer boundary for delivery dispatch.
 
@@ -25,6 +25,7 @@ defmodule Edenflowers.TourPlanning.Behaviour do
 
   @type problem :: %{
           optional(:strategy) => optimization_strategy(),
+          optional(:shop_position) => String.t(),
           stops: [stop_input()],
           drivers: [driver_input()]
         }
@@ -53,23 +54,23 @@ defmodule Edenflowers.TourPlanning.Behaviour do
   @callback solve(problem()) :: {:ok, [solved_route()]} | {:error, :unassigned | atom()}
 end
 
-defmodule Edenflowers.TourPlanning do
+defmodule Edenflowers.Geography.TourPlanning do
   @moduledoc """
   Entry point for tour planning.
 
-  Delegates to the configured adapter (default: `Edenflowers.TourPlanning.HERE`).
+  Delegates to the configured adapter (default: `Edenflowers.Geography.TourPlanning.HERE`).
   Production and development use the HERE adapter. Tests configure the
-  deterministic `Edenflowers.TourPlanning.Fake`.
+  deterministic `Edenflowers.Geography.TourPlanning.Fake`.
   """
 
-  @spec solve(Edenflowers.TourPlanning.Behaviour.problem()) ::
-          {:ok, [Edenflowers.TourPlanning.Behaviour.solved_route()]}
+  @spec solve(Edenflowers.Geography.TourPlanning.Behaviour.problem()) ::
+          {:ok, [Edenflowers.Geography.TourPlanning.Behaviour.solved_route()]}
           | {:error, atom()}
   def solve(problem) do
     implementation().solve(problem)
   end
 
   defp implementation do
-    Application.get_env(:edenflowers, :tour_planning, Edenflowers.TourPlanning.HERE)
+    Application.get_env(:edenflowers, :tour_planning, Edenflowers.Geography.TourPlanning.HERE)
   end
 end

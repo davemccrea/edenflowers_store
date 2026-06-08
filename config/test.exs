@@ -58,11 +58,14 @@ config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
 config :edenflowers, :stripe_api, Edenflowers.StripeAPI.Mock
 config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 
-# Use mock HereAPI in tests
-config :edenflowers, :here_api, Edenflowers.HereAPI.Mock
+# Use mock Geography adapters in tests
+config :edenflowers, :geocoding, Edenflowers.Geography.Geocoding.Mock
+config :edenflowers, :routing, Edenflowers.Geography.Routing.Mock
 
 # Use deterministic TourPlanning fake in tests
-config :edenflowers, :tour_planning, Edenflowers.TourPlanning.Fake
+config :edenflowers, :tour_planning, Edenflowers.Geography.TourPlanning.Fake
+
+config :edenflowers, :shop_position, "63.1243488,21.5974075"
 
 # Use mocks for expense capture in tests
 config :edenflowers, :papra_client, Edenflowers.Papra.Mock

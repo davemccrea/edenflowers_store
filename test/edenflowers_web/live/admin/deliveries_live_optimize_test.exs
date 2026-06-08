@@ -10,23 +10,23 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
   alias AshAuthentication.Plug.Helpers
 
   defmodule UnassignedSolver do
-    @behaviour Edenflowers.TourPlanning.Behaviour
+    @behaviour Edenflowers.Geography.TourPlanning.Behaviour
     @impl true
     def solve(_problem), do: {:error, :unassigned}
   end
 
   defmodule FailingSolver do
-    @behaviour Edenflowers.TourPlanning.Behaviour
+    @behaviour Edenflowers.Geography.TourPlanning.Behaviour
     @impl true
     def solve(_problem), do: {:error, :tour_planning_failed}
   end
 
   defmodule StrategySolver do
-    @behaviour Edenflowers.TourPlanning.Behaviour
+    @behaviour Edenflowers.Geography.TourPlanning.Behaviour
     @impl true
     def solve(problem) do
       send(Application.fetch_env!(:edenflowers, :strategy_test_pid), {:strategy, problem.strategy})
-      Edenflowers.TourPlanning.Fake.solve(problem)
+      Edenflowers.Geography.TourPlanning.Fake.solve(problem)
     end
   end
 

@@ -1,4 +1,4 @@
-defmodule Edenflowers.TourPlanning.Fake do
+defmodule Edenflowers.Geography.TourPlanning.Fake do
   @moduledoc """
   Deterministic tour-planning fake for tests.
 
@@ -7,7 +7,7 @@ defmodule Edenflowers.TourPlanning.Fake do
   contributes to each route's total duration.
   """
 
-  @behaviour Edenflowers.TourPlanning.Behaviour
+  @behaviour Edenflowers.Geography.TourPlanning.Behaviour
 
   @leg_distance_m 2_000
   @leg_duration_s 300

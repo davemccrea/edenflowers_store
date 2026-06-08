@@ -1,4 +1,4 @@
-defmodule Edenflowers.TourPlanning.HERE do
+defmodule Edenflowers.Geography.TourPlanning.HERE do
   @moduledoc """
   HERE Tour Planning adapter (synchronous `/v3/problems` endpoint).
 
@@ -18,11 +18,10 @@ defmodule Edenflowers.TourPlanning.HERE do
   are the intended workforce, limited only by there being fewer deliveries than drivers.
   """
 
-  @behaviour Edenflowers.TourPlanning.Behaviour
+  @behaviour Edenflowers.Geography.TourPlanning.Behaviour
 
   require Logger
 
-  @shop_position "63.1243488,21.5974075"
   @profile "delivery_car"
   @endpoint "https://tourplanning.hereapi.com/v3/problems"
 
@@ -61,13 +60,15 @@ defmodule Edenflowers.TourPlanning.HERE do
 
   @doc "Builds the HERE Tour Planning problem JSON from the behaviour's problem input."
   def build_problem(%{stops: stops, drivers: drivers} = problem) do
+    shop = shop_position(problem)
+
     problem
     |> Map.get(:strategy, :cheapest)
     |> objectives()
     |> then(fn objective_fields ->
       %{
         fleet: %{
-          types: Enum.map(drivers, &vehicle_type/1),
+          types: Enum.map(drivers, &vehicle_type(&1, shop)),
           profiles: [
             %{
               name: @profile,
@@ -122,13 +123,13 @@ defmodule Edenflowers.TourPlanning.HERE do
   # One vehicle per driver. Cost is driving distance only (no fixed or time cost), so the
   # plan minimises total kilometres. `shift.end` is omitted so the route ends at the last
   # delivery (open route).
-  defp vehicle_type(%{id: driver_id}) do
+  defp vehicle_type(%{id: driver_id}, shop_position) do
     %{
       id: "driver-#{driver_id}",
       profile: @profile,
       costs: %{fixed: 0.0, distance: 1.0, time: 0.0},
       capacity: [@vehicle_capacity],
-      shifts: [%{start: %{time: shift_start(), location: latlng(@shop_position)}}],
+      shifts: [%{start: %{time: shift_start(), location: latlng(shop_position)}}],
       amount: 1
     }
   end
@@ -142,6 +143,12 @@ defmodule Edenflowers.TourPlanning.HERE do
         ]
       }
     }
+  end
+
+  defp shop_position(%{shop_position: position}), do: position
+
+  defp shop_position(_) do
+    Application.get_env(:edenflowers, :shop_position, "63.1243488,21.5974075")
   end
 
   @doc """

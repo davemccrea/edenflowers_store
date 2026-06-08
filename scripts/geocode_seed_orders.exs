@@ -92,10 +92,12 @@ format_items = fn items ->
 end
 
 for order <- orders do
-  case Edenflowers.HereAPI.get_address(order.address) do
+  case Edenflowers.Geography.Geocoding.HERE.get_address(order.address, order[:locale] || "fi") do
     {:ok, {geocoded_address, position, here_id}} ->
+      shop = Application.get_env(:edenflowers, :shop_position, "63.1243488,21.5974075")
+
       distance =
-        case Edenflowers.HereAPI.get_distance(position) do
+        case Edenflowers.Geography.Routing.HERE.distance(shop, position) do
           {:ok, d} -> d
           _ -> 0
         end

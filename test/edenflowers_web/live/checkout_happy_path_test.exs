@@ -237,11 +237,11 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
         )
       )
 
-    stub(Edenflowers.HereAPI.Mock, :get_address, fn _query, _locale ->
+    stub(Edenflowers.Geography.Geocoding.Mock, :get_address, fn _query, _locale ->
       {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
     end)
 
-    stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+    stub(Edenflowers.Geography.Routing.Mock, :distance, fn _origin, _destination -> {:ok, 3000} end)
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 

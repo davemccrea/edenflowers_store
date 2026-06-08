@@ -1070,7 +1070,7 @@ defmodule Edenflowers.Store.OrderTest do
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
-      # Note: In real flow, delivery_address would trigger HereAPI calls
+      # Note: In real flow, delivery_address would trigger Geocoding calls
       # For pickup, we don't need delivery address
       assert {:ok, order} =
                order
