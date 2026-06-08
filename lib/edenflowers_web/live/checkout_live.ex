@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   @checkout_states Order.checkout_states()
 
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
 
   defp submit_action_for(:contact_details), do: :submit_contact_details
@@ -40,8 +39,8 @@ defmodule EdenflowersWeb.CheckoutLive do
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:form, build_submit_form(order))
-       |> assign(:client_secret, nil)
-       |> maybe_setup_stripe(order)}
+        |> assign(:client_secret, nil)
+        |> maybe_setup_payment(order, socket.assigns[:current_user])}
     else
       {:error, :empty_cart} ->
         # Mounting with an effectively-empty cart means the customer either
@@ -552,7 +551,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   end
 
   def handle_event("pay", _, socket) do
-    case stripe_api().update_payment_intent(socket.assigns.order) do
+    case Edenflowers.Checkout.update_payment(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
@@ -754,7 +753,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
     socket
     |> assign_forms(order, opts)
-    |> ensure_stripe_for_state(order)
+    |> ensure_payment_for_state(order, actor(socket))
   end
 
   # Persisted (not just visual) so the dependent form-3b renders and the
@@ -786,67 +785,38 @@ defmodule EdenflowersWeb.CheckoutLive do
     push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
   end
 
-  # ======
-  # Stripe
-  # ======
+  # =======
+  # Payment
+  # =======
 
   # We only touch Stripe once the customer is on the payment state. Earlier
   # mounts (or mounts where the LiveView reconnects on a non-payment state)
   # skip the round trip entirely.
-  defp maybe_setup_stripe(socket, %{state: :payment} = order), do: setup_stripe(socket, order)
-  defp maybe_setup_stripe(socket, _order), do: socket
+  defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
+    case Edenflowers.Checkout.setup_payment(order, actor) do
+      {:ok, updated_order, client_secret} ->
+        socket
+        |> assign(order: updated_order)
+        |> assign(client_secret: client_secret)
 
-  defp ensure_stripe_for_state(socket, %{state: :payment} = order) do
+      {:error, _reason} ->
+        payment_unavailable(socket)
+    end
+  end
+
+  defp maybe_setup_payment(socket, _order, _actor), do: socket
+
+  defp ensure_payment_for_state(socket, %{state: :payment} = order, actor) do
     if socket.assigns[:client_secret] do
       socket
     else
-      setup_stripe(socket, order)
+      maybe_setup_payment(socket, order, actor)
     end
   end
 
-  defp ensure_stripe_for_state(socket, _order), do: socket
+  defp ensure_payment_for_state(socket, _order, _actor), do: socket
 
-  defp setup_stripe(socket, %{payment_intent_id: nil} = order) do
-    case stripe_api().create_payment_intent(order) do
-      {:ok, payment_intent} ->
-        persist_payment_intent(socket, order, payment_intent)
-
-      {:error, reason} ->
-        Logger.error("Failed to create payment intent for order #{order.id}: #{inspect(reason)}")
-        stripe_unavailable(socket)
-    end
-  end
-
-  defp setup_stripe(socket, order) do
-    case stripe_api().retrieve_payment_intent(order) do
-      {:ok, payment_intent} ->
-        assign(socket, client_secret: payment_intent.client_secret)
-
-      {:error, reason} ->
-        Logger.error("Failed to retrieve payment intent for order #{order.id}: #{inspect(reason)}")
-        stripe_unavailable(socket)
-    end
-  end
-
-  defp persist_payment_intent(socket, order, payment_intent) do
-    case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
-      {:ok, order} ->
-        socket
-        |> assign(order: order)
-        |> assign(client_secret: payment_intent.client_secret)
-
-      {:error, reason} ->
-        # Persisting the id failed — cancel the orphan intent on Stripe so it
-        # doesn't linger in the dashboard. Best-effort; surface a flash either way.
-        stripe_api().cancel_payment_intent(payment_intent)
-
-        Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
-
-        stripe_unavailable(socket)
-    end
-  end
-
-  defp stripe_unavailable(socket) do
+  defp payment_unavailable(socket) do
     socket
     |> assign(client_secret: nil)
     |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
