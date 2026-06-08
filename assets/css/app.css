@@ -420,7 +420,7 @@ body.ready {
   max-width: 100%;
 }
 
-/* Active entry: honey underline + description visible. */
+/* Active entry: honey underline. */
 .category-index__item[data-active="true"] .category-index__name {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);

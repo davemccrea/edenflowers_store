@@ -57,11 +57,19 @@ defmodule EdenflowersWeb.StoreLive do
           <ol class="category-index__list">
             <li
               :for={{category, idx} <- @categories}
+              id={"category-item-#{category.id}"}
               class="category-index__item"
               data-active={@selected_category && @selected_category.id == category.id && "true"}
             >
               <.link
+                id={"category-link-#{category.id}"}
                 patch={~p"/store/#{category.slug}"}
+                phx-click={
+                  JS.set_attribute({"data-active", "true"}, to: "#category-item-#{category.id}")
+                  |> JS.remove_attribute("data-active", to: ".category-index__item:not(#category-item-#{category.id})")
+                  |> JS.set_attribute({"aria-current", "page"}, to: "#category-link-#{category.id}")
+                  |> JS.remove_attribute("aria-current", to: ".category-index__link:not(#category-link-#{category.id})")
+                }
                 class="category-index__link group"
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
