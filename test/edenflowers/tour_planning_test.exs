@@ -1,7 +1,7 @@
 defmodule Edenflowers.TourPlanningTest do
   use ExUnit.Case, async: true
 
-  alias Edenflowers.TourPlanning
+  alias Edenflowers.TourPlanning.HERE
 
   # Mirrors the documented HERE Tour Planning v3 solution shape: the first stop in a
   # tour is the shop departure (no delivery activity); each later stop carries a
@@ -45,7 +45,7 @@ defmodule Edenflowers.TourPlanningTest do
 
   describe "parse_solution/2" do
     test "maps tours to per-driver routes with per-leg and total metrics" do
-      assert {:ok, [route]} = TourPlanning.parse_solution(solution_body(), problem())
+      assert {:ok, [route]} = HERE.parse_solution(solution_body(), problem())
 
       assert route.driver_id == "spike-1"
       assert [stop1, stop2] = route.stops
@@ -60,7 +60,7 @@ defmodule Edenflowers.TourPlanningTest do
     end
 
     test "totals are leg sums, with duration adding per-stop handling" do
-      assert {:ok, [route]} = TourPlanning.parse_solution(solution_body(), problem())
+      assert {:ok, [route]} = HERE.parse_solution(solution_body(), problem())
 
       assert route.total_distance_m == 4000
       assert route.total_driving_s == 900
@@ -71,7 +71,7 @@ defmodule Edenflowers.TourPlanningTest do
     test "returns {:error, :unassigned} when HERE leaves any order unplaced" do
       body = Map.put(solution_body(), "unassigned", [%{"jobId" => "order-2", "reasons" => []}])
 
-      assert {:error, :unassigned} = TourPlanning.parse_solution(body, problem())
+      assert {:error, :unassigned} = HERE.parse_solution(body, problem())
     end
 
     test "returns {:error, :unassigned} when a requested order is absent from the tours" do
@@ -80,7 +80,7 @@ defmodule Edenflowers.TourPlanningTest do
           [departure, first]
         end)
 
-      assert {:error, :unassigned} = TourPlanning.parse_solution(body, problem())
+      assert {:error, :unassigned} = HERE.parse_solution(body, problem())
     end
 
     test "keeps every delivery when HERE groups multiple jobs into one stop" do
@@ -93,7 +93,7 @@ defmodule Edenflowers.TourPlanningTest do
           [departure, grouped]
         end)
 
-      assert {:ok, [route]} = TourPlanning.parse_solution(body, problem())
+      assert {:ok, [route]} = HERE.parse_solution(body, problem())
 
       assert [
                %{
@@ -116,7 +116,7 @@ defmodule Edenflowers.TourPlanningTest do
 
   describe "build_problem/1" do
     test "maps drivers to open-route vehicles, stops to jobs, and defaults to cheapest" do
-      problem = TourPlanning.build_problem(problem())
+      problem = HERE.build_problem(problem())
 
       assert [vehicle] = problem.fleet.types
       assert vehicle.id == "driver-spike-1"
@@ -141,7 +141,7 @@ defmodule Edenflowers.TourPlanningTest do
     end
 
     test "balanced enables advanced objectives and balances route duration before minimizing cost" do
-      problem = TourPlanning.build_problem(Map.put(problem(), :strategy, :balanced))
+      problem = HERE.build_problem(Map.put(problem(), :strategy, :balanced))
 
       assert problem.advancedObjectives == [
                [%{type: "minimizeUnassigned"}],
@@ -155,7 +155,7 @@ defmodule Edenflowers.TourPlanningTest do
     end
 
     test "fastest maximizes parallel routes before minimizing total duration and cost" do
-      problem = TourPlanning.build_problem(Map.put(problem(), :strategy, :fastest))
+      problem = HERE.build_problem(Map.put(problem(), :strategy, :fastest))
 
       assert problem.objectives == [
                %{type: "minimizeUnassigned"},
@@ -171,7 +171,7 @@ defmodule Edenflowers.TourPlanningTest do
       stops = for n <- 1..7, do: %{id: "order-#{n}", position: "63.1,21.6", handling_seconds: 300}
       drivers = for n <- 1..3, do: %{id: "d#{n}"}
 
-      problem = TourPlanning.build_problem(%{stops: stops, drivers: drivers})
+      problem = HERE.build_problem(%{stops: stops, drivers: drivers})
 
       assert length(problem.fleet.types) == 3
     end
