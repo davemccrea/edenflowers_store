@@ -270,6 +270,56 @@ body.ready {
   scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
 }
 
+@keyframes quantity-pulse {
+  0% {
+    transform: scale(1);
+    color: var(--color-base-content);
+  }
+  40% {
+    transform: scale(1.25);
+    color: var(--color-primary);
+  }
+  100% {
+    transform: scale(1);
+    color: var(--color-base-content);
+  }
+}
+
+.quantity-pulse {
+  /* inline-block is load-bearing — transform: scale() is a no-op on inline elements,
+     and this class lands on a <span>. */
+  display: inline-block;
+  animation: quantity-pulse 400ms ease-out;
+}
+
+/* `translate` is set directly rather than via Tailwind's `translate-y-*` —
+   Tailwind v4 composes through `--tw-translate-x`, which leaves the x axis
+   undefined when only the y utility is applied. */
+@keyframes line-item-enter {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.line-item-row-enter {
+  animation: line-item-enter 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Without backwards fill the browser paints the final frame before the animation
+     starts, producing a visible flash where the row jumps from its destination. */
+  animation-fill-mode: backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quantity-pulse,
+  .line-item-row-enter {
+    animation: none;
+  }
+}
+
 @utility container {
   @apply mx-auto px-4 sm:px-8;
 }
@@ -342,6 +392,13 @@ body.ready {
   @apply underline underline-offset-[0.2em];
   text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
   text-decoration-thickness: from-font;
+}
+
+@utility cart-icon-button {
+  /* transition-[scale,color] — Tailwind v4 emits `scale:` (not `transform:`) for active:scale-*,
+     so transition-transform wouldn't cover it. opacity is intentionally not transitioned so
+     phx-click-loading feedback is instant. */
+  @apply cursor-pointer p-1 transition-[scale,color] duration-100 hover:text-base-content active:scale-90 phx-click-loading:opacity-50;
 }
 
 #hotfx-shy-header {

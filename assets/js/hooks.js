@@ -174,6 +174,23 @@ Hooks.CharacterCount = {
   },
 };
 
+Hooks.PulseOnChange = {
+  mounted() {
+    this.last = this.el.dataset.quantity;
+  },
+
+  updated() {
+    const next = this.el.dataset.quantity;
+    if (next === this.last) return;
+    this.el.classList.remove("quantity-pulse");
+    // Force reflow so the browser registers the class removal before we
+    // re-add it; otherwise the animation won't restart on rapid clicks.
+    void this.el.offsetWidth;
+    this.el.classList.add("quantity-pulse");
+    this.last = next;
+  },
+};
+
 Hooks.FocusElement = {
   mounted() {
     // Focus on the first form element when the page loads (step 1)

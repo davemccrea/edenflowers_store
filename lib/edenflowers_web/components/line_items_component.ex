@@ -12,7 +12,12 @@ defmodule EdenflowersWeb.LineItemsComponent do
     <div id={@id}>
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
-          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-base">
+          <li
+            :for={line_item <- @order.line_items}
+            id={"#{@id}-row-#{line_item.id}"}
+            phx-mounted={JS.add_class("line-item-row-enter")}
+            class="flex flex-row gap-4 text-base"
+          >
             <%= if @link_product and not line_item.is_card do %>
               <.link
                 navigate={~p"/product/#{line_item.product_id}"}
@@ -63,7 +68,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   <button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="cart-icon-button"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -71,11 +76,18 @@ defmodule EdenflowersWeb.LineItemsComponent do
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
                   </button>
-                  <span class="tabular-nums">{line_item.quantity}</span>
+                  <span
+                    id={"#{@id}-qty-#{line_item.id}"}
+                    data-quantity={line_item.quantity}
+                    phx-hook="PulseOnChange"
+                    class="tabular-nums"
+                  >
+                    {line_item.quantity}
+                  </span>
                   <button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="cart-icon-button"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
@@ -87,10 +99,8 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  phx-value-id={line_item.id}
-                  phx-target={@myself}
+                  class="cart-icon-button"
+                  phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
@@ -101,10 +111,8 @@ defmodule EdenflowersWeb.LineItemsComponent do
                 <button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  phx-value-id={line_item.id}
-                  phx-target={@myself}
+                  class="cart-icon-button"
+                  phx-click={remove_row("#{@id}-row-#{line_item.id}", line_item.id, @myself)}
                   aria-label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
@@ -124,6 +132,17 @@ defmodule EdenflowersWeb.LineItemsComponent do
       <% end %>
     </div>
     """
+  end
+
+  # JS.hide and JS.push fire in parallel, but the row reaches opacity-0 before
+  # the server's removal patch lands, so the DOM yank is invisible.
+  defp remove_row(row_id, line_item_id, target) do
+    JS.hide(
+      to: "##{row_id}",
+      transition: {"transition-opacity duration-200 ease-in", "opacity-100", "opacity-0"},
+      time: 200
+    )
+    |> JS.push("remove_item", value: %{id: line_item_id}, target: target)
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
