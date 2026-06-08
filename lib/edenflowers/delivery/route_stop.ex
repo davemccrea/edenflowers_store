@@ -22,7 +22,7 @@ defmodule Edenflowers.Delivery.RouteStop do
     define :record_failed, action: :record_failed
   end
 
-  @doc "Order ids already on a published route for the given day — the eligibility exclusion set."
+  @doc false
   def published_order_ids(date) do
     date
     |> list_for_date!(query: [select: [:order_id]], authorize?: false)

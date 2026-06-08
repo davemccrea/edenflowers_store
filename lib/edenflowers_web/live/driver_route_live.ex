@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.DriverRouteLive do
   use EdenflowersWeb, :live_view
 
+  alias Edenflowers.Format
   alias Edenflowers.Delivery.{Driver, Route, RouteStop}
 
   # Public, no-login page reached at /d/:token. The unguessable token is the only gate, so
@@ -168,7 +169,7 @@ defmodule EdenflowersWeb.DriverRouteLive do
         <span class="font-medium">{@stop.order_reference}</span>
       </span>
       <span class="text-base-content/65 whitespace-nowrap text-sm">
-        {format_distance(@stop.leg_distance_m)} · {format_duration(@stop.leg_duration_s)}
+        {Format.format_distance(@stop.leg_distance_m)} · {Format.format_duration(@stop.leg_duration_s)}
       </span>
     </div>
     """
@@ -384,22 +385,4 @@ defmodule EdenflowersWeb.DriverRouteLive do
     end
   end
 
-  defp format_distance(metres) do
-    distance = :erlang.float_to_binary(metres / 1000, decimals: 1)
-    ~t"#{distance} km"
-  end
-
-  defp format_duration(seconds) do
-    minutes = div(seconds, 60)
-
-    cond do
-      minutes >= 60 ->
-        hours = div(minutes, 60)
-        remaining_minutes = rem(minutes, 60)
-        ~t"#{hours} h #{remaining_minutes} min"
-
-      true ->
-        ~t"#{minutes} min"
-    end
-  end
 end

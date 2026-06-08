@@ -150,12 +150,16 @@ defmodule EdenflowersWeb.Layouts do
       |> String.capitalize()
 
     primary_nav = [
-      {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
-      {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
-      {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
-      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
-      {"/admin/deliveries", ~t"Deliveries", true, "hero-map"},
-      {"/admin/drivers", ~t"Drivers", true, "hero-truck"}
+      {"/admin", ~t"Dashboard", true, "hero-squares-2x2", []},
+      {"/admin/orders", ~t"Orders", true, "hero-shopping-bag", []},
+      {"/admin/expenses", ~t"Expenses", true, "hero-document-text", []},
+      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days", []},
+      {"/admin/deliveries", ~t"Deliveries", true, "hero-map",
+       [
+         {"/admin/deliveries", ~t"Overview"},
+         {"/admin/deliveries/plan", ~t"Plan dispatch"}
+       ]},
+      {"/admin/drivers", ~t"Drivers", true, "hero-truck", []}
     ]
 
     system_nav = [
@@ -266,15 +270,25 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3">
-        <.admin_nav_item
-          :for={{path, label, live?, icon} <- @primary_nav}
-          path={path}
-          label={label}
-          live?={live?}
-          icon={icon}
-          current_path={@current_path}
-          exact={path == "/admin"}
-        />
+        <div :for={{path, label, live?, icon, children} <- @primary_nav}>
+          <.admin_nav_item
+            :if={children == []}
+            path={path}
+            label={label}
+            live?={live?}
+            icon={icon}
+            current_path={@current_path}
+            exact={path == "/admin"}
+          />
+          <.admin_nav_group
+            :if={children != []}
+            path={path}
+            label={label}
+            icon={icon}
+            children={children}
+            current_path={@current_path}
+          />
+        </div>
       </nav>
 
       <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
@@ -322,6 +336,43 @@ defmodule EdenflowersWeb.Layouts do
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
       {@label}
     </.link>
+    """
+  end
+
+  attr :path, :string, required: true
+  attr :label, :string, required: true
+  attr :icon, :string, required: true
+  attr :children, :list, required: true
+  attr :current_path, :string, required: true
+
+  defp admin_nav_group(assigns) do
+    assigns = assign(assigns, :active, String.starts_with?(assigns.current_path, assigns.path))
+
+    ~H"""
+    <details open={@active} class="group">
+      <summary class={["flex cursor-pointer list-none items-center gap-3 rounded-r border-l-2 px-3 py-2 text-sm transition-colors", if(@active,
+    do: "border-primary text-base-content bg-base-300/50 font-medium",
+    else: "text-base-content/65 border-transparent hover:bg-base-300/40 hover:text-base-content")]}>
+        <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
+        <span class="flex-1">{@label}</span>
+        <.icon
+          name="hero-chevron-down"
+          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <div class="mt-0.5 space-y-0.5 pl-7">
+        <.link
+          :for={{path, label} <- @children}
+          navigate={path}
+          aria-current={@current_path == path && "page"}
+          class={["block rounded-r border-l-2 px-3 py-1.5 text-sm transition-colors", if(@current_path == path,
+    do: "border-primary text-base-content font-medium",
+    else: "text-base-content/60 border-transparent hover:text-base-content")]}
+        >
+          {label}
+        </.link>
+      </div>
+    </details>
     """
   end
 

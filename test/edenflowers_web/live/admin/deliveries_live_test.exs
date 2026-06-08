@@ -35,25 +35,25 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
   end
 
   test "shows the empty state when nothing is eligible today", %{conn: conn} do
-    {:ok, _view, html} = live(conn, ~p"/admin/deliveries")
-    assert html =~ "No deliveries to plan today"
+    {:ok, _view, html} = live(conn, ~p"/admin/deliveries/plan")
+    assert html =~ "No deliveries are waiting to be assigned"
   end
 
-  test "lists eligible orders without pre-selecting them", %{conn: conn} do
+  test "lists eligible orders pre-selected", %{conn: conn} do
     order = eligible_order(order_reference: "EF-100", recipient_name: "Recipient One")
 
-    {:ok, view, html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, html} = live(conn, ~p"/admin/deliveries/plan")
 
     assert html =~ "EF-100"
     assert html =~ "Recipient One"
-    refute has_element?(view, "input#order-#{order.id}[checked]")
+    assert has_element?(view, "input#order-#{order.id}[checked]")
   end
 
   test "pre-selects the only active driver", %{conn: conn} do
     eligible_order()
     driver = generate(driver(name: "Solo Driver"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     assert has_element?(view, "input#driver-#{driver.id}[checked]")
   end
@@ -63,21 +63,21 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     a = generate(driver(name: "Driver A"))
     b = generate(driver(name: "Driver B"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     refute has_element?(view, "input#driver-#{a.id}[checked]")
     refute has_element?(view, "input#driver-#{b.id}[checked]")
   end
 
-  test "toggling an order selects it", %{conn: conn} do
+  test "toggling an order excludes it", %{conn: conn} do
     order = eligible_order()
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-    refute has_element?(view, "input#order-#{order.id}[checked]")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
+    assert has_element?(view, "input#order-#{order.id}[checked]")
 
     view |> element("input#order-#{order.id}") |> render_click()
 
-    assert has_element?(view, "input#order-#{order.id}[checked]")
+    refute has_element?(view, "input#order-#{order.id}[checked]")
   end
 
   test "toggling a driver selects it", %{conn: conn} do
@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     a = generate(driver(name: "Driver A"))
     _b = generate(driver(name: "Driver B"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     refute has_element?(view, "input#driver-#{a.id}[checked]")
 
     view |> element("input#driver-#{a.id}") |> render_click()
@@ -93,16 +93,16 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     assert has_element?(view, "input#driver-#{a.id}[checked]")
   end
 
-  test "the optimize button is disabled when no orders are selected", %{conn: conn} do
+  test "the build routes button is disabled when no orders are selected", %{conn: conn} do
     order = eligible_order()
     generate(driver(name: "Solo Driver"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-    assert has_element?(view, "button[phx-click=optimize][disabled]")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
+    refute has_element?(view, "button[phx-click=optimize][disabled]")
 
     view |> element("input#order-#{order.id}") |> render_click()
 
-    refute has_element?(view, "button[phx-click=optimize][disabled]")
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
   end
 
   test "the optimize button is disabled when no drivers are selected", %{conn: conn} do
@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveTest do
     generate(driver(name: "Driver A"))
     generate(driver(name: "Driver B"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     assert has_element?(view, "button[phx-click=optimize][disabled]")
   end

@@ -12,6 +12,19 @@ give each driver a stable link to their stops, and watch deliveries get marked d
 real time. The florist can run this more than once a day in waves as orders become
 ready and drivers become available.
 
+## User-facing language
+
+- **Dispatch**: one explicit planning cycle in which the florist selects deliveries and
+  available drivers, reviews the optimized result, and publishes it.
+- **Route**: one driver's ordered collection of stops produced by a dispatch. A driver
+  can receive more than one route in a day and returns to the shop between routes.
+- **Wave** remains internal implementation language and is not shown in the UI.
+- **Run** and **trip** are avoided in the UI because they overlap with dispatch and route
+  without adding a distinct business concept.
+- `/admin/deliveries` is the operational overview for today's published routes.
+- `/admin/deliveries/plan` is the focused dispatch planner. Publishing returns the florist
+  to the overview.
+
 ## The core loop (happy path)
 
 1. In the morning the florist opens the deliveries page. Today's deliverable orders

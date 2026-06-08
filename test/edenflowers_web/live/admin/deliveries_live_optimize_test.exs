@@ -64,7 +64,6 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
   end
 
   defp optimize(view) do
-    view |> element("#toggle-all-orders") |> render_click()
     view |> element("button[phx-click=optimize]") |> render_click()
     render(view)
   end
@@ -75,22 +74,15 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     view |> element("button[phx-click=toggle_composer]") |> render_click()
   end
 
-  test "starts with no orders selected and can select all", %{conn: conn} do
+  test "starts with all orders selected and can exclude all", %{conn: conn} do
     first = eligible_order()
     second = eligible_order()
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-
-    refute has_element?(view, "input#order-#{first.id}[checked]")
-    refute has_element?(view, "input#order-#{second.id}[checked]")
-    assert has_element?(view, "button[phx-click=optimize][disabled]")
-
-    view |> element("#toggle-all-orders") |> render_click()
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     assert has_element?(view, "input#order-#{first.id}[checked]")
     assert has_element?(view, "input#order-#{second.id}[checked]")
-    assert has_element?(view, "#toggle-all-orders[checked]")
     refute has_element?(view, "button[phx-click=optimize][disabled]")
 
     view |> element("#toggle-all-orders") |> render_click()
@@ -98,6 +90,13 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     refute has_element?(view, "input#order-#{first.id}[checked]")
     refute has_element?(view, "input#order-#{second.id}[checked]")
     refute has_element?(view, "#toggle-all-orders[checked]")
+    assert has_element?(view, "button[phx-click=optimize][disabled]")
+
+    view |> element("#toggle-all-orders") |> render_click()
+
+    assert has_element?(view, "input#order-#{first.id}[checked]")
+    assert has_element?(view, "input#order-#{second.id}[checked]")
+    assert has_element?(view, "#toggle-all-orders[checked]")
   end
 
   test "optimizing renders the proposed routes via the fake", %{conn: conn} do
@@ -105,16 +104,32 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     eligible_order(order_reference: "EF-2", recipient_name: "Bob")
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     html = optimize(view)
 
-    assert html =~ "Proposed routes"
+    assert html =~ "Review routes"
     assert html =~ "Dana"
     assert html =~ "EF-1"
     assert html =~ "EF-2"
     assert html =~ "Alice"
     assert html =~ "4.0 km"
+  end
+
+  test "warns before navigating away from an optimized draft", %{conn: conn} do
+    eligible_order()
+    generate(driver(name: "Dana"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
+
+    assert has_element?(view, "#dispatch-draft-guard[data-active=false]")
+
+    optimize(view)
+
+    assert has_element?(
+             view,
+             "#dispatch-draft-guard[phx-hook=UnsavedChanges][data-active=true]"
+           )
   end
 
   test "lets the florist choose how the run is optimized", %{conn: conn} do
@@ -125,7 +140,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     eligible_order()
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     assert has_element?(view, "#optimization-strategy input[value=cheapest][checked]")
     assert has_element?(view, "#optimization-strategy", "Balanced")
@@ -140,7 +155,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     |> render_change(%{"optimization" => %{"strategy" => "balanced"}})
 
     assert has_element?(view, "#optimization-strategy input[value=balanced][checked]")
-    refute has_element?(view, "section", "Proposed routes")
+    refute has_element?(view, "section", "Review routes")
 
     view |> element("button[phx-click=optimize]") |> render_click()
     render(view)
@@ -164,7 +179,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     used = generate(driver(name: "Used Driver"))
     spare = generate(driver(name: "Spare Driver"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     view |> element("input#driver-#{used.id}") |> render_click()
     view |> element("input#driver-#{spare.id}") |> render_click()
 
@@ -180,7 +195,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     first = generate(driver(name: "Driver A"))
     second = generate(driver(name: "Driver B"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     view |> element("input#driver-#{first.id}") |> render_click()
     view |> element("input#driver-#{second.id}") |> render_click()
     optimize(view)
@@ -207,20 +222,20 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     eligible_order(order_reference: "EF-OTHER")
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
-    assert optimize(view) =~ "Proposed routes"
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
+    assert optimize(view) =~ "Review routes"
 
     expand_composer(view)
     view |> element("input#order-#{order.id}") |> render_click()
 
-    refute render(view) =~ "Proposed routes"
+    refute render(view) =~ "Review routes"
   end
 
   test "optimizing collapses the composer, and it can be reopened", %{conn: conn} do
     eligible_order()
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
     assert has_element?(view, "#composer-body")
 
     optimize(view)
@@ -235,13 +250,13 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     eligible_order()
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     html = optimize(view)
 
     assert html =~ "Some orders"
     assert html =~ "optimize again"
-    refute html =~ "Proposed routes"
+    refute html =~ "Review routes"
   end
 
   test "shows an error when the optimizer can't be reached", %{conn: conn} do
@@ -249,7 +264,7 @@ defmodule EdenflowersWeb.Admin.DeliveriesLiveOptimizeTest do
     eligible_order()
     generate(driver(name: "Dana"))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/deliveries")
+    {:ok, view, _html} = live(conn, ~p"/admin/deliveries/plan")
 
     html = optimize(view)
 
