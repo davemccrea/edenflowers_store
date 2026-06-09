@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert user.newsletter_opt_in == true
 
       assert_enqueued(
-        worker: Edenflowers.Workers.SendNewsletterPromoEmail,
+        worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail,
         args: %{"email" => "subscriber@example.com"}
       )
     end
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, user} = Edenflowers.Accounts.User.get_by_email("bystander@example.com", authorize?: false)
       assert user.newsletter_opt_in == false
 
-      refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
+      refute_enqueued(worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail)
     end
 
     # Reproduces the reported bug: a guest who opted in and advanced past step 1
@@ -331,7 +331,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       pickup_option =
-        Edenflowers.Store.FulfillmentOption.list!()
+        Edenflowers.Fulfillment.FulfillmentOption.list!()
         |> Enum.find(&(&1.fulfillment_method == :pickup))
 
       # User picks a date on the delivery calendar. The checkout LiveView

@@ -755,7 +755,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
   describe "Newsletter opt-in during checkout" do
     alias Edenflowers.Accounts.User
-    alias Edenflowers.Workers.SendNewsletterPromoEmail
+    alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
     test "checkbox checked subscribes the user, stamps the order, and enqueues the welcome email worker" do
       order = Order.create_for_checkout!(authorize?: false)

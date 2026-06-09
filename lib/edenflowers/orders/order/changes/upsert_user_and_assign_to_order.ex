@@ -24,7 +24,7 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
   import Edenflowers.Actors
 
   alias Edenflowers.Accounts.User
-  alias Edenflowers.Workers.SendNewsletterPromoEmail
+  alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
   @impl true
   def init(opts), do: {:ok, opts}

@@ -9,6 +9,10 @@ defmodule Edenflowers.Format do
   def currency(nil, locale), do: currency(0, locale)
   def currency(amount, locale), do: Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
 
+  def date(date, "en-GB" = locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "dd/MM/yyyy")
+  end
+
   def date(date, locale) do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end
