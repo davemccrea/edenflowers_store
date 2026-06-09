@@ -1,4 +1,4 @@
-defmodule Edenflowers.Services.CourseRegistration.Changes.SetUserFromActor do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.SetUserFromActor do
   use Ash.Resource.Change
 
   @impl true

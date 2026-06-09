@@ -1,6 +1,6 @@
-defmodule Edenflowers.Services.CourseRegistration do
+defmodule Edenflowers.Courses.CourseRegistration do
   use Ash.Resource,
-    domain: Edenflowers.Services,
+    domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -21,7 +21,7 @@ defmodule Edenflowers.Services.CourseRegistration do
     create :register do
       accept [:name, :email, :course_id]
       change set_attribute(:status, :pending)
-      change {Edenflowers.Services.CourseRegistration.Changes.SetUserFromActor, []}
+      change {Edenflowers.Courses.CourseRegistration.Changes.SetUserFromActor, []}
     end
 
     update :confirm_payment do
@@ -64,6 +64,6 @@ defmodule Edenflowers.Services.CourseRegistration do
       allow_nil? true
     end
 
-    belongs_to :course, Edenflowers.Services.Course
+    belongs_to :course, Edenflowers.Courses.Course
   end
 end

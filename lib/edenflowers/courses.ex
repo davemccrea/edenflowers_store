@@ -1,4 +1,4 @@
-defmodule Edenflowers.Services do
+defmodule Edenflowers.Courses do
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]
@@ -8,7 +8,7 @@ defmodule Edenflowers.Services do
   end
 
   resources do
-    resource Edenflowers.Services.Course
-    resource Edenflowers.Services.CourseRegistration
+    resource Edenflowers.Courses.Course
+    resource Edenflowers.Courses.CourseRegistration
   end
 end

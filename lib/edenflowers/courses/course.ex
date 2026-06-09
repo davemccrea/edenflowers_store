@@ -1,6 +1,6 @@
-defmodule Edenflowers.Services.Course do
+defmodule Edenflowers.Courses.Course do
   use Ash.Resource,
-    domain: Edenflowers.Services,
+    domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
@@ -81,7 +81,7 @@ defmodule Edenflowers.Services.Course do
   end
 
   relationships do
-    has_many :course_registrations, Edenflowers.Services.CourseRegistration
+    has_many :course_registrations, Edenflowers.Courses.CourseRegistration
   end
 
   aggregates do

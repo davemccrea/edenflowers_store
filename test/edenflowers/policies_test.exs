@@ -6,7 +6,7 @@ defmodule Edenflowers.PoliciesTest do
   use Edenflowers.DataCase
   import Generator
 
-  alias Edenflowers.Services.Course
+  alias Edenflowers.Courses.Course
 
   alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
   alias Edenflowers.Orders.{LineItem, Order}
