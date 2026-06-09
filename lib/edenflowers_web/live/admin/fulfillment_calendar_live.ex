@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   disable them. Scoped to a single fulfillment option or to all options at
   once (with a `:mixed` indicator when options disagree).
 
-  Click semantics live in `Edenflowers.Store.FulfillmentCalendar`. Admin
+  Click semantics live in `Edenflowers.Fulfillment.FulfillmentCalendar`. Admin
   presentation lives in `EdenflowersWeb.Admin.CalendarComponent`. This
   LiveView only orchestrates state and persistence.
   """
@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
 
-  alias Edenflowers.Store.{FulfillmentCalendar, FulfillmentOption}
+  alias Edenflowers.Fulfillment.{FulfillmentCalendar, FulfillmentOption}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 

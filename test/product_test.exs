@@ -1,8 +1,8 @@
-defmodule Edenflowers.Store.ProductTest do
+defmodule Edenflowers.Catalog.ProductTest do
   use Edenflowers.DataCase
   import Generator
 
-  alias Edenflowers.Store.Product
+  alias Edenflowers.Catalog.Product
 
   setup do
     tax_rate = generate(tax_rate())

@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.CheckoutAddressLiveTest do
   import Generator
   import Mox
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   setup :verify_on_exit!
 

@@ -184,7 +184,7 @@ defmodule Edenflowers.Accounts.User do
   end
 
   relationships do
-    belongs_to :newsletter_promo, Edenflowers.Store.Promotion
+    belongs_to :newsletter_promo, Edenflowers.Pricing.Promotion
   end
 
   calculations do

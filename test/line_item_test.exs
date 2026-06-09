@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.LineItemTest do
+defmodule Edenflowers.Orders.LineItemTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.{Order, LineItem}
+  alias Edenflowers.Orders.{Order, LineItem}
 
   setup do
     order = generate(order())

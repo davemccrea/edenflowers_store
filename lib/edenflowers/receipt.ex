@@ -8,7 +8,7 @@ defmodule Edenflowers.Receipt do
   """
 
   alias Edenflowers.Format
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   @typst_bin "typst"
 

@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.PromoCodeComponent do
   """
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   def update(%{order: order} = assigns, socket) do
     socket =

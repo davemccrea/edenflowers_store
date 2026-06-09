@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
 
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Store.FulfillmentCalendar
+  alias Edenflowers.Fulfillment.FulfillmentCalendar
 
   # Shared "options disagree" tile — diagonal stripes via the calendar-mixed
   # @utility in app.css. Used by cells, the weekday header, and the legend.

@@ -8,16 +8,10 @@ defmodule Edenflowers.PoliciesTest do
 
   alias Edenflowers.Services.Course
 
-  alias Edenflowers.Store.{
-    FulfillmentOption,
-    LineItem,
-    Order,
-    Product,
-    ProductCategory,
-    ProductVariant,
-    Promotion,
-    TaxRate
-  }
+  alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
+  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Fulfillment.{FulfillmentOption}
+  alias Edenflowers.Pricing.{Promotion, TaxRate}
 
   describe "Promotion mutations require admin or system actor" do
     setup do

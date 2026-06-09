@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Weekday
 
   setup %{conn: conn} do

@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
   import Mox
   import ExUnit.CaptureLog
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   setup :verify_on_exit!
 
@@ -149,7 +149,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
       pickup_option =
-        Edenflowers.Store.FulfillmentOption.list!()
+        Edenflowers.Fulfillment.FulfillmentOption.list!()
         |> Enum.find(&(&1.fulfillment_method == :pickup))
 
       assert html =~ ~s(value="#{delivery_option.id}" checked)
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       delivery_option: delivery_option
     } do
       pickup_option =
-        Edenflowers.Store.FulfillmentOption.list!()
+        Edenflowers.Fulfillment.FulfillmentOption.list!()
         |> Enum.find(&(&1.fulfillment_method == :pickup))
 
       Order.update_fulfillment_option!(step_3_order, pickup_option.id, actor: nil)
@@ -218,7 +218,7 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
     test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
-      options = Edenflowers.Store.FulfillmentOption.list!()
+      options = Edenflowers.Fulfillment.FulfillmentOption.list!()
       delivery_id = Enum.find(options, &(&1.fulfillment_method == :delivery)).id
       pickup_id = Enum.find(options, &(&1.fulfillment_method == :pickup)).id
 

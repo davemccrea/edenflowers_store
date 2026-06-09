@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.FulfillmentOptionTest do
+defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Fulfillment.FulfillmentOption
 
   setup do
     tax_rate = generate(tax_rate())

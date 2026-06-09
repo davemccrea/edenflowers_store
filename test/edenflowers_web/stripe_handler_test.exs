@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   setup do
     Edenflowers.Repo.delete_all(Oban.Job)

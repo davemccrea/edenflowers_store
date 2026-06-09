@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.OrderTest do
+defmodule Edenflowers.Orders.OrderTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   describe "Store Resource" do
     test "creates an order for checkout" do
@@ -995,7 +995,7 @@ defmodule Edenflowers.Store.OrderTest do
       closed_date = Date.add(Date.utc_today(), 3)
 
       {:ok, _} =
-        Edenflowers.Store.FulfillmentOption.update_calendar(
+        Edenflowers.Fulfillment.FulfillmentOption.update_calendar(
           pickup_option,
           %{disabled_dates: [closed_date]},
           authorize?: false

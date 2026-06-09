@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Hooks.PutOrder do
   use Phoenix.Component
   require Logger
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   def on_mount(:default, _params, %{"order_id" => order_id} = _session, socket) do
     locale = Localize.get_locale().cldr_locale_id |> to_string()

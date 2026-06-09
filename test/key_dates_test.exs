@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.KeyDatesTest do
+defmodule Edenflowers.Fulfillment.KeyDatesTest do
   use ExUnit.Case, async: true
 
-  alias Edenflowers.Store.KeyDates
+  alias Edenflowers.Fulfillment.KeyDates
 
   describe "for_year/1" do
     test "materialises the four known key dates for 2026" do

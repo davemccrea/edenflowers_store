@@ -1,5 +1,5 @@
-defmodule Edenflowers.Store.PromotionTest do
-  alias Edenflowers.Store.Promotion
+defmodule Edenflowers.Pricing.PromotionTest do
+  alias Edenflowers.Pricing.Promotion
   use Edenflowers.DataCase
 
   describe "Promotion Resource" do
@@ -175,7 +175,7 @@ defmodule Edenflowers.Store.PromotionTest do
     end
 
     test "increments usage when order is finalized with promotion" do
-      alias Edenflowers.Store.Order
+      alias Edenflowers.Orders.Order
 
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
@@ -290,7 +290,7 @@ defmodule Edenflowers.Store.PromotionTest do
     end
 
     test "prevents applying promotion to order when usage limit reached" do
-      alias Edenflowers.Store.Order
+      alias Edenflowers.Orders.Order
 
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))

@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.CheckoutHappyPathTest do
   import Swoosh.TestAssertions
   import ExUnit.CaptureLog
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   @moduletag :typst
 

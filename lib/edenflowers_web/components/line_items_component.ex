@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.LineItemsComponent do
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   attr :id, :string, required: true
   attr :order, :any, required: true

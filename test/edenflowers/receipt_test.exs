@@ -3,7 +3,7 @@ defmodule Edenflowers.ReceiptTest do
   use ExUnit.Case, async: true
 
   alias Edenflowers.Receipt
-  alias Edenflowers.Store.{LineItem, Order}
+  alias Edenflowers.Orders.{LineItem, Order}
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
   @sample_dir Path.join([:code.priv_dir(:edenflowers), "receipts", "sample"])

@@ -4,8 +4,8 @@ defmodule EdenflowersWeb.StripeHandler do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Store.Order
-  alias Edenflowers.Workers.SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
 
   @impl true
   def handle_event(%Stripe.Event{type: "charge.succeeded"} = _event) do

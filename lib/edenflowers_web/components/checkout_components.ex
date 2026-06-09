@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.CheckoutComponents do
   use EdenflowersWeb, :html
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   @checkout_states Order.checkout_states()
 

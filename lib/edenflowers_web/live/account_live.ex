@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.AccountLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_required}
 

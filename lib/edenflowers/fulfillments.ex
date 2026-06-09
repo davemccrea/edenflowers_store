@@ -1,5 +1,5 @@
 defmodule Edenflowers.Fulfillments do
-  alias Edenflowers.Store.FulfillmentOption
+  alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Weekday
   import Decimal, only: [is_decimal: 1]
 

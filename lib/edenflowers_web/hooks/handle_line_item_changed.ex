@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   use Phoenix.Component
   import Phoenix.LiveView
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders.Order
 
   def on_mount(:default, _params, _session, socket) do
     if connected?(socket) && socket.view != EdenflowersWeb.CheckoutLive do

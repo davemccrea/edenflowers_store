@@ -1,7 +1,7 @@
-defmodule Edenflowers.Store.FulfillmentCalendarTest do
+defmodule Edenflowers.Fulfillment.FulfillmentCalendarTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Store.FulfillmentCalendar
+  alias Edenflowers.Fulfillment.FulfillmentCalendar
   alias Edenflowers.Weekday
 
   setup do
