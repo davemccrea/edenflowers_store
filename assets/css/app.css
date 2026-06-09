@@ -382,7 +382,6 @@ body.ready {
    Each entry is a serif word anchored by an eyebrow numeral. Description
    shows on the active entry and on hover/focus of inactive ones. No
    transitions: state changes snap, by design. */
-/* Active entry: honey underline. */
 .category-index__item[data-active="true"] .category-index__name {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);

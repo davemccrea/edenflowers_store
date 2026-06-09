@@ -31,14 +31,9 @@ defmodule EdenflowersWeb.Router do
     plug :set_actor, :user
   end
 
-  # ============================================================================
-  # Public Routes
-  # ============================================================================
-
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    # -- Live Routes (shared session) -------------------------------------------
     ash_authentication_live_session :public,
       on_mount: [
         EdenflowersWeb.Hooks.PutLocale,
@@ -46,7 +41,6 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
-      # Marketing
       scope "/", Marketing do
         live "/", HomeLive
         live "/maternity", MaternityLive
@@ -58,30 +52,25 @@ defmodule EdenflowersWeb.Router do
         live "/faq", FaqLive
       end
 
-      # Store
       scope "/", Store do
         live "/store", StoreLive
         live "/store/:category", StoreLive
         live "/product/:id", ProductLive
       end
 
-      # Checkout
       scope "/", Checkout do
         live "/checkout", CheckoutLive
         live "/order/:id", OrderLive
       end
 
-      # Account
       scope "/", Account do
         live "/account", AccountLive
       end
     end
 
-    # -- Controller Routes -------------------------------------------------------
     get "/checkout/complete/:id", CheckoutCompleteController, :index
     get "/locale/:locale", LocaleController, :index
 
-    # -- Auth Routes ------------------------------------------------------------
     auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
     sign_out_route AuthController
 
@@ -95,10 +84,6 @@ defmodule EdenflowersWeb.Router do
       ]
     )
   end
-
-  # ============================================================================
-  # Admin Routes
-  # ============================================================================
 
   scope "/admin", EdenflowersWeb do
     pipe_through :browser
@@ -115,10 +100,6 @@ defmodule EdenflowersWeb.Router do
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
     ash_admin("/", AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}]))
   end
-
-  # ============================================================================
-  # Dev Routes
-  # ============================================================================
 
   if Application.compile_env(:edenflowers, :dev_routes) do
     import Phoenix.LiveDashboard.Router
