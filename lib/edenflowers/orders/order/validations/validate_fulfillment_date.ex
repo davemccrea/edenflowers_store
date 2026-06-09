@@ -2,7 +2,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateFulfillmentDate do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @impl true

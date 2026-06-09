@@ -23,9 +23,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentCalendar do
   no override is stored once a date matches its weekday default.
   """
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
   alias Edenflowers.Fulfillment.{FulfillmentOption, KeyDates}
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment.Weekday
 
   @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 

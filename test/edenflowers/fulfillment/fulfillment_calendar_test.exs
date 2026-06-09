@@ -2,7 +2,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentCalendarTest do
   use Edenflowers.DataCase
   import Generator
   alias Edenflowers.Fulfillment.FulfillmentCalendar
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment.Weekday
 
   setup do
     tax_rate = generate(tax_rate())

@@ -1,4 +1,4 @@
-defmodule Edenflowers.Weekday do
+defmodule Edenflowers.Fulfillment.Weekday do
   @moduledoc """
   Maps `Date.day_of_week/1` integers to atoms used by `FulfillmentOption.available_days`.
   """

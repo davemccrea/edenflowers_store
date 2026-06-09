@@ -1,7 +1,7 @@
 defmodule Edenflowers.Orders.Order.Validations.ValidateDeliveryAddress do
   use Ash.Resource.Validation
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
 
   @impl true
   def validate(changeset, _opts, _context) do

@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
-  alias Edenflowers.Receipt
+  alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Order
 
   def enqueue(%{"order_id" => order_id} = args) do

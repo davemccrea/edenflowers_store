@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
   require Logger
   import EdenflowersWeb.CoreComponents
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
 
   @impl true
   def mount(socket) do

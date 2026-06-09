@@ -8,7 +8,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @impl true

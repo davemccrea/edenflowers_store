@@ -58,14 +58,14 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   Key dates falling on `weekday` for the current and following year. The
   two-year lookahead matches the calendar's visible horizon.
   """
-  @spec dates_for_weekday(Edenflowers.Weekday.t()) :: [Date.t()]
+  @spec dates_for_weekday(Edenflowers.Fulfillment.Weekday.t()) :: [Date.t()]
   def dates_for_weekday(weekday) do
     year = Date.utc_today().year
 
     [year, year + 1]
     |> Enum.flat_map(&for_year/1)
     |> Enum.map(& &1.date)
-    |> Enum.filter(&(Edenflowers.Weekday.from_date(&1) == weekday))
+    |> Enum.filter(&(Edenflowers.Fulfillment.Weekday.from_date(&1) == weekday))
   end
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)

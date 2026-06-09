@@ -1,4 +1,4 @@
-defmodule Edenflowers.Receipt do
+defmodule Edenflowers.Orders.Receipt do
   @moduledoc """
   Renders the order-receipt PDF by shelling out to the Typst CLI.
 

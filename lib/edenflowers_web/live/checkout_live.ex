@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.CheckoutLive do
   alias Edenflowers.Catalog.{ProductVariant, ProductVariantSize}
   alias Edenflowers.Orders.{Order}
   alias Edenflowers.Fulfillment.{FulfillmentOption}
-  alias Edenflowers.Fulfillments
+  alias Edenflowers.Fulfillment.Fulfillments
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 

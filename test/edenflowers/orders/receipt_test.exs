@@ -1,8 +1,8 @@
-defmodule Edenflowers.ReceiptTest do
+defmodule Edenflowers.Orders.ReceiptTest do
   # build_payload/1 is pure — no DB needed.
   use ExUnit.Case, async: true
 
-  alias Edenflowers.Receipt
+  alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.{LineItem, Order}
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.

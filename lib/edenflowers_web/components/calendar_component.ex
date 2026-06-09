@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   use EdenflowersWeb, :live_component
   require Logger
 
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment.Weekday
   alias EdenflowersWeb.CalendarComponent.Keymap
 
   @week_begins :default

@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Fulfillment.FulfillmentOption
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment.Weekday
 
   setup %{conn: conn} do
     tax_rate = generate(tax_rate())

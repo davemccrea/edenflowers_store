@@ -1,6 +1,6 @@
-defmodule Edenflowers.Fulfillments do
+defmodule Edenflowers.Fulfillment.Fulfillments do
   alias Edenflowers.Fulfillment.FulfillmentOption
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment.Weekday
   import Decimal, only: [is_decimal: 1]
 
   defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
