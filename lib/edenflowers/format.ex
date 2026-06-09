@@ -1,13 +1,13 @@
-defmodule Edenflowers.Localize.Format do
+defmodule Edenflowers.Format do
   @moduledoc """
   Locale-aware formatting helpers shared between the order-confirmation
   email body and the PDF receipt payload. All functions return strings
   formatted via CLDR for the supplied locale.
   """
 
-  def currency(amount, locale) do
-    Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
-  end
+  def currency(amount, locale \\ Edenflowers.Locales.default())
+  def currency(nil, locale), do: currency(0, locale)
+  def currency(amount, locale), do: Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
 
   def date(date, locale) do
     Localize.Date.to_string!(date, locale: locale, format: :short)

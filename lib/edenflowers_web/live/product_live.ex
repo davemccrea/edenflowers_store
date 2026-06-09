@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.ProductLive do
                 {@product.name}
               </h1>
               <p data-testid="product-price" class="font-serif text-base-content text-2xl">
-                {Edenflowers.Utils.format_money(@selected_variant.price)}
+                {Edenflowers.Format.currency(@selected_variant.price)}
               </p>
             </header>
 
@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.ProductLive do
                       {String.capitalize(to_string(variant.size))}
                     </span>
                     <span class="size-option__price text-base-content/75 ml-2 text-sm">
-                      {Edenflowers.Utils.format_money(variant.price)}
+                      {Edenflowers.Format.currency(variant.price)}
                     </span>
                   </label>
                 </div>

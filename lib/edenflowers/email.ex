@@ -7,7 +7,7 @@ defmodule Edenflowers.Email do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Email.Templates
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
 

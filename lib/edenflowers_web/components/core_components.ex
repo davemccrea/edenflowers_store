@@ -935,7 +935,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
             {~t"From"}
           </span>
-          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+          {Edenflowers.Format.currency(@product.cheapest_price)}
         </p>
       </div>
     </.link>

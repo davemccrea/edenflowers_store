@@ -2,8 +2,6 @@ defmodule Edenflowers.Store.Order.Validations.ValidateMinimumCartTotal do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Utils
-
   @impl true
   def validate(changeset, _opts, _context) do
     promotion_id = Ash.Changeset.get_argument_or_attribute(changeset, :promotion_id)
@@ -26,7 +24,7 @@ defmodule Edenflowers.Store.Order.Validations.ValidateMinimumCartTotal do
       else
         {:error,
          field: :promotion_id,
-         message: ~t"Cart total must be at least #{Utils.format_money(minimum_required)} to use this promotion"}
+         message: ~t"Cart total must be at least #{Edenflowers.Format.currency(minimum_required)} to use this promotion"}
       end
     else
       {:error, _} ->
