@@ -39,15 +39,15 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       client_secret: "pi_test_secret_#{:rand.uniform(1_000_000)}"
     }
 
-    stub(Edenflowers.StripeAPI.Mock, :create_payment_intent, fn _order ->
+    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _order ->
       {:ok, mock_payment_intent}
     end)
 
-    stub(Edenflowers.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+    stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
       {:ok, mock_payment_intent}
     end)
 
-    stub(Edenflowers.StripeAPI.Mock, :update_payment_intent, fn _order ->
+    stub(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn _order ->
       {:ok, mock_payment_intent}
     end)
 
@@ -185,11 +185,11 @@ defmodule EdenflowersWeb.CheckoutLiveTest do
       step_3_order: step_3_order,
       delivery_option: delivery_option
     } do
-      stub(Edenflowers.HereAPI.Mock, :get_address, fn _query ->
+      stub(Edenflowers.External.HereAPI.Mock, :get_address, fn _query ->
         {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
       end)
 
-      stub(Edenflowers.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+      stub(Edenflowers.External.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 

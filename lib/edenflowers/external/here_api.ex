@@ -1,11 +1,11 @@
-defmodule Edenflowers.HereAPI.Behaviour do
+defmodule Edenflowers.External.HereAPI.Behaviour do
   @callback get_address(query :: String.t()) ::
               {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
   @callback get_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
 end
 
-defmodule Edenflowers.HereAPI do
-  @behaviour Edenflowers.HereAPI.Behaviour
+defmodule Edenflowers.External.HereAPI do
+  @behaviour Edenflowers.External.HereAPI.Behaviour
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

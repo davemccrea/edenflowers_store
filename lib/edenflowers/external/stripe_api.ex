@@ -1,4 +1,4 @@
-defmodule Edenflowers.StripeAPI.Behaviour do
+defmodule Edenflowers.External.StripeAPI.Behaviour do
   @moduledoc """
   Behaviour for Stripe API interactions.
   This allows us to mock Stripe API calls in tests.
@@ -10,12 +10,12 @@ defmodule Edenflowers.StripeAPI.Behaviour do
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
 end
 
-defmodule Edenflowers.StripeAPI do
+defmodule Edenflowers.External.StripeAPI do
   @moduledoc """
   Real implementation of Stripe API interactions.
   """
 
-  @behaviour Edenflowers.StripeAPI.Behaviour
+  @behaviour Edenflowers.External.StripeAPI.Behaviour
 
   @impl true
   def create_payment_intent(%{grand_total: grand_total, id: id}) do

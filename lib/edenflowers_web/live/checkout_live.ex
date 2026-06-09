@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.CheckoutLive do
 
   @checkout_states Order.checkout_states()
 
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.StripeAPI)
+  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.External.StripeAPI)
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
 
   defp submit_action_for(:contact_details), do: :submit_contact_details

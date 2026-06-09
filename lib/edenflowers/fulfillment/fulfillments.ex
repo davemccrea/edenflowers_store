@@ -3,7 +3,7 @@ defmodule Edenflowers.Fulfillment.Fulfillments do
   alias Edenflowers.Fulfillment.Weekday
   import Decimal, only: [is_decimal: 1]
 
-  defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.HereAPI)
+  defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.External.HereAPI)
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

@@ -1,6 +1,6 @@
 # Define the mock module for StripeAPI
-Mox.defmock(Edenflowers.StripeAPI.Mock, for: Edenflowers.StripeAPI.Behaviour)
-Mox.defmock(Edenflowers.HereAPI.Mock, for: Edenflowers.HereAPI.Behaviour)
+Mox.defmock(Edenflowers.External.StripeAPI.Mock, for: Edenflowers.External.StripeAPI.Behaviour)
+Mox.defmock(Edenflowers.External.HereAPI.Mock, for: Edenflowers.External.HereAPI.Behaviour)
 
 # Skip Typst-dependent smoke tests when the binary isn't on PATH (devs
 # without it locally). CI installs Typst, so the tag stays included there.
