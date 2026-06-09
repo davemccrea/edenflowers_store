@@ -424,7 +424,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
@@ -465,7 +464,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # Helper used by inputs to generate form errors
   def error(assigns) do
     ~H"""
     <p class="text-error mt-1.5 flex items-center gap-2 text-sm">
@@ -909,6 +907,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
   attr :navigate, :string, required: true
+  attr :locale, :string, required: true
   attr :from_price?, :boolean, default: true
   attr :class, :any, default: nil
 
@@ -935,7 +934,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
             {~t"From"}
           </span>
-          {Edenflowers.Format.currency(@product.cheapest_price)}
+          {Edenflowers.Format.currency(@product.cheapest_price, @locale)}
         </p>
       </div>
     </.link>

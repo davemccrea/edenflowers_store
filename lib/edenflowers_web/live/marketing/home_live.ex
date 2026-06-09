@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   aria-roledescription="slide"
                   aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <.product_card product={product} navigate={~p"/product/#{product}"} />
+                  <.product_card product={product} navigate={~p"/product/#{product}"} locale={Localize.get_locale().cldr_locale_id |> to_string()} />
                 </li>
               </ul>
             </div>
@@ -122,7 +122,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <%!-- Pull quote --%>
       <section class="bg-forest not-last:border-b">
         <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
@@ -138,7 +137,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <%!-- Other services --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
           <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
@@ -162,7 +160,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <%!-- Client logos --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
           <p class="eyebrow text-base-content/50 mb-12 text-center">{~t"In good company"}</p>

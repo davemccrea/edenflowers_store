@@ -59,10 +59,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # ======
-  # Markup
-  # ======
-
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -240,7 +236,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
 
                     <.form_button disabled={true} id="payment-button">
-                      {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total)}
+                      {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                     </.form_button>
                   </form>
 
@@ -277,7 +273,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       <% Decimal.eq?(@order.fulfillment_fee, 0) -> %>
                         <span>{~t"Free"}</span>
                       <% true -> %>
-                        <span class="tabular-nums">{Edenflowers.Format.currency(@order.fulfillment_fee)}</span>
+                        <span class="tabular-nums">{Edenflowers.Format.currency(@order.fulfillment_fee, @order.locale)}</span>
                     <% end %>
                   </div>
 
@@ -288,7 +284,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <span>{~t"Discount"}</span>
                     <span class="text-success tabular-nums" data-testid="discount-amount">
-                      - {Edenflowers.Format.currency(@order.discount)}
+                      - {Edenflowers.Format.currency(@order.discount, @order.locale)}
                     </span>
                   </div>
 
@@ -298,13 +294,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     data-testid="vat-line"
                   >
                     <span>{~t"Incl. VAT"}</span>
-                    <span class="tabular-nums">{Edenflowers.Format.currency(@order.tax)}</span>
+                    <span class="tabular-nums">{Edenflowers.Format.currency(@order.tax, @order.locale)}</span>
                   </div>
 
                   <div class="mt-3 flex items-baseline justify-between font-semibold" data-testid="order-total">
                     <span>{~t"Total"}</span>
                     <span class="tabular-nums" data-testid="total-amount">
-                      {Edenflowers.Format.currency(@order.grand_total)}
+                      {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                     </span>
                   </div>
                 </div>
@@ -314,7 +310,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </div>
       </.container>
 
-      <.card_drawer variants={@card_variants} />
+      <.card_drawer variants={@card_variants} locale={@order.locale} />
     </Layouts.app>
     """
   end
@@ -444,6 +440,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   attr :variants, :list, required: true
+  attr :locale, :string, required: true
 
   defp card_drawer(assigns) do
     ~H"""
@@ -491,7 +488,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               />
               <span class="text-sm">{variant.product.name}</span>
               <span class="text-base-content/60 text-xs">
-                {Edenflowers.Format.currency(variant.price)}
+                {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
             </button>
           </div>
@@ -506,12 +503,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp size_label(:large), do: gettext("Large")
   defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
   defp size_label(_), do: ""
-
-  # ==============
-  # Event Handlers
-  # ==============
-
-  # Form validation & submission
 
   def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
@@ -565,7 +556,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # Step navigation
   def handle_event("edit_step", %{"state" => "contact_details"}, socket) do
     Order.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
@@ -596,7 +586,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, reload_order(socket)}
   end
 
-  # Card selection
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
     order = Order.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
@@ -608,7 +597,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign_forms(socket, order, drop: ["card_message"])}
   end
 
-  # Stripe events
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("#{message}: #{inspect(details)}")
 
@@ -619,10 +607,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        ~t"Payment is temporarily unavailable. Please refresh the page and try again."
      )}
   end
-
-  # ===========
-  # Info Events
-  # ===========
 
   # No PaymentIntent sync here: the `pay` handler updates the amount
   # synchronously before pushing `stripe:process_payment`, so Stripe always
@@ -640,10 +624,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
-
-  # =======
-  # General
-  # =======
 
   defp handle_mount_error(socket, log_message, flash_message) do
     Logger.error(log_message)
@@ -671,10 +651,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp actor(socket), do: socket.assigns[:current_user]
-
-  # =====
-  # Forms
-  # =====
 
   defp make_form(order, action, params) do
     order
@@ -747,10 +723,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # =====
-  # Order
-  # =====
-
   defp reload_order(socket, opts \\ []) do
     order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
@@ -774,10 +746,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp cart_has_items?(_order), do: :ok
 
-  # ===========
-  # DOM helpers
-  # ===========
-
   defp section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state}"
   end
@@ -788,10 +756,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp scroll_to_state(socket, state) do
     push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
   end
-
-  # ======
-  # Stripe
-  # ======
 
   # We only touch Stripe once the customer is on the payment state. Earlier
   # mounts (or mounts where the LiveView reconnects on a non-payment state)

@@ -123,7 +123,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     case FulfillmentCalendar.week_toggle_direction(targets, week, today) do
       nil ->
-        # Whole week is in the past — nothing to do.
         {:noreply, socket}
 
       direction ->

@@ -239,8 +239,6 @@ defmodule EdenflowersWeb.CalendarComponent do
     """
   end
 
-  # Event Handlers
-
   def handle_event("current-month", _, socket) do
     {:noreply, update_calendar_view(socket, socket.assigns.today_date)}
   end
@@ -295,8 +293,6 @@ defmodule EdenflowersWeb.CalendarComponent do
     Logger.error("Client error for #{socket.assigns.id} component: #{message}")
     {:noreply, socket}
   end
-
-  # Helper Functions
 
   defp parse_week(week_string) do
     week_string

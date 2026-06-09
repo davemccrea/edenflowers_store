@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
               role="list"
             >
               <li :for={product <- @products}>
-                <.product_card product={product} navigate={~p"/product/#{product}"} />
+                <.product_card product={product} navigate={~p"/product/#{product}"} locale={Localize.get_locale().cldr_locale_id |> to_string()} />
               </li>
             </ul>
           <% end %>

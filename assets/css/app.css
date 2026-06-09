@@ -389,7 +389,6 @@ body.ready {
   text-underline-offset: 0.3em;
 }
 
-/* Inactive entries: same underline appears on hover/focus. */
 .category-index__item:not([data-active="true"])
   .category-index__link:hover
   .category-index__name,
@@ -402,7 +401,6 @@ body.ready {
   text-underline-offset: 0.3em;
 }
 
-/* Keyboard focus ring around the whole link. */
 .category-index__link:focus-visible {
   outline: 2px solid var(--color-link-underline);
   outline-offset: 0.5rem;

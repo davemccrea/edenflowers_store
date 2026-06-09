@@ -10,7 +10,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <%!-- Hero --%>
       <section class="relative not-last:border-b">
         <.image
           src="local:///image_4.jpg"
@@ -29,11 +28,9 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
         </div>
       </section>
 
-      <%!-- Main content --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
           <div class="flex flex-col items-center gap-12 md:flex-row md:items-start md:gap-16 lg:gap-24">
-            <%!-- Circular portrait --%>
             <div class="flex-shrink-0">
               <div class="h-56 w-56 overflow-hidden rounded-full sm:h-64 sm:w-64 md:h-72 md:w-72">
                 <.image
@@ -47,7 +44,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
               </div>
             </div>
 
-            <%!-- Text --%>
             <div class="text-base-content flex max-w-2xl flex-col gap-6">
               <h2 class="section-title sm:text-4xl">{~t"Hello, I'm Jennie"}</h2>
               <p class="text-base-content/80 text-lg leading-relaxed">
@@ -61,7 +57,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
         </div>
       </section>
 
-      <%!-- Full-bleed image --%>
       <section class="not-last:border-b">
         <.image
           src="local:///image_5.jpg"
@@ -72,7 +67,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
         />
       </section>
 
-      <%!-- Second text block --%>
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
           <div class="text-base-content mx-auto flex max-w-2xl flex-col gap-6">

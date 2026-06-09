@@ -42,12 +42,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <%!-- Magazine spread: photograph left, buy column right (with the
-             description living inside it between price and size). On mobile
-             the grid collapses to image-first, then the buy column. --%>
         <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
-          <%!-- Photograph: capped at 480px wide on desktop so it sits at
-               a calmer scale; aspect 4:5 matches the mobile grid card. --%>
           <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
             <.image
               data-testid="product-image"
@@ -76,7 +71,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 {@product.name}
               </h1>
               <p data-testid="product-price" class="font-serif text-base-content text-2xl">
-                {Edenflowers.Format.currency(@selected_variant.price)}
+                {Edenflowers.Format.currency(@selected_variant.price, Localize.get_locale().cldr_locale_id |> to_string())}
               </p>
             </header>
 
@@ -112,7 +107,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       {String.capitalize(to_string(variant.size))}
                     </span>
                     <span class="size-option__price text-base-content/75 ml-2 text-sm">
-                      {Edenflowers.Format.currency(variant.price)}
+                      {Edenflowers.Format.currency(variant.price, Localize.get_locale().cldr_locale_id |> to_string())}
                     </span>
                   </label>
                 </div>

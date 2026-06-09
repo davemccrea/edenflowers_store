@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         data-testid="address-distance"
         class="mt-1.5 text-sm"
       >
-        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_fee)}
+        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_fee, @order)}
       </p>
     </div>
     """
@@ -181,9 +181,9 @@ defmodule EdenflowersWeb.AddressInputComponent do
     if km < 1, do: "#{meters} m", else: "#{:erlang.float_to_binary(km, decimals: 1)} km"
   end
 
-  defp format_delivery_amount(nil), do: ""
+  defp format_delivery_amount(nil, _order), do: ""
 
-  defp format_delivery_amount(amount) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Format.currency(amount)
+  defp format_delivery_amount(amount, order) do
+    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Format.currency(amount, order.locale)
   end
 end

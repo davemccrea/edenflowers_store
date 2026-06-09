@@ -1,4 +1,3 @@
-# Define the mock module for StripeAPI
 Mox.defmock(Edenflowers.External.StripeAPI.Mock, for: Edenflowers.External.StripeAPI.Behaviour)
 Mox.defmock(Edenflowers.External.HereAPI.Mock, for: Edenflowers.External.HereAPI.Behaviour)
 Mox.defmock(Edenflowers.Papra.Mock, for: Edenflowers.Papra.Behaviour)

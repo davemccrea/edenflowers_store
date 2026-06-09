@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.LineItemsComponent do
                     {String.capitalize(to_string(line_item.variant_size))}
                   </span>
                 </div>
-                <span class="shrink-0 tabular-nums">{Edenflowers.Format.currency(line_item.subtotal)}</span>
+                <span class="shrink-0 tabular-nums">{Edenflowers.Format.currency(line_item.subtotal, @order.locale)}</span>
               </div>
 
               <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-3">
