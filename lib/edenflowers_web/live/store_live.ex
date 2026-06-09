@@ -53,8 +53,8 @@ defmodule EdenflowersWeb.StoreLive do
         <p class="eyebrow text-base-content/60 mb-5">{~t"The Store"}</p>
         <h1 :if={@selected_category} class="page-title mb-12 md:mb-16">{@selected_category.name}</h1>
 
-        <nav aria-label={~t"Categories"} class="category-index mb-20 md:mb-28">
-          <ol class="category-index__list">
+        <nav aria-label={~t"Categories"} class="mb-20 md:mb-28">
+          <ol class="grid grid-cols-1 gap-6 list-none p-0 m-0 md:grid-cols-3 md:gap-10">
             <li
               :for={{category, idx} <- @categories}
               id={"category-item-#{category.id}"}
@@ -70,14 +70,14 @@ defmodule EdenflowersWeb.StoreLive do
                   |> JS.set_attribute({"aria-current", "page"}, to: "#category-link-#{category.id}")
                   |> JS.remove_attribute("aria-current", to: ".category-index__link:not(#category-link-#{category.id})")
                 }
-                class="category-index__link group"
+                class="category-index__link grid grid-cols-[auto_1fr] items-baseline gap-x-3.5 no-underline text-base-content outline-none group"
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
-                <span class="category-index__numeral" aria-hidden="true">
+                <span class="eyebrow self-center text-base-content/55 [font-variant-numeric:tabular-nums]" aria-hidden="true">
                   {String.pad_leading(Integer.to_string(idx), 2, "0")}
                 </span>
-                <span class="category-index__name">{category.name}</span>
-                <span class="category-index__description">{category.description}</span>
+                <span class="category-index__name font-serif text-xl leading-snug tracking-normal md:text-2xl w-max max-w-full">{category.name}</span>
+                <span class="col-start-2 pt-2.5 font-serif italic text-base-content/85 max-w-[32ch]">{category.description}</span>
               </.link>
             </li>
           </ol>

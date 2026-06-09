@@ -74,12 +74,7 @@ defmodule EdenflowersWeb.CheckoutLive do
               <%!-- Outer step chrome (titles, summaries, edit links) lives in CheckoutComponents.
                    The <section>s below are the inner content for the active step. --%>
               <.steps state={@order.state} order={@order}>
-                <section
-                  :if={@order.state == :contact_details}
-                  id={section_id(@id, :contact_details)}
-                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
-                  data-testid="checkout-step-1"
-                >
+                <.checkout_step order={@order} id={@id} state={:contact_details} testid="checkout-step-1">
                   <.form
                     id={"#{@id}-form-1"}
                     for={@form}
@@ -103,14 +98,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                     <.form_button data-testid="step-1-next-button">{~t"Next"}</.form_button>
                   </.form>
-                </section>
+                </.checkout_step>
 
-                <section
-                  :if={@order.state == :gift_options}
-                  id={section_id(@id, :gift_options)}
-                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
-                  data-testid="checkout-step-2"
-                >
+                <.checkout_step order={@order} id={@id} state={:gift_options} testid="checkout-step-2">
                   <.form
                     id={"#{@id}-form-2"}
                     for={@form}
@@ -143,13 +133,9 @@ defmodule EdenflowersWeb.CheckoutLive do
 
                     <.form_button>{gettext("Next")}</.form_button>
                   </.form>
-                </section>
+                </.checkout_step>
 
-                <section
-                  :if={@order.state == :delivery}
-                  id={section_id(@id, :delivery)}
-                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
-                >
+                <.checkout_step order={@order} id={@id} state={:delivery}>
                   <.form id={"#{@id}-form-3a"} for={%{}} phx-change="update_fulfillment_option">
                     <.input
                       :let={option}
@@ -224,13 +210,9 @@ defmodule EdenflowersWeb.CheckoutLive do
                       <.form_button>{~t"Next"}</.form_button>
                     </.form>
                   <% end %>
-                </section>
+                </.checkout_step>
 
-                <section
-                  :if={@order.state == :payment}
-                  id={section_id(@id, :payment)}
-                  class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
-                >
+                <.checkout_step order={@order} id={@id} state={:payment}>
                   <form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
@@ -254,7 +236,7 @@ defmodule EdenflowersWeb.CheckoutLive do
                   <p :if={!@client_secret} class="text-error" data-testid="stripe-unavailable">
                     {~t"Payment is temporarily unavailable. Please try again in a moment."}
                   </p>
-                </section>
+                </.checkout_step>
               </.steps>
             </div>
 
@@ -323,6 +305,25 @@ defmodule EdenflowersWeb.CheckoutLive do
 
       <.card_drawer variants={@card_variants} />
     </Layouts.app>
+    """
+  end
+
+  attr :order, :map, required: true
+  attr :id, :string, required: true
+  attr :state, :atom, required: true
+  attr :testid, :string, default: nil
+  slot :inner_block, required: true
+
+  defp checkout_step(assigns) do
+    ~H"""
+    <section
+      :if={@order.state == @state}
+      id={section_id(@id, @state)}
+      class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
+      data-testid={@testid}
+    >
+      {render_slot(@inner_block)}
+    </section>
     """
   end
 

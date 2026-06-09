@@ -382,44 +382,6 @@ body.ready {
    Each entry is a serif word anchored by an eyebrow numeral. Description
    shows on the active entry and on hover/focus of inactive ones. No
    transitions: state changes snap, by design. */
-.category-index__list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-@media (width >= theme(--breakpoint-md)) {
-  .category-index__list {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2.5rem;
-  }
-}
-
-.category-index__link {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 0.875rem;
-  align-items: baseline;
-  text-decoration: none;
-  color: var(--color-base-content);
-  outline: none;
-}
-
-.category-index__numeral {
-  @apply eyebrow;
-  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
-  font-variant-numeric: tabular-nums;
-  align-self: center;
-}
-
-.category-index__name {
-  @apply font-serif text-xl leading-snug tracking-normal md:text-2xl;
-  width: max-content;
-  max-width: 100%;
-}
-
 /* Active entry: honey underline. */
 .category-index__item[data-active="true"] .category-index__name {
   text-decoration: underline;
@@ -445,17 +407,6 @@ body.ready {
 .category-index__link:focus-visible {
   outline: 2px solid var(--color-link-underline);
   outline-offset: 0.5rem;
-}
-
-.category-index__description {
-  grid-column: 2;
-  padding-top: 0.625rem;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
-  max-width: 32ch;
 }
 
 #store-products {
@@ -505,31 +456,6 @@ body.ready {
 .size-option:has(input:focus-visible) {
   outline: 2px solid var(--color-link-underline);
   outline-offset: 0.5rem;
-}
-
-/* Editorial FAQ list — questions and answers as prose, not as an accordion.
-   Each item is a hairline-separated row with serif question + serif italic
-   answer. Five items short enough to scan top-to-bottom. */
-.faq-list__item {
-  padding-block: 2rem;
-  border-top: 1px solid
-    color-mix(in oklab, var(--color-base-content) 12%, transparent);
-}
-.faq-list__item:last-child {
-  border-bottom: 1px solid
-    color-mix(in oklab, var(--color-base-content) 12%, transparent);
-}
-.faq-list__question {
-  @apply font-serif text-xl leading-snug md:text-2xl;
-  margin: 0 0 0.875rem;
-}
-.faq-list__answer {
-  font-family: var(--font-sans);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  color: var(--color-base-content);
-  max-width: 60ch;
-  margin: 0;
 }
 
 /* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */
