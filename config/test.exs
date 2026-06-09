@@ -35,7 +35,6 @@ config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Test
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
-# Print only warnings and errors during test
 config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
@@ -61,3 +60,8 @@ config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 
 # Use mock HereAPI in tests
 config :edenflowers, :here_api, Edenflowers.External.HereAPI.Mock
+
+# Use mocks for expense capture in tests
+config :edenflowers, :papra_client, Edenflowers.Papra.Mock
+config :edenflowers, :claude_client, Edenflowers.Claude.Mock
+config :edenflowers, :papra_webhook_secret, "test-webhook-secret"

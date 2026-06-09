@@ -51,6 +51,11 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert line.tax_rate =~ ~r/25,5\x{00A0}%/u
     end
 
+    test "formats fulfillment_date with the order's locale" do
+      assert Receipt.build_payload(build_delivery_order(locale: "fi")).fulfillment_date == "16.5.2026"
+      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_date == "16/05/2026"
+    end
+
     test "renders tax_rate with a single fractional digit" do
       # Default :percent rounds 25.5% to "26%" — regression guard for Format.percentage.
       order = build_delivery_order(locale: "en-GB")

@@ -14,6 +14,7 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   @reset_attrs %{
     customer_name: nil,
     customer_email: nil,
+    newsletter_offer_hidden?: false,
     gift: false,
     recipient_name: nil,
     card_message: nil,

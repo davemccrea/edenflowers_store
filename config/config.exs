@@ -64,7 +64,7 @@ config :spark,
 config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
-    ash_domains: [Edenflowers.Accounts, Edenflowers.Catalog, Edenflowers.Orders, Edenflowers.Fulfillment, Edenflowers.Pricing, Edenflowers.Courses]
+  ash_domains: [Edenflowers.Accounts, Edenflowers.Catalog, Edenflowers.Orders, Edenflowers.Fulfillment, Edenflowers.Pricing, Edenflowers.Courses, Edenflowers.Expenses]
 
 config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 

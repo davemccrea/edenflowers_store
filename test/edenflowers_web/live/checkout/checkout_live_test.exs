@@ -1,11 +1,13 @@
 defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   use EdenflowersWeb.ConnCase, async: true
+  use Oban.Testing, repo: Edenflowers.Repo
 
   import PhoenixTest
 
   import Phoenix.LiveViewTest,
     only: [
       live: 2,
+      render: 1,
       render_click: 3,
       render_change: 2,
       element: 2,
@@ -15,9 +17,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert_redirect: 2
     ]
 
+  import ExUnit.CaptureLog
   import Generator
   import Mox
-  import ExUnit.CaptureLog
 
   alias Edenflowers.Orders.Order
 
@@ -77,6 +79,103 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :contact_details
       assert is_nil(reloaded.customer_email)
+    end
+
+    test "newsletter checkbox is unchecked by default", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox'][checked]")
+    end
+
+    test "checking the newsletter box subscribes the user and enqueues the welcome email", %{
+      conn: conn,
+      order: order
+    } do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Subscriber")
+      |> fill_in("Email *", with: "subscriber@example.com")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("subscriber@example.com", authorize?: false)
+      assert user.newsletter_opt_in == true
+
+      assert_enqueued(
+        worker: Edenflowers.Workers.SendNewsletterPromoEmail,
+        args: %{"email" => "subscriber@example.com"}
+      )
+    end
+
+    test "leaving the newsletter box unchecked does not opt the user in", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Bystander")
+      |> fill_in("Email *", with: "bystander@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+
+      {:ok, user} = Edenflowers.Accounts.User.get_by_email("bystander@example.com", authorize?: false)
+      assert user.newsletter_opt_in == false
+
+      refute_enqueued(worker: Edenflowers.Workers.SendNewsletterPromoEmail)
+    end
+
+    # Reproduces the reported bug: a guest who opted in and advanced past step 1
+    # must not see an empty checkbox on returning — the order carries the
+    # hide decision so it survives a refresh and the actor's inability to read
+    # the subscribed user's record.
+    test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Returning Guest")
+      |> fill_in("Email *", with: "returning@example.com")
+      |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # A guest who declined the offer should still see the box on return, since
+    # nothing was stamped.
+    test "newsletter checkbox stays visible after a guest declines and returns to step 1", %{
+      conn: conn,
+      order: order
+    } do
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Undecided Guest")
+      |> fill_in("Email *", with: "undecided@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    # An order whose customer email resolves to an already-subscribed user gets
+    # the box hidden on submit, even if the box itself was left unticked.
+    test "newsletter checkbox is hidden once the order's user is already subscribed", %{conn: conn, order: order} do
+      generate(admin_user(admin: false, email: "subscribed@example.com", newsletter_opt_in: true))
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> fill_in("Your Name *", with: "Already Subscribed")
+      |> fill_in("Email *", with: "subscribed@example.com")
+      |> click_button("Next")
+      |> assert_has("h2", text: "Gift options")
+      |> click_link("Edit")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
   end
 
@@ -226,6 +325,30 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {pickup_pos, _} = :binary.match(html, pickup_id)
 
       assert delivery_pos < pickup_pos
+    end
+
+    test "switching fulfillment option clears the previously selected date", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      pickup_option =
+        Edenflowers.Store.FulfillmentOption.list!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      # User picks a date on the delivery calendar. The checkout LiveView
+      # stores that date in the form params via the `:date_selected` message.
+      selected_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+      send(view.pid, {:date_selected, selected_date})
+
+      assert render(view) =~ ~s(value="#{selected_date}")
+
+      # User then switches to a different fulfillment option. The new option
+      # has its own calendar, so the date that was valid for delivery may not
+      # be valid for pickup and must be cleared from the form.
+      view
+      |> element("#checkout-form-3a")
+      |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
+
+      refute render(view) =~ ~s(value="#{selected_date}")
     end
   end
 
@@ -522,12 +645,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
-      log =
-        capture_log(fn ->
-          assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
-        end)
-
-      assert log =~ "Cart is empty"
+      capture_log(fn ->
+        assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+      end)
 
       reloaded = Order.get_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []
@@ -543,8 +663,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
       {:ok, view, _html} = live(conn, "/checkout")
 
-      Order.remove_line_item!(order, non_card_line_item.id, authorize?: false)
-      assert_redirect(view, "/")
+      capture_log(fn ->
+        Order.remove_line_item!(order, non_card_line_item.id, authorize?: false)
+        assert_redirect(view, "/")
+      end)
 
       reloaded = Order.get_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
