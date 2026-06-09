@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.AboutLive do
+defmodule EdenflowersWeb.Marketing.AboutLive do
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}

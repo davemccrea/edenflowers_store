@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CheckoutAddressLiveTest do
+defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest

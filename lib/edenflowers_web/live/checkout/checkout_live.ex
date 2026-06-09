@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CheckoutLive do
+defmodule EdenflowersWeb.Checkout.CheckoutLive do
   use EdenflowersWeb, :live_view
 
   require Logger

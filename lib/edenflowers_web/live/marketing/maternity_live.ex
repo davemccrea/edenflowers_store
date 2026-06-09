@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.MaternityLive do
+defmodule EdenflowersWeb.Marketing.MaternityLive do
   use EdenflowersWeb, :live_view
 
   def mount(_params, _session, socket) do

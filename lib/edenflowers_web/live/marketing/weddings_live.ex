@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.ContactLive do
+defmodule EdenflowersWeb.Marketing.WeddingsLive do
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.ContactLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title">{~t"Contact"}</h1>
+        <h1 class="page-title">{~t"Weddings"}</h1>
       </.container>
     </Layouts.app>
     """

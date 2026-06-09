@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.OrderLive do
+defmodule EdenflowersWeb.Checkout.OrderLive do
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_required}

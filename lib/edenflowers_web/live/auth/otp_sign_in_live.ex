@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.OtpSignInLive do
+defmodule EdenflowersWeb.Auth.OtpSignInLive do
   use EdenflowersWeb, :live_view
 
   import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]

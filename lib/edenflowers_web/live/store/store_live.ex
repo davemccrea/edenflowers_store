@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.StoreLive do
+defmodule EdenflowersWeb.Store.StoreLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog.{Product, ProductCategory}

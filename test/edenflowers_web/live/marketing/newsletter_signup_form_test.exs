@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.NewsletterSignupFormTest do
+defmodule EdenflowersWeb.Marketing.NewsletterSignupFormTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import PhoenixTest

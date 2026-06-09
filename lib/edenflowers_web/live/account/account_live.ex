@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.AccountLive do
+defmodule EdenflowersWeb.Account.AccountLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders.Order
