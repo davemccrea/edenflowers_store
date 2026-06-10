@@ -132,7 +132,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
              {:ok, {geocoded_address, position, here_id}} <- here_api.get_address(delivery_address),
              {:ok, distance} <- here_api.get_distance(position),
-             {:ok, fulfillment_fee} <- calculate_price(option_id, distance, authorize?: false) do
+             {:ok, %{error: nil, fulfillment_fee: fulfillment_fee}} <-
+               calculate_price(option_id, distance, authorize?: false) do
           {:ok,
            %{
              error: nil,
@@ -143,13 +144,18 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
              fulfillment_fee: fulfillment_fee
            }}
         else
-          {:error, reason} ->
-            {:ok, %{error: reason}}
+          {:error, reason} -> {:ok, %{error: reason}}
+          {:ok, %{error: reason}} -> {:ok, %{error: reason}}
         end
       end
     end
 
-    action :calculate_price, :decimal do
+    action :calculate_price, :map do
+      description "Fulfillment fee for `distance`. Returns {:ok, %{error: nil, fulfillment_fee: fee}} " <>
+                    "within range and {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}} beyond " <>
+                    "it. Out-of-range is a normal result, not an error, so it stays out of Ash.Error.Unknown " <>
+                    "and shares calculate_delivery's result shape."
+
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       argument :distance, :decimal, default: Decimal.new("0")
 
@@ -160,7 +166,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
           case option.rate_type do
             :fixed ->
-              {:ok, option.base_price}
+              {:ok, %{error: nil, fulfillment_fee: option.base_price}}
 
             :dynamic ->
               %{
@@ -176,18 +182,20 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
               cond do
                 Decimal.lte?(distance, free_dist_m) ->
-                  {:ok, Decimal.new("0")}
+                  {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}}
 
                 Decimal.gt?(distance, free_dist_m) and Decimal.lt?(distance, max_dist_m) ->
-                  {:ok,
-                   distance
-                   |> Decimal.sub(free_dist_m)
-                   |> Decimal.mult(price_per_m)
-                   |> Decimal.add(base_price)
-                   |> Decimal.round(2)}
+                  fee =
+                    distance
+                    |> Decimal.sub(free_dist_m)
+                    |> Decimal.mult(price_per_m)
+                    |> Decimal.add(base_price)
+                    |> Decimal.round(2)
+
+                  {:ok, %{error: nil, fulfillment_fee: fee}}
 
                 true ->
-                  {:error, :out_of_delivery_range}
+                  {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}}
               end
           end
         end

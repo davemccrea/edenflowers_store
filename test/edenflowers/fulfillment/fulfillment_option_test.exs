@@ -101,21 +101,30 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
 
     test "calculates fixed pricing", %{tax_rate: tax_rate} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
-      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new("0"))
+
+      assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
+               FulfillmentOption.calculate_price(option.id, Decimal.new("0"))
     end
 
     test "returns value when distance is within free delivery range", %{option: option} do
-      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new(4999))
-      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new(5000))
-      assert {:ok, Decimal.new("4.50")} == FulfillmentOption.calculate_price(option.id, Decimal.new(5001))
+      assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
+               FulfillmentOption.calculate_price(option.id, Decimal.new(4999))
+
+      assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
+               FulfillmentOption.calculate_price(option.id, Decimal.new(5000))
+
+      assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("4.50")}} ==
+               FulfillmentOption.calculate_price(option.id, Decimal.new(5001))
     end
 
     test "returns value when distance is within paid delivery range", %{option: option} do
-      assert {:ok, Decimal.new("8.10")} == FulfillmentOption.calculate_price(option.id, Decimal.new(7250))
+      assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("8.10")}} ==
+               FulfillmentOption.calculate_price(option.id, Decimal.new(7250))
     end
 
-    test "wraps an out-of-range distance in Ash.Error.Unknown", %{option: option} do
-      assert {:error, %Ash.Error.Unknown{}} = FulfillmentOption.calculate_price(option.id, Decimal.new(20000))
+    test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
+      assert {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}} =
+               FulfillmentOption.calculate_price(option.id, Decimal.new(20000))
     end
   end
 

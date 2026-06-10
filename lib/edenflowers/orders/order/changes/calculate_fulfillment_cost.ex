@@ -27,7 +27,8 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   defp apply_pickup(changeset) do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    with {:ok, fee} <- FulfillmentOption.calculate_price(id, Decimal.new("0"), authorize?: false) do
+    with {:ok, %{error: nil, fulfillment_fee: fee}} <-
+           FulfillmentOption.calculate_price(id, Decimal.new("0"), authorize?: false) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_fee: fee,
         delivery_address: nil,
