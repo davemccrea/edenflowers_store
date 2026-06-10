@@ -14,6 +14,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     authorizers: [Ash.Policy.Authorizer]
 
   alias Edenflowers.Fulfillment.FulfillmentCalendar
+  alias Edenflowers.Fulfillment.FulfillmentPricing
 
   postgres do
     table "fulfillment_options"
@@ -131,21 +132,24 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
              {:ok, {geocoded_address, position, here_id}} <- here_api.get_address(delivery_address),
-             {:ok, distance} <- here_api.get_distance(position),
-             {:ok, %{error: nil, fulfillment_fee: fulfillment_fee}} <-
-               calculate_price(option_id, distance, authorize?: false) do
-          {:ok,
-           %{
-             error: nil,
-             geocoded_address: geocoded_address,
-             position: position,
-             here_id: here_id,
-             distance: distance,
-             fulfillment_fee: fulfillment_fee
-           }}
+             {:ok, distance} <- here_api.get_distance(position) do
+          case FulfillmentPricing.price(option, distance) do
+            %{error: nil, fulfillment_fee: fulfillment_fee} ->
+              {:ok,
+               %{
+                 error: nil,
+                 geocoded_address: geocoded_address,
+                 position: position,
+                 here_id: here_id,
+                 distance: distance,
+                 fulfillment_fee: fulfillment_fee
+               }}
+
+            %{error: reason} ->
+              {:ok, %{error: reason}}
+          end
         else
           {:error, reason} -> {:ok, %{error: reason}}
-          {:ok, %{error: reason}} -> {:ok, %{error: reason}}
         end
       end
     end
@@ -160,44 +164,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :distance, :decimal, default: Decimal.new("0")
 
       run fn input, _context ->
-        option_id = input.arguments.fulfillment_option_id
-        distance = input.arguments.distance
-
-        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
-          case option.rate_type do
-            :fixed ->
-              {:ok, %{error: nil, fulfillment_fee: option.base_price}}
-
-            :dynamic ->
-              %{
-                price_per_km: price_per_km,
-                base_price: base_price,
-                free_dist_km: free_dist_km,
-                max_dist_km: max_dist_km
-              } = option
-
-              price_per_m = Decimal.div(price_per_km, 1000)
-              free_dist_m = Decimal.mult(free_dist_km, 1000)
-              max_dist_m = Decimal.mult(max_dist_km, 1000)
-
-              cond do
-                Decimal.lte?(distance, free_dist_m) ->
-                  {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}}
-
-                Decimal.gt?(distance, free_dist_m) and Decimal.lt?(distance, max_dist_m) ->
-                  fee =
-                    distance
-                    |> Decimal.sub(free_dist_m)
-                    |> Decimal.mult(price_per_m)
-                    |> Decimal.add(base_price)
-                    |> Decimal.round(2)
-
-                  {:ok, %{error: nil, fulfillment_fee: fee}}
-
-                true ->
-                  {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}}
-              end
-          end
+        with {:ok, option} <- Ash.get(__MODULE__, input.arguments.fulfillment_option_id, authorize?: false) do
+          {:ok, FulfillmentPricing.price(option, input.arguments.distance)}
         end
       end
     end
