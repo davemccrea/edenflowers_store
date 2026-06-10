@@ -85,7 +85,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   aria-roledescription="slide"
                   aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
                 >
-                  <.product_card product={product} navigate={~p"/product/#{product}"} locale={Localize.get_locale().cldr_locale_id |> to_string()} />
+                  <.product_card
+                    product={product}
+                    navigate={~p"/product/#{product}"}
+                    locale={Localize.get_locale().cldr_locale_id |> to_string()}
+                  />
                 </li>
               </ul>
             </div>

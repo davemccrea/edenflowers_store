@@ -1165,7 +1165,7 @@ defmodule EdenflowersWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         aria-label={@label}
-        class={"js-scroll-lock-dialog #{@placement_class} fixed inset-0 hidden outline-hidden"}
+        class={"#{@placement_class} js-scroll-lock-dialog fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>

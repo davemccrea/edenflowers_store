@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
         socket
       end
 
-      error =
+    error =
       if String.trim(value) == "",
         do: {:required, DeliveryError.message(:address_required)},
         else: nil

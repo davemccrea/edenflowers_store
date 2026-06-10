@@ -14,8 +14,8 @@ alias Edenflowers.Accounts.User
 alias Edenflowers.Repo
 alias Edenflowers.Catalog.ProductCategory
 alias Edenflowers.Catalog.{Product, ProductVariant}
-  alias Edenflowers.Fulfillment.{FulfillmentOption}
-  alias Edenflowers.Pricing.{TaxRate, Promotion}
+alias Edenflowers.Fulfillment.{FulfillmentOption}
+alias Edenflowers.Pricing.{TaxRate, Promotion}
 
 # Admin user. `admin` is writable?: false on the resource so normal Ash actions
 # can't set it — raw SQL is the appropriate escape hatch for seed setup.

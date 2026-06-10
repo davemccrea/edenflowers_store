@@ -198,6 +198,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       description "Whether the option can be fulfilled on `date`. Returns a tagged map: " <>
                     "%{error: nil} when bookable, or %{error: reason} when not. The tagged map " <>
                     "keeps the reason out of Ash.Error.Unknown so callers can match on it directly."
+
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       argument :date, :date, allow_nil?: false
       argument :now, :utc_datetime, default: &DateTime.utc_now/0

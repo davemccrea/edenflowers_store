@@ -24,7 +24,8 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateMinimumCartTotal do
       else
         {:error,
          field: :promotion_id,
-         message: ~t"Cart total must be at least #{Edenflowers.Format.currency(minimum_required, order.locale)} to use this promotion"}
+         message:
+           ~t"Cart total must be at least #{Edenflowers.Format.currency(minimum_required, order.locale)} to use this promotion"}
       end
     else
       {:error, _} ->

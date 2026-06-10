@@ -155,7 +155,8 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-    {:ok, fulfillment_fee} = Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, Decimal.new("0"))
+    {:ok, fulfillment_fee} =
+      Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, Decimal.new("0"))
 
     order =
       generate(
@@ -204,7 +205,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: nil
-                 })
+               })
                |> Ash.update(authorize?: false)
 
       assert %Ash.Error.Invalid{} = error
@@ -218,7 +219,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: false,
                  recipient_name: nil
-                 })
+               })
                |> Ash.update(authorize?: false)
 
       assert order.gift == false
@@ -233,7 +234,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
                  recipient_name: "Jane Doe"
-                 })
+               })
                |> Ash.update(authorize?: false)
 
       assert order.gift == true

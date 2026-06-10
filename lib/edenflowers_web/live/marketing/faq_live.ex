@@ -40,9 +40,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
   defp faq_item(assigns) do
     ~H"""
-    <div class="py-8 border-t border-base-content/12 last:border-b">
+    <div class="border-base-content/12 border-t py-8 last:border-b">
       <dt>
-        <h2 class="font-serif text-xl leading-snug md:text-2xl mb-3.5">{@question}</h2>
+        <h2 class="font-serif mb-3.5 text-xl leading-snug md:text-2xl">{@question}</h2>
       </dt>
       <dd class="font-sans text-[1.0625rem] leading-[1.6] text-base-content max-w-[60ch]">
         {render_slot(@inner_block)}

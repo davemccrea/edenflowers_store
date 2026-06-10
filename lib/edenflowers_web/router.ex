@@ -98,7 +98,11 @@ defmodule EdenflowersWeb.Router do
     pipe_through :browser
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
-    ash_admin("/", AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}]))
+
+    ash_admin(
+      "/",
+      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
+    )
   end
 
   if Application.compile_env(:edenflowers, :dev_routes) do
