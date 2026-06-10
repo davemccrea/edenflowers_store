@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.AddressInputComponent do
+defmodule EdenflowersWeb.Checkout.AddressInput do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 

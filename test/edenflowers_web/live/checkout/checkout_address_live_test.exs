@@ -290,7 +290,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
     end
 
-    # Regression: AddressInputComponent renders <input name="delivery_address">
+    # Regression: Checkout.AddressInput renders <input name="delivery_address">
     # (no form[...] prefix), so the browser submits the address at the top
     # level of the params, not under "form". save_form_3 must bridge it back
     # in or save_step_3 fails with "Delivery address required".

@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   require Logger
 
-  import EdenflowersWeb.CheckoutComponents, only: [steps: 1]
+  import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
   import EdenflowersWeb.KeyDateIcon
 
   alias Edenflowers.Catalog.{ProductVariant, ProductVariantSize}
@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         <div class="flex flex-col gap-12">
           <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
             <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
-              <%!-- Outer step chrome (titles, summaries, edit links) lives in CheckoutComponents.
+              <%!-- Outer step chrome (titles, summaries, edit links) lives in Checkout.Fields.
                    The <section>s below are the inner content for the active step. --%>
               <.steps state={@order.state} order={@order}>
                 <.checkout_step order={@order} id={@id} state={:contact_details} testid="checkout-step-1">
@@ -165,7 +165,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       <.live_component
                         :if={@order.fulfillment_method == :delivery}
                         id="address-input"
-                        module={EdenflowersWeb.AddressInputComponent}
+                        module={EdenflowersWeb.Checkout.AddressInput}
                         order={@order}
                         label={recipient_label(@order, :address)}
                       />
@@ -510,7 +510,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  # AddressInputComponent owns the address field's lifecycle independently
+  # Checkout.AddressInput owns the address field's lifecycle independently
   # of the parent form, so submit is the only moment the parent learns the
   # typed value — bridge it into the form params here.
   def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
@@ -714,7 +714,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp forward_delivery_address_error(form) do
     case form[:delivery_address].errors do
       [error | _] ->
-        send_update(EdenflowersWeb.AddressInputComponent,
+        send_update(EdenflowersWeb.Checkout.AddressInput,
           id: "address-input",
           error_message: translate_error(error)
         )

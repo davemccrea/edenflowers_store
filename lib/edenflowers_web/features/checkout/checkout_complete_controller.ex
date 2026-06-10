@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CheckoutCompleteController do
+defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
   use EdenflowersWeb, :controller
 
   # Stripe redirects the customer here from `confirmPayment` once the payment

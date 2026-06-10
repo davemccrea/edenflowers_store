@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CheckoutComponents do
+defmodule EdenflowersWeb.Checkout.Fields do
   use EdenflowersWeb, :html
 
   alias Edenflowers.Orders.Order
