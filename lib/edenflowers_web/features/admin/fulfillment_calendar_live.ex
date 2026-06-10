@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Fulfillment CalendarViewModel")
+     |> assign(:page_title, "Fulfillment Calendar")
      |> assign(:options, options)
      |> assign(:scope, :all)
      |> assign(:today, today())}
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     <div class="container mx-auto py-10">
       <header class="mb-8 max-w-2xl">
         <p class="eyebrow text-base-content/55 mb-2">Availability</p>
-        <h1 class="page-title">Fulfillment CalendarViewModel</h1>
+        <h1 class="page-title">Fulfillment Calendar</h1>
         <p class="text-base-content/70 mt-3 text-sm leading-relaxed">
           Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
         </p>
