@@ -1,7 +1,7 @@
 defmodule Edenflowers.Orders.Order.Validations.ValidateDeliveryAddress do
   use Ash.Resource.Validation
 
-  alias Edenflowers.Fulfillment.Fulfillments
+  alias Edenflowers.Fulfillment.DeliveryError
 
   @impl true
   def validate(changeset, _opts, _context) do
@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateDeliveryAddress do
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
     if method == :delivery and blank?(delivery_address) do
-      {:error, field: :delivery_address, message: Fulfillments.delivery_error_message(:address_required)}
+      {:error, field: :delivery_address, message: DeliveryError.message(:address_required)}
     else
       :ok
     end

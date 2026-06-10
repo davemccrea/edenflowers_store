@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
   require Logger
   import EdenflowersWeb.CoreComponents
 
-  alias Edenflowers.Fulfillment.Fulfillments
+  alias Edenflowers.Fulfillment.{DeliveryError, FulfillmentOption}
 
   @impl true
   def mount(socket) do
@@ -82,9 +82,9 @@ defmodule EdenflowersWeb.AddressInputComponent do
         socket
       end
 
-    error =
+      error =
       if String.trim(value) == "",
-        do: {:required, Fulfillments.delivery_error_message(:address_required)},
+        do: {:required, DeliveryError.message(:address_required)},
         else: nil
 
     {:noreply, assign(socket, typed: value, touched: true, error: error)}
@@ -109,25 +109,25 @@ defmodule EdenflowersWeb.AddressInputComponent do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           Fulfillments.calculate_delivery(address, fulfillment_option)
+           FulfillmentOption.calculate_delivery(address, fulfillment_option.id)
          end)}
     end
   end
 
   @impl true
   def handle_async(:lookup_address, {:ok, {:ok, result}}, socket) do
-    address = socket.assigns.typed
+    if result.error do
+      {:noreply, fail(socket, DeliveryError.message(result.error))}
+    else
+      address = socket.assigns.typed
 
-    {:noreply,
-     assign(socket,
-       loading: false,
-       confirmed: %{address: address, result: result},
-       error: nil
-     )}
-  end
-
-  def handle_async(:lookup_address, {:ok, {:error, reason}}, socket) do
-    {:noreply, fail(socket, Fulfillments.delivery_error_message(reason))}
+      {:noreply,
+       assign(socket,
+         loading: false,
+         confirmed: %{address: address, result: result},
+         error: nil
+       )}
+    end
   end
 
   def handle_async(:lookup_address, {:exit, {:shutdown, :cancel}}, socket) do
@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.AddressInputComponent do
 
   def handle_async(:lookup_address, result, socket) do
     Logger.error("lookup_address unexpected result: #{inspect(result)}")
-    {:noreply, fail(socket, Fulfillments.delivery_error_message(:unknown))}
+    {:noreply, fail(socket, DeliveryError.message(:unknown))}
   end
 
   defp fail(socket, message) do

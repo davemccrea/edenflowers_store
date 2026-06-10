@@ -15,7 +15,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
 
-  alias Edenflowers.Fulfillment.{FulfillmentCalendar, FulfillmentOption}
+  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias EdenflowersWeb.Admin.Calendar
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -112,7 +113,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
     targets = scoped_options(socket)
-    direction = FulfillmentCalendar.weekday_toggle_direction(targets, weekday)
+    direction = Calendar.weekday_toggle_direction(targets, weekday)
 
     {:noreply, apply_to_scope(socket, &FulfillmentOption.set_weekday!(&1, weekday, direction, actor: &2))}
   end
@@ -121,7 +122,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     %{today: today} = socket.assigns
     targets = scoped_options(socket)
 
-    case FulfillmentCalendar.week_toggle_direction(targets, week, today) do
+    case Calendar.week_toggle_direction(targets, week, today) do
       nil ->
         {:noreply, socket}
 
@@ -131,7 +132,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   end
 
   defp scoped_options(%{assigns: %{scope: scope, options: options}}),
-    do: FulfillmentCalendar.scoped_options(scope, options)
+    do: Calendar.scoped_options(scope, options)
 
   defp apply_to_scope(socket, fun) do
     %{options: options, current_user: actor} = socket.assigns

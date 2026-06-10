@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     product_variant = generate(product_variant(product_id: product.id))
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
-    {:ok, fulfillment_fee} = Edenflowers.Fulfillment.Fulfillments.calculate_price(fulfillment_option)
+    {:ok, fulfillment_fee} = Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, Decimal.new("0"))
 
     {:ok, user} =
       Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)

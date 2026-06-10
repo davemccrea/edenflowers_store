@@ -8,7 +8,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.Fulfillments
+  alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @impl true
@@ -27,8 +27,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   defp apply_pickup(changeset) do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
-         {:ok, fee} <- Fulfillments.calculate_price(option) do
+    with {:ok, fee} <- FulfillmentOption.calculate_price(id, Decimal.new("0"), authorize?: false) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_fee: fee,
         delivery_address: nil,
@@ -42,7 +41,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
       _ ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :fulfillment_option_id,
-          message: Fulfillments.delivery_error_message(:unknown)
+          message: DeliveryError.message(:unknown)
         })
     end
   end
@@ -51,26 +50,26 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    with {:ok, option} <- Ash.get(FulfillmentOption, id, authorize?: false),
-         {:ok, result} <- Fulfillments.calculate_delivery(delivery_address, option) do
-      Ash.Changeset.force_change_attributes(changeset,
-        geocoded_address: result.geocoded_address,
-        position: result.position,
-        here_id: result.here_id,
-        distance: result.distance,
-        fulfillment_fee: result.fulfillment_fee
-      )
-    else
-      {:error, reason} when is_atom(reason) ->
+    with {:ok, result} <- FulfillmentOption.calculate_delivery(delivery_address, id, authorize?: false) do
+      if result.error do
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,
-          message: Fulfillments.delivery_error_message(reason)
+          message: DeliveryError.message(result.error)
         })
-
+      else
+        Ash.Changeset.force_change_attributes(changeset,
+          geocoded_address: result.geocoded_address,
+          position: result.position,
+          here_id: result.here_id,
+          distance: result.distance,
+          fulfillment_fee: result.fulfillment_fee
+        )
+      end
+    else
       _ ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,
-          message: Fulfillments.delivery_error_message(:unknown)
+          message: DeliveryError.message(:unknown)
         })
     end
   end

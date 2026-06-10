@@ -80,4 +80,69 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                |> Ash.create(authorize?: false)
     end
   end
+
+  describe "calculate_price action" do
+    setup %{tax_rate: tax_rate} do
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            fulfillment_method: :delivery,
+            rate_type: :dynamic,
+            base_price: "4.50",
+            price_per_km: "1.60",
+            free_dist_km: 5,
+            max_dist_km: 20
+          )
+        )
+
+      [option: option]
+    end
+
+    test "calculates fixed pricing", %{tax_rate: tax_rate} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
+      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new("0"))
+    end
+
+    test "returns value when distance is within free delivery range", %{option: option} do
+      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new(4999))
+      assert {:ok, Decimal.new("0")} == FulfillmentOption.calculate_price(option.id, Decimal.new(5000))
+      assert {:ok, Decimal.new("4.50")} == FulfillmentOption.calculate_price(option.id, Decimal.new(5001))
+    end
+
+    test "returns value when distance is within paid delivery range", %{option: option} do
+      assert {:ok, Decimal.new("8.10")} == FulfillmentOption.calculate_price(option.id, Decimal.new(7250))
+    end
+
+    test "wraps an out-of-range distance in Ash.Error.Unknown", %{option: option} do
+      assert {:error, %Ash.Error.Unknown{}} = FulfillmentOption.calculate_price(option.id, Decimal.new(20000))
+    end
+  end
+
+  describe "fulfill_on_date action" do
+    test "returns %{error: nil} when bookable", %{tax_rate: tax_rate} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
+      now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
+
+      assert {:ok, %{error: nil}} =
+               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-05], %{now: now}, authorize?: false)
+    end
+
+    test "returns %{error: :past} when the date is in the past", %{tax_rate: tax_rate} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
+      now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
+
+      assert {:ok, %{error: :past}} =
+               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-01], %{now: now}, authorize?: false)
+    end
+
+    test "normalises now to Helsinki for the same-day deadline", %{tax_rate: tax_rate} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate.id, same_day: true, order_deadline: ~T[14:00:00]))
+      # 14:01 Helsinki is past the 14:00 cutoff even though its UTC wall-clock is earlier.
+      now = DateTime.from_naive!(~N[2024-04-02 14:01:00], "Europe/Helsinki")
+
+      assert {:ok, %{error: :order_deadline_passed}} =
+               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-02], %{now: now}, authorize?: false)
+    end
+  end
 end

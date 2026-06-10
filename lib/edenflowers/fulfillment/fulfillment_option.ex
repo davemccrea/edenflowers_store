@@ -13,6 +13,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  alias Edenflowers.Fulfillment.FulfillmentCalendar
+
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
@@ -27,6 +29,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
     define :set_week, action: :set_week, args: [:week, :today, :direction]
     define :reset_calendar, action: :reset_calendar
+    define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
+    define :calculate_price, action: :calculate_price, args: [:fulfillment_option_id, :distance]
+    define :fulfill_on_date, action: :fulfill_on_date, args: [:fulfillment_option_id, :date]
   end
 
   actions do
@@ -114,6 +119,101 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       require_atomic? false
       change Edenflowers.Fulfillment.FulfillmentOption.Changes.ResetCalendar
     end
+
+    action :calculate_delivery, :map do
+      argument :delivery_address, :string, allow_nil?: false
+      argument :fulfillment_option_id, :uuid, allow_nil?: false
+
+      run fn input, _context ->
+        here_api = Application.get_env(:edenflowers, :here_api, Edenflowers.External.HereAPI)
+        delivery_address = input.arguments.delivery_address
+        option_id = input.arguments.fulfillment_option_id
+
+        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
+             {:ok, {geocoded_address, position, here_id}} <- here_api.get_address(delivery_address),
+             {:ok, distance} <- here_api.get_distance(position),
+             {:ok, fulfillment_fee} <- calculate_price(option_id, distance, authorize?: false) do
+          {:ok,
+           %{
+             error: nil,
+             geocoded_address: geocoded_address,
+             position: position,
+             here_id: here_id,
+             distance: distance,
+             fulfillment_fee: fulfillment_fee
+           }}
+        else
+          {:error, reason} ->
+            {:ok, %{error: reason}}
+        end
+      end
+    end
+
+    action :calculate_price, :decimal do
+      argument :fulfillment_option_id, :uuid, allow_nil?: false
+      argument :distance, :decimal, default: Decimal.new("0")
+
+      run fn input, _context ->
+        option_id = input.arguments.fulfillment_option_id
+        distance = input.arguments.distance
+
+        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
+          case option.rate_type do
+            :fixed ->
+              {:ok, option.base_price}
+
+            :dynamic ->
+              %{
+                price_per_km: price_per_km,
+                base_price: base_price,
+                free_dist_km: free_dist_km,
+                max_dist_km: max_dist_km
+              } = option
+
+              price_per_m = Decimal.div(price_per_km, 1000)
+              free_dist_m = Decimal.mult(free_dist_km, 1000)
+              max_dist_m = Decimal.mult(max_dist_km, 1000)
+
+              cond do
+                Decimal.lte?(distance, free_dist_m) ->
+                  {:ok, Decimal.new("0")}
+
+                Decimal.gt?(distance, free_dist_m) and Decimal.lt?(distance, max_dist_m) ->
+                  {:ok,
+                   distance
+                   |> Decimal.sub(free_dist_m)
+                   |> Decimal.mult(price_per_m)
+                   |> Decimal.add(base_price)
+                   |> Decimal.round(2)}
+
+                true ->
+                  {:error, :out_of_delivery_range}
+              end
+          end
+        end
+      end
+    end
+
+    action :fulfill_on_date, :map do
+      description "Whether the option can be fulfilled on `date`. Returns a tagged map: " <>
+                    "%{error: nil} when bookable, or %{error: reason} when not. The tagged map " <>
+                    "keeps the reason out of Ash.Error.Unknown so callers can match on it directly."
+      argument :fulfillment_option_id, :uuid, allow_nil?: false
+      argument :date, :date, allow_nil?: false
+      argument :now, :utc_datetime, default: &DateTime.utc_now/0
+
+      run fn input, _context ->
+        option_id = input.arguments.fulfillment_option_id
+        date = input.arguments.date
+        # `unavailable_reason/3` expects Helsinki-local time for the same-day
+        # deadline comparison, so normalise the incoming UTC `now`.
+        now = DateTime.shift_zone!(input.arguments.now, "Europe/Helsinki")
+
+        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
+          {:ok, %{error: FulfillmentCalendar.unavailable_reason(option, date, now)}}
+        end
+      end
+    end
   end
 
   policies do
@@ -124,6 +224,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
     # Public read access (for checkout)
     policy action_type(:read) do
+      authorize_if always()
+    end
+
+    # Generic actions (e.g. calculate_delivery) are public
+    policy action_type(:action) do
       authorize_if always()
     end
 
