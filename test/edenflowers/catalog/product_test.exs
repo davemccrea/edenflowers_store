@@ -81,7 +81,6 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
 
     test "fails to assign fulfillment option to product if fulfillment option does not exist", %{tax_rate: tax_rate} do
-      # Non existing resource
       id = Ecto.UUID.generate()
 
       assert {:error, _} =
@@ -120,7 +119,6 @@ defmodule Edenflowers.Catalog.ProductTest do
     test "returns correct cheapest_price with multiple variants", %{tax_rate: tax_rate} do
       product = generate(product(tax_rate_id: tax_rate.id))
       price1 = Decimal.new("18.50")
-      # Cheapest
       price2 = Decimal.new("12.00")
       price3 = Decimal.new("20.00")
       _variant1 = generate(product_variant(product_id: product.id, price: price1))
@@ -138,10 +136,7 @@ defmodule Edenflowers.Catalog.ProductTest do
 
   describe "Product.get_all_for_store filtering" do
     test "includes published products with variants and published category", %{tax_rate: tax_rate} do
-      # Create published category
       published_category = generate(product_category(visibility: :public))
-
-      # Create published product with variants
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
@@ -153,7 +148,6 @@ defmodule Edenflowers.Catalog.ProductTest do
     test "excludes draft products", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
 
-      # Create draft product with variants
       draft_product =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: true))
 
@@ -167,7 +161,6 @@ defmodule Edenflowers.Catalog.ProductTest do
     test "excludes products without product_variants", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
 
-      # Create published product WITHOUT variants
       product_no_variants =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
 
@@ -177,10 +170,7 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
 
     test "excludes products with draft category", %{tax_rate: tax_rate} do
-      # Create draft category
       draft_category = generate(product_category(visibility: :draft))
-
-      # Create published product with variants but draft category
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 

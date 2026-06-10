@@ -91,7 +91,6 @@ defmodule Edenflowers.Orders.Order do
   actions do
     defaults [:read]
 
-    # Read Actions
     read :by_id do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))
@@ -115,7 +114,6 @@ defmodule Edenflowers.Orders.Order do
       filter expr(state == :placed)
     end
 
-    # Create Actions
     create :create_for_checkout do
       change {Changes.GenerateOrderReference, []}
     end

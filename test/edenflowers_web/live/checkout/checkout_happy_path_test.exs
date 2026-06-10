@@ -53,7 +53,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   } do
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Step 1: Your Details
     view
     |> form("#checkout-form-1", %{
       "form" => %{
@@ -65,14 +64,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert render(view) =~ "Gift options"
 
-    # Step 2: Gift Options (not a gift — defaults are fine)
+    # Not a gift, so the defaults are fine.
     view
     |> form("#checkout-form-2", %{"form" => %{"gift" => "false"}})
     |> render_submit()
 
     assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
-    # Step 3: pick fulfillment option, then submit the date/phone form
     view
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
@@ -142,7 +140,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Step 1
     view
     |> form("#checkout-form-1", %{
       "form" => %{
@@ -152,9 +149,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    # Step 2: mark as gift (this fires `set_gift` and persists the flag so
-    # the `add_card` policy passes), pick a card, write a card message,
-    # submit.
+    # Marking as gift fires `set_gift` and persists the flag so the
+    # `add_card` policy passes, letting the customer pick a card and message.
     view
     |> element(~s(input[name="form[gift]"][value="true"]))
     |> render_change(%{"form" => %{"gift" => "true"}})
@@ -176,7 +172,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert render(view) =~ ~r{<h2[^>]*>.*?<span>Delivery</span>.*?</h2>}s
 
-    # Step 3
     view
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
@@ -194,7 +189,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert render(view) =~ "Payment"
 
-    # Step 4
     view
     |> element("#checkout-form-4")
     |> render_submit()
@@ -245,7 +239,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Step 1
     view
     |> form("#checkout-form-1", %{
       "form" => %{
@@ -255,12 +248,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     })
     |> render_submit()
 
-    # Step 2
     view
     |> form("#checkout-form-2", %{"form" => %{"gift" => "false"}})
     |> render_submit()
 
-    # Step 3: pick delivery, blur the address to trigger geocoding, submit
+    # Pick delivery, then blur the address to trigger geocoding before submit.
     view
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => delivery_option.id}})
@@ -286,7 +278,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert render(view) =~ "Payment"
 
-    # Step 4
     view
     |> element("#checkout-form-4")
     |> render_submit()
@@ -343,7 +334,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert render(view) =~ ~s(data-testid="promo-badge")
 
-    # Step 1 → 4
     view
     |> form("#checkout-form-1", %{
       "form" => %{
@@ -458,7 +448,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Step 1
     view
     |> form("#checkout-form-1", %{
       "form" => %{
@@ -484,7 +473,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     })
     |> render_change()
 
-    # Pick a card.
     html =
       view
       |> render_click("select_card", %{"variant-id" => card_variant.id})

@@ -66,18 +66,13 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
     Ash.load!(
       order,
       [
-        # Aggregates
         :items_subtotal,
         :items_tax,
         :discount,
-
-        # Calculations
         :promotion_applied?,
         :grand_total,
         :tax,
         :fulfillment_tax,
-
-        # Relationships
         line_items: [:subtotal, :total, :unit_price_ex_tax]
       ],
       actor: system_actor(),

@@ -30,18 +30,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
   end
 
   policies do
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    # Anyone can create registrations (for guest registration flow)
+    # Anyone can create registrations (for the guest registration flow).
     policy action_type(:create) do
       authorize_if always()
     end
 
-    # Users can read and update their own registrations
-    # For registrations without a user (guest registrations), only admins can access
+    # Guest registrations have a nil user_id, so this expr only ever matches
+    # a logged-in user's own rows — guest rows stay admin-only via the bypass.
     policy action_type([:read, :update]) do
       authorize_if expr(user_id == ^actor(:id))
     end

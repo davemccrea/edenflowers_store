@@ -96,10 +96,8 @@ defmodule Edenflowers.Orders.LineItem do
   calculations do
     calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
 
-    # This is the base price for a specific item or service multiplied by the quantity, before any taxes or discounts are applied.
     calculate :subtotal, :decimal, expr(unit_price * quantity)
 
-    # This is the final amount for a specific line item, including the subtotal plus taxes and minus any line-specific discounts.
     calculate :total,
               :decimal,
               expr(
@@ -120,7 +118,6 @@ defmodule Edenflowers.Orders.LineItem do
                 )
               )
 
-    # This is the amount of tax applied to a specific line item.
     calculate :tax, :decimal, expr(total * tax_rate)
 
     # `unit_price` is stored tax-inclusive.

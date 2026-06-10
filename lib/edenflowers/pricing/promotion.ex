@@ -62,7 +62,6 @@ defmodule Edenflowers.Pricing.Promotion do
       authorize_if always()
     end
 
-    # Public read access (for promotion code validation)
     policy action_type(:read) do
       authorize_if always()
     end

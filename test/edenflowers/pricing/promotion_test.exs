@@ -165,11 +165,9 @@ defmodule Edenflowers.Pricing.PromotionTest do
       promotion = generate(promotion())
       assert promotion.usage == 0
 
-      # Increment usage once
       {:ok, updated} = Promotion.increment_usage(promotion, authorize?: false)
       assert updated.usage == 1
 
-      # Increment again
       {:ok, updated2} = Promotion.increment_usage(updated, authorize?: false)
       assert updated2.usage == 2
     end
@@ -184,10 +182,8 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
       assert promotion.usage == 0
 
-      # Create order with promotion
       order = generate(order(state: :payment, promotion_id: promotion.id, payment_intent_id: "pi_test"))
 
-      # Add line item
       _line_item =
         generate(
           line_item(
@@ -196,13 +192,11 @@ defmodule Edenflowers.Pricing.PromotionTest do
           )
         )
 
-      # Finalize checkout
       {:ok, _order} = Order.finalize_checkout(order.id, authorize?: false)
 
-      # Drain Oban queue so the IncrementPromotionUsage job runs synchronously
+      # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
       Oban.drain_queue(queue: :default)
 
-      # Check usage was incremented
       {:ok, updated_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
       assert updated_promotion.usage == 1
     end
@@ -212,7 +206,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
     import Generator
 
     test "rejects promotion code when usage equals usage_limit" do
-      # Create promotion with usage_limit
       {:ok, promotion} =
         Promotion
         |> Ash.Changeset.for_create(:create, %{
@@ -224,19 +217,16 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      # Increment usage to match limit using the increment_usage action
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
 
-      # Should not be found because usage >= usage_limit
       assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("LIMITED", Date.utc_today())
     end
 
     test "allows promotion code when usage is below usage_limit" do
-      # Create promotion with usage_limit
       {:ok, promotion} =
         Promotion
         |> Ash.Changeset.for_create(:create, %{
@@ -248,13 +238,11 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      # Increment usage to 4 (below limit of 5)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       {:ok, promotion} = Promotion.increment_usage(promotion, authorize?: false)
 
-      # Should be found because usage < usage_limit
       assert {:ok, %Promotion{id: id}} =
                Promotion.get_by_code("LIMITED10", Date.utc_today())
 
@@ -262,7 +250,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
     end
 
     test "allows unlimited usage when usage_limit is nil" do
-      # Create promotion without usage_limit (defaults to nil)
       {:ok, promotion} =
         Promotion
         |> Ash.Changeset.for_create(:create, %{
@@ -273,7 +260,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      # Increment usage many times to simulate high usage
       promotion =
         Enum.reduce(1..100, promotion, fn _, promo ->
           {:ok, updated} = Promotion.increment_usage(promo, authorize?: false)
@@ -282,7 +268,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
       assert promotion.usage == 100
 
-      # Should be found even with high usage because there's no limit
       assert {:ok, %Promotion{id: id}} =
                Promotion.get_by_code("UNLIMITED", Date.utc_today())
 
@@ -296,7 +281,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
 
-      # Create promotion with usage_limit
       {:ok, promotion} =
         Promotion
         |> Ash.Changeset.for_create(:create, %{
@@ -308,14 +292,12 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      # Increment usage to limit (10 times)
       Enum.each(1..10, fn _ ->
         {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
       end)
 
       order = Order.create_for_checkout!(authorize?: false)
 
-      # Add line item
       generate(
         line_item(
           order_id: order.id,
@@ -323,7 +305,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
         )
       )
 
-      # Try to apply promotion using code - should fail
       assert {:error, error} = Order.add_promotion_with_code(order, "MAXED", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end

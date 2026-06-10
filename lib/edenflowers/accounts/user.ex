@@ -152,22 +152,19 @@ defmodule Edenflowers.Accounts.User do
       authorize_if always()
     end
 
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    # Users can read their own data
     policy action_type(:read) do
       authorize_if expr(id == ^actor(:id))
     end
 
-    # Users can update their own data
     policy action_type(:update) do
       authorize_if expr(id == ^actor(:id))
     end
 
-    # Anyone can subscribe to the newsletter (no actor required)
+    # Anyone can subscribe to the newsletter (no actor required).
     policy action(:subscribe_to_newsletter) do
       authorize_if always()
     end

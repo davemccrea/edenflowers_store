@@ -53,7 +53,6 @@ defmodule Edenflowers.External.HereAPI do
     url =
       "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{query}&return=summary&apikey=#{api_key()}"
 
-    # %{"routes" => [%{"sections" => [%{"summary" => %{"length" => length}} | _]} | _]} <- body
     with {:ok, %{body: body}} <- Req.get(url),
          {:ok, total_length} <- sum_route_lengths(body) do
       {:ok, total_length}

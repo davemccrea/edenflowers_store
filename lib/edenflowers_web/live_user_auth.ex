@@ -9,9 +9,6 @@ defmodule EdenflowersWeb.LiveUserAuth do
 
   alias EdenflowersWeb.ReturnTo
 
-  # This is used for nested liveviews to fetch the current user.
-  # To use, place the following at the top of that liveview:
-  # on_mount {EdenflowersWeb.LiveUserAuth, :current_user}
   def on_mount(:current_user, _params, session, socket) do
     {:cont, AshAuthentication.Phoenix.LiveSession.assign_new_resources(socket, session)}
   end

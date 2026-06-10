@@ -24,7 +24,6 @@ defmodule Edenflowers.Orders.Order.Changes.UpdatePromotionUsageCount do
           result
 
         {:error, _error} ->
-          # Order finalization failed - don't try to update promotion
           result
       end
     end)

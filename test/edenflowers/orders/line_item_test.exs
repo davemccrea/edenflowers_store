@@ -93,7 +93,6 @@ defmodule Edenflowers.Orders.LineItemTest do
       promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
       order = generate(order())
 
-      # Add line item first
       line_item =
         LineItem
         |> Ash.Changeset.for_create(:add_to_cart, %{
@@ -102,7 +101,6 @@ defmodule Edenflowers.Orders.LineItemTest do
         })
         |> Ash.create!(authorize?: false)
 
-      # Then apply promotion
       _order = Order.add_promotion_with_id!(order, promotion.id, authorize?: false)
 
       line_item = Ash.load!(line_item, :promotion_applied?)

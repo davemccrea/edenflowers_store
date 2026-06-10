@@ -46,17 +46,14 @@ defmodule Edenflowers.Courses.Course do
   end
 
   policies do
-    # Admin bypass - admins can do anything
     bypass actor_attribute_equals(:admin, true) do
       authorize_if always()
     end
 
-    # Public read access to courses
     policy action_type(:read) do
       authorize_if always()
     end
 
-    # Only admin via bypass — all others forbidden
     policy action_type([:create, :update, :destroy]) do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
