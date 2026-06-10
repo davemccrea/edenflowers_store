@@ -13,8 +13,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  alias Edenflowers.Fulfillment.FulfillmentCalendar
-  alias Edenflowers.Fulfillment.FulfillmentPricing
+  alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Fulfillment.Fee
 
   postgres do
     table "fulfillment_options"
@@ -133,7 +133,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
              {:ok, {geocoded_address, position, here_id}} <- here_api.get_address(delivery_address),
              {:ok, distance} <- here_api.get_distance(position) do
-          case FulfillmentPricing.price(option, distance) do
+          case Fee.calculate(option, distance) do
             %{error: nil, fulfillment_fee: fulfillment_fee} ->
               {:ok,
                %{
@@ -165,7 +165,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
       run fn input, _context ->
         with {:ok, option} <- Ash.get(__MODULE__, input.arguments.fulfillment_option_id, authorize?: false) do
-          {:ok, FulfillmentPricing.price(option, input.arguments.distance)}
+          {:ok, Fee.calculate(option, input.arguments.distance)}
         end
       end
     end
@@ -188,7 +188,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         now = DateTime.shift_zone!(input.arguments.now, "Europe/Helsinki")
 
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
-          {:ok, FulfillmentCalendar.unavailable_reason(option, date, now)}
+          {:ok, Availability.unavailable_reason(option, date, now)}
         end
       end
     end

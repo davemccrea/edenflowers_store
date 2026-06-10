@@ -1,9 +1,9 @@
-defmodule Edenflowers.Fulfillment.FulfillmentPricing do
+defmodule Edenflowers.Fulfillment.Fee do
   @moduledoc """
   Pure fulfillment-fee calculation. Shared by the `calculate_price` action
   (which loads the option first) and `calculate_delivery` (which already holds
   the loaded option after geocoding), the same split as
-  `FulfillmentCalendar.unavailable_reason/3` vs the `fulfill_on_date` action.
+  `Availability.unavailable_reason/3` vs the `fulfill_on_date` action.
   """
 
   alias Edenflowers.Fulfillment.FulfillmentOption
@@ -17,12 +17,12 @@ defmodule Edenflowers.Fulfillment.FulfillmentPricing do
           %{error: nil, fulfillment_fee: Decimal.t()}
           | %{error: :out_of_delivery_range, fulfillment_fee: nil}
 
-  @spec price(FulfillmentOption.t(), Decimal.t()) :: result()
-  def price(%FulfillmentOption{rate_type: :fixed} = option, _distance) do
+  @spec calculate(FulfillmentOption.t(), Decimal.t()) :: result()
+  def calculate(%FulfillmentOption{rate_type: :fixed} = option, _distance) do
     %{error: nil, fulfillment_fee: option.base_price}
   end
 
-  def price(%FulfillmentOption{rate_type: :dynamic} = option, %Decimal{} = distance) do
+  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, %Decimal{} = distance) do
     %{
       price_per_km: price_per_km,
       base_price: base_price,

@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   disable them. Scoped to a single fulfillment option or to all options at
   once (with a `:mixed` indicator when options disagree).
 
-  Click semantics live in `Edenflowers.Fulfillment.FulfillmentCalendar`. Admin
+  Click semantics live in `Edenflowers.Fulfillment.Availability`. Admin
   presentation lives in `EdenflowersWeb.Admin.CalendarComponent`. This
   LiveView only orchestrates state and persistence.
   """

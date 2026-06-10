@@ -10,20 +10,20 @@ defmodule EdenflowersWeb.Admin.Calendar do
   `:all_past`.
 
   The per-option booking rule itself lives in the domain
-  (`Edenflowers.Fulfillment.FulfillmentCalendar.admin_cell_state/3`); these
+  (`Edenflowers.Fulfillment.Availability.admin_cell_state/3`); these
   helpers call into it.
   """
 
-  alias Edenflowers.Fulfillment.{FulfillmentCalendar, FulfillmentOption, KeyDates, Weekday}
+  alias Edenflowers.Fulfillment.{Availability, FulfillmentOption, KeyDates, Weekday}
 
   @typedoc "Which fulfillment options the admin grid is showing: every option, or one by id."
   @type scope :: :all | String.t()
 
   @typedoc """
-  `FulfillmentCalendar.admin_cell_state/3` outputs plus `:mixed`, which only
+  `Availability.admin_cell_state/3` outputs plus `:mixed`, which only
   happens in the admin "All options" view when options disagree on a date.
   """
-  @type cell_state :: FulfillmentCalendar.admin_cell_state() | :mixed
+  @type cell_state :: Availability.admin_cell_state() | :mixed
 
   @doc """
   Narrow `options` to the current scope. `:all` returns everything; a UUID
@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   def cell_state_for_scope(option_id, options, %Date{} = date, %Date{} = today) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :open
-      option -> FulfillmentCalendar.admin_cell_state(option, date, today)
+      option -> Availability.admin_cell_state(option, date, today)
     end
   end
 
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
 
   def cell_state_for_options(options, date, today) when is_list(options) do
     options
-    |> Enum.map(&FulfillmentCalendar.admin_cell_state(&1, date, today))
+    |> Enum.map(&Availability.admin_cell_state(&1, date, today))
     |> Enum.uniq()
     |> case do
       [single] -> single
@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
         :all_past
 
       dates ->
-        states = Enum.map(dates, &FulfillmentCalendar.admin_cell_state(option, &1, today))
+        states = Enum.map(dates, &Availability.admin_cell_state(option, &1, today))
 
         cond do
           Enum.all?(states, &(&1 == :open)) -> :all_open

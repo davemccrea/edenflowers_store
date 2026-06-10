@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   alias Edenflowers.Catalog.{ProductVariant, ProductVariantSize}
   alias Edenflowers.Orders.{Order}
-  alias Edenflowers.Fulfillment.{FulfillmentCalendar, FulfillmentOption}
+  alias Edenflowers.Fulfillment.{Availability, FulfillmentOption}
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
 
@@ -202,9 +202,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                             }
                             selected_date={@form[:fulfillment_date].value}
                             module={EdenflowersWeb.CalendarComponent}
-                            cell_state={
-                              fn date -> FulfillmentCalendar.customer_cell_state(@order.fulfillment_option, date) end
-                            }
+                            cell_state={fn date -> Availability.customer_cell_state(@order.fulfillment_option, date) end}
                           >
                             <:day_decoration :let={%{date: day, state: state}}>
                               <.key_date_icon date={day} muted?={state == :past} />

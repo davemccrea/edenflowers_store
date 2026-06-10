@@ -1,4 +1,4 @@
-defmodule Edenflowers.Fulfillment.FulfillmentCalendar do
+defmodule Edenflowers.Fulfillment.Availability do
   @moduledoc """
   Pure availability projections for fulfillment calendars.
 

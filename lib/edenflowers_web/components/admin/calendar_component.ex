@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
 
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Fulfillment.FulfillmentCalendar
+  alias Edenflowers.Fulfillment.Availability
   alias EdenflowersWeb.Admin.Calendar
 
   # Shared "options disagree" tile — diagonal stripes via the calendar-mixed
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Admin.CalendarComponent do
   defp scope_override?(option_id, options, date) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> false
-      option -> FulfillmentCalendar.override?(option, date)
+      option -> Availability.override?(option, date)
     end
   end
 
