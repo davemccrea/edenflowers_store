@@ -194,11 +194,12 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       end
     end
 
-    action :fulfill_on_date, :map do
-      description "Whether the option can be fulfilled on `date`. Returns a tagged map: " <>
-                    "%{error: nil} when bookable, or %{error: reason} when not. The tagged map " <>
-                    "keeps the reason out of Ash.Error.Unknown so callers can match on it directly."
+    action :fulfill_on_date, :atom do
+      description "Why the option can't be fulfilled on `date`, or nil when it can. Returns " <>
+                    "{:ok, nil} when bookable and {:ok, reason} when not — a non-bookable date " <>
+                    "is a normal result, not an error, so it stays out of Ash.Error.Unknown."
 
+      allow_nil? true
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       argument :date, :date, allow_nil?: false
       argument :now, :utc_datetime, default: &DateTime.utc_now/0
@@ -211,7 +212,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         now = DateTime.shift_zone!(input.arguments.now, "Europe/Helsinki")
 
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
-          {:ok, %{error: FulfillmentCalendar.unavailable_reason(option, date, now)}}
+          {:ok, FulfillmentCalendar.unavailable_reason(option, date, now)}
         end
       end
     end
