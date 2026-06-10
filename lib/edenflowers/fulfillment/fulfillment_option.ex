@@ -89,7 +89,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     update :toggle_date do
-      description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in FulfillmentCalendar."
+      description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in Changes.ToggleDate."
       # The change reads the existing option to compute the new override sets,
       # so it can't be expressed as a single DB expression.
       require_atomic? false
@@ -98,7 +98,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     update :set_weekday do
-      description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per FulfillmentCalendar."
+      description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per Changes.SetWeekday."
       require_atomic? false
       argument :weekday, :atom, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
