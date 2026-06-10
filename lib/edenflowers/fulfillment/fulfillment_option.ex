@@ -131,8 +131,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         option_id = input.arguments.fulfillment_option_id
 
         with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
-             {:ok, {geocoded_address, position, here_id}} <- here_api.get_address(delivery_address),
-             {:ok, distance} <- here_api.get_distance(position) do
+             {:ok, {geocoded_address, position, here_id}} <- here_api.geocode(delivery_address),
+             {:ok, distance} <- here_api.route_distance(position) do
           case Fee.calculate(option, distance) do
             %{error: nil, fulfillment_fee: fulfillment_fee} ->
               {:ok,

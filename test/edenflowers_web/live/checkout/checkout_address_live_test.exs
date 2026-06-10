@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     end
 
     test "address not found shows field error", %{conn: conn, delivery_option: delivery_option} do
-      stub(Edenflowers.External.HereAPI.Mock, :get_address, fn _query -> {:error, :address_not_found} end)
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query -> {:error, :address_not_found} end)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -63,11 +63,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     end
 
     test "out of delivery range shows field error", %{conn: conn, delivery_option: delivery_option} do
-      stub(Edenflowers.External.HereAPI.Mock, :get_address, fn _query ->
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
         {:ok, {"Somewhere Far Away 1, 99999 Nowhere", "70.0000,30.0000", "here-id-456"}}
       end)
 
-      stub(Edenflowers.External.HereAPI.Mock, :get_distance, fn _position -> {:error, :out_of_delivery_range} end)
+      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:error, :out_of_delivery_range} end)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     end
 
     test "blurring an empty address field does nothing", %{conn: conn, delivery_option: delivery_option} do
-      expect(Edenflowers.External.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
+      expect(Edenflowers.External.HereAPI.Mock, :geocode, 0, fn _query -> :should_not_be_called end)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -159,11 +159,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       conn: conn,
       delivery_option: delivery_option
     } do
-      expect(Edenflowers.External.HereAPI.Mock, :get_address, 1, fn _query ->
+      expect(Edenflowers.External.HereAPI.Mock, :geocode, 1, fn _query ->
         {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
       end)
 
-      expect(Edenflowers.External.HereAPI.Mock, :get_distance, 1, fn _position -> {:ok, 3000} end)
+      expect(Edenflowers.External.HereAPI.Mock, :route_distance, 1, fn _position -> {:ok, 3000} end)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -222,7 +222,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       order: order,
       delivery_option: delivery_option
     } do
-      expect(Edenflowers.External.HereAPI.Mock, :get_address, 0, fn _query -> :should_not_be_called end)
+      expect(Edenflowers.External.HereAPI.Mock, :geocode, 0, fn _query -> :should_not_be_called end)
 
       seed_confirmed_address(order, delivery_option)
 
@@ -325,11 +325,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   defp stub_successful_geocode do
-    stub(Edenflowers.External.HereAPI.Mock, :get_address, fn _query ->
+    stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
       {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
     end)
 
-    stub(Edenflowers.External.HereAPI.Mock, :get_distance, fn _position -> {:ok, 3000} end)
+    stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
   end
 
   defp select_delivery_option(view, option_id) do

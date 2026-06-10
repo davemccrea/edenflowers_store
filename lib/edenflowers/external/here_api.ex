@@ -1,7 +1,7 @@
 defmodule Edenflowers.External.HereAPI.Behaviour do
-  @callback get_address(query :: String.t()) ::
+  @callback geocode(query :: String.t()) ::
               {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
-  @callback get_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
+  @callback route_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
 end
 
 defmodule Edenflowers.External.HereAPI do
@@ -15,7 +15,7 @@ defmodule Edenflowers.External.HereAPI do
   # TODO
   @lang "sv"
 
-  def get_address(query) when is_binary(query) do
+  def geocode(query) when is_binary(query) do
     url =
       "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
 
@@ -49,9 +49,9 @@ defmodule Edenflowers.External.HereAPI do
     end
   end
 
-  def get_distance(query) when is_binary(query) do
+  def route_distance(position) when is_binary(position) do
     url =
-      "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{query}&return=summary&apikey=#{api_key()}"
+      "https://router.hereapi.com/v8/routes?transportMode=car&origin=#{@origin}&destination=#{position}&return=summary&apikey=#{api_key()}"
 
     with {:ok, %{body: body}} <- Req.get(url),
          {:ok, total_length} <- sum_route_lengths(body) do
