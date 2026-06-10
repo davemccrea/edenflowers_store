@@ -8,12 +8,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   once (with a `:mixed` indicator when options disagree).
 
   Click semantics live in `Edenflowers.Fulfillment.Availability`. Admin
-  presentation lives in `EdenflowersWeb.Admin.CalendarComponent`. This
+  presentation lives in `EdenflowersWeb.Admin.CalendarGrid`. This
   LiveView only orchestrates state and persistence.
   """
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
+  import EdenflowersWeb.Admin.CalendarGrid, only: [admin_calendar: 1, admin_calendar_legend: 1]
 
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias EdenflowersWeb.Admin.CalendarViewModel

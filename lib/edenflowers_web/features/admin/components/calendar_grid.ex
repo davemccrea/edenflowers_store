@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.Admin.CalendarComponent do
+defmodule EdenflowersWeb.Admin.CalendarGrid do
   @moduledoc """
   Admin wrapper around `EdenflowersWeb.CalendarComponent`.
 
