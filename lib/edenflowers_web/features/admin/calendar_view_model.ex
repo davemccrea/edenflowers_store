@@ -14,29 +14,18 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
 
   alias Edenflowers.Fulfillment.{Availability, FulfillmentOption, KeyDates, Weekday}
 
-  @typedoc "Which fulfillment options the admin grid is showing: every option, or one by id."
   @type scope :: :all | String.t()
 
   @typedoc """
-  `Availability.admin_cell_state/3` outputs plus `:mixed`, which only
-  happens in the admin "All options" view when options disagree on a date.
+  `Availability.admin_cell_state/3` outputs plus `:mixed`, which arises only in
+  the "All options" view when options disagree on a date.
   """
   @type cell_state :: Availability.admin_cell_state() | :mixed
 
-  @doc """
-  Narrow `options` to the current scope. `:all` returns everything; a UUID
-  string returns the single option (or `[]` when not found).
-  """
   @spec scoped_options(scope(), [FulfillmentOption.t()]) :: [FulfillmentOption.t()]
   def scoped_options(:all, options), do: options
   def scoped_options(option_id, options), do: Enum.filter(options, &(&1.id == option_id))
 
-  @doc """
-  Cell state for the current scope. `:all` aggregates across every option
-  (collapsing disagreement to `:mixed`); a single-option scope returns that
-  option's admin cell state. Falls back to `:open` when the scoped id is
-  unknown so the cell still renders.
-  """
   @spec cell_state_for_scope(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
   def cell_state_for_scope(:all, options, %Date{} = date, %Date{} = today) do
     cell_state_for_options(options, date, today)
@@ -49,11 +38,6 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
     end
   end
 
-  @doc """
-  Cell state across multiple options. Returns `:mixed` when options disagree
-  on whether the date is open — used by the "All options" admin view to
-  signal that the florist must pick a specific option to disambiguate.
-  """
   @spec cell_state_for_options([FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
   def cell_state_for_options([], _date, _today), do: :open
 
@@ -67,16 +51,6 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
     end
   end
 
-  @doc """
-  Weekday state across the current scope.
-
-  - `:on` — every option in scope has the weekday available.
-  - `:off` — no option in scope has the weekday available.
-  - `:mixed` — options disagree.
-
-  Scope is `:all` (every option) or a single option id. Falls back to `:on`
-  when the scoped option isn't found so the header keeps a sensible default.
-  """
   @spec weekday_state(scope(), [FulfillmentOption.t()], Weekday.t()) :: :on | :off | :mixed
   def weekday_state(:all, [], _weekday), do: :on
 
@@ -99,21 +73,15 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   end
 
   @typedoc """
-  Summary of a week's openness for one option, used to label and enable/disable
-  the per-week toggle button.
+  Openness of a week for one option:
 
-  - `:all_open` — every non-past cell in the week is open.
-  - `:all_closed` — every non-past cell is closed (by weekday rule or override).
-  - `:mixed` — some non-past cells are open, others closed.
-  - `:all_past` — every cell in the week is in the past; the week isn't actionable.
+  - `:all_open` — every non-past cell is open.
+  - `:all_closed` — every non-past cell is closed (weekday rule or override).
+  - `:mixed` — non-past cells disagree.
+  - `:all_past` — every cell is in the past; the week isn't actionable.
   """
   @type week_state :: :all_open | :all_closed | :mixed | :all_past
 
-  @doc """
-  Classify a week's openness for one option, against `today`. Used by the
-  per-week toggle button to pick its label and to disable itself when the
-  whole week is in the past.
-  """
   @spec week_state(FulfillmentOption.t(), [Date.t()], Date.t()) :: week_state()
   def week_state(%FulfillmentOption{} = option, week, %Date{} = today) when is_list(week) do
     actionable =
@@ -136,22 +104,12 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
     end
   end
 
-  @doc """
-  Smart-toggle direction across a scope. If any option has the weekday
-  available, the bulk gesture closes it everywhere; otherwise it opens it
-  everywhere.
-  """
   @spec weekday_toggle_direction([FulfillmentOption.t()], Weekday.t()) :: :on | :off
   def weekday_toggle_direction(options, weekday) when is_list(options) do
     if Enum.any?(options, &(weekday in &1.available_days)), do: :off, else: :on
   end
 
-  @doc """
-  Smart-toggle direction across a scope. If any option has at least one open
-  non-past cell in the week, the bulk gesture closes the week everywhere;
-  otherwise it opens what's closed. Returns `nil` when no option has any
-  actionable (non-past) cell — the week is entirely past, nothing to do.
-  """
+  @doc "Like `weekday_toggle_direction/2`, but `nil` when the week is entirely past (nothing to toggle)."
   @spec week_toggle_direction([FulfillmentOption.t()], [Date.t()], Date.t()) :: :open | :closed | nil
   def week_toggle_direction(options, week, %Date{} = today) when is_list(options) and is_list(week) do
     any_actionable? =
