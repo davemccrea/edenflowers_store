@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   @default_timezone "Europe/Helsinki"
 
   def mount(socket) do
-    today_date = calculate_today()
+    today_date = today()
 
     {:ok,
      socket
@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     # (e.g. form pre-populated on remount), advance the view so the selected
     # pill is visible. No-op when the selected date is already in view.
     socket =
-      if selected_date && not current_month?(selected_date, socket.assigns.view_date) do
+      if selected_date && not same_month?(selected_date, socket.assigns.view_date) do
         update_calendar_view(socket, selected_date)
       else
         socket
@@ -121,7 +121,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2"}
       phx-hook="CalendarHook"
       data-view-date={Date.to_iso8601(@view_date)}
-      data-focusable-dates={get_focusable_dates_json(@view_date)}
+      data-focusable-dates={focusable_dates_json(@view_date)}
     >
       <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
         {live_region_text(@view_date, @selected_date)}
@@ -130,7 +130,7 @@ defmodule EdenflowersWeb.CalendarComponent do
       <div class="flex items-center justify-between">
         <button
           id={"#{@id}-previous-month"}
-          disabled={current_month?(@view_date, @today_date)}
+          disabled={same_month?(@view_date, @today_date)}
           phx-target={@myself}
           phx-click="previous-month"
           type="button"
@@ -205,7 +205,7 @@ defmodule EdenflowersWeb.CalendarComponent do
             <.icon name="hero-arrows-right-left" class="h-3 w-3" />
           </button>
           <%= for day <- week do %>
-            <%= if current_month?(day, @view_date) do %>
+            <%= if same_month?(day, @view_date) do %>
               <% state = @cell_state.(day) %>
               <% selectable? = state in @clickable_states %>
               <button
@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   def handle_event("select", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string),
-         true <- current_month?(date, socket.assigns.view_date),
+         true <- same_month?(date, socket.assigns.view_date),
          true <- socket.assigns.cell_state.(date) in socket.assigns.clickable_states do
       send(self(), {socket.assigns.on_click, date})
       {:noreply, update_calendar_view(socket, date)}
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.CalendarComponent do
   end
 
   defp previous_month_button_class(view_date, today_date) do
-    is_disabled = current_month?(view_date, today_date)
+    is_disabled = same_month?(view_date, today_date)
 
     base_class =
       "focus-visible:outline-base-content flex flex-none items-center justify-center rounded-sm p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -436,7 +436,7 @@ defmodule EdenflowersWeb.CalendarComponent do
     |> Enum.chunk_every(7)
   end
 
-  defp get_focusable_dates_json(view_date) do
+  defp focusable_dates_json(view_date) do
     first = Date.beginning_of_month(view_date)
     last = Date.end_of_month(view_date)
 
@@ -447,11 +447,11 @@ defmodule EdenflowersWeb.CalendarComponent do
 
   defp selected?(day, selected_date), do: day == selected_date
 
-  defp current_month?(day, view_date) do
+  defp same_month?(day, view_date) do
     Date.beginning_of_month(day) == Date.beginning_of_month(view_date)
   end
 
-  defp calculate_today(tz \\ @default_timezone) do
+  defp today(tz \\ @default_timezone) do
     tz
     |> DateTime.now!()
     |> DateTime.to_date()
