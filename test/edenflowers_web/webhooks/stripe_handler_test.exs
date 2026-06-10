@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.StripeHandlerTest do
+defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   use Edenflowers.DataCase
 
   import ExUnit.CaptureLog
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   describe "payment_intent.succeeded" do
     test "finalizes the order, marks it paid, and enqueues a confirmation email", %{order: order} do
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_succeeded_1",
                  type: "payment_intent.succeeded",
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
@@ -72,11 +72,11 @@ defmodule EdenflowersWeb.StripeHandlerTest do
       }
 
       # First delivery — finalizes + enqueues.
-      assert :ok = EdenflowersWeb.StripeHandler.handle_event(event)
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
       # Stripe redelivers the same event after we've already processed it. The
       # handler must still return :ok so Stripe stops retrying, and the unique
       # constraint on the worker collapses the duplicate enqueue.
-      assert :ok = EdenflowersWeb.StripeHandler.handle_event(event)
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
 
       order = Order.get_by_id!(order.id, authorize?: false)
       assert order.state == :placed
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     test "returns :error when metadata.order_id is missing" do
       capture_log(fn ->
         assert :error =
-                 EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_no_metadata",
                    type: "payment_intent.succeeded",
                    data: %{object: %{metadata: %{}}}
@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   describe "payment_intent.payment_failed" do
     test "marks the order's payment_status as :failed without finalizing", %{order: order} do
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_failed_1",
                  type: "payment_intent.payment_failed",
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
@@ -119,7 +119,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     test "does not downgrade an already-paid order", %{order: order} do
       # Succeeded fires first.
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_first_success",
                  type: "payment_intent.succeeded",
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
 
       # A late `payment_failed` for the same intent shouldn't flip the order back.
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_late_failure",
                  type: "payment_intent.payment_failed",
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   describe "payment_intent.canceled" do
     test "marks the order's payment_status as :failed", %{order: order} do
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
                  type: "payment_intent.canceled",
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
   describe "unhandled events" do
     test "returns :ok for charge.succeeded (handled via payment_intent.succeeded)" do
       assert :ok =
-               EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_charge_succeeded",
                  type: "charge.succeeded",
                  data: %{object: %{}}
@@ -167,7 +167,7 @@ defmodule EdenflowersWeb.StripeHandlerTest do
     test "returns :ok for an unhandled event type" do
       capture_log(fn ->
         assert :ok =
-                 EdenflowersWeb.StripeHandler.handle_event(%Stripe.Event{
+                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_random",
                    type: "invoice.paid",
                    data: %{object: %{}}

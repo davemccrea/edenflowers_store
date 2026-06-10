@@ -1,8 +1,8 @@
-defmodule EdenflowersWeb.PapraHandler do
+defmodule EdenflowersWeb.Webhooks.PapraHandler do
   @moduledoc """
   Handles verified Papra webhook events.
 
-  Mirrors `EdenflowersWeb.StripeHandler`: a thin module that turns a webhook
+  Mirrors `EdenflowersWeb.Webhooks.StripeHandler`: a thin module that turns a webhook
   payload into an enqueued Oban job and returns quickly. All slow, fallible
   work (fetching the document, calling Claude, ingesting) happens in
   `Edenflowers.Workers.ProcessExpenseDocument`, where Oban retries apply.

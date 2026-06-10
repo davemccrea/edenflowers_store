@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.StripeHandler do
+defmodule EdenflowersWeb.Webhooks.StripeHandler do
   @behaviour Stripe.WebhookHandler
 
   require Logger
