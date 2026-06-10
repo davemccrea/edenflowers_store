@@ -1,9 +1,9 @@
-defmodule EdenflowersWeb.CalendarComponent do
+defmodule EdenflowersWeb.DatePicker do
   use EdenflowersWeb, :live_component
   require Logger
 
   alias Edenflowers.Fulfillment.Weekday
-  alias EdenflowersWeb.CalendarComponent.Keymap
+  alias EdenflowersWeb.DatePicker.Keymap
 
   @week_begins :default
   @default_timezone "Europe/Helsinki"

@@ -201,7 +201,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                                 Enum.any?(@form[:fulfillment_date].errors)
                             }
                             selected_date={@form[:fulfillment_date].value}
-                            module={EdenflowersWeb.CalendarComponent}
+                            module={EdenflowersWeb.DatePicker}
                             cell_state={fn date -> Availability.customer_cell_state(@order.fulfillment_option, date) end}
                           >
                             <:day_decoration :let={%{date: day, state: state}}>

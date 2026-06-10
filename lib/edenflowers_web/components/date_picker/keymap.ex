@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CalendarComponent.Keymap do
+defmodule EdenflowersWeb.DatePicker.Keymap do
   @moduledoc """
   WAI-ARIA date-picker keyboard navigation.
 

@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.CalendarGrid do
   @moduledoc """
-  Admin wrapper around `EdenflowersWeb.CalendarComponent`.
+  Admin wrapper around `EdenflowersWeb.DatePicker`.
 
   Holds every admin-specific binding — styling, override decoration,
   weekday-click — so the LiveView only orchestrates state. The inner
@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Admin.CalendarGrid do
     <.live_component
       id={@id}
       field={nil}
-      module={EdenflowersWeb.CalendarComponent}
+      module={EdenflowersWeb.DatePicker}
       selected_date={nil}
       cell_state={fn date -> CalendarViewModel.cell_state_for_scope(@scope, @options, date, @today) end}
       cell_class={

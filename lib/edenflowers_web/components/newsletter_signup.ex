@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.NewsletterSignupForm do
+defmodule EdenflowersWeb.NewsletterSignup do
   use EdenflowersWeb, :live_component
   require Logger
 

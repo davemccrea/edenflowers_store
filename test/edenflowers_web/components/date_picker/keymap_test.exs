@@ -1,7 +1,7 @@
-defmodule EdenflowersWeb.CalendarComponent.KeymapTest do
+defmodule EdenflowersWeb.DatePicker.KeymapTest do
   use ExUnit.Case, async: true
 
-  alias EdenflowersWeb.CalendarComponent.Keymap
+  alias EdenflowersWeb.DatePicker.Keymap
 
   @today ~D[2026-05-12]
 
