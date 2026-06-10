@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.Admin.CalendarGrid do
+defmodule EdenflowersWeb.Admin.Calendar do
   @moduledoc """
   Admin wrapper around `EdenflowersWeb.DatePicker`.
 
@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.CalendarGrid do
   attr :options, :list, required: true
   attr :today, :any, required: true, doc: "`Date.t()` — passed in so render stays pure"
 
-  def calendar(assigns) do
+  def grid(assigns) do
     ~H"""
     <.live_component
       id={@id}
