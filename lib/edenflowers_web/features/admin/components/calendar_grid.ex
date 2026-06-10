@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.CalendarGrid do
   attr :options, :list, required: true
   attr :today, :any, required: true, doc: "`Date.t()` — passed in so render stays pure"
 
-  def admin_calendar(assigns) do
+  def calendar(assigns) do
     ~H"""
     <.live_component
       id={@id}
@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.Admin.CalendarGrid do
   Static legend that matches the admin cell vocabulary. Kept next to the
   cell/weekday class functions so a change to either stays visible.
   """
-  def admin_calendar_legend(assigns) do
+  def legend(assigns) do
     ~H"""
     <aside class="text-sm md:max-w-xs md:pt-2">
       <h2 class="eyebrow text-base-content/55 mb-3">Legend</h2>

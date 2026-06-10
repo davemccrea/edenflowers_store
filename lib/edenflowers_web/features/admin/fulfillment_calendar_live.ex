@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   """
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.CalendarGrid, only: [admin_calendar: 1, admin_calendar_legend: 1]
+  import EdenflowersWeb.Admin.CalendarGrid, only: [calendar: 1, legend: 1]
 
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias EdenflowersWeb.Admin.CalendarViewModel
@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
       <div class="flex flex-col gap-8 md:flex-row md:items-start">
         <div class="w-full max-w-xl">
-          <.admin_calendar
+          <.calendar
             id="admin-fulfillment-calendar"
             scope={@scope}
             options={@options}
@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
         </div>
 
         <div class="flex flex-col gap-4">
-          <.admin_calendar_legend />
+          <.legend />
           <button
             type="button"
             phx-click="reset-calendar"
