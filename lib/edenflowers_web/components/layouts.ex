@@ -227,7 +227,7 @@ defmodule EdenflowersWeb.Layouts do
 
     <.live_component
       id="cart-drawer-component"
-      module={EdenflowersWeb.CartDrawerComponent}
+      module={EdenflowersWeb.Cart.Drawer}
       order={@order}
       current_user={@current_user}
     />

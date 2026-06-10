@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.LineItemsComponent do
+defmodule EdenflowersWeb.Cart.LineItems do
   use EdenflowersWeb, :live_component
 
   alias Edenflowers.Orders.Order

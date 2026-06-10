@@ -252,11 +252,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   {~t"Cart"} ({@order.total_items_in_cart || 0})
                 </p>
 
-                <.live_component id="checkout-line-items" module={EdenflowersWeb.LineItemsComponent} order={@order} />
+                <.live_component id="checkout-line-items" module={EdenflowersWeb.Cart.LineItems} order={@order} />
 
                 <.live_component
                   id="checkout-promo"
-                  module={EdenflowersWeb.PromoCodeComponent}
+                  module={EdenflowersWeb.Cart.PromoCode}
                   order={@order}
                   current_user={@current_user}
                 />

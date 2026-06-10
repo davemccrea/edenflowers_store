@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.PromoCodeComponent do
+defmodule EdenflowersWeb.Cart.PromoCode do
   @moduledoc """
   Promo code affordance — collapsed link by default, expands to an input
   with Apply when the customer signals intent, and shows the applied

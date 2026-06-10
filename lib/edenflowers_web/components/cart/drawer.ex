@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.CartDrawerComponent do
+defmodule EdenflowersWeb.Cart.Drawer do
   use EdenflowersWeb, :live_component
 
   def update(assigns, socket) do
@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.CartDrawerComponent do
         <div class="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
           <.live_component
             id="cart-line-items"
-            module={EdenflowersWeb.LineItemsComponent}
+            module={EdenflowersWeb.Cart.LineItems}
             order={@order}
             link_product={true}
           />
@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.CartDrawerComponent do
           <.live_component
             :if={Enum.any?(@order.line_items)}
             id="cart-drawer-promo"
-            module={EdenflowersWeb.PromoCodeComponent}
+            module={EdenflowersWeb.Cart.PromoCode}
             order={@order}
             current_user={@current_user}
           />
