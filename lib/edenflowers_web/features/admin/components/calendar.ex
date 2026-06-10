@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
       on_week_click={:fulfillment_week_toggled}
       week_class={
         fn week ->
-          week_class(scope_week_state(@scope, @options, week, @today))
+          week_class(CalendarViewModel.week_state(@scope, @options, week, @today))
         end
       }
     >
@@ -86,27 +86,6 @@ defmodule EdenflowersWeb.Admin.Calendar do
       </ul>
     </aside>
     """
-  end
-
-  # Aggregate week state across the current scope. From the button's POV three
-  # outcomes matter: everything open, everything closed, anything else (mixed),
-  # or whole week in the past. Cross-option disagreement just folds into :mixed
-  # — the bulk gesture is the gesture for that case.
-  defp scope_week_state(scope, options, week, today) do
-    case CalendarViewModel.scoped_options(scope, options) do
-      [] ->
-        :all_open
-
-      list ->
-        states = Enum.map(list, &CalendarViewModel.week_state(&1, week, today))
-
-        cond do
-          Enum.all?(states, &(&1 == :all_past)) -> :all_past
-          Enum.all?(states, &(&1 == :all_open)) -> :all_open
-          Enum.all?(states, &(&1 == :all_closed)) -> :all_closed
-          true -> :mixed
-        end
-    end
   end
 
   # `:all` collapses to `false` — across options, "some override, some don't"

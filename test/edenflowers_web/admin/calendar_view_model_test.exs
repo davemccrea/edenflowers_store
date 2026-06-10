@@ -199,18 +199,18 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
     end
   end
 
-  describe "week_state/3" do
+  describe "week_state/4" do
     test ":all_open when every actionable cell is open", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       # 2024-04-08 Mon .. 2024-04-14 Sun — a Mon-Sun week with no key dates.
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_open == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
+      assert :all_open == CalendarViewModel.week_state(option.id, [option], week, ~D[2024-04-01])
     end
 
     test ":all_closed when every actionable cell is closed", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_closed == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
+      assert :all_closed == CalendarViewModel.week_state(option.id, [option], week, ~D[2024-04-01])
     end
 
     test ":mixed when some cells are open and some closed", %{tax_rate_id: tax_rate_id} do
@@ -224,13 +224,13 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
         )
 
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :mixed == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
+      assert :mixed == CalendarViewModel.week_state(option.id, [option], week, ~D[2024-04-01])
     end
 
     test ":all_past when every cell is before today", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_past == CalendarViewModel.week_state(option, week, ~D[2024-04-15])
+      assert :all_past == CalendarViewModel.week_state(option.id, [option], week, ~D[2024-04-15])
     end
 
     test "ignores key dates so a key-date-only week reports as :all_past", %{tax_rate_id: tax_rate_id} do
@@ -241,7 +241,23 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
       # "today" makes Mon..Sat all past, leaving only Sun (Mother's Day) actionable.
       today = ~D[2026-05-10]
 
-      assert :all_past == CalendarViewModel.week_state(option, week, today)
+      assert :all_past == CalendarViewModel.week_state(option.id, [option], week, today)
+    end
+  end
+
+  describe "week_state/4 across options" do
+    test ":mixed when options disagree", %{tax_rate_id: tax_rate_id} do
+      open_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
+      closed_option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+
+      assert :mixed ==
+               CalendarViewModel.week_state(:all, [open_option, closed_option], week, ~D[2024-04-01])
+    end
+
+    test ":all_open for an empty scope" do
+      week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
+      assert :all_open == CalendarViewModel.week_state(:all, [], week, ~D[2024-04-01])
     end
   end
 

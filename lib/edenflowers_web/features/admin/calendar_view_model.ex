@@ -72,17 +72,36 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   end
 
   @typedoc """
-  Openness of a week for one option:
+  Openness of a week across the current scope, for the per-week toggle button:
 
-  - `:all_open` — every non-past cell is open.
-  - `:all_closed` — every non-past cell is closed (weekday rule or override).
-  - `:mixed` — non-past cells disagree.
-  - `:all_past` — every cell is in the past; the week isn't actionable.
+  - `:all_open` — every actionable (non-past) cell is open; also when the scope is empty.
+  - `:all_closed` — every actionable cell is closed (weekday rule or override).
+  - `:mixed` — cells within an option, or options with each other, disagree.
+  - `:all_past` — the whole week is in the past; the button isn't actionable.
   """
   @type week_state :: :all_open | :all_closed | :mixed | :all_past
 
-  @spec week_state(FulfillmentOption.t(), [Date.t()], Date.t()) :: week_state()
-  def week_state(%FulfillmentOption{} = option, week, %Date{} = today) when is_list(week) do
+  @spec week_state(scope(), [FulfillmentOption.t()], [Date.t()], Date.t()) :: week_state()
+  def week_state(scope, options, week, %Date{} = today) when is_list(week) do
+    case scoped_options(scope, options) do
+      [] ->
+        :all_open
+
+      list ->
+        # Cross-option disagreement folds into :mixed — the bulk gesture is the
+        # gesture for that case.
+        states = Enum.map(list, &option_week_state(&1, week, today))
+
+        cond do
+          Enum.all?(states, &(&1 == :all_past)) -> :all_past
+          Enum.all?(states, &(&1 == :all_open)) -> :all_open
+          Enum.all?(states, &(&1 == :all_closed)) -> :all_closed
+          true -> :mixed
+        end
+    end
+  end
+
+  defp option_week_state(%FulfillmentOption{} = option, week, %Date{} = today) when is_list(week) do
     actionable =
       week
       |> Enum.reject(&(Date.compare(&1, today) == :lt))
@@ -112,11 +131,11 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   @spec week_toggle_direction([FulfillmentOption.t()], [Date.t()], Date.t()) :: :open | :closed | nil
   def week_toggle_direction(options, week, %Date{} = today) when is_list(options) and is_list(week) do
     any_actionable? =
-      Enum.any?(options, fn option -> week_state(option, week, today) != :all_past end)
+      Enum.any?(options, fn option -> option_week_state(option, week, today) != :all_past end)
 
     cond do
       not any_actionable? -> nil
-      Enum.any?(options, fn option -> week_state(option, week, today) in [:all_open, :mixed] end) -> :closed
+      Enum.any?(options, fn option -> option_week_state(option, week, today) in [:all_open, :mixed] end) -> :closed
       true -> :open
     end
   end
