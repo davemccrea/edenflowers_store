@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Checkout.OrderLive do
   use EdenflowersWeb, :live_view
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_required}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
   def mount(_params, _session, socket) do
     {:ok, socket}

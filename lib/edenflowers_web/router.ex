@@ -71,14 +71,14 @@ defmodule EdenflowersWeb.Router do
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
     get "/locale/:locale", LocaleController, :index
 
-    auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
-    sign_out_route AuthController
+    auth_routes Auth.AuthController, Edenflowers.Accounts.User, path: "/auth"
+    sign_out_route Auth.AuthController
 
     sign_in_route(
       live_view: EdenflowersWeb.Auth.OtpSignInLive,
       auth_routes_prefix: "/auth",
       on_mount: [
-        {EdenflowersWeb.LiveUserAuth, :live_no_user},
+        {EdenflowersWeb.Auth.LiveUserAuth, :live_no_user},
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Router do
     pipe_through :browser
 
     ash_authentication_live_session :admin,
-      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}] do
+      on_mount: [{EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}] do
       live "/fulfillment-calendar", Admin.FulfillmentCalendarLive
     end
   end
@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.Router do
 
     ash_admin(
       "/",
-      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
+      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}])
     )
   end
 

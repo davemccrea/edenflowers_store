@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Catalog.{Product}
   alias Edenflowers.Orders.{Order}
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     locale = current_locale_atom()

@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.ReturnTo do
+defmodule EdenflowersWeb.Auth.ReturnTo do
   @moduledoc """
   Validates and normalises post-sign-in return targets.
 

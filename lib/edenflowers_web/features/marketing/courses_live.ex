@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Marketing.CoursesLive do
   use EdenflowersWeb, :live_view
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
     upcoming_courses =

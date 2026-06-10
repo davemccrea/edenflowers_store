@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Layouts do
   # user lands back where they started. Filters out paths that aren't worth
   # capturing (the sign-in page itself, the home page, anything not safe).
   defp sign_in_href(current_path) do
-    case EdenflowersWeb.ReturnTo.safe_path(current_path) do
+    case EdenflowersWeb.Auth.ReturnTo.safe_path(current_path) do
       nil -> ~p"/sign-in"
       "/" -> ~p"/sign-in"
       path -> ~p"/sign-in?return_to=#{path}"

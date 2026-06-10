@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   end
 
   # The OTP itself can only be validated server-side by the sign-in action's
-  # preparation, so we always hand off to AuthController and let it flash any
+  # preparation, so we always hand off to Auth.AuthController and let it flash any
   # failure. Client-side `pattern`/`maxlength` cover the empty/short-code case.
   def handle_event("verify", params, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.sign_in_form, params["user"] || %{})

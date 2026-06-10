@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Orders.{Order}
   alias Edenflowers.Fulfillment.{Availability, FulfillmentOption}
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @checkout_states Order.checkout_states()
 

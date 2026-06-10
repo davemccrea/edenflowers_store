@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   alias Edenflowers.Catalog.Product
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
     products = Product.get_featured!()

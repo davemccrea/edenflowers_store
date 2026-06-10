@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.AuthController do
+defmodule EdenflowersWeb.Auth.AuthController do
   use EdenflowersWeb, :controller
   use AshAuthentication.Phoenix.Controller
 

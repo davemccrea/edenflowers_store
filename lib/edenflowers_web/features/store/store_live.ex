@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
 
   alias Edenflowers.Catalog.{Product, ProductCategory}
 
-  on_mount {EdenflowersWeb.LiveUserAuth, :live_user_optional}
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
     locale = current_locale_atom()

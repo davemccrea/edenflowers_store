@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.LiveUserAuth do
+defmodule EdenflowersWeb.Auth.LiveUserAuth do
   @moduledoc """
   Helpers for authenticating users in LiveViews.
   """
@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.LiveUserAuth do
   use EdenflowersWeb, :verified_routes
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias EdenflowersWeb.ReturnTo
+  alias EdenflowersWeb.Auth.ReturnTo
 
   def on_mount(:current_user, _params, session, socket) do
     {:cont, AshAuthentication.Phoenix.LiveSession.assign_new_resources(socket, session)}
