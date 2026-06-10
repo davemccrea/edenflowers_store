@@ -14,6 +14,11 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
 
   alias Edenflowers.Fulfillment.{Availability, FulfillmentOption, KeyDates, Weekday}
 
+  @typedoc """
+  Which fulfillment options the admin grid is currently showing, set by the
+  scope buttons above it: `:all` aggregates every option into one view, while a
+  FulfillmentOption id (UUID string) narrows to that single option.
+  """
   @type scope :: :all | String.t()
 
   @typedoc """
