@@ -1,7 +1,7 @@
-defmodule EdenflowersWeb.Admin.CalendarTest do
+defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
   use Edenflowers.DataCase
   import Generator
-  alias EdenflowersWeb.Admin.Calendar
+  alias EdenflowersWeb.Admin.CalendarViewModel
   alias Edenflowers.Fulfillment.Weekday
 
   setup do
@@ -14,19 +14,19 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
-      assert [a, b] == Calendar.scoped_options(:all, [a, b])
+      assert [a, b] == CalendarViewModel.scoped_options(:all, [a, b])
     end
 
     test "an id scope filters to that option", %{tax_rate_id: tax_rate_id} do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
-      assert [b] == Calendar.scoped_options(b.id, [a, b])
+      assert [b] == CalendarViewModel.scoped_options(b.id, [a, b])
     end
 
     test "an unknown id returns an empty list", %{tax_rate_id: tax_rate_id} do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
-      assert [] == Calendar.scoped_options("missing-id", [a])
+      assert [] == CalendarViewModel.scoped_options("missing-id", [a])
     end
   end
 
@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       today = ~D[2024-04-01]
       future_wednesday = today |> Date.shift(month: 3) |> next_weekday(:wednesday)
 
-      assert :open == Calendar.cell_state_for_options([a, b], future_wednesday, today)
+      assert :open == CalendarViewModel.cell_state_for_options([a, b], future_wednesday, today)
     end
 
     test "returns :mixed when options disagree", %{tax_rate_id: tax_rate_id} do
@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :mixed ==
-               Calendar.cell_state_for_options(
+               CalendarViewModel.cell_state_for_options(
                  [open_option, closed_option],
                  future_sunday,
                  today
@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
     end
 
     test "returns :open for an empty options list" do
-      assert :open == Calendar.cell_state_for_options([], ~D[2024-04-10], ~D[2024-04-01])
+      assert :open == CalendarViewModel.cell_state_for_options([], ~D[2024-04-10], ~D[2024-04-01])
     end
   end
 
@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :mixed ==
-               Calendar.cell_state_for_scope(
+               CalendarViewModel.cell_state_for_scope(
                  :all,
                  [open_option, closed_option],
                  future_sunday,
@@ -105,14 +105,14 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :weekday_disabled ==
-               Calendar.cell_state_for_scope(option.id, [option], future_sunday, today)
+               CalendarViewModel.cell_state_for_scope(option.id, [option], future_sunday, today)
     end
 
     test "falls back to :open when the scoped option id is unknown", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
       assert :open ==
-               Calendar.cell_state_for_scope("missing-id", [option], ~D[2024-04-10], ~D[2024-04-01])
+               CalendarViewModel.cell_state_for_scope("missing-id", [option], ~D[2024-04-10], ~D[2024-04-01])
     end
   end
 
@@ -121,7 +121,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
-      assert :on == Calendar.weekday_state(:all, [a, b], :monday)
+      assert :on == CalendarViewModel.weekday_state(:all, [a, b], :monday)
     end
 
     test ":all returns :off when no option has the weekday available", %{tax_rate_id: tax_rate_id} do
@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
 
-      assert :off == Calendar.weekday_state(:all, [a, b], :sunday)
+      assert :off == CalendarViewModel.weekday_state(:all, [a, b], :sunday)
     end
 
     test ":all returns :mixed when options disagree", %{tax_rate_id: tax_rate_id} do
@@ -143,14 +143,14 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
           )
         )
 
-      assert :mixed == Calendar.weekday_state(:all, [a, b], :sunday)
+      assert :mixed == CalendarViewModel.weekday_state(:all, [a, b], :sunday)
     end
 
     test ":all returns :on for an empty options list" do
       # Regression: with no options, the page renders a default `:on` header.
       # Returning :mixed here previously made empty pages render with a "varies"
       # treatment despite there being nothing to vary.
-      assert :on == Calendar.weekday_state(:all, [], :sunday)
+      assert :on == CalendarViewModel.weekday_state(:all, [], :sunday)
     end
 
     test "single-option scope reads off that option", %{tax_rate_id: tax_rate_id} do
@@ -164,13 +164,13 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
           )
         )
 
-      assert :on == Calendar.weekday_state(a.id, [a, b], :sunday)
-      assert :off == Calendar.weekday_state(b.id, [a, b], :sunday)
+      assert :on == CalendarViewModel.weekday_state(a.id, [a, b], :sunday)
+      assert :off == CalendarViewModel.weekday_state(b.id, [a, b], :sunday)
     end
 
     test "single-option scope falls back to :on when the id is unknown", %{tax_rate_id: tax_rate_id} do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
-      assert :on == Calendar.weekday_state("missing-id", [a], :sunday)
+      assert :on == CalendarViewModel.weekday_state("missing-id", [a], :sunday)
     end
   end
 
@@ -186,7 +186,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
           )
         )
 
-      assert :off == Calendar.weekday_toggle_direction([a, b], :sunday)
+      assert :off == CalendarViewModel.weekday_toggle_direction([a, b], :sunday)
     end
 
     test "returns :on when no option has the weekday on", %{tax_rate_id: tax_rate_id} do
@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: days))
 
-      assert :on == Calendar.weekday_toggle_direction([a, b], :sunday)
+      assert :on == CalendarViewModel.weekday_toggle_direction([a, b], :sunday)
     end
   end
 
@@ -203,13 +203,13 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       # 2024-04-08 Mon .. 2024-04-14 Sun — a Mon-Sun week with no key dates.
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_open == Calendar.week_state(option, week, ~D[2024-04-01])
+      assert :all_open == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
     end
 
     test ":all_closed when every actionable cell is closed", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_closed == Calendar.week_state(option, week, ~D[2024-04-01])
+      assert :all_closed == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
     end
 
     test ":mixed when some cells are open and some closed", %{tax_rate_id: tax_rate_id} do
@@ -223,13 +223,13 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
         )
 
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :mixed == Calendar.week_state(option, week, ~D[2024-04-01])
+      assert :mixed == CalendarViewModel.week_state(option, week, ~D[2024-04-01])
     end
 
     test ":all_past when every cell is before today", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :all_past == Calendar.week_state(option, week, ~D[2024-04-15])
+      assert :all_past == CalendarViewModel.week_state(option, week, ~D[2024-04-15])
     end
 
     test "ignores key dates so a key-date-only week reports as :all_past", %{tax_rate_id: tax_rate_id} do
@@ -240,7 +240,7 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       # "today" makes Mon..Sat all past, leaving only Sun (Mother's Day) actionable.
       today = ~D[2026-05-10]
 
-      assert :all_past == Calendar.week_state(option, week, today)
+      assert :all_past == CalendarViewModel.week_state(option, week, today)
     end
   end
 
@@ -249,19 +249,19 @@ defmodule EdenflowersWeb.Admin.CalendarTest do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
       # Today after the week → every cell is past.
-      assert nil == Calendar.week_toggle_direction([option], week, ~D[2024-04-15])
+      assert nil == CalendarViewModel.week_toggle_direction([option], week, ~D[2024-04-15])
     end
 
     test "returns :closed when any option has open or mixed cells", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :closed == Calendar.week_toggle_direction([option], week, ~D[2024-04-01])
+      assert :closed == CalendarViewModel.week_toggle_direction([option], week, ~D[2024-04-01])
     end
 
     test "returns :open when every option's week is fully closed", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id, available_days: []))
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
-      assert :open == Calendar.week_toggle_direction([option], week, ~D[2024-04-01])
+      assert :open == CalendarViewModel.week_toggle_direction([option], week, ~D[2024-04-01])
     end
   end
 

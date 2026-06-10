@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   import EdenflowersWeb.Admin.CalendarComponent, only: [admin_calendar: 1, admin_calendar_legend: 1]
 
   alias Edenflowers.Fulfillment.FulfillmentOption
-  alias EdenflowersWeb.Admin.Calendar
+  alias EdenflowersWeb.Admin.CalendarViewModel
 
   on_mount {EdenflowersWeb.LiveUserAuth, :live_admin_required}
 
@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Fulfillment Calendar")
+     |> assign(:page_title, "Fulfillment CalendarViewModel")
      |> assign(:options, options)
      |> assign(:scope, :all)
      |> assign(:today, today())}
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     <div class="container mx-auto py-10">
       <header class="mb-8 max-w-2xl">
         <p class="eyebrow text-base-content/55 mb-2">Availability</p>
-        <h1 class="page-title">Fulfillment Calendar</h1>
+        <h1 class="page-title">Fulfillment CalendarViewModel</h1>
         <p class="text-base-content/70 mt-3 text-sm leading-relaxed">
           Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
         </p>
@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
     targets = scoped_options(socket)
-    direction = Calendar.weekday_toggle_direction(targets, weekday)
+    direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
 
     {:noreply, apply_to_scope(socket, &FulfillmentOption.set_weekday!(&1, weekday, direction, actor: &2))}
   end
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     %{today: today} = socket.assigns
     targets = scoped_options(socket)
 
-    case Calendar.week_toggle_direction(targets, week, today) do
+    case CalendarViewModel.week_toggle_direction(targets, week, today) do
       nil ->
         {:noreply, socket}
 
@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   end
 
   defp scoped_options(%{assigns: %{scope: scope, options: options}}),
-    do: Calendar.scoped_options(scope, options)
+    do: CalendarViewModel.scoped_options(scope, options)
 
   defp apply_to_scope(socket, fun) do
     %{options: options, current_user: actor} = socket.assigns

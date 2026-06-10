@@ -1,17 +1,15 @@
-defmodule EdenflowersWeb.Admin.Calendar do
+defmodule EdenflowersWeb.Admin.CalendarViewModel do
   @moduledoc """
-  Admin calendar view-model helpers.
+  View-model helpers for the admin calendar grid.
 
-  Pure functions that summarise a *set* of fulfillment options for the admin
-  grid: aggregating per-option cell states into one cell (collapsing
-  disagreement to `:mixed`), classifying weekday headers and weeks, and
-  deciding what a bulk toggle should do. They exist because the admin grid
-  renders many options at once — a non-UI caller would never need `:mixed` or
-  `:all_past`.
+  The grid shows many fulfillment options at once, so these pure functions
+  summarise a *set* of options into one cell, weekday header, or week. They
+  aggregate per-option states, collapse disagreement to `:mixed`, and decide
+  what a bulk toggle should do.
 
-  The per-option booking rule itself lives in the domain
-  (`Edenflowers.Fulfillment.Availability.admin_cell_state/3`); these
-  helpers call into it.
+  The per-option booking rule lives in the domain
+  (`Edenflowers.Fulfillment.Availability.admin_cell_state/3`); these helpers
+  call into it.
   """
 
   alias Edenflowers.Fulfillment.{Availability, FulfillmentOption, KeyDates, Weekday}
@@ -36,8 +34,8 @@ defmodule EdenflowersWeb.Admin.Calendar do
   @doc """
   Cell state for the current scope. `:all` aggregates across every option
   (collapsing disagreement to `:mixed`); a single-option scope returns that
-  option's admin cell state. Returns `:open` when the scoped id is unknown
-  so the cell renders sensibly rather than blowing up.
+  option's admin cell state. Falls back to `:open` when the scoped id is
+  unknown so the cell still renders.
   """
   @spec cell_state_for_scope(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
   def cell_state_for_scope(:all, options, %Date{} = date, %Date{} = today) do
@@ -76,9 +74,8 @@ defmodule EdenflowersWeb.Admin.Calendar do
   - `:off` — no option in scope has the weekday available.
   - `:mixed` — options disagree.
 
-  Scope is either `:all` (every option) or a single option id (UUID string).
-  Returns `:on` when the scoped option can't be found so the header keeps a
-  sensible default rather than disappearing.
+  Scope is `:all` (every option) or a single option id. Falls back to `:on`
+  when the scoped option isn't found so the header keeps a sensible default.
   """
   @spec weekday_state(scope(), [FulfillmentOption.t()], Weekday.t()) :: :on | :off | :mixed
   def weekday_state(:all, [], _weekday), do: :on
