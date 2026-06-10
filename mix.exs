@@ -29,7 +29,7 @@ defmodule Edenflowers.MixProject do
             ],
             "elixir-otp": [
               description: "Expert on Elixir and OTP.",
-              usage_rules: [:elixir, :otp]
+              usage_rules: [:usage_rules]
             ],
             igniter: [
               description: "Expert on Igniter.",

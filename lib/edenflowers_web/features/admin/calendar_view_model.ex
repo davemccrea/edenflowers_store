@@ -32,26 +32,18 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   def scoped_options(option_id, options), do: Enum.filter(options, &(&1.id == option_id))
 
   @spec cell_state(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
+  def cell_state(:all, [], _date, _today), do: :open
+
   def cell_state(:all, options, %Date{} = date, %Date{} = today) do
-    cell_state_for_options(options, date, today)
+    options
+    |> Enum.map(&Availability.admin_cell_state(&1, date, today))
+    |> single_or_mixed()
   end
 
   def cell_state(option_id, options, %Date{} = date, %Date{} = today) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :open
       option -> Availability.admin_cell_state(option, date, today)
-    end
-  end
-
-  defp cell_state_for_options([], _date, _today), do: :open
-
-  defp cell_state_for_options(options, date, today) when is_list(options) do
-    options
-    |> Enum.map(&Availability.admin_cell_state(&1, date, today))
-    |> Enum.uniq()
-    |> case do
-      [single] -> single
-      _multiple -> :mixed
     end
   end
 
@@ -95,14 +87,9 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
       list ->
         # Cross-option disagreement folds into :mixed — the bulk gesture is the
         # gesture for that case.
-        states = Enum.map(list, &option_week_state(&1, week, today))
-
-        cond do
-          Enum.all?(states, &(&1 == :all_past)) -> :all_past
-          Enum.all?(states, &(&1 == :all_open)) -> :all_open
-          Enum.all?(states, &(&1 == :all_closed)) -> :all_closed
-          true -> :mixed
-        end
+        list
+        |> Enum.map(&option_week_state(&1, week, today))
+        |> single_or_mixed()
     end
   end
 
@@ -135,13 +122,21 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   @doc "Like `weekday_toggle_direction/2`, but `nil` when the week is entirely past (nothing to toggle)."
   @spec week_toggle_direction([FulfillmentOption.t()], [Date.t()], Date.t()) :: :open | :closed | nil
   def week_toggle_direction(options, week, %Date{} = today) when is_list(options) and is_list(week) do
-    any_actionable? =
-      Enum.any?(options, fn option -> option_week_state(option, week, today) != :all_past end)
+    states = Enum.map(options, &option_week_state(&1, week, today))
 
     cond do
-      not any_actionable? -> nil
-      Enum.any?(options, fn option -> option_week_state(option, week, today) in [:all_open, :mixed] end) -> :closed
+      Enum.all?(states, &(&1 == :all_past)) -> nil
+      Enum.any?(states, &(&1 in [:all_open, :mixed])) -> :closed
       true -> :open
+    end
+  end
+
+  # Collapse per-option states: the shared value when every option agrees,
+  # otherwise `:mixed`.
+  defp single_or_mixed([_ | _] = states) do
+    case Enum.uniq(states) do
+      [single] -> single
+      _ -> :mixed
     end
   end
 end
