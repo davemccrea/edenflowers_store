@@ -1,11 +1,7 @@
 defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
   @moduledoc """
-  Creates or updates a user and assigns them to the order.
-
-  This change finds or creates a user based on the customer_email
-  and customer_name provided in the order. If the user already exists,
-  their name is updated. The user is then associated with the order
-  via the user_id field.
+  Upserts a user from the order's `customer_email`/`customer_name` and assigns
+  them to the order via `user_id`.
 
   If the `newsletter_opt_in` argument is true, the user is opted in to the
   newsletter and the same welcome/promo email worker the footer signup uses
@@ -16,8 +12,6 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
   subscription state, so checkout can decide whether to show the opt-in box
   without reading the user record under the customer's actor (the User read
   policy is own-record-only, so that read returns nil for guests).
-
-  If user creation fails, an error is added to the changeset.
   """
   use Ash.Resource.Change
   require Logger

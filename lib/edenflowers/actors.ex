@@ -1,9 +1,6 @@
 defmodule Edenflowers.Actors do
   @moduledoc """
   Actor definitions for authorization in Ash resources.
-
-  Actors are used to represent different types of users or systems interacting with resources.
-  They determine what actions are authorized through policy checks.
   """
 
   @doc """

@@ -1,9 +1,7 @@
 defmodule Edenflowers.Orders.Order.Changes.ClearGiftFields do
   @moduledoc """
-  Clears gift-related fields and removes the card line item when the order is not a gift.
-
-  When the gift flag is set to false, this change clears the recipient_name and
-  card_message fields and destroys the card line item attached to the order, if any.
+  When the gift flag is set to false, clears `recipient_name` and `card_message`
+  and destroys the card line item, if any.
   """
   use Ash.Resource.Change
 
