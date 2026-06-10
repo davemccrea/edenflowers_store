@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
       field={nil}
       module={EdenflowersWeb.DatePicker}
       selected_date={nil}
-      cell_state={fn date -> CalendarViewModel.cell_state_for_scope(@scope, @options, date, @today) end}
+      cell_state={fn date -> CalendarViewModel.cell_state(@scope, @options, date, @today) end}
       cell_class={
         fn day, state, opts ->
           cell_class(day, state, opts, scope_override?(@scope, @options, day))

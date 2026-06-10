@@ -26,22 +26,21 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   def scoped_options(:all, options), do: options
   def scoped_options(option_id, options), do: Enum.filter(options, &(&1.id == option_id))
 
-  @spec cell_state_for_scope(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
-  def cell_state_for_scope(:all, options, %Date{} = date, %Date{} = today) do
+  @spec cell_state(scope(), [FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
+  def cell_state(:all, options, %Date{} = date, %Date{} = today) do
     cell_state_for_options(options, date, today)
   end
 
-  def cell_state_for_scope(option_id, options, %Date{} = date, %Date{} = today) do
+  def cell_state(option_id, options, %Date{} = date, %Date{} = today) do
     case Enum.find(options, &(&1.id == option_id)) do
       nil -> :open
       option -> Availability.admin_cell_state(option, date, today)
     end
   end
 
-  @spec cell_state_for_options([FulfillmentOption.t()], Date.t(), Date.t()) :: cell_state()
-  def cell_state_for_options([], _date, _today), do: :open
+  defp cell_state_for_options([], _date, _today), do: :open
 
-  def cell_state_for_options(options, date, today) when is_list(options) do
+  defp cell_state_for_options(options, date, today) when is_list(options) do
     options
     |> Enum.map(&Availability.admin_cell_state(&1, date, today))
     |> Enum.uniq()

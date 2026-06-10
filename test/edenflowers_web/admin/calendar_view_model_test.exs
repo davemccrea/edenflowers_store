@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
     end
   end
 
-  describe "cell_state_for_options/3" do
+  describe "cell_state/4 with :all scope" do
     test "returns the single shared state when all options agree", %{tax_rate_id: tax_rate_id} do
       a = generate(fulfillment_option(tax_rate_id: tax_rate_id))
       b = generate(fulfillment_option(tax_rate_id: tax_rate_id))
@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
       today = ~D[2024-04-01]
       future_wednesday = today |> Date.shift(month: 3) |> next_weekday(:wednesday)
 
-      assert :open == CalendarViewModel.cell_state_for_options([a, b], future_wednesday, today)
+      assert :open == CalendarViewModel.cell_state(:all, [a, b], future_wednesday, today)
     end
 
     test "returns :mixed when options disagree", %{tax_rate_id: tax_rate_id} do
@@ -56,7 +56,8 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :mixed ==
-               CalendarViewModel.cell_state_for_options(
+               CalendarViewModel.cell_state(
+                 :all,
                  [open_option, closed_option],
                  future_sunday,
                  today
@@ -64,11 +65,11 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
     end
 
     test "returns :open for an empty options list" do
-      assert :open == CalendarViewModel.cell_state_for_options([], ~D[2024-04-10], ~D[2024-04-01])
+      assert :open == CalendarViewModel.cell_state(:all, [], ~D[2024-04-10], ~D[2024-04-01])
     end
   end
 
-  describe "cell_state_for_scope/4" do
+  describe "cell_state/4" do
     test ":all aggregates across options", %{tax_rate_id: tax_rate_id} do
       open_option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
@@ -84,7 +85,7 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :mixed ==
-               CalendarViewModel.cell_state_for_scope(
+               CalendarViewModel.cell_state(
                  :all,
                  [open_option, closed_option],
                  future_sunday,
@@ -105,14 +106,14 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
       future_sunday = today |> Date.shift(month: 3) |> next_weekday(:sunday)
 
       assert :weekday_disabled ==
-               CalendarViewModel.cell_state_for_scope(option.id, [option], future_sunday, today)
+               CalendarViewModel.cell_state(option.id, [option], future_sunday, today)
     end
 
     test "falls back to :open when the scoped option id is unknown", %{tax_rate_id: tax_rate_id} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate_id))
 
       assert :open ==
-               CalendarViewModel.cell_state_for_scope("missing-id", [option], ~D[2024-04-10], ~D[2024-04-01])
+               CalendarViewModel.cell_state("missing-id", [option], ~D[2024-04-10], ~D[2024-04-01])
     end
   end
 
