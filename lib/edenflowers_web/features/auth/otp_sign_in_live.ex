@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     socket =
       socket
       |> assign(strategy: strategy)
+      |> assign(google_strategy: Info.strategy!(User, :google))
       |> assign(current_tenant: session["tenant"])
       |> assign(context: session["context"] || %{})
       |> assign(email: nil)
@@ -95,12 +96,13 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             </button>
           </div>
         <% else %>
-          <a
-            href={~p"/auth/user/google"}
-            class="btn btn-lg btn-outline w-full"
-          >
-            <span>{~t"Continue with Google"}</span>
-          </a>
+          <.live_component
+            module={AshAuthentication.Phoenix.Components.OAuth2}
+            id="sign-in-google"
+            strategy={@google_strategy}
+            auth_routes_prefix="/auth"
+            overrides={[AshAuthentication.Phoenix.Overrides.Default]}
+          />
 
           <div class="text-base-content/50 flex items-center gap-3 text-xs uppercase">
             <hr class="border-base-300 flex-1" />
