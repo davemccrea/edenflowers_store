@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
       :ok
     else
       {:error, :missing_order_id} ->
-        Logger.warning("Stripe payment_intent.succeeded event #{event.id} is missing order_id metadata")
+        Logger.warning("Stripe #{event.type} event #{event.id} is missing order_id metadata")
 
         :error
 
@@ -87,34 +87,32 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
   defp finalize_checkout(order_id) do
-    case Orders.finalize_checkout(order_id, actor: system_actor()) do
-      {:ok, order} ->
-        {:ok, order}
+    case Orders.get_order_by_id(order_id, actor: system_actor()) do
+      {:ok, %{state: :placed}} ->
+        {:ok, :already_placed}
 
-      {:error, reason} ->
-        # AshStateMachine refuses :checkout → :placed when state is already
-        # :placed. Detect that via current state instead of pattern-matching on
-        # the error struct so the handler stays decoupled from Ash internals.
-        case Orders.get_order_by_id(order_id, actor: system_actor()) do
-          {:ok, %{state: :placed}} -> {:ok, :already_placed}
-          _ -> {:error, {:payment_update_failed, order_id, reason}}
+      _ ->
+        case Orders.finalize_checkout(order_id, actor: system_actor()) do
+          {:ok, order} -> {:ok, order}
+          {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
         end
     end
   end
 
   defp mark_payment_failed(order_id) do
-    with {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()) do
-      case order.payment_status do
-        :paid ->
-          {:ok, :already_paid}
+    case Orders.get_order_by_id(order_id, actor: system_actor()) do
+      {:ok, order} -> maybe_mark_payment_failed(order, order_id)
+      {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
+    end
+  end
 
-        _ ->
-          case Orders.mark_payment_failed(order, actor: system_actor()) do
-            {:ok, order} -> {:ok, order}
-            {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
-          end
-      end
-    else
+  defp maybe_mark_payment_failed(%{payment_status: :paid}, _order_id) do
+    {:ok, :already_paid}
+  end
+
+  defp maybe_mark_payment_failed(order, order_id) do
+    case Orders.mark_payment_failed(order, actor: system_actor()) do
+      {:ok, order} -> {:ok, order}
       {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
     end
   end
