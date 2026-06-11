@@ -200,7 +200,7 @@ defmodule EdenflowersWeb.Layouts do
             </li>
             <li class="border-base-content/10 border-t pt-4">
               <.link
-                class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
+                class="text-base-content group font-serif link-underline-hover-display inline-flex items-center gap-3 text-3xl"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
@@ -219,7 +219,7 @@ defmodule EdenflowersWeb.Layouts do
           current_locale_code={@current_locale_code}
           current_path={@current_path}
           class="flex flex-wrap gap-x-5 gap-y-2"
-          item_class="text-base-content/80 text-sm tracking-wide hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
+          item_class="text-base-content/80 link-underline-hover-nav text-sm tracking-wide"
         />
         <.social_media_links size={6} />
       </footer>
@@ -325,7 +325,9 @@ defmodule EdenflowersWeb.Layouts do
                 />
                 <%= if @order.total_items_in_cart > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
-                    <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
+                    <div
+                      class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none"
+                    >
                       {@order.total_items_in_cart}
                     </div>
                   </span>

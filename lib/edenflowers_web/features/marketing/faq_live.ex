@@ -11,7 +11,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">{~t"Frequently Asked Questions"}</h1>
+        <p class="eyebrow text-base-content/60 hero-reveal mb-5">{~t"Help"}</p>
+        <h1 class="page-title hero-reveal mb-16 md:mb-20" style="--reveal-delay: 80ms;">
+          {~t"Frequently Asked Questions"}
+        </h1>
 
         <dl class="max-w-3xl">
           <.faq_item question={~t"How long will my flowers stay fresh?"}>
@@ -42,7 +45,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     ~H"""
     <div class="border-base-content/12 border-t py-8 last:border-b">
       <dt>
-        <h2 class="font-serif mb-3.5 text-xl leading-snug md:text-2xl">{@question}</h2>
+        <h2 class="font-serif text-balance mb-3.5 text-xl leading-snug md:text-2xl">{@question}</h2>
       </dt>
       <dd class="font-sans text-[1.0625rem] leading-[1.6] text-base-content max-w-[60ch]">
         {render_slot(@inner_block)}

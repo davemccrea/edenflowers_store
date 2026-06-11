@@ -937,18 +937,27 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def category_tile(assigns) do
     ~H"""
-    <.link navigate={@navigate} class="group relative overflow-hidden">
+    <.link navigate={@navigate} class="group relative block overflow-hidden">
       <.image
         src={@image_src}
         alt={@label}
         width={800}
         height={400}
         sizes="(min-width: 768px) 33vw, 100vw"
-        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+        class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
       />
-      <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+      <%!-- Static gradient keeps the label legible on any photograph; the
+            second layer deepens the whole image slightly on hover. --%>
+      <div class="from-black/50 via-black/15 absolute inset-0 bg-gradient-to-t to-transparent" />
+      <div class="bg-black/10 absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100" />
       <div class="absolute inset-0 flex items-end p-6">
-        <h3 class="tile-title text-white">{@label}</h3>
+        <h3 class="tile-title flex items-center gap-2.5 text-white transition-transform duration-500 ease-out group-hover:-translate-y-1.5">
+          {@label}
+          <.icon
+            name="hero-arrow-right"
+            class="h-4 w-4 -translate-x-1 opacity-0 transition duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+          />
+        </h3>
       </div>
     </.link>
     """
@@ -968,6 +977,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Facebook"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///facebook_logo_bw_128px.png"
@@ -982,6 +992,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Instagram"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///instagram_logo_bw_128px.png"

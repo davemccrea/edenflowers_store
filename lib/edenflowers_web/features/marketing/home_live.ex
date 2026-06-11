@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           width={1920}
           height={1080}
           priority
-          class="h-[100vh] w-full object-cover"
+          class="hero-zoom h-[100vh] w-full object-cover"
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
@@ -31,9 +31,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.link
               navigate={~p"/store"}
-              class="border-white/80 font-sans tracking-[0.18em] inline-flex w-fit border px-7 py-3 text-sm uppercase text-white transition hover:text-base-content hover:bg-white"
+              class="border-white/80 font-sans tracking-[0.18em] group inline-flex w-fit items-center gap-3 border px-7 py-3 text-sm uppercase text-white transition duration-300 hover:text-base-content hover:bg-white"
             >
               {~t"Shop Now"}
+              <.icon
+                name="hero-arrow-right-mini"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
             </.link>
           </div>
         </div>
@@ -42,7 +46,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <h2 class="section-title">{~t"Featured Blooms"}</h2>
+            <div class="space-y-3">
+              <p class="eyebrow text-base-content/60">{~t"The collection"}</p>
+              <h2 class="section-title">{~t"Featured Blooms"}</h2>
+            </div>
 
             <div class="hidden items-center gap-2 md:flex">
               <button
@@ -99,7 +106,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream relative overflow-hidden not-last:border-b" aria-labelledby="location-heading">
+      <section class="bg-cream relative not-last:border-b" aria-labelledby="location-heading">
         <.flower
           name="flower-41"
           class="text-base-content/15 pointer-events-none absolute top-4 left-4 h-16 w-16 md:top-8 md:left-8 md:h-24 md:w-24"
@@ -143,6 +150,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
+          <p class="eyebrow text-base-content/60 mb-4">{~t"Services"}</p>
           <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <.category_tile

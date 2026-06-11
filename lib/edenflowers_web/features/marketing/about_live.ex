@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
         />
         <div class="bg-black/30 absolute inset-0 flex items-end">
           <div class="container pb-10">
-            <h1 class="hero-heading-overlay">
+            <h1 class="hero-heading-overlay hero-reveal">
               {~t"About"}
             </h1>
           </div>

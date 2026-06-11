@@ -16,7 +16,8 @@ defmodule EdenflowersWeb.NewsletterSignup do
       </p>
 
       <%= if @submitted do %>
-        <p class="text-base-content/80">
+        <%!-- hero-reveal replays here because the element enters the DOM on submit. --%>
+        <p class="text-base-content/80 hero-reveal">
           {~t"Thanks! Your 15% off code is on its way to your inbox."}
         </p>
       <% else %>
