@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
     {:ok, %{fulfillment_fee: fulfillment_fee}} =
-      Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, Decimal.new("0"))
+      Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, 0)
 
     {:ok, user} =
       Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)

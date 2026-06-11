@@ -1,7 +1,10 @@
 defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
   use Edenflowers.DataCase
   import Generator
+  import Mox
   alias Edenflowers.Fulfillment.FulfillmentOption
+
+  setup :verify_on_exit!
 
   setup do
     tax_rate = generate(tax_rate())
@@ -103,28 +106,60 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, Decimal.new("0"))
+               FulfillmentOption.calculate_price(option.id, 0)
     end
 
     test "returns value when distance is within free delivery range", %{option: option} do
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, Decimal.new(4999))
+               FulfillmentOption.calculate_price(option.id, 4999)
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, Decimal.new(5000))
+               FulfillmentOption.calculate_price(option.id, 5000)
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("4.50")}} ==
-               FulfillmentOption.calculate_price(option.id, Decimal.new(5001))
+               FulfillmentOption.calculate_price(option.id, 5001)
     end
 
     test "returns value when distance is within paid delivery range", %{option: option} do
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("8.10")}} ==
-               FulfillmentOption.calculate_price(option.id, Decimal.new(7250))
+               FulfillmentOption.calculate_price(option.id, 7250)
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
       assert {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}} =
-               FulfillmentOption.calculate_price(option.id, Decimal.new(20000))
+               FulfillmentOption.calculate_price(option.id, 20000)
+    end
+  end
+
+  describe "calculate_delivery action" do
+    setup %{tax_rate: tax_rate} do
+      option =
+        generate(
+          fulfillment_option(
+            tax_rate_id: tax_rate.id,
+            fulfillment_method: :delivery,
+            rate_type: :dynamic,
+            base_price: "4.50",
+            price_per_km: "1.60",
+            free_dist_km: 5,
+            max_dist_km: 20
+          )
+        )
+
+      [option: option]
+    end
+
+    test "computes the fee from the integer distance route_distance returns", %{option: option} do
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 7250} end)
+
+      assert {:ok, %{error: nil, fulfillment_fee: fee, distance: 7250}} =
+               FulfillmentOption.calculate_delivery("Stadsgatan 3", option.id)
+
+      assert Decimal.eq?(fee, Decimal.new("8.10"))
     end
   end
 

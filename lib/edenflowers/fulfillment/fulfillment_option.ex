@@ -161,7 +161,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
                     "and shares calculate_delivery's result shape."
 
       argument :fulfillment_option_id, :uuid, allow_nil?: false
-      argument :distance, :decimal, default: Decimal.new("0")
+      argument :distance, :integer, default: 0
 
       run fn input, _context ->
         with {:ok, option} <- Ash.get(__MODULE__, input.arguments.fulfillment_option_id, authorize?: false) do

@@ -17,12 +17,12 @@ defmodule Edenflowers.Fulfillment.Fee do
           %{error: nil, fulfillment_fee: Decimal.t()}
           | %{error: :out_of_delivery_range, fulfillment_fee: nil}
 
-  @spec calculate(FulfillmentOption.t(), Decimal.t()) :: result()
-  def calculate(%FulfillmentOption{rate_type: :fixed} = option, _distance) do
+  @spec calculate(FulfillmentOption.t(), non_neg_integer()) :: result()
+  def calculate(%FulfillmentOption{rate_type: :fixed} = option, distance) when is_integer(distance) do
     %{error: nil, fulfillment_fee: option.base_price}
   end
 
-  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, %Decimal{} = distance) do
+  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, distance) when is_integer(distance) do
     %{
       price_per_km: price_per_km,
       base_price: base_price,
@@ -30,6 +30,7 @@ defmodule Edenflowers.Fulfillment.Fee do
       max_dist_km: max_dist_km
     } = option
 
+    distance = Decimal.new(distance)
     price_per_m = Decimal.div(price_per_km, 1000)
     free_dist_m = Decimal.mult(free_dist_km, 1000)
     max_dist_m = Decimal.mult(max_dist_km, 1000)
