@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
     end
 
-    with :ok <- cart_has_items?(order),
+    with :ok <- validate_cart_not_empty(order),
          {:ok, fulfillment_options} <- FulfillmentOption.list_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       card_variants = ProductVariant.for_card_drawer!()
@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     </.input>
                   </.form>
 
-                  <%= if not is_nil(@order.fulfillment_option) do %>
+                  <%= if @order.fulfillment_option do %>
                     <.form
                       id={"#{@id}-form-3b"}
                       for={@form}
@@ -249,7 +249,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
             <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
               <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section">
                 <p class="eyebrow text-base-content/60" data-testid="cart-heading">
-                  {~t"Cart"} ({@order.total_items_in_cart || 0})
+                  {~t"Cart"} ({@order.total_items_in_cart})
                 </p>
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.Cart.LineItems} order={@order} />
@@ -635,9 +635,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
      |> push_navigate(to: ~p"/")}
   end
 
-  defp recipient_label(%{gift: true, recipient_name: name}, field) when is_binary(name) and name != "" do
-    first_name = name |> String.split() |> List.first()
-
+  defp recipient_label(%{gift: true, recipient_first_name: first_name}, field) when is_binary(first_name) do
     case field do
       :address -> gettext("%{name}'s Address *", name: first_name)
       :phone -> gettext("%{name}'s Phone Number", name: first_name)
@@ -744,8 +742,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp ensure_fulfillment_default(order, _options, _actor), do: order
 
-  defp cart_has_items?(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
-  defp cart_has_items?(_order), do: :ok
+  defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
+  defp validate_cart_not_empty(_order), do: :ok
 
   defp section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state}"

@@ -61,7 +61,7 @@ defmodule Edenflowers.External.HereAPI do
     end
   end
 
-  def sum_route_lengths(%{"routes" => []}), do: {:error, 0}
+  def sum_route_lengths(%{"routes" => []}), do: {:error, :no_routes}
 
   def sum_route_lengths(%{"routes" => routes}) do
     total_length =

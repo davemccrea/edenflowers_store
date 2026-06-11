@@ -38,21 +38,6 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           {~t"Sign in to your account"}
         </h2>
 
-        <%= if is_nil(@email) do %>
-          <a
-            href={~p"/auth/user/google"}
-            class="btn btn-lg btn-outline w-full"
-          >
-            <span>{~t"Continue with Google"}</span>
-          </a>
-
-          <div class="text-base-content/50 flex items-center gap-3 text-xs uppercase">
-            <hr class="border-base-300 flex-1" />
-            <span>{~t"or"}</span>
-            <hr class="border-base-300 flex-1" />
-          </div>
-        <% end %>
-
         <%= if @email do %>
           <p class="text-center text-sm">
             {~t"🥳 A sign-in code was sent to #{@email}."}
@@ -110,6 +95,19 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             </button>
           </div>
         <% else %>
+          <a
+            href={~p"/auth/user/google"}
+            class="btn btn-lg btn-outline w-full"
+          >
+            <span>{~t"Continue with Google"}</span>
+          </a>
+
+          <div class="text-base-content/50 flex items-center gap-3 text-xs uppercase">
+            <hr class="border-base-300 flex-1" />
+            <span>{~t"or"}</span>
+            <hr class="border-base-300 flex-1" />
+          </div>
+
           <.form
             class="flex w-full flex-col space-y-4"
             for={@request_form}

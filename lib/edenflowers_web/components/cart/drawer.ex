@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
       >
         <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
           <h1 class="section-title">
-            <%= if not is_nil(@order.total_items_in_cart) do %>
+            <%= if @order.total_items_in_cart > 0 do %>
               {~t"Cart"} ({@order.total_items_in_cart})
             <% else %>
               {~t"Cart"}

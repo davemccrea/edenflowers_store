@@ -66,6 +66,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
     Ash.load!(
       order,
       [
+        :customer_first_name,
         :items_subtotal,
         :items_tax,
         :discount,

@@ -16,6 +16,7 @@ defmodule Edenflowers.Orders.Order do
   @locales Edenflowers.Locales.all()
 
   @checkout_load [
+    :recipient_first_name,
     :total_items_in_cart,
     :discount,
     :items_subtotal,
@@ -433,6 +434,7 @@ defmodule Edenflowers.Orders.Order do
 
   calculations do
     calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
+    calculate :recipient_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :recipient_name}
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
@@ -451,7 +453,7 @@ defmodule Edenflowers.Orders.Order do
   end
 
   aggregates do
-    sum :total_items_in_cart, :line_items, :quantity
+    sum :total_items_in_cart, :line_items, :quantity, default: 0
     sum :items_subtotal, :line_items, :total
     sum :items_tax, :line_items, :tax
     sum :discount, :line_items, :discount

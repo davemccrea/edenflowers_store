@@ -316,14 +316,14 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Cart button --%>
               <.cart_count_badge
-                count={@order.total_items_in_cart || 0}
+                count={@order.total_items_in_cart}
                 phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
               >
                 <.icon
                   class="text-base-content h-5 w-5 group-hover:text-base-content/60"
                   name="hero-shopping-bag"
                 />
-                <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
+                <%= if @order.total_items_in_cart > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
                     <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
@@ -334,7 +334,7 @@ defmodule EdenflowersWeb.Layouts do
                   class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex"
                   aria-hidden="true"
                 >
-                  <%= if not is_nil(@order.total_items_in_cart) do %>
+                  <%= if @order.total_items_in_cart > 0 do %>
                     {~t"Cart"} ({@order.total_items_in_cart})
                   <% else %>
                     {~t"Cart"}
