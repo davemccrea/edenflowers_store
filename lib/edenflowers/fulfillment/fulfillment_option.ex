@@ -221,6 +221,25 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     validate present(:order_deadline) do
       where attribute_equals(:same_day, true)
     end
+
+    validate numericality(:base_price, greater_than_or_equal_to: 0)
+    validate numericality(:minimum_cart_total, greater_than_or_equal_to: 0)
+
+    validate numericality(:price_per_km, greater_than_or_equal_to: 0) do
+      where attribute_equals(:rate_type, :dynamic)
+    end
+
+    validate numericality(:free_dist_km, greater_than_or_equal_to: 0) do
+      where attribute_equals(:rate_type, :dynamic)
+    end
+
+    validate numericality(:max_dist_km, greater_than: 0) do
+      where attribute_equals(:rate_type, :dynamic)
+    end
+
+    validate compare(:free_dist_km, less_than_or_equal_to: :max_dist_km) do
+      where attribute_equals(:rate_type, :dynamic)
+    end
   end
 
   attributes do

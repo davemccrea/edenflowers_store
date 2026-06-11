@@ -84,6 +84,72 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
   end
 
+  describe "pricing validations" do
+    setup %{tax_rate: tax_rate} do
+      valid = %{
+        name: "Home delivery",
+        fulfillment_method: :delivery,
+        rate_type: :dynamic,
+        minimum_cart_total: 0,
+        base_price: "3.00",
+        price_per_km: "1.50",
+        free_dist_km: 5,
+        max_dist_km: 20,
+        tax_rate_id: tax_rate.id
+      }
+
+      create = fn overrides ->
+        FulfillmentOption
+        |> Ash.Changeset.for_create(:create, Map.merge(valid, Map.new(overrides)))
+        |> Ash.create(authorize?: false)
+      end
+
+      [create: create]
+    end
+
+    test "rejects a negative base_price", %{create: create} do
+      assert {:error, _} = create.(base_price: "-1.00")
+    end
+
+    test "rejects a negative minimum_cart_total", %{create: create} do
+      assert {:error, _} = create.(minimum_cart_total: "-1.00")
+    end
+
+    test "rejects a negative price_per_km", %{create: create} do
+      assert {:error, _} = create.(price_per_km: "-0.50")
+    end
+
+    test "rejects a negative free_dist_km", %{create: create} do
+      assert {:error, _} = create.(free_dist_km: -1)
+    end
+
+    test "rejects a max_dist_km of zero", %{create: create} do
+      assert {:error, _} = create.(max_dist_km: 0)
+    end
+
+    test "rejects free_dist_km greater than max_dist_km", %{create: create} do
+      assert {:error, _} = create.(free_dist_km: 20, max_dist_km: 5)
+    end
+
+    test "allows free_dist_km equal to max_dist_km", %{create: create} do
+      assert {:ok, _} = create.(free_dist_km: 10, max_dist_km: 10)
+    end
+
+    test "ignores dynamic pricing fields for a :fixed option", %{create: create} do
+      assert {:ok, _} =
+               create.(rate_type: :fixed, price_per_km: nil, free_dist_km: nil, max_dist_km: nil)
+    end
+
+    test "enforces free_dist_km <= max_dist_km on update too", %{create: create} do
+      {:ok, option} = create.(%{})
+
+      assert {:error, _} =
+               option
+               |> Ash.Changeset.for_update(:update, %{free_dist_km: 30})
+               |> Ash.update(authorize?: false)
+    end
+  end
+
   describe "calculate_price action" do
     setup %{tax_rate: tax_rate} do
       option =
