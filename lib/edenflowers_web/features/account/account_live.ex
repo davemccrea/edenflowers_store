@@ -1,12 +1,12 @@
 defmodule EdenflowersWeb.Account.AccountLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
   def mount(_params, _session, socket) do
-    orders = Order.get_all_completed!(socket.assigns.current_user.id, actor: socket.assigns.current_user)
+    orders = Orders.list_completed_orders!(socket.assigns.current_user.id, actor: socket.assigns.current_user)
 
     {:ok,
      socket

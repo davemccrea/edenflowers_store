@@ -10,7 +10,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotPromotion do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Pricing
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -35,7 +35,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotPromotion do
         )
 
       id ->
-        case Ash.get(Promotion, id, authorize?: false) do
+        case Pricing.get_promotion_by_id(id, authorize?: false) do
           {:ok, %{discount_rate: rate, name: name, code: code}} ->
             Ash.Changeset.force_change_attributes(changeset,
               discount_rate: rate,

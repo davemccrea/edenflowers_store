@@ -8,7 +8,9 @@ defmodule Edenflowers.Orders.Order.Changes.RemoveLineItem do
 
   require Ash.Query
 
-  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Orders.LineItem
+
+  alias Edenflowers.Orders
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -38,7 +40,7 @@ defmodule Edenflowers.Orders.Order.Changes.RemoveLineItem do
     order = Ash.load!(order, :non_card_line_item_count, authorize?: false)
 
     if order.non_card_line_item_count == 0 do
-      Order.restart_checkout(order, authorize?: false)
+      Orders.restart_checkout(order, authorize?: false)
     else
       {:ok, order}
     end

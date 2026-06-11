@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Store.StoreLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Catalog.{Product, ProductCategory}
+  alias Edenflowers.Catalog
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
     locale = current_locale_atom()
 
     categories =
-      ProductCategory.get_all!()
+      Catalog.list_categories!()
       |> Ash.load!(:translations)
       |> Enum.map(&AshTranslation.translate(&1, locale))
       |> Enum.with_index(1)
@@ -34,10 +34,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
   end
 
   defp load_products(category_slug) do
-    case ProductCategory.get_by_slug(category_slug) do
+    case Catalog.get_category_by_slug(category_slug) do
       {:ok, category} ->
         translated_category = AshTranslation.translate(category, current_locale_atom())
-        {:ok, Product.get_by_category!(category.id), translated_category}
+        {:ok, Catalog.list_products_by_category!(category.id), translated_category}
 
       {:error, _} ->
         :error

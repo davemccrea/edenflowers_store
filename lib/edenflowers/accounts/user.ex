@@ -63,18 +63,6 @@ defmodule Edenflowers.Accounts.User do
     actor?(true)
   end
 
-  code_interface do
-    define :get_by_subject, action: :get_by_subject, args: [:subject]
-    define :get_by_email, action: :get_by_email, args: [:email]
-    define :upsert, action: :upsert, args: [:email, :name]
-    define :request_otp, action: :request_otp, args: [:email]
-    define :sign_in_with_otp, action: :sign_in_with_otp, args: [:email, :otp]
-    define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
-    define :update_name, action: :update_name, args: [:name]
-    define :update_newsletter_preference, action: :update_newsletter_preference, args: [:newsletter_opt_in]
-    define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
-  end
-
   actions do
     defaults [:read]
 

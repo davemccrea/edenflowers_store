@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   import Mox
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   @moduletag :typst
 
@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     order = generate(order())
 
-    Order.add_line_item!(order, variant.id, 1, authorize?: false)
+    Orders.add_line_item!(order, variant.id, 1, authorize?: false)
 
     payment_intent = %{
       id: "pi_test_#{:rand.uniform(1_000_000)}",
@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
                data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
-    finalized = Order.get_by_id!(order.id, authorize?: false)
+    finalized = Orders.get_order_by_id!(order.id, authorize?: false)
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
 
@@ -200,7 +200,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
              })
 
     finalized =
-      Order.get_by_id!(order.id, authorize?: false)
+      Orders.get_order_by_id!(order.id, authorize?: false)
       |> Ash.load!([:line_items], authorize?: false)
 
     assert finalized.state == :placed
@@ -288,7 +288,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
                data: %{object: %{metadata: %{"order_id" => order.id}}}
              })
 
-    finalized = Order.get_by_id!(order.id, authorize?: false)
+    finalized = Orders.get_order_by_id!(order.id, authorize?: false)
 
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
@@ -373,7 +373,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
              })
 
     finalized =
-      Order.get_by_id!(order.id, authorize?: false)
+      Orders.get_order_by_id!(order.id, authorize?: false)
       |> Ash.load!([:promotion_applied?, :discount, :grand_total, :promotion], authorize?: false)
 
     assert finalized.state == :placed
@@ -530,7 +530,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert html =~ "Payment processing error"
 
-    stalled = Order.get_by_id!(order.id, authorize?: false)
+    stalled = Orders.get_order_by_id!(order.id, authorize?: false)
     assert stalled.state == :payment
     assert stalled.payment_status != :paid
 

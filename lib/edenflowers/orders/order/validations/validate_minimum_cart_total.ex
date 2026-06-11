@@ -14,7 +14,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateMinimumCartTotal do
   end
 
   defp validate_minimum_cart_total(changeset, promotion_id) do
-    with {:ok, promotion} <- Edenflowers.Pricing.Promotion.get_by_id(promotion_id, authorize?: false),
+    with {:ok, promotion} <- Edenflowers.Pricing.get_promotion_by_id(promotion_id, authorize?: false),
          {:ok, order} <- Ash.load(changeset.data, [:items_subtotal], authorize?: false, lazy?: true) do
       items_subtotal = order.items_subtotal || Decimal.new(0)
       minimum_required = promotion.minimum_cart_total

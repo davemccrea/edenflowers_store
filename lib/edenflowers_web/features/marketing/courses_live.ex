@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Marketing.CoursesLive do
 
   def mount(_params, _session, socket) do
     upcoming_courses =
-      Edenflowers.Courses.Course.list_upcoming_courses!(load: [:total_registrations])
+      Edenflowers.Courses.list_upcoming_courses!(load: [:total_registrations])
 
     socket =
       socket

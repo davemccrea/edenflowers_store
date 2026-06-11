@@ -10,11 +10,6 @@ defmodule Edenflowers.Catalog.ProductVariant do
     repo Edenflowers.Repo
   end
 
-  code_interface do
-    define :get_by_id, action: :by_id, args: [:id]
-    define :for_card_drawer, action: :for_card_drawer
-  end
-
   actions do
     defaults [:read, :destroy]
 

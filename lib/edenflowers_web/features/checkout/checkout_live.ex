@@ -6,9 +6,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
   import EdenflowersWeb.KeyDateIcon
 
-  alias Edenflowers.Catalog.{ProductVariant, ProductVariantSize}
+  alias Edenflowers.Catalog.ProductVariantSize
+
+  alias Edenflowers.Orders
+
+  alias Edenflowers.Fulfillment
+
+  alias Edenflowers.Catalog
   alias Edenflowers.Orders.{Order}
-  alias Edenflowers.Fulfillment.{Availability, FulfillmentOption}
+  alias Edenflowers.Fulfillment.Availability
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -29,9 +35,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
 
     with :ok <- validate_cart_not_empty(order),
-         {:ok, fulfillment_options} <- FulfillmentOption.list_for_checkout() do
+         {:ok, fulfillment_options} <- Fulfillment.list_options_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
-      card_variants = ProductVariant.for_card_drawer!()
+      card_variants = Catalog.list_card_drawer_variants!()
 
       {:ok,
        socket
@@ -49,7 +55,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         # navigated here directly or returned after another tab emptied the
         # cart. Reset before bouncing so a stale step/card/contact details
         # don't survive into the next checkout.
-        Order.restart_checkout!(order, actor: socket.assigns[:current_user])
+        Orders.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
       error ->
@@ -558,22 +564,22 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("edit_step", %{"state" => "contact_details"}, socket) do
-    Order.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
+    Orders.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
   end
 
   def handle_event("edit_step", %{"state" => "gift_options"}, socket) do
-    Order.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
+    Orders.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :gift_options)}
   end
 
   def handle_event("edit_step", %{"state" => "delivery"}, socket) do
-    Order.return_to_delivery!(socket.assigns.order, actor: actor(socket))
+    Orders.return_to_delivery!(socket.assigns.order, actor: actor(socket))
     {:noreply, scroll_to_state(reload_order(socket), :delivery)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    Order.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
+    Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
     # Delivery and pickup are served by different fulfillment calendars, so a
     # date that was valid for the previous option may not be valid for the
     # new one. The action clears `:fulfillment_date` on the order; drop the
@@ -583,18 +589,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
-    Order.set_gift!(socket.assigns.order, gift, actor: actor(socket))
+    Orders.set_gift!(socket.assigns.order, gift, actor: actor(socket))
     {:noreply, reload_order(socket)}
   end
 
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-    order = Order.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    order = Orders.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
     {:noreply, assign_forms(socket, order)}
   end
 
   def handle_event("remove_card", _, socket) do
-    order = Order.remove_card!(socket.assigns.order, actor: actor(socket))
+    order = Orders.remove_card!(socket.assigns.order, actor: actor(socket))
     {:noreply, assign_forms(socket, order, drop: ["card_message"])}
   end
 
@@ -613,7 +619,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # synchronously before pushing `stripe:process_payment`, so Stripe always
   # charges the cart total at the moment of click.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     {:noreply, assign(socket, order: order)}
   end
 
@@ -723,7 +729,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp reload_order(socket, opts \\ []) do
-    order = Order.get_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
@@ -736,7 +742,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
     case List.first(options) do
       nil -> order
-      %{id: id} -> Order.update_fulfillment_option!(order, id, actor: actor)
+      %{id: id} -> Orders.update_fulfillment_option!(order, id, actor: actor)
     end
   end
 
@@ -795,7 +801,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp persist_payment_intent(socket, order, payment_intent) do
-    case Order.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
+    case Orders.add_payment_intent_id(order, payment_intent.id, actor: actor(socket)) do
       {:ok, order} ->
         socket
         |> assign(order: order)

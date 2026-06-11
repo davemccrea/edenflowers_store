@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
 
   @impl true
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
   defp finalize_checkout(order_id) do
-    case Order.finalize_checkout(order_id, actor: system_actor()) do
+    case Orders.finalize_checkout(order_id, actor: system_actor()) do
       {:ok, order} ->
         {:ok, order}
 
@@ -95,7 +95,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
         # AshStateMachine refuses :checkout → :placed when state is already
         # :placed. Detect that via current state instead of pattern-matching on
         # the error struct so the handler stays decoupled from Ash internals.
-        case Order.get_by_id(order_id, actor: system_actor()) do
+        case Orders.get_order_by_id(order_id, actor: system_actor()) do
           {:ok, %{state: :placed}} -> {:ok, :already_placed}
           _ -> {:error, {:payment_update_failed, order_id, reason}}
         end
@@ -103,13 +103,13 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   end
 
   defp mark_payment_failed(order_id) do
-    with {:ok, order} <- Order.get_by_id(order_id, actor: system_actor()) do
+    with {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()) do
       case order.payment_status do
         :paid ->
           {:ok, :already_paid}
 
         _ ->
-          case Order.mark_payment_failed(order, actor: system_actor()) do
+          case Orders.mark_payment_failed(order, actor: system_actor()) do
             {:ok, order} -> {:ok, order}
             {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
           end

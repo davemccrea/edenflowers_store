@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
   def handle_event("submit", %{"email_address" => email_address} = params, socket) do
     socket = assign(socket, form: to_form(params))
 
-    case Edenflowers.Accounts.User.subscribe_to_newsletter(email_address) do
+    case Edenflowers.Accounts.subscribe_to_newsletter(email_address) do
       {:ok, _} ->
         locale = Gettext.get_locale(EdenflowersWeb.Gettext)
 

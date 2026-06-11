@@ -1,7 +1,8 @@
 defmodule Edenflowers.Orders.LineItemTest do
   use Edenflowers.DataCase
   import Generator
-  alias Edenflowers.Orders.{Order, LineItem}
+  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders
 
   setup do
     order = generate(order())
@@ -101,7 +102,7 @@ defmodule Edenflowers.Orders.LineItemTest do
         })
         |> Ash.create!(authorize?: false)
 
-      _order = Order.add_promotion_with_id!(order, promotion.id, authorize?: false)
+      _order = Orders.add_promotion_with_id!(order, promotion.id, authorize?: false)
 
       line_item = Ash.load!(line_item, :promotion_applied?)
 

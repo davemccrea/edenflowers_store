@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   import Generator
   import Mox
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   setup :verify_on_exit!
 
@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     delivery_option = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :fixed, base_price: "5.00"))
     order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
-    Order.add_line_item!(order, variant.id, 1, authorize?: false)
+    Orders.add_line_item!(order, variant.id, 1, authorize?: false)
 
     stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _order ->
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
@@ -247,7 +247,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
       render_async(view)
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
       assert is_nil(reloaded.geocoded_address)
       assert is_nil(reloaded.fulfillment_fee)
@@ -277,7 +277,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
         }
       })
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
       assert reloaded.geocoded_address == "Stadsgatan 3, 65300 Vasa"
@@ -318,7 +318,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
         }
       })
 
-      reloaded = Order.get_for_checkout!(order.id, actor: nil)
+      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert reloaded.state == :payment
       assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end

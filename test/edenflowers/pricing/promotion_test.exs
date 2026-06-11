@@ -1,4 +1,6 @@
 defmodule Edenflowers.Pricing.PromotionTest do
+  alias Edenflowers.Pricing
+  alias Edenflowers.Orders
   alias Edenflowers.Pricing.Promotion
   use Edenflowers.DataCase
 
@@ -29,7 +31,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion.get_by_code("Christmas20", ~D[2024-12-20])
+               Pricing.get_promotion_by_code("Christmas20", ~D[2024-12-20])
     end
 
     test "gets promotion using a code with leading and trailing whitespace" do
@@ -44,7 +46,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion.get_by_code(" CHRISTMAS20 ", ~D[2024-12-20])
+               Pricing.get_promotion_by_code(" CHRISTMAS20 ", ~D[2024-12-20])
     end
 
     test "fails to get promotion if code doesn't match" do
@@ -58,7 +60,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("AUTUMN20", ~D[2024-12-20])
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("AUTUMN20", ~D[2024-12-20])
     end
 
     test "fails to get promotion if current date is before start date" do
@@ -72,7 +74,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-18])
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-18])
     end
 
     test "gets promotion if current date is same as start date" do
@@ -87,7 +89,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-19])
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-19])
     end
 
     test "gets promotion if current date is after start date and before expiration date" do
@@ -103,7 +105,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-21])
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-21])
     end
 
     test "gets promotion if current date is after start date and on expiration date" do
@@ -119,7 +121,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-22])
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-22])
     end
 
     test "fails to get promotion if current date is after expiration date" do
@@ -134,7 +136,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("CHRISTMAS20", ~D[2024-12-23])
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-23])
     end
 
     test "rejects expired promotion code" do
@@ -149,7 +151,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       })
       |> Ash.create!(authorize?: false)
 
-      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("EXPIRED")
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("EXPIRED")
     end
   end
 
@@ -165,16 +167,14 @@ defmodule Edenflowers.Pricing.PromotionTest do
       promotion = generate(promotion())
       assert promotion.usage == 0
 
-      {:ok, updated} = Promotion.increment_usage(promotion, authorize?: false)
+      {:ok, updated} = Pricing.increment_promotion_usage(promotion, authorize?: false)
       assert updated.usage == 1
 
-      {:ok, updated2} = Promotion.increment_usage(updated, authorize?: false)
+      {:ok, updated2} = Pricing.increment_promotion_usage(updated, authorize?: false)
       assert updated2.usage == 2
     end
 
     test "increments usage when order is finalized with promotion" do
-      alias Edenflowers.Orders.Order
-
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id))
@@ -192,12 +192,12 @@ defmodule Edenflowers.Pricing.PromotionTest do
           )
         )
 
-      {:ok, _order} = Order.finalize_checkout(order.id, authorize?: false)
+      {:ok, _order} = Orders.finalize_checkout(order.id, authorize?: false)
 
       # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
       Oban.drain_queue(queue: :default)
 
-      {:ok, updated_promotion} = Promotion.get_by_id(promotion.id, authorize?: false)
+      {:ok, updated_promotion} = Pricing.get_promotion_by_id(promotion.id, authorize?: false)
       assert updated_promotion.usage == 1
     end
   end
@@ -217,13 +217,13 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
 
-      assert {:error, %Ash.Error.Invalid{}} = Promotion.get_by_code("LIMITED", Date.utc_today())
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("LIMITED", Date.utc_today())
     end
 
     test "allows promotion code when usage is below usage_limit" do
@@ -238,13 +238,13 @@ defmodule Edenflowers.Pricing.PromotionTest do
         })
         |> Ash.create(authorize?: false)
 
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
-      {:ok, promotion} = Promotion.increment_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, promotion} = Pricing.increment_promotion_usage(promotion, authorize?: false)
 
       assert {:ok, %Promotion{id: id}} =
-               Promotion.get_by_code("LIMITED10", Date.utc_today())
+               Pricing.get_promotion_by_code("LIMITED10", Date.utc_today())
 
       assert id == promotion.id
     end
@@ -262,21 +262,19 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
       promotion =
         Enum.reduce(1..100, promotion, fn _, promo ->
-          {:ok, updated} = Promotion.increment_usage(promo, authorize?: false)
+          {:ok, updated} = Pricing.increment_promotion_usage(promo, authorize?: false)
           updated
         end)
 
       assert promotion.usage == 100
 
       assert {:ok, %Promotion{id: id}} =
-               Promotion.get_by_code("UNLIMITED", Date.utc_today())
+               Pricing.get_promotion_by_code("UNLIMITED", Date.utc_today())
 
       assert id == promotion.id
     end
 
     test "prevents applying promotion to order when usage limit reached" do
-      alias Edenflowers.Orders.Order
-
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
@@ -293,10 +291,10 @@ defmodule Edenflowers.Pricing.PromotionTest do
         |> Ash.create(authorize?: false)
 
       Enum.each(1..10, fn _ ->
-        {:ok, _} = Promotion.increment_usage(promotion, authorize?: false)
+        {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
       end)
 
-      order = Order.create_for_checkout!(authorize?: false)
+      order = Orders.create_for_checkout!(authorize?: false)
 
       generate(
         line_item(
@@ -305,7 +303,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
         )
       )
 
-      assert {:error, error} = Order.add_promotion_with_code(order, "MAXED", authorize?: false)
+      assert {:error, error} = Orders.add_promotion_with_code(order, "MAXED", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end

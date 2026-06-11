@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   import EdenflowersWeb.Admin.Calendar, only: [grid: 1, legend: 1]
 
-  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment
   alias EdenflowersWeb.Admin.CalendarViewModel
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    options = FulfillmentOption.list!()
+    options = Fulfillment.list_options!()
 
     {:ok,
      socket
@@ -103,19 +103,19 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   end
 
   def handle_event("reset-calendar", _, socket) do
-    {:noreply, apply_to_scope(socket, &FulfillmentOption.reset_calendar!(&1, actor: &2))}
+    {:noreply, apply_to_scope(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
   end
 
   @impl true
   def handle_info({:fulfillment_date_toggled, date}, socket) do
-    {:noreply, apply_to_scope(socket, &FulfillmentOption.toggle_date!(&1, date, actor: &2))}
+    {:noreply, apply_to_scope(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
   end
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
     targets = scoped_options(socket)
     direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
 
-    {:noreply, apply_to_scope(socket, &FulfillmentOption.set_weekday!(&1, weekday, direction, actor: &2))}
+    {:noreply, apply_to_scope(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
   end
 
   def handle_info({:fulfillment_week_toggled, week}, socket) do
@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
         {:noreply, socket}
 
       direction ->
-        {:noreply, apply_to_scope(socket, &FulfillmentOption.set_week!(&1, week, today, direction, actor: &2))}
+        {:noreply, apply_to_scope(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
     end
   end
 

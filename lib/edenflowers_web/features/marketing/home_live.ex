@@ -1,12 +1,12 @@
 defmodule EdenflowersWeb.Marketing.HomeLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Catalog.Product
+  alias Edenflowers.Catalog
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
-    products = Product.get_featured!()
+    products = Catalog.list_featured_products!()
 
     {:ok, socket |> assign(products: products)}
   end

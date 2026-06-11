@@ -7,6 +7,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
   alias Edenflowers.Orders.Order
 
+  alias Edenflowers.Orders
+
   setup do
     Edenflowers.Repo.delete_all(Oban.Job)
 
@@ -16,10 +18,10 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
     {:ok, %{fulfillment_fee: fulfillment_fee}} =
-      Edenflowers.Fulfillment.FulfillmentOption.calculate_price(fulfillment_option.id, 0)
+      Edenflowers.Fulfillment.calculate_price(fulfillment_option.id, 0)
 
     {:ok, user} =
-      Edenflowers.Accounts.User.upsert("john.smith@example.com", "John Smith", authorize?: false)
+      Edenflowers.Accounts.upsert_user("john.smith@example.com", "John Smith", authorize?: false)
 
     order =
       Ash.Seed.seed!(Order, %{
@@ -55,7 +57,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Order.get_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
 
@@ -78,7 +80,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       # constraint on the worker collapses the duplicate enqueue.
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
 
-      order = Order.get_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
 
@@ -109,7 +111,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Order.get_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
 
@@ -133,7 +135,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Order.get_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
     end
@@ -148,7 +150,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
-      order = Order.get_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
     end

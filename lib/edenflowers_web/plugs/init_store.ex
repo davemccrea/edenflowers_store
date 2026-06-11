@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Plugs.InitStore do
   import Plug.Conn
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   def init(opts), do: opts
 
@@ -9,20 +9,20 @@ defmodule EdenflowersWeb.Plugs.InitStore do
     actor = conn.assigns[:current_user]
 
     if order_id do
-      case Order.get_by_id(order_id, actor: actor) do
+      case Orders.get_order_by_id(order_id, actor: actor) do
         {:ok, %{state: :placed}} ->
-          order = Order.create_for_checkout!(actor: actor)
+          order = Orders.create_for_checkout!(actor: actor)
           put_session(conn, :order_id, order.id)
 
         {:error, _} ->
-          order = Order.create_for_checkout!(actor: actor)
+          order = Orders.create_for_checkout!(actor: actor)
           put_session(conn, :order_id, order.id)
 
         _ ->
           conn
       end
     else
-      order = Order.create_for_checkout!(actor: actor)
+      order = Orders.create_for_checkout!(actor: actor)
       put_session(conn, :order_id, order.id)
     end
   end

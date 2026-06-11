@@ -9,14 +9,6 @@ defmodule Edenflowers.Courses.Course do
     table "courses"
   end
 
-  code_interface do
-    define :list_courses, action: :read
-    define :get_course, action: :read, get_by: [:id]
-    define :create_course, action: :create
-    define :list_upcoming_courses, action: :upcoming
-    define :list_past_courses, action: :past
-  end
-
   actions do
     defaults [:read, :update, :destroy]
 

@@ -21,20 +21,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     repo Edenflowers.Repo
   end
 
-  code_interface do
-    define :list, action: :read
-    define :list_for_checkout, action: :list_for_checkout
-    define :get_by_id, action: :by_id, args: [:id]
-    define :update_calendar, action: :update_calendar
-    define :toggle_date, action: :toggle_date, args: [:date]
-    define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
-    define :set_week, action: :set_week, args: [:week, :today, :direction]
-    define :reset_calendar, action: :reset_calendar
-    define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
-    define :calculate_price, action: :calculate_price, args: [:fulfillment_option_id, :distance]
-    define :fulfill_on_date, action: :fulfill_on_date, args: [:fulfillment_option_id, :date]
-  end
-
   actions do
     defaults [
       :read,

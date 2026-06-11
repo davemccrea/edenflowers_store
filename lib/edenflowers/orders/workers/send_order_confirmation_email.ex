@@ -6,9 +6,10 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
   import Edenflowers.Actors
 
   alias Edenflowers.Email
+
+  alias Edenflowers.Orders
   alias Edenflowers.Mailer
   alias Edenflowers.Orders.Receipt
-  alias Edenflowers.Orders.Order
 
   def enqueue(%{"order_id" => order_id} = args) do
     args
@@ -23,7 +24,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
     order =
       order_id
-      |> Order.get_by_id!(actor: system_actor(), authorize?: false)
+      |> Orders.get_order_by_id!(actor: system_actor(), authorize?: false)
       |> load_for_send()
 
     # Skip if a prior Oban attempt already delivered + marked.
@@ -40,7 +41,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
          email = build_email(order, pdf),
          {:ok, _result} <- Mailer.deliver(email),
          {:ok, _order} <-
-           Order.mark_receipt_emailed(order, sha, actor: system_actor()) do
+           Orders.mark_receipt_emailed(order, sha, actor: system_actor()) do
       :ok
     end
   end

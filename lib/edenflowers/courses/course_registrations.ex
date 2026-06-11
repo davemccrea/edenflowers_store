@@ -9,12 +9,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     table "course_registrations"
   end
 
-  code_interface do
-    define :list_registrations, action: :read
-    define :register_for_course, action: :register
-    define :get_registration, action: :read, get_by: [:id]
-  end
-
   actions do
     defaults [:read, :destroy]
 

@@ -10,14 +10,6 @@ defmodule Edenflowers.Catalog.Product do
     repo Edenflowers.Repo
   end
 
-  code_interface do
-    define :get_all_for_store, action: :for_store
-    define :get_featured, action: :featured
-    define :get_by_category, action: :by_category, args: [:category_id]
-    define :get_by_category_slug, action: :get_by_category_slug, args: [:slug]
-    define :get_by_id, action: :by_id, args: [:id]
-  end
-
   actions do
     defaults [:read, :destroy]
 

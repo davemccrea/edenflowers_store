@@ -9,13 +9,6 @@ defmodule Edenflowers.Pricing.Promotion do
     repo Edenflowers.Repo
   end
 
-  code_interface do
-    define :get_by_id, args: [:id], action: :by_id, get?: true
-    define :get_by_code, args: [:code, {:optional, :today}], action: :by_code, get?: true
-    define :increment_usage, action: :increment_usage
-    define :create_for_newsletter, action: :create_for_newsletter
-  end
-
   actions do
     defaults [:read, :destroy]
 

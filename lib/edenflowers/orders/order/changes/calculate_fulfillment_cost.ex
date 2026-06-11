@@ -8,8 +8,8 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   """
   use Ash.Resource.Change
 
+  alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.DeliveryError
-  alias Edenflowers.Fulfillment.FulfillmentOption
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -28,7 +28,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
     with {:ok, %{error: nil, fulfillment_fee: fee}} <-
-           FulfillmentOption.calculate_price(id, 0, authorize?: false) do
+           Fulfillment.calculate_price(id, 0, authorize?: false) do
       Ash.Changeset.force_change_attributes(changeset,
         fulfillment_fee: fee,
         delivery_address: nil,
@@ -51,7 +51,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    with {:ok, result} <- FulfillmentOption.calculate_delivery(delivery_address, id, authorize?: false) do
+    with {:ok, result} <- Fulfillment.calculate_delivery(delivery_address, id, authorize?: false) do
       if result.error do
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
           field: :delivery_address,

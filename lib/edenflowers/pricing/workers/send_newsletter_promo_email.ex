@@ -10,10 +10,11 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
 
   import Edenflowers.Actors
 
-  alias Edenflowers.Accounts.User
+  alias Edenflowers.Pricing
+
+  alias Edenflowers.Accounts
   alias Edenflowers.Email
   alias Edenflowers.Mailer
-  alias Edenflowers.Pricing.Promotion
 
   def enqueue(%{"email" => _email} = args) do
     args |> __MODULE__.new() |> Oban.insert()
@@ -21,11 +22,11 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
 
   def perform(%Oban.Job{args: %{"email" => email, "locale" => locale}}) do
     Gettext.with_locale(EdenflowersWeb.Gettext, locale, fn ->
-      case User.get_by_email(email, authorize?: false, load: [:newsletter_promo]) do
+      case Accounts.get_user_by_email(email, authorize?: false, load: [:newsletter_promo]) do
         {:ok, %{newsletter_promo: nil} = user} ->
-          {:ok, promo} = Promotion.create_for_newsletter(actor: system_actor())
+          {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
           Email.newsletter_promo(email, promo.code) |> Mailer.deliver()
-          {:ok, _} = User.set_newsletter_promo(user, promo.id, actor: system_actor())
+          {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
           :ok
 
         {:ok, %{newsletter_promo: %{usage: 0, code: code}}} ->

@@ -3,7 +3,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
 
   @moduletag :typst
@@ -40,7 +40,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
 
-    reloaded = Order.get_by_id!(order.id, authorize?: false)
+    reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
     assert reloaded.receipt_emailed_at != nil
     assert reloaded.receipt_sha256 =~ ~r/^[0-9a-f]{64}$/
   end

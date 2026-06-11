@@ -17,7 +17,7 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Accounts.User
+  alias Edenflowers.Accounts
   alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
   @impl true
@@ -30,7 +30,7 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
       customer_name = Ash.Changeset.get_argument_or_attribute(changeset, :customer_name)
       newsletter_opt_in = Ash.Changeset.get_argument(changeset, :newsletter_opt_in) || false
 
-      with {:ok, user} <- User.upsert(customer_email, customer_name, actor: system_actor()),
+      with {:ok, user} <- Accounts.upsert_user(customer_email, customer_name, actor: system_actor()),
            {:ok, user} <- maybe_opt_in_to_newsletter(user, newsletter_opt_in, changeset) do
         Ash.Changeset.force_change_attributes(changeset,
           user_id: user.id,
@@ -60,7 +60,7 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
   defp maybe_opt_in_to_newsletter(user, false, _changeset), do: {:ok, user}
 
   defp maybe_opt_in_to_newsletter(user, true, changeset) do
-    case User.update_newsletter_preference(user, true, actor: system_actor()) do
+    case Accounts.update_newsletter_preference(user, true, actor: system_actor()) do
       {:ok, user} ->
         enqueue_newsletter_email(user.email, changeset)
         {:ok, user}

@@ -2,7 +2,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateFulfillmentDate do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment
 
   @impl true
   def validate(changeset, _opts, _context) do
@@ -13,7 +13,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateFulfillmentDate do
       {:error, field: :fulfillment_date, message: "is required"}
     else
       # All other rules (past, weekday, disabled_dates, same-day deadline) live
-      # in the FulfillmentOption.fulfill_on_date action so the validator and the
+      # in the Fulfillment.fulfill_on_date action so the validator and the
       # calendar share one source of truth — including the Helsinki timezone.
       check_availability(option_id, fulfillment_date)
     end
@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateFulfillmentDate do
   defp check_availability(nil, _date), do: :ok
 
   defp check_availability(option_id, date) do
-    case FulfillmentOption.fulfill_on_date(option_id, date, authorize?: false) do
+    case Fulfillment.fulfill_on_date(option_id, date, authorize?: false) do
       {:ok, nil} -> :ok
       {:ok, reason} -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
     end

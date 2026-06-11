@@ -8,8 +8,12 @@ defmodule Edenflowers.PoliciesTest do
 
   alias Edenflowers.Courses.Course
 
+  alias Edenflowers.Orders
+
+  alias Edenflowers.Pricing
+
   alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
-  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Orders.LineItem
   alias Edenflowers.Fulfillment.{FulfillmentOption}
   alias Edenflowers.Pricing.{Promotion, TaxRate}
 
@@ -47,7 +51,7 @@ defmodule Edenflowers.PoliciesTest do
     end
 
     test "system actor can increment usage", %{promotion: promotion} do
-      assert {:ok, _} = Promotion.increment_usage(promotion, actor: %{system: true})
+      assert {:ok, _} = Pricing.increment_promotion_usage(promotion, actor: %{system: true})
     end
 
     test "system actor cannot create a promotion" do
@@ -286,39 +290,39 @@ defmodule Edenflowers.PoliciesTest do
     end
 
     test "guest cannot update locale", %{order: order} do
-      assert {:error, %Ash.Error.Forbidden{}} = Order.update_locale(order, "en-GB", actor: nil)
+      assert {:error, %Ash.Error.Forbidden{}} = Orders.update_locale(order, "en-GB", actor: nil)
     end
 
     test "admin cannot update locale", %{order: order} do
       assert {:error, %Ash.Error.Forbidden{}} =
-               Order.update_locale(order, "en-GB", actor: %{admin: true})
+               Orders.update_locale(order, "en-GB", actor: %{admin: true})
     end
 
     test "system actor cannot update locale", %{order: order} do
       assert {:error, %Ash.Error.Forbidden{}} =
-               Order.update_locale(order, "en-GB", actor: %{system: true})
+               Orders.update_locale(order, "en-GB", actor: %{system: true})
     end
 
     test "admin cannot attach payment intent", %{order: order} do
       assert {:error, %Ash.Error.Forbidden{}} =
-               Order.add_payment_intent_id(order, "pi_admin_override", actor: %{admin: true})
+               Orders.add_payment_intent_id(order, "pi_admin_override", actor: %{admin: true})
     end
 
     test "admin cannot mark payment failed on placed order", %{order: order} do
       # The action's own validation also rejects a :paid order; either error
       # class is acceptable since both layers correctly block the mutation.
       assert {:error, error} =
-               Order.mark_payment_failed(order, actor: %{admin: true})
+               Orders.mark_payment_failed(order, actor: %{admin: true})
 
       assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end
 
     test "admin can still read a placed order", %{order: order} do
-      assert {:ok, _} = Order.get_by_id(order.id, actor: %{admin: true})
+      assert {:ok, _} = Orders.get_order_by_id(order.id, actor: %{admin: true})
     end
 
     test "system actor can still read a placed order", %{order: order} do
-      assert {:ok, _} = Order.get_by_id(order.id, actor: %{system: true})
+      assert {:ok, _} = Orders.get_order_by_id(order.id, actor: %{system: true})
     end
   end
 

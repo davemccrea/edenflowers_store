@@ -21,7 +21,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   require Logger
   import EdenflowersWeb.CoreComponents
 
-  alias Edenflowers.Fulfillment.{DeliveryError, FulfillmentOption}
+  alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.DeliveryError
 
   @impl true
   def mount(socket) do
@@ -109,7 +110,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           FulfillmentOption.calculate_delivery(address, fulfillment_option.id)
+           Fulfillment.calculate_delivery(address, fulfillment_option.id)
          end)}
     end
   end

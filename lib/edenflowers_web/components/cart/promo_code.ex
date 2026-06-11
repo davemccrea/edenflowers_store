@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
   """
   use EdenflowersWeb, :live_component
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   def update(%{order: order} = assigns, socket) do
     socket =
@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
 
   def handle_event("clear_promo", _, socket) do
     actor = socket.assigns[:current_user]
-    Order.clear_promotion!(socket.assigns.order, actor: actor)
+    Orders.clear_promotion!(socket.assigns.order, actor: actor)
 
     {:noreply,
      assign(socket,

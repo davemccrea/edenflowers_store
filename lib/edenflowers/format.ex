@@ -1,8 +1,7 @@
 defmodule Edenflowers.Format do
   @moduledoc """
-  Locale-aware formatting helpers shared between the order-confirmation
-  email body and the PDF receipt payload. All functions return strings
-  formatted via CLDR for the supplied locale.
+  Locale-aware formatting helpers shared across the project.
+  All functions return strings formatted via CLDR for the supplied locale.
   """
 
   def currency(amount, locale)

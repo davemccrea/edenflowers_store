@@ -2,7 +2,7 @@ defmodule Edenflowers.Pricing.Workers.IncrementPromotionUsage do
   use Oban.Worker
   import Edenflowers.Actors
 
-  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Pricing
 
   def enqueue(%{"promotion_id" => promotion_id} = args) do
     args
@@ -15,7 +15,7 @@ defmodule Edenflowers.Pricing.Workers.IncrementPromotionUsage do
   end
 
   def perform(%Oban.Job{args: %{"promotion_id" => promotion_id}}) do
-    case Promotion.increment_usage(promotion_id, actor: system_actor()) do
+    case Pricing.increment_promotion_usage(promotion_id, actor: system_actor()) do
       {:ok, _promotion} -> :ok
       {:error, error} -> {:error, error}
     end

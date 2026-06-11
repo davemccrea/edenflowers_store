@@ -16,11 +16,6 @@ defmodule Edenflowers.Catalog.ProductCategory do
     fields [:name, :description]
   end
 
-  code_interface do
-    define :get_all, action: :get_all
-    define :get_by_slug, action: :get_by_slug, args: [:slug]
-  end
-
   actions do
     defaults [:read, :destroy]
 

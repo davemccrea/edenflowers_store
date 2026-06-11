@@ -2,6 +2,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
   use Edenflowers.DataCase
   import Generator
   import Mox
+  alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   setup :verify_on_exit!
@@ -172,28 +173,28 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, 0)
+               Fulfillment.calculate_price(option.id, 0)
     end
 
     test "returns value when distance is within free delivery range", %{option: option} do
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, 4999)
+               Fulfillment.calculate_price(option.id, 4999)
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("0")}} ==
-               FulfillmentOption.calculate_price(option.id, 5000)
+               Fulfillment.calculate_price(option.id, 5000)
 
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("4.50")}} ==
-               FulfillmentOption.calculate_price(option.id, 5001)
+               Fulfillment.calculate_price(option.id, 5001)
     end
 
     test "returns value when distance is within paid delivery range", %{option: option} do
       assert {:ok, %{error: nil, fulfillment_fee: Decimal.new("8.10")}} ==
-               FulfillmentOption.calculate_price(option.id, 7250)
+               Fulfillment.calculate_price(option.id, 7250)
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
       assert {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}} =
-               FulfillmentOption.calculate_price(option.id, 20000)
+               Fulfillment.calculate_price(option.id, 20000)
     end
   end
 
@@ -223,7 +224,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 7250} end)
 
       assert {:ok, %{error: nil, fulfillment_fee: fee, distance: 7250}} =
-               FulfillmentOption.calculate_delivery("Stadsgatan 3", option.id)
+               Fulfillment.calculate_delivery("Stadsgatan 3", option.id)
 
       assert Decimal.eq?(fee, Decimal.new("8.10"))
     end
@@ -235,7 +236,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
 
       assert {:ok, nil} =
-               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-05], %{now: now}, authorize?: false)
+               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-05], %{now: now}, authorize?: false)
     end
 
     test "returns :past when the date is in the past", %{tax_rate: tax_rate} do
@@ -243,7 +244,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
 
       assert {:ok, :past} =
-               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-01], %{now: now}, authorize?: false)
+               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-01], %{now: now}, authorize?: false)
     end
 
     test "normalises now to Helsinki for the same-day deadline", %{tax_rate: tax_rate} do
@@ -252,7 +253,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       now = DateTime.from_naive!(~N[2024-04-02 14:01:00], "Europe/Helsinki")
 
       assert {:ok, :order_deadline_passed} =
-               FulfillmentOption.fulfill_on_date(option.id, ~D[2024-04-02], %{now: now}, authorize?: false)
+               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-02], %{now: now}, authorize?: false)
     end
   end
 end

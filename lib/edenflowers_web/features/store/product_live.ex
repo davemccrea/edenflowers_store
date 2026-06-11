@@ -1,14 +1,15 @@
 defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Catalog.{Product}
-  alias Edenflowers.Orders.{Order}
+  alias Edenflowers.Orders
+
+  alias Edenflowers.Catalog
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     locale = current_locale_atom()
-    {:ok, product} = Product.get_by_id(id, load: [:product_variants, :tax_rate])
+    {:ok, product} = Catalog.get_product_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
     product_category = product.product_category |> Ash.load!(:translations) |> AshTranslation.translate(locale)
 
@@ -146,7 +147,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    Order.add_line_item(socket.assigns.order, socket.assigns.selected_variant.id, 1)
+    Orders.add_line_item(socket.assigns.order, socket.assigns.selected_variant.id, 1)
 
     {:noreply, socket}
   end

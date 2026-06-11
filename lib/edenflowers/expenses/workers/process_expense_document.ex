@@ -5,7 +5,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   Claude, and ingests them into the `Edenflowers.Expenses` domain.
 
   Unique on `document_id` so at-least-once webhook delivery collapses to a
-  single job. `Expense.ingest` additionally upserts on `document_id`, so even
+  single job. `Expenses.ingest_expense` additionally upserts on `document_id`, so even
   a job that runs twice cannot create a duplicate row.
   """
   use Oban.Worker, unique: [keys: [:document_id], period: :infinity]
@@ -13,7 +13,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   require Logger
   import Edenflowers.Actors
 
-  alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Expenses
 
   defp papra, do: Application.get_env(:edenflowers, :papra_client, Edenflowers.Papra)
   defp claude, do: Application.get_env(:edenflowers, :claude_client, Edenflowers.Claude)
@@ -63,7 +63,7 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   defp ingest(document_id, fields) do
     attrs = Map.put(fields, :document_id, document_id)
 
-    case Expense.ingest(attrs, actor: system_actor()) do
+    case Expenses.ingest_expense(attrs, actor: system_actor()) do
       {:ok, expense} ->
         {:ok, expense}
 

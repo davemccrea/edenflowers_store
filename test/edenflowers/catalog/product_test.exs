@@ -4,6 +4,8 @@ defmodule Edenflowers.Catalog.ProductTest do
 
   alias Edenflowers.Catalog.Product
 
+  alias Edenflowers.Catalog
+
   setup do
     tax_rate = generate(tax_rate())
     product_category = generate(product_category())
@@ -134,13 +136,13 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
   end
 
-  describe "Product.get_all_for_store filtering" do
+  describe "Catalog.list_store_products filtering" do
     test "includes published products with variants and published category", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Catalog.list_store_products!(authorize?: false)
 
       assert Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -153,7 +155,7 @@ defmodule Edenflowers.Catalog.ProductTest do
 
       _variant = generate(product_variant(product_id: draft_product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Catalog.list_store_products!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == draft_product.id end)
     end
@@ -164,7 +166,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product_no_variants =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Catalog.list_store_products!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product_no_variants.id end)
     end
@@ -174,7 +176,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Catalog.list_store_products!(authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -184,7 +186,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id, price: "15.99"))
 
-      products = Product.get_all_for_store!(authorize?: false)
+      products = Catalog.list_store_products!(authorize?: false)
       found_product = Enum.find(products, fn p -> p.id == product.id end)
 
       assert found_product != nil
@@ -194,7 +196,7 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
   end
 
-  describe "Product.get_by_category filtering" do
+  describe "Catalog.list_products_by_category filtering" do
     test "returns only products in specified category", %{tax_rate: tax_rate} do
       category_a = generate(product_category(visibility: :public))
       category_b = generate(product_category(visibility: :public))
@@ -205,7 +207,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product_b = generate(product(tax_rate_id: tax_rate.id, product_category_id: category_b.id, draft: false))
       _variant_b = generate(product_variant(product_id: product_b.id))
 
-      products = Product.get_by_category!(category_a.id, authorize?: false)
+      products = Catalog.list_products_by_category!(category_a.id, authorize?: false)
 
       assert Enum.any?(products, fn p -> p.id == product_a.id end)
       refute Enum.any?(products, fn p -> p.id == product_b.id end)
@@ -214,19 +216,19 @@ defmodule Edenflowers.Catalog.ProductTest do
     test "returns empty list when category has no qualifying products", %{tax_rate: _tax_rate} do
       empty_category = generate(product_category(visibility: :public))
 
-      products = Product.get_by_category!(empty_category.id, authorize?: false)
+      products = Catalog.list_products_by_category!(empty_category.id, authorize?: false)
 
       assert products == []
     end
   end
 
-  describe "Product.get_by_category_slug filtering" do
+  describe "Catalog.list_products_by_category_slug filtering" do
     test "returns products matching the slug", %{tax_rate: tax_rate} do
       cards_category = generate(product_category(slug: "cards", visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
 
       assert Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -241,7 +243,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       other_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: other_category.id, draft: false))
       _other_variant = generate(product_variant(product_id: other_product.id))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
 
       assert Enum.any?(products, fn p -> p.id == card_product.id end)
       refute Enum.any?(products, fn p -> p.id == other_product.id end)
@@ -252,7 +254,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       draft_product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: true))
       _variant = generate(product_variant(product_id: draft_product.id))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == draft_product.id end)
     end
@@ -263,7 +265,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product_no_variants =
         generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product_no_variants.id end)
     end
@@ -273,7 +275,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: draft_cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
 
       refute Enum.any?(products, fn p -> p.id == product.id end)
     end
@@ -283,7 +285,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards_category.id, draft: false))
       _variant = generate(product_variant(product_id: product.id, price: "7.50"))
 
-      products = Product.get_by_category_slug!("cards", authorize?: false)
+      products = Catalog.list_products_by_category_slug!("cards", authorize?: false)
       found = Enum.find(products, fn p -> p.id == product.id end)
 
       assert found != nil

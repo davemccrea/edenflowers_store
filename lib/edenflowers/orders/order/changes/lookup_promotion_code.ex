@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.Changes.LookupPromotionCode do
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Pricing
 
   @impl true
   def init(opts), do: {:ok, opts}
@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.Order.Changes.LookupPromotionCode do
     Ash.Changeset.before_action(changeset, fn changeset ->
       code = Ash.Changeset.get_argument(changeset, :code)
 
-      case Promotion.get_by_code(code) do
+      case Pricing.get_promotion_by_code(code) do
         {:ok, promotion} ->
           Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
 
