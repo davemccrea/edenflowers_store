@@ -1,0 +1,34 @@
+defmodule Edenflowers.Orders.Order.Changes.LookupPromotionCode do
+  @moduledoc """
+  Looks up a promotion by its code and assigns it to the order.
+
+  If the code is valid and the promotion is active, the promotion_id
+  is set on the order. If the code is invalid or the promotion is
+  inactive/expired, an error is added to the changeset.
+  """
+  use Ash.Resource.Change
+  use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  alias Edenflowers.Pricing
+
+  @impl true
+  def init(opts), do: {:ok, opts}
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      code = Ash.Changeset.get_argument(changeset, :code)
+
+      case Pricing.get_promotion_by_code(code) do
+        {:ok, promotion} ->
+          Ash.Changeset.force_change_attributes(changeset, promotion_id: promotion.id)
+
+        {:error, _error} ->
+          Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{
+            field: :code,
+            message: ~t"Invalid code"
+          })
+      end
+    end)
+  end
+end

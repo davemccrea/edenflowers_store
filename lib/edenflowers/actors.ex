@@ -1,9 +1,6 @@
 defmodule Edenflowers.Actors do
   @moduledoc """
   Actor definitions for authorization in Ash resources.
-
-  Actors are used to represent different types of users or systems interacting with resources.
-  They determine what actions are authorized through policy checks.
   """
 
   @doc """
@@ -19,7 +16,7 @@ defmodule Edenflowers.Actors do
       iex> Edenflowers.Actors.system_actor()
       %{system: true}
 
-      iex> Order.finalize_checkout(order, actor: Edenflowers.Actors.system_actor())
+      iex> Orders.finalize_checkout(order, actor: Edenflowers.Actors.system_actor())
   """
   def system_actor do
     %{system: true}
@@ -37,7 +34,7 @@ defmodule Edenflowers.Actors do
       iex> Edenflowers.Actors.guest_actor()
       %{guest: true}
 
-      iex> Order.get_for_checkout!(order_id, actor: Edenflowers.Actors.guest_actor())
+      iex> Orders.get_order_for_checkout!(order_id, actor: Edenflowers.Actors.guest_actor())
   """
   def guest_actor do
     %{guest: true}

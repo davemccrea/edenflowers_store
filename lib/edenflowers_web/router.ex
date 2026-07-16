@@ -34,41 +34,51 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser
 
-    ash_authentication_live_session :authenticated_routes,
+    ash_authentication_live_session :public,
       on_mount: [
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
-      live "/maternity", MaternityLive
-      live "/", HomeLive
-      live "/store", StoreLive
-      live "/store/:category", StoreLive
-      live "/courses", CoursesLive
-      live "/weddings", WeddingsLive
-      live "/condolences", CondolencesLive
-      live "/about", AboutLive
-      live "/contact", ContactLive
-      live "/faq", FaqLive
-      live "/product/:id", ProductLive
-      live "/checkout", CheckoutLive
-      live "/order/:id", OrderLive
-      live "/account", AccountLive
+      scope "/", Marketing do
+        live "/", HomeLive
+        live "/maternity", MaternityLive
+        live "/courses", CoursesLive
+        live "/weddings", WeddingsLive
+        live "/condolences", CondolencesLive
+        live "/about", AboutLive
+        live "/contact", ContactLive
+        live "/faq", FaqLive
+      end
+
+      scope "/", Store do
+        live "/store", StoreLive
+        live "/store/:category", StoreLive
+        live "/product/:id", ProductLive
+      end
+
+      scope "/", Checkout do
+        live "/checkout", CheckoutLive
+        live "/order/:id", OrderLive
+      end
+
+      scope "/", Account do
+        live "/account", AccountLive
+      end
     end
 
-    get "/checkout/complete/:id", CheckoutCompleteController, :index
+    get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
     get "/locale/:locale", LocaleController, :index
 
-    auth_routes AuthController, Edenflowers.Accounts.User, path: "/auth"
-    sign_out_route AuthController
+    auth_routes Auth.AuthController, Edenflowers.Accounts.User, path: "/auth"
+    sign_out_route Auth.AuthController
 
-    # Using a custom live view which handles the OTP strategy in a single page
     sign_in_route(
-      live_view: EdenflowersWeb.OtpSignInLive,
+      live_view: EdenflowersWeb.Auth.OtpSignInLive,
       auth_routes_prefix: "/auth",
       on_mount: [
-        {EdenflowersWeb.LiveUserAuth, :live_no_user},
+        {EdenflowersWeb.Auth.LiveUserAuth, :live_no_user},
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
@@ -78,8 +88,8 @@ defmodule EdenflowersWeb.Router do
   scope "/admin", EdenflowersWeb do
     pipe_through :browser
 
-    ash_authentication_live_session :admin_routes,
-      on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}] do
+    ash_authentication_live_session :admin,
+      on_mount: [{EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}] do
       live "/fulfillment-calendar", Admin.FulfillmentCalendarLive
     end
   end
@@ -91,17 +101,11 @@ defmodule EdenflowersWeb.Router do
 
     ash_admin(
       "/",
-      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.LiveUserAuth, :live_admin_required}])
+      AshAuthentication.Phoenix.LiveSession.opts(on_mount: [{EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}])
     )
   end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:edenflowers, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do

@@ -1,0 +1,418 @@
+defmodule Edenflowers.Pricing.PromotionTest do
+  alias Edenflowers.Pricing
+  alias Edenflowers.Orders
+  alias Edenflowers.Pricing.Promotion
+  use Edenflowers.DataCase
+
+  describe "Promotion Resource" do
+    test "creates a promotion" do
+      assert {:ok, _promotion} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "A promotion",
+                 code: "CHRISTMAS20",
+                 discount_rate: "0.20",
+                 minimum_cart_total: "30.00",
+                 start_date: ~D[2024-12-19],
+                 expiration_date: ~D[2024-12-31]
+               })
+               |> Ash.create(authorize?: false)
+    end
+
+    test "gets promotion using a code with mixed case" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, %Promotion{}} =
+               Pricing.get_promotion_by_code("Christmas20", ~D[2024-12-20])
+    end
+
+    test "gets promotion using a code with leading and trailing whitespace" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, %Promotion{}} =
+               Pricing.get_promotion_by_code(" CHRISTMAS20 ", ~D[2024-12-20])
+    end
+
+    test "fails to get promotion if code doesn't match" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("AUTUMN20", ~D[2024-12-20])
+    end
+
+    test "fails to get promotion if current date is before start date" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-18])
+    end
+
+    test "gets promotion if current date is same as start date" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, %Promotion{}} =
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-19])
+    end
+
+    test "gets promotion if current date is after start date and before expiration date" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19],
+        expiration_date: ~D[2024-12-22]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, %Promotion{}} =
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-21])
+    end
+
+    test "gets promotion if current date is after start date and on expiration date" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19],
+        expiration_date: ~D[2024-12-22]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:ok, %Promotion{}} =
+               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-22])
+    end
+
+    test "fails to get promotion if current date is after expiration date" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "CHRISTMAS20",
+        discount_rate: "0.20",
+        minimum_cart_total: "30.00",
+        start_date: ~D[2024-12-19],
+        expiration_date: ~D[2024-12-22]
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-23])
+    end
+
+    test "rejects expired promotion code" do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "A promotion",
+        code: "EXPIRED",
+        discount_rate: "0.20",
+        minimum_cart_total: "0",
+        start_date: Date.add(Date.utc_today(), -10),
+        expiration_date: Date.add(Date.utc_today(), -1)
+      })
+      |> Ash.create!(authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("EXPIRED")
+    end
+  end
+
+  describe "Promotion usage tracking" do
+    import Generator
+
+    test "starts with usage of 0" do
+      promotion = generate(promotion())
+      assert promotion.usage == 0
+    end
+
+    test "increments usage count" do
+      promotion = generate(promotion())
+      assert promotion.usage == 0
+
+      {:ok, updated} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      assert updated.usage == 1
+
+      {:ok, updated2} = Pricing.increment_promotion_usage(updated, authorize?: false)
+      assert updated2.usage == 2
+    end
+
+    test "increments usage when order is finalized with promotion" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      product_variant = generate(product_variant(product_id: product.id))
+      promotion = generate(promotion(minimum_cart_total: "0"))
+
+      assert promotion.usage == 0
+
+      order = generate(order(state: :payment, promotion_id: promotion.id, payment_intent_id: "pi_test"))
+
+      _line_item =
+        generate(
+          line_item(
+            order_id: order.id,
+            product_variant_id: product_variant.id
+          )
+        )
+
+      {:ok, _order} = Orders.finalize_checkout(order.id, authorize?: false)
+
+      # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
+      Oban.drain_queue(queue: :default)
+
+      {:ok, updated_promotion} = Pricing.get_promotion_by_id(promotion.id, authorize?: false)
+      assert updated_promotion.usage == 1
+    end
+  end
+
+  describe "Promotion usage limits" do
+    import Generator
+
+    test "rejects promotion code when usage equals usage_limit" do
+      {:ok, promotion} =
+        Promotion
+        |> Ash.Changeset.for_create(:create, %{
+          name: "Limited Promo",
+          code: "LIMITED",
+          discount_rate: "0.10",
+          minimum_cart_total: "0",
+          usage_limit: 5
+        })
+        |> Ash.create(authorize?: false)
+
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("LIMITED", Date.utc_today())
+    end
+
+    test "allows promotion code when usage is below usage_limit" do
+      {:ok, promotion} =
+        Promotion
+        |> Ash.Changeset.for_create(:create, %{
+          name: "Limited Promo 10",
+          code: "LIMITED10",
+          discount_rate: "0.10",
+          minimum_cart_total: "0",
+          usage_limit: 5
+        })
+        |> Ash.create(authorize?: false)
+
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      {:ok, promotion} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+
+      assert {:ok, %Promotion{id: id}} =
+               Pricing.get_promotion_by_code("LIMITED10", Date.utc_today())
+
+      assert id == promotion.id
+    end
+
+    test "allows unlimited usage when usage_limit is nil" do
+      {:ok, promotion} =
+        Promotion
+        |> Ash.Changeset.for_create(:create, %{
+          name: "Unlimited Promo",
+          code: "UNLIMITED",
+          discount_rate: "0.10",
+          minimum_cart_total: "0"
+        })
+        |> Ash.create(authorize?: false)
+
+      promotion =
+        Enum.reduce(1..100, promotion, fn _, promo ->
+          {:ok, updated} = Pricing.increment_promotion_usage(promo, authorize?: false)
+          updated
+        end)
+
+      assert promotion.usage == 100
+
+      assert {:ok, %Promotion{id: id}} =
+               Pricing.get_promotion_by_code("UNLIMITED", Date.utc_today())
+
+      assert id == promotion.id
+    end
+
+    test "prevents applying promotion to order when usage limit reached" do
+      tax_rate = generate(tax_rate())
+      product = generate(product(tax_rate_id: tax_rate.id))
+      product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
+
+      {:ok, promotion} =
+        Promotion
+        |> Ash.Changeset.for_create(:create, %{
+          name: "Maxed Out Promo",
+          code: "MAXED",
+          discount_rate: "0.20",
+          minimum_cart_total: "0",
+          usage_limit: 10
+        })
+        |> Ash.create(authorize?: false)
+
+      Enum.each(1..10, fn _ ->
+        {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+      end)
+
+      order = Orders.create_for_checkout!(authorize?: false)
+
+      generate(
+        line_item(
+          order_id: order.id,
+          product_variant_id: product_variant.id
+        )
+      )
+
+      assert {:error, error} = Orders.add_promotion_with_code(order, "MAXED", authorize?: false)
+      assert %Ash.Error.Invalid{} = error
+    end
+  end
+
+  describe "Promotion discount_rate validations" do
+    test "rejects discount_rate of 0" do
+      assert {:error, error} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Invalid Promo",
+                 code: "ZERO",
+                 discount_rate: "0",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+
+    test "rejects negative discount_rate" do
+      assert {:error, error} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Invalid Promo",
+                 code: "NEGATIVE",
+                 discount_rate: "-0.10",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+
+    test "rejects discount_rate above 1.0" do
+      assert {:error, error} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Invalid Promo",
+                 code: "TOOBIG",
+                 discount_rate: "1.01",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+
+    test "accepts discount_rate of 1.0 (100% off)" do
+      assert {:ok, promotion} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Free Promo",
+                 code: "FREE100",
+                 discount_rate: "1.0",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert Decimal.equal?(promotion.discount_rate, "1.0")
+    end
+
+    test "accepts small discount_rate like 0.01 (1% off)" do
+      assert {:ok, promotion} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Small Promo",
+                 code: "TINY",
+                 discount_rate: "0.01",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert Decimal.equal?(promotion.discount_rate, "0.01")
+    end
+  end
+
+  describe "Promotion unique code constraint" do
+    import Generator
+
+    test "prevents duplicate promotion codes" do
+      generate(promotion(code: "DUPLICATE"))
+
+      assert {:error, error} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Second Promo",
+                 code: "DUPLICATE",
+                 discount_rate: "0.15",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+
+    test "enforces case-insensitive uniqueness for codes" do
+      generate(promotion(code: "CaseTest"))
+
+      assert {:error, error} =
+               Promotion
+               |> Ash.Changeset.for_create(:create, %{
+                 name: "Second Promo",
+                 code: "CASETEST",
+                 discount_rate: "0.15",
+                 minimum_cart_total: "0"
+               })
+               |> Ash.create(authorize?: false)
+
+      assert %Ash.Error.Invalid{} = error
+    end
+  end
+end

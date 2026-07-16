@@ -1,4 +1,4 @@
-<%= if @order.customer_name do %><%= gettext("Hi %{name},", name: @order.customer_name |> String.split() |> List.first()) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
 <%= gettext("Thank you for your order. Your reference is %{reference}, and I'll have everything ready on %{date}.", reference: @order.order_reference, date: @format_date.(@order.fulfillment_date)) %>
 

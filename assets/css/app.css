@@ -274,24 +274,30 @@ body.ready {
   @apply mx-auto px-4 sm:px-8;
 }
 
+/* Rag control: headings balance their lines; body copy avoids orphans.
+   Both degrade silently in older engines. */
+main p {
+  text-wrap: pretty;
+}
+
 @utility hero-heading {
-  @apply font-serif text-5xl font-light leading-[1.05] tracking-tight sm:text-6xl md:text-7xl;
+  @apply font-serif text-5xl font-light leading-[1.05] tracking-tight text-balance sm:text-6xl md:text-7xl;
 }
 
 @utility hero-heading-overlay {
-  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
+  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-balance text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
 }
 
 @utility hero-display {
-  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
+  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight text-balance sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
-  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1];
+  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight text-balance sm:text-5xl sm:leading-[1.1];
 }
 
 @utility section-title {
-  @apply font-serif text-3xl leading-tight tracking-tight md:text-4xl;
+  @apply font-serif text-3xl leading-tight tracking-tight text-balance md:text-4xl;
 }
 
 @utility tile-title {
@@ -303,7 +309,7 @@ body.ready {
 }
 
 @utility pull-quote {
-  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight md:text-4xl md:leading-[1.2];
+  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight text-balance md:text-4xl md:leading-[1.2];
 }
 
 @utility footer-line {
@@ -322,19 +328,22 @@ body.ready {
    `from-font`); em offsets track text size. Three buckets:
      -display  serif headings (text-2xl+)
      -nav      small UI labels (text-xs..sm)
-     -body     inline prose links — dimmed, always visible */
+     -body     inline prose links — dimmed, always visible
+   Hover variants keep the underline permanently in place and fade only
+   its colour in/out, so the stroke never pops — it breathes. Active
+   states elsewhere (.category-index, .size-option) still snap, by design. */
 @utility link-underline-hover-display {
-  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.3em] hover:underline;
+  @apply underline decoration-transparent underline-offset-[0.3em] hover:decoration-(--color-link-underline);
   text-decoration-thickness: 3px;
 }
 
 @utility link-underline-group-hover-display {
-  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.3em] group-hover:underline;
+  @apply underline decoration-transparent underline-offset-[0.3em] group-hover:decoration-(--color-link-underline);
   text-decoration-thickness: 3px;
 }
 
 @utility link-underline-hover-nav {
-  @apply no-underline decoration-(--color-link-underline) underline-offset-[0.25em] hover:underline;
+  @apply underline decoration-transparent underline-offset-[0.25em] hover:decoration-(--color-link-underline);
   text-decoration-thickness: 2px;
 }
 
@@ -378,49 +387,26 @@ body.ready {
   }
 }
 
+/* Slow settle on hero photography: starts slightly zoomed and eases home.
+   Transform-only, so LCP timing is unaffected. Parent needs overflow-hidden. */
+@keyframes hero-zoom-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-zoom {
+    animation: hero-zoom-settle 7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
 /* Editorial category index — replaces the pill row on the Store page.
    Each entry is a serif word anchored by an eyebrow numeral. Description
    shows on the active entry and on hover/focus of inactive ones. No
    transitions: state changes snap, by design. */
-.category-index__list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-@media (width >= theme(--breakpoint-md)) {
-  .category-index__list {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2.5rem;
-  }
-}
-
-.category-index__link {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 0.875rem;
-  align-items: baseline;
-  text-decoration: none;
-  color: var(--color-base-content);
-  outline: none;
-}
-
-.category-index__numeral {
-  @apply eyebrow;
-  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
-  font-variant-numeric: tabular-nums;
-  align-self: center;
-}
-
-.category-index__name {
-  @apply font-serif text-xl leading-snug tracking-normal md:text-2xl;
-  width: max-content;
-  max-width: 100%;
-}
-
-/* Active entry: honey underline + description visible. */
 .category-index__item[data-active="true"] .category-index__name {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);
@@ -428,7 +414,6 @@ body.ready {
   text-underline-offset: 0.3em;
 }
 
-/* Inactive entries: same underline appears on hover/focus. */
 .category-index__item:not([data-active="true"])
   .category-index__link:hover
   .category-index__name,
@@ -441,32 +426,18 @@ body.ready {
   text-underline-offset: 0.3em;
 }
 
-/* Keyboard focus ring around the whole link. */
 .category-index__link:focus-visible {
   outline: 2px solid var(--color-link-underline);
   outline-offset: 0.5rem;
 }
 
-.category-index__description {
-  grid-column: 2;
-  padding-top: 0.625rem;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
-  max-width: 32ch;
-  display: none;
+#store-products {
+  transition: opacity 150ms ease;
 }
 
-.category-index__item[data-active="true"] .category-index__description,
-.category-index__item:not([data-active="true"])
-  .category-index__link:hover
-  .category-index__description,
-.category-index__item:not([data-active="true"])
-  .category-index__link:focus-visible
-  .category-index__description {
-  display: block;
+.phx-page-loading #store-products {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* "Favourite" mark on the product photograph — top-right corner, hairline
@@ -507,31 +478,6 @@ body.ready {
 .size-option:has(input:focus-visible) {
   outline: 2px solid var(--color-link-underline);
   outline-offset: 0.5rem;
-}
-
-/* Editorial FAQ list — questions and answers as prose, not as an accordion.
-   Each item is a hairline-separated row with serif question + serif italic
-   answer. Five items short enough to scan top-to-bottom. */
-.faq-list__item {
-  padding-block: 2rem;
-  border-top: 1px solid
-    color-mix(in oklab, var(--color-base-content) 12%, transparent);
-}
-.faq-list__item:last-child {
-  border-bottom: 1px solid
-    color-mix(in oklab, var(--color-base-content) 12%, transparent);
-}
-.faq-list__question {
-  @apply font-serif text-xl leading-snug md:text-2xl;
-  margin: 0 0 0.875rem;
-}
-.faq-list__answer {
-  font-family: var(--font-sans);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  color: var(--color-base-content);
-  max-width: 60ch;
-  margin: 0;
 }
 
 /* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */

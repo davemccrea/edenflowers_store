@@ -33,13 +33,6 @@ defmodule Edenflowers.Expenses.Expense do
     repo Edenflowers.Repo
   end
 
-  code_interface do
-    define :ingest, action: :ingest
-    define :list, action: :read
-    define :mark_reviewed, action: :mark_reviewed
-    define :correct, action: :correct
-  end
-
   actions do
     defaults [:read, :destroy]
 
