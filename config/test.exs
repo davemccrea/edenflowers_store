@@ -55,11 +55,11 @@ config :ash, disable_async?: true
 config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
 
 # Use mock StripeAPI in tests
-config :edenflowers, :stripe_api, Edenflowers.StripeAPI.Mock
+config :edenflowers, :stripe_api, Edenflowers.External.StripeAPI.Mock
 config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 
 # Use mock HereAPI in tests
-config :edenflowers, :here_api, Edenflowers.HereAPI.Mock
+config :edenflowers, :here_api, Edenflowers.External.HereAPI.Mock
 
 # Use mocks for expense capture in tests
 config :edenflowers, :papra_client, Edenflowers.Papra.Mock

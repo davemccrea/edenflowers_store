@@ -1,19 +1,17 @@
 defmodule Edenflowers.Email do
   @moduledoc """
-  Email templates and functions for sending emails
+  Builds the app's Swoosh email envelopes. Bodies are rendered by
+  `Edenflowers.Email.Templates`; subjects are localised per the order's locale.
   """
 
   import Swoosh.Email
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Email.Templates
-  alias Edenflowers.Localize.Format
+  alias Edenflowers.Format
 
   @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
 
-  @doc """
-  Builds an order confirmation email
-  """
   def order_confirmation(order) do
     Gettext.with_locale(EdenflowersWeb.Gettext, order.locale, fn ->
       new()

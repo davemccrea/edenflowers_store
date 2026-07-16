@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.KeyDateIcon do
   """
   use EdenflowersWeb, :html
 
-  alias Edenflowers.Store.KeyDates
+  alias Edenflowers.Fulfillment.KeyDates
 
   attr :date, Date, required: true
   attr :muted?, :boolean, default: false, doc: "Render at lower opacity (use on faded cells, e.g. past dates)."

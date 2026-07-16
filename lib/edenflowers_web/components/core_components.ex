@@ -1,30 +1,13 @@
 defmodule EdenflowersWeb.CoreComponents do
   @moduledoc """
-  Provides core UI components.
+  Core UI components, styled with Tailwind CSS and daisyUI.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as tables, forms, and
-  inputs. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
+  Useful references:
 
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
-
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
-
-    * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
-      we build on. You will use it for layout, sizing, flexbox, grid, and
-      spacing.
-
-    * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
-
-    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
-      the component system used by Phoenix. Some components, such as `<.link>`
-      and `<.form>`, are defined there.
-
+    * [daisyUI](https://daisyui.com/docs/intro/) — available components and themes.
+    * [Tailwind CSS](https://tailwindcss.com) — layout, sizing, and spacing utilities.
+    * [Heroicons](https://heroicons.com) — see `icon/1`.
+    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) — `<.link>`, `<.form>`, and friends.
   """
   use Phoenix.Component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -424,7 +407,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
@@ -465,7 +447,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # Helper used by inputs to generate form errors
   def error(assigns) do
     ~H"""
     <p class="text-error mt-1.5 flex items-center gap-2 text-sm">
@@ -909,6 +890,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
   attr :navigate, :string, required: true
+  attr :locale, :string, required: true
   attr :from_price?, :boolean, default: true
   attr :class, :any, default: nil
 
@@ -935,7 +917,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
             {~t"From"}
           </span>
-          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+          {Edenflowers.Format.currency(@product.cheapest_price, @locale)}
         </p>
       </div>
     </.link>
@@ -955,18 +937,27 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def category_tile(assigns) do
     ~H"""
-    <.link navigate={@navigate} class="group relative overflow-hidden">
+    <.link navigate={@navigate} class="group relative block overflow-hidden">
       <.image
         src={@image_src}
         alt={@label}
         width={800}
         height={400}
         sizes="(min-width: 768px) 33vw, 100vw"
-        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+        class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
       />
-      <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+      <%!-- Static gradient keeps the label legible on any photograph; the
+            second layer deepens the whole image slightly on hover. --%>
+      <div class="from-black/50 via-black/15 absolute inset-0 bg-gradient-to-t to-transparent" />
+      <div class="bg-black/10 absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100" />
       <div class="absolute inset-0 flex items-end p-6">
-        <h3 class="tile-title text-white">{@label}</h3>
+        <h3 class="tile-title flex items-center gap-2.5 text-white transition-transform duration-500 ease-out group-hover:-translate-y-1.5">
+          {@label}
+          <.icon
+            name="hero-arrow-right"
+            class="h-4 w-4 -translate-x-1 opacity-0 transition duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+          />
+        </h3>
       </div>
     </.link>
     """
@@ -986,6 +977,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Facebook"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///facebook_logo_bw_128px.png"
@@ -1000,6 +992,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Instagram"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///instagram_logo_bw_128px.png"
@@ -1166,7 +1159,7 @@ defmodule EdenflowersWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         aria-label={@label}
-        class={"js-scroll-lock-dialog #{@placement_class} fixed inset-0 hidden outline-hidden"}
+        class={"#{@placement_class} js-scroll-lock-dialog fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>
@@ -1205,16 +1198,6 @@ defmodule EdenflowersWeb.CoreComponents do
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
-    # When using gettext, we typically pass the strings we want
-    # to translate as a static argument:
-    #
-    #     # Translate the number of files with plural rules
-    #     dngettext("errors", "1 file", "%{count} files", count)
-    #
-    # However the error messages in our forms and APIs are generated
-    # dynamically, so we need to translate them by calling Gettext
-    # with our gettext backend as first argument. Translations are
-    # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
       Gettext.dngettext(EdenflowersWeb.Gettext, "errors", msg, msg, count, opts)
     else

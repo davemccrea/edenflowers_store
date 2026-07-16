@@ -1,7 +1,7 @@
-defmodule EdenflowersWeb.ReturnToTest do
+defmodule EdenflowersWeb.Auth.ReturnToTest do
   use ExUnit.Case, async: true
 
-  alias EdenflowersWeb.ReturnTo
+  alias EdenflowersWeb.Auth.ReturnTo
 
   describe "safe_path/1" do
     test "accepts path-only same-origin URLs" do

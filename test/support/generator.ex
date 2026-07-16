@@ -3,16 +3,10 @@ defmodule Generator do
 
   alias Edenflowers.Accounts.User
 
-  alias Edenflowers.Store.{
-    TaxRate,
-    Promotion,
-    ProductCategory,
-    Product,
-    ProductVariant,
-    Order,
-    LineItem,
-    FulfillmentOption
-  }
+  alias Edenflowers.Pricing.{TaxRate, Promotion}
+  alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
+  alias Edenflowers.Orders.{Order, LineItem}
+  alias Edenflowers.Fulfillment.FulfillmentOption
 
   # seed_generator bypasses actions so we can set :admin directly
   # (the attribute is writable?: false on the resource).
@@ -62,7 +56,12 @@ defmodule Generator do
   def product_category(opts \\ []) do
     changeset_generator(ProductCategory, :create,
       defaults: %{
-        name: words()
+        name: words(),
+        # slug has a unique index; without this Ash fills it with a random short
+        # string that occasionally collides. Must be unique across concurrently
+        # running tests (not sequence/2, which restarts per test process) or
+        # concurrent sandbox transactions deadlock on the index.
+        slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end)
       },
       overrides: opts,
       authorize?: false
