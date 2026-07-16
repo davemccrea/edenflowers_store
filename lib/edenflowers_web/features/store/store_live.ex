@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
                 <.product_card
                   product={product}
                   navigate={~p"/product/#{product}"}
-                  locale={Localize.get_locale().cldr_locale_id |> to_string()}
+                  locale={Edenflowers.Format.locale()}
                 />
               </li>
             </ul>

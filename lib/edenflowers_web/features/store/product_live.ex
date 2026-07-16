@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 {@product.name}
               </h1>
               <p data-testid="product-price" class="font-serif text-base-content text-2xl">
-                {Edenflowers.Format.currency(@selected_variant.price, Localize.get_locale().cldr_locale_id |> to_string())}
+                {Edenflowers.Format.currency(@selected_variant.price, Edenflowers.Format.locale())}
               </p>
             </header>
 
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       {String.capitalize(to_string(variant.size))}
                     </span>
                     <span class="size-option__price text-base-content/75 ml-2 text-sm">
-                      {Edenflowers.Format.currency(variant.price, Localize.get_locale().cldr_locale_id |> to_string())}
+                      {Edenflowers.Format.currency(variant.price, Edenflowers.Format.locale())}
                     </span>
                   </label>
                 </div>

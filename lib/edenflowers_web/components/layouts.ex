@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    current_locale_code = Localize.get_locale().cldr_locale_id |> to_string()
+    current_locale_code = Edenflowers.Format.locale()
     current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
 
     locales =
@@ -325,9 +325,7 @@ defmodule EdenflowersWeb.Layouts do
                 />
                 <%= if @order.total_items_in_cart > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
-                    <div
-                      class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none"
-                    >
+                    <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
                     </div>
                   </span>
