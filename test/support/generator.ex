@@ -56,7 +56,12 @@ defmodule Generator do
   def product_category(opts \\ []) do
     changeset_generator(ProductCategory, :create,
       defaults: %{
-        name: words()
+        name: words(),
+        # slug has a unique index; without this Ash fills it with a random short
+        # string that occasionally collides. Must be unique across concurrently
+        # running tests (not sequence/2, which restarts per test process) or
+        # concurrent sandbox transactions deadlock on the index.
+        slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end)
       },
       overrides: opts,
       authorize?: false
