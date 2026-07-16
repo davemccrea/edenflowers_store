@@ -36,25 +36,39 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
         payment_intent_id: "pi_test_#{:rand.uniform(1_000_000)}"
       })
 
-    _line_item =
-      generate(
-        line_item(
-          order_id: order.id,
-          product_variant_id: product_variant.id,
-          quantity: 1
-        )
+    generate(
+      line_item(
+        order_id: order.id,
+        product_variant_id: product_variant.id,
+        quantity: 1
       )
+    )
 
-    %{order: order}
+    # Derive the expected Stripe amount from the order's real grand_total via the
+    # same conversion the handler uses, so the fixture can't silently diverge from
+    # production's rounding.
+    %{grand_total: grand_total} = Ash.get!(Order, order.id, load: [:grand_total], authorize?: false)
+    expected_amount = Edenflowers.External.StripeAPI.to_stripe_amount(grand_total)
+
+    %{order: order, expected_amount: expected_amount}
   end
 
   describe "payment_intent.succeeded" do
-    test "finalizes the order, marks it paid, and enqueues a confirmation email", %{order: order} do
+    test "finalizes the order, marks it paid, and enqueues a confirmation email", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_succeeded_1",
                  type: "payment_intent.succeeded",
-                 data: %{object: %{metadata: %{"order_id" => order.id}}}
+                 data: %{
+                   object: %{
+                     id: order.payment_intent_id,
+                     metadata: %{"order_id" => order.id},
+                     amount_received: expected_amount
+                   }
+                 }
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -66,18 +80,27 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert_email_sent()
     end
 
-    test "is idempotent on redelivery for an already-placed order", %{order: order} do
+    test "is idempotent on redelivery for an already-placed order", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
       event = %Stripe.Event{
         id: "evt_succeeded_dup",
         type: "payment_intent.succeeded",
-        data: %{object: %{metadata: %{"order_id" => order.id}}}
+        data: %{
+          object: %{
+            id: order.payment_intent_id,
+            metadata: %{"order_id" => order.id},
+            amount_received: expected_amount
+          }
+        }
       }
 
       # First delivery — finalizes + enqueues.
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
       # Stripe redelivers the same event after we've already processed it. The
-      # handler must still return :ok so Stripe stops retrying, and the unique
-      # constraint on the worker collapses the duplicate enqueue.
+      # handler must still return :ok so Stripe stops retrying, and the receipt_emailed_at
+      # guard in the worker prevents a duplicate send.
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -87,13 +110,69 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
-    test "returns :error when metadata.order_id is missing" do
+    test "logs error and returns :ok when amount_received does not match grand_total", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
+      log =
+        capture_log(fn ->
+          assert :ok =
+                   EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                     id: "evt_amount_mismatch",
+                     type: "payment_intent.succeeded",
+                     data: %{
+                       object: %{
+                         id: order.payment_intent_id,
+                         metadata: %{"order_id" => order.id},
+                         amount_received: expected_amount - 1
+                       }
+                     }
+                   })
+        end)
+
+      assert log =~ "amount mismatch"
+
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert order.state == :payment
+      assert order.payment_status != :paid
+      refute_email_sent()
+    end
+
+    test "logs error and returns :ok when payment_intent_id does not match", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
+      log =
+        capture_log(fn ->
+          assert :ok =
+                   EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                     id: "evt_pi_mismatch",
+                     type: "payment_intent.succeeded",
+                     data: %{
+                       object: %{
+                         id: "pi_wrong_#{:rand.uniform(1_000_000)}",
+                         metadata: %{"order_id" => order.id},
+                         amount_received: expected_amount
+                       }
+                     }
+                   })
+        end)
+
+      assert log =~ "payment_intent mismatch"
+
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert order.state == :payment
+      assert order.payment_status != :paid
+      refute_email_sent()
+    end
+
+    test "returns :ok when metadata.order_id is missing (permanent failure, stop retries)", %{order: order} do
       capture_log(fn ->
-        assert :error =
+        assert :ok =
                  EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_no_metadata",
                    type: "payment_intent.succeeded",
-                   data: %{object: %{metadata: %{}}}
+                   data: %{object: %{id: order.payment_intent_id, metadata: %{}}}
                  })
       end)
 
@@ -118,13 +197,19 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       refute_email_sent()
     end
 
-    test "does not downgrade an already-paid order", %{order: order} do
+    test "does not downgrade an already-paid order", %{order: order, expected_amount: expected_amount} do
       # Succeeded fires first.
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_first_success",
                  type: "payment_intent.succeeded",
-                 data: %{object: %{metadata: %{"order_id" => order.id}}}
+                 data: %{
+                   object: %{
+                     id: order.payment_intent_id,
+                     metadata: %{"order_id" => order.id},
+                     amount_received: expected_amount
+                   }
+                 }
                })
 
       # A late `payment_failed` for the same intent shouldn't flip the order back.

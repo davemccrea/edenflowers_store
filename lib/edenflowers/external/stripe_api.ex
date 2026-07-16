@@ -17,9 +17,21 @@ defmodule Edenflowers.External.StripeAPI do
 
   @behaviour Edenflowers.External.StripeAPI.Behaviour
 
+  @doc """
+  Converts a decimal monetary value into the integer minor units (cents) Stripe
+  expects. The webhook handler reuses this so the amount it verifies is computed
+  identically to the amount that was charged.
+  """
+  def to_stripe_amount(value) do
+    value
+    |> Decimal.round(2)
+    |> Decimal.mult(100)
+    |> Decimal.to_integer()
+  end
+
   @impl true
   def create_payment_intent(%{grand_total: grand_total, id: id}) do
-    amount = convert_to_stripe_amount(grand_total)
+    amount = to_stripe_amount(grand_total)
 
     Stripe.PaymentIntent.create(%{
       amount: amount,
@@ -38,7 +50,7 @@ defmodule Edenflowers.External.StripeAPI do
 
   @impl true
   def update_payment_intent(%{payment_intent_id: payment_intent_id, grand_total: grand_total}) do
-    amount = convert_to_stripe_amount(grand_total)
+    amount = to_stripe_amount(grand_total)
 
     Stripe.PaymentIntent.update(payment_intent_id, %{
       amount: amount
@@ -48,12 +60,5 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def cancel_payment_intent(%{id: payment_intent_id}) do
     Stripe.PaymentIntent.cancel(payment_intent_id)
-  end
-
-  defp convert_to_stripe_amount(value) do
-    value
-    |> Decimal.round(2)
-    |> Decimal.mult(100)
-    |> Decimal.to_integer()
   end
 end

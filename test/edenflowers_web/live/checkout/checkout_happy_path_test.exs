@@ -98,10 +98,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     # Simulate Stripe firing payment_intent.succeeded — this finalizes the
     # order and enqueues the confirmation email Oban job.
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-               type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"order_id" => order.id}}}
-             })
+             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized = Orders.get_order_by_id!(order.id, authorize?: false)
     assert finalized.state == :placed
@@ -194,10 +191,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-               type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"order_id" => order.id}}}
-             })
+             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized =
       Orders.get_order_by_id!(order.id, authorize?: false)
@@ -283,10 +277,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-               type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"order_id" => order.id}}}
-             })
+             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized = Orders.get_order_by_id!(order.id, authorize?: false)
 
@@ -367,10 +358,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-               type: "payment_intent.succeeded",
-               data: %{object: %{metadata: %{"order_id" => order.id}}}
-             })
+             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized =
       Orders.get_order_by_id!(order.id, authorize?: false)
@@ -537,5 +525,23 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert %{success: 0, failure: 0} = Oban.drain_queue(queue: :default)
 
     refute_email_sent()
+  end
+
+  # Mirrors the real webhook: the payment_intent's id and amount_received match
+  # the order, so the handler's verification passes.
+  defp payment_intent_succeeded_event(order_id) do
+    order = Orders.get_order_by_id!(order_id, authorize?: false, load: [:grand_total])
+    amount_received = Decimal.mult(order.grand_total, 100) |> Decimal.to_integer()
+
+    %Stripe.Event{
+      type: "payment_intent.succeeded",
+      data: %{
+        object: %{
+          id: order.payment_intent_id,
+          metadata: %{"order_id" => order.id},
+          amount_received: amount_received
+        }
+      }
+    }
   end
 end
