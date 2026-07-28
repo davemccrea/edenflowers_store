@@ -6,10 +6,10 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   use Phoenix.Component
   import Phoenix.LiveView
 
-  alias Edenflowers.Store.Order
+  alias Edenflowers.Orders
 
   def on_mount(:default, _params, _session, socket) do
-    if connected?(socket) && socket.view != EdenflowersWeb.CheckoutLive do
+    if connected?(socket) && socket.view != EdenflowersWeb.Checkout.CheckoutLive do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{socket.assigns.order.id}")
       {:cont, attach_hook(socket, :handle_line_item_changed, :handle_info, &handle_line_item_changed/2)}
     else
@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
 
   defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
-    order = Order.get_for_checkout!(order_id, actor: actor)
+    order = Orders.get_order_for_checkout!(order_id, actor: actor)
     {:halt, assign(socket, order: order)}
   end
 
