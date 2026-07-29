@@ -1,0 +1,81 @@
+defmodule Edenflowers.Courses.Course do
+  use Ash.Resource,
+    domain: Edenflowers.Courses,
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
+
+  postgres do
+    repo Edenflowers.Repo
+    table "courses"
+  end
+
+  actions do
+    defaults [:read, :update, :destroy]
+
+    create :create do
+      accept [
+        :name,
+        :description,
+        :location_name,
+        :location_address,
+        :image_slug,
+        :date,
+        :start_time,
+        :end_time,
+        :register_before,
+        :total_places,
+        :price
+      ]
+    end
+
+    read :upcoming do
+      filter expr(date >= today())
+    end
+
+    read :past do
+      filter expr(date < today())
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      description "All mutations require admin actor (covered by bypass above)."
+      forbid_if always()
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false
+    attribute :description, :string, allow_nil?: false
+    attribute :location_name, :string, allow_nil?: false
+    attribute :location_address, :string, allow_nil?: false
+    attribute :image_slug, :string, allow_nil?: false
+    attribute :date, :date, allow_nil?: false
+    attribute :start_time, :time, allow_nil?: false
+    attribute :end_time, :time, allow_nil?: false
+    attribute :register_before, :date, allow_nil?: false
+    attribute :total_places, :integer, allow_nil?: false
+    attribute :price, :decimal, allow_nil?: false
+
+    timestamps()
+  end
+
+  relationships do
+    has_many :course_registrations, Edenflowers.Courses.CourseRegistration
+  end
+
+  aggregates do
+    count :total_registrations, :course_registrations do
+      filter expr(status == :confirmed)
+    end
+  end
+end

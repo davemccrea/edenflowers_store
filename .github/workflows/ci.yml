@@ -51,7 +51,7 @@ jobs:
         run: typst compile priv/receipts/_warmup.typ /tmp/warmup.pdf
 
       - name: Restore deps and build cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             deps
