@@ -7,6 +7,14 @@
 # General application configuration
 import Config
 
+# Workaround for stripity_stripe + hackney 4.x: hackney 4.0 negotiates HTTP/2
+# by default, but stripity_stripe still sends a `Connection: keep-alive` header,
+# which is illegal under HTTP/2 (RFC 7540 §8.1.2.2). hackney rejects the request
+# with :protocol_error, breaking Stripe payment intent creation at checkout.
+# Forcing HTTP/1.1 sidesteps it. Remove once stripity_stripe fixes the header.
+# Tracking: https://github.com/beam-community/stripity-stripe/issues/905
+config :hackney, default_protocols: [:http1]
+
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
