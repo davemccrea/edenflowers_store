@@ -18,6 +18,11 @@ defmodule EdenflowersWeb.Endpoint do
     websocket: [connect_info: [:uri, session: @session_options]],
     longpoll: [connect_info: [:uri, session: @session_options]]
 
+  plug Plug.Static,
+    at: "/.well-known",
+    from: {:edenflowers, "priv/static/.well-known"},
+    gzip: false
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),

@@ -1,0 +1,7 @@
+PLACEHOLDER - Replace this file with the actual content downloaded from the Stripe Dashboard.
+
+Steps:
+1. Go to Stripe Dashboard > Settings > Payment methods > Apple Pay
+2. Add your domain (e.g. edenflowers.ie)
+3. Download the domain association file
+4. Replace this file with the downloaded content
