@@ -254,7 +254,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
             <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
               <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section">
-                <p class="eyebrow text-base-content/60" data-testid="cart-heading">
+                <p class="eyebrow text-base-content/70" data-testid="cart-heading">
                   {~t"Cart"} ({@order.total_items_in_cart})
                 </p>
 
@@ -274,7 +274,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     <span>{~t"Delivery"}</span>
                     <%= cond do %>
                       <% is_nil(@order.fulfillment_fee) -> %>
-                        <span class="text-base-content/60">—</span>
+                        <span class="text-base-content/70">—</span>
                       <% Decimal.eq?(@order.fulfillment_fee, 0) -> %>
                         <span>{~t"Free"}</span>
                       <% true -> %>
@@ -494,7 +494,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 class="h-24 w-24 object-cover"
               />
               <span class="text-sm">{variant.product.name}</span>
-              <span class="text-base-content/60 text-xs">
+              <span class="text-base-content/70 text-xs">
                 {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
             </button>

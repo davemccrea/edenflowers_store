@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     ~H"""
     <div class="container mx-auto py-10">
       <header class="mb-8 max-w-2xl">
-        <p class="eyebrow text-base-content/55 mb-2">Availability</p>
+        <p class="eyebrow text-base-content/70 mb-2">Availability</p>
         <h1 class="page-title">Fulfillment Calendar</h1>
         <p class="text-base-content/70 mt-3 text-sm leading-relaxed">
           Click a date to toggle it on or off. Click a weekday header (Mon, Tue&hellip;) to toggle that weekday everywhere.
@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
   defp reset_confirm_message, do: "Are you sure you want to reset the calendar? This action is destructive."
 
   defp reset_button_class do
-    "self-start rounded px-3.5 py-1.5 text-sm text-base-content/55 " <>
+    "self-start rounded px-3.5 py-1.5 text-sm text-base-content/70 " <>
       "hover:text-base-content/85 hover:bg-error/10 " <>
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content"
   end

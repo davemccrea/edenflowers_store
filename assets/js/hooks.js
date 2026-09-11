@@ -10,9 +10,9 @@ export const Hooks = {};
  * Markup contract (set in HomeLive):
  *   <div class="embla">
  *     <div class="embla__viewport" phx-hook="FeaturedCarousel" id="...">
- *       <ul class="embla__container">
- *         <li class="embla__slide">...</li>
- *       </ul>
+ *       <div class="embla__container">
+ *         <div class="embla__slide" role="group">...</div>
+ *       </div>
  *     </div>
  *     <button class="embla__prev">…</button>
  *     <button class="embla__next">…</button>
