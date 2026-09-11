@@ -44,6 +44,21 @@ defmodule EdenflowersWeb.Store.ProductLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
+          <header class="order-first md:hidden">
+            <.link
+              navigate={~p"/store/#{@product.product_category.slug}"}
+              class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
+            >
+              {@product_category.name}
+            </.link>
+            <h1 class="page-title mb-3">
+              {@product.name}
+            </h1>
+            <p class="font-serif text-base-content text-2xl">
+              {Edenflowers.Format.currency(@selected_variant.price, Edenflowers.Format.locale())}
+            </p>
+          </header>
+
           <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
             <.image
               data-testid="product-image"
@@ -61,7 +76,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
           </figure>
 
           <div class="flex flex-col gap-8 md:max-w-prose">
-            <header>
+            <header class="hidden md:block">
               <.link
                 navigate={~p"/store/#{@product.product_category.slug}"}
                 class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
