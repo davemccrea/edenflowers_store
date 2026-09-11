@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
   end
 
   defp position_classes(true), do: ["eyebrow tabular-nums", "text-[var(--color-link-underline)]"]
-  defp position_classes(false), do: ["eyebrow tabular-nums", "text-base-content/55"]
+  defp position_classes(false), do: ["eyebrow tabular-nums", "text-base-content/70"]
 
   defp title_classes(past?, future?) do
     base = "section-title flex items-baseline gap-2"

@@ -367,13 +367,13 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-2">
-              <h3 class="eyebrow text-base-content/60">Minimosen</h3>
+              <h3 class="eyebrow text-base-content/70">Minimosen</h3>
               <p class="footer-line whitespace-nowrap">Kauppapuistikko 21</p>
               <p class="footer-line whitespace-nowrap">65100 Vaasa</p>
             </div>
 
             <div class="footer-grid__hours space-y-2">
-              <h3 class="eyebrow text-base-content/60">
+              <h3 class="eyebrow text-base-content/70">
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
@@ -384,7 +384,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__help space-y-2">
-              <h3 class="eyebrow text-base-content/60">{~t"Help"}</h3>
+              <h3 class="eyebrow text-base-content/70">{~t"Help"}</h3>
               <ul class="space-y-1">
                 <li>
                   <.link navigate={~p"/faq"} class="footer-line link-underline-hover-nav">
@@ -405,7 +405,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__socials space-y-2">
-              <h3 class="eyebrow text-base-content/60">{~t"Socials"}</h3>
+              <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
               <.social_media_links size={6} />
             </div>
           </div>

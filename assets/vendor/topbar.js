@@ -60,6 +60,9 @@
       style.top = style.left = style.right = style.margin = style.padding = 0;
       style.zIndex = 100001;
       style.display = "none";
+      // Local patch (re-apply on upgrade): decorative progress bar, and it
+      // lives outside every landmark. Keep it out of the a11y tree.
+      canvas.setAttribute("aria-hidden", "true");
       if (options.className) canvas.classList.add(options.className);
       addEvent(window, "resize", repaint);
     },

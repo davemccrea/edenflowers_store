@@ -158,8 +158,7 @@ defmodule EdenflowersWeb.CoreComponents do
       <span
         class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
         aria-hidden="true"
-      >
-      </span>
+      ></span>
     </button>
     """
   end
@@ -938,9 +937,10 @@ defmodule EdenflowersWeb.CoreComponents do
   def category_tile(assigns) do
     ~H"""
     <.link navigate={@navigate} class="group relative block overflow-hidden">
+      <%!-- Decorative: the heading below carries the same label, so alt text would repeat it. --%>
       <.image
         src={@image_src}
-        alt={@label}
+        alt=""
         width={800}
         height={400}
         sizes="(min-width: 768px) 33vw, 100vw"
