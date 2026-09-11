@@ -99,7 +99,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def auth(assigns) do
-    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
+    current_locale = Localize.Language.display_name!(Localize.get_locale().language, fallback: true)
 
     assigns =
       assigns
@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.Layouts do
 
   def app(assigns) do
     current_locale_code = Edenflowers.Format.locale()
-    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
+    current_locale = Localize.Language.display_name!(Localize.get_locale().language, fallback: true)
 
     locales =
       for code <- Edenflowers.Locales.all() do
