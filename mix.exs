@@ -127,7 +127,7 @@ defmodule Edenflowers.MixProject do
       # Dev & build tooling
       {:igniter, "~> 0.4"},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
-      {:tidewave, "~> 0.1", only: [:dev]},
+      {:tidewave, "~> 0.9", only: [:dev]},
       {:usage_rules, "~> 1.1", only: [:dev]},
       # Test
       {:faker, "~> 0.18", only: :test},
