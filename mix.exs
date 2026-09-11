@@ -91,9 +91,9 @@ defmodule Edenflowers.MixProject do
       {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},
       {:phoenix_html, "~> 4.1"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_dashboard, "~> 0.9"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.1.0"},
+      {:phoenix_live_view, "~> 1.2"},
       # Database
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
@@ -109,8 +109,8 @@ defmodule Edenflowers.MixProject do
       # Internationalisation
       {:gettext, "~> 1.0"},
       {:gettext_sigils, "~> 0.5"},
-      {:localize, "~> 0.38.0"},
-      {:localize_web, "~> 0.6.0"},
+      {:localize, "~> 1.2"},
+      {:localize_web, "~> 1.1"},
       # Telemetry
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
@@ -119,7 +119,7 @@ defmodule Edenflowers.MixProject do
       {:stripity_stripe, "~> 3.2"},
       {:swoosh, "~> 1.16"},
       # Utilities
-      {:dns_cluster, "~> 0.2.0"},
+      {:dns_cluster, "~> 0.3.0"},
       {:hammer, "~> 7.0"},
       {:jason, "~> 1.2"},
       {:req, "~> 0.5"},
