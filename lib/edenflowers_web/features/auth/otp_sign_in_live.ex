@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
 
           <div class="flex flex-col items-center gap-2 text-center text-sm">
             <%= if @resend_remaining > 0 do %>
-              <span class="text-base-content/50">
+              <span class="text-base-content/70">
                 {~t"Resend code in"} {@resend_remaining}s
               </span>
             <% else %>
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             overrides={[AshAuthentication.Phoenix.Overrides.Default]}
           />
 
-          <div class="text-base-content/50 flex items-center gap-3 text-xs uppercase">
+          <div class="text-base-content/70 flex items-center gap-3 text-xs uppercase">
             <hr class="border-base-300 flex-1" />
             <span>{~t"or"}</span>
             <hr class="border-base-300 flex-1" />

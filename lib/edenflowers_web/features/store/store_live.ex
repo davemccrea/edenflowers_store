@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <p class="eyebrow text-base-content/60 hero-reveal mb-5">{~t"The Store"}</p>
+        <p class="eyebrow text-base-content/70 hero-reveal mb-5">{~t"The Store"}</p>
         <h1 :if={@selected_category} class="page-title hero-reveal mb-12 md:mb-16" style="--reveal-delay: 80ms;">
           {@selected_category.name}
         </h1>
@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
                 <span
-                  class="eyebrow text-base-content/55 [font-variant-numeric:tabular-nums] self-center"
+                  class="eyebrow text-base-content/70 [font-variant-numeric:tabular-nums] self-center"
                   aria-hidden="true"
                 >
                   {String.pad_leading(Integer.to_string(idx), 2, "0")}

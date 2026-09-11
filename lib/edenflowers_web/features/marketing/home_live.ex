@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
             <div class="space-y-3">
-              <p class="eyebrow text-base-content/60">{~t"The collection"}</p>
+              <p class="eyebrow text-base-content/70">{~t"The collection"}</p>
               <h2 class="section-title">{~t"Featured Blooms"}</h2>
             </div>
 
@@ -84,8 +84,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               class="embla__viewport"
               data-dot-label-template={~t"Go to slide __N__"}
             >
-              <ul class="embla__container">
-                <li
+              <div class="embla__container">
+                <div
                   :for={{product, idx} <- Enum.with_index(@products)}
                   class="embla__slide"
                   role="group"
@@ -97,8 +97,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                     navigate={~p"/product/#{product}"}
                     locale={Edenflowers.Format.locale()}
                   />
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
 
             <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <p class="eyebrow text-base-content/60 mb-4">{~t"Where to find us"}</p>
+            <p class="eyebrow text-base-content/70 mb-4">{~t"Where to find us"}</p>
             <h2 id="location-heading" class="section-title mb-7">
               {~t"Made in Vaasa, Finland."}
             </h2>
@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <p class="eyebrow text-base-content/60 mb-4">{~t"Services"}</p>
+          <p class="eyebrow text-base-content/70 mb-4">{~t"Services"}</p>
           <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <.category_tile
@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <p class="eyebrow text-base-content/50 mb-12 text-center">{~t"In good company"}</p>
+          <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"In good company"}</p>
           <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
             <li>
               <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
