@@ -52,8 +52,13 @@ defmodule EdenflowersWeb.Endpoint do
 
   plug Stripe.WebhookPlug,
     at: "/webhook/stripe",
-    handler: EdenflowersWeb.StripeHandler,
+    handler: EdenflowersWeb.Webhooks.StripeHandler,
     secret: {Application, :get_env, [:edenflowers, :stripe_webhook_secret]}
+
+  plug EdenflowersWeb.Plugs.PapraWebhook,
+    at: "/webhook/papra",
+    handler: EdenflowersWeb.Webhooks.PapraHandler,
+    secret: {Application, :get_env, [:edenflowers, :papra_webhook_secret]}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

@@ -5,10 +5,6 @@ defmodule EdenflowersWeb.Layouts do
   """
   use EdenflowersWeb, :html
 
-  # Embed all files in layouts/* within this module.
-  # The default root.html.heex file contains the HTML
-  # skeleton of your application, namely HTML headers
-  # and other static content.
   embed_templates "layouts/*"
 
   @doc """
@@ -91,7 +87,7 @@ defmodule EdenflowersWeb.Layouts do
   # user lands back where they started. Filters out paths that aren't worth
   # capturing (the sign-in page itself, the home page, anything not safe).
   defp sign_in_href(current_path) do
-    case EdenflowersWeb.ReturnTo.safe_path(current_path) do
+    case EdenflowersWeb.Auth.ReturnTo.safe_path(current_path) do
       nil -> ~p"/sign-in"
       "/" -> ~p"/sign-in"
       path -> ~p"/sign-in?return_to=#{path}"
@@ -103,7 +99,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def auth(assigns) do
-    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
+    current_locale = Localize.Language.display_name!(Localize.get_locale().language, fallback: true)
 
     assigns =
       assigns
@@ -118,7 +114,8 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
-        <.flash_group flash={@flash} />
+        <.flash kind={:info} flash={@flash} />
+        <.flash kind={:error} flash={@flash} />
         {render_slot(@inner_block)}
       </main>
 
@@ -143,8 +140,8 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    current_locale_code = Localize.get_locale().cldr_locale_id |> to_string()
-    current_locale = Localize.Language.display_name!(Localize.get_locale(), fallback: true)
+    current_locale_code = Edenflowers.Format.locale()
+    current_locale = Localize.Language.display_name!(Localize.get_locale().language, fallback: true)
 
     locales =
       for code <- Edenflowers.Locales.all() do
@@ -203,7 +200,7 @@ defmodule EdenflowersWeb.Layouts do
             </li>
             <li class="border-base-content/10 border-t pt-4">
               <.link
-                class="text-base-content group font-serif inline-flex items-center gap-3 text-3xl hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
+                class="text-base-content group font-serif link-underline-hover-display inline-flex items-center gap-3 text-3xl"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
@@ -222,7 +219,7 @@ defmodule EdenflowersWeb.Layouts do
           current_locale_code={@current_locale_code}
           current_path={@current_path}
           class="flex flex-wrap gap-x-5 gap-y-2"
-          item_class="text-base-content/80 text-sm tracking-wide hover:decoration-(--color-link-underline) hover:underline hover:underline-offset-4"
+          item_class="text-base-content/80 link-underline-hover-nav text-sm tracking-wide"
         />
         <.social_media_links size={6} />
       </footer>
@@ -230,7 +227,7 @@ defmodule EdenflowersWeb.Layouts do
 
     <.live_component
       id="cart-drawer-component"
-      module={EdenflowersWeb.CartDrawerComponent}
+      module={EdenflowersWeb.Cart.Drawer}
       order={@order}
       current_user={@current_user}
     />
@@ -319,14 +316,14 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Cart button --%>
               <.cart_count_badge
-                count={@order.total_items_in_cart || 0}
+                count={@order.total_items_in_cart}
                 phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
               >
                 <.icon
                   class="text-base-content h-5 w-5 group-hover:text-base-content/60"
                   name="hero-shopping-bag"
                 />
-                <%= if not is_nil(@order.total_items_in_cart) && @order.total_items_in_cart > 0 do %>
+                <%= if @order.total_items_in_cart > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
                     <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
                       {@order.total_items_in_cart}
@@ -337,7 +334,7 @@ defmodule EdenflowersWeb.Layouts do
                   class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex"
                   aria-hidden="true"
                 >
-                  <%= if not is_nil(@order.total_items_in_cart) do %>
+                  <%= if @order.total_items_in_cart > 0 do %>
                     {~t"Cart"} ({@order.total_items_in_cart})
                   <% else %>
                     {~t"Cart"}
@@ -351,7 +348,8 @@ defmodule EdenflowersWeb.Layouts do
     </div>
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-      <.flash_group flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
 
       {render_slot(@inner_block)}
     </main>
@@ -365,17 +363,17 @@ defmodule EdenflowersWeb.Layouts do
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
             <div class="footer-grid__newsletter space-y-4">
-              <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignupForm} />
+              <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignup} />
             </div>
 
             <div class="footer-grid__location space-y-2">
-              <h3 class="eyebrow text-base-content/60">Minimossen</h3>
+              <h3 class="eyebrow text-base-content/70">Minimossen</h3>
               <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
               <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
             </div>
 
             <div class="footer-grid__hours space-y-2">
-              <h3 class="eyebrow text-base-content/60">
+              <h3 class="eyebrow text-base-content/70">
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
@@ -386,7 +384,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__help space-y-2">
-              <h3 class="eyebrow text-base-content/60">{~t"Help"}</h3>
+              <h3 class="eyebrow text-base-content/70">{~t"Help"}</h3>
               <ul class="space-y-1">
                 <li>
                   <.link navigate={~p"/faq"} class="footer-line link-underline-hover-nav">
@@ -407,7 +405,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__socials space-y-2">
-              <h3 class="eyebrow text-base-content/60">{~t"Socials"}</h3>
+              <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
               <.social_media_links size={6} />
             </div>
           </div>
@@ -426,7 +424,16 @@ defmodule EdenflowersWeb.Layouts do
           </.locale_picker>
 
           <span class="text-xs">
-            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus: 2944459-6 •
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus:
+            <a
+              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              href="https://tietopalvelu.ytj.fi/yritys/2944459-6"
+              target="_blank"
+              rel="noopener"
+            >
+              2944459-6
+            </a>
+            •
             <a
               class="text-base-content link-underline-hover-nav whitespace-nowrap"
               href="https://github.com/davemccrea/edenflowers_store"

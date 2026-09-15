@@ -27,12 +27,14 @@ config :edenflowers, Oban,
 config :localize,
   supported_locales: ["en-GB", "sv-FI", "fi"],
   default_locale: "en-GB",
-  gettext: EdenflowersWeb.Gettext
+  gettext: EdenflowersWeb.Gettext,
+  allow_runtime_locale_download: true
 
 config :ash,
   include_embedded_source_by_default?: false,
   default_page_type: :keyset,
-  policies: [no_filter_static_forbidden_reads?: false]
+  policies: [no_filter_static_forbidden_reads?: false],
+  default_string_length_count: :codepoints
 
 config :spark,
   formatter: [
@@ -64,7 +66,15 @@ config :spark,
 config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Edenflowers.Accounts, Edenflowers.Store, Edenflowers.Services]
+  ash_domains: [
+    Edenflowers.Accounts,
+    Edenflowers.Catalog,
+    Edenflowers.Orders,
+    Edenflowers.Fulfillment,
+    Edenflowers.Pricing,
+    Edenflowers.Courses,
+    Edenflowers.Expenses
+  ]
 
 config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 

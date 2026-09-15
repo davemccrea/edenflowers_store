@@ -5,7 +5,7 @@ defmodule Edenflowers.Accounts.User.Senders.SendOtp do
 
   use AshAuthentication.Sender
 
-  alias Edenflowers.Workers.SendOtpEmail
+  alias Edenflowers.Accounts.Workers.SendOtpEmail
 
   @impl true
   def send(user_or_email, otp_code, _opts) do

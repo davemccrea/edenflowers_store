@@ -1,30 +1,13 @@
 defmodule EdenflowersWeb.CoreComponents do
   @moduledoc """
-  Provides core UI components.
+  Core UI components, styled with Tailwind CSS and daisyUI.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as tables, forms, and
-  inputs. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
+  Useful references:
 
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
-
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
-
-    * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
-      we build on. You will use it for layout, sizing, flexbox, grid, and
-      spacing.
-
-    * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
-
-    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
-      the component system used by Phoenix. Some components, such as `<.link>`
-      and `<.form>`, are defined there.
-
+    * [daisyUI](https://daisyui.com/docs/intro/) — available components and themes.
+    * [Tailwind CSS](https://tailwindcss.com) — layout, sizing, and spacing utilities.
+    * [Heroicons](https://heroicons.com) — see `icon/1`.
+    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) — `<.link>`, `<.form>`, and friends.
   """
   use Phoenix.Component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -48,51 +31,55 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders flash messages as toast notifications.
+  Renders flash notices.
 
-  Also handles the disconnected/reconnected banner via the FlashHandler hook.
+  ## Examples
+
+      <.flash kind={:info} flash={@flash} />
+      <.flash
+        id="welcome-back"
+        kind={:info}
+        phx-mounted={show("#welcome-back") |> JS.remove_attribute("hidden")}
+        hidden
+      >
+        Welcome Back!
+      </.flash>
   """
-  def flash_group(assigns) do
+  attr :id, :string, doc: "the optional id of flash container"
+  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+
+  slot :inner_block, doc: "the optional inner block that renders the flash message"
+
+  def flash(assigns) do
+    assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
+
     ~H"""
     <div
-      id="flash-group"
-      class="z-[100] fixed inset-x-0 bottom-6 flex flex-col items-center gap-3 px-4"
-      role="region"
-      aria-label={~t"Notifications"}
-      phx-hook="FlashHandler"
-      data-disconnected-message={~t"Disconnected from server. Reconnecting..."}
-      data-reconnected-message={~t"Reconnected"}
+      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
+      id={@id}
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      role="alert"
+      class="toast toast-top toast-end z-50"
+      {@rest}
     >
-      <div
-        :for={{key, msg} <- @flash}
-        id={"flash-#{key}"}
-        class="toast-item"
-        data-key={key}
-        data-duration="5000"
-        role={flash_role(key)}
-      >
-        <div class="toast-item__head">
-          <p class="toast-item__eyebrow">{flash_label(key)}</p>
-          <button class="toast-item__dismiss" aria-label={~t"Dismiss"} data-dismiss>
-            <.icon name="hero-x-mark" />
-          </button>
+      <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
         </div>
-        <p class="toast-item__body">{msg}</p>
+        <div class="flex-1" />
+        <button type="button" class="group cursor-pointer self-start" aria-label={~t"close"}>
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        </button>
       </div>
     </div>
     """
   end
-
-  # Errors interrupt; everything else waits politely. WCAG 4.1.3.
-  defp flash_role("error"), do: "alert"
-  defp flash_role(_), do: "status"
-
-  # Severity → eyebrow label. Restrained, conventional words — the message
-  # itself does the heavy lifting; the eyebrow just orients the reader.
-  defp flash_label("error"), do: ~t"Couldn't complete"
-  defp flash_label("warning"), do: ~t"Notice"
-  defp flash_label("success"), do: ~t"Confirmed"
-  defp flash_label(_), do: ~t"Note"
 
   @doc """
   Renders a button with navigation support.
@@ -139,6 +126,41 @@ defmodule EdenflowersWeb.CoreComponents do
       </button>
       """
     end
+  end
+
+  @doc """
+  Renders a form submit button with a label↔spinner swap on submit.
+
+  The loading state is driven by LiveView's automatic `.phx-submit-loading`
+  class on the form — no `loading` prop, because a static prop would not
+  reflect the in-flight submit state. The label and spinner share one grid
+  cell, so the button width is stable across idle/loading (no layout shift).
+  Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
+
+  ## Examples
+
+      <.form_button>{~t"Next"}</.form_button>
+      <.form_button disabled={true} id="payment-button">{~t"Pay"}</.form_button>
+  """
+  attr :rest, :global
+  attr :disabled, :boolean, default: false
+  slot :inner_block
+
+  def form_button(assigns) do
+    ~H"""
+    <button
+      {@rest}
+      disabled={@disabled}
+      type="submit"
+      class="btn btn-primary btn-lg mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
+    >
+      <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
+      <span
+        class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
+        aria-hidden="true"
+      ></span>
+    </button>
+    """
   end
 
   @doc """
@@ -384,7 +406,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
@@ -425,7 +446,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  # Helper used by inputs to generate form errors
   def error(assigns) do
     ~H"""
     <p class="text-error mt-1.5 flex items-center gap-2 text-sm">
@@ -869,6 +889,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
   attr :navigate, :string, required: true
+  attr :locale, :string, required: true
   attr :from_price?, :boolean, default: true
   attr :class, :any, default: nil
 
@@ -895,7 +916,7 @@ defmodule EdenflowersWeb.CoreComponents do
           <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
             {~t"From"}
           </span>
-          {Edenflowers.Utils.format_money(@product.cheapest_price)}
+          {Edenflowers.Format.currency(@product.cheapest_price, @locale)}
         </p>
       </div>
     </.link>
@@ -915,18 +936,28 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def category_tile(assigns) do
     ~H"""
-    <.link navigate={@navigate} class="group relative overflow-hidden">
+    <.link navigate={@navigate} class="group relative block overflow-hidden">
+      <%!-- Decorative: the heading below carries the same label, so alt text would repeat it. --%>
       <.image
         src={@image_src}
-        alt={@label}
+        alt=""
         width={800}
         height={400}
         sizes="(min-width: 768px) 33vw, 100vw"
-        class="h-72 w-full object-cover transition duration-500 group-hover:scale-102 sm:h-80 md:h-96"
+        class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
       />
-      <div class="absolute inset-0 transition duration-500 group-hover:bg-black/10" />
+      <%!-- Static gradient keeps the label legible on any photograph; the
+            second layer deepens the whole image slightly on hover. --%>
+      <div class="from-black/50 via-black/15 absolute inset-0 bg-gradient-to-t to-transparent" />
+      <div class="bg-black/10 absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100" />
       <div class="absolute inset-0 flex items-end p-6">
-        <h3 class="tile-title text-white">{@label}</h3>
+        <h3 class="tile-title flex items-center gap-2.5 text-white transition-transform duration-500 ease-out group-hover:-translate-y-1.5">
+          {@label}
+          <.icon
+            name="hero-arrow-right"
+            class="h-4 w-4 -translate-x-1 opacity-0 transition duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+          />
+        </h3>
       </div>
     </.link>
     """
@@ -946,6 +977,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Facebook"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///facebook_logo_bw_128px.png"
@@ -960,6 +992,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Eden Flowers on Instagram"
+        class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///instagram_logo_bw_128px.png"
@@ -1107,7 +1140,6 @@ defmodule EdenflowersWeb.CoreComponents do
           time: @time
         )
         |> JS.focus(to: "##{@id}-top")
-        |> JS.add_class("overflow-hidden", to: "html")
       }
       phx-hide={
         %JS{}
@@ -1117,7 +1149,6 @@ defmodule EdenflowersWeb.CoreComponents do
           transition: {@transition, @transition_in, @transition_out},
           time: @time
         )
-        |> JS.remove_class("overflow-hidden", to: "html")
         |> JS.pop_focus()
       }
       class="z-100 relative"
@@ -1128,7 +1159,7 @@ defmodule EdenflowersWeb.CoreComponents do
         role="dialog"
         aria-modal="true"
         aria-label={@label}
-        class={"#{@placement_class} fixed inset-0 hidden outline-hidden"}
+        class={"#{@placement_class} js-scroll-lock-dialog fixed inset-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>
@@ -1167,16 +1198,6 @@ defmodule EdenflowersWeb.CoreComponents do
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
-    # When using gettext, we typically pass the strings we want
-    # to translate as a static argument:
-    #
-    #     # Translate the number of files with plural rules
-    #     dngettext("errors", "1 file", "%{count} files", count)
-    #
-    # However the error messages in our forms and APIs are generated
-    # dynamically, so we need to translate them by calling Gettext
-    # with our gettext backend as first argument. Translations are
-    # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
       Gettext.dngettext(EdenflowersWeb.Gettext, "errors", msg, msg, count, opts)
     else

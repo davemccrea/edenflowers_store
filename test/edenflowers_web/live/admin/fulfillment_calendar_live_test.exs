@@ -6,8 +6,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
-  alias Edenflowers.Store.FulfillmentOption
-  alias Edenflowers.Weekday
+  alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.Weekday
 
   setup %{conn: conn} do
     tax_rate = generate(tax_rate())
@@ -88,8 +88,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded_delivery = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
+      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
 
       refute :monday in reloaded_delivery.available_days
       refute :monday in reloaded_pickup.available_days
@@ -110,8 +110,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded_delivery = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
+      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
 
       refute :saturday in reloaded_delivery.available_days
       refute :saturday in reloaded_pickup.available_days
@@ -134,8 +134,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded_delivery = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
+      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
 
       refute :monday in reloaded_delivery.available_days
       assert :monday in reloaded_pickup.available_days
@@ -154,6 +154,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       |> render_click()
 
       future = next_weekday(:monday)
+      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+
+      if future.month != today.month do
+        view
+        |> element("#admin-fulfillment-calendar-next-month")
+        |> render_click()
+      end
 
       view
       |> element(~s|button[phx-click="select"][phx-value-date="#{Date.to_iso8601(future)}"]|)
@@ -161,7 +168,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
       assert future in reloaded.disabled_dates
     end
   end
@@ -177,20 +184,33 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       |> element(~s|button[phx-value-scope="#{delivery.id}"]|, "Delivery")
       |> render_click()
 
-      # Pick a week payload whose dates are all in the future, so the click
-      # actually has something to do.
-      html = render(view)
+      # Pick a week payload whose weekday dates are all strictly in the future,
+      # so the click actually has something to disable. Navigate to next month
+      # if no such week exists in the current view (e.g. running near month-end).
       today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+      tomorrow = Date.add(today, 1)
 
-      week_payload =
+      find_future_week = fn html ->
         Regex.scan(~r/phx-click="week-click" phx-value-week="([^"]+)"/, html)
         |> Enum.map(fn [_, payload] -> payload end)
         |> Enum.find(fn payload ->
           dates = payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
-          Enum.all?(dates, &(Date.compare(&1, today) != :lt))
+          weekdays = Enum.filter(dates, &(Date.day_of_week(&1) in 1..5))
+          weekdays != [] and Enum.all?(weekdays, &(Date.compare(&1, tomorrow) != :lt))
         end)
+      end
 
-      assert week_payload, "expected at least one future week button in the rendered month"
+      week_payload =
+        case find_future_week.(render(view)) do
+          nil ->
+            view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
+            find_future_week.(render(view))
+
+          payload ->
+            payload
+        end
+
+      assert week_payload, "expected at least one future week button in the rendered view"
 
       view
       |> element(~s|button[phx-click="week-click"][phx-value-week="#{week_payload}"]|)
@@ -198,7 +218,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
 
       # Delivery is open Mon-Fri; clicking the week-toggle closes Mon-Fri of that week.
       week_dates = week_payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
@@ -214,7 +234,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     } do
       # Seed delivery with an override and a non-default weekday rule.
       {:ok, _} =
-        FulfillmentOption.update_calendar(
+        Fulfillment.update_calendar(
           delivery,
           %{
             available_days: [:monday],
@@ -236,7 +256,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
+      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
 
       assert Enum.sort(reloaded.available_days) ==
                [:friday, :monday, :saturday, :sunday, :thursday, :tuesday, :wednesday]
@@ -258,8 +278,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       drain(view)
 
-      reloaded_delivery = FulfillmentOption.get_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = FulfillmentOption.get_by_id!(pickup.id, authorize?: false)
+      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
 
       for option <- [reloaded_delivery, reloaded_pickup] do
         assert :sunday in option.available_days
