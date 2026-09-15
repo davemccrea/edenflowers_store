@@ -1020,3 +1020,45 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "In good company"
 msgstr "Hyvässä seurassa"
+
+#: lib/edenflowers_web/components/layouts.ex:372
+#: lib/edenflowers_web/features/marketing/contact_live.ex:46
+#, elixir-autogen, elixir-format
+msgid "65230 Vasa"
+msgstr "65230 Vaasa"
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:41
+#, elixir-autogen, elixir-format
+msgid "Address"
+msgstr "Osoite"
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:55
+#, elixir-autogen, elixir-format
+msgid "Mon–Fri: 09:00–17:00"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:371
+#: lib/edenflowers_web/features/marketing/contact_live.ex:45
+#, elixir-autogen, elixir-format
+msgid "Myrvägen 1"
+msgstr "Muurahaistie 1"
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:32
+#, elixir-autogen, elixir-format
+msgid "Phone"
+msgstr "Puhelinnumero"
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:56
+#, elixir-autogen, elixir-format
+msgid "Sat: 10:00–15:00"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:57
+#, elixir-autogen, elixir-format
+msgid "Sun: closed"
+msgstr ""
