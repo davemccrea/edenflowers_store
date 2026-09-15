@@ -1,0 +1,143 @@
+defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
+  @moduledoc """
+  Admin date-toggle editor.
+
+  The florist sees a calendar overlaid on the existing fulfillment-option
+  availability rules and can click dates / weekday headers to enable or
+  disable them. Scoped to a single fulfillment option or to all options at
+  once (with a `:mixed` indicator when options disagree).
+
+  Click semantics live in `Edenflowers.Fulfillment.Availability`. Admin
+  presentation lives in `EdenflowersWeb.Admin.Calendar`. This
+  LiveView only orchestrates state and persistence.
+  """
+  use EdenflowersWeb, :live_view
+
+  import EdenflowersWeb.Admin.Calendar, only: [grid: 1, legend: 1]
+  import EdenflowersWeb.Admin.Components
+
+  alias EdenflowersWeb.Layouts
+
+  alias Edenflowers.Fulfillment
+  alias EdenflowersWeb.Admin.CalendarViewModel
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+
+  @timezone "Europe/Helsinki"
+
+  @impl true
+  def mount(_params, _session, socket) do
+    options = Fulfillment.list_options!()
+
+    {:ok,
+     socket
+     |> assign(:page_title, ~t"Fulfillment Calendar")
+     |> assign(:options, options)
+     |> assign(:scope, :all)
+     |> assign(:today, today())}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page width="wide">
+        <.admin_page_header title={~t"Fulfillment Calendar"}></.admin_page_header>
+
+        <section class="mb-6 max-w-xs">
+          <form id="scope-form" phx-change="set-scope">
+            <label class="flex flex-col">
+              <span class="fieldset-label mb-1">{~t"Fulfillment option"}</span>
+              <select name="scope" class="select w-full">
+                <option value="all" selected={@scope == :all}>{~t"All options"}</option>
+                <option :for={option <- @options} value={option.id} selected={@scope == option.id}>
+                  {option.name}
+                </option>
+              </select>
+            </label>
+          </form>
+        </section>
+
+        <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
+          <div class="w-full min-w-0 max-w-xl">
+            <.grid
+              id="admin-fulfillment-calendar"
+              scope={@scope}
+              options={@options}
+              today={@today}
+            />
+          </div>
+
+          <div class="flex min-w-0 flex-col gap-4">
+            <.legend />
+            <button
+              type="button"
+              phx-click="reset-calendar"
+              data-confirm={reset_confirm_message()}
+              aria-label={~t"Reset calendar to defaults"}
+              class="btn btn-sm btn-ghost text-error self-start hover:bg-error/10"
+            >
+              {~t"Reset"}
+            </button>
+          </div>
+        </div>
+      </.admin_page>
+    </Layouts.admin>
+    """
+  end
+
+  @impl true
+  def handle_event("set-scope", %{"scope" => "all"}, socket) do
+    {:noreply, assign(socket, :scope, :all)}
+  end
+
+  def handle_event("set-scope", %{"scope" => id}, socket) do
+    {:noreply, assign(socket, :scope, id)}
+  end
+
+  def handle_event("reset-calendar", _, socket) do
+    {:noreply, apply_to_scope(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
+  end
+
+  @impl true
+  def handle_info({:fulfillment_date_toggled, date}, socket) do
+    {:noreply, apply_to_scope(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
+  end
+
+  def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
+    targets = scoped_options(socket)
+    direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
+
+    {:noreply, apply_to_scope(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
+  end
+
+  def handle_info({:fulfillment_week_toggled, week}, socket) do
+    %{today: today} = socket.assigns
+    targets = scoped_options(socket)
+
+    case CalendarViewModel.week_toggle_direction(targets, week, today) do
+      nil ->
+        {:noreply, socket}
+
+      direction ->
+        {:noreply, apply_to_scope(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
+    end
+  end
+
+  defp scoped_options(%{assigns: %{scope: scope, options: options}}),
+    do: CalendarViewModel.scoped_options(scope, options)
+
+  defp apply_to_scope(socket, fun) do
+    %{options: options, current_user: actor} = socket.assigns
+    targets = scoped_options(socket)
+
+    updated_by_id = Map.new(targets, fn option -> {option.id, fun.(option, actor)} end)
+
+    assign(socket, :options, Enum.map(options, &Map.get(updated_by_id, &1.id, &1)))
+  end
+
+  defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
+
+  defp reset_confirm_message,
+    do: ~t"Are you sure you want to reset the calendar? This action is destructive."
+end

@@ -3,6 +3,8 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
   alias Edenflowers.Expenses.Expense
 
+  alias Edenflowers.Expenses
+
   @valid_attrs %{
     document_id: "doc_abc123",
     vendor_name: "Acme Oy",
@@ -18,7 +20,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
   describe ":ingest" do
     test "creates an expense with all fields coerced to the correct types" do
-      assert {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
+      assert {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
       assert expense.document_id == "doc_abc123"
       assert expense.vendor_name == "Acme Oy"
@@ -33,10 +35,10 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     end
 
     test "upserts on document_id — re-ingesting updates extracted fields" do
-      {:ok, _} = Expense.ingest(@valid_attrs, actor: system_actor())
+      {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
       updated_attrs = Map.merge(@valid_attrs, %{vendor_name: "Acme Ab", confidence: "low"})
-      {:ok, updated} = Expense.ingest(updated_attrs, actor: system_actor())
+      {:ok, updated} = Expenses.ingest_expense(updated_attrs, actor: system_actor())
 
       assert updated.vendor_name == "Acme Ab"
       assert updated.confidence == :low
@@ -46,7 +48,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
     test "accepts null for optional fields" do
       minimal = %{document_id: "doc_minimal", confidence: "medium"}
-      assert {:ok, expense} = Expense.ingest(minimal, actor: system_actor())
+      assert {:ok, expense} = Expenses.ingest_expense(minimal, actor: system_actor())
 
       assert expense.vendor_name == nil
       assert expense.date == nil
@@ -57,7 +59,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
     test "requires document_id" do
       assert {:error, error} =
-               Expense.ingest(Map.delete(@valid_attrs, :document_id), actor: system_actor())
+               Expenses.ingest_expense(Map.delete(@valid_attrs, :document_id), actor: system_actor())
 
       assert error
              |> Ash.Error.to_ash_error()
@@ -69,36 +71,36 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
     test "requires confidence" do
       assert {:error, _} =
-               Expense.ingest(Map.delete(@valid_attrs, :confidence), actor: system_actor())
+               Expenses.ingest_expense(Map.delete(@valid_attrs, :confidence), actor: system_actor())
     end
 
     test "rejects an unknown category value" do
       assert {:error, _} =
-               Expense.ingest(Map.put(@valid_attrs, :category, "invalid_cat"), actor: system_actor())
+               Expenses.ingest_expense(Map.put(@valid_attrs, :category, "invalid_cat"), actor: system_actor())
     end
 
     test "rejects an unknown currency value" do
       assert {:error, _} =
-               Expense.ingest(Map.put(@valid_attrs, :currency, "usd"), actor: system_actor())
+               Expenses.ingest_expense(Map.put(@valid_attrs, :currency, "usd"), actor: system_actor())
     end
   end
 
   describe ":mark_reviewed" do
     test "sets reviewed_at to the current time" do
-      {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
       assert expense.reviewed_at == nil
 
-      {:ok, reviewed} = Expense.mark_reviewed(expense, actor: admin_actor())
+      {:ok, reviewed} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
       assert reviewed.reviewed_at != nil
     end
   end
 
   describe ":correct" do
     test "updates the extracted fields" do
-      {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
       {:ok, corrected} =
-        Expense.correct(
+        Expenses.correct_expense(
           expense,
           %{vendor_name: "Corrected Vendor", category: "travel"},
           actor: admin_actor()
@@ -112,27 +114,27 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
   describe "policies" do
     test "system actor can ingest" do
-      assert {:ok, _} = Expense.ingest(@valid_attrs, actor: system_actor())
+      assert {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
     end
 
     test "admin actor can read" do
-      {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
       assert {:ok, _} = Ash.get(Expense, expense.id, actor: admin_actor())
     end
 
     test "admin actor can mark_reviewed and correct" do
-      {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
-      assert {:ok, _} = Expense.mark_reviewed(expense, actor: admin_actor())
-      assert {:ok, _} = Expense.correct(expense, %{vendor_name: "X"}, actor: admin_actor())
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
+      assert {:ok, _} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
+      assert {:ok, _} = Expenses.correct_expense(expense, %{vendor_name: "X"}, actor: admin_actor())
     end
 
     test "unauthenticated actor cannot read" do
-      {:ok, expense} = Expense.ingest(@valid_attrs, actor: system_actor())
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
       assert {:error, _} = Ash.get(Expense, expense.id, actor: nil)
     end
 
     test "unauthenticated actor cannot ingest" do
-      assert {:error, _} = Expense.ingest(@valid_attrs, actor: nil)
+      assert {:error, _} = Expenses.ingest_expense(@valid_attrs, actor: nil)
     end
   end
 

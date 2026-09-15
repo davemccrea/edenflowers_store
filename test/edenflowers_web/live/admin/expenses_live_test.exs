@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
-  alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Expenses
 
   setup %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   end
 
   defp create_expense(document_id, vendor_name, description) do
-    Expense.ingest!(
+    Expenses.ingest_expense!(
       %{
         document_id: document_id,
         vendor_name: vendor_name,

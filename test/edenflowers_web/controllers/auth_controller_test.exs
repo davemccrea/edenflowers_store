@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.AuthControllerTest do
 
   alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
-  alias EdenflowersWeb.AuthController
+  alias EdenflowersWeb.Auth.AuthController
 
   describe "success/4" do
     test "redirects admins to /admin when no return_to was captured", %{conn: conn} do

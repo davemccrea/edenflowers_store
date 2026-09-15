@@ -10,18 +10,19 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Edenflowers.Accounts
 alias Edenflowers.Accounts.User
 alias Edenflowers.Actors
-alias Edenflowers.Fulfillments
 alias Edenflowers.Repo
-alias Edenflowers.Store.ProductCategory
-alias Edenflowers.Store.{TaxRate, FulfillmentOption, Product, ProductVariant, Promotion}
-alias Edenflowers.Store.{Order, LineItem}
-alias Edenflowers.Store.Order.Changes.GenerateOrderReference
-alias Edenflowers.Weekday
+alias Edenflowers.Catalog.ProductCategory
+alias Edenflowers.Catalog.{Product, ProductVariant}
+alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
+alias Edenflowers.Orders.{Order, LineItem}
+alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
+alias Edenflowers.Pricing.{TaxRate, Promotion}
+alias Edenflowers.Expenses.Expense
 
 require Ash.Query
-alias Edenflowers.Expenses.Expense
 
 # Admin user. `admin` is writable?: false on the resource so normal Ash actions
 # can't set it — raw SQL is the appropriate escape hatch for seed setup.
@@ -401,7 +402,7 @@ fulfillment_date_for = fn option, days_out ->
     end)
   else
     Stream.iterate(requested_date, &Date.add(&1, 1))
-    |> Enum.find(fn date -> Fulfillments.fulfill_on_date(option, date, now) == :ok end)
+    |> Enum.find(fn date -> Availability.unavailable_reason(option, date, now) == nil end)
   end
 end
 
@@ -525,10 +526,10 @@ orders = [
 for order_attrs <- orders do
   fulfillment_option = order_attrs.fulfillment_option
   promotion = order_attrs[:promotion]
-  user = User.upsert!(order_attrs.customer_email, order_attrs.customer_name, actor: Actors.system_actor())
+  user = Accounts.upsert_user!(order_attrs.customer_email, order_attrs.customer_name, actor: Actors.system_actor())
 
-  {:ok, fulfillment_fee} =
-    Fulfillments.calculate_price(fulfillment_option, order_attrs[:distance] || 0)
+  %{error: nil, fulfillment_fee: fulfillment_fee} =
+    Fee.calculate(fulfillment_option, order_attrs[:distance] || 0)
 
   order =
     Ash.Seed.seed!(Order, %{

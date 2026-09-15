@@ -2,7 +2,7 @@ defmodule Edenflowers.Accounts.Calculations.InitialsTest do
   use Edenflowers.DataCase, async: true
 
   alias Edenflowers.Accounts.Calculations.Initials
-  alias Edenflowers.Accounts.User
+  alias Edenflowers.Accounts
 
   describe "calculate/3 extraction" do
     test "uses first and last initials for a regular full name" do
@@ -34,7 +34,7 @@ defmodule Edenflowers.Accounts.Calculations.InitialsTest do
 
   describe "User.initials calculation" do
     test "extracts initials from User.name" do
-      {:ok, user} = User.upsert("jane@example.com", "Jane Doe", authorize?: false)
+      {:ok, user} = Accounts.upsert_user("jane@example.com", "Jane Doe", authorize?: false)
       user = Ash.load!(user, [:initials], authorize?: false)
 
       assert user.initials == "JD"

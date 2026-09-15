@@ -1,14 +1,14 @@
 defmodule EdenflowersWeb.Plugs.CaptureReturnTo do
   @moduledoc """
   Captures a `return_to` query parameter into the session on the way into the
-  sign-in page. `EdenflowersWeb.AuthController.success/4` later reads the
+  sign-in page. `EdenflowersWeb.Auth.AuthController.success/4` later reads the
   session value to send the user back where they came from.
 
-  Only same-origin, path-only targets are accepted (see `EdenflowersWeb.ReturnTo`).
+  Only same-origin, path-only targets are accepted (see `EdenflowersWeb.Auth.ReturnTo`).
   """
   import Plug.Conn
 
-  alias EdenflowersWeb.ReturnTo
+  alias EdenflowersWeb.Auth.ReturnTo
 
   @sign_in_path "/sign-in"
 

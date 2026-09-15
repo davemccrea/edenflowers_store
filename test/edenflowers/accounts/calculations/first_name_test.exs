@@ -2,8 +2,8 @@ defmodule Edenflowers.Accounts.Calculations.FirstNameTest do
   use Edenflowers.DataCase, async: true
   import Generator
 
+  alias Edenflowers.Accounts
   alias Edenflowers.Accounts.Calculations.FirstName
-  alias Edenflowers.Accounts.User
 
   describe "init/1" do
     test "accepts a :source atom" do
@@ -96,28 +96,28 @@ defmodule Edenflowers.Accounts.Calculations.FirstNameTest do
 
   describe "User.first_name calculation" do
     test "extracts first name from User.name" do
-      {:ok, user} = User.upsert("jane@example.com", "Jane Doe", authorize?: false)
+      {:ok, user} = Accounts.upsert_user("jane@example.com", "Jane Doe", authorize?: false)
       user = Ash.load!(user, [:first_name], authorize?: false)
 
       assert user.first_name == "Jane"
     end
 
     test "returns nil when User.name is nil" do
-      {:ok, user} = User.upsert("noname@example.com", nil, authorize?: false)
+      {:ok, user} = Accounts.upsert_user("noname@example.com", nil, authorize?: false)
       user = Ash.load!(user, [:first_name], authorize?: false)
 
       assert is_nil(user.first_name)
     end
 
     test "handles comma-inverted names on User" do
-      {:ok, user} = User.upsert("smith@example.com", "Smith, Jane", authorize?: false)
+      {:ok, user} = Accounts.upsert_user("smith@example.com", "Smith, Jane", authorize?: false)
       user = Ash.load!(user, [:first_name], authorize?: false)
 
       assert user.first_name == "Jane"
     end
 
     test "handles mononyms on User" do
-      {:ok, user} = User.upsert("madonna@example.com", "Madonna", authorize?: false)
+      {:ok, user} = Accounts.upsert_user("madonna@example.com", "Madonna", authorize?: false)
       user = Ash.load!(user, [:first_name], authorize?: false)
 
       assert user.first_name == "Madonna"
@@ -150,7 +150,7 @@ defmodule Edenflowers.Accounts.Calculations.FirstNameTest do
       # customer_name is a per-order snapshot, so even when a user is linked
       # with a different name the calculation should reflect what the order
       # stored at checkout time.
-      {:ok, user} = User.upsert("snap@example.com", "Different User Name", authorize?: false)
+      {:ok, user} = Accounts.upsert_user("snap@example.com", "Different User Name", authorize?: false)
       order = generate(order(user_id: user.id, customer_name: "Snapshot Name"))
 
       order = Ash.load!(order, [:customer_first_name], authorize?: false)
