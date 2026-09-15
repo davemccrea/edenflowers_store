@@ -46,10 +46,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <div class="space-y-3">
-              <p class="eyebrow text-base-content/70">{~t"The collection"}</p>
-              <h2 class="section-title">{~t"Featured Blooms"}</h2>
-            </div>
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
 
             <div class="hidden items-center gap-2 md:flex">
               <button
