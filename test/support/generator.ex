@@ -2,6 +2,7 @@ defmodule Generator do
   use Ash.Generator
 
   alias Edenflowers.Accounts.User
+  alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
 
   alias Edenflowers.Pricing.{TaxRate, Promotion}
   alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
@@ -109,7 +110,7 @@ defmodule Generator do
     seed_generator(
       %Order{
         state: :contact_details,
-        order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16()
+        order_reference: GenerateOrderReference.generate()
       },
       overrides: opts,
       authorize?: false

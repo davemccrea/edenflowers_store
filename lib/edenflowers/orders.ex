@@ -13,7 +13,9 @@ defmodule Edenflowers.Orders do
       define :get_order_by_id, action: :by_id, args: [:id]
       define :get_order_by_reference, action: :by_order_reference, args: [:order_reference]
       define :get_order_for_checkout, action: :for_checkout, args: [:id]
+      define :get_order_for_admin, action: :admin_show, args: [:id]
       define :list_completed_orders, action: :completed
+      define :list_open_orders, action: :open
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options
       define :submit_delivery, action: :submit_delivery
@@ -22,6 +24,7 @@ defmodule Edenflowers.Orders do
       define :return_to_delivery, action: :return_to_delivery
       define :finalize_checkout, action: :finalize_checkout
       define :mark_payment_failed, action: :mark_payment_failed
+      define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
       define :mark_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]
       define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]

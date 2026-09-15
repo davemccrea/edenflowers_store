@@ -85,6 +85,7 @@ defmodule Edenflowers.MixProject do
       {:ash_rate_limiter, "~> 2.0"},
       {:ash_state_machine, "~> 0.2.12"},
       {:ash_translation, "~> 0.2.0"},
+      {:cinder, "~> 0.14"},
       {:simple_sat, "~> 0.1"},
       # Phoenix & web
       {:bandit, "~> 1.5"},

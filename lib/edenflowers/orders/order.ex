@@ -10,7 +10,7 @@ defmodule Edenflowers.Orders.Order do
 
   require Ash.Resource.Change.Builtins
 
-  alias __MODULE__.{Changes, Validations}
+  alias __MODULE__.{Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -29,6 +29,20 @@ defmodule Edenflowers.Orders.Order do
     :promotion,
     :fulfillment_option,
     :line_items
+  ]
+
+  @admin_show_load [
+    :customer_name,
+    :grand_total,
+    :items_subtotal,
+    :items_tax,
+    :tax,
+    :fulfillment_tax,
+    :discount,
+    :distance_km,
+    :promotion,
+    :fulfillment_option,
+    line_items: [:subtotal]
   ]
 
   postgres do
@@ -82,6 +96,55 @@ defmodule Edenflowers.Orders.Order do
 
     read :completed do
       filter expr(state == :placed)
+    end
+
+    read :open do
+      filter expr(state == :placed and fulfillment_status == :pending)
+
+      prepare build(
+                sort: [fulfillment_date: :asc],
+                load: [
+                  :customer_name,
+                  :order_reference,
+                  :fulfillment_date,
+                  :fulfillment_option_name,
+                  :fulfillment_method,
+                  :grand_total,
+                  :non_card_line_item_count,
+                  :distance_km,
+                  :gift,
+                  :recipient_name,
+                  :card_message
+                ]
+              )
+    end
+
+    # Read-only table feed for the /admin/orders Cinder collection. Deliberately
+    # separate from :open/:completed so table-shaped loads and sorting don't leak
+    # into the dashboard/domain split.
+    read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+
+      filter expr(state == :placed)
+
+      prepare build(
+                sort: [ordered_at: :desc],
+                load: [
+                  :customer_name,
+                  :fulfillment_date,
+                  :fulfillment_method,
+                  :grand_total,
+                  :payment_status,
+                  :fulfillment_status
+                ]
+              )
+    end
+
+    read :admin_show do
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id) and state == :placed)
+      get? true
+      prepare build(load: @admin_show_load)
     end
 
     create :create_for_checkout do
@@ -200,6 +263,12 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:payment_status, :failed)
     end
 
+    update :mark_fulfilled do
+      validate attribute_equals(:fulfillment_status, :pending)
+      change set_attribute(:fulfillment_status, :fulfilled)
+      change load(@admin_show_load)
+    end
+
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
       validate {Validations.ValidateMinimumCartTotal, []}
@@ -284,6 +353,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     bypass actor_attribute_equals(:admin, true) do
+      authorize_if action(:mark_fulfilled)
       authorize_if action_type(:read)
     end
 
@@ -404,6 +474,10 @@ defmodule Edenflowers.Orders.Order do
   calculations do
     calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
     calculate :recipient_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :recipient_name}
+
+    # `distance` is snapshotted in metres; expose it as a kilometre string for
+    # display, and only for deliveries.
+    calculate :distance_km, :string, Calculations.DistanceKm
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))

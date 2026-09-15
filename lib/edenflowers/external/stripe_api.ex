@@ -61,4 +61,16 @@ defmodule Edenflowers.External.StripeAPI do
   def cancel_payment_intent(%{id: payment_intent_id}) do
     Stripe.PaymentIntent.cancel(payment_intent_id)
   end
+
+  def dashboard_payment_url(nil), do: nil
+
+  def dashboard_payment_url(payment_intent_id) do
+    path =
+      case Application.get_env(:edenflowers, :stripe_publishable_key) do
+        "pk_live_" <> _ -> "/payments/#{payment_intent_id}"
+        _ -> "/test/payments/#{payment_intent_id}"
+      end
+
+    "https://dashboard.stripe.com#{path}"
+  end
 end
