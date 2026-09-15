@@ -171,7 +171,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"In good company"}</p>
+          <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"Trusted by"}</p>
           <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
             <li>
               <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">

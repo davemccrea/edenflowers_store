@@ -1021,6 +1021,11 @@ msgstr ""
 msgid "close"
 msgstr ""
 
+#: lib/edenflowers_web/live/home_live.ex:141
+#, elixir-autogen, elixir-format
+msgid "Trusted by"
+msgstr "Meihin luottavat"
+
 #: lib/edenflowers_web/components/layouts.ex:648
 #: lib/edenflowers_web/features/marketing/contact_live.ex:46
 #, elixir-autogen, elixir-format
