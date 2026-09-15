@@ -182,7 +182,7 @@ authentication do
       client_secret MyApp.Secrets
       redirect_uri MyApp.Secrets
       # auth0 also needs: base_url
-      # apple also needs: team_id, private_key_id, private_key_path
+      # apple also needs: team_id, private_key_id, private_key_path or private_key
       # oidc also needs: openid_configuration_uri
       identity_resource MyApp.Accounts.UserIdentity
     end

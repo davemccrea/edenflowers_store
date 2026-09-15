@@ -8,7 +8,9 @@ metadata:
 <!-- usage-rules-skill-start -->
 ## Additional References
 
-- [localize](references/localize.md)
+### localize
+
+- [localize](references/localize/localize.md)
 
 ## Searching Documentation
 
@@ -19,4 +21,5 @@ mix usage_rules.search_docs "search term" -p localize
 ## Available Mix Tasks
 
 - `mix localize.download_locales` - Downloads locale ETF files from the Localize CDN
+- `mix localize.unit.gen_conversions` - Generates a dependency-free unit conversion module for embedded targets
 <!-- usage-rules-skill-end -->
