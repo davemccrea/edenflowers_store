@@ -649,8 +649,8 @@ msgstr "Valmistettu hienostuneille maistajille, kukkamme yhdistävät laadun ja 
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:121
 #, elixir-autogen, elixir-format
-msgid "Cut and arranged the same day from a small shop on Kauppapuistikko. Eden Flowers delivers up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."
-msgstr ""
+msgid "Every arrangement is made by hand at our shop in Minimossen. We deliver across the Vaasa area, and delivery within 5 km is free."
+msgstr "Jokainen asetelma tehdään käsin myymälässämme Minimossenissa. Toimitamme koko Vaasan seudulle, ja 5 km:n säteellä toimitus on maksuton."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:21
 #, elixir-autogen, elixir-format
@@ -726,8 +726,8 @@ msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:127
 #, elixir-autogen, elixir-format
-msgid "Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"
-msgstr ""
+msgid "Map of Vaasa, Finland with Minimossen pinned"
+msgstr "Vaasan kartta, johon Minimossen on merkitty"
 
 #: lib/edenflowers/orders/order/validations/validate_customer_email.ex:20
 #, elixir-autogen, elixir-format
@@ -792,8 +792,8 @@ msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:116
 #, elixir-autogen, elixir-format
-msgid "Where to find us"
-msgstr ""
+msgid "Local to Vaasa"
+msgstr "Vaasalainen kukkakauppa"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:30
 #, elixir-autogen, elixir-format
