@@ -1,6 +1,8 @@
 // @ts-check
 
 import EmblaCarousel from "../vendor/embla-carousel.esm";
+import PhotoSwipeLightbox from "../vendor/photoswipe-lightbox.esm";
+import PhotoSwipe from "../vendor/photoswipe.esm";
 
 export const Hooks = {};
 
@@ -741,6 +743,51 @@ Hooks.HotFxShyHeader = {
     if (window.scrollY > this.lastMaxScroll) {
       this.lastMaxScroll = window.scrollY;
     }
+  },
+};
+
+/**
+ * Click-to-zoom photo gallery (PhotoSwipe 5).
+ *
+ * Markup contract: the hook element wraps one <a> per photo, each linking to
+ * the full-size image and carrying data-pswp-width/height. Those dimensions
+ * must match the served image exactly or PhotoSwipe's zoom maths goes wrong —
+ * the page builds both URL and attributes from the same numbers.
+ */
+Hooks.PhotoGallery = {
+  mounted() {
+    // Passing pswpModule as a value rather than a dynamic import keeps
+    // everything in the single esbuild bundle — no runtime chunk fetch.
+    this.lightbox = new PhotoSwipeLightbox({
+      gallery: this.el,
+      children: "a",
+      pswpModule: PhotoSwipe,
+    });
+
+    // Credit line. PhotoSwipe has no caption of its own, and the plugin that
+    // adds one isn't worth a second vendored file for this. Text comes from
+    // the same data-pswp-credit the page renders into the visible figcaption,
+    // so there's one source of truth.
+    this.lightbox.on("uiRegister", () => {
+      this.lightbox.pswp.ui.registerElement({
+        name: "credit",
+        appendTo: "root",
+        onInit: (el, pswp) => {
+          const render = () => {
+            const credit = pswp.currSlide?.data?.element?.dataset?.pswpCredit;
+            el.textContent = credit || "";
+          };
+          pswp.on("change", render);
+          render();
+        },
+      });
+    });
+
+    this.lightbox.init();
+  },
+
+  destroyed() {
+    if (this.lightbox) this.lightbox.destroy();
   },
 };
 
