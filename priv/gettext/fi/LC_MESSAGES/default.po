@@ -547,7 +547,7 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/contact_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
-msgstr ""
+msgstr "Aukioloajat"
 
 #: lib/edenflowers_web/components/layouts.ex:684
 #, elixir-autogen, elixir-format
@@ -1040,7 +1040,7 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/contact_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Mon–Fri: 09:00–17:00"
-msgstr ""
+msgstr "Ma–Pe: 09:00–17:00"
 
 #: lib/edenflowers_web/components/layouts.ex:647
 #: lib/edenflowers_web/features/marketing/contact_live.ex:45
@@ -1056,12 +1056,12 @@ msgstr "Puhelinnumero"
 #: lib/edenflowers_web/features/marketing/contact_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Sat: 10:00–15:00"
-msgstr ""
+msgstr "La: 10:00–15:00"
 
 #: lib/edenflowers_web/features/marketing/contact_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Sun: closed"
-msgstr ""
+msgstr "Su: suljettu"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:156
 #, elixir-autogen, elixir-format
