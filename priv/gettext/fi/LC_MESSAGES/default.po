@@ -1727,12 +1727,6 @@ msgstr "Jokainen asetelma tehdään käsin myymälässämme Minimossenissa, ja 5
 msgid "Flowers for everyday moments"
 msgstr "Kukkia arjen hetkiin"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:52
-#: lib/edenflowers_web/features/marketing/home_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "This week"
-msgstr "Tällä viikolla"
-
 #: lib/edenflowers_web/features/marketing/about_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"
@@ -1767,3 +1761,9 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
 msgstr "Lähetä sähköpostia tai soita, niin autan mielelläni. Olet myös tervetullut käymään liikkeessä aukioloaikoina."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:52
+#: lib/edenflowers_web/features/marketing/home_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "Favourites"
+msgstr "Suosikit"
