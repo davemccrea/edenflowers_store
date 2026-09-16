@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title hero-reveal mb-16 md:mb-20">
+        <h1 class="page-title mb-16 md:mb-20">
           {~t"Frequently Asked Questions"}
         </h1>
 
