@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.CoreComponents do
     "ghost" => "btn-ghost",
     "text" => "btn-link text-primary underline-offset-4",
     "inverse" =>
-      "btn-outline border-white/80 text-white hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content focus-visible:outline-white",
+      "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
     "destructive" => "btn-error btn-outline"
   }
 
@@ -857,7 +857,10 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def product_card(assigns) do
     ~H"""
-    <.link navigate={@navigate} class={["group block focus:outline-none", @class]}>
+    <.link
+      navigate={@navigate}
+      class={["group relative isolate block after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-10 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2", @class]}
+    >
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
         <.image
           src={@product.image_slug}

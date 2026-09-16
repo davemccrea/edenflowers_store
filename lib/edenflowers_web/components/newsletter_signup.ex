@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
               name="email_address"
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40 focus:outline-none focus:ring-0"
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40"
               placeholder={~t"your@email.com"}
               autocomplete="email"
             />
