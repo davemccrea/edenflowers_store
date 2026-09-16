@@ -3,10 +3,12 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @thumb_width 400
+
   # width/height are the dimensions PhotoSwipe opens the photo at, and the
   # exact size Imgproxy is asked for — the two must agree. Keep each entry's
   # ratio equal to the source photo's so the fill crop is a no-op.
-  # Slugs resolve against the Imgproxy local source. `credit` is optional.
+  # Slugs resolve against the Imgproxy local source.
   @gallery [
     %{
       src: "local:///image_1.jpg",
@@ -15,7 +17,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       height: 2000,
       credit: "Photo: Anna Virtanen"
     },
-    %{src: "local:///image_4.jpg", alt: "Ceremony arch", width: 2000, height: 1333},
+    %{src: "local:///image_4.jpg", alt: "Ceremony arch", width: 2000, height: 1333, credit: nil},
     %{
       src: "local:///image_5.jpg",
       alt: "Table centrepiece",
@@ -26,7 +28,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   ]
 
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(gallery: @gallery)}
+    {:ok, socket |> assign(gallery: @gallery, thumb_width: @thumb_width)}
   end
 
   def render(assigns) do
@@ -40,10 +42,10 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         <div id="wedding-gallery" phx-hook="PhotoGallery" class="mt-4 columns-2 gap-4 md:columns-3">
           <figure :for={photo <- @gallery} class="mb-4 break-inside-avoid">
             <a
-              href={full_size_url(photo)}
+              href={image_url(photo.src, photo.width, photo.height)}
               data-pswp-width={photo.width}
               data-pswp-height={photo.height}
-              data-pswp-credit={credit(photo)}
+              data-pswp-credit={photo.credit}
               target="_blank"
               rel="noreferrer"
               class="block"
@@ -51,15 +53,15 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               <.image
                 src={photo.src}
                 alt={photo.alt}
-                width={thumb_width()}
+                width={@thumb_width}
                 height={thumb_height(photo)}
                 sizes="(min-width: 768px) 33vw, 50vw"
                 class="w-full rounded-md"
               />
             </a>
 
-            <figcaption :if={credit(photo)} class="text-base-content/60 mt-1 text-xs">
-              {credit(photo)}
+            <figcaption :if={photo.credit} class="text-base-content/60 mt-1 text-xs">
+              {photo.credit}
             </figcaption>
           </figure>
         </div>
@@ -68,18 +70,5 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     """
   end
 
-  defp credit(photo), do: Map.get(photo, :credit)
-
-  defp thumb_width, do: 400
-
-  defp thumb_height(photo), do: round(thumb_width() * photo.height / photo.width)
-
-  defp full_size_url(photo) do
-    photo.src
-    |> Imgproxy.new()
-    |> Imgproxy.resize(photo.width, photo.height, type: "fill")
-    |> Imgproxy.add_option(:q, [85])
-    |> Imgproxy.set_extension("webp")
-    |> to_string()
-  end
+  defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
 end

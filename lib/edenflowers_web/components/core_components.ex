@@ -829,6 +829,21 @@ defmodule EdenflowersWeb.CoreComponents do
     end)
   end
 
+  @doc """
+  Returns a single Imgproxy URL, built through the same resize/quality
+  pipeline as `image/1`.
+
+  For callers that need one concrete URL rather than a responsive `<picture>` —
+  a lightbox target, an `og:image`. Matches `image/1`'s defaults: fill crop
+  and WebP.
+  """
+  def image_url(src, width, height) do
+    src
+    |> imgproxy_resize(width, height, "fill")
+    |> Imgproxy.set_extension("webp")
+    |> to_string()
+  end
+
   defp imgproxy_resize(src, width, height, crop_type) do
     src
     |> Imgproxy.new()

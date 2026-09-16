@@ -37,12 +37,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
     # source — if they drift, the photographer gets credited in only one place.
     assert Enum.map(captions, &Enum.at(&1, 1)) == Enum.map(attributes, &Enum.at(&1, 1))
     assert ["Photo: Anna Virtanen", "Photo: Anna Virtanen"] = Enum.map(attributes, &Enum.at(&1, 1))
-  end
 
-  test "a photo without a credit renders no caption", %{html: html} do
-    figures = Regex.scan(~r/<figure.*?<\/figure>/s, html)
-
-    assert length(figures) == 3
-    assert Enum.count(figures, fn [figure] -> figure =~ "figcaption" end) == 2
+    # The third photo has no credit, so it gets neither.
+    assert length(Regex.scan(~r/<figure.*?<\/figure>/s, html)) == 3
   end
 end

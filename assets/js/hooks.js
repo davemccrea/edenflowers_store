@@ -787,7 +787,7 @@ Hooks.PhotoGallery = {
   },
 
   destroyed() {
-    if (this.lightbox) this.lightbox.destroy();
+    this.lightbox.destroy();
   },
 };
 
