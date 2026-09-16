@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
                 ring around a borderless field would cut across the underline
                 and the Subscribe button. The shadow fakes the second pixel so
                 nothing below shifts. --%>
-          <div class="border-base-content/30 flex items-center gap-2 border-b pb-1 transition-colors focus-within:border-base-content has-[input:focus-visible]:shadow-[0_1px_0_0_var(--color-base-content)]">
+          <div class="border-base-content/30 flex items-center gap-2 border-b pb-1 transition-colors focus-within:border-base-content has-[:focus-visible]:shadow-[0_1px_0_0_var(--color-base-content)]">
             <input
               type="email"
               name="email_address"
