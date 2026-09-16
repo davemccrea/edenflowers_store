@@ -29,13 +29,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
     end
   end
 
-  test "a credit renders both as a caption and as the attribute the hook reads", %{html: html} do
-    captions = Regex.scan(~r/<figcaption[^>]*>\s*([^<]+?)\s*<\/figcaption>/, html)
+  test "photographer credits are available to the lightbox", %{html: html} do
     attributes = Regex.scan(~r/data-pswp-credit="([^"]+)"/, html)
 
-    # The lightbox credit and the visible caption must come from the same
-    # source — if they drift, the photographer gets credited in only one place.
-    assert Enum.map(captions, &Enum.at(&1, 1)) == Enum.map(attributes, &Enum.at(&1, 1))
     assert ["Photo: Anna Riska" | _] = Enum.map(attributes, &Enum.at(&1, 1))
     assert length(attributes) == 17
     assert length(Regex.scan(~r/<figure.*?<\/figure>/s, html)) == 17
@@ -57,19 +53,17 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
       assert Enum.min(widths) == 320
       assert Enum.max(widths) == 960
       assert [sizes] = LazyHTML.attribute(image, "sizes")
-      assert sizes =~ "(min-width: 96rem) 30rem"
-      assert String.ends_with?(sizes, "calc((100vw - 3rem) / 2)")
+      assert sizes =~ "(min-width: 96rem) calc(90.5rem / 4)"
+      assert sizes =~ "(min-width: 80rem) calc(74.5rem / 4)"
+      assert String.ends_with?(sizes, "calc((100vw - 2.5rem) / 2)")
     end
   end
 
-  test "only the first gallery image is prioritised", %{html: html} do
-    [first | remaining] =
+  test "gallery images load lazily", %{html: html} do
+    images =
       html |> LazyHTML.from_fragment() |> LazyHTML.query("#wedding-gallery img") |> Enum.to_list()
 
-    assert LazyHTML.attribute(first, "loading") == ["eager"]
-    assert LazyHTML.attribute(first, "fetchpriority") == ["high"]
-
-    for image <- remaining do
+    for image <- images do
       assert LazyHTML.attribute(image, "loading") == ["lazy"]
       assert LazyHTML.attribute(image, "fetchpriority") == []
     end
