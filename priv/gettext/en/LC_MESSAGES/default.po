@@ -18,7 +18,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:437
 #: lib/edenflowers_web/components/layouts.ex:673
-#: lib/edenflowers_web/features/marketing/about_live.ex:14
+#: lib/edenflowers_web/features/marketing/about_live.ex:16
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr ""
@@ -515,16 +515,6 @@ msgstr "Delivery address required"
 #: lib/edenflowers_web/features/checkout/components/address_input.ex:188
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Free delivery! 🥳"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:38
-#, elixir-autogen, elixir-format
-msgid "Get in touch"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:29
-#, elixir-autogen, elixir-format
-msgid "Hello, I'm Jennie"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:649
@@ -1746,4 +1736,34 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/home_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "This week"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:21
+#, elixir-autogen, elixir-format
+msgid "Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Hi, I'm Jennie! I've run Eden Flowers in Vaasa since 2018. You'll find the shop in Minimossen, the recycling mall at Myrvägen 1."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:25
+#, elixir-autogen, elixir-format
+msgid "I make flowers for every occasion: christenings, weddings, funerals and everything in between. Whether it's for your own home or for a friend, ordering should be easy, so"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:22
+#, elixir-autogen, elixir-format, fuzzy
+msgid "get in touch"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "or just pop in."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:26
+#, elixir-autogen, elixir-format
+msgid "order online"
 msgstr ""
