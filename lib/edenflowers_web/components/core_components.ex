@@ -14,6 +14,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
+  @image_quality 80
+
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
   default top/bottom rhythm. Use for every page that doesn't need
@@ -690,37 +692,18 @@ defmodule EdenflowersWeb.CoreComponents do
   Renders an optimised responsive image through the configured Imgproxy server.
 
   `width`/`height` are the **CSS pixel** dimensions the image will occupy on
-  screen — the component automatically emits a `srcset` covering 1×, 1.5×, and
-  2× so retina displays get a crisp source without callers having to remember
-  the rule.
+  screen — the component emits a `srcset` covering 1×, 1.5×, and 2× so retina
+  displays get a crisp source without callers having to remember the rule.
 
   Output is a `<picture>` with a WebP `<source>` and the original-format `<img>`
   as fallback. When `priority` is set the image becomes a LCP candidate
   (`loading="eager"`, `fetchpriority="high"`). Default for non-priority is
   `loading="lazy"` + `decoding="async"`.
 
-  ## Art direction
+  SVGs and external URLs (anything without a `local:///` prefix, such as the
+  seed placeholders) skip the `<picture>` machinery and render a plain `<img>`.
 
-  Pass `sources` to swap crops per breakpoint — this replaces the legacy
-  pattern of two `<img>` tags toggled with `hidden`/`block` Tailwind classes:
-
-      <.image
-        src={@product.image_slug}
-        alt=""
-        width={600}
-        height={750}
-        sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
-        sizes="(min-width: 640px) 25vw, 50vw"
-      />
-
-  ## Bypass cases
-
-  Three sources skip the `<picture>` + `srcset` machinery:
-
-    * SVGs (no point rasterising to WebP)
-    * External URLs (no `local:///` prefix — passes through unchanged so
-      placeholder images keep working)
-    * Tiny images (`width <= 64` with no `sources`) — emits a single 2× source
+  Pass `sources` to swap crops per breakpoint — see `product_card/1`.
 
   ## Examples
 
@@ -735,8 +718,6 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :sizes, :string, default: "100vw"
   attr :priority, :boolean, default: false
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
-  attr :format, :atom, default: :webp, values: [:webp, :original]
-  attr :quality, :integer, default: 80
   attr :sources, :list, default: []
   attr :class, :any, default: nil
   attr :rest, :global, include: ~w(id data-testid)
@@ -748,9 +729,6 @@ defmodule EdenflowersWeb.CoreComponents do
 
       external_src?(assigns.src) ->
         render_passthrough(assigns, assigns.src)
-
-      assigns.width <= 64 and assigns.sources == [] ->
-        render_tiny(assigns)
 
       true ->
         render_picture(assigns)
@@ -780,19 +758,8 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  defp render_tiny(assigns) do
-    url =
-      assigns.src
-      |> imgproxy_resize(assigns.width * 2, assigns.height * 2, assigns.crop_type, assigns.quality)
-      |> maybe_extension(assigns.format)
-      |> to_string()
-
-    render_passthrough(assigns, url)
-  end
-
   defp render_picture(assigns) do
-    base_variants =
-      build_variants(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality)
+    base_variants = build_variants(assigns.src, assigns.width, assigns.height, assigns.crop_type)
 
     art_directed =
       Enum.map(assigns.sources, fn source ->
@@ -800,36 +767,27 @@ defmodule EdenflowersWeb.CoreComponents do
 
         %{
           media: Map.fetch!(source, :media),
-          variants: build_variants(assigns.src, source.width, source.height, crop, assigns.quality)
+          variants: build_variants(assigns.src, source.width, source.height, crop)
         }
       end)
-
-    fallback_src = base_variants |> hd() |> Map.fetch!(:url)
 
     assigns =
       assign(assigns,
         base_variants: base_variants,
         art_directed: art_directed,
-        fallback_src: fallback_src
+        fallback_src: hd(base_variants).base_url
       )
 
     ~H"""
     <picture>
       <%= for ad <- @art_directed do %>
-        <%= if @format == :webp do %>
-          <source
-            type="image/webp"
-            media={ad.media}
-            srcset={srcset(ad.variants, :webp)}
-            sizes={@sizes}
-          />
-        <% end %>
-        <source media={ad.media} srcset={srcset(ad.variants, :original)} sizes={@sizes} />
+        <source type="image/webp" media={ad.media} srcset={srcset(ad.variants, :webp_url)} sizes={@sizes} />
+        <source media={ad.media} srcset={srcset(ad.variants, :base_url)} sizes={@sizes} />
       <% end %>
-      <source :if={@format == :webp} type="image/webp" srcset={srcset(@base_variants, :webp)} sizes={@sizes} />
+      <source type="image/webp" srcset={srcset(@base_variants, :webp_url)} sizes={@sizes} />
       <img
         src={@fallback_src}
-        srcset={srcset(@base_variants, :original)}
+        srcset={srcset(@base_variants, :base_url)}
         sizes={@sizes}
         alt={@alt}
         width={@width}
@@ -847,35 +805,27 @@ defmodule EdenflowersWeb.CoreComponents do
   # Emits 1×, 1.5×, and 2× variants of the declared CSS-pixel size, capped at
   # 3840w. Below 320w we skip 1.5× — the visible gain is marginal and the
   # source asset may not be that large.
-  defp build_variants(src, width, height, crop_type, quality) do
+  defp build_variants(src, width, height, crop_type) do
     multipliers = if width <= 320, do: [1.0, 2.0], else: [1.0, 1.5, 2.0]
 
-    multipliers
-    |> Enum.map(fn m ->
+    Enum.map(multipliers, fn m ->
       w = min(round(width * m), 3840)
       h = min(round(height * m), 3840)
-      img = imgproxy_resize(src, w, h, crop_type, quality)
+      img = imgproxy_resize(src, w, h, crop_type)
+
       %{width: w, base_url: to_string(img), webp_url: img |> Imgproxy.set_extension("webp") |> to_string()}
     end)
-    |> Enum.uniq_by(& &1.width)
-    |> Enum.map(&Map.put(&1, :url, &1.base_url))
   end
 
-  defp imgproxy_resize(src, width, height, crop_type, quality) do
+  defp imgproxy_resize(src, width, height, crop_type) do
     src
     |> Imgproxy.new()
     |> Imgproxy.resize(width, height, type: crop_type)
-    |> Imgproxy.add_option(:q, [quality])
+    |> Imgproxy.add_option(:q, [@image_quality])
   end
 
-  defp maybe_extension(img, :webp), do: Imgproxy.set_extension(img, "webp")
-  defp maybe_extension(img, :original), do: img
-
-  defp srcset(variants, :webp),
-    do: variants |> Enum.map_join(", ", &"#{&1.webp_url} #{&1.width}w")
-
-  defp srcset(variants, :original),
-    do: variants |> Enum.map_join(", ", &"#{&1.base_url} #{&1.width}w")
+  defp srcset(variants, url_key),
+    do: Enum.map_join(variants, ", ", &"#{&1[url_key]} #{&1.width}w")
 
   @doc """
   Renders a product card used by both the Featured Blooms carousel (home)
@@ -963,13 +913,7 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  attr :size, :integer, default: 5
-
   def social_media_links(assigns) do
-    # @size is a Tailwind scale step; multiply by 4 to get CSS pixels
-    # (h-5 = 20px, h-8 = 32px). Stays below the 64px tiny-icon threshold.
-    assigns = assign(assigns, :px, assigns.size * 4)
-
     ~H"""
     <div class="flex flex-row gap-4">
       <a
@@ -982,9 +926,9 @@ defmodule EdenflowersWeb.CoreComponents do
         <.image
           src="local:///facebook_logo_bw_128px.png"
           alt=""
-          width={@px}
-          height={@px}
-          class={"h-#{@size} w-#{@size}"}
+          width={24}
+          height={24}
+          class="h-6 w-6"
         />
       </a>
       <a
@@ -997,9 +941,9 @@ defmodule EdenflowersWeb.CoreComponents do
         <.image
           src="local:///instagram_logo_bw_128px.png"
           alt=""
-          width={@px}
-          height={@px}
-          class={"h-#{@size} w-#{@size}"}
+          width={24}
+          height={24}
+          class="h-6 w-6"
         />
       </a>
     </div>
