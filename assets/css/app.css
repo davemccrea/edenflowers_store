@@ -210,16 +210,8 @@ summary {
   pointer-events: none;
 }
 
-/* FOUC fix: https://www.abeautifulsite.net/posts/flash-of-undefined-custom-elements/ */
 body {
-  opacity: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-body.ready {
-  transition: 0.25s opacity;
-  opacity: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -294,14 +286,6 @@ body.ready {
    Both degrade silently in older engines. */
 main p {
   text-wrap: pretty;
-}
-
-@utility hero-heading {
-  @apply font-serif text-5xl font-light leading-[1.05] tracking-tight text-balance sm:text-6xl md:text-7xl;
-}
-
-@utility hero-heading-overlay {
-  @apply font-serif text-5xl font-light leading-[1.08] tracking-tight text-balance text-white sm:text-5xl sm:leading-[1.05] md:text-6xl;
 }
 
 @utility hero-display {
@@ -479,19 +463,16 @@ main p {
    Each entry is a serif word anchored by an eyebrow numeral. Description
    shows on the active entry and on hover/focus of inactive ones. No
    transitions: state changes snap, by design. */
-.category-index__item[data-active="true"] .category-index__name {
-  text-decoration: underline;
-  text-decoration-color: var(--color-link-underline);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.3em;
-}
-
+.category-index__item[data-active="true"] .category-index__name,
 .category-index__item:not([data-active="true"])
   .category-index__link:hover
   .category-index__name,
 .category-index__item:not([data-active="true"])
   .category-index__link:focus-visible
-  .category-index__name {
+  .category-index__name,
+.size-option[data-active="true"] .size-option__label,
+.size-option:not([data-active="true"]):hover .size-option__label,
+.size-option:has(input:focus-visible) .size-option__label {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);
   text-decoration-thickness: 3px;
@@ -528,19 +509,6 @@ main p {
   position: relative;
   display: inline-block;
   padding-bottom: 0.15em;
-}
-.size-option[data-active="true"] .size-option__label {
-  text-decoration: underline;
-  text-decoration-color: var(--color-link-underline);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.3em;
-}
-.size-option:not([data-active="true"]):hover .size-option__label,
-.size-option:has(input:focus-visible) .size-option__label {
-  text-decoration: underline;
-  text-decoration-color: var(--color-link-underline);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.3em;
 }
 .size-option:has(input:focus-visible) {
   outline: 2px solid var(--focus-color, var(--color-primary));
@@ -638,8 +606,7 @@ main p {
    Two visual primitives layered onto cells / legend swatches:
    - strike: a short diagonal line through the centre, marking a closed cell.
    - corner: a top-right triangle, marking an override that contradicts the weekday rule.
-   Each is offered on both pseudo-elements so cells can use one slot for the
-   strike and the other for the corner without colliding. */
+   Strikes use ::after and corners use ::before so they can coexist. */
 @utility calendar-strike-after {
   &::after {
     content: "";
@@ -652,62 +619,22 @@ main p {
     transform: translateY(-50%) rotate(45deg);
     @apply bg-error/75;
   }
-
-  &:hover::after {
-    @apply bg-error;
-  }
 }
 
 /* Tighter strike for smaller elements (weekday header buttons). Same angle
    and colour as calendar-strike-after — just a shorter visible span so the
    slash doesn't overshoot a 3-letter label. */
 @utility calendar-strike-after-tight {
+  @apply calendar-strike-after;
+
   &::after {
-    content: "";
-    position: absolute;
     left: 32%;
     right: 32%;
-    top: 50%;
-    height: 2px;
-    border-radius: 9999px;
-    transform: translateY(-50%) rotate(45deg);
-    @apply bg-error/75;
-  }
-
-  &:hover::after {
-    @apply bg-error;
-  }
-}
-
-@utility calendar-strike-before {
-  &::before {
-    content: "";
-    position: absolute;
-    left: 22%;
-    right: 22%;
-    top: 50%;
-    height: 2px;
-    border-radius: 9999px;
-    transform: translateY(-50%) rotate(45deg);
-    @apply bg-error/75;
   }
 }
 
 @utility calendar-corner-before {
   &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0.5rem;
-    height: 0.5rem;
-    clip-path: polygon(100% 0, 0 0, 100% 100%);
-    @apply bg-primary/75;
-  }
-}
-
-@utility calendar-corner-after {
-  &::after {
     content: "";
     position: absolute;
     top: 0;
