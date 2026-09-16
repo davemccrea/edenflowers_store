@@ -107,7 +107,7 @@ msgstr "Totalt"
 
 #: lib/edenflowers_web/components/layouts.ex:435
 #: lib/edenflowers_web/features/marketing/home_live.ex:152
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:14
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:36
 #, elixir-autogen, elixir-format
 msgid "Weddings"
 msgstr "Bröllop"
@@ -1737,3 +1737,8 @@ msgstr "— kort att skriva"
 #, elixir-autogen, elixir-format
 msgid "Trusted by"
 msgstr "De litar på oss"
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:38
+#, elixir-autogen, elixir-format
+msgid "Gallery"
+msgstr "Galleri"
