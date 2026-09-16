@@ -174,7 +174,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"Trusted by"}</p>
           <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
             <li>
-              <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
+              <a
+                href="https://www.dermosil.com/"
+                class="block"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Dermosil"
+              >
                 <img
                   src="/images/logo-dermosil.svg"
                   alt="Dermosil"
@@ -187,7 +193,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </a>
             </li>
             <li>
-              <a href="https://sfp.fi/" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
+              <a href="https://sfp.fi/" class="block" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
                 <img
                   src="/images/logo-sfp.svg"
                   alt="SFP RKP"
@@ -202,6 +208,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <li>
               <a
                 href="https://evl.fi/en/"
+                class="block"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Evangelical Lutheran Church of Finland"
@@ -218,7 +225,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </a>
             </li>
             <li>
-              <a href="https://bnf.fi/" target="_blank" rel="noopener noreferrer" aria-label="Bonnier News Finland">
+              <a
+                href="https://bnf.fi/"
+                class="block"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Bonnier News Finland"
+              >
                 <.image
                   src="local:///logo-bonnier-news.png"
                   alt="Bonnier News Finland"
