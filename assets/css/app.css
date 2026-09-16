@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @import "../../deps/cinder/priv/cinder.css";
 @import "../../deps/cinder/priv/themes/daisy_ui.css";
+@import "./vendor/photoswipe.css";
 @source "../../deps/ash_authentication_phoenix";
 @source "../css";
 @source "../js";
@@ -589,6 +590,22 @@ main p {
 :where(.embla__prev, .embla__next):disabled {
   opacity: 0.3;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* PhotoSwipe credit line — registered by the PhotoGallery hook. Sits above
+   the bottom edge so it clears the image on portrait phones. */
+.pswp__credit {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding-inline: 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(255 255 255 / 0.75);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
   pointer-events: none;
 }
 

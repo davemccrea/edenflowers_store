@@ -12,28 +12,72 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     )
   end
 
-  test "emits 1x, 1.5x, and 2x variants as webp and original" do
+  defp attribute(html, selector, name) do
+    html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> LazyHTML.attribute(name) |> List.first()
+  end
+
+  defp candidates(html) do
+    html
+    |> attribute("img", "srcset")
+    |> String.split(", ")
+    |> Enum.map(fn candidate ->
+      [url, width] = String.split(candidate, " ")
+      {url, width |> String.trim_trailing("w") |> String.to_integer()}
+    end)
+  end
+
+  test "renders responsive WebP without a picture wrapper for a single crop" do
     html = image([])
 
-    assert html =~ ~s(type="image/webp")
+    refute html =~ "<picture"
+    refute html =~ "<source"
+    assert attribute(html, "img", "src") == CoreComponents.image_url("local:///p.jpg", 600, 750)
 
-    for width <- [600, 900, 1200] do
-      assert html =~ "rs:fill:#{width}:#{round(width * 1.25)}:false"
+    assert Enum.map(candidates(html), &elem(&1, 1)) == [320, 480, 600, 640, 960, 1200]
+
+    for {url, width} <- candidates(html) do
+      assert url =~ "rs:fill:#{width}:#{round(width * 1.25)}:false"
+      assert url =~ "q:80"
+      assert String.ends_with?(url, ".webp")
     end
   end
 
-  test "skips the 1.5x variant below 320 CSS pixels" do
+  test "small thumbnails only request widths up to twice their declared width" do
     html = image(width: 24, height: 24)
 
-    assert html =~ "rs:fill:24:24:false"
-    assert html =~ "rs:fill:48:48:false"
-    refute html =~ "rs:fill:36:36:false"
+    assert Enum.map(candidates(html), &elem(&1, 1)) == [24, 48]
+  end
+
+  test "large heroes include phone-sized candidates" do
+    html = image(width: 1920, height: 1080)
+
+    assert {_, 320} = hd(candidates(html))
+    assert {_, 3840} = List.last(candidates(html))
+  end
+
+  test "caps both orientations proportionally with unique width descriptors" do
+    for {width, height, max_width, max_height} <- [
+          {3000, 2000, 3840, 2560},
+          {2000, 3000, 2560, 3840},
+          {6000, 4000, 3840, 2560}
+        ] do
+      variants = image(width: width, height: height) |> candidates()
+      widths = Enum.map(variants, &elem(&1, 1))
+
+      assert widths == Enum.sort(Enum.uniq(widths))
+      assert {url, ^max_width} = List.last(variants)
+      assert url =~ "rs:fill:#{max_width}:#{max_height}:false"
+    end
+
+    assert CoreComponents.image_url("local:///p.jpg", 6000, 4000) =~ "rs:fill:3840:2560:false"
   end
 
   test "art-directed sources precede the base source and use their own crop" do
     html = image(sources: [%{media: "(min-width: 640px)", width: 600, height: 600}])
 
     assert html =~ ~s|media="(min-width: 640px)"|
+    assert html |> LazyHTML.from_fragment() |> LazyHTML.query("source") |> Enum.count() == 1
+    assert attribute(html, "source", "type") == "image/webp"
 
     {art_directed_at, _} = :binary.match(html, "rs:fill:600:600:false")
     {base_at, _} = :binary.match(html, "rs:fill:600:750:false")
@@ -46,6 +90,56 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     html = image(src: "https://placehold.co/400x400", width: 400, height: 400)
     refute html =~ "<picture"
     assert html =~ ~s(src="https://placehold.co/400x400")
+  end
+
+  test "external images including SVG URLs pass through both APIs unchanged" do
+    for src <- ["https://example.com/photo.jpg", "https://example.com/logo.svg?version=2#logo"] do
+      html = image(src: src, sources: [%{media: "(min-width: 640px)", width: 600, height: 600}])
+
+      assert attribute(html, "img", "src") == src
+      assert attribute(html, "img", "srcset") == nil
+      assert attribute(html, "img", "sizes") == nil
+      refute html =~ "<picture"
+      assert CoreComponents.image_url(src, 600, 750) == src
+    end
+  end
+
+  test "local SVGs with query strings are proxied without raster transformations" do
+    src = "local:///logo.SVG?version=2"
+    expected = src |> Imgproxy.new() |> to_string()
+    html = image(src: src)
+
+    assert attribute(html, "img", "src") == expected
+    assert attribute(html, "img", "srcset") == nil
+    assert CoreComponents.image_url(src, 600, 750) == expected
+  end
+
+  test "shared image markup preserves layout, accessibility and loading attributes" do
+    for sources <- [[], [%{media: "(min-width: 640px)", width: 600, height: 600}]] do
+      html =
+        image(
+          sources: sources,
+          alt: "Bouquet",
+          class: "object-cover",
+          sizes: "50vw",
+          priority: true,
+          rest: %{"data-testid" => "photo"}
+        )
+
+      for {name, expected} <- [
+            {"alt", "Bouquet"},
+            {"class", "object-cover"},
+            {"sizes", "50vw"},
+            {"width", "600"},
+            {"height", "750"},
+            {"loading", "eager"},
+            {"decoding", "async"},
+            {"fetchpriority", "high"},
+            {"data-testid", "photo"}
+          ] do
+        assert attribute(html, "img", name) == expected
+      end
+    end
   end
 
   test "priority images are eager LCP candidates" do
