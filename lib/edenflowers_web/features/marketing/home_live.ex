@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <.category_tile
               navigate={~p"/courses"}
               label={~t"Courses"}
-              image_src="https://placehold.co/800x600/e8e0d8/888?text=Courses"
+              image_src="local:///image_1.jpg"
             />
             <.category_tile
               navigate={~p"/condolences"}
