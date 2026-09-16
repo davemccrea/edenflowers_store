@@ -51,7 +51,7 @@ msgstr "Suruvalittelut"
 
 #: lib/edenflowers_web/components/layouts.ex:438
 #: lib/edenflowers_web/components/layouts.ex:668
-#: lib/edenflowers_web/features/marketing/contact_live.ex:16
+#: lib/edenflowers_web/features/marketing/contact_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Contact"
 msgstr "Yhteystiedot"
@@ -179,7 +179,7 @@ msgstr "Tarjoatteko tilauspalveluita?"
 
 #: lib/edenflowers_web/features/admin/account_live.ex:43
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:123
-#: lib/edenflowers_web/features/marketing/contact_live.ex:23
+#: lib/edenflowers_web/features/marketing/contact_live.ex:32
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr "Sähköposti"
@@ -518,7 +518,7 @@ msgid "Free delivery! 🥳"
 msgstr "Ilmainen toimitus!"
 
 #: lib/edenflowers_web/components/layouts.ex:649
-#: lib/edenflowers_web/features/marketing/contact_live.ex:39
+#: lib/edenflowers_web/features/marketing/contact_live.ex:48
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr "Aukioloajat"
@@ -975,42 +975,42 @@ msgid "close"
 msgstr "sulje"
 
 #: lib/edenflowers_web/components/layouts.ex:644
-#: lib/edenflowers_web/features/marketing/contact_live.ex:35
+#: lib/edenflowers_web/features/marketing/contact_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr "65230 Vaasa"
 
 #: lib/edenflowers_web/components/layouts.ex:641
-#: lib/edenflowers_web/features/marketing/contact_live.ex:31
+#: lib/edenflowers_web/features/marketing/contact_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr "Osoite"
 
 #: lib/edenflowers_web/components/layouts.ex:652
-#: lib/edenflowers_web/features/marketing/contact_live.ex:40
+#: lib/edenflowers_web/features/marketing/contact_live.ex:49
 #, elixir-autogen, elixir-format
 msgid "Mon–Fri: 09:00–17:00"
 msgstr "Ma–Pe: 09:00–17:00"
 
 #: lib/edenflowers_web/components/layouts.ex:643
-#: lib/edenflowers_web/features/marketing/contact_live.ex:34
+#: lib/edenflowers_web/features/marketing/contact_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
 msgstr "Muurahaistie 1"
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:27
+#: lib/edenflowers_web/features/marketing/contact_live.ex:36
 #, elixir-autogen, elixir-format
 msgid "Phone"
 msgstr "Puhelinnumero"
 
 #: lib/edenflowers_web/components/layouts.ex:653
-#: lib/edenflowers_web/features/marketing/contact_live.ex:41
+#: lib/edenflowers_web/features/marketing/contact_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Sat: 10:00–15:00"
 msgstr "La: 10:00–15:00"
 
 #: lib/edenflowers_web/components/layouts.ex:654
-#: lib/edenflowers_web/features/marketing/contact_live.ex:42
+#: lib/edenflowers_web/features/marketing/contact_live.ex:51
 #, elixir-autogen, elixir-format
 msgid "Sun: closed"
 msgstr "Su: suljettu"
@@ -1763,7 +1763,7 @@ msgstr ""
 msgid "order online"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:18
+#: lib/edenflowers_web/features/marketing/contact_live.ex:27
 #, elixir-autogen, elixir-format
 msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
 msgstr "Lähetä sähköpostia tai soita, niin autan mielelläni. Olet myös tervetullut käymään liikkeessä aukioloaikoina."
