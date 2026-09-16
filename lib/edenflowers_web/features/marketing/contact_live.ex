@@ -13,6 +13,15 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
       <.container>
         <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
           <div>
+            <.image
+              src="local:///jennie_99.jpg"
+              alt="Jennie"
+              width={112}
+              height={112}
+              sizes="7rem"
+              crop="831:831:fp:0.546:0.27"
+              class="size-28 mb-8 rounded-full object-cover"
+            />
             <h1 class="page-title mb-6">{~t"Contact"}</h1>
             <p class="text-base-content/80 text-lg leading-relaxed">
               {~t"Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."}
