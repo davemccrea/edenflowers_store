@@ -13,8 +13,8 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
       <.container>
         <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
           <div>
-            <h1 class="page-title hero-reveal mb-6">{~t"Contact"}</h1>
-            <p class="text-base-content/80 hero-reveal text-lg leading-relaxed" style="--reveal-delay: 80ms;">
+            <h1 class="page-title mb-6">{~t"Contact"}</h1>
+            <p class="text-base-content/80 text-lg leading-relaxed">
               {~t"Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."}
             </p>
           </div>
