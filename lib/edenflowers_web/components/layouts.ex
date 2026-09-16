@@ -515,11 +515,6 @@ defmodule EdenflowersWeb.Layouts do
       data-show={JS.remove_class("hidden")}
     >
       <header class="w-full">
-        <%!-- Banner --%>
-        <section class="bg-forest py-2 text-center">
-          <span class="text-forest-content text-sm">{~t"Let us know what you think of the new website! 🚀"}</span>
-        </section>
-
         <%!-- Main header --%>
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="flex items-center">
