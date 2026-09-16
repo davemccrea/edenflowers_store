@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="current-month"
           type="button"
-          class="cursor-pointer rounded-sm focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="cursor-pointer"
         >
           {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
           <span class="sr-only">— {~t"go to current month"}</span>
@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="text-base-content flex flex-none cursor-pointer items-center justify-center rounded-sm p-1.5 hover:text-base-content/60 focus-visible:outline-base-content focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
         >
           <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
@@ -313,7 +313,7 @@ defmodule EdenflowersWeb.DatePicker do
     is_disabled = same_month?(view_date, today_date)
 
     base_class =
-      "focus-visible:outline-base-content flex flex-none items-center justify-center rounded-sm p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2"
+      "flex flex-none items-center justify-center p-1.5"
 
     if is_disabled do
       "#{base_class} text-base-content/20"
@@ -330,18 +330,18 @@ defmodule EdenflowersWeb.DatePicker do
     selected? = Keyword.get(opts, :selected?, false)
     today? = Keyword.get(opts, :today?, false)
 
-    base = "relative aspect-square rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+    base = "relative aspect-square"
 
     state_class =
       cond do
         state != :open ->
-          "cursor-not-allowed text-base-content/20 focus-visible:outline-base-content"
+          "cursor-not-allowed text-base-content/20"
 
         selected? ->
-          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90 focus-visible:outline-base-content"
+          "cursor-pointer bg-primary text-primary-content hover:bg-primary/90"
 
         true ->
-          "cursor-pointer hover:bg-base-content/20 focus-visible:outline-base-content"
+          "cursor-pointer hover:bg-base-content/20"
       end
 
     if today?, do: "#{base} #{state_class} underline", else: "#{base} #{state_class}"
@@ -358,7 +358,7 @@ defmodule EdenflowersWeb.DatePicker do
 
   @doc false
   def default_weekday_class(_weekday) do
-    "hover:bg-base-content/10 focus-visible:outline-base-content cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+    "hover:bg-base-content/10 cursor-pointer"
   end
 
   defp maybe_default(assigns, key, default) do
