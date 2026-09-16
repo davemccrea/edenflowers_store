@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def container(assigns) do
     ~H"""
-    <div class={["mt-28 container mb-24 sm:mt-[calc(var(--header-height)+var(--spacing)*12)] sm:mb-36", @class]}>
+    <div class={["container mt-28 mb-24 sm:mt-[calc(var(--header-height)+var(--spacing)*12)] sm:mb-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -721,11 +721,17 @@ defmodule EdenflowersWeb.CoreComponents do
 
   Pass `sources` to swap crops per breakpoint — see `product_card/1`.
 
+  Pass `crop` to cut a region out of the original before resizing, using
+  Imgproxy's `width:height:gravity` format. A focus-point gravity keeps a
+  subject centred where possible; the crop is shifted to stay inside the
+  photo when the subject is near an edge.
+
   ## Examples
 
       <.image src="local:///hero.jpg" alt="" width={1920} height={1080} priority />
       <.image src={@product.image_slug} alt={@product.name} width={1000} height={1250} priority />
       <.image src={@slug} alt={~t"Map"} width={1600} height={1880} sizes="(min-width: 768px) 50vw, 100vw" />
+      <.image src="local:///portrait.jpg" alt="" width={200} height={200} crop="800:800:fp:0.5:0.3" />
   """
   attr :src, :string, required: true
   attr :alt, :string, required: true
@@ -735,6 +741,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :priority, :boolean, default: false
   attr :quality, :integer, default: @image_quality, values: 1..100
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
+  attr :crop, :string, default: nil
   attr :sources, :list, default: []
   attr :class, :any, default: nil
   attr :rest, :global, include: ~w(id data-testid)
@@ -751,6 +758,7 @@ defmodule EdenflowersWeb.CoreComponents do
                 source.width,
                 source.height,
                 Map.get(source, :crop_type, assigns.crop_type),
+                assigns.crop,
                 assigns.quality
               )
           }
@@ -761,8 +769,17 @@ defmodule EdenflowersWeb.CoreComponents do
 
     assigns =
       assign(assigns,
-        resolved_src: resolve_image_url(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality),
-        srcset: image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality),
+        resolved_src:
+          resolve_image_url(
+            assigns.src,
+            assigns.width,
+            assigns.height,
+            assigns.crop_type,
+            assigns.crop,
+            assigns.quality
+          ),
+        srcset:
+          image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop, assigns.quality),
         resolved_sources: sources
       )
 
@@ -806,7 +823,7 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  defp image_srcset(src, width, height, crop_type, quality) do
+  defp image_srcset(src, width, height, crop_type, crop, quality) do
     if raster_src?(src) do
       {max_width, _} = capped_dimensions(width * 2, height * 2)
 
@@ -816,7 +833,7 @@ defmodule EdenflowersWeb.CoreComponents do
       |> Enum.sort()
       |> Enum.map_join(", ", fn candidate_width ->
         candidate_height = max(1, round(height * candidate_width / width))
-        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, quality)
+        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, crop, quality)
         "#{url} #{candidate_width}w"
       end)
     end
@@ -832,10 +849,10 @@ defmodule EdenflowersWeb.CoreComponents do
   without resizing or format conversion.
   """
   def image_url(src, width, height) do
-    resolve_image_url(src, width, height, "fill", @image_quality)
+    resolve_image_url(src, width, height, "fill", nil, @image_quality)
   end
 
-  defp resolve_image_url(src, width, height, crop_type, quality) do
+  defp resolve_image_url(src, width, height, crop_type, crop, quality) do
     cond do
       external_src?(src) ->
         src
@@ -848,12 +865,16 @@ defmodule EdenflowersWeb.CoreComponents do
 
         src
         |> Imgproxy.new()
+        |> maybe_crop(crop)
         |> Imgproxy.resize(width, height, type: crop_type)
         |> Imgproxy.add_option(:q, [quality])
         |> Imgproxy.set_extension("webp")
         |> to_string()
     end
   end
+
+  defp maybe_crop(img, nil), do: img
+  defp maybe_crop(img, crop), do: Imgproxy.add_option(img, :c, String.split(crop, ":"))
 
   defp capped_dimensions(width, height) do
     scale = min(1, @max_image_dimension / max(width, height))

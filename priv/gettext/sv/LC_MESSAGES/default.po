@@ -564,7 +564,7 @@ msgstr "Välj ett kort innan du skriver ett meddelande"
 msgid "Browse bouquets"
 msgstr "Se våra buketter"
 
-#: lib/edenflowers_web/components/core_components.ex:1069
+#: lib/edenflowers_web/components/core_components.ex:1090
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Varukorgen, tom"
@@ -678,7 +678,7 @@ msgstr "Till mig själv"
 msgid "For somebody else"
 msgstr "Till någon annan"
 
-#: lib/edenflowers_web/components/core_components.ex:903
+#: lib/edenflowers_web/components/core_components.ex:924
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Från"

@@ -42,6 +42,14 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     end
   end
 
+  test "crop is added to every candidate" do
+    html = image(width: 112, height: 112, crop: "831:831:fp:0.546:0.27")
+
+    for {url, _width} <- candidates(html) do
+      assert url =~ "/c:831:831:fp:0.546:0.27/"
+    end
+  end
+
   test "small thumbnails only request widths up to twice their declared width" do
     html = image(width: 24, height: 24)
 
