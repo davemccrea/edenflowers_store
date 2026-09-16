@@ -15,6 +15,8 @@ defmodule EdenflowersWeb.CoreComponents do
   alias Phoenix.LiveView.JS
 
   @image_quality 80
+  @image_widths [320, 480, 640, 960, 1280, 1920, 2560, 3840]
+  @max_image_dimension 3840
 
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
@@ -26,7 +28,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def container(assigns) do
     ~H"""
-    <div class={["mt-[calc(var(--header-height)+var(--spacing)*12)] container mb-36", @class]}>
+    <div class={["mt-28 container mb-24 sm:mt-[calc(var(--header-height)+var(--spacing)*12)] sm:mb-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
@@ -703,12 +705,14 @@ defmodule EdenflowersWeb.CoreComponents do
   @doc """
   Renders an optimised responsive image through the configured Imgproxy server.
 
-  `width`/`height` are the **CSS pixel** dimensions the image will occupy on
-  screen — the component emits a `srcset` covering 1×, 1.5×, and 2× so retina
-  displays get a crisp source without callers having to remember the rule.
+  `width`/`height` set the intrinsic dimensions and crop ratio. Responsive
+  candidates include smaller standard widths and extend to twice the declared
+  width, capped proportionally at 3840 pixels on either edge. Set `sizes` to
+  the rendered layout width so the browser can select the right candidate.
 
-  Output is a `<picture>` with a WebP `<source>` and the original-format `<img>`
-  as fallback. When `priority` is set the image becomes a LCP candidate
+  Transformed images use WebP. Output is an `<img>` with `srcset`, wrapped in
+  `<picture>` only when `sources` supplies breakpoint-specific crops.
+  When `priority` is set the image becomes a LCP candidate
   (`loading="eager"`, `fetchpriority="high"`). Default for non-priority is
   `loading="lazy"` + `decoding="async"`.
 
@@ -729,35 +733,67 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :height, :integer, required: true
   attr :sizes, :string, default: "100vw"
   attr :priority, :boolean, default: false
+  attr :quality, :integer, default: @image_quality, values: 1..100
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
   attr :sources, :list, default: []
   attr :class, :any, default: nil
   attr :rest, :global, include: ~w(id data-testid)
 
   def image(assigns) do
-    cond do
-      svg_src?(assigns.src) ->
-        render_passthrough(assigns, Imgproxy.new(assigns.src) |> to_string())
+    sources =
+      if raster_src?(assigns.src) do
+        Enum.map(assigns.sources, fn source ->
+          %{
+            media: Map.fetch!(source, :media),
+            srcset:
+              image_srcset(
+                assigns.src,
+                source.width,
+                source.height,
+                Map.get(source, :crop_type, assigns.crop_type),
+                assigns.quality
+              )
+          }
+        end)
+      else
+        []
+      end
 
-      external_src?(assigns.src) ->
-        render_passthrough(assigns, assigns.src)
+    assigns =
+      assign(assigns,
+        resolved_src: resolve_image_url(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality),
+        srcset: image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.quality),
+        resolved_sources: sources
+      )
 
-      true ->
-        render_picture(assigns)
-    end
+    ~H"""
+    <picture :if={@resolved_sources != []}>
+      <source
+        :for={source <- @resolved_sources}
+        type="image/webp"
+        media={source.media}
+        srcset={source.srcset}
+        sizes={@sizes}
+      />
+      <.image_tag {assigns} />
+    </picture>
+    <.image_tag :if={@resolved_sources == []} {assigns} />
+    """
   end
 
-  defp svg_src?(src), do: Path.extname(src) |> String.downcase() == ".svg"
+  defp svg_src?(src), do: Path.extname(URI.parse(src).path || "") |> String.downcase() == ".svg"
 
   defp external_src?(src),
     do: not String.starts_with?(src, "local:///")
 
-  defp render_passthrough(assigns, url) do
-    assigns = assign(assigns, :resolved_src, url)
+  defp raster_src?(src), do: not external_src?(src) and not svg_src?(src)
 
+  defp image_tag(assigns) do
     ~H"""
     <img
       src={@resolved_src}
+      srcset={@srcset}
+      sizes={if @srcset, do: @sizes}
       alt={@alt}
       width={@width}
       height={@height}
@@ -770,74 +806,59 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  defp render_picture(assigns) do
-    base_variants = build_variants(assigns.src, assigns.width, assigns.height, assigns.crop_type)
+  defp image_srcset(src, width, height, crop_type, quality) do
+    if raster_src?(src) do
+      {max_width, _} = capped_dimensions(width * 2, height * 2)
 
-    art_directed =
-      Enum.map(assigns.sources, fn source ->
-        crop = Map.get(source, :crop_type, assigns.crop_type)
-
-        %{
-          media: Map.fetch!(source, :media),
-          variants: build_variants(assigns.src, source.width, source.height, crop)
-        }
+      (@image_widths ++ [min(width, max_width), max_width])
+      |> Enum.filter(&(&1 <= max_width))
+      |> Enum.uniq()
+      |> Enum.sort()
+      |> Enum.map_join(", ", fn candidate_width ->
+        candidate_height = max(1, round(height * candidate_width / width))
+        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, quality)
+        "#{url} #{candidate_width}w"
       end)
-
-    assigns =
-      assign(assigns,
-        base_variants: base_variants,
-        art_directed: art_directed,
-        fallback_src: hd(base_variants).base_url
-      )
-
-    ~H"""
-    <picture>
-      <%= for ad <- @art_directed do %>
-        <source type="image/webp" media={ad.media} srcset={srcset(ad.variants, :webp_url)} sizes={@sizes} />
-        <source media={ad.media} srcset={srcset(ad.variants, :base_url)} sizes={@sizes} />
-      <% end %>
-      <source type="image/webp" srcset={srcset(@base_variants, :webp_url)} sizes={@sizes} />
-      <img
-        src={@fallback_src}
-        srcset={srcset(@base_variants, :base_url)}
-        sizes={@sizes}
-        alt={@alt}
-        width={@width}
-        height={@height}
-        loading={if @priority, do: "eager", else: "lazy"}
-        decoding="async"
-        fetchpriority={if @priority, do: "high"}
-        class={@class}
-        {@rest}
-      />
-    </picture>
-    """
+    end
   end
 
-  # Emits 1×, 1.5×, and 2× variants of the declared CSS-pixel size, capped at
-  # 3840w. Below 320w we skip 1.5× — the visible gain is marginal and the
-  # source asset may not be that large.
-  defp build_variants(src, width, height, crop_type) do
-    multipliers = if width <= 320, do: [1.0, 2.0], else: [1.0, 1.5, 2.0]
+  @doc """
+  Returns a single Imgproxy URL, built through the same resize/quality
+  pipeline as `image/1`.
 
-    Enum.map(multipliers, fn m ->
-      w = min(round(width * m), 3840)
-      h = min(round(height * m), 3840)
-      img = imgproxy_resize(src, w, h, crop_type)
-
-      %{width: w, base_url: to_string(img), webp_url: img |> Imgproxy.set_extension("webp") |> to_string()}
-    end)
+  For callers that need one concrete URL rather than a responsive image —
+  a lightbox target, an `og:image`. Matches `image/1`'s defaults: fill crop
+  and WebP. External URLs pass through unchanged; local SVGs are proxied
+  without resizing or format conversion.
+  """
+  def image_url(src, width, height) do
+    resolve_image_url(src, width, height, "fill", @image_quality)
   end
 
-  defp imgproxy_resize(src, width, height, crop_type) do
-    src
-    |> Imgproxy.new()
-    |> Imgproxy.resize(width, height, type: crop_type)
-    |> Imgproxy.add_option(:q, [@image_quality])
+  defp resolve_image_url(src, width, height, crop_type, quality) do
+    cond do
+      external_src?(src) ->
+        src
+
+      svg_src?(src) ->
+        src |> Imgproxy.new() |> to_string()
+
+      true ->
+        {width, height} = capped_dimensions(width, height)
+
+        src
+        |> Imgproxy.new()
+        |> Imgproxy.resize(width, height, type: crop_type)
+        |> Imgproxy.add_option(:q, [quality])
+        |> Imgproxy.set_extension("webp")
+        |> to_string()
+    end
   end
 
-  defp srcset(variants, url_key),
-    do: Enum.map_join(variants, ", ", &"#{&1[url_key]} #{&1.width}w")
+  defp capped_dimensions(width, height) do
+    scale = min(1, @max_image_dimension / max(width, height))
+    {max(1, floor(width * scale)), max(1, floor(height * scale))}
+  end
 
   @doc """
   Renders a product card used by both the Featured Blooms carousel (home)
@@ -907,7 +928,7 @@ defmodule EdenflowersWeb.CoreComponents do
         src={@image_src}
         alt=""
         width={800}
-        height={400}
+        height={800}
         sizes="(min-width: 768px) 33vw, 100vw"
         class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
       />

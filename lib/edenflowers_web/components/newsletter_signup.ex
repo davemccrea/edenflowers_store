@@ -25,23 +25,31 @@ defmodule EdenflowersWeb.NewsletterSignup do
           <label for="newsletter-form_email_address" class="sr-only">
             {~t"Email Address"}
           </label>
-          <div class="border-base-content/30 flex items-baseline gap-4 border-b pb-1 transition-colors focus-within:border-base-content">
+          <%!-- Keyboard focus thickens the rule instead of boxing the input: a
+                ring around a borderless field would cut across the underline
+                and the Subscribe button. The shadow fakes the second pixel so
+                nothing below shifts. --%>
+          <div class="border-base-content/30 flex items-center gap-2 border-b pb-1 transition-colors focus-within:border-base-content has-[input:focus-visible]:shadow-[0_1px_0_0_var(--color-base-content)]">
             <input
               type="email"
               name="email_address"
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40"
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40 focus-visible:outline-hidden"
               placeholder={~t"your@email.com"}
               autocomplete="email"
+              required
             />
-            <.button
+            <button
               type="submit"
-              variant="text"
-              class="whitespace-nowrap"
+              aria-label={~t"Subscribe"}
+              class="text-base-content/70 hover:text-base-content group flex flex-none p-1 transition-colors"
             >
-              {~t"Subscribe"}
-            </.button>
+              <.icon
+                name="hero-arrow-right"
+                class="h-5 w-5 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </button>
           </div>
           <p class="text-base-content/70 text-xs leading-relaxed">
             {~t"Only occasional emails. Unsubscribe at any time."}
