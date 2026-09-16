@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def container(assigns) do
     ~H"""
-    <div class={["mt-[calc(var(--header-height)+var(--spacing)*12)] container mb-36", @class]}>
+    <div class={["mt-28 container mb-24 sm:mt-[calc(var(--header-height)+var(--spacing)*12)] sm:mb-36", @class]}>
       {render_slot(@inner_block)}
     </div>
     """
