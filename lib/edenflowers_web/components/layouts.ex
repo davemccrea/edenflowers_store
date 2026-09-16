@@ -497,7 +497,7 @@ defmodule EdenflowersWeb.Layouts do
           class="flex flex-wrap gap-x-5 gap-y-2"
           item_class="text-base-content/80 link-underline-hover-nav text-sm tracking-wide"
         />
-        <.social_media_links size={6} />
+        <.social_media_links />
       </footer>
     </.drawer>
 
@@ -683,7 +683,7 @@ defmodule EdenflowersWeb.Layouts do
 
             <div class="footer-grid__socials space-y-2">
               <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
-              <.social_media_links size={6} />
+              <.social_media_links />
             </div>
           </div>
         </div>
