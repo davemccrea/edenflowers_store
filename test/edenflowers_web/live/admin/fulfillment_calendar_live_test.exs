@@ -55,18 +55,17 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   end
 
   describe "rendered styling" do
-    # Guardrail: closed cells get the strike on ::after (so ::before is free for
-    # the override corner); the legend swatch gets it on ::before. Both reference
-    # the same underlying CSS rule in app.css, so drift in the visual is
-    # impossible at the CSS layer — but this catches accidental removal of the
-    # utility class from either element.
+    # Guardrail: the strike lives on ::after so ::before stays free for the
+    # override corner, and cells and legend swatches share the one utility.
+    # Drift in the visual is impossible at the CSS layer — this catches
+    # accidental removal of the class from either element.
     test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       # Sundays are closed for the delivery option set up in `setup`, so any
       # rendered Sunday in the current month carries the closed strike.
-      assert html =~ "calendar-strike-after"
-      assert html =~ "calendar-strike-before"
+      assert has_element?(view, "button.calendar-strike-after")
+      assert has_element?(view, "span.calendar-strike-after")
     end
   end
 

@@ -106,7 +106,8 @@ defmodule EdenflowersWeb.Admin.Calendar do
 
     base = "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center"
 
-    closed_class = "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after"
+    closed_class =
+      "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after hover:after:bg-error"
 
     state_class =
       case state do
@@ -151,7 +152,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
           "cursor-pointer text-base-content/65 hover:text-base-content/85 hover:bg-primary/10"
 
         :off ->
-          "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after-tight"
+          "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after-tight hover:after:bg-error"
 
         :mixed ->
           "cursor-pointer text-base-content/85 hover:bg-primary/10 #{@mixed_tile_class}"
@@ -162,7 +163,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
 
   # Uses the same calendar-strike-* / calendar-corner-* utilities as the
   # cells (defined in app.css), so the legend can't drift from the real cells.
-  defp legend_swatch(:closed), do: "#{@swatch_base} bg-base-content/10 calendar-strike-before"
-  defp legend_swatch(:override), do: "#{@swatch_base} ring-1 ring-inset ring-base-content/15 calendar-corner-after"
+  defp legend_swatch(:closed), do: "#{@swatch_base} bg-base-content/10 calendar-strike-after"
+  defp legend_swatch(:override), do: "#{@swatch_base} ring-1 ring-inset ring-base-content/15 calendar-corner-before"
   defp legend_swatch(:mixed), do: "#{@swatch_base} #{@mixed_tile_class}"
 end
