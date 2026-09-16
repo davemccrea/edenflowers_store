@@ -112,7 +112,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     <li>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2 transition-colors hover:bg-base-200/60 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+        class="grid-cols-[minmax(0,1fr)_auto] grid items-center gap-x-3 px-3 py-2 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2"
       >
         <div class="min-w-0">
           <div class="flex min-w-0 items-center gap-2">
@@ -191,7 +191,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           <li :for={expense <- Enum.take(@expenses_to_review, 5)}>
             <.link
               navigate={~p"/admin/expenses/#{expense.id}"}
-              class="flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-base-200/60 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+              class="flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2"
             >
               <span class="flex min-w-0 items-center gap-2">
                 <span

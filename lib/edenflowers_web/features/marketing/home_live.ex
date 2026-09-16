@@ -29,16 +29,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             {~t"Fresh flowers for everyday moments"}
           </h1>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
-            <.link
+            <.button
               navigate={~p"/store"}
-              class="border-white/80 font-sans tracking-[0.18em] group inline-flex w-fit items-center gap-3 border px-7 py-3 text-sm uppercase text-white transition duration-300 hover:text-base-content hover:bg-white"
+              variant="inverse"
+              size="lg"
+              class="group w-fit"
             >
               {~t"Shop Now"}
               <.icon
                 name="hero-arrow-right-mini"
                 class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
               />
-            </.link>
+            </.button>
           </div>
         </div>
       </section>
@@ -49,22 +51,22 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <h2 class="section-title">{~t"Featured Blooms"}</h2>
 
             <div class="hidden items-center gap-2 md:flex">
-              <button
+              <.icon_button
                 type="button"
-                class="embla__prev btn btn-circle btn-ghost"
-                aria-label={~t"Previous slide"}
+                class="embla__prev"
+                aria_label={~t"Previous slide"}
                 aria-controls="featured-blooms-viewport"
               >
                 <.icon name="hero-chevron-left" class="h-5 w-5" />
-              </button>
-              <button
+              </.icon_button>
+              <.icon_button
                 type="button"
-                class="embla__next btn btn-circle btn-ghost"
-                aria-label={~t"Next slide"}
+                class="embla__next"
+                aria_label={~t"Next slide"}
                 aria-controls="featured-blooms-viewport"
               >
                 <.icon name="hero-chevron-right" class="h-5 w-5" />
-              </button>
+              </.icon_button>
             </div>
           </div>
 

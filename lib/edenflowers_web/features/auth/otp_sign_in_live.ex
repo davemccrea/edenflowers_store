@@ -87,13 +87,13 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
                 {~t"Resend code in"} {@resend_remaining}s
               </span>
             <% else %>
-              <button type="button" phx-click="resend" class="link-underline-hover-nav">
+              <.button type="button" phx-click="resend" variant="text">
                 {~t"Resend code"}
-              </button>
+              </.button>
             <% end %>
-            <button type="button" phx-click="reset" class="link-underline-hover-nav">
+            <.button type="button" phx-click="reset" variant="text">
               {~t"Use a different email"}
-            </button>
+            </.button>
           </div>
         <% else %>
           <.live_component

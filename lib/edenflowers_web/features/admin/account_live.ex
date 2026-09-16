@@ -50,10 +50,10 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           </dl>
 
           <div class="border-base-300/70 mt-5 border-t pt-5">
-            <.link href={~p"/sign-out"} method="delete" class="btn btn-outline btn-sm">
+            <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm">
               <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
               {~t"Sign out"}
-            </.link>
+            </.button>
           </div>
         </section>
       </.admin_page>

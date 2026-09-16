@@ -92,26 +92,36 @@ defmodule EdenflowersWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type)
+  attr :rest, :global, include: ~w(href navigate patch method download target rel name value disabled type form)
   attr :class, :any, default: nil
-  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost)
+  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost text inverse destructive)
   attr :size, :string, default: "md", values: ~w(sm md lg)
   slot :inner_block, required: true
 
   @button_variants %{
     "primary" => "btn-primary",
-    "secondary" => "btn-primary btn-soft",
-    "ghost" => "btn-ghost"
+    "secondary" => "btn-primary btn-outline",
+    "ghost" => "btn-ghost",
+    "text" => "btn-link text-primary underline-offset-4",
+    "inverse" =>
+      "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
+    "destructive" => "btn-error btn-outline"
   }
 
   @button_sizes %{
     "sm" => "btn-sm",
-    "md" => "",
+    "md" => "btn-md",
     "lg" => "btn-lg"
   }
 
   def button(%{rest: rest} = assigns) do
-    classes = ["btn", @button_variants[assigns.variant], @button_sizes[assigns.size], assigns[:class]]
+    classes = [
+      "btn gap-2 rounded-none font-sans font-medium normal-case tracking-normal shadow-none",
+      @button_variants[assigns.variant],
+      @button_sizes[assigns.size],
+      assigns.variant == "text" && "px-0",
+      assigns[:class]
+    ]
 
     assigns = assign(assigns, :class, classes)
 
@@ -150,18 +160,20 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def form_button(assigns) do
     ~H"""
-    <button
+    <.button
       {@rest}
       disabled={@disabled}
       type="submit"
-      class="btn btn-primary btn-lg mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
+      variant="primary"
+      size="lg"
+      class="mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
     >
       <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
       <span
         class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
         aria-hidden="true"
       ></span>
-    </button>
+    </.button>
     """
   end
 
@@ -400,7 +412,7 @@ defmodule EdenflowersWeb.CoreComponents do
           {@rest}
         />
       </label>
-      <button class="btn btn-primary join-item z-50">{@button_text}</button>
+      <.button type="submit" variant="primary" class="join-item z-50">{@button_text}</.button>
     </fieldset>
     <div :if={@errors != []} id={"#{@id}-error"}>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -845,7 +857,10 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def product_card(assigns) do
     ~H"""
-    <.link navigate={@navigate} class={["group block focus:outline-none", @class]}>
+    <.link
+      navigate={@navigate}
+      class={["group relative isolate block after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-10 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2", @class]}
+    >
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
         <.image
           src={@product.image_slug}
@@ -955,7 +970,8 @@ defmodule EdenflowersWeb.CoreComponents do
   button — keyboard/SR users always get an accessible name.
   """
   attr :aria_label, :string, required: true
-  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :class, :any, default: nil
+  attr :size, :string, default: "md", values: ~w(sm md lg)
   attr :rest, :global, include: ~w(type disabled name value form)
   slot :inner_block, required: true
 
@@ -963,9 +979,9 @@ defmodule EdenflowersWeb.CoreComponents do
     assigns = assign_new(assigns, :type, fn -> "button" end)
 
     ~H"""
-    <button type={@type} class={@class} aria-label={@aria_label} {@rest}>
+    <.button type={@type} variant="ghost" size={@size} class={["btn-square", @class]} aria-label={@aria_label} {@rest}>
       {render_slot(@inner_block)}
-    </button>
+    </.button>
     """
   end
 

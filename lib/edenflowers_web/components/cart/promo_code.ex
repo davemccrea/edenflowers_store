@@ -59,15 +59,16 @@ defmodule EdenflowersWeb.Cart.PromoCode do
             />
           </.form>
         <% true -> %>
-          <button
+          <.button
             type="button"
             phx-click="open_promo"
             phx-target={@myself}
-            class="link-underline-hover-nav text-base-content/70 w-fit cursor-pointer text-sm"
+            variant="text"
+            class="w-fit"
             data-testid="promo-toggle"
           >
             {~t"Have a promo code?"}
-          </button>
+          </.button>
       <% end %>
     </div>
     """

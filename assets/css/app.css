@@ -122,6 +122,20 @@
   display: contents;
 }
 
+/* Match daisyUI's outline geometry without overriding compound fields. */
+@layer base {
+  :where(:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+/* daisyUI derives focus colours from each component. Keep one brand colour,
+   including fields that draw their outline on a wrapper instead of the input. */
+:where(:focus-visible:not(.outline-hidden, .focus-visible\:outline-hidden), .input:focus-within, .textarea:focus-within, .select:focus-within) {
+  outline-color: var(--focus-color, var(--color-primary));
+}
+
 button:not(:disabled):not([aria-disabled="true"]),
 [role="button"]:not([aria-disabled="true"]),
 label,
@@ -484,11 +498,6 @@ main p {
   text-underline-offset: 0.3em;
 }
 
-.category-index__link:focus-visible {
-  outline: 2px solid var(--color-link-underline);
-  outline-offset: 0.5rem;
-}
-
 #store-products {
   transition: opacity 150ms ease;
 }
@@ -534,8 +543,8 @@ main p {
   text-underline-offset: 0.3em;
 }
 .size-option:has(input:focus-visible) {
-  outline: 2px solid var(--color-link-underline);
-  outline-offset: 0.5rem;
+  outline: 2px solid var(--focus-color, var(--color-primary));
+  outline-offset: 2px;
 }
 
 /* Embla Carousel (Featured Blooms) — hook: assets/js/hooks.js (FeaturedCarousel). */
