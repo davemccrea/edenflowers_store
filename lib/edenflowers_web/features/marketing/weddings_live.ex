@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       credit: "Anna Riska"
     },
     %{
-      src: "local:///wedding/björn_yrjans.jpg",
+      src: "local:///wedding/bjorn_yrjans.jpg",
       width: 1335,
       height: 2000,
       credit: "Björn Yrjans"
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       credit: "Marie Lillhannus"
     },
     %{
-      src: "local:///wedding/sara_björkskog.jpg",
+      src: "local:///wedding/sara_bjorkskog.jpg",
       width: 1334,
       height: 2000,
       credit: "Sara Björkskog"

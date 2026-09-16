@@ -152,7 +152,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <.category_tile
               navigate={~p"/weddings"}
               label={~t"Weddings"}
-              image_src="https://placehold.co/800x600/e8e0d8/888?text=Weddings"
+              image_src="local:///wedding/bjorn_yrjans.jpg"
             />
             <.category_tile
               navigate={~p"/courses"}
