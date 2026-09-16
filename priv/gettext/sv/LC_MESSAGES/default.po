@@ -112,11 +112,6 @@ msgstr "Totalt"
 msgid "Weddings"
 msgstr "Bröllop"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:30
-#, elixir-autogen, elixir-format
-msgid "Fresh flowers for everyday moments"
-msgstr "Färska blommor för vardagliga stunder"
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:39
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Shop Now"
@@ -193,12 +188,6 @@ msgstr "E-post"
 #, elixir-autogen, elixir-format
 msgid "Email *"
 msgstr "E-post *"
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:52
-#: lib/edenflowers_web/features/marketing/home_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "Featured Blooms"
-msgstr "Utvalda blommor"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:15
 #, elixir-autogen, elixir-format
@@ -642,11 +631,6 @@ msgstr "Mer än en butik"
 msgid "Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."
 msgstr "Skapade för dem med kräsen smak, våra blommor kombinerar kvalitet och stil och levereras perfekt arrangerade till din dörr."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:118
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made by hand at our shop in Minimossen. We deliver across the Vaasa area, and delivery within 5 km is free."
-msgstr "Alla våra arrangemang görs för hand i butiken i Minimossen. Vi levererar i hela Vasanejden, och inom 5 km är leveransen gratis."
-
 #: lib/edenflowers_web/features/marketing/faq_live.ex:20
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
@@ -773,11 +757,6 @@ msgstr "Tack! Din kod på 15 % rabatt är på väg till din inkorg."
 #, elixir-autogen, elixir-format, fuzzy
 msgid "This collection is being refreshed. Check back shortly — or browse another category in the meantime."
 msgstr "Den här kollektionen fylls på. Titta in igen snart — eller bläddra bland våra andra kategorier under tiden."
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:116
-#, elixir-autogen, elixir-format
-msgid "Local to Vaasa"
-msgstr "Här i Vasa"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:29
 #, elixir-autogen, elixir-format
@@ -1747,3 +1726,24 @@ msgstr "Foto: %{photo_credit}"
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers"
 msgstr "Bröllopsblommor"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:116
+#, elixir-autogen, elixir-format
+msgid "Delivery across Vaasa"
+msgstr "Leverans i hela Vasanejden"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Every arrangement is made by hand at our shop in Minimossen, and delivery within 5 km is free."
+msgstr "Alla våra arrangemang görs för hand i butiken i Minimossen, och inom 5 km är leveransen gratis."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:30
+#, elixir-autogen, elixir-format
+msgid "Flowers for everyday moments"
+msgstr "Blommor för vardagens stunder"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:52
+#: lib/edenflowers_web/features/marketing/home_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "This week"
+msgstr "Denna vecka"

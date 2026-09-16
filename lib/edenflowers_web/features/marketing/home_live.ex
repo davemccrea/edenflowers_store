@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
-            {~t"Fresh flowers for everyday moments"}
+            {~t"Flowers for everyday moments"}
           </h1>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.button
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <h2 class="section-title">{~t"Featured Blooms"}</h2>
+            <h2 class="section-title">{~t"This week"}</h2>
 
             <div class="hidden items-center gap-2 md:flex">
               <.icon_button
@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             class="embla"
             role="group"
             aria-roledescription="carousel"
-            aria-label={~t"Featured Blooms"}
+            aria-label={~t"This week"}
           >
             <div
               id="featured-blooms-viewport"
@@ -113,9 +113,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Local to Vaasa"}</p>
+            <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Delivery across Vaasa"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Every arrangement is made by hand at our shop in Minimossen. We deliver across the Vaasa area, and delivery within 5 km is free."}
+              {~t"Every arrangement is made by hand at our shop in Minimossen, and delivery within 5 km is free."}
             </p>
           </div>
 

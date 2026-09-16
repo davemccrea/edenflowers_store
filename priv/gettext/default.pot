@@ -112,11 +112,6 @@ msgstr ""
 msgid "Weddings"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:30
-#, elixir-autogen, elixir-format
-msgid "Fresh flowers for everyday moments"
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:39
 #, elixir-autogen, elixir-format
 msgid "Shop Now"
@@ -192,12 +187,6 @@ msgstr ""
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Email *"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:52
-#: lib/edenflowers_web/features/marketing/home_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "Featured Blooms"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:15
@@ -642,11 +631,6 @@ msgstr ""
 msgid "Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:118
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made by hand at our shop in Minimossen. We deliver across the Vaasa area, and delivery within 5 km is free."
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/faq_live.ex:20
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
@@ -772,11 +756,6 @@ msgstr ""
 #: lib/edenflowers_web/features/store/store_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "This collection is being refreshed. Check back shortly — or browse another category in the meantime."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:116
-#, elixir-autogen, elixir-format
-msgid "Local to Vaasa"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:29
@@ -1746,4 +1725,25 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:116
+#, elixir-autogen, elixir-format
+msgid "Delivery across Vaasa"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Every arrangement is made by hand at our shop in Minimossen, and delivery within 5 km is free."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:30
+#, elixir-autogen, elixir-format
+msgid "Flowers for everyday moments"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:52
+#: lib/edenflowers_web/features/marketing/home_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "This week"
 msgstr ""
