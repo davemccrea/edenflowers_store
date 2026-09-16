@@ -643,7 +643,8 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-2">
-              <h3 class="eyebrow text-base-content/70">Minimossen</h3>
+              <h3 class="eyebrow text-base-content/70">{~t"Address"}</h3>
+              <p class="footer-line whitespace-nowrap">Minimossen</p>
               <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
               <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
             </div>
@@ -653,9 +654,9 @@ defmodule EdenflowersWeb.Layouts do
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
-                <p class="footer-line whitespace-nowrap">Ma–Pe: 09:00–17:00</p>
-                <p class="footer-line whitespace-nowrap">La: 10:00–15:00</p>
-                <p class="footer-line whitespace-nowrap">Su: suljettu</p>
+                <p class="footer-line whitespace-nowrap">{~t"Mon–Fri: 09:00–17:00"}</p>
+                <p class="footer-line whitespace-nowrap">{~t"Sat: 10:00–15:00"}</p>
+                <p class="footer-line whitespace-nowrap">{~t"Sun: closed"}</p>
               </div>
             </div>
 
