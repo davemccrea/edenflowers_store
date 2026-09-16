@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
           <div>
             <h1 class="page-title mb-6">{~t"Contact"}</h1>
             <p class="text-base-content/80 text-lg leading-relaxed">
-              {~t"Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."}
+              {~t"Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."}
             </p>
           </div>
 
