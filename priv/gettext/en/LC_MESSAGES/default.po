@@ -1727,12 +1727,6 @@ msgstr ""
 msgid "Flowers for everyday moments"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:52
-#: lib/edenflowers_web/features/marketing/home_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "This week"
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/about_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"
@@ -1766,4 +1760,10 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/contact_live.ex:27
 #, elixir-autogen, elixir-format
 msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:52
+#: lib/edenflowers_web/features/marketing/home_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "Favourites"
 msgstr ""
