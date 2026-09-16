@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           alt=""
           width={1920}
           height={1080}
+          sources={[%{media: "(max-width: 767px)", width: 1080, height: 1920}]}
           priority
           class="hero-zoom h-[100vh] w-full object-cover"
         />

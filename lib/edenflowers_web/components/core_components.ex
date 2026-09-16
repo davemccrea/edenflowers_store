@@ -928,7 +928,7 @@ defmodule EdenflowersWeb.CoreComponents do
         src={@image_src}
         alt=""
         width={800}
-        height={400}
+        height={800}
         sizes="(min-width: 768px) 33vw, 100vw"
         class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
       />
