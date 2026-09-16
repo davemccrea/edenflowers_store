@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
   def handle_params(params, _uri, socket) do
     case Map.get(params, "category") do
       nil ->
-        {:noreply, push_patch(socket, to: ~p"/store/bouquets")}
+        {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}
 
       category_slug ->
         case load_products(category_slug) do
@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
             {:noreply, assign(socket, products: products, selected_category: selected_category)}
 
           :error ->
-            {:noreply, push_patch(socket, to: ~p"/store/bouquets")}
+            {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}
         end
     end
   end
