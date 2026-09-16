@@ -338,7 +338,7 @@ defmodule EdenflowersWeb.Layouts do
         type="button"
         tabindex="0"
         aria-label={~t"Admin account menu"}
-        class={["inline-flex cursor-pointer items-center rounded-md transition-colors hover:bg-base-300/50 focus-visible:ring-primary/50 focus-visible:outline-none focus-visible:ring-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+        class={["inline-flex cursor-pointer items-center rounded-md transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
         <span class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
           {@initials}

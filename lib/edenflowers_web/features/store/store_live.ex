@@ -71,7 +71,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   |> JS.set_attribute({"aria-current", "page"}, to: "#category-link-#{category.id}")
                   |> JS.remove_attribute("aria-current", to: ".category-index__link:not(#category-link-#{category.id})")
                 }
-                class="category-index__link grid-cols-[auto_1fr] text-base-content group grid items-baseline gap-x-3.5 no-underline outline-none"
+                class="category-index__link grid-cols-[auto_1fr] text-base-content group grid items-baseline gap-x-3.5 no-underline"
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
                 <span

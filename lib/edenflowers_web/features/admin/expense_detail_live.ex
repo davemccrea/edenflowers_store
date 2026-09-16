@@ -46,14 +46,15 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             >
               <.icon name="hero-check" class="h-3 w-3" /> {~t"Reviewed"}
             </span>
-            <button
+            <.button
               :if={is_nil(@expense.reviewed_at)}
               type="button"
               phx-click="mark_reviewed"
-              class="btn btn-primary btn-sm"
+              variant="primary"
+              size="sm"
             >
               {~t"Mark as Reviewed"}
-            </button>
+            </.button>
           </:actions>
         </.admin_page_header>
 
@@ -128,9 +129,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               </div>
             </div>
             <div class="mt-6">
-              <button type="submit" class="btn btn-outline btn-sm w-full sm:w-auto">
+              <.button type="submit" variant="primary" size="sm" class="w-full sm:w-auto">
                 {~t"Save Corrections"}
-              </button>
+              </.button>
             </div>
           </.form>
         </section>

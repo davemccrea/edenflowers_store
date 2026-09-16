@@ -104,9 +104,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   defp cell_class(_day, state, opts, override?) do
     today? = Keyword.get(opts, :today?, false)
 
-    base =
-      "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center " <>
-        "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
+    base = "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center"
 
     closed_class = "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after"
 
@@ -126,9 +124,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   defp week_class(state) do
-    base =
-      "flex items-center justify-center rounded text-base-content/70 " <>
-        "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
+    base = "flex items-center justify-center rounded text-base-content/70"
 
     case state do
       :all_past ->
@@ -145,9 +141,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   defp weekday_class(state) do
-    base =
-      "relative rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider " <>
-        "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-base-content"
+    base = "relative rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider"
 
     state_class =
       case state do
