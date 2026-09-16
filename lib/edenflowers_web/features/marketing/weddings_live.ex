@@ -128,8 +128,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
         <h2 class="section-title mt-16">{~t"Gallery"}</h2>
 
-        <div id="wedding-gallery" phx-hook="PhotoGallery" class="mt-4 columns-2 gap-4 md:columns-3">
-          <figure :for={{photo, index} <- Enum.with_index(@gallery)} class="mb-4 break-inside-avoid">
+        <div id="wedding-gallery" phx-hook="PhotoGallery" class="mt-2 columns-2 gap-2 md:columns-3">
+          <figure :for={{photo, index} <- Enum.with_index(@gallery)} class="mb-2 break-inside-avoid">
             <a
               href={image_url(photo.src, photo.width, photo.height)}
               data-pswp-width={photo.width}
@@ -146,14 +146,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 height={thumb_height(photo)}
                 quality={80}
                 sizes="(min-width: 96rem) 30rem, (min-width: 80rem) calc(74rem / 3), (min-width: 64rem) calc(58rem / 3), (min-width: 48rem) 14rem, (min-width: 40rem) 17.5rem, calc((100vw - 3rem) / 2)"
-                priority={index == 0}
                 class="w-full rounded-md"
               />
             </a>
-
-            <figcaption :if={photo.credit} class="text-base-content/60 mt-[1px] text-xs">
-              {~t"Photo: #{photo.credit}"}
-            </figcaption>
           </figure>
         </div>
       </.container>
