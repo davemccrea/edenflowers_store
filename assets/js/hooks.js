@@ -764,6 +764,13 @@ Hooks.PhotoGallery = {
       pswpModule: PhotoSwipe,
     });
 
+    // A mouse click leaves the thumbnail focused, so Escape rings it on close.
+    // Keyboard activation has detail 0 and keeps PhotoSwipe's focus round trip.
+    this.el.addEventListener(
+      "click",
+      (e) => e.detail && document.activeElement?.blur(),
+    );
+
     // Credit line. PhotoSwipe has no caption of its own, and the plugin that
     // adds one isn't worth a second vendored file for this. Text comes from
     // the same data-pswp-credit the page renders into the visible figcaption,
