@@ -46,10 +46,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <div class="space-y-3">
-              <p class="eyebrow text-base-content/70">{~t"The collection"}</p>
-              <h2 class="section-title">{~t"Featured Blooms"}</h2>
-            </div>
+            <h2 class="section-title">{~t"Featured Blooms"}</h2>
 
             <div class="hidden items-center gap-2 md:flex">
               <button
@@ -113,18 +110,15 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <p class="eyebrow text-base-content/70 mb-4">{~t"Where to find us"}</p>
-            <h2 id="location-heading" class="section-title mb-7">
-              {~t"Made in Vaasa, Finland."}
-            </h2>
+            <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Local to Vaasa"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Cut and arranged the same day from a small shop on Kauppapuistikko. Eden Flowers delivers up to 20 km from Vaasa city centre — from €3, with free delivery within 5 km. The most competitive rates in the region."}
+              {~t"Every arrangement is made by hand at our shop in Minimossen. We deliver across the Vaasa area, and delivery within 5 km is free."}
             </p>
           </div>
 
           <.image
             src="local:///home-vaasa-map.png"
-            alt={~t"Map of Vaasa, Finland showing Eden Flowers' location at Kauppapuistikko 21"}
+            alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
             width={1600}
             height={1880}
             sizes="(min-width: 768px) 50vw, 100vw"
@@ -174,7 +168,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"In good company"}</p>
+          <p class="eyebrow text-base-content/70 mb-12 text-center">{~t"Trusted by"}</p>
           <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
             <li>
               <a href="https://www.dermosil.com/" target="_blank" rel="noopener noreferrer" aria-label="Dermosil">
