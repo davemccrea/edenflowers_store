@@ -31,16 +31,17 @@ defmodule EdenflowersWeb.NewsletterSignup do
               name="email_address"
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40 focus:outline-none focus:ring-0"
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40"
               placeholder={~t"your@email.com"}
               autocomplete="email"
             />
-            <button
+            <.button
               type="submit"
-              class="eyebrow text-base-content/70 link-underline-hover-nav whitespace-nowrap py-2 hover:text-base-content"
+              variant="text"
+              class="whitespace-nowrap"
             >
               {~t"Subscribe"}
-            </button>
+            </.button>
           </div>
           <p class="text-base-content/70 text-xs leading-relaxed">
             {~t"Only occasional emails. Unsubscribe at any time."}

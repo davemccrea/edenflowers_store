@@ -60,55 +60,55 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
               <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-3">
                 <div class="flex flex-row items-center gap-3">
-                  <button
+                  <.icon_button
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="phx-click-loading:opacity-50"
                     phx-click="decrement_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={~t"Decrement"}
+                    aria_label={~t"Decrement"}
                   >
                     <.icon class="h-4 w-4" name="hero-minus-mini" />
-                  </button>
+                  </.icon_button>
                   <span class="tabular-nums">{line_item.quantity}</span>
-                  <button
+                  <.icon_button
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
-                    class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                    class="phx-click-loading:opacity-50"
                     phx-click="increment_line_item"
                     phx-value-id={line_item.id}
                     phx-target={@myself}
-                    aria-label={~t"Increment"}
+                    aria_label={~t"Increment"}
                   >
                     <.icon class="h-4 w-4" name="hero-plus-mini" />
-                  </button>
+                  </.icon_button>
                 </div>
-                <button
+                <.icon_button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                  class="phx-click-loading:opacity-50"
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
-                  aria-label={~t"Remove"}
+                  aria_label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
-                </button>
+                </.icon_button>
               </div>
 
               <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
-                <button
+                <.icon_button
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
-                  class="cursor-pointer p-1 hover:text-base-content phx-click-loading:opacity-50"
+                  class="phx-click-loading:opacity-50"
                   phx-click="remove_item"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
-                  aria-label={~t"Remove"}
+                  aria_label={~t"Remove"}
                 >
                   <.icon name="hero-trash" class="h-4 w-4" />
-                </button>
+                </.icon_button>
               </div>
             </div>
           </li>
