@@ -73,15 +73,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           <div class="mb-5 flex items-center justify-between gap-4">
             <h2 class="text-base-content text-base font-semibold">{~t"Fulfillment"}</h2>
-            <button
+            <.button
               :if={@order.fulfillment_status == :pending}
               type="button"
               phx-click="mark_fulfilled"
               data-confirm={~t"Mark this order as fulfilled?"}
-              class="btn btn-primary btn-sm shrink-0"
+              variant="primary"
+              size="sm"
+              class="shrink-0"
             >
               {~t"Mark as fulfilled"}
-            </button>
+            </.button>
           </div>
 
           <div class="mb-6">
@@ -151,16 +153,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.money_row label={~t"VAT"} amount={@order.tax} locale={@locale} />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
               </dl>
-              <a
+              <.button
                 :if={@order.payment_intent_id}
                 href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
                 target="_blank"
                 rel="noopener"
-                class="btn btn-outline btn-sm mt-5"
+                variant="secondary"
+                size="sm"
+                class="mt-5"
               >
                 {~t"View payment in Stripe"}
                 <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-              </a>
+              </.button>
             </.detail_section>
           </main>
 

@@ -432,16 +432,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </fieldset>
       </div>
 
-      <button
+      <.button
         :if={is_nil(@card_line_item)}
         type="button"
         phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-        class="text-base-content link-underline-hover-nav inline-flex w-fit cursor-pointer items-center gap-2 text-base"
+        variant="text"
+        class="w-fit"
         data-testid="select-card-button"
       >
         <.icon name="hero-envelope" class="h-4 w-4" />
         {gettext("Select a card")}
-      </button>
+      </.button>
     </div>
     """
   end

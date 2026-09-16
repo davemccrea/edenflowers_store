@@ -35,12 +35,13 @@ defmodule EdenflowersWeb.NewsletterSignup do
               placeholder={~t"your@email.com"}
               autocomplete="email"
             />
-            <button
+            <.button
               type="submit"
-              class="eyebrow text-base-content/70 link-underline-hover-nav whitespace-nowrap py-2 hover:text-base-content"
+              variant="text"
+              class="whitespace-nowrap"
             >
               {~t"Subscribe"}
-            </button>
+            </.button>
           </div>
           <p class="text-base-content/70 text-xs leading-relaxed">
             {~t"Only occasional emails. Unsubscribe at any time."}
