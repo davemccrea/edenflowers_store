@@ -986,11 +986,6 @@ msgstr ""
 msgid "Address"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:18
-#, elixir-autogen, elixir-format
-msgid "Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."
-msgstr ""
-
 #: lib/edenflowers_web/components/layouts.ex:652
 #: lib/edenflowers_web/features/marketing/contact_live.ex:40
 #, elixir-autogen, elixir-format
@@ -1766,4 +1761,9 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/about_live.ex:26
 #, elixir-autogen, elixir-format
 msgid "order online"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
 msgstr ""

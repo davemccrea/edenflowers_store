@@ -986,11 +986,6 @@ msgstr "65230 Vaasa"
 msgid "Address"
 msgstr "Osoite"
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:18
-#, elixir-autogen, elixir-format
-msgid "Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."
-msgstr ""
-
 #: lib/edenflowers_web/components/layouts.ex:652
 #: lib/edenflowers_web/features/marketing/contact_live.ex:40
 #, elixir-autogen, elixir-format
@@ -1767,3 +1762,8 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "order online"
 msgstr ""
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
+msgstr "Lähetä sähköpostia tai soita, niin autan mielelläni. Olet myös tervetullut käymään liikkeessä aukioloaikoina."
