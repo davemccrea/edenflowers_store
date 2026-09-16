@@ -564,7 +564,7 @@ msgstr ""
 msgid "Browse bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1069
+#: lib/edenflowers_web/components/core_components.ex:1090
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr ""
@@ -678,7 +678,7 @@ msgstr ""
 msgid "For somebody else"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:903
+#: lib/edenflowers_web/components/core_components.ex:924
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr ""
