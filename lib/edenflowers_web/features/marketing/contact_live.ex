@@ -11,57 +11,52 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">{~t"Contact"}</h1>
+        <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
+          <div>
+            <h1 class="page-title hero-reveal mb-6">{~t"Contact"}</h1>
+            <p class="text-base-content/80 hero-reveal text-lg leading-relaxed" style="--reveal-delay: 80ms;">
+              {~t"Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."}
+            </p>
+          </div>
 
-        <div class="max-w-3xl space-y-12">
-          <p class="text-base-content/80 text-lg">
-            {~t"Got a question, a special request, or want to talk through an arrangement? Reach us by email or phone, or stop by the shop during opening hours."}
-          </p>
+          <dl class="grid gap-10">
+            <.contact_item label={~t"Email"}>
+              <a class="link-underline-static-body" href="mailto:info@edenflowers.fi">info@edenflowers.fi</a>
+            </.contact_item>
 
-          <dl class="grid grid-cols-1 gap-10 sm:grid-cols-2">
-            <div class="space-y-2">
-              <dt class="eyebrow text-base-content/60">{~t"Email"}</dt>
-              <dd>
-                <a class="footer-line link-underline-hover-nav" href="mailto:info@edenflowers.fi">
-                  info@edenflowers.fi
-                </a>
-              </dd>
-            </div>
+            <.contact_item label={~t"Phone"}>
+              <a class="link-underline-static-body" href="tel:+358402209494">040 220 9494</a>
+            </.contact_item>
 
-            <div class="space-y-2">
-              <dt class="eyebrow text-base-content/60">{~t"Phone"}</dt>
-              <dd>
-                <a class="footer-line link-underline-hover-nav" href="tel:+358402209494">
-                  040 220 9494
-                </a>
-              </dd>
-            </div>
+            <.contact_item label={~t"Address"}>
+              <address class="not-italic">
+                Minimossen<br />
+                {~t"Myrvägen 1"}<br />
+                {~t"65230 Vasa"}
+              </address>
+            </.contact_item>
 
-            <div class="space-y-2">
-              <dt class="eyebrow text-base-content/60">{~t"Address"}</dt>
-              <dd class="not-italic">
-                <address class="space-y-1 not-italic">
-                  <p class="footer-line">Minimossen</p>
-                  <p class="footer-line">{~t"Myrvägen 1"}</p>
-                  <p class="footer-line">{~t"65230 Vasa"}</p>
-                </address>
-              </dd>
-            </div>
-
-            <div class="space-y-2">
-              <dt class="eyebrow text-base-content/60">{~t"Opening hours"}</dt>
-              <dd>
-                <ul class="space-y-1">
-                  <li class="footer-line">{~t"Mon–Fri: 09:00–17:00"}</li>
-                  <li class="footer-line">{~t"Sat: 10:00–15:00"}</li>
-                  <li class="footer-line">{~t"Sun: closed"}</li>
-                </ul>
-              </dd>
-            </div>
+            <.contact_item label={~t"Opening hours"}>
+              {~t"Mon–Fri: 09:00–17:00"}<br />
+              {~t"Sat: 10:00–15:00"}<br />
+              {~t"Sun: closed"}
+            </.contact_item>
           </dl>
         </div>
       </.container>
     </Layouts.app>
+    """
+  end
+
+  attr :label, :string, required: true
+  slot :inner_block, required: true
+
+  defp contact_item(assigns) do
+    ~H"""
+    <div class="space-y-2">
+      <dt class="eyebrow text-base-content/60">{@label}</dt>
+      <dd class="text-lg leading-relaxed">{render_slot(@inner_block)}</dd>
+    </div>
     """
   end
 end
