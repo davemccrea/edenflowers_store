@@ -3,7 +3,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
-  # Largest column: (1536px container - 64px padding - 32px gaps) / 3.
   @thumb_width 480
 
   # width/height are the dimensions PhotoSwipe opens the photo at, and the
@@ -128,7 +127,11 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
         <h2 class="section-title mt-16">{~t"Gallery"}</h2>
 
-        <div id="wedding-gallery" phx-hook="PhotoGallery" class="mt-2 columns-2 gap-2 md:columns-3">
+        <div
+          id="wedding-gallery"
+          phx-hook="PhotoGallery"
+          class="mt-2 columns-2 gap-2 md:columns-3 xl:columns-4"
+        >
           <figure :for={{photo, index} <- Enum.with_index(@gallery)} class="mb-2 break-inside-avoid">
             <a
               href={image_url(photo.src, photo.width, photo.height)}
@@ -145,7 +148,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 width={@thumb_width}
                 height={thumb_height(photo)}
                 quality={80}
-                sizes="(min-width: 96rem) 30rem, (min-width: 80rem) calc(74rem / 3), (min-width: 64rem) calc(58rem / 3), (min-width: 48rem) 14rem, (min-width: 40rem) 17.5rem, calc((100vw - 3rem) / 2)"
+                sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
                 class="w-full rounded-md"
               />
             </a>

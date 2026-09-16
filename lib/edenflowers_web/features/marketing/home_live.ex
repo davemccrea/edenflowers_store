@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="relative overflow-hidden not-last:border-b">
         <.image
-          src="local:///image_1.jpg"
+          src="local:///wedding/daniela_streng_1.jpg"
           alt=""
           width={1920}
           height={1080}
@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
-          <h1 class="hero-display hero-reveal max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
+          <h1 class="hero-display hero-reveal max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
             {~t"Fresh flowers for everyday moments"}
           </h1>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
