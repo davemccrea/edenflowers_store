@@ -64,7 +64,8 @@ defmodule EdenflowersWeb.Cart.PromoCode do
             phx-click="open_promo"
             phx-target={@myself}
             variant="text"
-            class="w-fit"
+            class="text-base-content/70 w-fit text-sm"
+            aria-expanded="false"
             data-testid="promo-toggle"
           >
             {~t"Have a promo code?"}
