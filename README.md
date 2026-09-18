@@ -11,6 +11,18 @@ brew install just
 
 `.githooks/pre-commit` formats staged Elixir (`mix format`) and JS/CSS (Prettier via `npx`). `pre-push` runs `mix precommit`.
 
+The server commands (`just images`, `logs`, `console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
+
+```
+Host edenflowers-staging
+    HostName <staging IP>
+    User <you>
+
+Host edenflowers-production
+    HostName <production IP>
+    User <you>
+```
+
 ### Commands
 
 Run `just` to list everything. Each recipe wraps a script in `scripts/`, which you can also run directly.
