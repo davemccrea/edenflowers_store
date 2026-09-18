@@ -107,7 +107,7 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(current_locale: String.capitalize(current_locale))
 
     ~H"""
-    <div class="auth-background-pattern flex min-h-screen flex-col">
+    <div class="bg-base-200 flex min-h-screen flex-col">
       <header class="py-8 text-center">
         <.link navigate={~p"/"} class="text-primary logo-wordmark text-xl sm:text-2xl">
           Eden Flowers

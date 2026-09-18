@@ -44,6 +44,29 @@ defmodule EdenflowersWeb.AuthControllerTest do
     end
   end
 
+  describe "failure/3" do
+    test "a wrong OTP sends the user back to the code step for the same email", %{conn: conn} do
+      conn =
+        %{conn | params: %{"user" => %{"email" => "jennie@example.com", "otp" => "WRONG1"}}}
+        |> init_auth_session(%{})
+        |> AuthController.failure({:otp, :sign_in}, nil)
+
+      assert redirected_to(conn) == ~p"/sign-in"
+      assert Phoenix.Flash.get(conn.assigns.flash, :otp_email) == "jennie@example.com"
+    end
+  end
+
+  describe "GET /sign-in after a failed OTP" do
+    test "opens on the code step for the flashed email", %{conn: conn} do
+      conn = Plug.Test.init_test_session(conn, %{"phoenix_flash" => %{"otp_email" => "jennie@example.com"}})
+
+      {:ok, _view, html} = live(conn, ~p"/sign-in")
+
+      assert html =~ "jennie@example.com"
+      assert html =~ "user[otp]"
+    end
+  end
+
   describe "GET /sign-in" do
     test "redirects an already-signed-in admin to /admin", %{conn: conn} do
       admin = generate(admin_user()) |> with_token()

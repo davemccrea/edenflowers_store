@@ -1,8 +1,6 @@
 defmodule EdenflowersWeb.Auth.OtpSignInLive do
   use EdenflowersWeb, :live_view
 
-  import AshAuthentication.Phoenix.Components.Helpers, only: [auth_path: 5]
-
   alias AshAuthentication.Info
   alias Edenflowers.Accounts.User
 
@@ -11,38 +9,30 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   # purely a UX brake so users don't burn through their quota.
   @resend_cooldown_seconds 30
 
-  def mount(_params, session, socket) do
-    strategy = Info.strategy!(User, :otp)
-
+  def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(strategy: strategy)
+      |> assign(strategy: Info.strategy!(User, :otp))
       |> assign(google_strategy: Info.strategy!(User, :google))
-      |> assign(current_tenant: session["tenant"])
-      |> assign(context: session["context"] || %{})
-      |> assign(email: nil)
-      |> assign(trigger_action: false)
-      |> assign(resend_remaining: 0)
-      |> assign(subject_name: Info.authentication_subject_name!(strategy.resource))
-      |> assign(auth_routes_prefix: "/auth")
-      |> assign_request_form()
-      |> assign_sign_in_form()
+      |> reset_state()
 
-    {:ok, socket}
+    # Set by AuthController.failure/3 after a wrong code, so the user lands
+    # back on the code step instead of having to request a new code. Not
+    # cleared here: the connected mount reads the same flash again.
+    {:ok, assign(socket, email: Phoenix.Flash.get(socket.assigns.flash, :otp_email))}
   end
 
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash} current_path={@current_path}>
-      <section class="bg-base-100 flex w-full max-w-lg flex-col space-y-4 p-8 shadow-lg">
-        <h2 class="text-center text-lg font-bold">
-          {~t"Sign in to your account"}
-        </h2>
-
+      <section class="bg-base-100 border-base-300 mx-4 flex w-full max-w-md flex-col space-y-6 border p-8 sm:p-10">
         <%= if @email do %>
-          <p class="text-center text-sm">
-            {~t"🥳 A sign-in code was sent to #{@email}."}
-          </p>
+          <div class="space-y-2 text-center">
+            <h1 class="text-xl font-semibold">{~t"Check your email"}</h1>
+            <p class="text-base-content/70 text-sm">
+              {~t"We sent a 6-character code to"} <span class="text-base-content break-all font-medium">{@email}</span>. {~t"It expires in 10 minutes."}
+            </p>
+          </div>
 
           <.form
             class="flex w-full flex-col space-y-4"
@@ -50,15 +40,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             phx-submit="verify"
             method="POST"
             phx-trigger-action={@trigger_action}
-            action={
-              auth_path(
-                @socket,
-                @subject_name,
-                @auth_routes_prefix,
-                @strategy,
-                :sign_in
-              )
-            }
+            action={~p"/auth/user/otp/sign_in"}
           >
             <%!-- Mirrors the email so the form-trigger handoff carries it through. --%>
             <input type="hidden" name="user[email]" value={@email} />
@@ -81,7 +63,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             </.button>
           </.form>
 
-          <div class="flex flex-col items-center gap-2 text-center text-sm">
+          <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
             <%= if @resend_remaining > 0 do %>
               <span class="text-base-content/70">
                 {~t"Resend code in"} {@resend_remaining}s
@@ -96,6 +78,13 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
             </.button>
           </div>
         <% else %>
+          <div class="space-y-2 text-center">
+            <h1 class="text-xl font-semibold">{~t"Sign in"}</h1>
+            <p class="text-base-content/70 text-sm">
+              {~t"Continue with Google, or we'll email you a sign-in code."}
+            </p>
+          </div>
+
           <.live_component
             module={AshAuthentication.Phoenix.Components.OAuth2}
             id="sign-in-google"
@@ -142,14 +131,9 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     {:noreply, assign(socket, request_form: form)}
   end
 
-  def handle_event("request", %{"user" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.request_form, params: params) do
-      result when result == :ok or (is_tuple(result) and elem(result, 0) == :ok) ->
-        {:noreply, socket |> assign(email: params["email"]) |> start_resend_cooldown()}
-
-      {:error, form} ->
-        {:noreply, socket |> assign(request_form: form) |> request_error_toast(form)}
-    end
+  def handle_event("request", %{"user" => %{"email" => email}}, socket) do
+    {_result, socket} = request_code(socket, email)
+    {:noreply, socket}
   end
 
   # The OTP itself can only be validated server-side by the sign-in action's
@@ -157,39 +141,21 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   # failure. Client-side `pattern`/`maxlength` cover the empty/short-code case.
   def handle_event("verify", params, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.sign_in_form, params["user"] || %{})
-
-    {:noreply,
-     socket
-     |> assign(:sign_in_form, form)
-     |> assign(:trigger_action, true)}
+    {:noreply, assign(socket, sign_in_form: form, trigger_action: true)}
   end
 
-  def handle_event("resend", _params, %{assigns: %{email: email}} = socket) when is_binary(email) do
-    if socket.assigns.resend_remaining > 0 do
-      {:noreply, socket}
-    else
-      # Rebuild the request form so stale state from the original submission
-      # can't leak into the resend.
-      socket = assign_request_form(socket)
-
-      case AshPhoenix.Form.submit(socket.assigns.request_form, params: %{"email" => email}) do
-        result when result == :ok or (is_tuple(result) and elem(result, 0) == :ok) ->
-          {:noreply, socket |> put_flash(:info, ~t"We've sent you a new code.") |> start_resend_cooldown()}
-
-        {:error, form} ->
-          {:noreply, socket |> assign(request_form: form) |> request_error_toast(form)}
-      end
+  def handle_event("resend", _params, %{assigns: %{email: email, resend_remaining: 0}} = socket)
+      when is_binary(email) do
+    case request_code(socket, email) do
+      {:ok, socket} -> {:noreply, put_flash(socket, :info, ~t"We've sent you a new code.")}
+      {:error, socket} -> {:noreply, socket}
     end
   end
 
+  def handle_event("resend", _params, socket), do: {:noreply, socket}
+
   def handle_event("reset", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(email: nil)
-     |> assign(trigger_action: false)
-     |> assign(resend_remaining: 0)
-     |> assign_request_form()
-     |> assign_sign_in_form()}
+    {:noreply, reset_state(socket)}
   end
 
   def handle_info(:resend_tick, socket) do
@@ -197,61 +163,44 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
 
     if remaining > 0 do
       Process.send_after(self(), :resend_tick, 1_000)
-      {:noreply, assign(socket, resend_remaining: remaining)}
-    else
-      {:noreply, assign(socket, resend_remaining: 0)}
+    end
+
+    {:noreply, assign(socket, resend_remaining: max(remaining, 0))}
+  end
+
+  defp reset_state(%{assigns: %{strategy: strategy}} = socket) do
+    assign(socket,
+      email: nil,
+      trigger_action: false,
+      resend_remaining: 0,
+      request_form: build_form(strategy, strategy.request_action_name, "otp-request"),
+      sign_in_form: build_form(strategy, strategy.sign_in_action_name, "otp-sign-in")
+    )
+  end
+
+  defp request_code(%{assigns: %{strategy: strategy}} = socket, email) do
+    form = build_form(strategy, strategy.request_action_name, "otp-request")
+
+    case AshPhoenix.Form.submit(form, params: %{"email" => email}) do
+      {:error, form} ->
+        {:error, socket |> assign(request_form: form) |> request_error_toast(form)}
+
+      _ok ->
+        Process.send_after(self(), :resend_tick, 1_000)
+        {:ok, assign(socket, email: email, request_form: form, resend_remaining: @resend_cooldown_seconds)}
     end
   end
 
-  defp start_resend_cooldown(socket) do
-    Process.send_after(self(), :resend_tick, 1_000)
-    assign(socket, resend_remaining: @resend_cooldown_seconds)
-  end
-
-  defp assign_request_form(%{assigns: %{strategy: strategy, current_tenant: current_tenant, context: context}} = socket) do
-    domain = Info.authentication_domain!(strategy.resource)
-    subject_name = Info.authentication_subject_name!(strategy.resource)
-
-    form =
-      strategy.resource
-      |> AshPhoenix.Form.for_action(strategy.request_action_name,
-        domain: domain,
-        as: to_string(subject_name),
-        id: "otp-request",
-        tenant: current_tenant,
-        transform_errors: fn _source, error -> error end,
-        context:
-          Ash.Helpers.deep_merge_maps(context, %{
-            strategy: strategy,
-            private: %{ash_authentication?: true}
-          })
-      )
-      |> to_form()
-
-    assign(socket, request_form: form)
-  end
-
-  defp assign_sign_in_form(%{assigns: %{strategy: strategy, current_tenant: current_tenant, context: context}} = socket) do
-    domain = Info.authentication_domain!(strategy.resource)
-    subject_name = Info.authentication_subject_name!(strategy.resource)
-
-    form =
-      strategy.resource
-      |> AshPhoenix.Form.for_action(strategy.sign_in_action_name,
-        domain: domain,
-        as: to_string(subject_name),
-        id: "otp-sign-in",
-        tenant: current_tenant,
-        transform_errors: fn _source, error -> error end,
-        context:
-          Ash.Helpers.deep_merge_maps(context, %{
-            strategy: strategy,
-            private: %{ash_authentication?: true}
-          })
-      )
-      |> to_form()
-
-    assign(socket, sign_in_form: form)
+  defp build_form(strategy, action_name, id) do
+    strategy.resource
+    |> AshPhoenix.Form.for_action(action_name,
+      domain: Info.authentication_domain!(strategy.resource),
+      as: "user",
+      id: id,
+      transform_errors: fn _source, error -> error end,
+      context: %{strategy: strategy, private: %{ash_authentication?: true}}
+    )
+    |> to_form()
   end
 
   defp request_error_toast(socket, form) do
