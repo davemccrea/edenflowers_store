@@ -104,7 +104,6 @@ defmodule EdenflowersWeb.CoreComponents do
     "primary" => "btn-primary",
     "secondary" => "btn-primary btn-outline",
     "ghost" => "btn-ghost",
-    "text" => "btn-link text-primary underline-offset-4",
     "inverse" =>
       "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
     "destructive" => "btn-error btn-outline"
@@ -117,13 +116,20 @@ defmodule EdenflowersWeb.CoreComponents do
   }
 
   def button(%{rest: rest} = assigns) do
-    classes = [
-      "btn gap-2 rounded-none font-sans font-medium normal-case tracking-normal shadow-none",
-      @button_variants[assigns.variant],
-      @button_sizes[assigns.size],
-      assigns.variant == "text" && "px-0",
-      assigns[:class]
-    ]
+    classes =
+      if assigns.variant == "text" do
+        [
+          "link-underline-static-body inline-flex cursor-pointer items-center gap-2 hover:decoration-current",
+          assigns[:class]
+        ]
+      else
+        [
+          "btn gap-2 rounded-none font-sans font-medium normal-case tracking-normal shadow-none",
+          @button_variants[assigns.variant],
+          @button_sizes[assigns.size],
+          assigns[:class]
+        ]
+      end
 
     assigns = assign(assigns, :class, classes)
 
