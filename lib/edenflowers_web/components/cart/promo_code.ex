@@ -4,6 +4,10 @@ defmodule EdenflowersWeb.Cart.PromoCode do
   with Apply when the customer signals intent, and shows the applied
   code as a removable badge once a promotion is on the order.
 
+  Pass `show_applied={false}` where the page renders `badge/1` elsewhere
+  (checkout puts it on the Discount line); the badge's click still
+  targets this component by its DOM id.
+
   Mounted in both the cart drawer and the checkout right column. State
   (`promo_open`, the form) is owned by this component; the underlying
   `Order` mutations broadcast on `line_item:changed:<id>` so the parent
@@ -19,6 +23,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
       |> assign(assigns)
       |> assign_new(:form, fn -> build_form(order) end)
       |> assign_new(:open, fn -> false end)
+      |> assign_new(:show_applied, fn -> true end)
 
     {:ok, socket}
   end
@@ -27,18 +32,11 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     ~H"""
     <div id={@id}>
       <%= cond do %>
+        <% @order.promotion_applied? and not @show_applied -> %>
         <% @order.promotion_applied? -> %>
           <div class="flex items-baseline justify-between text-sm" data-testid="promo-applied">
             <span class="text-base-content/70">{~t"Promo code"}</span>
-            <button
-              type="button"
-              phx-click="clear_promo"
-              phx-target={@myself}
-              class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
-              data-testid="promo-badge"
-            >
-              {@order.promotion_code} <.icon name="hero-x-mark" class="h-3 w-3" />
-            </button>
+            <.badge code={@order.promotion_code} target={@myself} />
           </div>
         <% @open -> %>
           <.form
@@ -72,6 +70,23 @@ defmodule EdenflowersWeb.Cart.PromoCode do
           </.button>
       <% end %>
     </div>
+    """
+  end
+
+  attr :code, :string, required: true
+  attr :target, :any, required: true, doc: "the PromoCode component (`@myself` or its DOM id selector)"
+
+  def badge(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="clear_promo"
+      phx-target={@target}
+      class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
+      data-testid="promo-badge"
+    >
+      {@code} <.icon name="hero-x-mark" class="h-3 w-3" />
+    </button>
     """
   end
 
