@@ -321,7 +321,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -346,7 +346,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
@@ -426,7 +426,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}</span>
         <div class="relative">
           <input
             type={@type}
