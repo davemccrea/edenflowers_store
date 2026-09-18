@@ -296,6 +296,25 @@ main p {
   text-wrap: pretty;
 }
 
+/* Rice paper by Transparent Textures (transparenttextures.com), from the
+   Subtle Patterns collection. Transparent PNG, so it tints whatever
+   background colour sits underneath. Drawn on a pseudo-element because a
+   background image can't take its own opacity. */
+@utility rice-paper {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("/images/rice-paper.png");
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
 @utility hero-display {
   @apply font-serif font-light text-5xl leading-[1.08] tracking-tight text-balance sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }

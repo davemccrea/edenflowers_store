@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <section class="not-last:border-b">
+      <section class="rice-paper from-base-100 to-cream bg-linear-to-b not-last:border-b">
         <div class="container pt-28 pb-20 sm:pt-[calc(var(--header-height)+var(--spacing)*12)] md:pb-24">
           <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">
             <div>
@@ -165,7 +165,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </figure>
       </section>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="prices-heading">
+      <section class="not-last:border-b" aria-labelledby="prices-heading">
         <div class="container py-24">
           <div class="max-w-2xl">
             <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section class="not-last:border-b" aria-labelledby="process-heading">
+      <section class="from-cream to-base-300 bg-linear-to-b not-last:border-b" aria-labelledby="process-heading">
         <div class="container py-24">
           <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
           <ol class="grid gap-10 md:grid-cols-4">
@@ -200,7 +200,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section id="my-work" class="scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+      <section id="my-work" class="rice-paper scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
           <div
