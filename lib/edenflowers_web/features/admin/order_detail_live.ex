@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </section>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <main class="space-y-6">
+          <div class="space-y-6">
             <.detail_section :if={present?(@order.card_message)} title={~t"Card message"}>
               <blockquote class="border-base-300 text-base-content whitespace-pre-wrap break-words border-l-2 pl-3 text-sm italic">
                 {@order.card_message}
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
               </.button>
             </.detail_section>
-          </main>
+          </div>
 
           <aside class="space-y-6">
             <.detail_section id="order-customer" title={~t"Customer"}>
