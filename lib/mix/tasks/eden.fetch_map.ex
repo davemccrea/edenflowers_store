@@ -25,9 +25,12 @@ defmodule Mix.Tasks.Eden.FetchMap do
   # Composition spec. Dimensions are the Mapbox source; the render aspect is
   # preserved (1097:1280 ≈ 800:940) so Imgproxy can pure-downscale to any DPR
   # without re-cropping.
-  @longitude 21.6165
-  @latitude 63.0951
-  @zoom 10
+  # Centred halfway between the shop and Vaasa's market square. On desktop the
+  # page crops up to ~27% off the top and bottom, which would hide the pin if
+  # the frame were centred on the market square itself.
+  @center {21.6083, 63.1097}
+  @shop {21.6000, 63.1243}
+  @zoom 12
   @width 1097
   @height 1280
   @style "davemccrea/cmp1rbxej001201r0c0z808jo"
@@ -35,6 +38,35 @@ defmodule Mix.Tasks.Eden.FetchMap do
   # Honey approximates --color-link-underline.
   @marker_color "E8B33C"
   @output_path "images/home-vaasa-map.png"
+
+  # The custom style only has land and water, so roads are layered on at
+  # request time from Mapbox's own street data, tinted to sit quietly on the
+  # cream land colour.
+  @road_layer %{
+    id: "roads",
+    type: "line",
+    source: "composite",
+    "source-layer": "road",
+    filter: [
+      "match",
+      ["get", "class"],
+      ["motorway", "trunk", "primary", "secondary", "tertiary", "street", "street_limited"],
+      true,
+      false
+    ],
+    paint: %{
+      "line-color": "#c9bfa8",
+      "line-width": [
+        "match",
+        ["get", "class"],
+        ["motorway", "trunk", "primary"],
+        2,
+        ["secondary", "tertiary"],
+        1.2,
+        0.6
+      ]
+    }
+  }
 
   @impl Mix.Task
   def run(_args) do
@@ -62,12 +94,21 @@ defmodule Mix.Tasks.Eden.FetchMap do
   end
 
   defp build_url(token) do
-    marker = "pin-s+#{@marker_color}(#{@longitude},#{@latitude})"
-    coords = "#{@longitude},#{@latitude},#{@zoom}"
+    {center_lng, center_lat} = @center
+    {shop_lng, shop_lat} = @shop
+
+    marker = "pin-s+#{@marker_color}(#{shop_lng},#{shop_lat})"
+    coords = "#{center_lng},#{center_lat},#{@zoom}"
     size = "#{@width}x#{@height}@2x"
 
     "https://api.mapbox.com/styles/v1/#{@style}/static/" <>
       "#{marker}/#{coords}/#{size}" <>
-      "?access_token=#{token}&logo=false&attribution=false"
+      "?" <>
+      URI.encode_query(
+        access_token: token,
+        logo: false,
+        attribution: false,
+        addlayer: JSON.encode!(@road_layer)
+      )
   end
 end
