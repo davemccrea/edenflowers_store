@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   <%= if @link_product and not line_item.is_card do %>
                     <.link
                       navigate={~p"/product/#{line_item.product_id}"}
-                      class="link-underline-hover-nav"
+                      class="link-underline-hover"
                     >
                       {line_item.product_name}
                     </.link>
