@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
       <.container>
         <.link
           navigate={~p"/account"}
-          class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
+          class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
         >
           {~t"Your account"}
         </.link>

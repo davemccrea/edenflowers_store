@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
         <.link
           :if={@past?}
           phx-click={JS.push("edit_step", value: %{state: @state})}
-          class="link-underline-hover-nav shrink-0 text-sm"
+          class="link-underline-hover shrink-0 text-sm"
         >
           {~t"Edit"}
         </.link>

@@ -50,11 +50,11 @@ defmodule EdenflowersWeb.Store.StoreLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 :if={@selected_category} class="page-title hero-reveal mb-12 md:mb-16">
+        <h1 :if={@selected_category} class="page-title mb-12 md:mb-16">
           {@selected_category.name}
         </h1>
 
-        <nav aria-label={~t"Categories"} class="hero-reveal mb-20 md:mb-28" style="--reveal-delay: 80ms;">
+        <nav aria-label={~t"Categories"} class="mb-20 md:mb-28">
           <ol class="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3 md:gap-10">
             <li
               :for={{category, idx} <- @categories}

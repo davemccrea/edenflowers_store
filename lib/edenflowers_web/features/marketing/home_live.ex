@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </blockquote>
           <.link
             navigate={~p"/about"}
-            class="eyebrow text-forest-content link-underline-hover-nav"
+            class="eyebrow text-forest-content link-underline-hover"
           >
             {~t"Learn more"}
           </.link>
