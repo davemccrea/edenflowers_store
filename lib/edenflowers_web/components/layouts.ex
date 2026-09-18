@@ -467,7 +467,7 @@ defmodule EdenflowersWeb.Layouts do
           <ul class="space-y-4">
             <li :for={{url, name} <- @nav}>
               <.link
-                class="font-serif text-base-content link-underline-hover-display text-3xl"
+                class="font-serif text-base-content link-underline-hover text-3xl"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={url}
               >
@@ -476,7 +476,7 @@ defmodule EdenflowersWeb.Layouts do
             </li>
             <li class="border-base-content/10 border-t pt-4">
               <.link
-                class="text-base-content group font-serif link-underline-hover-display inline-flex items-center gap-3 text-3xl"
+                class="text-base-content group font-serif link-underline-hover inline-flex items-center gap-3 text-3xl"
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
@@ -495,7 +495,7 @@ defmodule EdenflowersWeb.Layouts do
           current_locale_code={@current_locale_code}
           current_path={@current_path}
           class="flex flex-wrap gap-x-5 gap-y-2"
-          item_class="text-base-content/80 link-underline-hover-nav text-sm tracking-wide"
+          item_class="text-base-content/80 link-underline-hover text-sm tracking-wide"
         />
         <.social_media_links />
       </footer>
@@ -536,7 +536,7 @@ defmodule EdenflowersWeb.Layouts do
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
                     <.link
-                      class="text-base-content link-underline-hover-nav whitespace-nowrap text-sm tracking-wide"
+                      class="text-base-content link-underline-hover whitespace-nowrap text-sm tracking-wide"
                       navigate={url}
                     >
                       {name}
@@ -659,17 +659,17 @@ defmodule EdenflowersWeb.Layouts do
               <h3 class="eyebrow text-base-content/70">{~t"Help"}</h3>
               <ul class="space-y-1">
                 <li>
-                  <.link navigate={~p"/faq"} class="footer-line link-underline-hover-nav">
+                  <.link navigate={~p"/faq"} class="footer-line link-underline-hover">
                     {~t"FAQ"}
                   </.link>
                 </li>
                 <li>
-                  <.link navigate={~p"/contact"} class="footer-line link-underline-hover-nav">
+                  <.link navigate={~p"/contact"} class="footer-line link-underline-hover">
                     {~t"Contact"}
                   </.link>
                 </li>
                 <li>
-                  <.link navigate={~p"/about"} class="footer-line link-underline-hover-nav">
+                  <.link navigate={~p"/about"} class="footer-line link-underline-hover">
                     {~t"About"}
                   </.link>
                 </li>
@@ -698,7 +698,7 @@ defmodule EdenflowersWeb.Layouts do
           <span class="text-xs">
             © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus:
             <a
-              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              class="text-base-content link-underline-hover whitespace-nowrap"
               href="https://tietopalvelu.ytj.fi/yritys/2944459-6"
               target="_blank"
               rel="noopener"
@@ -707,7 +707,7 @@ defmodule EdenflowersWeb.Layouts do
             </a>
             •
             <a
-              class="text-base-content link-underline-hover-nav whitespace-nowrap"
+              class="text-base-content link-underline-hover whitespace-nowrap"
               href="https://github.com/davemccrea/edenflowers_store"
             >
               {~t"Built with "} <span>❤️</span>

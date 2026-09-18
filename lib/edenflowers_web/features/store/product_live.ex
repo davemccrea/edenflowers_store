@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
           <header class="order-first md:hidden">
             <.link
               navigate={~p"/store/#{@product.product_category.slug}"}
-              class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
+              class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
             >
               {@product_category.name}
             </.link>
@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
             <header class="hidden md:block">
               <.link
                 navigate={~p"/store/#{@product.product_category.slug}"}
-                class="eyebrow text-base-content/70 link-underline-hover-nav mb-5 inline-block w-fit"
+                class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
               >
                 {@product_category.name}
               </.link>
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
             <p class="text-base-content/75 text-base">
               {~t"Have a question?"}
-              <.link navigate={~p"/faq"} class="link-underline-hover-nav whitespace-nowrap">
+              <.link navigate={~p"/faq"} class="link-underline-hover whitespace-nowrap">
                 {~t"See the FAQ"}
               </.link>
             </p>
