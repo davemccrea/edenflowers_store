@@ -113,9 +113,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Delivery across Vaasa"}</p>
+            <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Made in Minimossen"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Every arrangement is made by hand at our shop in Minimossen, and delivery within 5 km is free."}
+              {~t"Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen. Beyond that, we keep our delivery rates among the lowest in Vaasa."}
             </p>
           </div>
 
