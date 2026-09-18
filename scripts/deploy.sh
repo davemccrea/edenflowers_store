@@ -12,7 +12,47 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 ok "working tree clean"
 
+TARGET="${1:-}"
+
+if [[ -z "$TARGET" ]]; then
+  section "Target selection"
+  echo "  1) staging     (push current branch to staging)"
+  echo "  2) production  (tag a release from main)"
+  echo
+  read -r -p "  Choice [1]: " CHOICE
+  CHOICE="${CHOICE:-1}"
+
+  case "$CHOICE" in
+    1) TARGET="staging" ;;
+    2) TARGET="production" ;;
+    *) fail "invalid choice" ;;
+  esac
+fi
+
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+
+if [[ "$TARGET" == "staging" ]]; then
+  section "Ready to push"
+  echo "  staging → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)  ($BRANCH)"
+  echo
+  read -r -p "  Proceed with push? [y/N] " REPLY
+  if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+    printf '\n  %saborted%s\n' "$DIM" "$RESET"
+    exit 1
+  fi
+
+  # staging is a deploy pointer, not a shared branch, so overwriting it is expected.
+  SKIP_HOOKS=1 git push --force origin HEAD:refs/heads/staging
+
+  printf '\n%s%s✓ Deployed %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
+    "$BOLD" "$GREEN" "$BRANCH" "$RESET" "$DIM" "$RESET"
+  exit 0
+fi
+
+if [[ "$TARGET" != "production" ]]; then
+  fail "target must be staging or production"
+fi
+
 if [[ "$BRANCH" != "main" ]]; then
   fail "must deploy from main (currently on $BRANCH)"
 fi
@@ -46,7 +86,7 @@ PATCH_NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
 MINOR_NEXT="$MAJOR.$((MINOR + 1)).0"
 MAJOR_NEXT="$((MAJOR + 1)).0.0"
 
-VERSION="${1:-}"
+VERSION="${2:-}"
 
 if [[ -z "$VERSION" ]]; then
   section "Version selection"
