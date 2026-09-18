@@ -12,12 +12,10 @@ defmodule Edenflowers.External.HereAPI do
   require Logger
 
   @origin "63.1243488,21.5974075"
-  # TODO
-  @lang "sv"
 
   def geocode(query) when is_binary(query) do
     url =
-      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{@lang}&apiKey=#{api_key()}"
+      "https://geocode.search.hereapi.com/v1/geocode?q=#{URI.encode(query)}&at=#{@origin}&limit=1&lang=#{Gettext.get_locale(EdenflowersWeb.Gettext)}&apiKey=#{api_key()}"
 
     with {:ok, %{status: 200, body: body}} <- Req.get(url),
          %{
