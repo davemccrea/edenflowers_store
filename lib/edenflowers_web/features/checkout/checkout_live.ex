@@ -265,6 +265,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   module={EdenflowersWeb.Cart.PromoCode}
                   order={@order}
                   current_user={@current_user}
+                  show_applied={false}
                 />
 
                 <div class="border-base-content/12 border-t"></div>
@@ -289,7 +290,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     class="flex items-baseline justify-between"
                     data-testid="discount-section"
                   >
-                    <span>{~t"Discount"}</span>
+                    <span class="flex items-baseline gap-2">
+                      {~t"Discount"}
+                      <EdenflowersWeb.Cart.PromoCode.badge code={@order.promotion_code} target="#checkout-promo" />
+                    </span>
                     <span class="text-success tabular-nums" data-testid="discount-amount">
                       - {Edenflowers.Format.currency(@order.discount, @order.locale)}
                     </span>

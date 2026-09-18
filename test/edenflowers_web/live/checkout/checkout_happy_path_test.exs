@@ -446,6 +446,28 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     apply_promo.()
   end
 
+  test "the promo code can be removed from the checkout discount line", %{conn: conn} do
+    promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    view
+    |> element("#checkout-promo [data-testid='promo-toggle']")
+    |> render_click()
+
+    view
+    |> form("#checkout-promo-form", %{"form" => %{"code" => promotion.code}})
+    |> render_submit()
+
+    refute has_element?(view, "#checkout-promo [data-testid='promo-badge']")
+
+    view
+    |> element("[data-testid='discount-section'] [data-testid='promo-badge']")
+    |> render_click()
+
+    refute has_element?(view, "[data-testid='discount-section']")
+  end
+
   test "selecting a card preserves the unsaved recipient name on step 2", %{conn: conn} do
     cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
