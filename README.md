@@ -39,7 +39,7 @@ just console production         # remote IEx on a server
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.
 
-`images/` is gitignored, so photos reach the servers only through `just images`. It mirrors with `--delete`: anything removed locally is removed on the server too.
+`images/` is gitignored, so photos reach the servers only through `just images`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
 
 ### Database
 

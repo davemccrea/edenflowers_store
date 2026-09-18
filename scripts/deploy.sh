@@ -41,6 +41,8 @@ if [[ "$TARGET" == "staging" ]]; then
     exit 1
   fi
 
+  scripts/sync-images.sh staging
+
   # staging is a deploy pointer, not a shared branch, so overwriting it is expected.
   SKIP_HOOKS=1 git push --force origin HEAD:refs/heads/staging
 
@@ -132,6 +134,9 @@ ok "locales downloaded"
 
 section "Running precommit checks"
 mix precommit
+
+# Before tagging, so a failed sync doesn't leave a local version-bump commit and tag behind.
+scripts/sync-images.sh production
 
 section "Tagging release"
 # Use -i.bak + rm so it works on both BSD sed (macOS) and GNU sed (Linux).
