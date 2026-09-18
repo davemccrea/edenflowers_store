@@ -37,14 +37,28 @@ defmodule EdenflowersWeb.Auth.AuthController do
         {{:google, _}, _} ->
           ~t"We couldn't sign you in with Google. Please try again or use a sign-in code."
 
+        {{:otp, :sign_in}, _} ->
+          ~t"That code didn't work. Check it and try again, or send a new code."
+
         _ ->
-          ~t"We couldn't sign you in. Please check your code and try again."
+          ~t"We couldn't sign you in. Please try again."
       end
 
     conn
+    |> put_otp_email(activity)
     |> put_flash(:error, message)
     |> redirect(to: ~p"/sign-in")
   end
+
+  # Lets OtpSignInLive reopen the code step for the same email after a wrong code.
+  defp put_otp_email(conn, {:otp, :sign_in}) do
+    case conn.params do
+      %{"user" => %{"email" => email}} when is_binary(email) -> put_flash(conn, :otp_email, email)
+      _ -> conn
+    end
+  end
+
+  defp put_otp_email(conn, _activity), do: conn
 
   def sign_out(conn, _params) do
     return_to = get_session(conn, :return_to) || ~p"/"
