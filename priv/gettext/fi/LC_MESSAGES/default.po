@@ -107,7 +107,7 @@ msgstr "Yhteensä"
 
 #: lib/edenflowers_web/components/layouts.ex:435
 #: lib/edenflowers_web/features/marketing/home_live.ex:155
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:133
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Weddings"
 msgstr "Häät"
@@ -1683,12 +1683,7 @@ msgstr "— kortti kirjoittamatta"
 msgid "Trusted by"
 msgstr "Meihin luottavat"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:203
-#, elixir-autogen, elixir-format
-msgid "Photo: %{photo_credit}"
-msgstr "Kuva: %{photo_credit}"
-
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:210
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:221
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers"
 msgstr "Hääkukat"
@@ -1784,138 +1779,138 @@ msgstr "Lähetimme 6-merkkisen koodin osoitteeseen"
 msgid "At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."
 msgstr "Kukilla voit sanoa viimeiset jäähyväiset. Sidon perinteisiä suruvihkoja sekä persoonallisia sidontoja ja toimitan kirkkoihin ja kappeleihin Vaasan alueella pientä korvausta vastaan."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:135
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."
 msgstr "Häissä kukat ovat tärkeä osa kokonaisuutta. Eden Flowers auttaa teitä löytämään kukat jotka parhaiten vastaavat toivettanne ja heijastavat persoonallisuuttanne."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:138
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:224
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:128
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "Request a quote"
 msgstr "Pyydä tarjous"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:234
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:247
 #, elixir-autogen, elixir-format
 msgid "Bridal bouquet"
 msgstr "Hääkimppu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:235
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "Bridesmaids' bouquets"
 msgstr "Morsiusneitokimput"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:239
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Ceremony and reception decoration"
 msgstr "Vihki- ja juhlapaikan koristelu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:246
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:259
 #, elixir-autogen, elixir-format
 msgid "Consultation"
 msgstr "Tapaaminen"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:237
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:250
 #, elixir-autogen, elixir-format
 msgid "Corsages"
 msgstr "Vieheet"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:247
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:260
 #, elixir-autogen, elixir-format
 msgid "Design and quote"
 msgstr "Suunnitelma ja tarjous"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:165
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Every wedding is different, so these are starting prices. You'll get an exact quote once we've talked through your plans."
 msgstr "Jokaiset häät ovat erilaiset, joten nämä ovat lähtöhintoja. Saatte tarkan tarjouksen, kun olemme käyneet suunnitelmanne läpi."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:238
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:251
 #, elixir-autogen, elixir-format
 msgid "Flower crowns and floral jewellery"
 msgstr "Hiuskranssit ja kukkakorut"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:236
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:249
 #, elixir-autogen, elixir-format
 msgid "Flower girl bouquets"
 msgstr "Kukkaistyttöjen kimput"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:245
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "Get in touch"
 msgstr "Ota yhteyttä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:181
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "How it works"
 msgstr "Näin se toimii"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:247
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:260
 #, elixir-autogen, elixir-format
 msgid "I put together a proposal and a quote. Once you're happy, your date is booked."
 msgstr "Kokoan ehdotuksen ja tarjouksen. Kun olette tyytyväisiä, päivä on varattu."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:176
-#, elixir-autogen, elixir-format
-msgid "If you need help with delivery or decorating on site, that's no problem."
-msgstr "Tarvitsetteko apua toimituksessa tai koristelua paikan päällä, niin tämäkin onnistuu."
-
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:252
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:265
 #, elixir-autogen, elixir-format
 msgid "On request"
 msgstr "Tarjouksen mukaan"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:223
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:236
 #, elixir-autogen, elixir-format
 msgid "Planning a wedding?"
 msgstr "Suunnitteletteko häitä?"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:163
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Prices"
 msgstr "Hinnat"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:245
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "Tell me your date, venue and a little about the day you're imagining."
 msgstr "Kertokaa päivämäärä, paikka ja vähän siitä, millaista päivää toivotte."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:248
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "The wedding day"
 msgstr "Hääpäivä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:246
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:259
 #, elixir-autogen, elixir-format
 msgid "We meet to talk through colours, flowers and style, in the shop or online."
 msgstr "Tapaamme ja juttelemme väreistä, kukista ja tyylistä joko myymälässä tai verkossa."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:248
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Your flowers are made fresh and delivered, and I can decorate the venue on site."
 msgstr "Kukat tehdään tuoreina ja toimitetaan, ja voin koristella paikan päällä."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:256
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "from %{amount}"
 msgstr "alk. %{amount}"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:146
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Bride smiling with a colourful bridal bouquet"
 msgstr "Hymyilevä morsian värikkään hääkimpun kanssa"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:153
-#, elixir-autogen, elixir-format
-msgid "Photo: %{hero_credit}"
-msgstr "Kuva: %{hero_credit}"
-
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:192
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "My work"
 msgstr "Töitäni"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:139
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:129
 #, elixir-autogen, elixir-format
 msgid "See my work"
 msgstr "Katso töitäni"
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:177
+#, elixir-autogen, elixir-format
+msgid "Wrist corsages of peach roses"
+msgstr "Rannekorsaasit persikanvärisistä ruusuista"
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:275
+#, elixir-autogen, elixir-format
+msgid "Photo: %{credit}"
+msgstr "Kuva: %{credit}"

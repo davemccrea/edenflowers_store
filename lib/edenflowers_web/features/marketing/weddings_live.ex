@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   @thumb_width 480
 
   @hero %{src: "local:///wedding/anna_riska_2.jpg", credit: "Anna Riska"}
+  @prices_photo %{src: "local:///wedding/eden_flowers_2.jpg", credit: "Eden Flowers"}
 
   # width/height are the dimensions PhotoSwipe opens the photo at, and the
   # exact size Imgproxy is asked for — the two must agree. Keep each entry's
@@ -14,12 +15,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   @gallery [
     %{
       src: "local:///wedding/anna_riska_1.jpg",
-      width: 1333,
-      height: 2000,
-      credit: "Anna Riska"
-    },
-    %{
-      src: "local:///wedding/anna_riska_2.jpg",
       width: 1333,
       height: 2000,
       credit: "Anna Riska"
@@ -78,12 +73,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       height: 2000,
       credit: "Eden Flowers"
     },
-    %{
-      src: "local:///wedding/eden_flowers_2.jpg",
-      width: 2000,
-      height: 1333,
-      credit: "Eden Flowers"
-    },
     # %{src: "local:///wedding/eden_flowers_3.jpg", width: 1500, height: 2000, credit: "Eden Flowers"},
     %{
       src: "local:///wedding/josefin_westin.jpg",
@@ -120,18 +109,18 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(hero: @hero, gallery: @gallery, thumb_width: @thumb_width)
+     |> assign(hero: @hero, prices_photo: @prices_photo, gallery: @gallery, thumb_width: @thumb_width)
      |> assign(prices: prices(), steps: steps(), testimonial: testimonial())}
   end
 
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <section class="rice-paper from-base-100 to-cream bg-linear-to-b not-last:border-b">
+      <section class="from-base-100 to-cream bg-linear-to-b">
         <div class="container pt-28 pb-20 sm:pt-[calc(var(--header-height)+var(--spacing)*12)] md:pb-24">
           <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">
             <div>
-              <h1 class="page-title mb-6">{~t"Weddings"}</h1>
+              <h1 class="page-title mb-6 md:text-6xl">{~t"Weddings"}</h1>
               <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
                 {~t"Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."}
               </p>
@@ -151,13 +140,13 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 priority
                 class="aspect-[4/5] w-full rounded-md object-cover"
               />
-              <figcaption class="text-base-content/60 mt-2 text-sm">{~t"Photo: #{@hero.credit}"}</figcaption>
+              <figcaption class="text-base-content/60 mt-2 text-sm">{photo_credit(@hero.credit)}</figcaption>
             </figure>
           </div>
         </div>
       </section>
 
-      <section :if={@testimonial} class="bg-forest not-last:border-b">
+      <section :if={@testimonial} class="bg-forest">
         <figure class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
           <blockquote class="pull-quote text-forest-content max-w-3xl">{@testimonial.quote}</blockquote>
@@ -165,9 +154,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </figure>
       </section>
 
-      <section class="not-last:border-b" aria-labelledby="prices-heading">
-        <div class="container py-24">
-          <div class="max-w-2xl">
+      <section aria-labelledby="prices-heading">
+        <div class="container grid items-center gap-10 py-24 md:grid-cols-2 md:gap-16">
+          <div>
             <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
             <p class="text-base-content/80 mb-8 text-lg leading-relaxed">
               {~t"Every wedding is different, so these are starting prices. You'll get an exact quote once we've talked through your plans."}
@@ -180,14 +169,23 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 </dd>
               </div>
             </dl>
-            <p class="text-base-content/80 mt-6 leading-relaxed">
-              {~t"If you need help with delivery or decorating on site, that's no problem."}
-            </p>
           </div>
+
+          <figure>
+            <.image
+              src={@prices_photo.src}
+              alt={~t"Wrist corsages of peach roses"}
+              width={800}
+              height={533}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              class="aspect-[3/2] w-full rounded-md object-cover"
+            />
+            <figcaption class="text-base-content/60 mt-2 text-sm">{photo_credit(@prices_photo.credit)}</figcaption>
+          </figure>
         </div>
       </section>
 
-      <section class="from-cream to-base-300 bg-linear-to-b not-last:border-b" aria-labelledby="process-heading">
+      <section class="bg-cream" aria-labelledby="process-heading">
         <div class="container py-24">
           <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
           <ol class="grid gap-10 md:grid-cols-4">
@@ -200,7 +198,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section id="my-work" class="rice-paper scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+      <section id="my-work" class="scroll-anchor-below-header" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
           <div
@@ -213,7 +211,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 href={image_url(photo.src, photo.width, photo.height)}
                 data-pswp-width={photo.width}
                 data-pswp-height={photo.height}
-                data-pswp-credit={photo.credit && ~t"Photo: #{photo.credit}"}
+                data-pswp-credit={photo.credit && photo_credit(photo.credit)}
                 target="_blank"
                 rel="noreferrer"
                 class="block"
@@ -233,7 +231,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section class="bg-forest not-last:border-b">
+      <section class="bg-forest">
         <div class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
           <p class="section-title text-forest-content">{~t"Planning a wedding?"}</p>
           <.button navigate={~p"/contact"} variant="inverse">{~t"Request a quote"}</.button>
@@ -273,6 +271,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   # Returns %{quote: ..., couple: ...} once there's a testimonial to show.
   defp testimonial, do: nil
+
+  defp photo_credit(credit), do: ~t"Photo: #{credit}"
 
   defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
 end
