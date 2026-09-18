@@ -80,10 +80,10 @@ defmodule EdenflowersWeb.Cart.PromoCode do
 
   def handle_event("apply_promo", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _order} ->
+      {:ok, order} ->
         {:noreply,
          assign(socket,
-           form: build_form(socket.assigns.order),
+           form: build_form(order),
            open: false
          )}
 
@@ -94,11 +94,11 @@ defmodule EdenflowersWeb.Cart.PromoCode do
 
   def handle_event("clear_promo", _, socket) do
     actor = socket.assigns[:current_user]
-    Orders.clear_promotion!(socket.assigns.order, actor: actor)
+    order = Orders.clear_promotion!(socket.assigns.order, actor: actor)
 
     {:noreply,
      assign(socket,
-       form: build_form(socket.assigns.order),
+       form: build_form(order),
        open: false
      )}
   end
