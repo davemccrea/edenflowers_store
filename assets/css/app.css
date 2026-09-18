@@ -227,6 +227,13 @@ body {
   }
 }
 
+/* Modelled on Nord Design System: press lands instantly, opacity fades back on release. */
+.btn:active:not(:disabled, [aria-disabled="true"], .btn-link) {
+  opacity: 0.9;
+  translate: 0 1px;
+  transition: none;
+}
+
 .footer-grid {
   display: grid;
   gap: 3rem;
