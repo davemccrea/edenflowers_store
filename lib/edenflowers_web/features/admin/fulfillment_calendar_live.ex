@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
         <section class="mb-6 max-w-xs">
           <form id="scope-form" phx-change="set-scope">
             <label class="flex flex-col">
-              <span class="fieldset-label mb-1">{~t"Fulfillment option"}</span>
+              <span class="mb-1">{~t"Fulfillment option"}</span>
               <select name="scope" class="select w-full">
                 <option value="all" selected={@scope == :all}>{~t"All options"}</option>
                 <option :for={option <- @options} value={option.id} selected={@scope == option.id}>
