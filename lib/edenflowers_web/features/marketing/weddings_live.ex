@@ -5,6 +5,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   @thumb_width 480
 
+  @hero %{src: "local:///wedding/anna_riska_2.jpg", credit: "Anna Riska"}
+
   # width/height are the dimensions PhotoSwipe opens the photo at, and the
   # exact size Imgproxy is asked for — the two must agree. Keep each entry's
   # ratio equal to the source photo's so the fill crop is a no-op.
@@ -116,48 +118,161 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   ]
 
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(gallery: @gallery, thumb_width: @thumb_width)}
+    {:ok,
+     socket
+     |> assign(hero: @hero, gallery: @gallery, thumb_width: @thumb_width)
+     |> assign(prices: prices(), steps: steps(), testimonial: testimonial())}
   end
 
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <.container>
-        <h1 class="page-title">{~t"Weddings"}</h1>
+      <section class="not-last:border-b">
+        <div class="container pt-28 pb-20 sm:pt-[calc(var(--header-height)+var(--spacing)*12)] md:pb-24">
+          <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+            <div>
+              <h1 class="page-title mb-6">{~t"Weddings"}</h1>
+              <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+                {~t"Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."}
+              </p>
+              <div class="mt-8 flex flex-wrap items-center gap-6">
+                <.button navigate={~p"/contact"} variant="primary">{~t"Request a quote"}</.button>
+                <.button href="#my-work" variant="text">{~t"See my work"}</.button>
+              </div>
+            </div>
 
-        <h2 class="section-title mt-16">{~t"Gallery"}</h2>
-
-        <div
-          id="wedding-gallery"
-          phx-hook="PhotoGallery"
-          class="mt-2 columns-2 gap-2 md:columns-3 xl:columns-4"
-        >
-          <figure :for={{photo, index} <- Enum.with_index(@gallery)} class="mb-2 break-inside-avoid">
-            <a
-              href={image_url(photo.src, photo.width, photo.height)}
-              data-pswp-width={photo.width}
-              data-pswp-height={photo.height}
-              data-pswp-credit={photo.credit && ~t"Photo: #{photo.credit}"}
-              target="_blank"
-              rel="noreferrer"
-              class="block"
-            >
+            <figure>
               <.image
-                src={photo.src}
-                alt={~t"Wedding flowers"}
-                width={@thumb_width}
-                height={thumb_height(photo)}
-                quality={80}
-                sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
-                class="w-full rounded-md"
+                src={@hero.src}
+                alt={~t"Bride smiling with a colourful bridal bouquet"}
+                width={800}
+                height={1000}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                priority
+                class="aspect-[4/5] w-full rounded-md object-cover"
               />
-            </a>
-          </figure>
+              <figcaption class="text-base-content/60 mt-2 text-sm">{~t"Photo: #{@hero.credit}"}</figcaption>
+            </figure>
+          </div>
         </div>
-      </.container>
+      </section>
+
+      <section :if={@testimonial} class="bg-forest not-last:border-b">
+        <figure class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
+          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
+          <blockquote class="pull-quote text-forest-content max-w-3xl">{@testimonial.quote}</blockquote>
+          <figcaption class="eyebrow text-forest-content/70">{@testimonial.couple}</figcaption>
+        </figure>
+      </section>
+
+      <section class="bg-cream not-last:border-b" aria-labelledby="prices-heading">
+        <div class="container py-24">
+          <div class="max-w-2xl">
+            <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
+            <p class="text-base-content/80 mb-8 text-lg leading-relaxed">
+              {~t"Every wedding is different, so these are starting prices. You'll get an exact quote once we've talked through your plans."}
+            </p>
+            <dl class="border-t">
+              <div :for={{item, price} <- @prices} class="flex items-baseline justify-between gap-6 border-b py-4">
+                <dt class="text-lg">{item}</dt>
+                <dd class="text-base-content/80 shrink-0">
+                  {starting_price(price)}
+                </dd>
+              </div>
+            </dl>
+            <p class="text-base-content/80 mt-6 leading-relaxed">
+              {~t"If you need help with delivery or decorating on site, that's no problem."}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="not-last:border-b" aria-labelledby="process-heading">
+        <div class="container py-24">
+          <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
+          <ol class="grid gap-10 md:grid-cols-4">
+            <li :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}>
+              <p class="text-primary font-serif text-4xl font-light leading-none">{index}</p>
+              <h3 class="card-title mt-6 mb-2">{title}</h3>
+              <p class="text-base-content/80 leading-relaxed">{body}</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="my-work" class="scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+        <div class="container py-24">
+          <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
+          <div
+            id="wedding-gallery"
+            phx-hook="PhotoGallery"
+            class="columns-2 gap-2 md:columns-3 xl:columns-4"
+          >
+            <figure :for={{photo, index} <- Enum.with_index(@gallery)} class="mb-2 break-inside-avoid">
+              <a
+                href={image_url(photo.src, photo.width, photo.height)}
+                data-pswp-width={photo.width}
+                data-pswp-height={photo.height}
+                data-pswp-credit={photo.credit && ~t"Photo: #{photo.credit}"}
+                target="_blank"
+                rel="noreferrer"
+                class="block"
+              >
+                <.image
+                  src={photo.src}
+                  alt={~t"Wedding flowers"}
+                  width={@thumb_width}
+                  height={thumb_height(photo)}
+                  quality={80}
+                  sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
+                  class="w-full rounded-md"
+                />
+              </a>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-forest not-last:border-b">
+        <div class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
+          <p class="section-title text-forest-content">{~t"Planning a wedding?"}</p>
+          <.button navigate={~p"/contact"} variant="inverse">{~t"Request a quote"}</.button>
+        </div>
+      </section>
     </Layouts.app>
     """
   end
+
+  # Starting prices in euros; nil renders as "On request".
+  defp prices do
+    [
+      {~t"Bridal bouquet", nil},
+      {~t"Bridesmaids' bouquets", nil},
+      {~t"Flower girl bouquets", nil},
+      {~t"Corsages", nil},
+      {~t"Flower crowns and floral jewellery", nil},
+      {~t"Ceremony and reception decoration", nil}
+    ]
+  end
+
+  defp steps do
+    [
+      {~t"Get in touch", ~t"Tell me your date, venue and a little about the day you're imagining."},
+      {~t"Consultation", ~t"We meet to talk through colours, flowers and style, in the shop or online."},
+      {~t"Design and quote", ~t"I put together a proposal and a quote. Once you're happy, your date is booked."},
+      {~t"The wedding day", ~t"Your flowers are made fresh and delivered, and I can decorate the venue on site."}
+    ]
+  end
+
+  defp starting_price(nil), do: ~t"On request"
+
+  defp starting_price(euros) do
+    amount = Edenflowers.Format.currency(euros, Edenflowers.Format.locale())
+    ~t"from #{amount}"
+  end
+
+  # Returns %{quote: ..., couple: ...} once there's a testimonial to show.
+  defp testimonial, do: nil
 
   defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
 end
