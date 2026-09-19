@@ -29,12 +29,16 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
     end
   end
 
+  # The lightbox clones each figure's figcaption, so every photo needs one.
   test "photographer credits are available to the lightbox", %{html: html} do
-    attributes = Regex.scan(~r/data-pswp-credit="([^"]+)"/, html)
+    captions =
+      html
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("#wedding-gallery figure figcaption")
+      |> Enum.map(&(&1 |> LazyHTML.text() |> String.split() |> Enum.join(" ")))
 
-    assert ["Photo: Anna Riska" | _] = Enum.map(attributes, &Enum.at(&1, 1))
-    assert length(attributes) == 15
-    assert html |> LazyHTML.from_document() |> LazyHTML.query("#wedding-gallery figure") |> Enum.count() == 15
+    assert length(captions) == 15
+    assert ["Photo: Anna Riska" | _] = captions
   end
 
   test "thumbnails support the widest column at 2x without loading lightbox sizes", %{html: html} do
