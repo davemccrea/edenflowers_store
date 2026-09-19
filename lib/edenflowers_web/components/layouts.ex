@@ -676,9 +676,16 @@ defmodule EdenflowersWeb.Layouts do
 
             <div class="footer-grid__location space-y-2">
               <h3 class="eyebrow text-base-content/70">{~t"Address"}</h3>
-              <p class="footer-line whitespace-nowrap">Minimossen</p>
-              <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
-              <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
+              <a
+                href="https://www.google.com/maps/search/?api=1&amp;query=Minimossen%2C+Myrv%C3%A4gen+1%2C+65230+Vasa"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-static-body block space-y-2"
+              >
+                <p class="footer-line whitespace-nowrap">Minimossen</p>
+                <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
+                <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
+              </a>
             </div>
 
             <div class="footer-grid__hours space-y-2">
