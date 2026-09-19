@@ -70,7 +70,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 href={image_url(photo.src, photo.width, photo.height)}
                 data-pswp-width={photo.width}
                 data-pswp-height={photo.height}
-                data-pswp-credit={photo_credit(photo.credit)}
                 target="_blank"
                 rel="noreferrer"
                 class="block"
@@ -339,8 +338,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   # Returns %{quote: ..., couple: ...} once there's a testimonial to show.
   defp testimonial, do: nil
-
-  defp photo_credit(credit), do: ~t"Photo: #{credit}"
 
   attr :name, :string, required: true
 
