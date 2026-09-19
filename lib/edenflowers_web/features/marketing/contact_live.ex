@@ -39,9 +39,16 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
 
             <.contact_item label={~t"Address"}>
               <address class="not-italic">
-                Minimossen<br />
-                {~t"Myrvägen 1"}<br />
-                {~t"65230 Vasa"}
+                <a
+                  class="link-underline-static-body"
+                  href="https://www.google.com/maps/search/?api=1&amp;query=Minimossen%2C+Myrv%C3%A4gen+1%2C+65230+Vasa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Minimossen<br />
+                  {~t"Myrvägen 1"}<br />
+                  {~t"65230 Vasa"}
+                </a>
               </address>
             </.contact_item>
 

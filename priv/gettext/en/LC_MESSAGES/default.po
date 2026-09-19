@@ -17,7 +17,7 @@ msgid "Actions"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:475
-#: lib/edenflowers_web/components/layouts.ex:710
+#: lib/edenflowers_web/components/layouts.ex:717
 #: lib/edenflowers_web/features/marketing/about_live.ex:16
 #, elixir-autogen, elixir-format
 msgid "About"
@@ -49,7 +49,7 @@ msgid "Condolences"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:476
-#: lib/edenflowers_web/components/layouts.ex:705
+#: lib/edenflowers_web/components/layouts.ex:712
 #: lib/edenflowers_web/features/marketing/contact_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Contact"
@@ -146,7 +146,7 @@ msgstr ""
 msgid "Account"
 msgstr "Account"
 
-#: lib/edenflowers_web/components/layouts.ex:750
+#: lib/edenflowers_web/components/layouts.ex:757
 #, elixir-autogen, elixir-format
 msgid "Built with "
 msgstr ""
@@ -487,13 +487,13 @@ msgstr "Delivery address required"
 msgid "Free delivery!"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:686
-#: lib/edenflowers_web/features/marketing/contact_live.ex:48
+#: lib/edenflowers_web/components/layouts.ex:693
+#: lib/edenflowers_web/features/marketing/contact_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:717
+#: lib/edenflowers_web/components/layouts.ex:724
 #, elixir-autogen, elixir-format
 msgid "Socials"
 msgstr ""
@@ -586,7 +586,7 @@ msgstr ""
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:700
+#: lib/edenflowers_web/components/layouts.ex:707
 #, elixir-autogen, elixir-format
 msgid "FAQ"
 msgstr ""
@@ -632,7 +632,7 @@ msgstr ""
 msgid "Have a question?"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:696
+#: lib/edenflowers_web/components/layouts.ex:703
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr ""
@@ -922,8 +922,8 @@ msgstr ""
 msgid "close"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:681
-#: lib/edenflowers_web/features/marketing/contact_live.ex:44
+#: lib/edenflowers_web/components/layouts.ex:687
+#: lib/edenflowers_web/features/marketing/contact_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr ""
@@ -934,14 +934,14 @@ msgstr ""
 msgid "Address"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:689
-#: lib/edenflowers_web/features/marketing/contact_live.ex:49
+#: lib/edenflowers_web/components/layouts.ex:696
+#: lib/edenflowers_web/features/marketing/contact_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Mon–Fri: 09:00–17:00"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:680
-#: lib/edenflowers_web/features/marketing/contact_live.ex:43
+#: lib/edenflowers_web/components/layouts.ex:686
+#: lib/edenflowers_web/features/marketing/contact_live.ex:49
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
 msgstr ""
@@ -951,14 +951,14 @@ msgstr ""
 msgid "Phone"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:690
-#: lib/edenflowers_web/features/marketing/contact_live.ex:50
+#: lib/edenflowers_web/components/layouts.ex:697
+#: lib/edenflowers_web/features/marketing/contact_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Sat: 10:00–15:00"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:691
-#: lib/edenflowers_web/features/marketing/contact_live.ex:51
+#: lib/edenflowers_web/components/layouts.ex:698
+#: lib/edenflowers_web/features/marketing/contact_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Sun: closed"
 msgstr ""
