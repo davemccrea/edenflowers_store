@@ -49,3 +49,6 @@ images
 
 /priv/heroku_import/
 PLAN.md
+
+# Impeccable per-machine preferences (hook consent, local overrides).
+.impeccable/config.local.json
