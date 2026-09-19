@@ -646,17 +646,20 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
      |> push_navigate(to: ~p"/")}
   end
 
-  defp recipient_label(%{gift: true, recipient_first_name: first_name}, field) when is_binary(first_name) do
+  # Only a gift delivery asks for the recipient's details; otherwise the number is the buyer's.
+  defp recipient_label(%{gift: true, fulfillment_method: :delivery, recipient_first_name: first_name}, field)
+       when is_binary(first_name) do
     case field do
       :address -> gettext("%{name}'s Address *", name: first_name)
       :phone -> gettext("%{name}'s Phone Number", name: first_name)
     end
   end
 
-  defp recipient_label(_order, field) do
-    case field do
-      :address -> gettext("Address *")
-      :phone -> gettext("Phone Number")
+  defp recipient_label(order, field) do
+    case {field, order.fulfillment_method} do
+      {:address, _} -> gettext("Address *")
+      {:phone, :pickup} -> gettext("Phone Number *")
+      {:phone, _} -> gettext("Phone Number")
     end
   end
 

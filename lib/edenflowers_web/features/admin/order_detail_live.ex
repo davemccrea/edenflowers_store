@@ -183,7 +183,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     <span class="break-all">{@order.customer_email}</span>
                   </a>
                 </:contact>
-                <:contact :if={!@order.gift && present?(@order.recipient_phone_number)}>
+                <:contact :if={customer_phone?(@order) && present?(@order.recipient_phone_number)}>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
@@ -195,7 +195,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               title={~t"Recipient"}
             >
               <.person_block name={@order.recipient_name}>
-                <:contact :if={present?(@order.recipient_phone_number)}>
+                <:contact :if={!customer_phone?(@order) && present?(@order.recipient_phone_number)}>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
@@ -446,6 +446,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp money(amount, locale), do: Format.currency(amount || 0, locale)
+
+  # The phone number is the recipient's only on gift deliveries; the buyer collects pickups.
+  defp customer_phone?(order), do: !order.gift or order.fulfillment_method == :pickup
 
   defp present?(nil), do: false
   defp present?(""), do: false
