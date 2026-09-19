@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <section class="from-base-100 to-cream bg-linear-to-b">
-        <div class="container pt-28 pb-20 sm:pt-[calc(var(--header-height)+var(--spacing)*12)] md:pb-24">
+        <div class="container pt-28 pb-20 sm:pt-(--header-clearance) md:pb-24">
           <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">
             <div>
               <h1 class="page-title mb-6 md:text-6xl">{~t"Weddings"}</h1>

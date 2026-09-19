@@ -76,6 +76,8 @@
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
   --header-height: 8rem;
+  /* Clearance under the fixed header for the first block on a page. */
+  --header-clearance: calc(var(--header-height) + var(--spacing) * 12);
 }
 
 /* Brand extension palette. daisyUI semantics (primary, base-*) handle
