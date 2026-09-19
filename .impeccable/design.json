@@ -1,0 +1,557 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-19T00:00:00Z",
+  "title": "Design System: Eden Flowers",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Muted Green",
+        "canonical": "oklch(0.3684 0.0478 156.76)",
+        "tonalRamp": [
+          "oklch(15% 0.0478 156.76)",
+          "oklch(26% 0.0478 156.76)",
+          "oklch(37% 0.0478 156.76)",
+          "oklch(48% 0.0478 156.76)",
+          "oklch(59% 0.0478 156.76)",
+          "oklch(70% 0.0478 156.76)",
+          "oklch(84% 0.0478 156.76)",
+          "oklch(95% 0.0478 156.76)"
+        ]
+      },
+      "primary-content": {
+        "role": "primary",
+        "displayName": "Near-White Warm Grey",
+        "canonical": "oklch(97% 0 0)",
+        "note": "Sourced from Tailwind's neutral-100 via var(--color-neutral-100). The one token that carries no warm hue, because it sits on green rather than on paper.",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(97% 0 0)"
+        ]
+      },
+      "link-underline": {
+        "role": "secondary",
+        "displayName": "Amber Honey",
+        "canonical": "oklch(81% 0.15 93)",
+        "note": "Single-role. Exists only as a 2px text-decoration at 0.3em offset.",
+        "tonalRamp": [
+          "oklch(15% 0.15 93)",
+          "oklch(26% 0.15 93)",
+          "oklch(37% 0.15 93)",
+          "oklch(48% 0.15 93)",
+          "oklch(59% 0.15 93)",
+          "oklch(70% 0.15 93)",
+          "oklch(84% 0.15 93)",
+          "oklch(95% 0.15 93)"
+        ]
+      },
+      "cream": {
+        "role": "tertiary",
+        "displayName": "Warm Cream",
+        "canonical": "oklch(95% 0.025 75)",
+        "tonalRamp": [
+          "oklch(15% 0.025 75)",
+          "oklch(26% 0.025 75)",
+          "oklch(37% 0.025 75)",
+          "oklch(48% 0.025 75)",
+          "oklch(59% 0.025 75)",
+          "oklch(70% 0.025 75)",
+          "oklch(84% 0.025 75)",
+          "oklch(95% 0.025 75)"
+        ]
+      },
+      "cream-content": {
+        "role": "tertiary",
+        "displayName": "Dark Warm Brown",
+        "canonical": "oklch(30% 0.05 60)",
+        "tonalRamp": [
+          "oklch(15% 0.05 60)",
+          "oklch(26% 0.05 60)",
+          "oklch(37% 0.05 60)",
+          "oklch(48% 0.05 60)",
+          "oklch(59% 0.05 60)",
+          "oklch(70% 0.05 60)",
+          "oklch(84% 0.05 60)",
+          "oklch(95% 0.05 60)"
+        ]
+      },
+      "forest": {
+        "role": "tertiary",
+        "displayName": "Deep Forest Green",
+        "canonical": "oklch(26% 0.05 152)",
+        "note": "Reverse-out sections only. Three occurrences in the codebase.",
+        "tonalRamp": [
+          "oklch(15% 0.05 152)",
+          "oklch(26% 0.05 152)",
+          "oklch(37% 0.05 152)",
+          "oklch(48% 0.05 152)",
+          "oklch(59% 0.05 152)",
+          "oklch(70% 0.05 152)",
+          "oklch(84% 0.05 152)",
+          "oklch(95% 0.05 152)"
+        ]
+      },
+      "forest-content": {
+        "role": "tertiary",
+        "displayName": "Pale Warm Cream",
+        "canonical": "oklch(94% 0.02 80)",
+        "tonalRamp": [
+          "oklch(15% 0.02 80)",
+          "oklch(26% 0.02 80)",
+          "oklch(37% 0.02 80)",
+          "oklch(48% 0.02 80)",
+          "oklch(59% 0.02 80)",
+          "oklch(70% 0.02 80)",
+          "oklch(84% 0.02 80)",
+          "oklch(94% 0.02 80)"
+        ]
+      },
+      "base-100": {
+        "role": "neutral",
+        "displayName": "Warm Off-White",
+        "canonical": "oklch(99% 0.004 75)",
+        "tonalRamp": [
+          "oklch(22% 0.015 75)",
+          "oklch(30% 0.014 75)",
+          "oklch(42% 0.013 75)",
+          "oklch(55% 0.012 75)",
+          "oklch(68% 0.011 75)",
+          "oklch(93.5% 0.012 75)",
+          "oklch(97% 0.008 75)",
+          "oklch(99% 0.004 75)"
+        ],
+        "note": "The neutral ramp is the project's own spine: base-content, then base-300, base-200, base-100 at the light end."
+      },
+      "base-200": {
+        "role": "neutral",
+        "displayName": "Light Warm Oat",
+        "canonical": "oklch(97% 0.008 75)",
+        "tonalRamp": [
+          "oklch(15% 0.008 75)",
+          "oklch(26% 0.008 75)",
+          "oklch(37% 0.008 75)",
+          "oklch(48% 0.008 75)",
+          "oklch(59% 0.008 75)",
+          "oklch(70% 0.008 75)",
+          "oklch(84% 0.008 75)",
+          "oklch(97% 0.008 75)"
+        ]
+      },
+      "base-300": {
+        "role": "neutral",
+        "displayName": "Warm Oat",
+        "canonical": "oklch(93.5% 0.012 75)",
+        "note": "Every border and section rule in the system.",
+        "tonalRamp": [
+          "oklch(15% 0.012 75)",
+          "oklch(26% 0.012 75)",
+          "oklch(37% 0.012 75)",
+          "oklch(48% 0.012 75)",
+          "oklch(59% 0.012 75)",
+          "oklch(70% 0.012 75)",
+          "oklch(84% 0.012 75)",
+          "oklch(93.5% 0.012 75)"
+        ]
+      },
+      "base-content": {
+        "role": "neutral",
+        "displayName": "Near-Black Warm Grey",
+        "canonical": "oklch(22% 0.015 75)",
+        "note": "All text. Its /70, /65, /60, /40 and /15 mixes are the entire secondary-text and decoration scale — there is no separate muted token.",
+        "tonalRamp": [
+          "oklch(15% 0.015 75)",
+          "oklch(22% 0.015 75)",
+          "oklch(37% 0.015 75)",
+          "oklch(48% 0.015 75)",
+          "oklch(59% 0.015 75)",
+          "oklch(70% 0.015 75)",
+          "oklch(84% 0.015 75)",
+          "oklch(95% 0.015 75)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero Display",
+        "purpose": "Full-viewport hero headlines only. Scales 3rem → 5.5rem across sm/md/lg. Italic on the home hero. Utility: hero-display."
+      },
+      "headline": {
+        "displayName": "Page Title",
+        "purpose": "The h1 of an ordinary page. Utility: page-title."
+      },
+      "section": {
+        "displayName": "Section Title",
+        "purpose": "Section h2s. Steps to 2.25rem at md. Utility: section-title."
+      },
+      "title": {
+        "displayName": "Card / Tile Title",
+        "purpose": "Product names and category tile labels. card-title steps DOWN to 1.25rem at sm because grid cards narrow; tile-title does not."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default copy. Prose pages step up to 1.125rem with leading-relaxed, capped at max-w-2xl. main p carries text-wrap: pretty."
+      },
+      "label": {
+        "displayName": "Eyebrow",
+        "purpose": "Section category labels, footer column headings, the 'From' price prefix. Always at base-content/70. Utility: eyebrow."
+      }
+    },
+    "typographyExtras": [
+      {
+        "name": "pull-quote",
+        "value": "font-serif 300, 1.875rem/1.25 → 2.25rem/1.2, tracking-tight, text-balance",
+        "purpose": "Standalone editorial statements."
+      },
+      {
+        "name": "footer-line",
+        "value": "font-serif 1.125rem/1.375",
+        "purpose": "Address, opening hours — things the shop says, so serif."
+      },
+      {
+        "name": "logo-wordmark",
+        "value": "font-sans 700 uppercase, 0.14em → 0.18em, 1.5rem → 1.875rem, colour primary",
+        "purpose": "The header lockup. The only place sans is allowed to be large."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "admin-overflow-cue",
+        "value": "inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)",
+        "purpose": "Below lg on .admin-table-scroll: signals a compact admin table continues horizontally. Functional — the only structural shadow in the system."
+      },
+      {
+        "name": "lightbox-credit",
+        "value": "text-shadow: 0 1px 3px rgb(0 0 0 / 0.6)",
+        "purpose": "Keeps the photographer credit legible over an arbitrary photograph in PhotoSwipe."
+      },
+      {
+        "name": "product-mark-backdrop",
+        "value": "backdrop-filter: blur(2px)",
+        "purpose": "Not a shadow: the 'Favourite' mark sits ON the photograph via an 85%-opaque base-100 backdrop with a 2px blur and a hairline frame."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1) 150ms",
+        "purpose": "Every link, button and [role=button] state change: colour, background, border, text-decoration-color, opacity, box-shadow, transform."
+      },
+      {
+        "name": "ease-reveal",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1) 700ms",
+        "purpose": "Hero text arrival (.hero-reveal): opacity 0→1 and translateY(12px)→0, staggered by an inline --reveal-delay."
+      },
+      {
+        "name": "ease-settle",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1) 7s",
+        "purpose": "Hero photography (.hero-zoom): scale(1.06)→scale(1). Transform-only, so LCP timing is unaffected."
+      },
+      {
+        "name": "image-hover",
+        "value": "700ms ease-out, scale 1.04",
+        "purpose": "Product card and category tile photography on group hover."
+      },
+      {
+        "name": "tile-label-lift",
+        "value": "500ms ease-out, translateY(-0.375rem)",
+        "purpose": "Category tile label rises and its arrow slides in on hover."
+      },
+      {
+        "name": "shy-header",
+        "value": "transform 200ms ease-out",
+        "purpose": "The fixed header translates fully out of view on scroll-down, returns on scroll-up."
+      },
+      {
+        "name": "loading-dim",
+        "value": "opacity 200ms ease-out, 400ms delay in / 0ms out",
+        "purpose": "Body-level dim to 0.7 during a LiveView click or reconnect. The 400ms delay keeps sub-400ms socket flaps invisible; un-dim is immediate."
+      },
+      {
+        "name": "submit-swap",
+        "value": "opacity 0s with a 300ms delay",
+        "purpose": "Label↔spinner swap on submit buttons. Under 300ms the spinner never appears, so fast submits look instant."
+      },
+      {
+        "name": "press",
+        "value": "opacity 0.9 + translate 0 1px, transition: none",
+        "purpose": "The press lands instantly; the release fades back over ease-standard. Modelled on the Nord Design System."
+      },
+      {
+        "name": "no-transition-active",
+        "value": "none",
+        "purpose": "Deliberate absence. Category-index and size-option active underlines snap with no transition — hover breathes, active is a fact."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "carousel",
+        "value": "480px",
+        "purpose": "Bespoke. Embla slide basis 85% → 50%."
+      },
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "The typography and gutter breakpoint. Also drops the carousel focal-point effect."
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px",
+        "purpose": "Footer goes to four columns; admin table overflow cue disappears."
+      },
+      {
+        "name": "xl",
+        "value": "1280px",
+        "purpose": "The navigation breakpoint — desktop nav, sign-in and locale picker appear; below this they live in a drawer."
+      }
+    ],
+    "fonts": [
+      {
+        "family": "Crimson Text",
+        "role": "display",
+        "weights": "400, 600, 700 + italics (static)",
+        "hosting": "self-hosted woff2, SIL OFL 1.1"
+      },
+      {
+        "family": "Open Sans",
+        "role": "body",
+        "weights": "300–800 variable, roman + italic",
+        "hosting": "self-hosted woff2, SIL OFL 1.1"
+      }
+    ],
+    "radiusTokens": [
+      {
+        "name": "--radius-field",
+        "value": "0",
+        "purpose": "Inputs, selects, textareas, badges, tabs, buttons. Overridden from daisyUI's 0.25rem default — this is what makes the system square."
+      },
+      {
+        "name": "--radius-box",
+        "value": "0",
+        "purpose": "Dropdowns, modals, drawers, alerts, cards. Overridden from daisyUI's 0.5rem default."
+      },
+      {
+        "name": "--radius-selector",
+        "value": "0.5rem",
+        "purpose": "daisyUI default, kept deliberately. Shapes radios and checkboxes; a square radio reads as a checkbox, and the checkout fulfillment picker depends on the distinction."
+      }
+    ],
+    "spacingTokens": [
+      {
+        "name": "--header-height",
+        "value": "8rem",
+        "purpose": "Height of the fixed site header."
+      },
+      {
+        "name": "--header-clearance",
+        "value": "calc(var(--header-height) + var(--spacing) * 12)",
+        "purpose": "Top offset for the first block on a page, so it clears the fixed header. Used via sm:mt-(--header-clearance) / sm:pt-(--header-clearance)."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The acting control. Square, unshadowed, sans. Sizing approximated from daisyUI's btn-lg for preview.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Add to basket</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 3rem; padding: 0 1.5rem; border: 1px solid transparent; border-radius: 0; box-shadow: none; font-family: 'Open Sans', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: normal; text-transform: none; cursor: pointer; transition: color 150ms cubic-bezier(0.4,0,0.2,1), background-color 150ms cubic-bezier(0.4,0,0.2,1), border-color 150ms cubic-bezier(0.4,0,0.2,1), opacity 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary { background: var(--color-primary, oklch(0.3684 0.0478 156.76)); color: var(--color-primary-content, oklch(97% 0 0)); } .ds-btn-primary:hover { background: color-mix(in oklab, var(--color-primary, oklch(0.3684 0.0478 156.76)) 88%, black); } .ds-btn:focus-visible { outline: 2px solid var(--color-primary, oklch(0.3684 0.0478 156.76)); outline-offset: 2px; } .ds-btn:active { opacity: 0.9; translate: 0 1px; transition: none; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Green outline on paper. Same geometry as primary — the only difference is fill.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Request a quote</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: var(--color-primary, oklch(0.3684 0.0478 156.76)); border-color: var(--color-primary, oklch(0.3684 0.0478 156.76)); } .ds-btn-secondary:hover { background: var(--color-primary, oklch(0.3684 0.0478 156.76)); color: var(--color-primary-content, oklch(97% 0 0)); }"
+    },
+    {
+      "name": "Inverse Button",
+      "kind": "button",
+      "refersTo": "button-inverse",
+      "description": "Sits over photography. Fills white on hover and focus, and overrides the focus ring to white via --focus-color, because the default green ring vanishes on a dark photograph.",
+      "html": "<div class=\"ds-photo-bed\"><button class=\"ds-btn ds-btn-inverse\">Shop now<svg width=\"16\" height=\"16\" viewBox=\"0 0 20 20\" fill=\"currentColor\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z\" clip-rule=\"evenodd\"/></svg></button></div>",
+      "css": ".ds-photo-bed { background: linear-gradient(160deg, oklch(35% 0.04 152), oklch(22% 0.03 75)); padding: 2.5rem; } .ds-btn-inverse { background: transparent; color: #fff; border-color: rgb(255 255 255 / 0.8); } .ds-btn-inverse svg { transition: transform 300ms ease-out; } .ds-btn-inverse:hover { background: #fff; color: var(--color-base-content, oklch(22% 0.015 75)); border-color: #fff; } .ds-btn-inverse:hover svg { transform: translateX(0.25rem); } .ds-btn-inverse:focus-visible { outline-color: #fff; background: #fff; color: var(--color-base-content, oklch(22% 0.015 75)); border-color: #fff; }"
+    },
+    {
+      "name": "Inline Text Link",
+      "kind": "custom",
+      "refersTo": "button-text",
+      "description": "Not a button at all — it drops the button geometry entirely. The dimmed always-visible underline for links with nothing else marking them as clickable: inline prose, text buttons, contact details.",
+      "html": "<p class=\"ds-prose\">For anything made to order, <a href=\"#\" class=\"ds-link-body\">get in touch</a>.</p>",
+      "css": ".ds-prose { font-family: 'Open Sans', sans-serif; font-size: 1.125rem; line-height: 1.625; color: color-mix(in oklab, var(--color-base-content, oklch(22% 0.015 75)) 80%, transparent); margin: 0; } .ds-link-body { color: inherit; text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: from-font; text-decoration-color: color-mix(in oklab, currentColor 40%, transparent); transition: text-decoration-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-link-body:hover { text-decoration-color: currentColor; } .ds-link-body:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }"
+    },
+    {
+      "name": "Nav Link (honey underline)",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Desktop header navigation. The underline is permanently present and transparent; only its colour fades in. The stroke never pops — it breathes.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-nav-link\">Store</a><a href=\"#\" class=\"ds-nav-link\">Weddings</a><a href=\"#\" class=\"ds-nav-link\">Courses</a><a href=\"#\" class=\"ds-nav-link\">About</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 1.5rem; background: var(--color-base-100, oklch(99% 0.004 75)); padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-base-300, oklch(93.5% 0.012 75)); } .ds-nav-link { font-family: 'Open Sans', sans-serif; font-size: 0.875rem; letter-spacing: 0.025em; color: var(--color-base-content, oklch(22% 0.015 75)); white-space: nowrap; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 2px; text-underline-offset: 0.3em; transition: text-decoration-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { text-decoration-color: var(--color-link-underline, oklch(81% 0.15 93)); } .ds-nav-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Square, full-width, label above inside one click target. The right-inset slot reserves space for a spinner or a confirmation check so the value never slides when state arrives.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email address</span><span class=\"ds-field-shell\"><input class=\"ds-input\" type=\"email\" value=\"jennie@edenflowers.fi\"/><span class=\"ds-field-trailing\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" fill=\"currentColor\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z\" clip-rule=\"evenodd\"/></svg></span></span></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; font-family: 'Open Sans', sans-serif; } .ds-field-label { margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--color-base-content, oklch(22% 0.015 75)); } .ds-field-shell { position: relative; display: block; } .ds-input { width: 100%; height: 3rem; padding: 0 2.5rem 0 1rem; border: 1px solid var(--color-base-300, oklch(93.5% 0.012 75)); border-radius: 0; background: var(--color-base-100, oklch(99% 0.004 75)); color: var(--color-base-content, oklch(22% 0.015 75)); font-family: inherit; font-size: 1rem; } .ds-input:focus-visible { outline: 2px solid var(--color-primary, oklch(0.3684 0.0478 156.76)); outline-offset: 2px; } .ds-field-trailing { position: absolute; inset-block: 0; right: 0.75rem; display: flex; align-items: center; pointer-events: none; color: oklch(62% 0.13 150); }"
+    },
+    {
+      "name": "Radio Card",
+      "kind": "chip",
+      "refersTo": "radio-card",
+      "description": "Fulfillment and option picker. Square container, circular radio — the radio's roundness comes from --radius-selector, the one softness left in the system, because a square radio reads as a checkbox.",
+      "html": "<div class=\"ds-radio-set\"><label class=\"ds-radio-card\"><input type=\"radio\" name=\"ds-fulfil\" checked/><span>Home delivery</span></label><label class=\"ds-radio-card\"><input type=\"radio\" name=\"ds-fulfil\"/><span>In store pickup</span></label></div>",
+      "css": ".ds-radio-set { display: flex; flex-direction: column; gap: 0.5rem; font-family: 'Open Sans', sans-serif; } @media (min-width: 768px) { .ds-radio-set { flex-direction: row; } } .ds-radio-card { display: flex; flex: 1; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--color-base-300, oklch(93.5% 0.012 75)); border-radius: 0; color: var(--color-base-content, oklch(22% 0.015 75)); cursor: pointer; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), background-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-radio-card:hover { border-color: var(--color-primary, oklch(0.3684 0.0478 156.76)); } .ds-radio-card:has(input:checked) { border-color: var(--color-primary, oklch(0.3684 0.0478 156.76)); background: color-mix(in oklab, var(--color-primary, oklch(0.3684 0.0478 156.76)) 5%, transparent); } .ds-radio-card input { accent-color: var(--color-primary, oklch(0.3684 0.0478 156.76)); width: 0.875rem; height: 0.875rem; margin: 0; } .ds-radio-card:has(input:focus-visible) { outline: 2px solid var(--color-primary, oklch(0.3684 0.0478 156.76)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "There is no card. A link, an unframed figure on a cream bed, and two lines of type. The focus ring frames the whole card through a full-bleed ::after rather than outlining the text.",
+      "html": "<a href=\"#\" class=\"ds-product-card\"><figure class=\"ds-product-figure\"><div class=\"ds-product-photo\"></div></figure><h3 class=\"ds-product-name\">Midsummer Bouquet</h3><p class=\"ds-product-price\"><span class=\"ds-eyebrow\">From</span>45,00 €</p></a>",
+      "css": ".ds-product-card { position: relative; isolation: isolate; display: block; text-decoration: none; color: var(--color-base-content, oklch(22% 0.015 75)); max-width: 18rem; } .ds-product-card::after { content: ''; position: absolute; inset: 0; z-index: 10; pointer-events: none; } .ds-product-card:focus-visible { outline: none; } .ds-product-card:focus-visible::after { border: 2px solid var(--color-primary, oklch(0.3684 0.0478 156.76)); } .ds-product-figure { position: relative; margin: 0 0 1rem; aspect-ratio: 4 / 5; overflow: hidden; background: var(--color-cream, oklch(95% 0.025 75)); border-radius: 0; } .ds-product-photo { width: 100%; height: 100%; background: linear-gradient(145deg, oklch(78% 0.09 60), oklch(52% 0.08 150)); transition: transform 700ms ease-out; } .ds-product-card:hover .ds-product-photo { transform: scale(1.04); } .ds-product-name { margin: 0 0 0.375rem; font-family: 'Crimson Text', serif; font-size: 1.5rem; font-weight: 400; line-height: 1.375; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 2px; text-underline-offset: 0.3em; transition: text-decoration-color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-product-card:hover .ds-product-name { text-decoration-color: var(--color-link-underline, oklch(81% 0.15 93)); } .ds-product-price { margin: 0; font-family: 'Crimson Text', serif; font-style: italic; font-size: 1rem; line-height: 1; color: color-mix(in oklab, var(--color-base-content, oklch(22% 0.015 75)) 65%, transparent); } .ds-product-price .ds-eyebrow { margin-right: 0.25rem; font-family: 'Open Sans', sans-serif; font-style: normal; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; }"
+    },
+    {
+      "name": "Category Tile",
+      "kind": "card",
+      "refersTo": null,
+      "description": "A photograph with an overlaid serif label. Legibility comes from a static bottom-up gradient scrim, never a solid box. On hover the whole image deepens slightly, the label lifts, and an arrow slides in.",
+      "html": "<a href=\"#\" class=\"ds-tile\"><div class=\"ds-tile-photo\"></div><div class=\"ds-tile-scrim\"></div><div class=\"ds-tile-veil\"></div><h3 class=\"ds-tile-label\">Weddings<svg width=\"16\" height=\"16\" viewBox=\"0 0 20 20\" fill=\"currentColor\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z\" clip-rule=\"evenodd\"/></svg></h3></a>",
+      "css": ".ds-tile { position: relative; display: block; overflow: hidden; height: 18rem; max-width: 22rem; border-radius: 0; text-decoration: none; } .ds-tile-photo { width: 100%; height: 100%; background: linear-gradient(150deg, oklch(70% 0.10 40), oklch(38% 0.07 150)); transition: transform 700ms ease-out; } .ds-tile:hover .ds-tile-photo { transform: scale(1.04); } .ds-tile-scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0.15), transparent); } .ds-tile-veil { position: absolute; inset: 0; background: rgb(0 0 0 / 0.1); opacity: 0; transition: opacity 500ms; } .ds-tile:hover .ds-tile-veil { opacity: 1; } .ds-tile-label { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 0.625rem; margin: 0; padding: 1.5rem; font-family: 'Crimson Text', serif; font-size: 1.5rem; font-weight: 400; line-height: 1.375; letter-spacing: 0.025em; color: #fff; transition: transform 500ms ease-out; } .ds-tile:hover .ds-tile-label { transform: translateY(-0.375rem); } .ds-tile-label svg { align-self: flex-end; margin-bottom: 0.4rem; transform: translateX(-0.25rem); opacity: 0; transition: transform 500ms ease-out, opacity 500ms ease-out; } .ds-tile:hover .ds-tile-label svg { transform: translateX(0); opacity: 1; } .ds-tile:focus-visible { outline: 2px solid var(--color-primary, oklch(0.3684 0.0478 156.76)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Category Index (signature)",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "The Store page's navigation, replacing a pill row. Each category is a serif word anchored by an eyebrow numeral; the description shows on the active entry and on hover/focus of inactive ones. The active honey underline SNAPS — no transition, by design.",
+      "html": "<ul class=\"ds-index\"><li class=\"ds-index-item\" data-active=\"true\"><a href=\"#\" class=\"ds-index-link\"><span class=\"ds-index-num\">01</span><span class=\"ds-index-name\">Bouquets</span><span class=\"ds-index-desc\">Made fresh to order, wrapped by hand.</span></a></li><li class=\"ds-index-item\"><a href=\"#\" class=\"ds-index-link\"><span class=\"ds-index-num\">02</span><span class=\"ds-index-name\">Plants</span><span class=\"ds-index-desc\">Houseplants, in second-hand pots.</span></a></li><li class=\"ds-index-item\"><a href=\"#\" class=\"ds-index-link\"><span class=\"ds-index-num\">03</span><span class=\"ds-index-name\">Condolences</span><span class=\"ds-index-desc\">Delivered to churches and chapels.</span></a></li></ul>",
+      "css": ".ds-index { list-style: none; margin: 0; padding: 0; max-width: 24rem; } .ds-index-link { display: grid; grid-template-columns: 2.5rem 1fr; align-items: baseline; gap: 0 0.75rem; padding: 0.625rem 0; text-decoration: none; color: var(--color-base-content, oklch(22% 0.015 75)); } .ds-index-num { font-family: 'Open Sans', sans-serif; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: color-mix(in oklab, var(--color-base-content, oklch(22% 0.015 75)) 70%, transparent); } .ds-index-name { font-family: 'Crimson Text', serif; font-size: 1.5rem; line-height: 1.375; } .ds-index-desc { grid-column: 2; display: none; font-family: 'Open Sans', sans-serif; font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content, oklch(22% 0.015 75)) 65%, transparent); } .ds-index-item[data-active=\"true\"] .ds-index-desc, .ds-index-link:hover .ds-index-desc, .ds-index-link:focus-visible .ds-index-desc { display: block; } .ds-index-item[data-active=\"true\"] .ds-index-name, .ds-index-item:not([data-active=\"true\"]) .ds-index-link:hover .ds-index-name, .ds-index-item:not([data-active=\"true\"]) .ds-index-link:focus-visible .ds-index-name { text-decoration: underline; text-decoration-color: var(--color-link-underline, oklch(81% 0.15 93)); text-decoration-thickness: 2px; text-underline-offset: 0.3em; } .ds-index-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Paper Florist",
+    "overview": "Everything sits on warm oat paper. A single serif — Crimson Text — carries the voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, never by a shadow, never by a change of background unless that change means something. Photographs run to the edge of the container or past it, and the interface never frames them: no radius, no border, no drop shadow, no caption box. The page is paper; the flowers are the ink.\n\nThe whole palette lives in one warm family. Every neutral sits at hue ~75 — oat, cream, near-black — so nothing on screen reads as cold grey. Forest green appears only where a section needs to reverse out entirely, and the deep green primary appears only on the things that act. One amber-honey stroke does all the interactive work: a 2px underline at a 0.3em offset, and nothing else. It never becomes a fill, a badge, or a body colour.\n\nDensity is generous and editorial. Sections breathe at 5–9rem of vertical padding, headings balance their own line breaks, and body copy avoids orphans. Interaction is quiet and physical: hover underlines fade in rather than pop, presses land instantly with a 1px downward translate and an opacity dip, and the release fades back. Motion is used for arrival and for photography — a 700ms rise on hero text, a 7s settle on hero photographs — and almost nowhere else.",
+    "keyCharacteristics": [
+      "Warm oat paper (hue ~75) under everything; no cold grey anywhere.",
+      "Serif for voice, sans for interface — an absolute split.",
+      "Square at the token level — --radius-field and --radius-box are 0; only radios stay soft.",
+      "Hairline rules instead of cards, panels, or elevation.",
+      "One honey underline is the entire interactive vocabulary.",
+      "Photographs are full-bleed and unframed; they carry the persuasion.",
+      "Flat by default; a shadow must carry information to exist."
+    ],
+    "rules": [
+      {
+        "name": "The One Family Rule",
+        "body": "Every surface, text and border colour sits at hue 60–80 (paper) or hue ~150 (forest). A colour outside those two families is a defect unless it is a semantic status colour inside /admin.",
+        "section": "colors"
+      },
+      {
+        "name": "The Honey-Only Rule",
+        "body": "The amber accent exists as a 2px text-decoration and nothing else. Never a background, never a border, never a text colour, never a badge. Its scarcity is what makes an underline read as 'this responds to you'.",
+        "section": "colors"
+      },
+      {
+        "name": "The Opacity-Not-New-Token Rule",
+        "body": "Secondary text, dividers and decoration are produced by mixing base-content with transparency (/70, /65, /40, /15), not by adding grey tokens. Reach for an opacity step before proposing a new colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Serif-Sans Split Rule",
+        "body": "Serif is for what the shop says — headings, product names, prices, quotes, addresses, opening hours. Sans is for what the interface says about itself — eyebrows, buttons, nav, form labels, the wordmark. A serif button or a sans product name is a defect.",
+        "section": "typography"
+      },
+      {
+        "name": "The Eyebrow Rule",
+        "body": "A section that needs a category label above its heading uses the eyebrow (0.75rem, 700, uppercase, 0.18em) at base-content/70. Never a smaller heading, never a coloured chip, never a pill.",
+        "section": "typography"
+      },
+      {
+        "name": "The Balanced Heading Rule",
+        "body": "Every display, headline, section and pull-quote utility carries text-balance. Body copy carries text-wrap: pretty. Neither is optional — Swedish and Finnish produce much longer strings than English, and unbalanced headings break first in those locales.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rule-Not-Card Rule",
+        "body": "Vertical separation between sections is a one-pixel border (not-last:border-b) in base-300. Do not introduce a card, a panel, a margin-only gap, or an alternating background to separate sections. A background change (cream, forest) is reserved for sections that are genuinely a different kind of thing.",
+        "section": "layout"
+      },
+      {
+        "name": "The Full-Bleed Rule",
+        "body": "Photographs run to the container edge or past it. On mobile the carousel deliberately breaks out to the viewport edges (margin-inline: calc(50% - 50vw)). Never frame a photograph with a border, a radius, a shadow, or a caption box.",
+        "section": "layout"
+      },
+      {
+        "name": "The Functional-Shadow Rule",
+        "body": "A shadow must answer the question 'what would the user not know without this?' Overflow, floating layers and legibility over photography qualify. Cards, buttons, inputs, tiles and images do not.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Gradient-For-Legibility Rule",
+        "body": "Text over a photograph is made legible by a gradient scrim (from-black/50 via-black/15 to-transparent, bottom-up), never by a solid box, a blur panel or a shadow on the text.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Edge Rule",
+        "body": "Radius is 0, set at the token so nothing has to remember: the theme block pins daisyUI's --radius-field and --radius-box to 0. Exactly two exceptions exist: --radius-selector (kept at 0.5rem so radios stay circular) and rounded-full (things whose roundness is their meaning). rounded-full is the only radius utility in the entire codebase — nine of them. Any other radius in markup is a defect by construction.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Borders are 1px. If a boundary needs more weight than a hairline, it needs a different colour surface, not a thicker border.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Press Rule",
+        "body": "Every pressable control lands instantly: opacity 0.9, translate 0 1px, transition: none. The release fades back over 150ms. Do not add a scale, a ripple or a colour flash to a press.",
+        "section": "components"
+      },
+      {
+        "name": "The Breathe-Don't-Pop Rule",
+        "body": "Hover underlines are permanently present and transparent; only their colour transitions in over 150ms. Active-state underlines snap with no transition. That difference is deliberate: hover is an invitation, active is a fact.",
+        "section": "components"
+      },
+      {
+        "name": "The Orphan Rule",
+        "body": "A hand-written value that duplicates a token is a future defect. The old 0.25rem sites — radio card, checkout date-picker frame, admin warning banner, admin calendar cells, admin nav rounded-r, skip link — were all hand-matching daisyUI's --radius-field default. They were invisible until that token moved to 0, and then a radio card and the text input below it disagreed in the same checkout form. If you find yourself typing a value a token already sets, delete the value.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do set every new heading in Crimson Text and every new label, button and nav item in Open Sans. The split is absolute.",
+      "Do separate sections with not-last:border-b and reach for bg-cream or bg-forest only when the section is genuinely a different kind of thing.",
+      "Do let the radius tokens carry squareness. A component should need no radius utility at all; if you are typing one, the token is wrong or you are making an exception you have not justified.",
+      "Do express secondary text and decoration as opacity steps on base-content (/70, /65, /40, /15) rather than introducing grey tokens.",
+      "Do run photographs full-bleed and unframed, and make text over them legible with the bottom-up gradient scrim.",
+      "Do put text-balance on every serif heading and let main p handle body rag — Swedish and Finnish strings are materially longer than English and break first.",
+      "Do guard every new animation with @media (prefers-reduced-motion: no-preference), the way every existing one is.",
+      "Do give any visually-replaced control its focus ring back through :has(input:focus-visible), as the size picker does.",
+      "Do use --focus-color to recolour the focus ring when the default green would vanish against the surface, as the inverse button does over photography."
+    ],
+    "donts": [
+      "Don't let the honey accent become anything other than a 2px underline at a 0.3em offset. No honey fills, borders, badges or text.",
+      "Don't add a shadow that does not answer 'what would the user not know without this?'. There is no elevation scale and none should be created.",
+      "Don't wrap content in a card, a panel or a bordered box to group it. Use a rule, a background family, or vertical space.",
+      "Don't introduce a colour outside hue 60–80 or hue ~150, except for semantic status colours inside /admin.",
+      "Don't drift toward the generic florist e-commerce template: no pastel pinks, script fonts, pill buttons, heart icons, soft drop shadows or stock bouquet photography.",
+      "Don't bring SaaS dashboard chrome onto the storefront: no cards-in-cards, no elevated panels, no gradient CTAs, no coloured status pills.",
+      "Don't reach for luxury-brand pastiche: no all-caps thin sans at large sizes, no black-and-gold, no borrowed-prestige letter-spacing. The wordmark is the only large sans in the system.",
+      "Don't add any radius utility except rounded-full. rounded-full is the only one left in the codebase, storefront and admin alike — that is the invariant, not a coincidence.",
+      "Don't transition an active state. Hover breathes; active snaps.",
+      "Don't square --radius-selector. Radios must stay circular.",
+      "Don't hand-write a value a token already sets. That is how the 0.25rem tier survived invisibly until the token under it moved."
+    ]
+  }
+}
