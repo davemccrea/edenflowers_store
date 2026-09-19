@@ -218,13 +218,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         alt: ~t"Bride outdoors with a bright blue and red bouquet"
       },
       %{
-        src: "local:///wedding/eden_flowers_3.jpg",
-        width: 1500,
-        height: 2000,
-        credit: "Eden Flowers",
-        alt: ~t"Cascading bouquet with trailing red amaranthus"
-      },
-      %{
         src: "local:///wedding/daniela_streng_2.jpg",
         width: 1333,
         height: 2000,
