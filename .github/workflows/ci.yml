@@ -46,10 +46,6 @@ jobs:
               "typst-x86_64-unknown-linux-musl/typst"
           typst --version
 
-      # Warm @preview cache — Receipt.generate captures stdout as PDF bytes; cold-cache stderr would interleave.
-      - name: Warm Typst package cache
-        run: typst compile priv/receipts/_warmup.typ /tmp/warmup.pdf
-
       - name: Restore deps and build cache
         uses: actions/cache@v6
         with:

@@ -105,18 +105,10 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
-# `nobody` has no writable home; same value at warmup + runtime so the cache hits.
-ENV XDG_CACHE_HOME=/app/.cache
-
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/edenflowers ./
 
 USER nobody
-
-# Warm @preview cache — first render's stdout is captured as PDF bytes,
-# cold-cache download progress on stderr would arrive interleaved otherwise.
-RUN typst compile /app/lib/edenflowers-*/priv/receipts/_warmup.typ /tmp/warmup.pdf \
-  && rm /tmp/warmup.pdf
 
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`
