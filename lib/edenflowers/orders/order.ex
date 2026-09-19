@@ -378,6 +378,7 @@ defmodule Edenflowers.Orders.Order do
     module EdenflowersWeb.Endpoint
 
     publish :restart_checkout, ["order", "checkout_restarted", :id]
+    publish :finalize_checkout, ["order", "placed", :id]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end

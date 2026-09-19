@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.Router do
     end
 
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
+    get "/order/:id/receipt", Checkout.ReceiptController, :show
     get "/locale/:locale", LocaleController, :index
 
     auth_routes Auth.AuthController, Edenflowers.Accounts.User, path: "/auth"
