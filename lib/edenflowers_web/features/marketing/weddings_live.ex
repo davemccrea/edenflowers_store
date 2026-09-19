@@ -5,6 +5,17 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   @thumb_width 480
 
+  # Photographers without a known website are credited by name only.
+  @photographer_sites %{
+    "Björn Yrjans" => "https://www.bjornyrjans.com/",
+    "Daniela Streng" => "https://www.danielastreng.com/",
+    "Josefin Westin" => "https://www.josefinwestin.com/",
+    "Julia Lillqvist" => "https://julialillqvist.com/",
+    "Maria Sundelin" => "https://www.instagram.com/mariatheresesphotography/",
+    "Marie Lillhannus" => "https://www.picmi.fi/",
+    "Sara Björkskog" => "https://www.grann.fi/"
+  }
+
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -40,7 +51,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 priority
                 class="aspect-[4/5] w-full object-cover object-top md:max-h-[calc(100dvh-var(--header-clearance)-6rem)] md:w-auto"
               />
-              <figcaption class="text-base-content/70 mt-2 text-sm">{photo_credit("Anna Riska")}</figcaption>
+              <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Anna Riska" /></figcaption>
             </figure>
           </div>
         </div>
@@ -74,7 +85,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                   class="w-full"
                 />
               </a>
-              <figcaption class="text-base-content/70 mt-1.5 text-xs">{photo_credit(photo.credit)}</figcaption>
+              <figcaption class="text-base-content/70 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
             </figure>
           </div>
         </div>
@@ -114,7 +125,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               sizes="(min-width: 768px) 50vw, 100vw"
               class="aspect-[3/2] w-full object-cover"
             />
-            <figcaption class="text-base-content/70 mt-2 text-sm">{photo_credit("Eden Flowers")}</figcaption>
+            <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Eden Flowers" /></figcaption>
           </figure>
         </div>
       </section>
@@ -337,6 +348,20 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   defp testimonial, do: nil
 
   defp photo_credit(credit), do: ~t"Photo: #{credit}"
+
+  attr :name, :string, required: true
+
+  defp credit_line(assigns) do
+    assigns = assign(assigns, :url, @photographer_sites[assigns.name])
+
+    ~H"""
+    {~t"Photo:"}
+    <a :if={@url} href={@url} target="_blank" rel="noopener noreferrer" class="link-underline-static-body">
+      {@name}
+    </a>
+    <span :if={!@url}>{@name}</span>
+    """
+  end
 
   defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
 end
