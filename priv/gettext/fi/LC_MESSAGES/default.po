@@ -21,7 +21,7 @@ msgstr "Toiminnot"
 #: lib/edenflowers_web/features/marketing/about_live.ex:16
 #, elixir-autogen, elixir-format
 msgid "About"
-msgstr "Tietoa meistä"
+msgstr "Tietoa minusta"
 
 #: lib/edenflowers/fulfillment/delivery_error.ex:12
 #, elixir-autogen, elixir-format
