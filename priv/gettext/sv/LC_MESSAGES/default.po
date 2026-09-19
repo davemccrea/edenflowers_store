@@ -11,7 +11,7 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/components/core_components.ex:579
+#: lib/edenflowers_web/components/core_components.ex:582
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "Åtgärder"
@@ -538,7 +538,7 @@ msgstr "Välj ett kort innan du skriver ett meddelande"
 msgid "Browse bouquets"
 msgstr "Se våra buketter"
 
-#: lib/edenflowers_web/components/core_components.ex:1096
+#: lib/edenflowers_web/components/core_components.ex:1099
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Varukorgen, tom"
@@ -642,7 +642,7 @@ msgstr "Till mig själv"
 msgid "For somebody else"
 msgstr "Till någon annan"
 
-#: lib/edenflowers_web/components/core_components.ex:930
+#: lib/edenflowers_web/components/core_components.ex:933
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Från"
@@ -863,7 +863,7 @@ msgstr "Vi kunde inte logga in dig med Google. Försök igen eller använd en in
 msgid "We've sent you a new code."
 msgstr "Vi har skickat en ny kod till dig."
 
-#: lib/edenflowers/email.ex:60
+#: lib/edenflowers/email.ex:76
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Your Eden Flowers sign-in code"
 msgstr "Din inloggningskod till Eden Flowers"
@@ -949,7 +949,7 @@ msgstr "Hemleverans"
 msgid "In-store pickup"
 msgstr "Avhämtning i butik"
 
-#: lib/edenflowers_web/components/core_components.ex:80
+#: lib/edenflowers_web/components/core_components.ex:82
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr "stäng"
