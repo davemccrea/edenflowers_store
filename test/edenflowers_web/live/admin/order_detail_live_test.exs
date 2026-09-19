@@ -67,10 +67,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-recipient", "Grace Hopper")
-    assert has_element?(view, ~s|#order-recipient a[href="tel:040 123 4567"]|)
+    # The buyer collects a gift pickup, so the number is theirs.
+    assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
+    refute has_element?(view, ~s|#order-recipient a[href^="tel:"]|)
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
     # Gift is also surfaced prominently in the header, matching the dashboard.
     assert has_element?(view, "header", "Grace Hopper")
+  end
+
+  test "shows the phone under the recipient for a gift delivery", %{conn: conn} do
+    order =
+      placed_order(
+        gift: true,
+        recipient_name: "Grace Hopper",
+        recipient_phone_number: "040 123 4567",
+        fulfillment_method: :delivery,
+        delivery_address: "Kauppapuistikko 20, 65100 Vaasa"
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|#order-recipient a[href="tel:040 123 4567"]|)
+    refute has_element?(view, ~s|#order-customer a[href^="tel:"]|)
   end
 
   test "timeline reflects a refunded payment as a received-but-refunded state", %{conn: conn} do

@@ -1029,6 +1029,20 @@ defmodule Edenflowers.Orders.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
+    test "save_step_3 with pickup requires a phone number", %{pickup_option: pickup_option} do
+      order = generate(order(state: :delivery))
+
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
+               order
+               |> Ash.Changeset.for_update(:submit_delivery, %{
+                 fulfillment_option_id: pickup_option.id,
+                 fulfillment_date: Date.add(Date.utc_today(), 1)
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Enum.any?(errors, &(&1.field == :recipient_phone_number))
+    end
+
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
@@ -1038,7 +1052,8 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 1)
+                 fulfillment_date: Date.add(Date.utc_today(), 1),
+                 recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
@@ -1060,7 +1075,8 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 2)
+                 fulfillment_date: Date.add(Date.utc_today(), 2),
+                 recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 

@@ -189,6 +189,8 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.SnapshotFulfillmentMethod, []}
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
+      # Jennie texts pickup customers when their order is ready.
+      validate present(:recipient_phone_number), where: [attribute_equals(:fulfillment_method, :pickup)]
       change {Changes.CalculateFulfillmentCost, []}
       change transition_state(:payment)
       change load(@checkout_load)
