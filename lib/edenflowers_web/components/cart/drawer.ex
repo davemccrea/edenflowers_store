@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
           </.icon_button>
         </header>
 
-        <div class="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+        <div class="pb-[calc(2rem+var(--toolbar-clearance))] flex flex-1 flex-col gap-6 overflow-y-auto p-8">
           <.live_component
             id="cart-line-items"
             module={EdenflowersWeb.Cart.LineItems}
