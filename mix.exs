@@ -119,6 +119,7 @@ defmodule Edenflowers.MixProject do
       {:req_llm, "~> 1.6"},
       {:stripity_stripe, "~> 3.2"},
       {:swoosh, "~> 1.16"},
+      {:gen_smtp, "~> 1.2"},
       # Utilities
       {:dns_cluster, "~> 0.3.0"},
       {:hammer, "~> 7.0"},
