@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Router do
 
   import AshAdmin.Router
   import Oban.Web.Router
+  use ErrorTracker.Web, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -112,6 +113,13 @@ defmodule EdenflowersWeb.Router do
     end
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
+
+    error_tracker_dashboard("/errors",
+      on_mount: [
+        {EdenflowersWeb.Auth.LiveUserAuth, :current_user},
+        {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+      ]
+    )
 
     ash_admin(
       "/ash",

@@ -6,6 +6,12 @@ defmodule Edenflowers.Application do
   @impl true
   def start(_type, _args) do
     Oban.Telemetry.attach_default_logger()
+    :logger.add_handler(:error_tracker, Edenflowers.ErrorTrackerLogHandler, %{level: :error})
+
+    # Only the production server (and tests) configure an alert address.
+    if Application.get_env(:edenflowers, :error_alert_email) do
+      Edenflowers.ErrorAlerts.SendErrorAlertEmail.attach()
+    end
 
     children = [
       EdenflowersWeb.Telemetry,

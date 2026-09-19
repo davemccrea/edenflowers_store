@@ -124,6 +124,11 @@ config :tailwind,
     cd: Path.expand("..", __DIR__)
   ]
 
+config :error_tracker,
+  repo: Edenflowers.Repo,
+  otp_app: :edenflowers,
+  enabled: true
+
 # Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",

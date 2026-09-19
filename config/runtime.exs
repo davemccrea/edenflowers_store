@@ -101,6 +101,11 @@ if config_env() in [:prod, :dev] do
 end
 
 if config_env() == :prod do
+  # Set on the production server only, so staging doesn't send alerts.
+  if error_alert_email = System.get_env("ERROR_ALERT_EMAIL") do
+    config :edenflowers, :error_alert_email, error_alert_email
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
