@@ -8,22 +8,24 @@ defmodule EdenflowersWeb.Plugs.InitStore do
     order_id = get_session(conn, :order_id)
     actor = conn.assigns[:current_user]
 
-    if order_id do
-      case Orders.get_order_by_id(order_id, actor: actor) do
-        {:ok, %{state: :placed}} ->
-          order = Orders.create_for_checkout!(actor: actor)
-          put_session(conn, :order_id, order.id)
+    # The signed session is the proof this browser owns its cart, so the read
+    # skips the policy that would hide a guest's own placed order from them.
+    case order_id && Orders.get_order_by_id(order_id, authorize?: false) do
+      {:ok, %{state: :placed}} ->
+        conn
+        |> put_session(:guest_order_id, order_id)
+        |> start_cart(actor)
 
-        {:error, _} ->
-          order = Orders.create_for_checkout!(actor: actor)
-          put_session(conn, :order_id, order.id)
+      {:ok, _order} ->
+        conn
 
-        _ ->
-          conn
-      end
-    else
-      order = Orders.create_for_checkout!(actor: actor)
-      put_session(conn, :order_id, order.id)
+      _ ->
+        start_cart(conn, actor)
     end
+  end
+
+  defp start_cart(conn, actor) do
+    order = Orders.create_for_checkout!(actor: actor)
+    put_session(conn, :order_id, order.id)
   end
 end
