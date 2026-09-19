@@ -1,6 +1,6 @@
 # List available commands
 default:
-    @just --list
+    @just --list --unsorted
 
 # Start the dev server with .env loaded
 dev:
