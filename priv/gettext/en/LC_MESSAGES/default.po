@@ -1558,6 +1558,8 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:373
 #: lib/edenflowers_web/features/admin/account_live.ex:55
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:14
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:22
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr "Sign out"
@@ -2036,4 +2038,29 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:351
 #, elixir-autogen, elixir-format
 msgid "Photo:"
+msgstr ""
+
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:41
+#, elixir-autogen, elixir-format
+msgid "Back to the shop"
+msgstr ""
+
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:28
+#, elixir-autogen, elixir-format
+msgid "Stay signed in"
+msgstr ""
+
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:36
+#, elixir-autogen, elixir-format
+msgid "There's no account signed in on this device."
+msgstr ""
+
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:16
+#, elixir-autogen, elixir-format
+msgid "You're signed in as"
+msgstr ""
+
+#: lib/edenflowers_web/features/auth/sign_out_live.ex:34
+#, elixir-autogen, elixir-format
+msgid "You're signed out"
 msgstr ""
