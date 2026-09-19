@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section id="my-work" class="scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+      <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
           <div
@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                   class="w-full"
                 />
               </a>
-              <figcaption class="text-base-content/70 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
+              <figcaption class="text-cream-content/80 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
             </figure>
           </div>
         </div>
