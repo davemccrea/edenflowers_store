@@ -11,7 +11,7 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/components/core_components.ex:579
+#: lib/edenflowers_web/components/core_components.ex:582
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "Toiminnot"
@@ -538,7 +538,7 @@ msgstr "Valitse kortti ennen viestin kirjoittamista"
 msgid "Browse bouquets"
 msgstr "Selaa kimppuja"
 
-#: lib/edenflowers_web/components/core_components.ex:1096
+#: lib/edenflowers_web/components/core_components.ex:1099
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Ostoskori, tyhjä"
@@ -642,7 +642,7 @@ msgstr "Itselleni"
 msgid "For somebody else"
 msgstr "Jollekin toiselle"
 
-#: lib/edenflowers_web/components/core_components.ex:930
+#: lib/edenflowers_web/components/core_components.ex:933
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Alkaen"
@@ -863,7 +863,7 @@ msgstr "Google-kirjautuminen ei onnistunut. Yritä uudelleen tai käytä kirjaut
 msgid "We've sent you a new code."
 msgstr "Lähetimme sinulle uuden koodin."
 
-#: lib/edenflowers/email.ex:60
+#: lib/edenflowers/email.ex:76
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Your Eden Flowers sign-in code"
 msgstr "Eden Flowers -kirjautumiskoodisi"
@@ -949,7 +949,7 @@ msgstr "Kotiinkuljetus"
 msgid "In-store pickup"
 msgstr "Nouto myymälästä"
 
-#: lib/edenflowers_web/components/core_components.ex:80
+#: lib/edenflowers_web/components/core_components.ex:82
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr "sulje"
