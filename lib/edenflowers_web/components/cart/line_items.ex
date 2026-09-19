@@ -61,6 +61,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-3">
                 <div class="flex flex-row items-center gap-3">
                   <.icon_button
+                    size="lg"
                     id={"#{@id}-decrement-#{line_item.id}"}
                     type="button"
                     class="phx-click-loading:opacity-50"
@@ -73,6 +74,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   </.icon_button>
                   <span class="tabular-nums">{line_item.quantity}</span>
                   <.icon_button
+                    size="lg"
                     id={"#{@id}-increment-#{line_item.id}"}
                     type="button"
                     class="phx-click-loading:opacity-50"
@@ -85,6 +87,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   </.icon_button>
                 </div>
                 <.icon_button
+                  size="lg"
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="phx-click-loading:opacity-50"
@@ -99,11 +102,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
               <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
                 <.icon_button
+                  size="lg"
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  phx-value-id={line_item.id}
+                  phx-click="remove_card"
                   phx-target={@myself}
                   aria_label={~t"Remove"}
                 >
@@ -128,6 +131,12 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
   def handle_event("remove_item", %{"id" => id}, socket) do
     Orders.remove_line_item(socket.assigns.order, id)
+    {:noreply, socket}
+  end
+
+  # Not `remove_item`: removing the card also clears the card message.
+  def handle_event("remove_card", _, socket) do
+    Orders.remove_card(socket.assigns.order)
     {:noreply, socket}
   end
 

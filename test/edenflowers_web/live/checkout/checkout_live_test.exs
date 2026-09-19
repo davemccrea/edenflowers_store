@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     only: [
       live: 2,
       render: 1,
+      render_click: 1,
       render_click: 3,
       render_change: 2,
       element: 2,
@@ -61,7 +62,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "John Doe")
+      |> fill_in("Your name *", with: "John Doe")
       |> fill_in("Email *", with: "john@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
@@ -71,7 +72,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "John Doe")
+      |> fill_in("Your name *", with: "John Doe")
       |> fill_in("Email *", with: "notanemail")
       |> click_button("Next")
       |> assert_has("p", text: "Must be a valid email address")
@@ -95,7 +96,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "Subscriber")
+      |> fill_in("Your name *", with: "Subscriber")
       |> fill_in("Email *", with: "subscriber@example.com")
       |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
       |> click_button("Next")
@@ -114,7 +115,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "Bystander")
+      |> fill_in("Your name *", with: "Bystander")
       |> fill_in("Email *", with: "bystander@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
@@ -133,7 +134,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "Returning Guest")
+      |> fill_in("Your name *", with: "Returning Guest")
       |> fill_in("Email *", with: "returning@example.com")
       |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
       |> click_button("Next")
@@ -152,7 +153,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "Undecided Guest")
+      |> fill_in("Your name *", with: "Undecided Guest")
       |> fill_in("Email *", with: "undecided@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
@@ -169,7 +170,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> visit("/checkout")
-      |> fill_in("Your Name *", with: "Already Subscribed")
+      |> fill_in("Your name *", with: "Already Subscribed")
       |> fill_in("Email *", with: "subscribed@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
@@ -185,7 +186,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
         |> visit("/checkout")
-        |> fill_in("Your Name *", with: "John Doe")
+        |> fill_in("Your name *", with: "John Doe")
         |> fill_in("Email *", with: "john@example.com")
         |> click_button("Next")
 
@@ -398,7 +399,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='card-message-textarea']")
-      |> assert_has("[data-testid='remove-card-button']")
     end
 
     test "card row in cart sidebar has a remove control but no quantity controls",
@@ -438,21 +438,27 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> refute_has("[data-testid='select-card-button']")
     end
 
-    test "remove_card event removes the card from the order",
+    test "removing the card from the cart sidebar swaps the card message for the card picker",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(state: :gift_options, gift: true))
 
       Orders.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      card =
+        Orders.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        |> Enum.find(& &1.is_card)
 
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> assert_has("[data-testid='card-message-textarea']")
-      |> click_button("[data-testid='remove-card-button']", "Remove card")
-      |> assert_has("[data-testid='select-card-button']")
-      |> refute_has("[data-testid='card-message-textarea']")
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
+      # The checkout picks up the removal from the line_item:changed broadcast.
+      html = render(view)
+
+      assert html =~ ~s(data-testid="select-card-button")
+      refute html =~ ~s(data-testid="card-message-textarea")
     end
 
     test "save_form_2 persists card_message on the order",
@@ -467,7 +473,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      |> fill_in("Card Message", with: "Happy birthday!")
+      |> fill_in("Card message", with: "Happy birthday!")
       |> click_button("Next")
 
       reloaded = Orders.get_order_for_checkout!(gift_order.id, actor: nil)
@@ -485,8 +491,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      |> fill_in("Card Message", with: "Happy birthday!")
-      |> fill_in("Recipient Name *", with: "Updated Recipient")
+      |> fill_in("Card message", with: "Happy birthday!")
+      |> fill_in("Recipient name *", with: "Updated Recipient")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
     end
 
@@ -543,7 +549,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      |> fill_in("Card Message", with: "Happy birthday!")
+      |> fill_in("Card message", with: "Happy birthday!")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
       |> unwrap(fn view ->
         render_click(view, "select_card", %{"variant-id" => large_variant.id})
@@ -564,12 +570,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
-      |> fill_in("Card Message", with: oversize)
+      |> fill_in("Card message", with: oversize)
       |> click_button("Next")
       |> assert_has("p", text: "at most")
     end
 
-    test "remove_card clears card_message on the order",
+    test "removing the card from the cart clears card_message on the order",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order =
         generate(order(state: :gift_options, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
@@ -578,10 +584,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_card!(gift_order, card_variant.id, authorize?: false)
 
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> click_button("[data-testid='remove-card-button']", "Remove card")
+      card = Enum.find(Orders.get_order_for_checkout!(gift_order.id, actor: nil).line_items, & &1.is_card)
+
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
 
       reloaded = Orders.get_order_for_checkout!(gift_order.id, actor: nil)
       assert is_nil(reloaded.card_message)
@@ -593,7 +603,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      card =
+        Orders.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        |> Enum.find(& &1.is_card)
 
       {:ok, view, _html} =
         conn
@@ -604,7 +616,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> element("[data-testid='checkout-form-2']")
       |> render_change(%{"form" => %{"card_message" => "Stale message"}})
 
-      render_click(view, "remove_card", %{})
+      view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
+      render(view)
       html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
 
       assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
