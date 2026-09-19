@@ -11,7 +11,8 @@ defmodule EdenflowersWeb.Checkout.ReceiptController do
          {:ok, pdf} <- Receipt.generate(order) do
       send_download(conn, {:binary, pdf},
         filename: "eden-flowers-#{order.order_reference}.pdf",
-        content_type: "application/pdf"
+        content_type: "application/pdf",
+        disposition: :inline
       )
     else
       _ -> send_resp(conn, :not_found, "Not found")
