@@ -4,8 +4,12 @@ defmodule Edenflowers.Orders.Payment do
   """
 
   require Logger
+  import Edenflowers.Actors
 
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
 
   def setup_payment(%{payment_intent_id: nil} = order, actor) do
     case stripe_api().create_payment_intent(order) do
@@ -30,6 +34,74 @@ defmodule Edenflowers.Orders.Payment do
   end
 
   def update_payment(order), do: stripe_api().update_payment_intent(order)
+
+  @doc """
+  Places the order for a succeeded PaymentIntent and enqueues its confirmation
+  email. Shared by the Stripe webhook and the reconciliation job, so either may
+  run first or both may run: placing is guarded by the state machine and the
+  email job is unique per order.
+
+  Returns `{:ok, order}` when this call placed the order, or
+  `{:ok, :already_placed}`.
+  """
+  def complete_payment(order_id, payment_intent) do
+    # Enqueue even when already placed: gives a second chance if enqueue failed
+    # on an earlier attempt.
+    with {:ok, outcome} <- finalize_checkout(order_id, payment_intent),
+         {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order_id}) do
+      {:ok, outcome}
+    end
+  end
+
+  defp finalize_checkout(order_id, payment_intent) do
+    case Ash.get(Order, order_id, actor: system_actor(), load: [:grand_total]) do
+      {:ok, %{state: :placed}} ->
+        {:ok, :already_placed}
+
+      {:ok, order} ->
+        with :ok <- verify_payment_intent_id(payment_intent, order),
+             :ok <- verify_amount(payment_intent, order) do
+          place_order(order_id)
+        end
+
+      {:error, reason} ->
+        {:error, {:payment_update_failed, order_id, reason}}
+    end
+  end
+
+  defp verify_payment_intent_id(%{id: pi_id}, order) do
+    if pi_id == order.payment_intent_id do
+      :ok
+    else
+      {:error, {:payment_intent_mismatch, order.id, order.payment_intent_id, pi_id}}
+    end
+  end
+
+  defp verify_amount(%{amount_received: amount_received}, order) do
+    expected_cents = StripeAPI.to_stripe_amount(order.grand_total)
+
+    if amount_received == expected_cents do
+      :ok
+    else
+      {:error, {:amount_mismatch, order.id, expected_cents, amount_received}}
+    end
+  end
+
+  defp place_order(order_id) do
+    case Orders.finalize_checkout(order_id, actor: system_actor()) do
+      {:ok, order} -> {:ok, order}
+      {:error, reason} -> recover_already_placed(order_id, reason)
+    end
+  end
+
+  # A concurrent webhook delivery or reconciliation run may have placed the
+  # order between our read and write.
+  defp recover_already_placed(order_id, reason) do
+    case Orders.get_order_by_id(order_id, actor: system_actor()) do
+      {:ok, %{state: :placed}} -> {:ok, :already_placed}
+      _ -> {:error, {:payment_update_failed, order_id, reason}}
+    end
+  end
 
   defp persist_payment_intent(order, payment_intent, actor) do
     case Orders.add_payment_intent_id(order, payment_intent.id, actor: actor) do

@@ -19,11 +19,10 @@ config :edenflowers, Oban,
     # TODO: maybe enabled priner and reindexer at some point
     # {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
     # Oban.Plugins.Reindexer,
-    # {Oban.Plugins.Cron,
-    #  crontab: [
-    #    # Run every Sunday at 18:00
-    #    {"0 18 * * SUN", Edenflowers.Workers.WeeklyRecap}
-    #  ]}
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"*/10 * * * *", Edenflowers.Orders.Workers.ReconcileStripePayments}
+     ]}
   ]
 
 config :localize,
