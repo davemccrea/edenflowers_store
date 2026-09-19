@@ -926,7 +926,7 @@ defmodule EdenflowersWeb.CoreComponents do
           {@product.name}
         </h3>
         <p class="font-serif text-base-content/65 text-base italic leading-none">
-          <span :if={@from_price?} class="font-sans tracking-[0.18em] mr-1 text-xs uppercase not-italic">
+          <span :if={@from_price?} class="eyebrow mr-1 not-italic">
             {~t"From"}
           </span>
           {Edenflowers.Format.currency(@product.cheapest_price, @locale)}
