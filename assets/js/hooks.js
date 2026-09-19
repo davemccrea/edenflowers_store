@@ -772,17 +772,19 @@ Hooks.PhotoGallery = {
     );
 
     // Credit line. PhotoSwipe has no caption of its own, and the plugin that
-    // adds one isn't worth a second vendored file for this. Text comes from
-    // the same data-pswp-credit the page renders into the visible figcaption,
-    // so there's one source of truth.
+    // adds one isn't worth a second vendored file for this. It clones the
+    // thumbnail's figcaption, photographer link included, so there's one
+    // source of truth.
     this.lightbox.on("uiRegister", () => {
       this.lightbox.pswp.ui.registerElement({
         name: "credit",
         appendTo: "root",
         onInit: (el, pswp) => {
           const render = () => {
-            const credit = pswp.currSlide?.data?.element?.dataset?.pswpCredit;
-            el.textContent = credit || "";
+            const caption = pswp.currSlide?.data?.element
+              ?.closest("figure")
+              ?.querySelector("figcaption");
+            el.replaceChildren(...(caption?.cloneNode(true).childNodes ?? []));
           };
           pswp.on("change", render);
           render();

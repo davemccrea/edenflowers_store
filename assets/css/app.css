@@ -635,6 +635,10 @@ main p {
   pointer-events: none;
 }
 
+.pswp__credit a {
+  pointer-events: auto;
+}
+
 /* Hook toggles .embla--no-scroll when all slides fit in view. */
 .embla--no-scroll :where(.embla__prev, .embla__next, .embla__dots) {
   display: none;
