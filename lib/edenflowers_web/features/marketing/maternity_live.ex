@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Marketing.MaternityLive do
               width={400}
               height={500}
               sizes="(min-width: 768px) 384px, 100vw"
-              class="w-full rounded-md object-cover shadow-md"
+              class="w-full object-cover"
             />
           </div>
 
