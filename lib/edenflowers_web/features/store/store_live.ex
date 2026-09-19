@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
               <.flower name="flower-42" class="text-primary/80 h-20 w-20" />
               <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
               <p class="text-base-content/75 max-w-md leading-relaxed">
-                {~t"This collection is being refreshed. Check back shortly — or browse another category in the meantime."}
+                {~t"This collection is being refreshed. Check back shortly, or browse another category in the meantime."}
               </p>
               <.button patch={~p"/store/bouquets"} variant="secondary" class="mt-2">
                 {~t"Browse bouquets"}

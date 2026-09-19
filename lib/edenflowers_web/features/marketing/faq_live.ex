@@ -23,10 +23,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {~t"Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM. Every delivery is handled carefully so the flowers arrive in perfect condition."}
           </.faq_item>
           <.faq_item question={~t"Can I include a personal message with my order?"}>
-            {~t"Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."}
+            {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}
           </.faq_item>
           <.faq_item question={~t"Do you offer subscription services?"}>
-            {~t"Yes — weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."}
+            {~t"Yes. Weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."}
           </.faq_item>
           <.faq_item question={~t"What happens if I'm not home for delivery?"}>
             {~t"If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."}

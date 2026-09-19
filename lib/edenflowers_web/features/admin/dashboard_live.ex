@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               <span aria-hidden="true">🎁</span>
               <span :if={@order.recipient_name} class="max-w-[7rem] truncate">{@order.recipient_name}</span>
               <span :if={is_nil(@order.recipient_name)}>{~t"Gift"}</span>
-              <span :if={present?(@order.card_message)} class="sr-only">{~t"— card to write"}</span>
+              <span :if={present?(@order.card_message)} class="sr-only">{~t", card to write"}</span>
             </span>
           </div>
 

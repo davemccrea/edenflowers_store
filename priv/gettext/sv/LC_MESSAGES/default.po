@@ -449,8 +449,8 @@ msgstr "Välkommen tillbaka till Eden Flowers nyhetsbrev!"
 
 #: lib/edenflowers/email.ex:36
 #, elixir-autogen, elixir-format
-msgid "Welcome to Eden Flowers — your 15% off code inside"
-msgstr "Välkommen till Eden Flowers — här är din kod på 15 % rabatt"
+msgid "Welcome to Eden Flowers: your 15% off code inside"
+msgstr "Välkommen till Eden Flowers: här är din kod på 15 % rabatt"
 
 #: lib/edenflowers_web/features/auth/auth_controller.ex:12
 #, elixir-autogen, elixir-format
@@ -469,8 +469,8 @@ msgstr "Du har redan loggat in på ett annat sätt, men har inte bekräftat ditt
 
 #: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:5
 #, elixir-autogen, elixir-format
-msgid "Your 15% off welcome code is still valid — here it is again:"
-msgstr "Din välkomstkod på 15 % rabatt gäller fortfarande — här är den igen:"
+msgid "Your 15% off welcome code is still valid. Here it is again:"
+msgstr "Din välkomstkod på 15 % rabatt gäller fortfarande. Här är den igen:"
 
 #: lib/edenflowers/email.ex:44
 #, elixir-autogen, elixir-format
@@ -735,17 +735,17 @@ msgstr "Tack! Din kod på 15 % rabatt är på väg till din inkorg."
 
 #: lib/edenflowers_web/features/store/store_live.ex:100
 #, elixir-autogen, elixir-format, fuzzy
-msgid "This collection is being refreshed. Check back shortly — or browse another category in the meantime."
-msgstr "Den här kollektionen fylls på. Titta in igen snart — eller bläddra bland våra andra kategorier under tiden."
+msgid "This collection is being refreshed. Check back shortly, or browse another category in the meantime."
+msgstr "Den här kollektionen fylls på. Titta in igen snart, eller bläddra bland våra andra kategorier under tiden."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:29
 #, elixir-autogen, elixir-format
-msgid "Yes — weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."
-msgstr "Ja — vi erbjuder prenumerationer varje vecka, varannan vecka eller varje månad, med intervall enligt dina önskemål. Prenumeranter får 10 % rabatt på alla beställningar."
+msgid "Yes. Weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."
+msgstr "Ja. Vi erbjuder prenumerationer varje vecka, varannan vecka eller varje månad, med intervall enligt dina önskemål. Prenumeranter får 10 % rabatt på alla beställningar."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:26
 #, elixir-autogen, elixir-format
-msgid "Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."
+msgid "Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr "Ja. Lägg till ett personligt meddelande i kassan så följer det med på ett kort vid leveransen. Meddelandet får vara högst 200 tecken."
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:18
@@ -1219,8 +1219,8 @@ msgstr "Utgiften uppdaterades."
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:19
 #, elixir-autogen, elixir-format
-msgid "Expense — %{var}"
-msgstr "Utgift — %{var}"
+msgid "Expense: %{var}"
+msgstr "Utgift: %{var}"
 
 #: lib/edenflowers_web/components/layouts.ex:151
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:40
@@ -1669,8 +1669,8 @@ msgstr "Visa betalningen i Stripe"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:128
 #, elixir-autogen, elixir-format
-msgid "— card to write"
-msgstr "— kort att skriva"
+msgid ", card to write"
+msgstr ", kort att skriva"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:187
 #, elixir-autogen, elixir-format

@@ -33,7 +33,7 @@ defmodule Edenflowers.Email do
     new()
     |> from(@from_address)
     |> to(email_address)
-    |> subject(~t"Welcome to Eden Flowers — your 15% off code inside")
+    |> subject(~t"Welcome to Eden Flowers: your 15% off code inside")
     |> text_body(Templates.newsletter_promo(%{promo_code: promo_code}))
   end
 

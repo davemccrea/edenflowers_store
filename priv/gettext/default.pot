@@ -449,7 +449,7 @@ msgstr ""
 
 #: lib/edenflowers/email.ex:36
 #, elixir-autogen, elixir-format
-msgid "Welcome to Eden Flowers — your 15% off code inside"
+msgid "Welcome to Eden Flowers: your 15% off code inside"
 msgstr ""
 
 #: lib/edenflowers_web/features/auth/auth_controller.ex:12
@@ -469,7 +469,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:5
 #, elixir-autogen, elixir-format
-msgid "Your 15% off welcome code is still valid — here it is again:"
+msgid "Your 15% off welcome code is still valid. Here it is again:"
 msgstr ""
 
 #: lib/edenflowers/email.ex:44
@@ -735,17 +735,17 @@ msgstr ""
 
 #: lib/edenflowers_web/features/store/store_live.ex:100
 #, elixir-autogen, elixir-format
-msgid "This collection is being refreshed. Check back shortly — or browse another category in the meantime."
+msgid "This collection is being refreshed. Check back shortly, or browse another category in the meantime."
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:29
 #, elixir-autogen, elixir-format
-msgid "Yes — weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."
+msgid "Yes. Weekly, bi-weekly, and monthly subscriptions are available, with the cadence tailored to your preferences. Subscribers receive 10% off all orders."
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:26
 #, elixir-autogen, elixir-format
-msgid "Yes. Add a personal message during checkout — it'll be included on a card with the delivery. Messages can be up to 200 characters."
+msgid "Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:18
@@ -1219,7 +1219,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:19
 #, elixir-autogen, elixir-format
-msgid "Expense — %{var}"
+msgid "Expense: %{var}"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:151
@@ -1669,7 +1669,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:128
 #, elixir-autogen, elixir-format
-msgid "— card to write"
+msgid ", card to write"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:187

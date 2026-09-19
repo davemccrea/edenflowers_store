@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
       {:ok, expense} ->
         {:ok,
          socket
-         |> assign(:page_title, ~t"Expense — #{expense.vendor_name || id}")
+         |> assign(:page_title, ~t"Expense: #{expense.vendor_name || id}")
          |> assign(:locale, Localize.get_locale())
          |> assign(:expense, expense)
          |> assign(:form, build_form(expense, socket.assigns.current_user))}

@@ -147,7 +147,7 @@ defmodule EdenflowersWeb.DatePicker do
           class="cursor-pointer"
         >
           {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
-          <span class="sr-only">— {~t"go to current month"}</span>
+          <span class="sr-only">, {~t"go to current month"}</span>
         </button>
         <button
           id={"#{@id}-next-month"}
