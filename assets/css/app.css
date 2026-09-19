@@ -128,13 +128,6 @@
   --radius-box: 0;
 }
 
-/* Drawers are sized to the large viewport so they run underneath Safari's
-   bottom toolbar; this pads their last content back above it. Zero wherever
-   the toolbar is hidden or doesn't exist (desktop). */
-:root {
-  --toolbar-clearance: calc(100lvh - 100dvh);
-}
-
 [data-phx-session],
 [data-phx-teleported-src] {
   display: contents;
