@@ -166,7 +166,7 @@
   )
 
   table(
-    columns: (1fr, 110pt, 36pt, 48pt, 64pt),
+    columns: (1fr, 110pt, 36pt, auto, 64pt),
     column-gutter: 8pt,
     align: (left, right, right, right, right),
     stroke: none,
