@@ -41,7 +41,6 @@ const scrollLockDialogIsVisible = (dialog) => {
   if (
     !dialog.isConnected ||
     dialog.hidden ||
-    dialog.classList.contains("hidden") ||
     dialog.getAttribute("aria-hidden") === "true"
   ) {
     return false;
@@ -62,7 +61,19 @@ const syncModalDialogScrollLock = () => {
   );
 };
 
-const modalDialogObserver = new MutationObserver(syncModalDialogScrollLock);
+// Other elements change styles every frame (e.g. carousel tweens), so only
+// re-check when a drawer itself changed or nodes were added or removed.
+const modalDialogObserver = new MutationObserver((records) => {
+  if (
+    records.some(
+      (record) =>
+        record.type === "childList" ||
+        record.target.matches?.(scrollLockDialogSelector),
+    )
+  ) {
+    syncModalDialogScrollLock();
+  }
+});
 
 modalDialogObserver.observe(document.body, {
   subtree: true,
