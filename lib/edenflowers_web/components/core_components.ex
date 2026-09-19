@@ -1165,13 +1165,13 @@ defmodule EdenflowersWeb.CoreComponents do
       }
       class="z-100 relative"
     >
-      <div id={"#{@id}-backdrop"} class="bg-black/30 fixed inset-0 hidden"></div>
+      <div id={"#{@id}-backdrop"} class="bg-black/30 h-lvh fixed inset-x-0 top-0 hidden"></div>
       <div
         id={"#{@id}-dialog"}
         role="dialog"
         aria-modal="true"
         aria-label={@label}
-        class={"#{@placement_class} js-scroll-lock-dialog fixed inset-0 hidden outline-hidden"}
+        class={"#{@placement_class} js-scroll-lock-dialog h-lvh fixed inset-x-0 top-0 hidden outline-hidden"}
       >
         <.focus_wrap id={"#{@id}-body"}>
           <div tabindex="0" id={"#{@id}-top"}></div>

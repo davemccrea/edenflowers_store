@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Layouts do
       )
 
     ~H"""
-    <div class="flex h-full flex-col py-5">
+    <div class="pb-[calc(1.25rem+var(--toolbar-clearance))] flex h-full flex-col pt-5">
       <div class="mb-6 flex items-center justify-between px-5">
         <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
           Eden Flowers
@@ -527,7 +527,7 @@ defmodule EdenflowersWeb.Layouts do
         </nav>
       </div>
 
-      <footer class="bg-base-300 flex flex-col gap-6 px-8 py-8">
+      <footer class="bg-base-300 pb-[calc(2rem+var(--toolbar-clearance))] flex flex-col gap-6 px-8 pt-8">
         <.locale_list
           locales={@locales}
           current_locale_code={@current_locale_code}
