@@ -11,7 +11,8 @@
     :ecto_sql,
     :phoenix,
     :ash_archival,
-    :ash_translation
+    :ash_translation,
+    :error_tracker
   ],
   subdirectories: ["priv/*/migrations"],
   plugins: [Spark.Formatter, Phoenix.LiveView.HTMLFormatter, TailwindFormatter],
