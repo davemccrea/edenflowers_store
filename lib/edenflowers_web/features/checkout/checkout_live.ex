@@ -87,15 +87,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     data-testid="checkout-form-1"
                   >
                     <.input
-                      label={~t"Your Name *"}
+                      label={~t"Your name *"}
                       field={@form[:customer_name]}
                       type="text"
+                      autocomplete="name"
+                      aria-required="true"
                       data-testid="customer-name-input"
                     />
                     <.input
                       label={~t"Email *"}
                       field={@form[:customer_email]}
                       type="email"
+                      autocomplete="email"
+                      aria-required="true"
                       data-testid="customer-email-input"
                     />
 
@@ -135,9 +139,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.input
                       hidden={not @order.gift}
-                      label={~t"Recipient Name *"}
+                      label={~t"Recipient name *"}
                       field={@form[:recipient_name]}
                       type="text"
+                      aria-required="true"
                       data-testid="recipient-name-input"
                     />
 
@@ -154,7 +159,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       type="radio-card"
                       field={@form[:fulfillment_option_id]}
                       options={Enum.map(@fulfillment_options, fn %{id: id, name: name} -> %{name: name, value: id} end)}
-                      label={~t"Delivery Method *"}
+                      label={~t"Delivery method *"}
                     >
                       {option.name}
                     </.input>
@@ -174,11 +179,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         module={EdenflowersWeb.Checkout.AddressInput}
                         order={@order}
                         label={recipient_label(@order, :address)}
+                        autocomplete={own_details_autocomplete(@order, "street-address")}
                       />
 
                       <.input
                         :if={@order.fulfillment_method == :delivery}
-                        label={~t"Delivery Instructions"}
+                        label={~t"Delivery instructions"}
                         field={@form[:delivery_instructions]}
                         type="text"
                         placeholder={~t"e.g. Door code 1234, leave at the front door"}
@@ -186,19 +192,21 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                       <.input
                         label={recipient_label(@order, :phone)}
-                        placeholder={~t"045 1505141"}
+                        placeholder="040 123 4567"
                         field={@form[:recipient_phone_number]}
                         type="tel"
+                        autocomplete={own_details_autocomplete(@order, "tel")}
+                        aria-required={to_string(@order.fulfillment_method == :pickup)}
                       />
 
                       <fieldset class="flex flex-col">
-                        <label class="mb-1">
+                        <legend class="mb-1">
                           <%= if @order.fulfillment_method == :delivery do %>
-                            {~t"Delivery Date *"}
+                            {~t"Delivery date *"}
                           <% else %>
-                            {~t"Pickup Date *"}
+                            {~t"Pickup date *"}
                           <% end %>
-                        </label>
+                        </legend>
                         <div class="sm:max-w-md">
                           <.live_component
                             id="calendar"
@@ -238,7 +246,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     class="flex flex-col gap-4"
                   >
                     <div phx-update="ignore" id="payment-element"></div>
-                    <div phx-update="ignore" id="stripe-error-message" class="text-error"></div>
+                    <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
 
                     <.form_button disabled={true} id="payment-button">
                       {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
@@ -386,7 +394,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           data-testid="card-message-field"
           class="flex flex-col"
         >
-          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card Message")}</label>
+          <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card message")}</label>
           <div class="textarea textarea-lg relative w-full">
             <div class="relative w-full">
               <textarea
@@ -394,41 +402,31 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 name={@form[:card_message].name}
                 class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
                 maxlength={@card_message_max}
+                aria-describedby={"#{@id}-card-message-count"}
                 rows={5}
                 data-testid="card-message-textarea"
               >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
               <div class="absolute top-2 right-2">
-                <div class="relative">
-                  <button
-                    type="button"
-                    phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                    class="block shrink-0 cursor-pointer"
-                    data-testid="card-image-button"
-                    title={gettext("Change card")}
-                  >
-                    <.image
-                      src={@card_line_item.product_image_slug}
-                      alt={@card_line_item.product_name}
-                      width={80}
-                      height={80}
-                      sizes="80px"
-                      class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    phx-click="remove_card"
-                    class="text-base-content/70 bg-base-100 absolute -top-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center hover:text-base-content"
-                    data-testid="remove-card-button"
-                    title={gettext("Remove card")}
-                  >
-                    <.icon name="hero-trash" class="h-4 w-4" />
-                    <span class="sr-only">{gettext("Remove card")}</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+                  class="block shrink-0 cursor-pointer"
+                  data-testid="card-image-button"
+                  title={gettext("Change card")}
+                >
+                  <.image
+                    src={@card_line_item.product_image_slug}
+                    alt=""
+                    width={80}
+                    height={80}
+                    sizes="80px"
+                    class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
+                  />
+                  <span class="sr-only">{gettext("Change card")}</span>
+                </button>
               </div>
             </div>
-            <div class="text-base-content/40 flex justify-end text-xs">
+            <div id={"#{@id}-card-message-count"} class="text-base-content/70 flex justify-end text-xs">
               <span id="char-count" phx-update="ignore">0</span>/{@card_message_max}
             </div>
           </div>
@@ -459,16 +457,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     <.drawer
       id="card-drawer"
       placement="right"
-      label="Select a Card"
+      label={gettext("Select a card")}
       class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
     >
       <div class="flex flex-col gap-6" data-testid="card-drawer">
         <div class="flex flex-row items-center justify-between">
-          <h2 class="section-title">{gettext("Select a Card")}</h2>
+          <h2 class="section-title">{gettext("Select a card")}</h2>
           <button
             type="button"
             phx-click={JS.exec("phx-hide", to: "#card-drawer")}
-            class="h-10 w-10 cursor-pointer"
+            class="-mr-2.5 flex h-11 w-11 cursor-pointer items-center justify-center"
+            aria-label={~t"close"}
           >
             <.icon name="hero-x-mark" class="h-6 w-6" />
           </button>
@@ -604,11 +603,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign_forms(socket, order)}
   end
 
-  def handle_event("remove_card", _, socket) do
-    order = Orders.remove_card!(socket.assigns.order, actor: actor(socket))
-    {:noreply, assign_forms(socket, order, drop: ["card_message"])}
-  end
-
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("Stripe client error for order #{socket.assigns.order.id}: #{message}: #{inspect(details)}")
 
@@ -625,7 +619,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # charges the cart total at the moment of click.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
-    {:noreply, assign(socket, order: order)}
+
+    # A card removed from the cart takes its message with it; drop the typed
+    # value too, or it would reappear if a card is picked again.
+    if has_card?(socket.assigns.order) and not has_card?(order) do
+      {:noreply, assign_forms(socket, order, drop: ["card_message"])}
+    else
+      {:noreply, assign(socket, order: order)}
+    end
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
@@ -636,6 +637,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
+
+  defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
 
   defp handle_mount_error(socket, log_message, flash_message) do
     Logger.error(log_message)
@@ -650,18 +653,22 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp recipient_label(%{gift: true, fulfillment_method: :delivery, recipient_first_name: first_name}, field)
        when is_binary(first_name) do
     case field do
-      :address -> gettext("%{name}'s Address *", name: first_name)
-      :phone -> gettext("%{name}'s Phone Number", name: first_name)
+      :address -> gettext("%{name}'s address *", name: first_name)
+      :phone -> gettext("%{name}'s phone number", name: first_name)
     end
   end
 
   defp recipient_label(order, field) do
     case {field, order.fulfillment_method} do
       {:address, _} -> gettext("Address *")
-      {:phone, :pickup} -> gettext("Phone Number *")
-      {:phone, _} -> gettext("Phone Number")
+      {:phone, :pickup} -> gettext("Phone number *")
+      {:phone, _} -> gettext("Phone number")
     end
   end
+
+  # Autofill offers the buyer's own saved details, which are wrong for a gift's recipient.
+  defp own_details_autocomplete(%{gift: true, fulfillment_method: :delivery}, _token), do: "off"
+  defp own_details_autocomplete(_order, token), do: token
 
   defp actor(socket), do: socket.assigns[:current_user]
 

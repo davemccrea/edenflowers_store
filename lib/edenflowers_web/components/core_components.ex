@@ -381,8 +381,8 @@ defmodule EdenflowersWeb.CoreComponents do
       |> assign_new(:id_prefix, fn -> assigns.id || assigns.name || "radio_card" end)
 
     ~H"""
-    <fieldset class={["flex flex-col gap-1", @hidden && "hidden"]}>
-      <span :if={@label}>{@label}</span>
+    <fieldset class={["flex flex-col", @hidden && "hidden"]}>
+      <legend :if={@label} class="mb-1">{@label}</legend>
       <div class="flex flex-col flex-wrap gap-2 md:flex-row">
         <input type="hidden" name={@name} value="" />
         <%= for option <- @options do %>
