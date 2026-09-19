@@ -69,16 +69,19 @@ defmodule EdenflowersWeb.CoreComponents do
       class="toast toast-top toast-end z-50"
       {@rest}
     >
-      <div class={["alert max-w-80 text-wrap w-80 sm:max-w-96 sm:w-96", @kind == :info && "alert-info", @kind == :error && "alert-error"]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
+      <div class="bg-base-100 text-base-content border-base-300 shadow-base-content/10 flex w-80 items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96">
+        <.icon :if={@kind == :info} name="hero-information-circle" class="text-primary size-5 mt-0.5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="text-error-content size-5 mt-0.5 shrink-0" />
+        <div class="text-pretty min-w-0 flex-1 text-sm leading-relaxed">
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group cursor-pointer self-start" aria-label={~t"close"}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        <button
+          type="button"
+          class="text-base-content/50 size-8 -my-1 grid shrink-0 cursor-pointer place-items-center hover:text-base-content"
+          aria-label={~t"close"}
+        >
+          <.icon name="hero-x-mark" class="size-4" />
         </button>
       </div>
     </div>
