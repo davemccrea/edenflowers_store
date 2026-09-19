@@ -551,7 +551,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
-                class="text-primary logo-wordmark tracking-[0.14em] whitespace-nowrap text-2xl sm:tracking-[0.18em] sm:text-2xl lg:text-3xl"
+                class="text-primary logo-wordmark max-sm:tracking-[0.14em] whitespace-nowrap text-2xl lg:text-3xl"
               >
                 Eden Flowers
               </.link>

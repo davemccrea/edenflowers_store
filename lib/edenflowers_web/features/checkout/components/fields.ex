@@ -99,7 +99,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
     |> String.pad_leading(2, "0")
   end
 
-  defp position_classes(true), do: ["eyebrow tabular-nums", "text-[var(--color-link-underline)]"]
+  defp position_classes(true), do: ["eyebrow tabular-nums", "text-link-underline"]
   defp position_classes(false), do: ["eyebrow tabular-nums", "text-base-content/70"]
 
   defp title_classes(past?, future?) do
