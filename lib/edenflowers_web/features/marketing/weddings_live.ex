@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 height={1000}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 priority
-                class="aspect-[4/5] w-full rounded-md object-cover"
+                class="aspect-[4/5] w-full object-cover"
               />
               <figcaption class="text-base-content/60 mt-2 text-sm">{photo_credit(@hero.credit)}</figcaption>
             </figure>
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               width={800}
               height={533}
               sizes="(min-width: 768px) 50vw, 100vw"
-              class="aspect-[3/2] w-full rounded-md object-cover"
+              class="aspect-[3/2] w-full object-cover"
             />
             <figcaption class="text-base-content/60 mt-2 text-sm">{photo_credit(@prices_photo.credit)}</figcaption>
           </figure>
@@ -223,7 +223,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                   height={thumb_height(photo)}
                   quality={80}
                   sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
-                  class="w-full rounded-md"
+                  class="w-full"
                 />
               </a>
             </figure>

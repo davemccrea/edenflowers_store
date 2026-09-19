@@ -116,6 +116,14 @@
   --color-base-200: oklch(97% 0.008 75);
   --color-base-300: oklch(93.5% 0.012 75);
   --color-base-content: oklch(22% 0.015 75);
+
+  /* Square is the system. daisyUI's defaults (0.25rem field, 0.5rem box) are
+     what made `.btn` need an explicit `rounded-none`; setting them here squares
+     inputs, selects, dropdowns, modals, drawers and badges at the source.
+     --radius-selector stays soft on purpose: it shapes radios, and a square
+     radio reads as a checkbox. */
+  --radius-field: 0;
+  --radius-box: 0;
 }
 
 [data-phx-session],
@@ -154,7 +162,6 @@ summary {
   background: var(--color-base-100);
   color: var(--color-base-content);
   border: 2px solid var(--color-primary);
-  border-radius: 0.25rem;
   text-decoration: none;
   font-weight: 600;
 }

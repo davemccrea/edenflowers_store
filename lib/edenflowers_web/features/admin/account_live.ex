@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           <:subtitle>{~t"Manage your signed-in admin session."}</:subtitle>
         </.admin_page_header>
 
-        <section class="bg-base-100 border-base-300/70 rounded-lg border p-4 sm:p-5">
+        <section class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
           <div class="mb-5 flex items-center gap-3">
             <span class="bg-primary/10 text-primary inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-semibold">
               {user_initials(@current_user)}

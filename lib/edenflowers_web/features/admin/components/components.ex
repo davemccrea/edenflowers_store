@@ -107,7 +107,7 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section class="bg-base-100 border-base-300/70 rounded-lg border p-4 sm:p-5">
+    <section class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
       <div class="mb-4 flex items-start justify-between gap-3">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
