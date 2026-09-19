@@ -3,6 +3,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
   # repeated `enqueue/1` calls for the same order collapse to a single job.
   use Oban.Worker, unique: [keys: [:order_id], period: :infinity]
 
+  require Logger
   import Edenflowers.Actors
 
   alias Edenflowers.Email
@@ -29,6 +30,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
 
     # Skip if a prior Oban attempt already delivered + marked.
     if order.receipt_emailed_at do
+      Logger.info("Confirmation email for order #{order_id} already sent")
       :ok
     else
       send_with_receipt(order)
@@ -42,6 +44,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
          {:ok, _result} <- Mailer.deliver(email),
          {:ok, _order} <-
            Orders.mark_receipt_emailed(order, sha, actor: system_actor()) do
+      Logger.info("Sent confirmation email for order #{order.id}")
       :ok
     end
   end
