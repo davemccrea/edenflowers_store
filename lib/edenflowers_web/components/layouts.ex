@@ -95,6 +95,43 @@ defmodule EdenflowersWeb.Layouts do
     end
   end
 
+  @doc """
+  Renders the page's flash notices plus the connection-lost toasts, which
+  LiveView reveals on disconnect and hides again on reconnect.
+  """
+  attr :flash, :map, required: true
+
+  def flash_group(assigns) do
+    ~H"""
+    <div id="flash-group" aria-live="polite">
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
+      <.flash
+        id="client-error"
+        kind={:error}
+        title={~t"Connection lost"}
+        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
+        hidden
+      >
+        {~t"Reconnecting…"}
+        <.icon name="hero-arrow-path" class="size-3 align-[-0.125em] ml-1 motion-safe:animate-spin" />
+      </.flash>
+      <.flash
+        id="server-error"
+        kind={:error}
+        title={~t"Something went wrong"}
+        phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
+        hidden
+      >
+        {~t"Reconnecting…"}
+        <.icon name="hero-arrow-path" class="size-3 align-[-0.125em] ml-1 motion-safe:animate-spin" />
+      </.flash>
+    </div>
+    """
+  end
+
   attr :flash, :map, required: true
   attr :current_path, :string, required: true
   slot :inner_block, required: true
@@ -107,6 +144,8 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(current_locale: String.capitalize(current_locale))
 
     ~H"""
+    <.flash_group flash={@flash} />
+
     <div class="bg-base-200 flex min-h-screen flex-col">
       <header class="py-8 text-center">
         <.link navigate={~p"/"} class="text-primary logo-wordmark text-xl sm:text-2xl">
@@ -115,8 +154,6 @@ defmodule EdenflowersWeb.Layouts do
       </header>
 
       <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
-        <.flash kind={:info} flash={@flash} />
-        <.flash kind={:error} flash={@flash} />
         {render_slot(@inner_block)}
       </main>
 
@@ -164,6 +201,8 @@ defmodule EdenflowersWeb.Layouts do
       |> assign(:system_nav, system_nav)
 
     ~H"""
+    <.flash_group flash={@flash} />
+
     <div class="min-h-screen lg:flex">
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
@@ -219,8 +258,6 @@ defmodule EdenflowersWeb.Layouts do
         </div>
 
         <main id="main-content" tabindex="-1" class="flex-grow pb-12 outline-hidden">
-          <.flash kind={:info} flash={@flash} />
-          <.flash kind={:error} flash={@flash} />
           {render_slot(@inner_block)}
         </main>
       </div>
@@ -618,9 +655,9 @@ defmodule EdenflowersWeb.Layouts do
       </header>
     </div>
 
+    <.flash_group flash={@flash} />
+
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} />
 
       {render_slot(@inner_block)}
     </main>
