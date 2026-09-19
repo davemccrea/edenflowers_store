@@ -72,7 +72,15 @@ defmodule EdenflowersWeb.Router do
     get "/locale/:locale", LocaleController, :index
 
     auth_routes Auth.AuthController, Edenflowers.Accounts.User, path: "/auth"
-    sign_out_route Auth.AuthController
+
+    sign_out_route(Auth.AuthController, "/sign-out",
+      live_view: EdenflowersWeb.Auth.SignOutLive,
+      on_mount: [
+        {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional},
+        EdenflowersWeb.Hooks.PutLocale,
+        EdenflowersWeb.Hooks.PutCurrentPath
+      ]
+    )
 
     sign_in_route(
       live_view: EdenflowersWeb.Auth.OtpSignInLive,
