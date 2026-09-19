@@ -44,7 +44,6 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:436
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:14
-#: lib/edenflowers_web/features/marketing/home_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Condolences"
 msgstr ""
@@ -58,7 +57,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:434
 #: lib/edenflowers_web/features/marketing/courses_live.ex:25
-#: lib/edenflowers_web/features/marketing/home_live.ex:160
+#: lib/edenflowers_web/features/marketing/home_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "Courses"
 msgstr ""
@@ -106,7 +105,7 @@ msgid "Total"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:435
-#: lib/edenflowers_web/features/marketing/home_live.ex:155
+#: lib/edenflowers_web/features/marketing/home_live.ex:166
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Weddings"
@@ -204,7 +203,7 @@ msgstr ""
 msgid "Increment"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:143
+#: lib/edenflowers_web/features/marketing/home_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Learn more"
 msgstr ""
@@ -607,14 +606,9 @@ msgstr ""
 msgid "Add to cart"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:151
+#: lib/edenflowers_web/features/marketing/home_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Beyond the storefront"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:137
-#, elixir-autogen, elixir-format
-msgid "Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:20
@@ -1557,7 +1551,7 @@ msgstr ""
 msgid "Search vendor or description…"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:150
+#: lib/edenflowers_web/features/marketing/home_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "Services"
 msgstr ""
@@ -1678,7 +1672,7 @@ msgstr ""
 msgid "— card to write"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:174
+#: lib/edenflowers_web/features/marketing/home_live.ex:187
 #, elixir-autogen, elixir-format
 msgid "Trusted by"
 msgstr ""
@@ -1691,11 +1685,6 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/home_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Made in Minimossen"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:118
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen. Beyond that, we keep our delivery rates among the lowest in Vaasa."
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:30
@@ -1913,4 +1902,24 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:275
 #, elixir-autogen, elixir-format
 msgid "Photo: %{credit}"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:179
+#, elixir-autogen, elixir-format
+msgid "Funeral flowers"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:177
+#, elixir-autogen, elixir-format
+msgid "Ordering for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:147
+#, elixir-autogen, elixir-format
+msgid "Hi, I'm Jennie. I've been making flowers in Vaasa since 2018, and every arrangement still passes through my hands."
 msgstr ""

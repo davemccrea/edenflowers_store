@@ -44,10 +44,9 @@ msgstr "Varukorg"
 
 #: lib/edenflowers_web/components/layouts.ex:436
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:14
-#: lib/edenflowers_web/features/marketing/home_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Condolences"
-msgstr "Kondoleanser"
+msgstr "Begravning"
 
 #: lib/edenflowers_web/components/layouts.ex:438
 #: lib/edenflowers_web/components/layouts.ex:668
@@ -58,7 +57,7 @@ msgstr "Kontakt"
 
 #: lib/edenflowers_web/components/layouts.ex:434
 #: lib/edenflowers_web/features/marketing/courses_live.ex:25
-#: lib/edenflowers_web/features/marketing/home_live.ex:160
+#: lib/edenflowers_web/features/marketing/home_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "Courses"
 msgstr "Kurser"
@@ -106,7 +105,7 @@ msgid "Total"
 msgstr "Totalt"
 
 #: lib/edenflowers_web/components/layouts.ex:435
-#: lib/edenflowers_web/features/marketing/home_live.ex:155
+#: lib/edenflowers_web/features/marketing/home_live.ex:166
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Weddings"
@@ -204,7 +203,7 @@ msgstr "Hur länge håller mina blommor sig fräscha?"
 msgid "Increment"
 msgstr "Öka"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:143
+#: lib/edenflowers_web/features/marketing/home_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Learn more"
 msgstr "Läs mer"
@@ -607,15 +606,10 @@ msgstr "är ogiltig"
 msgid "Add to cart"
 msgstr "Lägg i varukorgen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:151
+#: lib/edenflowers_web/features/marketing/home_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Beyond the storefront"
 msgstr "Mer än en butik"
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:137
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."
-msgstr "Skapade för dem med kräsen smak, våra blommor kombinerar kvalitet och stil och levereras perfekt arrangerade till din dörr."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:20
 #, elixir-autogen, elixir-format
@@ -1557,7 +1551,7 @@ msgstr "Sök efter namn…"
 msgid "Search vendor or description…"
 msgstr "Sök leverantör eller beskrivning…"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:150
+#: lib/edenflowers_web/features/marketing/home_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "Services"
 msgstr "Tjänster"
@@ -1678,7 +1672,7 @@ msgstr "Visa betalningen i Stripe"
 msgid "— card to write"
 msgstr "— kort att skriva"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:174
+#: lib/edenflowers_web/features/marketing/home_live.ex:187
 #, elixir-autogen, elixir-format
 msgid "Trusted by"
 msgstr "De litar på oss"
@@ -1693,11 +1687,6 @@ msgstr "Bröllopsblommor"
 msgid "Made in Minimossen"
 msgstr "Gjort i Minimossen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:118
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen. Beyond that, we keep our delivery rates among the lowest in Vaasa."
-msgstr "Alla arrangemang görs färska på beställning, och leveransen är gratis inom 5 km från Minimossen. Längre bort håller vi våra leveranspriser bland de lägsta i Vasa."
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:30
 #, elixir-autogen, elixir-format
 msgid "Flowers for everyday moments"
@@ -1711,7 +1700,7 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/about_live.ex:18
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie! I've run Eden Flowers in Vaasa since 2018. You'll find the shop in Minimossen, the recycling mall at Myrvägen 1."
-msgstr ""
+msgstr "Hej, jag heter Jennie! Jag har drivit Eden Flowers i Vasa sedan 2018. Butiken hittar du i Minimossen, återvinningsgallerian på Myrvägen 1."
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:25
 #, elixir-autogen, elixir-format
@@ -1914,3 +1903,23 @@ msgstr "Handledskorsager med persikofärgade rosor"
 #, elixir-autogen, elixir-format
 msgid "Photo: %{credit}"
 msgstr "Foto: %{credit}"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen."
+msgstr "Alla arrangemang görs färska på beställning, och leveransen är gratis inom 5 km från Minimossen."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:179
+#, elixir-autogen, elixir-format
+msgid "Funeral flowers"
+msgstr "Begravningsblommor"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:177
+#, elixir-autogen, elixir-format
+msgid "Ordering for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."
+msgstr "Beställer du blommor till en begravning? Jag levererar till kyrkor och kapell i Vasa och Korsholm."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:147
+#, elixir-autogen, elixir-format
+msgid "Hi, I'm Jennie. I've been making flowers in Vaasa since 2018, and every arrangement still passes through my hands."
+msgstr "Hej, jag heter Jennie. Jag har arbetat med blommor i Vasa sedan 2018, och varje arrangemang går fortfarande genom mina händer."

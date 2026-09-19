@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Made in Minimossen"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen. Beyond that, we keep our delivery rates among the lowest in Vaasa."}
+              {~t"Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen."}
             </p>
           </div>
 
@@ -131,17 +131,28 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       </section>
 
       <section class="bg-forest not-last:border-b">
-        <div class="container flex flex-col items-center gap-10 py-24 md:py-32">
-          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
-          <blockquote class="pull-quote text-forest-content max-w-4xl text-center">
-            {~t"Crafted for those with discerning taste — flowers that blend quality and style and arrive perfectly arranged at your door."}
-          </blockquote>
-          <.link
-            navigate={~p"/about"}
-            class="eyebrow text-forest-content link-underline-hover"
-          >
-            {~t"Learn more"}
-          </.link>
+        <div class="grid md:grid-cols-2">
+          <.image
+            src="local:///jennie_99.jpg"
+            alt="Jennie"
+            width={1080}
+            height={1350}
+            sizes="(min-width: 768px) 50vw, 100vw"
+            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto"
+          />
+
+          <div class="flex flex-col items-start gap-10 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
+            <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
+            <p class="pull-quote text-forest-content max-w-xl">
+              {~t"Hi, I'm Jennie. I've been making flowers in Vaasa since 2018, and every arrangement still passes through my hands."}
+            </p>
+            <.link
+              navigate={~p"/about"}
+              class="eyebrow text-forest-content link-underline-hover"
+            >
+              {~t"Learn more"}
+            </.link>
+          </div>
         </div>
       </section>
 
@@ -149,7 +160,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div class="container py-20 md:py-28">
           <p class="eyebrow text-base-content/70 mb-4">{~t"Services"}</p>
           <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <.category_tile
               navigate={~p"/weddings"}
               label={~t"Weddings"}
@@ -160,12 +171,14 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               label={~t"Courses"}
               image_src="local:///image_1.jpg"
             />
-            <.category_tile
-              navigate={~p"/condolences"}
-              label={~t"Condolences"}
-              image_src="https://placehold.co/800x600/e8e0d8/888?text=Condolences"
-            />
           </div>
+          <%!-- Stands in for a condolences tile until there is a real photograph of funeral work. --%>
+          <p class="tile-title text-balance mt-12 max-w-2xl">
+            {~t"Ordering for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."}
+            <.link navigate={~p"/condolences"} class="link-underline-static-body whitespace-nowrap">
+              {~t"Funeral flowers"}
+            </.link>
+          </p>
         </div>
       </section>
 
