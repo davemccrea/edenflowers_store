@@ -170,8 +170,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <p class="eyebrow text-base-content/70 mb-4">{~t"Services"}</p>
-          <h2 class="section-title mb-10">{~t"Beyond the storefront"}</h2>
+          <h2 class="section-title mb-10">{~t"Beyond bouquets"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <.category_tile
               navigate={~p"/weddings"}
