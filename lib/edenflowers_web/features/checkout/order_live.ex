@@ -3,7 +3,6 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Receipt
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -20,8 +19,12 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
       # can read an order still in checkout, so only its owner may wait for it.
       {:ok, %{state: :payment} = order}
       when id == guest_order_id or (not is_nil(user) and order.user_id == user.id) ->
-        if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
-        {:ok, assign(socket, placed_order: nil, order_id: order.id)}
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
+          Process.send_after(self(), :payment_slow, 30_000)
+        end
+
+        {:ok, assign(socket, placed_order: nil, order_id: order.id, payment_slow?: false)}
 
       _ when is_nil(user) ->
         {:ok, redirect(socket, to: ~p"/sign-in?return_to=/order/#{id}")}
@@ -40,6 +43,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     {:noreply, assign_placed_order(socket, order)}
   end
 
+  def handle_info(:payment_slow, socket), do: {:noreply, assign(socket, :payment_slow?, true)}
+
   # A guest is granted the order their session's cart became (see `InitStore` and
   # `CheckoutCompleteController`); everyone else goes through the order's read policy.
   def get_order(id, guest_order_id, _user) when id == guest_order_id,
@@ -48,21 +53,30 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   def get_order(id, _guest_order_id, user), do: Orders.get_order_by_id(id, actor: user)
 
   defp assign_placed_order(socket, order) do
-    {:ok, order} = Receipt.load_for_receipt(order)
+    {:ok, order} = Ash.load(order, :customer_first_name, authorize?: false)
 
     socket
-    |> assign(:page_title, ~t"Order #{order.order_reference}")
+    |> assign(:page_title, ~t"Thank you for your order")
     |> assign(:placed_order, order)
+    |> assign(:first_name, order.customer_first_name)
+    |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
   end
 
+  # `order-status` is a live region in both renders, so the swap from pending to
+  # placed is announced.
   def render(%{placed_order: nil} = assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 class="page-title">{~t"Confirming your payment…"}</h1>
-        <p class="text-base-content/70 mt-4" data-testid="order-pending">
-          {~t"This usually takes a few seconds. You'll also get a confirmation email once it's done."}
-        </p>
+        <div id="order-status" role="status" class="max-w-prose" data-testid="order-pending">
+          <h1 class="page-title">{~t"Confirming your payment…"}</h1>
+          <p :if={!@payment_slow?} class="text-base-content/70 mt-4">
+            {~t"This usually takes a few seconds. You'll also get a confirmation email once it's done."}
+          </p>
+          <p :if={@payment_slow?} class="text-base-content/70 mt-4">
+            {~t"This is taking longer than usual. You'll get a confirmation email as soon as your order is placed. If nothing arrives, write to me at info@edenflowers.fi."}
+          </p>
+        </div>
       </.container>
     </Layouts.app>
     """
@@ -72,68 +86,54 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <p class="eyebrow text-base-content/70 mb-5">{~t"Thank you for your order"}</p>
-        <h1 class="page-title">{@placed_order.order_reference}</h1>
-        <p class="text-base-content/70 mt-4 max-w-prose">
-          {~t"A confirmation with your receipt has been sent to #{@placed_order.customer_email}."}
-        </p>
+        <div class="max-w-xl">
+          <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
+          <div id="order-status" role="status">
+            <h1 :if={@first_name} class="page-title">{~t"Thank you, #{@first_name}."}</h1>
+            <h1 :if={!@first_name} class="page-title">{~t"Thank you for your order"}</h1>
 
-        <div class="mt-10 grid gap-10 md:grid-cols-2">
-          <section class="flex flex-col gap-4" data-testid="order-fulfillment">
-            <p class="eyebrow text-base-content/70">{fulfillment_label(@placed_order.fulfillment_method)}</p>
-            <p>{Format.date(@placed_order.fulfillment_date, @placed_order.locale)}</p>
-            <p :if={@placed_order.fulfillment_method == :delivery}>{@placed_order.delivery_address}</p>
-            <p :if={@placed_order.gift && @placed_order.recipient_name}>
-              {~t"For #{@placed_order.recipient_name}"}
+            <p class="font-serif text-balance mt-6 text-2xl leading-snug" data-testid="order-fulfillment">
+              <%= if @placed_order.fulfillment_method == :delivery do %>
+                {~t"I'll deliver your order on #{@date}."}
+              <% else %>
+                {~t"Your order will be ready at the shop on #{@date}."}
+              <% end %>
             </p>
-            <blockquote
-              :if={@placed_order.card_message}
-              class="border-base-content/20 whitespace-pre-wrap border-l-2 pl-3 italic"
+            <p
+              :if={@placed_order.fulfillment_method == :pickup && @placed_order.recipient_phone_number}
+              class="font-serif text-base-content/80 mt-1 text-xl leading-snug"
             >
-              {@placed_order.card_message}
-            </blockquote>
-          </section>
+              {~t"I'll send a text message when it's ready."}
+            </p>
+          </div>
 
-          <section class="flex flex-col gap-2 text-base" data-testid="order-summary">
-            <p class="eyebrow text-base-content/70 mb-2">{~t"Summary"}</p>
+          <figure
+            :if={@placed_order.card_message}
+            class="bg-cream text-cream-content mt-10 max-w-sm px-7 py-6"
+            data-testid="order-card"
+          >
+            <figcaption :if={@placed_order.gift && @placed_order.recipient_name} class="mb-3 text-sm">
+              {~t"For #{@placed_order.recipient_name}"}
+            </figcaption>
+            <blockquote class="font-serif whitespace-pre-wrap text-xl italic leading-snug" phx-no-format>{@placed_order.card_message}</blockquote>
+          </figure>
 
-            <div :for={item <- @placed_order.line_items} class="flex items-baseline justify-between gap-4">
-              <span>{item.quantity} × {item.product_name}</span>
-              <span class="tabular-nums">{Format.currency(item.total, @placed_order.locale)}</span>
-            </div>
-
-            <div class="border-base-content/12 my-2 border-t"></div>
-
-            <div class="flex items-baseline justify-between">
-              <span>{fulfillment_label(@placed_order.fulfillment_method)}</span>
-              <span class="tabular-nums">{Format.currency(@placed_order.fulfillment_fee || 0, @placed_order.locale)}</span>
-            </div>
-            <div :if={@placed_order.promotion_applied?} class="flex items-baseline justify-between">
-              <span>{~t"Discount"}</span>
-              <span class="text-success tabular-nums">
-                - {Format.currency(@placed_order.discount, @placed_order.locale)}
-              </span>
-            </div>
-            <div class="flex items-baseline justify-between">
-              <span>{~t"Incl. VAT"}</span>
-              <span class="tabular-nums">{Format.currency(@placed_order.tax, @placed_order.locale)}</span>
-            </div>
-            <div class="mt-3 flex items-baseline justify-between font-semibold">
-              <span>{~t"Total"}</span>
-              <span class="tabular-nums">{Format.currency(@placed_order.grand_total, @placed_order.locale)}</span>
-            </div>
-
-            <.button href={~p"/order/#{@placed_order.id}/receipt"} variant="secondary" class="mt-6 w-fit">
-              <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
-              {~t"Download receipt"}
+          <div class="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <.button
+              href={~p"/order/#{@placed_order.id}/receipt"}
+              target="_blank"
+              rel="noopener"
+              variant="secondary"
+              size="lg"
+            >
+              {~t"View receipt"}
+              <.icon name="hero-arrow-top-right-on-square" class="size-4" />
             </.button>
-          </section>
+            <.button navigate={~p"/store"} variant="text">{~t"Back to the shop"}</.button>
+          </div>
         </div>
       </.container>
     </Layouts.app>
     """
   end
-
-  defp fulfillment_label(:delivery), do: ~t"Delivery"
-  defp fulfillment_label(_), do: ~t"Pickup"
 end

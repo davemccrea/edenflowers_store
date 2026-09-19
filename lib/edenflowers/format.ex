@@ -49,6 +49,12 @@ defmodule Edenflowers.Format do
     Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMM")
   end
 
+  @doc "Localized weekday with day and full month, e.g. \"Monday 8 June\" / \"måndag 8 juni\". For prose."
+  @spec weekday_date(Date.t(), Localize.Locale.locale_id()) :: String.t()
+  def weekday_date(date, locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMMM")
+  end
+
   @spec datetime(DateTime.t(), Localize.Locale.locale_id(), String.t()) :: String.t()
   def datetime(datetime, locale, time_zone \\ "Europe/Helsinki") do
     shifted = DateTime.shift_zone!(datetime, time_zone)
