@@ -101,6 +101,8 @@ defmodule Edenflowers.MixProject do
       # Background jobs
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.11"},
+      # Error tracking
+      {:error_tracker, "~> 0.9.0"},
       # Assets
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:heroicons,

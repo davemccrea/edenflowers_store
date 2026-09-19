@@ -53,6 +53,22 @@ defmodule Edenflowers.Email do
     |> text_body(Templates.newsletter_resubscribed(%{}))
   end
 
+  def error_alert(error) do
+    new()
+    |> from(@from_address)
+    |> to(Application.fetch_env!(:edenflowers, :error_alert_email))
+    |> subject("[Eden Flowers] #{String.slice(error.reason, 0, 80)}")
+    |> text_body("""
+    #{error.reason}
+
+    Kind: #{error.kind}
+    Where: #{error.source_function} (#{error.source_line})
+    Last seen: #{error.last_occurrence_at}
+
+    #{EdenflowersWeb.Endpoint.url()}/admin/errors/#{error.id}
+    """)
+  end
+
   def otp_sign_in(email_address, otp_code) do
     new()
     |> from(@from_address)

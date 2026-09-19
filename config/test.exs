@@ -37,6 +37,10 @@ config :swoosh, :api_client, false
 
 config :logger, level: :warning
 
+config :error_tracker, enabled: false
+
+config :edenflowers, :error_alert_email, "alerts@example.com"
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
