@@ -6,6 +6,10 @@ default:
 dev:
     source .env && iex -S mix phx.server
 
+# Forward Stripe webhooks to the local dev server
+stripe:
+    stripe listen --forward-to localhost:4000/webhook/stripe
+
 # Drop, set up and seed the dev and test databases
 reset-db:
     ./scripts/reset-db.sh
