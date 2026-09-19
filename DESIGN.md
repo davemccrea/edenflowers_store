@@ -281,7 +281,7 @@ Three serif words in a row on the product page, the active one anchored by the s
 Embla, used for Favourites. On mobile it bleeds to the viewport edges and applies a focal-point effect — the hook writes `--embla-progress` per frame and CSS scales neighbours down by up to 8% and fades them by up to 45%, so the focused card pops. At `sm` and up it becomes a plain multi-card row and the focal effect is dropped entirely. Dots are 5px circles that stretch to 14px when selected. All of it is disabled under `prefers-reduced-motion`.
 
 ### Loading and connection states
-Everything at body level except the flash group dims to 0.7 and becomes non-interactive during a LiveView click or reconnect — but only after a 400ms delay, so sub-400ms socket flaps stay invisible. Un-dimming is immediate. The flash group stays crisp and interactive so the "Disconnected" toast remains readable and dismissible.
+While LiveView is disconnected, every top-level part of the layout except the flash group dims to 0.7 — but only after a 400ms delay, so sub-400ms socket flaps stay invisible — and stops taking clicks at once. Un-dimming starts immediately. Nothing else dims the page: slow clicks already have the topbar and the button spinner, and the first connect leaves the server-rendered page usable. The flash group stays crisp and interactive so the "Connection lost" toast remains readable and dismissible.
 
 ### Named Rules
 

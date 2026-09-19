@@ -172,15 +172,20 @@ summary {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Dim everything body-level (header, main, drawers) in lockstep, but keep
-     the flash group crisp so the "Disconnected" toast stays readable. */
-  body > *:not(#flash-group) {
+  /* While disconnected, dim the layout (header, main, drawers, footer) in
+     lockstep, but keep the flash group crisp so the "Connection lost" toast
+     stays readable. LiveView puts its state classes on the main view's
+     container, which is `display: contents`, so the rules target that
+     container's children — which is why every layout renders
+     <.flash_group> at its top level, never inside <main>. */
+  [data-phx-main] > :not(#flash-group) {
     transition: opacity 200ms ease-out 0ms;
   }
   /* 400ms delay before dimming so sub-400ms socket flaps stay invisible;
-     un-dim is immediate (no delay) when the class is removed. */
-  .phx-loading body > *:not(#flash-group),
-  .phx-click-loading body > *:not(#flash-group) {
+     un-dim is immediate (no delay) when the class is removed. `.phx-error`
+     rather than `.phx-loading`: the latter is also set during the first
+     connect, when the server-rendered page is already perfectly usable. */
+  [data-phx-main].phx-error > :not(#flash-group) {
     opacity: 0.7;
     transition-delay: 400ms;
   }
@@ -212,11 +217,10 @@ summary {
   transition: opacity 0s 300ms;
 }
 
-/* Gate clicks during reconnect/loading so a tap on a CTA mid-flap doesn't
+/* Gate clicks while disconnected so a tap on a CTA mid-flap doesn't
    queue an ambiguous action. Keyboard focus and scrolling are unaffected;
    the flash group stays interactive so toasts can be dismissed. */
-.phx-loading body > *:not(#flash-group),
-.phx-click-loading body > *:not(#flash-group) {
+[data-phx-main].phx-error > :not(#flash-group) {
   pointer-events: none;
 }
 
