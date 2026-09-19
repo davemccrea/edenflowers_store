@@ -190,6 +190,7 @@ defmodule EdenflowersWeb.Layouts do
     ]
 
     system_nav = [
+      {"/admin/errors", ~t"Errors", false, "hero-exclamation-triangle"},
       {"/admin/oban", "Oban", false, "hero-cpu-chip"},
       {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
     ]
