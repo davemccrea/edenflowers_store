@@ -760,7 +760,7 @@ Hooks.PhotoGallery = {
     // everything in the single esbuild bundle — no runtime chunk fetch.
     this.lightbox = new PhotoSwipeLightbox({
       gallery: this.el,
-      children: "a",
+      children: "a[data-pswp-width]",
       pswpModule: PhotoSwipe,
     });
 
