@@ -44,6 +44,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             </.button>
           </div>
         </div>
+
+        <p class="absolute right-4 bottom-3 text-xs text-white/80">
+          {~t"Photo:"}
+          <a
+            href="https://www.danielastreng.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link-underline-hover hover:text-white"
+          >
+            Daniela Streng
+          </a>
+        </p>
       </section>
 
       <section id="store" class="not-last:border-b">
