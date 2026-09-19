@@ -1,4 +1,3 @@
-#import "@preview/tiaoma:0.3.0": qrcode
 #import "theme.typ": colors, fonts, type-scale, eyebrow, display, hairline, honey-rule
 #import "i18n.typ": translate
 
@@ -76,30 +75,12 @@
   // sits top-right as an editorial sign-off. Inline `Label: value` lines
   // use weight (not colour) to distinguish value from label — keeps the
   // page on one ink tone for content, one (muted) for chrome.
-  // QR encodes the customer-facing tracking URL. Reference is unguessable
-  // (random hex, 48 bits of entropy) so the URL alone is hard to enumerate;
-  // the tracking page should additionally email-gate on access.
-  let tracking-url = shop.tracking_base_url + "/" + order.order_reference
-
   grid(
     columns: (auto, 1fr),
     align: (left + top, right + top),
     [
       #display(t("receipt"))
       #v(8pt)
-      #grid(
-        columns: (auto, auto),
-        column-gutter: 8pt,
-        align: (left + horizon, left + horizon),
-        // option-1: 2 → Zint QR error-correction level M (~15% tolerance).
-        // Matches laskutys; balances scan reliability against module density.
-        box(width: 48pt, height: 48pt, link(tracking-url, qrcode(
-          tracking-url,
-          options: (option-1: 2),
-        ))),
-        text(size: type-scale.small, fill: colors.ink-muted)[#t("track-order")],
-      )
-      #v(4pt)
       #text(features: ("tnum",))[
         #t("reference"):
         #text(weight: "semibold")[#order.order_reference] \
