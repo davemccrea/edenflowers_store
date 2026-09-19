@@ -265,7 +265,7 @@ There are no cards. The product card is a link, a figure and two lines of text w
 - **Figure:** `aspect-[4/5]` (square at `sm`), `bg-cream` behind the image so the loading state is warm rather than blank, `overflow-hidden`.
 - **Image:** scales to 1.04 over 700ms `ease-out` on group hover.
 - **Name:** `card-title`, with the honey underline fading in on group hover.
-- **Price:** serif italic at `base-content/65`, with a sans uppercase "From" prefix at eyebrow spec.
+- **Price:** serif italic at `base-content/65`, prefixed by the `eyebrow` utility reading "From" (plus `not-italic`, since it sits inside the italic price line).
 - **Focus:** a full-bleed `::after` pseudo-element becomes a 2px primary border on `focus-visible`, so the ring frames the whole card rather than the text.
 
 ### Navigation
