@@ -224,6 +224,12 @@ summary {
   pointer-events: none;
 }
 
+/* Reserve the scrollbar's space so the page doesn't shift sideways when an
+   open drawer locks scrolling with overflow-hidden. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   text-rendering: optimizeLegibility;
 }
