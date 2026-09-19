@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
               width={800}
               height={1000}
               sizes="(min-width: 1024px) 24rem, (min-width: 768px) 20rem, 100vw"
-              class="aspect-[4/5] w-full rounded-md object-cover"
+              class="aspect-[4/5] w-full object-cover"
             />
           </div>
         </section>

@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   # corner fragments can be reused unchanged. `shrink-0` stops the flex row from
   # compressing the square when the label wraps; `mt-0.5` aligns it to the first
   # text line (the row is `items-start`, not centred across wrapped lines).
-  @swatch_base "relative inline-block w-4 h-4 mr-2 mt-0.5 shrink-0 rounded"
+  @swatch_base "relative inline-block w-4 h-4 mr-2 mt-0.5 shrink-0"
 
   attr :id, :string, required: true
   attr :scope, :any, required: true, doc: "`:all` or a FulfillmentOption id"
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   defp cell_class(_day, state, opts, override?) do
     today? = Keyword.get(opts, :today?, false)
 
-    base = "relative aspect-square rounded text-sm font-medium leading-none flex items-center justify-center"
+    base = "relative aspect-square text-sm font-medium leading-none flex items-center justify-center"
 
     closed_class =
       "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after hover:after:bg-error"
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   defp week_class(state) do
-    base = "flex items-center justify-center rounded text-base-content/70"
+    base = "flex items-center justify-center text-base-content/70"
 
     case state do
       :all_past ->
@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   defp weekday_class(state) do
-    base = "relative rounded px-1.5 py-1 text-xs font-semibold uppercase tracking-wider"
+    base = "relative px-1.5 py-1 text-xs font-semibold uppercase tracking-wider"
 
     state_class =
       case state do

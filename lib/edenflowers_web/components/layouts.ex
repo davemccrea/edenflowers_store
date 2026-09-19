@@ -73,7 +73,7 @@ defmodule EdenflowersWeb.Layouts do
       id={@id}
       popover
       style={"position-anchor: #{@anchor_name}; position-area: #{@position_area};"}
-      class="dropdown menu bg-base-100 border-base-300 rounded-none border p-1 shadow"
+      class="dropdown menu bg-base-100 border-base-300 border p-1 shadow"
     >
       <li :for={{code, name} <- @locales}>
         <.link href={~p"/locale/#{code}?redirect_to=#{@current_path}"}>
@@ -201,7 +201,7 @@ defmodule EdenflowersWeb.Layouts do
             type="button"
             phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label={~t"Open navigation menu"}
-            class="text-base-content/60 -m-px cursor-pointer rounded-md p-2 transition-colors hover:text-base-content active:bg-base-300/50"
+            class="text-base-content/60 -m-px cursor-pointer p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
             <.icon name="hero-bars-3" class="h-5 w-5" />
           </button>
@@ -273,7 +273,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
         <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
-          <span class="text-base-content/65 flex items-center gap-3 rounded-r border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
+          <span class="text-base-content/65 flex items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
             <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />
             <span class="flex-1 text-left">{@current_locale}</span>
             <.icon name="hero-chevron-up-down" class="text-base-content/60 h-4 w-4 shrink-0" />
@@ -309,7 +309,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.link
       {if @live?, do: [navigate: @path], else: [href: @path]}
-      class={["flex items-center gap-3 rounded-r px-3 py-2 text-sm transition-colors", if(@active,
+      class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
     else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
     >
@@ -338,7 +338,7 @@ defmodule EdenflowersWeb.Layouts do
         type="button"
         tabindex="0"
         aria-label={~t"Admin account menu"}
-        class={["inline-flex cursor-pointer items-center rounded-md transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+        class={["inline-flex cursor-pointer items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
         <span class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
           {@initials}
@@ -352,7 +352,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <ul
         tabindex="0"
-        class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 rounded-md border p-1 shadow"
+        class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 border p-1 shadow"
       >
         <li class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">

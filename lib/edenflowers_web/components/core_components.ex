@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.CoreComponents do
         ]
       else
         [
-          "btn gap-2 rounded-none font-sans font-medium normal-case tracking-normal shadow-none",
+          "btn gap-2 font-sans font-medium normal-case tracking-normal shadow-none",
           @button_variants[assigns.variant],
           @button_sizes[assigns.size],
           assigns[:class]
@@ -384,7 +384,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <%= for option <- @options do %>
           <label
             for={"#{@id_prefix}_#{option[:value]}"}
-            class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 rounded border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 has-[input:checked]:border-primary hover:border-primary"]}
+            class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 has-[input:checked]:border-primary hover:border-primary"]}
           >
             <input
               type="radio"

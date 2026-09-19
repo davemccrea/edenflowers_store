@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       <div :if={@orders_by_date != []} class="space-y-3">
         <section
           :for={{date, orders} <- @orders_by_date}
-          class={[date == @today && "bg-primary/5 ring-primary/15 rounded-lg pb-1 ring-1"]}
+          class={[date == @today && "bg-primary/5 ring-primary/15 pb-1 ring-1"]}
         >
           <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", if(date == @today, do: "font-bold text-emerald-600", else: "text-base-content/65")]}>
             <span :if={date == @today} aria-hidden="true" class="relative flex h-2 w-2">
@@ -177,7 +177,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       <div :if={@expenses_to_review != []}>
         <div
           :if={@low_confidence_count > 0}
-          class="bg-warning/10 border-warning/20 mb-3 flex items-center gap-2 rounded border px-3 py-2 text-sm"
+          class="bg-warning/10 border-warning/20 mb-3 flex items-center gap-2 border px-3 py-2 text-sm"
         >
           <.icon name="hero-exclamation-triangle" class="text-warning h-3.5 w-3.5 shrink-0" />
           <span class="text-base-content/85">

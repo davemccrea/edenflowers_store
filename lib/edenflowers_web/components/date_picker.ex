@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.DatePicker do
     ~H"""
     <div
       id={"#{@id}"}
-      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none rounded border p-2"}
+      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none border p-2"}
       phx-hook="CalendarHook"
       data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={focusable_dates_json(@view_date)}

@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
         <section
           id="order-fulfillment-summary"
-          class="bg-base-100 border-base-300/70 mb-6 rounded-lg border p-4 sm:p-5"
+          class="bg-base-100 border-base-300/70 mb-6 border p-4 sm:p-5"
         >
           <div class="mb-5 flex items-center justify-between gap-4">
             <h2 class="text-base-content text-base font-semibold">{~t"Fulfillment"}</h2>
@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp detail_section(assigns) do
     ~H"""
-    <section id={@id} class="bg-base-100 border-base-300/70 rounded-lg border p-4 sm:p-5">
+    <section id={@id} class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
       <h2 class="text-base-content mb-4 text-base font-semibold">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
@@ -265,7 +265,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           width={64}
           height={64}
           sizes="64px"
-          class="h-16 w-16 shrink-0 rounded-md object-cover"
+          class="h-16 w-16 shrink-0 object-cover"
         />
         <div class="min-w-0 flex-1">
           <div class="flex gap-3">
@@ -402,7 +402,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
 
     ~H"""
-    <div :if={@directions} class="border-base-300/70 mt-6 overflow-hidden rounded-md border">
+    <div :if={@directions} class="border-base-300/70 mt-6 overflow-hidden border">
       <a
         href={@directions}
         target="_blank"
