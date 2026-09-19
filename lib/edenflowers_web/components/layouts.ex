@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.Layouts do
 
   def admin(assigns) do
     current_locale =
-      Localize.get_locale()
+      Localize.get_locale().language
       |> Localize.Language.display_name!(fallback: true)
       |> String.capitalize()
 
