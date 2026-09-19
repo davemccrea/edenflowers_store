@@ -11,7 +11,7 @@
 msgid ""
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:582
+#: lib/edenflowers_web/components/core_components.ex:583
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr ""
@@ -538,7 +538,7 @@ msgstr ""
 msgid "Browse bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1099
+#: lib/edenflowers_web/components/core_components.ex:1100
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr ""
@@ -642,7 +642,7 @@ msgstr ""
 msgid "For somebody else"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:933
+#: lib/edenflowers_web/components/core_components.ex:934
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr ""
@@ -949,7 +949,7 @@ msgstr ""
 msgid "In-store pickup"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:82
+#: lib/edenflowers_web/components/core_components.ex:83
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr ""

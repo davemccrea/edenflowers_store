@@ -798,4 +798,43 @@ Hooks.PhotoGallery = {
   },
 };
 
+/**
+ * Dismisses an info flash after a few seconds by running its own phx-click
+ * (clear-flash + hide), so a timed dismissal and a click look identical.
+ * The countdown pauses while the toast is hovered or holds keyboard focus,
+ * and restarts in full afterwards. Errors never get this hook: they stay
+ * until the user dismisses them.
+ */
+const FLASH_DISMISS_MS = 5000;
+
+Hooks.AutoDismissFlash = {
+  mounted() {
+    this.pause = () => clearTimeout(this.timer);
+    this.resume = () => this.start();
+
+    this.el.addEventListener("mouseenter", this.pause);
+    this.el.addEventListener("focusin", this.pause);
+    this.el.addEventListener("mouseleave", this.resume);
+    this.el.addEventListener("focusout", this.resume);
+
+    this.start();
+  },
+
+  // A new message patched into the same toast gets a full countdown.
+  updated() {
+    this.start();
+  },
+
+  start() {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.liveSocket.execJS(this.el, this.el.getAttribute("phx-click"));
+    }, FLASH_DISMISS_MS);
+  },
+
+  destroyed() {
+    clearTimeout(this.timer);
+  },
+};
+
 export default Hooks;
