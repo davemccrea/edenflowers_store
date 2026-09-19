@@ -1677,7 +1677,7 @@ msgstr ", kort att skriva"
 #: lib/edenflowers_web/features/marketing/home_live.ex:187
 #, elixir-autogen, elixir-format
 msgid "Trusted by"
-msgstr "De litar på oss"
+msgstr "Några av mina kunder"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:116
 #, elixir-autogen, elixir-format
