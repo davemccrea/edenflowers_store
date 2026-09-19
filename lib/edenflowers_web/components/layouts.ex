@@ -659,7 +659,6 @@ defmodule EdenflowersWeb.Layouts do
     <.flash_group flash={@flash} />
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
-
       {render_slot(@inner_block)}
     </main>
 

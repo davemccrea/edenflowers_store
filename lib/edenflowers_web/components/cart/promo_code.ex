@@ -30,7 +30,8 @@ defmodule EdenflowersWeb.Cart.PromoCode do
 
   def render(assigns) do
     ~H"""
-    <div id={@id}>
+    <%!-- Hidden rather than removed: the badge rendered elsewhere targets this id. --%>
+    <div id={@id} class={(@order.promotion_applied? and not @show_applied) && "hidden"}>
       <%= cond do %>
         <% @order.promotion_applied? and not @show_applied -> %>
         <% @order.promotion_applied? -> %>

@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </div>
         </div>
 
-        <p class="absolute right-4 bottom-3 text-xs text-white/80">
+        <p class="text-white/80 absolute right-4 bottom-3 text-xs">
           {~t"Photo:"}
           <a
             href="https://www.danielastreng.com/"

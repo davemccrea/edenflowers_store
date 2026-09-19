@@ -54,6 +54,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         value={@typed}
         label={@label}
         type="text"
+        autocomplete={@autocomplete}
+        aria-required="true"
         errors={errors(@error, @touched)}
         phx-change="typing"
         phx-blur="lookup_address"
@@ -185,6 +187,6 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   defp format_delivery_amount(nil, _order), do: ""
 
   defp format_delivery_amount(amount, order) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery! 🥳", else: Edenflowers.Format.currency(amount, order.locale)
+    if Decimal.eq?(amount, 0), do: ~t"Free delivery!", else: Edenflowers.Format.currency(amount, order.locale)
   end
 end

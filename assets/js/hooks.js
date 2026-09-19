@@ -177,20 +177,9 @@ Hooks.CharacterCount = {
 };
 
 Hooks.FocusElement = {
+  // No autofocus on page load: on a phone it opens the keyboard over the page
+  // before the customer has seen it.
   mounted() {
-    // Focus on the first form element when the page loads (step 1)
-    requestAnimationFrame(() => {
-      const firstForm = this.el.querySelector('[id$="-form-1"]');
-      if (firstForm) {
-        const firstInput = firstForm.querySelector(
-          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
-        );
-        if (firstInput) {
-          /** @type {HTMLElement} */ (firstInput).focus();
-        }
-      }
-    });
-
     this.handleEvent("focus-element", ({ id }) => {
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
@@ -200,7 +189,13 @@ Hooks.FocusElement = {
         // Scroll the section heading to the top of the viewport. The section's
         // scroll-margin-top accounts for the fixed page header so the heading
         // doesn't land underneath it.
-        element.scrollIntoView({ block: "start", behavior: "smooth" });
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        element.scrollIntoView({
+          block: "start",
+          behavior: reducedMotion ? "auto" : "smooth",
+        });
 
         // preventScroll keeps keyboard focus working without overriding the
         // scroll position we just set above.
@@ -560,10 +555,12 @@ Hooks.Stripe = {
         appearance: this.buildAppearance(),
         // Stripe runs in a cross-origin iframe and can't see the host's
         // @font-face rules, so Open Sans must be loaded inside the iframe.
+        // Self-hosted rather than Google Fonts, which would send customers' IPs to Google.
         fonts: [
           {
-            cssSrc:
-              "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap",
+            family: "Open Sans",
+            src: `url(${new URL("/fonts/OpenSans-Variable.woff2", window.location.origin)}) format("woff2")`,
+            weight: "300 800",
           },
         ],
       });
@@ -586,9 +583,11 @@ Hooks.Stripe = {
         });
 
         if (error) {
-          // Stripe shows validation errors inline
-
-          if (error.type !== "validation_error") {
+          // The Payment Element shows validation errors itself, but not a
+          // declined card; Stripe's card_error message is written for the customer.
+          if (error.type === "card_error") {
+            this.stripeErrorMessage.textContent = error.message;
+          } else if (error.type !== "validation_error") {
             this.logAndPushError("error confirming payment", error);
           }
 

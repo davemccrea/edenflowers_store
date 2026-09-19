@@ -16,10 +16,10 @@
     <link rel="manifest" href="/site.webmanifest?v=20260506" />
 
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    <%!-- Before app.js: deferred scripts run in document order, and the Stripe hook needs it. --%>
+    <script defer src="https://js.stripe.com/v3/">
     </script>
-
-    <script src="https://js.stripe.com/v3/">
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
   </head>
   <body class="bg-base-100 flex min-h-screen flex-col antialiased">
