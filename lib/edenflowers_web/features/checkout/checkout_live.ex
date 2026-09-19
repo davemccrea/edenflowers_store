@@ -563,7 +563,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
       {:error, error} ->
-        Logger.error("Failed to update payment intent: #{inspect(error)}")
+        Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
     end
   end
@@ -610,7 +610,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error("#{message}: #{inspect(details)}")
+    Logger.error("Stripe client error for order #{socket.assigns.order.id}: #{message}: #{inspect(details)}")
 
     {:noreply,
      put_flash(

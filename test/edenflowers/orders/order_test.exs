@@ -1,5 +1,6 @@
 defmodule Edenflowers.Orders.OrderTest do
   use Edenflowers.DataCase
+  import ExUnit.CaptureLog
   import Generator
   alias Edenflowers.Orders
   alias Edenflowers.Accounts
@@ -736,12 +737,14 @@ defmodule Edenflowers.Orders.OrderTest do
 
       order2 = Orders.create_for_checkout!(authorize?: false)
 
-      assert {:error, error} =
-               order2
-               |> Ash.Changeset.for_update(:submit_contact_details, %{
-                 customer_name: "Test User"
-               })
-               |> Ash.update(authorize?: false)
+      {result, _log} =
+        with_log(fn ->
+          order2
+          |> Ash.Changeset.for_update(:submit_contact_details, %{customer_name: "Test User"})
+          |> Ash.update(authorize?: false)
+        end)
+
+      assert {:error, error} = result
 
       assert %Ash.Error.Invalid{} = error
     end

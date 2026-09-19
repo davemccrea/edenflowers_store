@@ -56,12 +56,13 @@ defmodule Edenflowers.Orders.Payment do
   defp finalize_checkout(order_id, payment_intent) do
     case Ash.get(Order, order_id, actor: system_actor(), load: [:grand_total]) do
       {:ok, %{state: :placed}} ->
+        Logger.info("Order #{order_id} already placed for PaymentIntent #{payment_intent.id}")
         {:ok, :already_placed}
 
       {:ok, order} ->
         with :ok <- verify_payment_intent_id(payment_intent, order),
              :ok <- verify_amount(payment_intent, order) do
-          place_order(order_id)
+          place_order(order_id, payment_intent)
         end
 
       {:error, reason} ->
@@ -87,10 +88,17 @@ defmodule Edenflowers.Orders.Payment do
     end
   end
 
-  defp place_order(order_id) do
+  defp place_order(order_id, payment_intent) do
     case Orders.finalize_checkout(order_id, actor: system_actor()) do
-      {:ok, order} -> {:ok, order}
-      {:error, reason} -> recover_already_placed(order_id, reason)
+      {:ok, order} ->
+        Logger.info(
+          "Placed order #{order_id} for PaymentIntent #{payment_intent.id} (#{payment_intent.amount_received} cents)"
+        )
+
+        {:ok, order}
+
+      {:error, reason} ->
+        recover_already_placed(order_id, reason)
     end
   end
 
@@ -106,6 +114,7 @@ defmodule Edenflowers.Orders.Payment do
   defp persist_payment_intent(order, payment_intent, actor) do
     case Orders.add_payment_intent_id(order, payment_intent.id, actor: actor) do
       {:ok, order} ->
+        Logger.info("Created PaymentIntent #{payment_intent.id} for order #{order.id} (#{payment_intent.amount} cents)")
         {:ok, order, payment_intent.client_secret}
 
       {:error, reason} ->
