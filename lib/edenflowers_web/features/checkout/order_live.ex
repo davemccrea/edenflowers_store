@@ -9,16 +9,21 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   # `@order` is taken by the PutOrder hook (the cart), hence `@placed_order`.
   def mount(%{"id" => id}, session, socket) do
-    case get_order(id, session["guest_order_id"], socket.assigns.current_user) do
+    user = socket.assigns.current_user
+    guest_order_id = session["guest_order_id"]
+
+    case get_order(id, guest_order_id, user) do
       {:ok, %{state: :placed} = order} ->
         {:ok, assign_placed_order(socket, order)}
 
-      # Stripe can redirect here before its webhook has placed the order.
-      {:ok, %{state: :payment} = order} ->
+      # Stripe can redirect here before its webhook has placed the order. Anyone
+      # can read an order still in checkout, so only its owner may wait for it.
+      {:ok, %{state: :payment} = order}
+      when id == guest_order_id or (not is_nil(user) and order.user_id == user.id) ->
         if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
         {:ok, assign(socket, placed_order: nil, order_id: order.id)}
 
-      _ when is_nil(socket.assigns.current_user) ->
+      _ when is_nil(user) ->
         {:ok, redirect(socket, to: ~p"/sign-in?return_to=/order/#{id}")}
 
       _ ->
@@ -29,14 +34,14 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     end
   end
 
-  # Access was already checked in mount.
+  # Only the order's owner subscribes, in mount.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:placed:" <> _}, socket) do
     order = Orders.get_order_by_id!(socket.assigns.order_id, authorize?: false)
     {:noreply, assign_placed_order(socket, order)}
   end
 
-  # A guest who just paid is granted their order by `CheckoutCompleteController`;
-  # everyone else goes through the order's read policy.
+  # A guest is granted the order their session's cart became (see `InitStore` and
+  # `CheckoutCompleteController`); everyone else goes through the order's read policy.
   def get_order(id, guest_order_id, _user) when id == guest_order_id,
     do: Orders.get_order_by_id(id, authorize?: false)
 

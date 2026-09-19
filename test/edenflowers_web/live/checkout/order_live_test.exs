@@ -48,6 +48,13 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert render(view) =~ "EF-CONFIRM"
   end
 
+  test "does not let another customer wait on an order in payment", %{conn: conn} do
+    other = generate(admin_user(admin: false))
+    order = placed_order(user_id: other.id, state: :payment, ordered_at: nil)
+
+    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
+  end
+
   @tag :typst
   test "downloads the receipt PDF", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id)
@@ -63,20 +70,37 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       %{conn: Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})}
     end
 
-    test "sees the order they just paid for", %{conn: conn} do
+    test "sees their order when the webhook placed it before Stripe's redirect", %{conn: conn} do
       order = placed_order([])
 
-      conn = get(conn, ~p"/checkout/complete/#{order.id}?payment_intent=pi_test_confirm")
+      conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       assert redirected_to(conn) == ~p"/order/#{order.id}"
+      refute get_session(conn, :order_id) == order.id
 
       {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
       assert has_element?(view, "h1", "EF-CONFIRM")
     end
 
-    test "is sent to sign in without the matching payment intent", %{conn: conn} do
-      order = placed_order([])
+    test "waits for the webhook when Stripe's redirect arrives first", %{conn: conn} do
+      order = placed_order(state: :payment, ordered_at: nil)
 
-      conn = get(conn, ~p"/checkout/complete/#{order.id}?payment_intent=pi_wrong")
+      conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
+      refute get_session(conn, :order_id) == order.id
+
+      {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+      assert has_element?(view, "[data-testid=order-pending]")
+
+      Orders.finalize_checkout!(order, actor: Edenflowers.Actors.system_actor())
+
+      assert render(view) =~ "EF-CONFIRM"
+    end
+
+    test "is sent to sign in for an order that wasn't their cart, keeping their cart", %{conn: conn} do
+      order = placed_order([])
+      cart = generate(order())
+
+      conn = conn |> Plug.Test.init_test_session(%{order_id: cart.id}) |> get(~p"/checkout/complete/#{order.id}")
+      assert get_session(conn, :order_id) == cart.id
 
       assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/order/#{order.id}")
       assert to =~ "/sign-in?return_to="
