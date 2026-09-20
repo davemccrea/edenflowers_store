@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Orders.{Order}
   alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -37,7 +38,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     with :ok <- validate_cart_not_empty(order),
          {:ok, fulfillment_options} <- Fulfillment.list_options_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
-      card_variants = Catalog.list_card_drawer_variants!()
+      fulfillment_options = Translations.translate(fulfillment_options)
+      card_variants = Catalog.list_card_drawer_variants!() |> Translations.translate_assoc(:product)
 
       {:ok,
        socket

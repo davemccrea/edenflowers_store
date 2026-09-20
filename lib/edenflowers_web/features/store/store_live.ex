@@ -2,16 +2,14 @@ defmodule EdenflowersWeb.Store.StoreLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
-    locale = current_locale_atom()
-
     categories =
       Catalog.list_categories!()
-      |> Ash.load!(:translations)
-      |> Enum.map(&AshTranslation.translate(&1, locale))
+      |> Translations.translate()
       |> Enum.with_index(1)
 
     {:ok, assign(socket, categories: categories, products: [], selected_category: nil)}
@@ -36,15 +34,13 @@ defmodule EdenflowersWeb.Store.StoreLive do
   defp load_products(category_slug) do
     case Catalog.get_category_by_slug(category_slug) do
       {:ok, category} ->
-        translated_category = AshTranslation.translate(category, current_locale_atom())
-        {:ok, Catalog.list_products_by_category!(category.id), translated_category}
+        products = category.id |> Catalog.list_products_by_category!() |> Translations.translate()
+        {:ok, products, Translations.translate(category)}
 
       {:error, _} ->
         :error
     end
   end
-
-  defp current_locale_atom, do: Localize.get_locale().cldr_locale_id
 
   def render(assigns) do
     ~H"""
