@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
     <div id={@id}>
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
-          <li :for={line_item <- @order.line_items} class="flex flex-row gap-4 text-base">
+          <li :for={line_item <- @order.line_items} class="flex flex-row gap-3 text-base sm:gap-4">
             <%= if @link_product and not line_item.is_card do %>
               <.link
                 navigate={~p"/product/#{line_item.product_id}"}
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   width={80}
                   height={80}
                   sizes="80px"
-                  class="h-20 w-20 object-cover"
+                  class="h-16 w-16 object-cover sm:h-20 sm:w-20"
                 />
               </.link>
             <% else %>
@@ -34,13 +34,13 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 width={80}
                 height={80}
                 sizes="80px"
-                class="h-20 w-20 object-cover"
+                class="h-16 w-16 object-cover sm:h-20 sm:w-20"
               />
             <% end %>
 
-            <div class="flex flex-1 flex-col gap-2">
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
               <div class="flex flex-row justify-between gap-3">
-                <div class="flex flex-col gap-0.5">
+                <div class="flex min-w-0 flex-col gap-0.5 break-words">
                   <%= if @link_product and not line_item.is_card do %>
                     <.link
                       navigate={~p"/product/#{line_item.product_id}"}
@@ -58,8 +58,10 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 <span class="shrink-0 tabular-nums">{Edenflowers.Format.currency(line_item.subtotal, @order.locale)}</span>
               </div>
 
-              <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-3">
-                <div class="flex flex-row items-center gap-3">
+              <%!-- gap-2 and the 4rem mobile thumbnail are load-bearing: three 3rem
+              buttons only fit on one line down to 320px with this budget. --%>
+              <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-2">
+                <div class="flex flex-row items-center gap-2">
                   <.icon_button
                     size="lg"
                     id={"#{@id}-decrement-#{line_item.id}"}
