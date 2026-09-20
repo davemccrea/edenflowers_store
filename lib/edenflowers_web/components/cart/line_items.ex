@@ -94,6 +94,10 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="phx-click-loading:opacity-50"
                   phx-click="remove_item"
+                  data-confirm={
+                    last_non_card_item?(@order) &&
+                      ~t"Removing this empties your cart and clears the checkout details you've entered. Continue?"
+                  }
                   phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria_label={~t"Remove"}
@@ -129,6 +133,12 @@ defmodule EdenflowersWeb.Cart.LineItems do
       <% end %>
     </div>
     """
+  end
+
+  # Removing the last non-card item restarts checkout, which blanks every
+  # field the customer has entered. See Orders.Order.Changes.RemoveLineItem.
+  defp last_non_card_item?(order) do
+    Enum.count(order.line_items, &(not &1.is_card)) == 1
   end
 
   def handle_event("remove_item", %{"id" => id}, socket) do
