@@ -18,13 +18,13 @@ defmodule EdenflowersWeb.Cart.Drawer do
         class="bg-base-200 border-l-1 w-[88vw] flex h-full flex-col sm:w-[25rem]"
       >
         <header class="flex flex-row items-center justify-between pt-6 pr-4 pl-3 sm:pt-8 sm:pl-8">
-          <h1 class="section-title">
+          <h2 class="section-title">
             <%= if @order.total_items_in_cart > 0 do %>
               {~t"Cart"} ({@order.total_items_in_cart})
             <% else %>
               {~t"Cart"}
             <% end %>
-          </h1>
+          </h2>
 
           <.icon_button aria_label={~t"Close cart"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
             <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
