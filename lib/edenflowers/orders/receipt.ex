@@ -86,10 +86,9 @@ defmodule Edenflowers.Orders.Receipt do
   defp variant_size_label(nil), do: nil
   defp variant_size_label(size), do: size |> to_string() |> String.capitalize()
 
-  # `translations.toml` keys are two-letter language subtags, but `order.locale`
-  # is e.g. "sv-FI". Parse the subtag out via CLDR rather than slicing. Use
-  # `parse!/1`, not `validate_locale/1`: we want the language subtag, not a check
-  # against `:supported_locales` (which would reject a bare "sv"/"en").
+  # `translations.toml` keys are two-letter subtags, but `order.locale` is e.g.
+  # "sv-FI". `parse!/1` (not `validate_locale/1`, which is gated by
+  # `:supported_locales`) just extracts the language subtag.
   defp lang_from_locale(locale) when is_binary(locale) do
     Localize.LanguageTag.parse!(locale).language |> to_string()
   end

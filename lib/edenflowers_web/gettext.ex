@@ -9,14 +9,12 @@ defmodule EdenflowersWeb.Gettext do
   require Logger
 
   @doc """
-  Runs `fun` with this backend's locale set to the Gettext locale that best
-  matches an app locale.
+  Runs `fun` with the Gettext locale that best matches `app_locale`.
 
-  `order.locale` and friends are region-qualified (e.g. "sv-FI"), but the PO
-  catalogs are two-letter ("sv"). `Localize.Locale.gettext_locale_id/2` resolves
-  the former to the latter via CLDR best-match, so callers don't silently fall
-  back to English for a locale that does have a catalog. Unknown locales fall
-  back to the current (default) locale, matching `Localize.Plug`'s behaviour.
+  App locales are region-qualified ("sv-FI") but the catalogs are two-letter
+  ("sv"), so this resolves via CLDR best-match rather than handing the raw
+  locale to Gettext (which would fall back to English). Unknown locales fall
+  back to the default.
   """
   def with_app_locale(app_locale, fun) when is_function(fun, 0) do
     gettext_locale =
