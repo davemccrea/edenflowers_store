@@ -337,7 +337,7 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
-          aria-invalid={@errors != []}
+          aria-invalid={@errors != [] && "true"}
           aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >
@@ -361,7 +361,7 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
-          aria-invalid={@errors != []}
+          aria-invalid={@errors != [] && "true"}
           aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
@@ -419,7 +419,7 @@ defmodule EdenflowersWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[@errors != [] && "input-error"]}
-          aria-invalid={@errors != []}
+          aria-invalid={@errors != [] && "true"}
           aria-describedby={@errors != [] && "#{@id}-error"}
           {@rest}
         />
@@ -444,7 +444,7 @@ defmodule EdenflowersWeb.CoreComponents do
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
-            aria-invalid={@errors != []}
+            aria-invalid={@errors != [] && "true"}
             aria-describedby={@errors != [] && "#{@id}-error"}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}
             {@rest}
