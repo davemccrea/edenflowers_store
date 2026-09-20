@@ -15,9 +15,9 @@ defmodule EdenflowersWeb.Cart.Drawer do
         id="cart-drawer"
         placement="right"
         label={gettext("Shopping cart")}
-        class="bg-base-200 border-l-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
+        class="bg-base-200 border-l-1 w-[88vw] flex h-full flex-col sm:w-[25rem]"
       >
-        <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+        <header class="flex flex-row items-center justify-between pt-6 pr-4 pl-3 sm:pt-8 sm:pl-8">
           <h1 class="section-title">
             <%= if @order.total_items_in_cart > 0 do %>
               {~t"Cart"} ({@order.total_items_in_cart})
@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
           </.icon_button>
         </header>
 
-        <div class="flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+        <div class="flex flex-1 flex-col gap-6 overflow-y-auto p-3 sm:p-8">
           <.live_component
             id="cart-line-items"
             module={EdenflowersWeb.Cart.LineItems}
