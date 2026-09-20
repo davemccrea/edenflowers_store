@@ -86,8 +86,12 @@ defmodule Edenflowers.Orders.Receipt do
   defp variant_size_label(nil), do: nil
   defp variant_size_label(size), do: size |> to_string() |> String.capitalize()
 
-  # `translations.toml` keys are two-letter, but `order.locale` is e.g. "sv-FI".
-  defp lang_from_locale(locale) when is_binary(locale), do: String.slice(locale, 0, 2)
+  # `translations.toml` keys are two-letter language subtags, but `order.locale`
+  # is e.g. "sv-FI". Extract the subtag via CLDR parsing rather than slicing.
+  defp lang_from_locale(locale) when is_binary(locale) do
+    {:ok, tag} = Localize.validate_locale(locale)
+    to_string(tag.language)
+  end
 
   defp typst_args(json) do
     priv = :code.priv_dir(:edenflowers)
