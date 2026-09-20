@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     conn = get(conn, ~p"/order/#{order.id}/receipt")
 
     assert "%PDF" <> _ = response(conn, 200)
-    assert get_resp_header(conn, "content-disposition") == [~s|inline; filename="eden-flowers-EF-CONFIRM.pdf"|]
+    assert get_resp_header(conn, "content-disposition") == [~s|inline; filename="eden-flowers-CONFIRM.pdf"|]
   end
 
   describe "guest" do
@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       Keyword.merge(
         [
           state: :placed,
-          order_reference: "EF-CONFIRM",
+          order_reference: "CONFIRM",
           customer_name: "Ada Lovelace",
           customer_email: "ada@example.com",
           fulfillment_option_id: fulfillment.id,

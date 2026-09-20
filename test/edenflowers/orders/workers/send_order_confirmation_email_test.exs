@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
           locale: "en-GB",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
-          order_reference: "EF-TEST-OC1",
+          order_reference: "TEST-OC1",
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
@@ -33,9 +33,9 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
-      assert email.subject =~ "EF-TEST-OC1"
+      assert email.subject =~ "TEST-OC1"
       assert email.text_body =~ "Anna"
-      assert email.text_body =~ "EF-TEST-OC1"
+      assert email.text_body =~ "TEST-OC1"
       assert email.html_body in [nil, ""]
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
@@ -56,7 +56,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
           locale: "fi",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
-          order_reference: "EF-TEST-OC2",
+          order_reference: "TEST-OC2",
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
@@ -85,7 +85,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
           locale: "sv-FI",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
-          order_reference: "EF-TEST-OC3",
+          order_reference: "TEST-OC3",
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
