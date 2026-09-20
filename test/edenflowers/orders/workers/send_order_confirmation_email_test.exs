@@ -73,4 +73,33 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
       assert not (email.subject =~ "Order Confirmation")
     end)
   end
+
+  test "renders the email in a region-qualified locale that has no exact Gettext catalog" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+
+    order =
+      generate(
+        order(
+          locale: "sv-FI",
+          customer_name: "Anna Lindqvist",
+          customer_email: "anna@example.com",
+          order_reference: "EF-TEST-OC3",
+          ordered_at: ~U[2026-05-15 12:00:00Z],
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-05-20],
+          fulfillment_fee: "0"
+        )
+      )
+
+    _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+    assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
+
+    assert_email_sent(fn email ->
+      assert email.subject =~ "Orderbekräftelse"
+      assert not (email.subject =~ "Order Confirmation")
+    end)
+  end
 end

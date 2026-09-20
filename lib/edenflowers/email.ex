@@ -13,7 +13,7 @@ defmodule Edenflowers.Email do
   @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
 
   def order_confirmation(order) do
-    Gettext.with_locale(EdenflowersWeb.Gettext, order.locale, fn ->
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(@from_address)
       |> to(order.customer_email)
