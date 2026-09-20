@@ -117,7 +117,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
     %Order{
       locale: locale,
-      order_reference: "EF-TEST-001",
+      order_reference: "TEST-001",
       ordered_at: ~U[2026-05-13 14:32:00Z],
       customer_name: "Anna Lindqvist",
       customer_email: "anna.lindqvist@example.fi",
@@ -164,7 +164,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
     %Order{
       locale: locale,
-      order_reference: "EF-TEST-002",
+      order_reference: "TEST-002",
       ordered_at: ~U[2026-05-13 16:08:00Z],
       customer_name: "Anna Lindqvist",
       customer_email: "anna.lindqvist@example.fi",

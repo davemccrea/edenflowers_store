@@ -15,11 +15,8 @@ defmodule Edenflowers.Orders.Order.Changes.GenerateOrderReference do
   def generate do
     <<value::unsigned-30, _::2>> = :crypto.strong_rand_bytes(4)
 
-    encoded =
-      for shift <- 25..0//-5, into: "" do
-        binary_part(@alphabet, Bitwise.band(Bitwise.bsr(value, shift), 31), 1)
-      end
-
-    "EF-" <> encoded
+    for shift <- 25..0//-5, into: "" do
+      binary_part(@alphabet, Bitwise.band(Bitwise.bsr(value, shift), 31), 1)
+    end
   end
 end

@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       Keyword.merge(
         [
           state: :placed,
-          order_reference: "EF-DETAIL",
+          order_reference: "DETAIL",
           customer_name: "Ada Lovelace",
           customer_email: "ada@example.com",
           fulfillment_option_id: fulfillment.id,

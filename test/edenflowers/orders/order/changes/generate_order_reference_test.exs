@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Order.Changes.GenerateOrderReferenceTest do
     for _ <- 1..100 do
       reference = GenerateOrderReference.generate()
 
-      assert reference =~ ~r/^EF-[0-9ABCDEFGHJKMNPQRSTVWXYZ]{6}$/
+      assert reference =~ ~r/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{6}$/
       refute reference =~ ~r/[ILOU]/
     end
   end
