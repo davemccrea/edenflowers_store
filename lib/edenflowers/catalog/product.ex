@@ -3,11 +3,17 @@ defmodule Edenflowers.Catalog.Product do
     otp_app: :edenflowers,
     domain: Edenflowers.Catalog,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshTranslation.Resource]
 
   postgres do
     table "products"
     repo Edenflowers.Repo
+  end
+
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name, :description]
   end
 
   actions do
@@ -45,10 +51,14 @@ defmodule Edenflowers.Catalog.Product do
     end
 
     create :create do
-      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured]
+      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
       argument :fulfillment_option_ids, {:array, :uuid}
 
       change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
+    end
+
+    update :update do
+      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
     end
   end
 

@@ -2,30 +2,43 @@ defmodule Edenflowers.Courses.Course do
   use Ash.Resource,
     domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshTranslation.Resource]
 
   postgres do
     repo Edenflowers.Repo
     table "courses"
   end
 
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name, :description]
+  end
+
   actions do
-    defaults [:read, :update, :destroy]
+    defaults [:read, :destroy]
+
+    @accept [
+      :name,
+      :description,
+      :location_name,
+      :location_address,
+      :image_slug,
+      :date,
+      :start_time,
+      :end_time,
+      :register_before,
+      :total_places,
+      :price,
+      :translations
+    ]
 
     create :create do
-      accept [
-        :name,
-        :description,
-        :location_name,
-        :location_address,
-        :image_slug,
-        :date,
-        :start_time,
-        :end_time,
-        :register_before,
-        :total_places,
-        :price
-      ]
+      accept @accept
+    end
+
+    update :update do
+      accept @accept
     end
 
     read :upcoming do

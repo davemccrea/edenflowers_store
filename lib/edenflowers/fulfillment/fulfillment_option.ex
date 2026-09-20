@@ -11,7 +11,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     otp_app: :edenflowers,
     domain: Edenflowers.Fulfillment,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshTranslation.Resource]
 
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
@@ -19,6 +20,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
+  end
+
+  translations do
+    locales Edenflowers.Locales.translatable_atoms()
+    fields [:name]
   end
 
   actions do
@@ -40,7 +46,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :available_days,
         :enabled_dates,
         :disabled_dates,
-        :tax_rate_id
+        :tax_rate_id,
+        :translations
       ],
       update: [
         :name,
@@ -54,7 +61,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :max_dist_km,
         :same_day,
         :order_deadline,
-        :tax_rate_id
+        :tax_rate_id,
+        :translations
       ]
     ]
 

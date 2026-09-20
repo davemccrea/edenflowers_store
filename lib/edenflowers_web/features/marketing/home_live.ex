@@ -2,11 +2,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(_params, _session, socket) do
-    products = Catalog.list_featured_products!()
+    products = Catalog.list_featured_products!() |> Translations.translate()
 
     {:ok, socket |> assign(products: products)}
   end

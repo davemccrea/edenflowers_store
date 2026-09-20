@@ -4,14 +4,15 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
-    locale = current_locale_atom()
     {:ok, product} = Catalog.get_product_by_id(id, load: [:product_variants, :tax_rate])
     product_variants = product.product_variants
-    product_category = product.product_category |> Ash.load!(:translations) |> AshTranslation.translate(locale)
+    product_category = Translations.translate(product.product_category)
+    product = Translations.translate(product)
 
     selected_variant =
       case length(product_variants) do
@@ -153,8 +154,6 @@ defmodule EdenflowersWeb.Store.ProductLive do
     </Layouts.app>
     """
   end
-
-  defp current_locale_atom, do: Localize.get_locale().cldr_locale_id
 
   def handle_event("change", %{"product_variant_id" => id}, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
