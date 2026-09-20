@@ -34,3 +34,9 @@ logs target:
 # Open a remote IEx console on a server (staging or production)
 console target:
     ssh -t edenflowers-{{target}} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
+
+# Dump the production database to tmp/
+db-dump:
+    @mkdir -p tmp
+    ssh edenflowers-production 'sudo -u postgres pg_dump -Fc edenflowers_store_prod' > tmp/production-$(date +%F).dump
+    @ls -lh tmp/production-$(date +%F).dump
