@@ -14,7 +14,7 @@ defmodule Edenflowers.Orders do
       define :get_order_by_reference, action: :by_order_reference, args: [:order_reference]
       define :get_order_for_checkout, action: :for_checkout, args: [:id]
       define :get_order_for_admin, action: :admin_show, args: [:id]
-      define :list_completed_orders, action: :completed
+      define :list_my_orders, action: :mine
       define :list_open_orders, action: :open
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options

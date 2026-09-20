@@ -17,7 +17,7 @@ defmodule Edenflowers.Courses do
     end
 
     resource Edenflowers.Courses.CourseRegistration do
-      define :list_registrations, action: :read
+      define :list_my_registrations, action: :mine
       define :register_for_course, action: :register
       define :get_registration_by_id, action: :read, get_by: [:id]
     end
