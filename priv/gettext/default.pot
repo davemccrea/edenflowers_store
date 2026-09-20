@@ -560,7 +560,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:259
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:558
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:812
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:825
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr ""
