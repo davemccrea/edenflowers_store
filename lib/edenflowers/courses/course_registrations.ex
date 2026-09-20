@@ -12,6 +12,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
   actions do
     defaults [:read, :destroy]
 
+    # Same reason as Order.mine: the admin bypass below grants an unrestricted
+    # read, so the customer-facing list narrows itself with a filter. The plain
+    # :read stays unscoped because Course.total_registrations counts through it.
+    read :mine do
+      filter expr(user_id == ^actor(:id))
+    end
+
     create :register do
       accept [:name, :email, :course_id]
       change set_attribute(:status, :pending)

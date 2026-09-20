@@ -94,8 +94,13 @@ defmodule Edenflowers.Orders.Order do
       prepare build(load: @checkout_load)
     end
 
-    read :completed do
-      filter expr(state == :placed)
+    # Scoped to the actor by filter, not by policy: the admin bypass above grants
+    # admins an unrestricted read, so an action named for the customer's own
+    # order history has to narrow itself or it hands Jennie everyone's orders.
+    read :mine do
+      filter expr(state == :placed and user_id == ^actor(:id))
+
+      prepare build(sort: [ordered_at: :desc, inserted_at: :desc], load: [:grand_total])
     end
 
     read :open do

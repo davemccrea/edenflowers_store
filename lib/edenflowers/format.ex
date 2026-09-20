@@ -37,6 +37,11 @@ defmodule Edenflowers.Format do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end
 
+  @doc "Localized clock time, e.g. \"10:00\" / \"10.00\"."
+  @spec time(Time.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
+  def time(nil, _locale), do: nil
+  def time(time, locale), do: Localize.Time.to_string!(time, locale: locale, format: :short)
+
   @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\". For agenda labels."
   @spec day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def day_month(date, locale) do

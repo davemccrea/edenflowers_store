@@ -8,6 +8,7 @@ defmodule Generator do
   alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
   alias Edenflowers.Orders.{Order, LineItem}
   alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Courses.{Course, CourseRegistration}
 
   # seed_generator bypasses actions so we can set :admin directly
   # (the attribute is writable?: false on the resource).
@@ -150,6 +151,44 @@ defmodule Generator do
         available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
         enabled_dates: [],
         disabled_dates: []
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  def course(opts \\ []) do
+    changeset_generator(
+      Course,
+      :create,
+      defaults: %{
+        name: sequence(:course_name, &"Course #{&1}"),
+        description: "An afternoon with flowers.",
+        location_name: "Minimossen",
+        location_address: "Myrvägen 1, 65230 Vasa",
+        image_slug: "local:///image_1.jpg",
+        date: Date.add(Date.utc_today(), 30),
+        start_time: ~T[10:00:00],
+        end_time: ~T[14:00:00],
+        register_before: Date.add(Date.utc_today(), 20),
+        total_places: 8,
+        price: "85.00"
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  # seed_generator, not the :register action, so a registration can be attached
+  # to a user directly — :register only ever takes user_id from the actor.
+  def course_registration(opts \\ []) do
+    opts = Keyword.put_new_lazy(opts, :course_id, fn -> generate(course()).id end)
+
+    seed_generator(
+      %CourseRegistration{
+        name: "Ada Lovelace",
+        email: "ada@example.com",
+        status: :pending
       },
       overrides: opts,
       authorize?: false
