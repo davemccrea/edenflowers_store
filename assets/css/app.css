@@ -149,6 +149,12 @@
   outline-color: var(--focus-color, var(--color-primary));
 }
 
+/* An invalid field keeps its red through focus instead of flipping to brand. */
+[aria-invalid="true"],
+.input:has([aria-invalid="true"]) {
+  --focus-color: var(--color-error);
+}
+
 button:not(:disabled):not([aria-disabled="true"]),
 [role="button"]:not([aria-disabled="true"]),
 label,
