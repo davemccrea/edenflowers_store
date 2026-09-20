@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
-       |> assign(:form, build_submit_form(order))
+       |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
        |> assign(:client_secret, nil)
        |> maybe_setup_payment(order, actor(socket))}
     else
@@ -680,10 +680,23 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     |> to_form()
   end
 
+  # Signed-in customers shouldn't retype details we already hold. Anything
+  # already saved on the order wins, so returning to step 1 after an edit keeps
+  # what was typed there.
+  defp prefill_contact_details(%{state: :contact_details} = order, %{} = user) do
+    %{
+      "customer_name" => order.customer_name || user.name,
+      "customer_email" => order.customer_email || to_string(user.email)
+    }
+    |> Map.reject(fn {_key, value} -> is_nil(value) end)
+  end
+
+  defp prefill_contact_details(_order, _user), do: %{}
+
   # Builds the submit-form for the order's current state. Returns nil on the
   # payment state because the payment screen is driven by Stripe Elements
   # (not an Ash form submission).
-  defp build_submit_form(order, params \\ %{}) do
+  defp build_submit_form(order, params) do
     case submit_action_for(order.state) do
       nil -> nil
       action -> make_form(order, action, params)

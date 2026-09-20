@@ -58,6 +58,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   end
 
   describe "Step 1: Your Details" do
+    test "prefills the name and email of a signed-in customer", %{conn: conn, order: order} do
+      user = generate(admin_user(admin: false, name: "Ada Lovelace", email: "ada@example.com"))
+      {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
+      user = %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> visit("/checkout")
+      |> assert_has("[data-testid=customer-name-input]", value: "Ada Lovelace")
+      |> assert_has("[data-testid=customer-email-input]", value: "ada@example.com")
+    end
+
     test "successfully submits and progresses to step 2", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
