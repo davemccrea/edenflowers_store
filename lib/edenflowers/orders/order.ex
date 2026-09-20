@@ -147,9 +147,7 @@ defmodule Edenflowers.Orders.Order do
       prepare build(load: @admin_show_load)
     end
 
-    create :create_for_checkout do
-      change {Changes.GenerateOrderReference, []}
-    end
+    create :create_for_checkout
 
     # Forward checkout transitions
     update :submit_contact_details do
@@ -219,6 +217,7 @@ defmodule Edenflowers.Orders.Order do
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
+      change {Changes.GenerateOrderReference, []}
       change {Changes.UpdatePromotionUsageCount, []}
       require_atomic? false
     end
@@ -388,7 +387,7 @@ defmodule Edenflowers.Orders.Order do
   attributes do
     uuid_primary_key :id
 
-    attribute :order_reference, :string, allow_nil?: false
+    attribute :order_reference, :string
 
     attribute :state, :atom do
       allow_nil? false
