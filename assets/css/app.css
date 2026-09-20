@@ -427,6 +427,10 @@ main p {
 @utility link-underline-hover {
   @apply underline decoration-transparent underline-offset-[0.3em] hover:decoration-(--color-link-underline);
   text-decoration-thickness: 2px;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: text-decoration-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 @utility link-underline-group-hover {
