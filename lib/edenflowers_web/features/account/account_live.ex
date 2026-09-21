@@ -61,11 +61,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
           >
             <thead>
               <tr class="text-base-content/70">
-                <th scope="col" class="eyebrow w-2/5 pb-3 pr-4 sm:w-1/6">{~t"Date"}</th>
-                <th scope="col" class="eyebrow hidden pb-3 pr-4 sm:table-cell sm:w-1/6">{~t"Reference"}</th>
-                <th scope="col" class="eyebrow pb-3 pr-4">{~t"Status"}</th>
+                <th scope="col" class="eyebrow w-2/5 pr-4 pb-3 sm:w-1/6">{~t"Date"}</th>
+                <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/6">{~t"Reference"}</th>
+                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Status"}</th>
                 <th scope="col" class="eyebrow w-1/5 pb-3 text-right sm:w-1/6 sm:pr-4">{~t"Total"}</th>
-                <th scope="col" class="hidden w-[13%] pb-3 sm:table-cell">
+                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
                   <span class="sr-only">{~t"Receipt"}</span>
                 </th>
               </tr>
@@ -111,9 +111,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
           >
             <thead>
               <tr class="text-base-content/70">
-                <th scope="col" class="eyebrow pb-3 pr-4">{~t"Course"}</th>
-                <th scope="col" class="eyebrow hidden pb-3 pr-4 sm:table-cell sm:w-1/4">{~t"Location"}</th>
-                <th scope="col" class="eyebrow w-1/4 pb-3 pr-4 sm:w-1/5">{~t"When"}</th>
+                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Course"}</th>
+                <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/4">{~t"Location"}</th>
+                <th scope="col" class="eyebrow w-1/4 pr-4 pb-3 sm:w-1/5">{~t"When"}</th>
                 <th scope="col" class="eyebrow w-1/4 pb-3 sm:w-1/6">{~t"Status"}</th>
               </tr>
             </thead>
@@ -198,8 +198,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         token = System.unique_integer()
         Process.send_after(self(), {:clear_newsletter_saved, token}, @saved_visible_ms)
 
-        {:noreply,
-         assign(socket, current_user: user, newsletter_saved?: true, newsletter_saved_token: token)}
+        {:noreply, assign(socket, current_user: user, newsletter_saved?: true, newsletter_saved_token: token)}
 
       {:error, error} ->
         Logger.error(inspect(error))
