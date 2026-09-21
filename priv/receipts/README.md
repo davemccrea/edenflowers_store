@@ -18,7 +18,7 @@ cd priv/receipts
 typst watch main.typ preview.pdf --font-path fonts                # default sv, delivery
 typst compile main.typ preview.pdf --font-path fonts --input fixture=fi
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
-# fixtures: {en,fi,sv}[.pickup]
+# fixtures: {en,fi,sv}[.pickup], sv.nongift
 ```
 
 ## Render from Elixir
