@@ -1405,7 +1405,7 @@ msgid "Order marked as fulfilled."
 msgstr "Tilaus merkittiin toimitetuksi."
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:31
-#: lib/edenflowers_web/features/checkout/order_live.ex:35
+#: lib/edenflowers_web/features/checkout/order_live.ex:36
 #, elixir-autogen, elixir-format
 msgid "Order not found."
 msgstr "Tilausta ei löytynyt."
@@ -1478,7 +1478,7 @@ msgstr "Asiantuntijapalvelut"
 msgid "Recipient"
 msgstr "Vastaanottaja"
 
-#: lib/edenflowers_web/features/account/account_live.ex:236
+#: lib/edenflowers_web/features/account/account_live.ex:235
 #: lib/edenflowers_web/features/admin/components/components.ex:172
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:383
 #: lib/edenflowers_web/features/admin/orders_live.ex:141
@@ -2012,7 +2012,7 @@ msgid "Photo:"
 msgstr "Kuva:"
 
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:41
-#: lib/edenflowers_web/features/checkout/order_live.ex:132
+#: lib/edenflowers_web/features/checkout/order_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Back to the shop"
 msgstr "Takaisin kauppaan"
@@ -2058,53 +2058,33 @@ msgstr "Jokin meni vikaan"
 msgid "Errors"
 msgstr "Virheet"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:72
-#, elixir-autogen, elixir-format
-msgid "Confirming your payment…"
-msgstr "Vahvistetaan maksuasi…"
-
-#: lib/edenflowers_web/features/checkout/order_live.ex:116
-#, elixir-autogen, elixir-format
-msgid "For %{placed_order_recipient_name}"
-msgstr "Vastaanottaja: %{placed_order_recipient_name}"
-
-#: lib/edenflowers_web/features/checkout/order_live.ex:59
-#: lib/edenflowers_web/features/checkout/order_live.ex:93
+#: lib/edenflowers_web/features/checkout/order_live.ex:58
+#: lib/edenflowers_web/features/checkout/order_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Thank you for your order"
 msgstr "Kiitos tilauksestasi"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:77
-#, elixir-autogen, elixir-format
-msgid "This is taking longer than usual. You'll get a confirmation email as soon as your order is placed. If nothing arrives, write to me at info@edenflowers.fi."
-msgstr "Tämä kestää tavallista kauemmin. Saat vahvistussähköpostin heti, kun tilauksesi on vahvistettu. Jos viestiä ei kuulu, kirjoita minulle osoitteeseen info@edenflowers.fi."
-
-#: lib/edenflowers_web/features/checkout/order_live.ex:74
-#, elixir-autogen, elixir-format
-msgid "This usually takes a few seconds. You'll also get a confirmation email once it's done."
-msgstr "Tämä kestää yleensä muutaman sekunnin. Saat myös vahvistussähköpostin, kun kaikki on valmista."
-
-#: lib/edenflowers_web/features/checkout/order_live.ex:92
+#: lib/edenflowers_web/features/checkout/order_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Thank you, %{first_name}."
 msgstr "Kiitos, %{first_name}."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:129
+#: lib/edenflowers_web/features/checkout/order_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "View receipt"
 msgstr "Näytä kuitti"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:97
+#: lib/edenflowers_web/features/checkout/order_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "I'll deliver your order on %{date}."
 msgstr "Toimitan tilauksesi %{date}."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:99
+#: lib/edenflowers_web/features/checkout/order_live.ex:79
 #, elixir-autogen, elixir-format
 msgid "Your order will be ready at the shop on %{date}."
 msgstr "Tilauksesi on noudettavissa liikkeestä %{date}."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:106
+#: lib/edenflowers_web/features/checkout/order_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "I'll send a text message when it's ready."
 msgstr "Ilmoitan tekstiviestillä, kun tilaus on valmis."
@@ -2119,32 +2099,32 @@ msgstr "Puhelinnumero *"
 msgid "Beyond bouquets"
 msgstr "Muutakin kuin kimppuja"
 
-#: lib/edenflowers_web/features/account/account_live.ex:256
+#: lib/edenflowers_web/features/account/account_live.ex:255
 #, elixir-autogen, elixir-format
 msgid "Arriving %{date}"
 msgstr "Saapuu %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:254
+#: lib/edenflowers_web/features/account/account_live.ex:253
 #, elixir-autogen, elixir-format
 msgid "Arriving today"
 msgstr "Saapuu tänään"
 
-#: lib/edenflowers_web/features/account/account_live.ex:262
+#: lib/edenflowers_web/features/account/account_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "Booked"
 msgstr "Varattu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:263
+#: lib/edenflowers_web/features/account/account_live.ex:262
 #, elixir-autogen, elixir-format
 msgid "Cancelled"
 msgstr "Peruttu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:244
+#: lib/edenflowers_web/features/account/account_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "Collected %{date}"
 msgstr "Noudettu %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:238
+#: lib/edenflowers_web/features/account/account_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "Confirmed"
 msgstr "Vahvistettu"
@@ -2154,27 +2134,27 @@ msgstr "Vahvistettu"
 msgid "Course"
 msgstr "Kurssi"
 
-#: lib/edenflowers_web/features/account/account_live.ex:245
+#: lib/edenflowers_web/features/account/account_live.ex:244
 #, elixir-autogen, elixir-format
 msgid "Delivered %{date}"
 msgstr "Toimitettu %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:258
+#: lib/edenflowers_web/features/account/account_live.ex:257
 #, elixir-autogen, elixir-format
 msgid "Delivery on %{date}"
 msgstr "Toimitus %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:257
+#: lib/edenflowers_web/features/account/account_live.ex:256
 #, elixir-autogen, elixir-format
 msgid "Pickup on %{date}"
 msgstr "Nouto %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:255
+#: lib/edenflowers_web/features/account/account_live.ex:254
 #, elixir-autogen, elixir-format
 msgid "Ready to collect %{date}"
 msgstr "Noudettavissa %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:253
+#: lib/edenflowers_web/features/account/account_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Ready to collect today"
 msgstr "Noudettavissa tänään"
@@ -2190,7 +2170,7 @@ msgstr "Kuitti"
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr ""
 
-#: lib/edenflowers_web/features/account/account_live.ex:264
+#: lib/edenflowers_web/features/account/account_live.ex:263
 #, elixir-autogen, elixir-format
 msgid "Reserved"
 msgstr "Alustava"
@@ -2236,7 +2216,7 @@ msgstr "Et ole vielä varannut kurssia."
 msgid "You haven't ordered anything yet."
 msgstr "Et ole vielä tilannut mitään."
 
-#: lib/edenflowers_web/features/account/account_live.ex:214
+#: lib/edenflowers_web/features/account/account_live.ex:213
 #, elixir-autogen, elixir-format
 msgid "Your newsletter preference couldn't be saved."
 msgstr "Uutiskirjeasetustasi ei voitu tallentaa."
@@ -2255,3 +2235,18 @@ msgstr "Paikka"
 #, elixir-autogen, elixir-format
 msgid "Reference"
 msgstr "Viite"
+
+#: lib/edenflowers_web/features/checkout/order_live.ex:101
+#, elixir-autogen, elixir-format
+msgid "Confirming your payment… You'll get a confirmation email once it's done."
+msgstr "Vahvistetaan maksuasi… Saat vahvistussähköpostin, kun se on valmis."
+
+#: lib/edenflowers_web/features/checkout/order_live.ex:111
+#, elixir-autogen, elixir-format
+msgid "For %{shown_order_recipient_name}"
+msgstr "Vastaanottaja: %{shown_order_recipient_name}"
+
+#: lib/edenflowers_web/features/checkout/order_live.ex:99
+#, elixir-autogen, elixir-format
+msgid "Payment received. A confirmation email is on its way."
+msgstr "Maksu vastaanotettu. Vahvistussähköposti on matkalla."

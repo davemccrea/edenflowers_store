@@ -46,24 +46,18 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
   end
 
-  test "waits for the webhook, then shows the order", %{conn: conn, user: user} do
+  test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    assert has_element?(view, "h1", "Thank you, Ada.")
     assert has_element?(view, "[data-testid=order-pending]")
+    refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
     Orders.finalize_checkout!(order, actor: Edenflowers.Actors.system_actor())
 
-    assert has_element?(view, "h1", "Thank you")
-  end
-
-  test "points to the confirmation email when the webhook is slow", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
-
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
-    send(view.pid, :payment_slow)
-
-    assert render(view) =~ "info@edenflowers.fi"
+    assert has_element?(view, "[data-testid=order-paid]")
+    assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
   end
 
   test "does not let another customer wait on an order in payment", %{conn: conn} do
@@ -106,11 +100,12 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       refute get_session(conn, :order_id) == order.id
 
       {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+      assert has_element?(view, "h1", "Thank you")
       assert has_element?(view, "[data-testid=order-pending]")
 
       Orders.finalize_checkout!(order, actor: Edenflowers.Actors.system_actor())
 
-      assert has_element?(view, "h1", "Thank you")
+      assert has_element?(view, "[data-testid=order-paid]")
     end
 
     test "is sent to sign in for an order that wasn't their cart, keeping their cart", %{conn: conn} do
