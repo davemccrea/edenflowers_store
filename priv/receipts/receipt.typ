@@ -16,14 +16,14 @@
     "lang", "order_reference", "ordered_at",
     "customer_name", "customer_email",
     "fulfillment_method", "fulfillment_date",
-    "line_items",
-    "items_subtotal", "fulfillment_fee", "tax", "grand_total",
+    "line_items", "vat_breakdown",
+    "items_subtotal", "grand_total",
   )
   let optional = (
     "card_message",
     "recipient_name", "recipient_phone_number",
     "delivery_address", "delivery_instructions",
-    "discount",
+    "fulfillment_fee", "discount",
   )
   for key in required {
     assert(key in order, message: "receipt: missing required key `" + key + "`")
@@ -38,6 +38,11 @@
   for item in order.line_items {
     for key in line_item_required {
       assert(key in item, message: "receipt: line item missing `" + key + "`")
+    }
+  }
+  for row in order.vat_breakdown {
+    for key in ("rate", "base", "tax", "gross") {
+      assert(key in row, message: "receipt: VAT breakdown row missing `" + key + "`")
     }
   }
 
@@ -66,7 +71,13 @@
     ],
   )
 
-  set text(font: fonts.sans, size: type-scale.body, fill: colors.ink)
+  set document(
+    title: t("receipt") + " " + order.order_reference,
+    author: shop.name,
+    date: none,
+  )
+
+  set text(font: fonts.sans, size: type-scale.body, fill: colors.ink, lang: order.lang)
   set par(leading: 0.65em, justify: false)
 
   // ── Masthead ────────────────────────────────────────────────────────
@@ -125,7 +136,13 @@
       },
     )
   } else {
-    (text(weight: "semibold")[#shop.name], shop.address)
+    // `recipient_phone_number` is mandatory for pickup precisely so Jennie can
+    // text when the order is ready — the customer should see the number we hold.
+    (
+      text(weight: "semibold")[#shop.name],
+      shop.address,
+      order.recipient_phone_number,
+    )
   }
 
   grid(
@@ -181,13 +198,14 @@
     stroke: none,
     inset: (x: 0pt, y: 5pt),
 
-    head(t("item")),
-    head(t("unit-price-excl-vat")),
-    head(t("quantity")),
-    head(t("vat")),
-    head(t("total")),
-
-    table.hline(stroke: 0.5pt + colors.rule),
+    table.header(
+      head(t("item")),
+      head(t("unit-price-excl-vat")),
+      head(t("quantity")),
+      head(t("vat-rate")),
+      head(t("total")),
+      table.hline(stroke: 0.5pt + colors.rule),
+    ),
 
     ..order.line_items.map(item => (
       [
@@ -210,15 +228,18 @@
   // compounding paragraph spacing between separate grid calls. The
   // grand-total row is set off by a 0.5pt rule above (classic invoice
   // convention — "below the line") and a small size bump on the amount.
-  let fee-label = t("fulfillment-fee").replace("{method}", fulfillment-label)
-  let totals-rows = (
-    ([#t("subtotal")], [#order.items_subtotal]),
-    ([#fee-label], [#order.fulfillment_fee]),
-  )
+  let fee-label = if order.fulfillment_method == "delivery" {
+    t("delivery-fee")
+  } else {
+    t("pickup-fee")
+  }
+  let totals-rows = (([#t("subtotal")], [#order.items_subtotal]),)
   if order.discount != none {
     totals-rows.push(([#t("discount")], [−#order.discount]))
   }
-  totals-rows.push(([#t("vat")], [#order.tax]))
+  if order.fulfillment_fee != none {
+    totals-rows.push(([#fee-label], [#order.fulfillment_fee]))
+  }
 
   // Three-column layout: label (auto), flexible gap (1fr), value (auto).
   // Auto-sizes labels to their widest content so locale variants like
@@ -245,6 +266,39 @@
         text(weight: "bold")[#t("total-paid")],
         [],
         text(features: ("tnum",), weight: "bold")[#order.grand_total],
+      )
+
+      #v(14pt)
+
+      // ── VAT breakdown ─────────────────────────────────────────────────
+      // Finnish receipts must state the VAT per rate — kuittipakkolaki
+      // 658/2013 § 4, and AVL § 209 f for the simplified invoice every order
+      // under €400 falls under. Prices are tax-inclusive, so the VAT is
+      // *contained* in the total: this block decomposes the figure above it
+      // and must never read as another addend, which is why it sits below
+      // the rule rather than in the column.
+      #align(left, eyebrow(t("vat-breakdown")))
+      #v(5pt)
+      #table(
+        columns: (auto, 1fr, 1fr, 1fr),
+        align: (left, right, right, right),
+        stroke: none,
+        inset: (x: 0pt, y: 4pt),
+
+        table.header(
+          head(t("vat-rate")),
+          head(t("net")),
+          head(t("vat")),
+          head(t("gross")),
+          table.hline(stroke: 0.5pt + colors.rule),
+        ),
+
+        ..order.vat_breakdown.map(row => (
+          text(features: ("tnum",))[#row.rate],
+          text(features: ("tnum",))[#row.base],
+          text(features: ("tnum",))[#row.tax],
+          text(features: ("tnum",))[#row.gross],
+        )).flatten()
       )
     ]
   ]
