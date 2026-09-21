@@ -24,6 +24,8 @@
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
         "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
         "match_type": null,
         "match_with": null,
         "multitenancy": {
@@ -55,6 +57,8 @@
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
         "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
         "match_type": null,
         "match_with": null,
         "multitenancy": {
@@ -92,6 +96,7 @@
         }
       ],
       "include": null,
+      "include_base_filter?": true,
       "message": null,
       "name": null,
       "nulls_distinct": true,
@@ -114,6 +119,7 @@
         }
       ],
       "include": null,
+      "include_base_filter?": true,
       "message": null,
       "name": null,
       "nulls_distinct": true,
@@ -126,7 +132,7 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "BE5BAC3D766B9A6E52755D7312E3694C0C80BBF283858FF6A9E45F75E4324861",
+  "hash": "4863488E3BF8E99441E9A2DC54705D93152D4FDA729F09943A631A6D749D26DF",
   "identities": [],
   "multitenancy": {
     "attribute": null,
