@@ -105,6 +105,29 @@
     t("pickup-date")
   }
 
+  // `recipient_name` is only stored for gift orders; a non-gift delivery goes
+  // to the buyer, so name the buyer rather than leaving the line blank.
+  let recipient = if order.recipient_name != none {
+    order.recipient_name
+  } else {
+    order.customer_name
+  }
+
+  // Phone and instructions are optional, so collect the lines that are actually
+  // present and join them — an absent one must not leave a blank line behind.
+  let fulfillment-lines = if order.fulfillment_method == "delivery" {
+    (
+      text(weight: "semibold")[#recipient],
+      order.recipient_phone_number,
+      order.delivery_address,
+      if order.delivery_instructions != none {
+        text(font: fonts.serif, style: "italic")[#order.delivery_instructions]
+      },
+    )
+  } else {
+    (text(weight: "semibold")[#shop.name], shop.address)
+  }
+
   grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
@@ -117,21 +140,7 @@
     [
       #eyebrow(fulfillment-label)
       #v(5pt)
-      #if order.fulfillment_method == "delivery" [
-        #text(weight: "semibold")[#order.recipient_name] \
-        #if order.recipient_phone_number != none [
-          #order.recipient_phone_number \
-        ]
-        #order.delivery_address \
-        #if order.delivery_instructions != none [
-          #text(font: fonts.serif, style: "italic")[
-            #order.delivery_instructions
-          ] \
-        ]
-      ] else [
-        #text(weight: "semibold")[#shop.name] \
-        #shop.address
-      ]
+      #fulfillment-lines.filter(line => line != none).join(linebreak())
       #v(6pt)
       #date-label: #text(weight: "semibold")[#order.fulfillment_date]
     ],
