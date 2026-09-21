@@ -13,6 +13,18 @@
       "type": "uuid"
     },
     {
+      "allow_nil?": true,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "quantity",
+      "type": "bigint"
+    },
+    {
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
@@ -21,7 +33,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "unit_price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "tax_rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "product_name",
       "type": "text"
     },
     {
@@ -33,19 +69,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "product_image_slug",
       "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_card",
+      "type": "boolean"
     },
     {
       "allow_nil?": true,
-      "default": "\"pending\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "variant_size",
       "type": "text"
     },
     {
@@ -73,7 +121,7 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -84,6 +132,8 @@
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
         "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
         "match_type": null,
         "match_with": null,
         "multitenancy": {
@@ -91,20 +141,20 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_user_id_fkey",
-        "on_delete": null,
+        "name": "line_items_order_id_fkey",
+        "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "users"
+        "table": "orders"
       },
       "scale": null,
       "size": null,
-      "source": "user_id",
+      "source": "order_id",
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -115,6 +165,8 @@
         "destination_attribute_default": null,
         "destination_attribute_generated": null,
         "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
         "match_type": null,
         "match_with": null,
         "multitenancy": {
@@ -122,16 +174,49 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_course_id_fkey",
+        "name": "line_items_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "courses"
+        "table": "products"
       },
       "scale": null,
       "size": null,
-      "source": "course_id",
+      "source": "product_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "line_items_product_variant_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "product_variants"
+      },
+      "scale": null,
+      "size": null,
+      "source": "product_variant_id",
       "type": "uuid"
     }
   ],
@@ -141,8 +226,27 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "BB5F69C178E192BE928E3E7246050358493A9AF3A17A53AB3F4E3286F0487E12",
-  "identities": [],
+  "hash": "7408D7DF4923E188AA8EA04BD98FC799573D25F5BD264B3DB41E1F50BAD70BA6",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "line_items_unique_product_variant_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "order_id"
+        },
+        {
+          "type": "atom",
+          "value": "product_variant_id"
+        }
+      ],
+      "name": "unique_product_variant",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -150,5 +254,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "course_registrations"
+  "table": "line_items"
 }

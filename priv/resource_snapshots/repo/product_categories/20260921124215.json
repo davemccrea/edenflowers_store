@@ -1,6 +1,18 @@
 {
   "attributes": [
     {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "translations",
+      "type": "map"
+    },
+    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -25,18 +37,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "percentage",
-      "type": "decimal"
-    },
-    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -45,8 +45,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "archived_at",
-      "type": "utc_datetime_usec"
+      "source": "description",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "slug",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "visibility",
+      "type": "text"
     }
   ],
   "base_filter": null,
@@ -55,19 +79,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "EDF7CA9FBE1E405317B334E4BA2B6A0671B98CEEE1D01F76385E4C6BD0E0852C",
+  "hash": "16465C9C089B53B503A3FF50C1E1DCDBF2A436540C124AE5BE34A5E53D4A4D37",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "tax_rates_unique_name_index",
+      "index_name": "product_categories_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "slug"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_slug",
       "nils_distinct?": true,
       "where": null
     }
@@ -79,5 +103,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "tax_rates"
+  "table": "product_categories"
 }

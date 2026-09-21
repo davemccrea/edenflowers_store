@@ -1,18 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -37,6 +25,18 @@
       "type": "text"
     },
     {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "percentage",
+      "type": "decimal"
+    },
+    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -45,32 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "description",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "slug",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"draft\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "visibility",
-      "type": "text"
+      "source": "archived_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -79,19 +55,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "7E46230571E753473BA089173B15579FDDA6CBA8A7A602B121CCEA52895CAB0E",
+  "hash": "495E1A793AB61D336AF76B02D19FF7B24C83FBE5A9AAEC2101BA27278EF1EB55",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "product_categories_unique_slug_index",
+      "index_name": "tax_rates_unique_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "slug"
+          "value": "name"
         }
       ],
-      "name": "unique_slug",
+      "name": "unique_name",
       "nils_distinct?": true,
       "where": null
     }
@@ -103,5 +79,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "product_categories"
+  "table": "tax_rates"
 }

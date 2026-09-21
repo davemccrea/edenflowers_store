@@ -1,6 +1,18 @@
 {
   "attributes": [
     {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "translations",
+      "type": "map"
+    },
+    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -21,95 +33,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "document_id",
+      "source": "name",
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "vendor_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "vendor_vat_number",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "date",
-      "type": "date"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "total_amount",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "vat_amount",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "currency",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "category",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -129,7 +57,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "confidence",
+      "source": "location_name",
       "type": "text"
     },
     {
@@ -141,11 +69,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "processed_at",
-      "type": "utc_datetime"
+      "source": "location_address",
+      "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -153,12 +81,84 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reviewed_at",
-      "type": "utc_datetime"
+      "source": "image_slug",
+      "type": "text"
     },
     {
       "allow_nil?": false,
       "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "start_time",
+      "type": "time"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "end_time",
+      "type": "time"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "register_before",
+      "type": "date"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "total_places",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -166,11 +166,11 @@
       "scale": null,
       "size": null,
       "source": "inserted_at",
-      "type": "utc_datetime"
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -178,7 +178,7 @@
       "scale": null,
       "size": null,
       "source": "updated_at",
-      "type": "utc_datetime"
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -187,23 +187,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "expenses_unique_document_id_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "document_id"
-        }
-      ],
-      "name": "unique_document_id",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "105F8A6A48DDDE82F60F8FE65E657734F3EFD386C76B906E8BC96AC6483DC436",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -211,5 +196,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "expenses"
+  "table": "courses"
 }
