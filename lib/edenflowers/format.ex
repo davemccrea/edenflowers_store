@@ -37,6 +37,25 @@ defmodule Edenflowers.Format do
     Localize.Date.to_string!(date, locale: locale, format: :short)
   end
 
+  @doc """
+  `date/2` with its weekday, e.g. "Saturday 16/05/2026" / "lördag 16.5.2026".
+
+  For fulfillment dates, where the weekday is the part the customer acts on and
+  the year still has to be there. `weekday_date/2` is the prose form and omits
+  the year. Swedish and Finnish lowercase weekday names — that's CLDR being
+  right, not a missing capitalization.
+  """
+  @spec weekday_numeric_date(Date.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
+  def weekday_numeric_date(nil, _locale), do: nil
+
+  def weekday_numeric_date(date, "en-GB" = locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "EEEE dd/MM/yyyy")
+  end
+
+  def weekday_numeric_date(date, locale) do
+    Localize.Date.to_string!(date, locale: locale, format: "EEEE d.M.yyyy")
+  end
+
   @doc "Localized clock time, e.g. \"10:00\" / \"10.00\"."
   @spec time(Time.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
   def time(nil, _locale), do: nil

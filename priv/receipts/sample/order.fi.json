@@ -1,48 +1,52 @@
 {
-  "lang": "fi",
-  "order_reference": "2026-00428",
-  "ordered_at": "13.5.2026 klo 14:32",
-  "customer_name": "Anna Lindqvist",
-  "customer_email": "anna.lindqvist@example.fi",
-  "fulfillment_method": "delivery",
-  "recipient_name": "Margareta Lindqvist",
-  "recipient_phone_number": "+358 40 555 0123",
-  "delivery_address": "Korsholmsesplanaden 12 A 4, 65100 Vaasa",
-  "delivery_instructions": "Ovikello ylimpään kerrokseen. Jos kukaan ei avaa, jätä naapurille.",
-  "fulfillment_date": "Lauantai 16.5.2026",
-  "card_message": "Grattis på födelsedagen, mamma! Med kärlek från oss alla.",
   "line_items": [
     {
+      "total": "39,90 €",
+      "quantity": 1,
+      "tax_rate": "25,5 %",
+      "unit_price_ex_tax": "31,79 €",
       "product_name": "Kevätkimppu",
-      "variant_size": "Keskikokoinen",
-      "quantity": 1,
-      "unit_price_ex_tax": "31,79 €",
-      "unit_price": "39,90 €",
-      "tax_rate": "25,5 %",
-      "total": "39,90 €"
+      "variant_size": "Medium"
     },
     {
-      "product_name": "Eukalyptuskimppu",
-      "variant_size": null,
+      "total": "17,00 €",
       "quantity": 2,
-      "unit_price_ex_tax": "6,77 €",
-      "unit_price": "8,50 €",
-      "tax_rate": "25,5 %",
-      "total": "17,00 €"
+      "tax_rate": "25,5 %",
+      "unit_price_ex_tax": "6,77 €",
+      "product_name": "Eukalyptuskimppu",
+      "variant_size": null
     },
     {
-      "product_name": "Käsinkirjoitettu kortti",
-      "variant_size": null,
+      "total": "4,50 €",
       "quantity": 1,
-      "unit_price_ex_tax": "3,59 €",
-      "unit_price": "4,50 €",
-      "tax_rate": "25,5 %",
-      "total": "4,50 €"
+      "tax_rate": "25,5 %",
+      "unit_price_ex_tax": "3,59 €",
+      "product_name": "Käsinkirjoitettu kortti",
+      "variant_size": null
     }
   ],
-  "items_subtotal": "61,40 €",
-  "fulfillment_fee": "9,00 €",
-  "discount": "6,14 €",
-  "tax": "13,38 €",
-  "grand_total": "64,26 €"
+  "customer_email": "anna.lindqvist@example.fi",
+  "order_reference": "2026-00428",
+  "fulfillment_date": "lauantaina 16.5.2026",
+  "grand_total": "64,26 €",
+  "delivery_address": "Korsholmsesplanaden 12 A 4, 65100 Vasa",
+  "fulfillment_fee": "9,00 €",
+  "fulfillment_method": "delivery",
+  "discount": "6,14 €",
+  "items_subtotal": "61,40 €",
+  "card_message": "Hyvää syntymäpäivää, äiti! Rakkaudella meiltä kaikilta.",
+  "customer_name": "Anna Lindqvist",
+  "delivery_instructions": "Ovikello ylimpään kerrokseen. Jos kukaan ei avaa, jätä naapurille.",
+  "ordered_at": "13.5.2026 14.32",
+  "recipient_name": "Margareta Lindqvist",
+  "recipient_phone_number": "+358 40 555 0123",
+  "lang": "fi",
+  "vat_breakdown": [
+    {
+      "base": "51,20 €",
+      "rate": "25,5 %",
+      "tax": "13,06 €",
+      "gross": "64,26 €"
+    }
+  ]
 }

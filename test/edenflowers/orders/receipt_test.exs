@@ -29,9 +29,10 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert payload.fulfillment_method == "pickup"
       # Keys must be present on the payload even when null — the template asserts presence.
       assert payload.recipient_name == nil
-      assert payload.recipient_phone_number == nil
       assert payload.delivery_address == nil
       assert payload.delivery_instructions == nil
+      # Mandatory for pickup (order.ex) so Jennie can text when it's ready.
+      assert payload.recipient_phone_number == "+358 40 555 0123"
     end
 
     test "carries the order locale into the payload language code" do
@@ -51,9 +52,14 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert line.tax_rate =~ ~r/25,5\x{00A0}%/u
     end
 
-    test "formats fulfillment_date with the order's locale" do
-      assert Receipt.build_payload(build_delivery_order(locale: "fi")).fulfillment_date == "16.5.2026"
-      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_date == "16/05/2026"
+    test "names the weekday alongside the fulfillment date" do
+      # The weekday is the part the customer acts on. CLDR lowercases it in fi/sv,
+      # and Finnish puts it in the essive ("lauantaina") next to a date — both correct.
+      assert Receipt.build_payload(build_delivery_order(locale: "fi")).fulfillment_date ==
+               "lauantaina 16.5.2026"
+
+      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_date ==
+               "Saturday 16/05/2026"
     end
 
     test "renders tax_rate with a single fractional digit" do
@@ -77,6 +83,63 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
       assert is_binary(payload.discount)
       assert payload.discount =~ ~r/€/
+    end
+
+    test "states the pre-discount subtotal so the totals column balances" do
+      # items_subtotal is net of the promotion and grand_total never subtracts it,
+      # so printing it raw next to a Discount row double-counts the discount.
+      payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
+
+      # 56.90 goods − 5.69 discount + 9.00 fee = 60.21
+      assert payload.items_subtotal == "€56.90"
+      assert payload.discount == "€5.69"
+      assert payload.fulfillment_fee == "€9.00"
+      assert payload.grand_total == "€60.21"
+    end
+
+    test "line item totals sum to the subtotal row above them" do
+      payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
+
+      assert payload.line_items |> Enum.map(& &1.total) |> Enum.map(&parse_eur/1) |> Enum.sum() ==
+               parse_eur(payload.items_subtotal)
+    end
+
+    test "breaks VAT down per rate, taking it as contained in the tax-inclusive price" do
+      order =
+        build_delivery_order(
+          locale: "en-GB",
+          line_items: [
+            {"Spring Posy", :medium, "39.90", 1, "0.255"},
+            {"Chocolates", nil, "12.00", 1, "0.14"}
+          ]
+        )
+
+      # 25.5%: 39.90 goods + 9.00 fee = 48.90 gross → 38.96 net, 9.94 VAT.
+      # 14%:   12.00 gross → 10.53 net, 1.47 VAT.  Never gross × rate.
+      assert [standard, reduced] = Receipt.build_payload(order).vat_breakdown
+
+      assert standard == %{rate: "25.5%", base: "€38.96", tax: "€9.94", gross: "€48.90"}
+      assert reduced == %{rate: "14.0%", base: "€10.53", tax: "€1.47", gross: "€12.00"}
+    end
+
+    test "each VAT row's net and tax add up to its gross" do
+      order = build_delivery_order(locale: "en-GB", with_promotion: true)
+
+      for row <- Receipt.build_payload(order).vat_breakdown do
+        assert parse_eur(row.base) + parse_eur(row.tax) == parse_eur(row.gross)
+      end
+    end
+
+    test "the VAT breakdown accounts for the whole grand total" do
+      payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
+
+      assert payload.vat_breakdown |> Enum.map(&parse_eur(&1.gross)) |> Enum.sum() ==
+               parse_eur(payload.grand_total)
+    end
+
+    test "omits a zero fulfillment fee rather than printing a 0,00 row" do
+      assert Receipt.build_payload(build_pickup_order(locale: "en-GB")).fulfillment_fee == nil
+      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_fee == "€9.00"
     end
 
     test "uses customer-typed delivery_address, never the geocoded one" do
@@ -111,89 +174,98 @@ defmodule Edenflowers.Orders.ReceiptTest do
     end
   end
 
-  defp build_delivery_order(opts) do
-    locale = Keyword.fetch!(opts, :locale)
-    with_promotion = Keyword.get(opts, :with_promotion, false)
+  # Mirrors the LineItem/Order calculations so the fixture money adds up — the
+  # receipt's whole job is columns that balance, and hand-picked totals can't
+  # catch a receipt that double-counts.
+  defp build_line_item({name, size, price, quantity, rate}, discount_rate) do
+    price = Decimal.new(price)
+    rate = Decimal.new(rate)
+    subtotal = Decimal.mult(price, quantity)
+    discount = Decimal.mult(subtotal, discount_rate)
 
-    %Order{
-      locale: locale,
+    %LineItem{
+      product_name: name,
+      variant_size: size,
+      quantity: quantity,
+      unit_price: price,
+      unit_price_ex_tax: Decimal.div(price, Decimal.add(1, rate)),
+      tax_rate: rate,
+      subtotal: subtotal,
+      discount: discount,
+      total: Decimal.sub(subtotal, discount)
+    }
+  end
+
+  defp sum(line_items, field) do
+    line_items |> Enum.map(&Map.fetch!(&1, field)) |> Enum.reduce(&Decimal.add/2)
+  end
+
+  defp build_order(line_items, fee, attrs) do
+    items_subtotal = sum(line_items, :total)
+
+    struct!(
+      %Order{
+        locale: "en-GB",
+        ordered_at: ~U[2026-05-13 14:32:00Z],
+        customer_name: "Anna Lindqvist",
+        customer_email: "anna.lindqvist@example.fi",
+        fulfillment_date: ~D[2026-05-16],
+        fulfillment_fee: fee,
+        fulfillment_tax_percentage: Decimal.new("0.255"),
+        recipient_name: nil,
+        recipient_phone_number: nil,
+        delivery_address: nil,
+        geocoded_address: nil,
+        delivery_instructions: nil,
+        card_message: nil,
+        promotion_applied?: Decimal.compare(sum(line_items, :discount), 0) == :gt,
+        discount: sum(line_items, :discount),
+        items_subtotal: items_subtotal,
+        grand_total: Decimal.add(items_subtotal, fee),
+        line_items: line_items
+      },
+      attrs
+    )
+  end
+
+  defp build_delivery_order(opts) do
+    discount_rate =
+      if Keyword.get(opts, :with_promotion, false), do: Decimal.new("0.10"), else: Decimal.new("0")
+
+    line_items =
+      Enum.map(
+        Keyword.get(opts, :line_items, [
+          {"Spring Posy", :medium, "39.90", 1, "0.255"},
+          {"Eucalyptus Bunch", nil, "8.50", 2, "0.255"}
+        ]),
+        &build_line_item(&1, discount_rate)
+      )
+
+    line_items
+    |> build_order(Decimal.new("9.00"),
+      locale: Keyword.fetch!(opts, :locale),
       order_reference: "TEST-001",
-      ordered_at: ~U[2026-05-13 14:32:00Z],
-      customer_name: "Anna Lindqvist",
-      customer_email: "anna.lindqvist@example.fi",
       fulfillment_method: :delivery,
-      fulfillment_date: ~D[2026-05-16],
-      fulfillment_fee: Decimal.new("9.00"),
       recipient_name: "Margareta Lindqvist",
       recipient_phone_number: "+358 40 555 0123",
       delivery_address: "Raw Street 1",
       geocoded_address: Keyword.get(opts, :geocoded_address, "Korsholmsesplanaden 12 A 4, 65100 Vaasa"),
       delivery_instructions: "Doorbell to top-floor flat.",
-      card_message: "Grattis på födelsedagen, mamma!",
-      promotion_applied?: with_promotion,
-      discount: if(with_promotion, do: Decimal.new("6.14"), else: Decimal.new("0")),
-      items_subtotal: Decimal.new("61.40"),
-      tax: Decimal.new("13.38"),
-      grand_total: Decimal.new("64.26"),
-      line_items: [
-        %LineItem{
-          product_name: "Spring Posy",
-          variant_size: :medium,
-          quantity: 1,
-          unit_price: Decimal.new("39.90"),
-          unit_price_ex_tax: Decimal.new("31.79"),
-          tax_rate: Decimal.new("0.255"),
-          total: Decimal.new("39.90")
-        },
-        %LineItem{
-          product_name: "Eucalyptus Bunch",
-          variant_size: nil,
-          quantity: 2,
-          unit_price: Decimal.new("8.50"),
-          unit_price_ex_tax: Decimal.new("6.77"),
-          tax_rate: Decimal.new("0.255"),
-          total: Decimal.new("17.00")
-        }
-      ]
-    }
+      card_message: "Grattis på födelsedagen, mamma!"
+    )
     |> apply_overrides(opts)
   end
 
   defp build_pickup_order(opts) do
-    locale = Keyword.fetch!(opts, :locale)
-
-    %Order{
-      locale: locale,
+    [{"Spring Posy", :medium, "39.90", 1, "0.255"}]
+    |> Enum.map(&build_line_item(&1, Decimal.new("0")))
+    |> build_order(Decimal.new("0"),
+      locale: Keyword.fetch!(opts, :locale),
       order_reference: "TEST-002",
       ordered_at: ~U[2026-05-13 16:08:00Z],
-      customer_name: "Anna Lindqvist",
-      customer_email: "anna.lindqvist@example.fi",
       fulfillment_method: :pickup,
-      fulfillment_date: ~D[2026-05-16],
-      fulfillment_fee: Decimal.new("0"),
-      recipient_name: nil,
-      recipient_phone_number: nil,
-      delivery_address: nil,
-      geocoded_address: nil,
-      delivery_instructions: nil,
-      card_message: nil,
-      promotion_applied?: false,
-      discount: Decimal.new("0"),
-      items_subtotal: Decimal.new("48.40"),
-      tax: Decimal.new("9.84"),
-      grand_total: Decimal.new("48.40"),
-      line_items: [
-        %LineItem{
-          product_name: "Spring Posy",
-          variant_size: :medium,
-          quantity: 1,
-          unit_price: Decimal.new("39.90"),
-          unit_price_ex_tax: Decimal.new("31.79"),
-          tax_rate: Decimal.new("0.255"),
-          total: Decimal.new("39.90")
-        }
-      ]
-    }
+      recipient_phone_number: "+358 40 555 0123"
+    )
   end
 
   defp apply_overrides(order, opts) do
@@ -205,6 +277,18 @@ defmodule Edenflowers.Orders.ReceiptTest do
         :error -> acc
       end
     end)
+  end
+
+  # Cents, so the balance assertions compare what the customer actually reads
+  # rather than the unrounded Decimals behind it.
+  defp parse_eur(formatted) do
+    formatted
+    |> String.replace(~r/[^0-9,.\-]/u, "")
+    |> String.replace(",", ".")
+    |> Decimal.new()
+    |> Decimal.mult(100)
+    |> Decimal.round()
+    |> Decimal.to_integer()
   end
 
   defp read_fixture(name) do

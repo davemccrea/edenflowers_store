@@ -20,8 +20,7 @@ defmodule Edenflowers.Orders.Receipt do
         :discount,
         :promotion_applied?,
         :grand_total,
-        :tax,
-        line_items: [:total, :unit_price_ex_tax]
+        line_items: [:subtotal, :total, :unit_price_ex_tax]
       ],
       authorize?: false
     )
@@ -48,7 +47,7 @@ defmodule Edenflowers.Orders.Receipt do
       customer_name: order.customer_name,
       customer_email: order.customer_email,
       fulfillment_method: to_string(order.fulfillment_method),
-      fulfillment_date: Format.date(order.fulfillment_date, locale),
+      fulfillment_date: Format.weekday_numeric_date(order.fulfillment_date, locale),
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,
       # Customer's typed address, not `geocoded_address` — HERE strips flat numbers and stair codes.
@@ -56,25 +55,79 @@ defmodule Edenflowers.Orders.Receipt do
       delivery_instructions: order.delivery_instructions,
       card_message: order.card_message,
       line_items: Enum.map(order.line_items, &line_item_payload(&1, locale)),
-      items_subtotal: Format.currency(order.items_subtotal, locale),
-      fulfillment_fee: Format.currency(order.fulfillment_fee || 0, locale),
+      items_subtotal: Format.currency(gross_items_subtotal(order), locale),
+      fulfillment_fee: fulfillment_fee_payload(order, locale),
       discount: discount_payload(order, locale),
-      tax: Format.currency(order.tax, locale),
+      vat_breakdown: vat_breakdown(order, locale),
       grand_total: Format.currency(order.grand_total, locale)
     }
   end
 
+  # `total` is net of any promotion; the receipt states the discount once as
+  # its own row, so the line column has to show the undiscounted subtotal or
+  # the column won't sum to the row above it.
   defp line_item_payload(item, locale) do
     %{
       product_name: item.product_name,
       variant_size: variant_size_label(item.variant_size),
       quantity: item.quantity,
-      unit_price: Format.currency(item.unit_price, locale),
       unit_price_ex_tax: Format.currency(item.unit_price_ex_tax, locale),
       tax_rate: Format.percentage(item.tax_rate, locale),
-      total: Format.currency(item.total, locale)
+      total: Format.currency(item.subtotal, locale)
     }
   end
+
+  # `items_subtotal` sums `LineItem.total`, which already has the promotion
+  # taken off. Adding `discount` (the sum of the same lines' discounts) back
+  # recovers the pre-discount figure the "Subtotal" row is supposed to state.
+  defp gross_items_subtotal(order) do
+    Decimal.add(order.items_subtotal, order.discount || 0)
+  end
+
+  # A zero fee is noise on a pickup receipt — drop the row rather than print
+  # "Pickup fee 0,00 €".
+  defp fulfillment_fee_payload(order, locale) do
+    if positive?(order.fulfillment_fee) do
+      Format.currency(order.fulfillment_fee, locale)
+    end
+  end
+
+  # Finnish law wants the VAT stated per rate — kuittipakkolaki 658/2013 § 4,
+  # and AVL § 209 f for the simplified invoice every order under €400 falls
+  # under. Prices are tax-inclusive, so each rate's gross is split into the
+  # taxable base and the VAT contained in it. Rounding the base first and
+  # taking the VAT as the remainder keeps the printed row adding up.
+  defp vat_breakdown(order, locale) do
+    order.line_items
+    |> Enum.map(&{&1.tax_rate, &1.total})
+    |> Enum.concat(fulfillment_fee_entry(order))
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> Enum.sort_by(&elem(&1, 0), {:desc, Decimal})
+    |> Enum.map(fn {rate, amounts} ->
+      gross = Enum.reduce(amounts, &Decimal.add/2)
+      base = gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
+
+      %{
+        rate: Format.percentage(rate, locale),
+        base: Format.currency(base, locale),
+        tax: Format.currency(Decimal.sub(gross, base), locale),
+        gross: Format.currency(gross, locale)
+      }
+    end)
+  end
+
+  # The fee carries its own snapshotted rate, so it buckets alongside the
+  # line items rather than getting a row of its own.
+  defp fulfillment_fee_entry(order) do
+    if positive?(order.fulfillment_fee) and order.fulfillment_tax_percentage do
+      [{order.fulfillment_tax_percentage, order.fulfillment_fee}]
+    else
+      []
+    end
+  end
+
+  defp positive?(nil), do: false
+  defp positive?(amount), do: Decimal.compare(amount, 0) == :gt
 
   # `order.discount` sums to 0 (not nil) when no promotion applies, so gate on `promotion_applied?`.
   defp discount_payload(order, locale) do

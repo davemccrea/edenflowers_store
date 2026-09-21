@@ -18,7 +18,15 @@ cd priv/receipts
 typst watch main.typ preview.pdf --font-path fonts                # default sv, delivery
 typst compile main.typ preview.pdf --font-path fonts --input fixture=fi
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
-# fixtures: {en,fi,sv}[.pickup], sv.nongift
+# fixtures: {en,fi,sv}[.pickup], sv.nongift, sv.mixed-vat
+```
+
+The fixtures under `sample/` are generated, never hand-edited — they run
+through the real `Receipt.build_payload/1` so a preview can't quietly drift
+from what customers receive:
+
+```sh
+source .env && mix run priv/receipts/sample/regenerate.exs
 ```
 
 ## Render from Elixir
