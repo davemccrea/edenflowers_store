@@ -635,9 +635,14 @@ Hooks.Stripe = {
    * daisyUI input model (mirrored here):
    *   - rest: border-color = color-mix(base-content 20%, transparent)
    *   - focus / focus-within: border-color flips to full base-content;
-   *                           outline 2px solid base-content with 2px offset
+   *                           outline 2px solid with 2px offset, in primary --
+   *                           daisyUI draws that outline in base-content, app.css
+   *                           overrides every focus ring to the brand green
    *   - invalid: border-color and focus outline flip to --color-error
    *   - input-lg: 48px tall, 18px font, 12px horizontal padding
+   *
+   * The payment-method tabs mirror the `radio-card` input instead: base-300
+   * frame, primary frame over a 5% primary wash once selected.
    */
   buildAppearance() {
     const css = getComputedStyle(document.documentElement);
@@ -648,8 +653,11 @@ Hooks.Stripe = {
     const base100 = v("--color-base-100", "#ffffff");
     const primary = v("--color-primary", "#0570de");
     const error = v("--color-error", "#dc2626");
+    const base300 = v("--color-base-300", "#e5e7eb");
 
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
+    // Checkboxes carry a heavier hairline than inputs -- see `.checkbox` in app.css.
+    const checkboxBorder = `color-mix(in oklab, ${baseContent} 55%, transparent)`;
 
     return {
       theme: "flat",
@@ -678,7 +686,7 @@ Hooks.Stripe = {
         ".Input:focus": {
           backgroundColor: base100,
           border: `1px solid ${baseContent}`,
-          outline: `2px solid ${baseContent}`,
+          outline: `2px solid ${primary}`,
           outlineOffset: "2px",
           boxShadow: "none",
         },
@@ -700,6 +708,45 @@ Hooks.Stripe = {
           fontSize: "16px",
           fontWeight: "400",
           lineHeight: "24px",
+          marginBottom: "4px",
+        },
+        ".Tab": {
+          backgroundColor: base100,
+          border: `1px solid ${base300}`,
+          boxShadow: "none",
+          color: baseContent,
+        },
+        ".Tab:hover": {
+          backgroundColor: base100,
+          border: `1px solid ${primary}`,
+          boxShadow: "none",
+          color: baseContent,
+        },
+        ".Tab--selected": {
+          backgroundColor: `color-mix(in oklab, ${primary} 5%, ${base100})`,
+          border: `1px solid ${primary}`,
+          boxShadow: "none",
+          color: baseContent,
+        },
+        ".Tab--selected:focus": {
+          backgroundColor: `color-mix(in oklab, ${primary} 5%, ${base100})`,
+          border: `1px solid ${primary}`,
+          outline: `2px solid ${primary}`,
+          outlineOffset: "2px",
+          boxShadow: "none",
+          color: baseContent,
+        },
+        ".CheckboxInput": {
+          backgroundColor: base100,
+          border: `1px solid ${checkboxBorder}`,
+          borderRadius: "0",
+          boxShadow: "none",
+        },
+        ".CheckboxInput--checked": {
+          backgroundColor: primary,
+          border: `1px solid ${primary}`,
+          borderRadius: "0",
+          boxShadow: "none",
         },
         ".Error": {
           color: error,
