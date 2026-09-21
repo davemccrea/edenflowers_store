@@ -118,7 +118,10 @@ defmodule Edenflowers.Orders.LineItem do
                 )
               )
 
-    calculate :tax, :decimal, expr(total * tax_rate)
+    # `unit_price` is tax-inclusive, so VAT is *contained* in `total` rather
+    # than added to it: the VAT fraction is rate / (1 + rate), not rate.
+    # At 25.5% that's 20.32% of the gross.
+    calculate :tax, :decimal, expr(total * tax_rate / (1 + tax_rate))
 
     # `unit_price` is stored tax-inclusive.
     calculate :unit_price_ex_tax, :decimal, expr(unit_price / (1 + tax_rate))

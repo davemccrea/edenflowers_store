@@ -72,7 +72,12 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Ash.load!(order, [:items_subtotal, :items_tax], authorize?: false)
 
       assert Decimal.equal?(order.items_subtotal, "86.00")
-      assert Decimal.equal?(order.items_tax, "21.00")
+
+      # Prices are tax-inclusive, so the VAT is contained in the gross:
+      # 80.00 × 25.5/125.5 + 6.00 × 10/110 = 16.25 + 0.55.
+      assert order.items_tax
+             |> Decimal.round(2)
+             |> Decimal.equal?("16.80")
     end
 
     test "sums items_subtotal and items_tax correctly when promotion is applied" do
@@ -108,9 +113,10 @@ defmodule Edenflowers.Orders.OrderTest do
              |> Decimal.round(2)
              |> Decimal.equal?("87.98")
 
+      # Contained VAT on the discounted gross: 87.976 × 25.5/125.5.
       assert order.items_tax
              |> Decimal.round(2)
-             |> Decimal.equal?("22.43")
+             |> Decimal.equal?("17.88")
     end
 
     test "promotion_applied? returns true if promotion applied" do
@@ -208,9 +214,10 @@ defmodule Edenflowers.Orders.OrderTest do
            |> Decimal.round(2)
            |> Decimal.equal?("64.97")
 
+    # 59.98 goods × 25.5/125.5 + 4.99 fee × 15/115 — both quoted tax-inclusive.
     assert order.tax
            |> Decimal.round(2)
-           |> Decimal.equal?("16.04")
+           |> Decimal.equal?("12.84")
   end
 
   test "calling finalise_checkout updates state and payment_state" do

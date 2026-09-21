@@ -489,9 +489,14 @@ defmodule Edenflowers.Orders.Order do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
 
+    # The fee is quoted tax-inclusive like every other price, so its VAT is
+    # contained in it — see the note on `LineItem.tax`.
     calculate :fulfillment_tax,
               :decimal,
-              expr((fulfillment_fee || 0) * (fulfillment_tax_percentage || 0))
+              expr(
+                (fulfillment_fee || 0) * (fulfillment_tax_percentage || 0) /
+                  (1 + (fulfillment_tax_percentage || 0))
+              )
 
     calculate :tax, :decimal, expr(items_tax + fulfillment_tax)
 
