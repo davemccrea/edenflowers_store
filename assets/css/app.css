@@ -155,6 +155,22 @@
   --focus-color: var(--color-error);
 }
 
+/* Checkboxes rejoin the square system — --radius-selector stays soft because
+   it also shapes radios. Hairline frame at .product-mark weight so the empty
+   box reads as a drawn box, not daisyUI's 20% ghost; checked fills with the
+   brand green instead of daisyUI's transparent default. */
+.checkbox {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+}
+
+.checkbox:checked,
+.checkbox[aria-checked="true"] {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
 button:not(:disabled):not([aria-disabled="true"]),
 [role="button"]:not([aria-disabled="true"]),
 label,
