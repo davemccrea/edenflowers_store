@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Receipt do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Calculations.Tax
+  alias Edenflowers.Orders.Order.Calculations.Vat
 
   @typst_bin "typst"
 
@@ -94,12 +94,12 @@ defmodule Edenflowers.Orders.Receipt do
   # taking the VAT as the remainder keeps the printed row adding up.
   defp vat_breakdown(order, locale) do
     order
-    |> Tax.breakdown()
-    |> Enum.map(fn %{rate: rate, base: base, tax: tax, gross: gross} ->
+    |> Vat.breakdown()
+    |> Enum.map(fn %{rate: rate, base: base, vat: vat, gross: gross} ->
       %{
         rate: Format.percentage(rate, locale),
         base: Format.currency(base, locale),
-        tax: Format.currency(tax, locale),
+        tax: Format.currency(vat, locale),
         gross: Format.currency(gross, locale)
       }
     end)

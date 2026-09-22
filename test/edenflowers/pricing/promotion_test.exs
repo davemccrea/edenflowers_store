@@ -182,7 +182,15 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
       assert promotion.usage == 0
 
-      order = generate(order(state: :payment, promotion_id: promotion.id, payment_intent_id: "pi_test"))
+      order =
+        generate(
+          order(
+            state: :payment,
+            promotion_id: promotion.id,
+            discount_rate: promotion.discount_rate,
+            payment_intent_id: "pi_test"
+          )
+        )
 
       _line_item =
         generate(

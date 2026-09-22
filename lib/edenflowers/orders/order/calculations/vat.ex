@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Order.Calculations.Tax do
+defmodule Edenflowers.Orders.Order.Calculations.Vat do
   use Ash.Resource.Calculation
 
   @impl true
@@ -12,7 +12,13 @@ defmodule Edenflowers.Orders.Order.Calculations.Tax do
   def total(order) do
     order
     |> breakdown()
-    |> Enum.reduce(Decimal.new(0), &Decimal.add(&1.tax, &2))
+    |> Enum.reduce(Decimal.new(0), &Decimal.add(&1.vat, &2))
+  end
+
+  def breakdown(%{state: :placed, vat_breakdown: rows}) when is_list(rows), do: rows
+
+  def breakdown(%{state: :placed}) do
+    raise "placed order is missing its VAT breakdown snapshot"
   end
 
   def breakdown(order) do
@@ -25,7 +31,7 @@ defmodule Edenflowers.Orders.Order.Calculations.Tax do
       gross = Enum.reduce(amounts, Decimal.new(0), &Decimal.add/2)
       base = gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
 
-      %{rate: rate, base: base, tax: Decimal.sub(gross, base), gross: gross}
+      %{rate: rate, base: base, vat: Decimal.sub(gross, base), gross: gross}
     end)
   end
 
