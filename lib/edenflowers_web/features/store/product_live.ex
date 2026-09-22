@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                     <span class="size-option__label font-serif text-xl">
                       {String.capitalize(to_string(variant.size))}
                     </span>
-                    <span class="size-option__price text-base-content ml-2 font-serif text-lg">
+                    <span class="size-option__price text-base-content font-serif ml-2 text-lg">
                       {Edenflowers.Format.price(variant.price, Edenflowers.Format.locale())}
                     </span>
                   </label>
