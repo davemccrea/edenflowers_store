@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.LayoutsTest do
       render_component(&Layouts.admin/1,
         flash: %{},
         current_path: "/admin/orders",
-        current_user: %{email: "admin@example.com", first_name: "Admin", initials: "A"},
+        current_user: %{email: "admin@example.com", first_name: "Admin", initials: "A", avatar_content_type: nil},
         inner_block: []
       )
 
