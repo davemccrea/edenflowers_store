@@ -8,7 +8,7 @@ dev:
 
 # Forward Stripe webhooks to the local dev server
 stripe:
-    stripe listen --forward-to localhost:4000/webhook/stripe
+    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:4000/webhook/stripe
 
 # Drop, set up and seed the dev and test databases
 reset-db:
