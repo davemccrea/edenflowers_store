@@ -10,7 +10,6 @@
 
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
-@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Self-hosted brand fonts. Open Sans is a variable font covering all
    weights in a single file; Crimson Text ships static weights. Both are
@@ -50,28 +49,6 @@
   font-display: swap;
   src: url("/fonts/CrimsonText-600.woff2") format("woff2");
 }
-@font-face {
-  font-family: "Crimson Text";
-  font-style: italic;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/fonts/CrimsonText-600italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Crimson Text";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/CrimsonText-700.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Crimson Text";
-  font-style: italic;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/CrimsonText-700italic.woff2") format("woff2");
-}
-
 @theme {
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
@@ -195,11 +172,9 @@ summary {
   top: 0.5rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .phx-submit-loading [type="submit"],
-  .phx-submit-loading button[phx-click] {
-    cursor: progress;
-  }
+.phx-submit-loading [type="submit"],
+.phx-submit-loading button[phx-click] {
+  cursor: progress;
 }
 
 /* Submit button: label↔spinner swap with 300ms-delayed reveal.
@@ -222,6 +197,18 @@ summary {
 .phx-submit-loading .form-button-spinner {
   opacity: 1;
   transition: opacity 0s 300ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-submit-loading .form-button-label {
+    opacity: 1;
+    transition: none;
+  }
+
+  .phx-submit-loading .form-button-spinner {
+    opacity: 0;
+    transition: none;
+  }
 }
 
 /* Gate clicks while disconnected so a tap on a CTA mid-flap doesn't
@@ -247,7 +234,7 @@ body {
   .btn,
   [role="button"] {
     transition-property: color, background-color, border-color,
-      text-decoration-color, opacity, box-shadow, transform;
+      text-decoration-color, opacity, box-shadow, transform, translate;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -339,7 +326,7 @@ main p {
 }
 
 @utility card-title {
-  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
+  @apply block font-serif text-2xl font-normal leading-snug tracking-normal sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {
@@ -452,12 +439,23 @@ main p {
   position: fixed;
   top: 0;
   z-index: 50;
-  width: 100vw;
-  transition: transform 0.2s ease-out;
+  width: 100%;
+  visibility: visible;
+  transition:
+    transform 0.2s ease-out,
+    visibility 0s linear;
 }
 
-#hotfx-shy-header.hidden {
+#hotfx-shy-header.shy-header--hidden {
   transform: translateY(-100%);
+  visibility: hidden;
+  transition-delay: 0s, 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #hotfx-shy-header {
+    transition: none;
+  }
 }
 
 /* Each element sets its own `--reveal-delay` inline. */
@@ -580,7 +578,11 @@ main p {
   transform: scale(calc(1 - var(--embla-progress) * 0.08));
   opacity: calc(1 - var(--embla-progress) * 0.45);
   transform-origin: center;
-  will-change: transform, opacity;
+}
+@media (width < 640px) and (prefers-reduced-motion: no-preference) {
+  .embla__slide {
+    will-change: transform, opacity;
+  }
 }
 @media (min-width: 480px) {
   .embla__slide {
@@ -626,7 +628,6 @@ main p {
 /* `:where` keeps daisyUI .btn rules from out-specifying us. */
 :where(.embla__prev, .embla__next):disabled {
   opacity: 0.3;
-  cursor: not-allowed;
   pointer-events: none;
 }
 
