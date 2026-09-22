@@ -20,6 +20,14 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
     today = @timezone |> DateTime.now!() |> DateTime.to_date()
 
+    month_start =
+      today
+      |> Date.beginning_of_month()
+      |> DateTime.new!(~T[00:00:00], @timezone)
+      |> DateTime.shift_zone!("Etc/UTC")
+
+    sales_this_month = Orders.list_paid_orders_since!(month_start, actor: actor)
+
     orders_by_date =
       open_orders
       |> Enum.group_by(& &1.fulfillment_date)
@@ -36,6 +44,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
      |> assign(:open_order_count, length(open_orders))
      |> assign(:expenses_to_review, expenses_to_review)
      |> assign(:low_confidence_count, low_confidence_count)
+     |> assign(:sales_count, length(sales_this_month))
+     |> assign(:revenue, sales_this_month |> Enum.map(& &1.grand_total) |> Enum.reduce(Decimal.new(0), &Decimal.add/2))
      |> assign(:today, today)}
   end
 
@@ -47,6 +57,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         <.admin_page_header title={~t"Dashboard"} />
 
         <div class="space-y-5">
+          <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
           <.orders_widget
             orders_by_date={@orders_by_date}
             open_order_count={@open_order_count}
@@ -61,6 +72,27 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         </div>
       </.admin_page>
     </Layouts.admin>
+    """
+  end
+
+  attr :sales_count, :integer, required: true
+  attr :revenue, :any, required: true
+  attr :locale, :any, required: true
+
+  defp sales_widget(assigns) do
+    ~H"""
+    <.widget title={~t"This month"}>
+      <dl class="grid grid-cols-2 gap-4">
+        <div>
+          <dt class="text-base-content/65 text-sm">{~t"Sales"}</dt>
+          <dd class="text-base-content text-2xl font-semibold tabular-nums">{@sales_count}</dd>
+        </div>
+        <div>
+          <dt class="text-base-content/65 text-sm">{~t"Revenue"}</dt>
+          <dd class="text-base-content text-2xl font-semibold tabular-nums">{Format.currency(@revenue, @locale)}</dd>
+        </div>
+      </dl>
+    </.widget>
     """
   end
 

@@ -123,6 +123,12 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    read :paid_since do
+      argument :since, :utc_datetime, allow_nil?: false
+      filter expr(state == :placed and payment_status == :paid and ordered_at >= ^arg(:since))
+      prepare build(load: [:grand_total])
+    end
+
     # Read-only table feed for the /admin/orders Cinder collection. Deliberately
     # separate from :open/:completed so table-shaped loads and sorting don't leak
     # into the dashboard/domain split.
