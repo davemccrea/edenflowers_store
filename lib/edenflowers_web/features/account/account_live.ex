@@ -121,6 +121,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
               <tr :for={registration <- @registrations} class="border-base-content/12 border-t align-top">
                 <th scope="row" class="py-4 pr-4 font-normal">
                   {registration.course.name}
+                  <span :if={registration.seats > 1} class="text-base-content/70 tabular-nums">
+                    × {registration.seats}
+                  </span>
                   <%!-- Below sm the location has no column of its own; it rides under the name. --%>
                   <span class="text-base-content/70 block text-xs sm:hidden">
                     {registration.course.location_name}
@@ -260,7 +263,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp registration_label(:confirmed), do: ~t"Booked"
   defp registration_label(:cancelled), do: ~t"Cancelled"
-  defp registration_label(_pending), do: ~t"Reserved"
+  defp registration_label(_pending), do: ~t"Awaiting payment"
 
   defp registrations(user) do
     Courses.list_my_registrations!(actor: user, load: [:course])

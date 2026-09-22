@@ -668,7 +668,7 @@ defmodule EdenflowersWeb.Layouts do
         />
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
-            <div class="footer-grid__newsletter space-y-4">
+            <div id="newsletter" class="footer-grid__newsletter space-y-4">
               <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignup} />
             </div>
 

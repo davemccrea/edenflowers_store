@@ -1,12 +1,14 @@
 defmodule Edenflowers.Orders.Receipt do
   @moduledoc """
-  Renders the order-receipt PDF by shelling out to the Typst CLI.
+  Renders the receipt PDF for an order or a course booking by shelling out to
+  the Typst CLI.
 
   Deterministic over the placed order's snapshot columns, so the PDF
   bytes aren't persisted — `Order.receipt_sha256` records what was sent.
   Use `load_for_receipt/1` to load the aggregates `generate/1` expects.
   """
 
+  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Order.Calculations.Vat
@@ -28,8 +30,8 @@ defmodule Edenflowers.Orders.Receipt do
     )
   end
 
-  def generate(%Order{} = order) do
-    json = order |> build_payload() |> Jason.encode!()
+  def generate(%struct{} = record) when struct in [Order, CourseRegistration] do
+    json = record |> build_payload() |> Jason.encode!()
 
     # Keep stderr separate — merging it would corrupt the PDF bytes on stdout.
     case System.cmd(@typst_bin, typst_args(json)) do
@@ -56,6 +58,8 @@ defmodule Edenflowers.Orders.Receipt do
       delivery_address: order.delivery_address,
       delivery_instructions: order.delivery_instructions,
       card_message: order.card_message,
+      venue_name: nil,
+      venue_address: nil,
       line_items: Enum.map(order.line_items, &line_item_payload(&1, locale)),
       items_subtotal: Format.currency(order.items_subtotal, locale),
       fulfillment_fee: fulfillment_fee_payload(order, locale),
@@ -64,6 +68,59 @@ defmodule Edenflowers.Orders.Receipt do
       grand_total: Format.currency(order.grand_total, locale)
     }
   end
+
+  # Expects the registration's `course` loaded. A booking has one line and a
+  # single VAT rate, so the breakdown is computed here rather than snapshotted.
+  def build_payload(%CourseRegistration{} = registration) do
+    locale = registration.locale
+    course = registration.course
+    base = net_of_vat(registration.amount, registration.tax_rate)
+    amount = Format.currency(registration.amount, locale)
+
+    %{
+      lang: lang_from_locale(locale),
+      order_reference: registration.reference,
+      ordered_at: Format.datetime(registration.confirmed_at || registration.inserted_at, locale),
+      customer_name: registration.name,
+      customer_email: registration.email,
+      fulfillment_method: "course",
+      fulfillment_date:
+        "#{Format.weekday_numeric_date(course.date, locale)}, " <>
+          "#{Format.time(course.start_time, locale)}–#{Format.time(course.end_time, locale)}",
+      venue_name: course.location_name,
+      venue_address: course.location_address,
+      recipient_name: nil,
+      recipient_phone_number: nil,
+      delivery_address: nil,
+      delivery_instructions: nil,
+      card_message: nil,
+      line_items: [
+        %{
+          product_name: course.name,
+          variant_size: nil,
+          quantity: registration.seats,
+          unit_price_ex_tax: Format.currency(net_of_vat(registration.unit_price, registration.tax_rate), locale),
+          tax_rate: Format.percentage(registration.tax_rate, locale),
+          total: amount
+        }
+      ],
+      items_subtotal: amount,
+      fulfillment_fee: nil,
+      discount: nil,
+      vat_breakdown: [
+        %{
+          rate: Format.percentage(registration.tax_rate, locale),
+          base: Format.currency(base, locale),
+          tax: Format.currency(Decimal.sub(registration.amount, base), locale),
+          gross: amount
+        }
+      ],
+      grand_total: amount
+    }
+  end
+
+  # Same split as `Vat.breakdown/1`: round the base, VAT is the remainder.
+  defp net_of_vat(gross, rate), do: gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
 
   # `total` is net of any promotion; the receipt states the discount once as
   # its own row, so the line column has to show the undiscounted subtotal or

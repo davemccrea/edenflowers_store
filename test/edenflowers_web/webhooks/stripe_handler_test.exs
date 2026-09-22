@@ -262,4 +262,69 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       end)
     end
   end
+
+  describe "course registrations" do
+    setup do
+      course = generate(course(name: "Autumn Wreaths", price: "85.00"))
+
+      registration =
+        generate(
+          course_registration(
+            course_id: course.id,
+            seats: 2,
+            amount: Decimal.new("170.00"),
+            payment_intent_id: "pi_course_#{:rand.uniform(1_000_000)}"
+          )
+        )
+
+      %{registration: registration}
+    end
+
+    defp course_succeeded(registration, amount_received) do
+      EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+        id: "evt_course_succeeded",
+        type: "payment_intent.succeeded",
+        data: %{
+          object: %{
+            id: registration.payment_intent_id,
+            metadata: %{"course_registration_id" => registration.id},
+            amount_received: amount_received
+          }
+        }
+      })
+    end
+
+    test "confirms the booking and emails a receipt, once", %{registration: registration} do
+      assert :ok = course_succeeded(registration, 17_000)
+      assert :ok = course_succeeded(registration, 17_000)
+
+      registration = Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false)
+      assert registration.status == :confirmed
+      assert registration.confirmed_at
+
+      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.subject =~ "Autumn Wreaths"
+        assert [%{content_type: "application/pdf"}] = email.attachments
+      end)
+    end
+
+    test "leaves the booking pending when the amount does not match", %{registration: registration} do
+      capture_log(fn -> assert :ok = course_succeeded(registration, 8_500) end)
+
+      assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
+    end
+
+    test "ignores a failed payment; the seat hold lapses on its own", %{registration: registration} do
+      assert :ok =
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_course_failed",
+                 type: "payment_intent.payment_failed",
+                 data: %{object: %{metadata: %{"course_registration_id" => registration.id}}}
+               })
+
+      assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
+    end
+  end
 end

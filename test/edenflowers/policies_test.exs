@@ -240,7 +240,8 @@ defmodule Edenflowers.PoliciesTest do
           end_time: ~T[12:00:00],
           register_before: ~D[2029-12-25],
           total_places: 10,
-          price: "50.00"
+          price: "50.00",
+          tax_rate_id: generate(tax_rate()).id
         })
         |> Ash.create!(authorize?: false)
 
@@ -261,7 +262,8 @@ defmodule Edenflowers.PoliciesTest do
                  end_time: ~T[12:00:00],
                  register_before: ~D[2029-12-25],
                  total_places: 10,
-                 price: "50.00"
+                 price: "50.00",
+                 tax_rate_id: generate(tax_rate()).id
                })
                |> Ash.create(actor: nil)
 

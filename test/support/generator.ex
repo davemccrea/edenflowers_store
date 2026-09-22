@@ -159,6 +159,8 @@ defmodule Generator do
   end
 
   def course(opts \\ []) do
+    tax_rate_id = opts[:tax_rate_id] || once(:default_tax_rate_id, fn -> generate(tax_rate()).id end)
+
     changeset_generator(
       Course,
       :create,
@@ -173,7 +175,8 @@ defmodule Generator do
         end_time: ~T[14:00:00],
         register_before: Date.add(Date.utc_today(), 20),
         total_places: 8,
-        price: "85.00"
+        price: "85.00",
+        tax_rate_id: tax_rate_id
       },
       overrides: opts,
       authorize?: false
@@ -189,7 +192,13 @@ defmodule Generator do
       %CourseRegistration{
         name: "Ada Lovelace",
         email: "ada@example.com",
-        status: :pending
+        status: :pending,
+        seats: 1,
+        locale: "en-GB",
+        reference: GenerateOrderReference.generate(),
+        unit_price: Decimal.new("85.00"),
+        tax_rate: Decimal.new("0.255"),
+        amount: Decimal.new("85.00")
       },
       overrides: opts,
       authorize?: false

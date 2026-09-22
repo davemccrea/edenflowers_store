@@ -29,6 +29,24 @@ defmodule Edenflowers.Email do
     })
   end
 
+  def course_confirmation(registration) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(@from_address)
+      |> to(registration.email)
+      |> subject(~t"You're booked: #{course = registration.course.name}")
+      |> text_body(render_course_confirmation(registration))
+    end)
+  end
+
+  defp render_course_confirmation(registration) do
+    Templates.course_confirmation(%{
+      registration: registration,
+      format_date: &Format.weekday_numeric_date(&1, registration.locale),
+      format_time: &Format.time(&1, registration.locale)
+    })
+  end
+
   def newsletter_promo(email_address, promo_code) do
     new()
     |> from(@from_address)

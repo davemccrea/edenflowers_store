@@ -4,12 +4,36 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   require Logger
   import Edenflowers.Actors
 
+  alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Payment
 
   @impl true
   def handle_event(%Stripe.Event{type: "charge.succeeded"}) do
     # Charge events are handled via payment_intent.succeeded
+    :ok
+  end
+
+  @impl true
+  def handle_event(
+        %Stripe.Event{
+          type: "payment_intent.succeeded",
+          data: %{object: %{metadata: %{"course_registration_id" => registration_id}}}
+        } = event
+      )
+      when is_binary(registration_id) and registration_id != "" do
+    case Courses.Payment.complete_payment(registration_id, event.data.object) do
+      {:ok, _outcome} -> :ok
+      error -> handle_error(error, event)
+    end
+  end
+
+  # An unpaid course booking needs no update: its seat hold simply lapses.
+  def handle_event(%Stripe.Event{
+        type: type,
+        data: %{object: %{metadata: %{"course_registration_id" => _}}}
+      })
+      when type in ["payment_intent.payment_failed", "payment_intent.canceled"] do
     :ok
   end
 
