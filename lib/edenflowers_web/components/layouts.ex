@@ -204,7 +204,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.flash_group flash={@flash} />
 
-    <div class="min-h-screen lg:flex">
+    <div class="admin-theme min-h-screen lg:flex">
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
         id="admin-nav-drawer"
@@ -246,7 +246,7 @@ defmodule EdenflowersWeb.Layouts do
             <.icon name="hero-bars-3" class="h-5 w-5" />
           </button>
           <.link
-            navigate={~p"/admin"}
+            href={~p"/"}
             class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-base transition-colors active:text-primary/70"
           >
             Eden Flowers
@@ -283,7 +283,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <div class="flex h-full flex-col py-5">
       <div class="mb-6 flex items-center justify-between px-5">
-        <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-base">
+        <.link href={~p"/"} class="text-primary logo-wordmark text-base">
           Eden Flowers
         </.link>
         <button

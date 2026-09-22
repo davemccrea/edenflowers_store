@@ -43,6 +43,12 @@ defmodule EdenflowersWeb.Admin.Calendar do
         end
       }
       clickable_states={[:open, :weekday_disabled, :date_disabled]}
+      state_label={&cell_state_label/1}
+      weekday_state_label={
+        fn weekday ->
+          weekday_state_label(CalendarViewModel.weekday_state(@scope, @options, weekday))
+        end
+      }
       on_click={:fulfillment_date_toggled}
       on_weekday_click={:fulfillment_weekday_toggled}
       weekday_class={
@@ -100,6 +106,16 @@ defmodule EdenflowersWeb.Admin.Calendar do
       option -> Availability.override?(option, date)
     end
   end
+
+  defp cell_state_label(:open), do: ~t"open"
+  defp cell_state_label(:weekday_disabled), do: ~t"closed"
+  defp cell_state_label(:date_disabled), do: ~t"closed"
+  defp cell_state_label(:past), do: ~t"past"
+  defp cell_state_label(:mixed), do: ~t"options have different settings, choose a single option to change it"
+
+  defp weekday_state_label(:on), do: ~t"open"
+  defp weekday_state_label(:off), do: ~t"closed"
+  defp weekday_state_label(:mixed), do: ~t"options have different settings"
 
   defp cell_class(_day, state, opts, override?) do
     today? = Keyword.get(opts, :today?, false)

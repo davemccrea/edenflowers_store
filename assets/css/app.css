@@ -97,6 +97,8 @@
   --color-base-content: oklch(22% 0.015 75);
   /* daisyUI's default success green is ~2.3:1 on base-100; this clears AA as text. */
   --color-success: oklch(50% 0.11 155);
+  /* Same reason: the default error red is ~2.8:1, too faint for outline buttons and field errors. */
+  --color-error: oklch(52% 0.18 25);
 
   /* Square is the system. daisyUI's defaults (0.25rem field, 0.5rem box) are
      what made `.btn` need an explicit `rounded-none`; setting them here squares
@@ -247,6 +249,13 @@ body {
   transition: none;
 }
 
+/* The destructive button fills red on hover. daisyUI would set its text in
+   --color-error-content, which this codebase uses as a dark red *text* shade, so
+   the label vanished into the fill. Light text reads on every red we use. */
+.btn-error.btn-outline:is(:hover, :focus-visible, :active):not(:disabled, [aria-disabled="true"]) {
+  color: var(--color-base-100);
+}
+
 .footer-grid {
   display: grid;
   gap: 3rem;
@@ -341,24 +350,43 @@ main p {
   @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
 }
 
-/* Admin status pills use dark semantic foregrounds. DaisyUI's soft badges use
-   the bright semantic base colour as text, which is too faint at 12px. */
+/* The admin is Jennie's tool, not the storefront: status colours come straight
+   from the Tailwind palette so paid, pending, refunded and failed read at a
+   glance. Scoped to the admin layout; the storefront keeps its muted tokens.
+   The -content tokens are the readable text shade (700) for tinted surfaces. */
+.admin-theme,
+[data-phx-main]:has(> .admin-theme) > #flash-group {
+  --color-success: var(--color-emerald-500);
+  --color-success-content: var(--color-emerald-700);
+  --color-warning: var(--color-amber-400);
+  --color-warning-content: var(--color-amber-800);
+  --color-error: var(--color-red-600);
+  --color-error-content: var(--color-red-700);
+}
+
+/* Tailwind UI-style pills: a 50-tint fill, 700 text, inset 600/20 ring. */
 .badge.admin-badge-success {
-  border-color: color-mix(in oklab, var(--color-success-content) 18%, transparent);
-  background-color: color-mix(in oklab, var(--color-success) 12%, transparent);
-  color: var(--color-success-content);
+  border-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent);
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
 }
 
 .badge.admin-badge-warning {
-  border-color: color-mix(in oklab, var(--color-warning-content) 18%, transparent);
-  background-color: color-mix(in oklab, var(--color-warning) 14%, transparent);
-  color: var(--color-warning-content);
+  border-color: color-mix(in oklab, var(--color-amber-600) 25%, transparent);
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-800);
+}
+
+.badge.admin-badge-attention {
+  border-color: color-mix(in oklab, var(--color-orange-600) 20%, transparent);
+  background-color: var(--color-orange-50);
+  color: var(--color-orange-700);
 }
 
 .badge.admin-badge-error {
-  border-color: color-mix(in oklab, var(--color-error-content) 18%, transparent);
-  background-color: color-mix(in oklab, var(--color-error) 12%, transparent);
-  color: var(--color-error-content);
+  border-color: color-mix(in oklab, var(--color-red-600) 20%, transparent);
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
 }
 
 .badge.admin-badge-neutral {

@@ -22,6 +22,8 @@ defmodule EdenflowersWeb.DatePicker do
      |> assign(on_click: :date_selected)
      |> assign(on_weekday_click: nil)
      |> assign(weekday_class: &default_weekday_class/1)
+     |> assign(state_label: fn _ -> nil end)
+     |> assign(weekday_state_label: fn _ -> nil end)
      |> update_calendar_view(today_date)}
   end
 
@@ -66,6 +68,17 @@ defmodule EdenflowersWeb.DatePicker do
       "Optional (Date.t(), cell_state, opts -> css_classes). Overrides default per-state styling. " <>
         "`opts` is a keyword list with `:selected?` and `:today?` so the override can compose with " <>
         "the standard selected/today affordances. Defaults to a single closed style for all non-`:open` states."
+
+  attr :state_label, :any,
+    default: nil,
+    doc:
+      "Optional (cell_state -> String.t() | nil). Spoken after the date so screen readers hear what " <>
+        "the styling shows, e.g. \"closed\". When it returns nil, a non-clickable cell is announced as " <>
+        "\"not available\"."
+
+  attr :weekday_state_label, :any,
+    default: nil,
+    doc: "Optional (weekday_atom -> String.t() | nil). Spoken after the weekday header's toggle label."
 
   attr :clickable_states, :any,
     default: nil,
@@ -173,7 +186,7 @@ defmodule EdenflowersWeb.DatePicker do
               phx-target={@myself}
               phx-click="weekday-click"
               phx-value-weekday={Atom.to_string(Weekday.from_date(week_day))}
-              aria-label={weekday_aria_label(week_day)}
+              aria-label={weekday_aria_label(week_day, @weekday_state_label.(Weekday.from_date(week_day)))}
               class={@weekday_class.(Weekday.from_date(week_day))}
             >
               {Localize.DateTime.to_string!(week_day, format: "EEEEEE")}
@@ -215,7 +228,7 @@ defmodule EdenflowersWeb.DatePicker do
                 phx-value-date={day}
                 data-key-targets={key_targets_json(day, @today_date)}
                 type="button"
-                aria-label={day_aria_label(day, @today_date, @selected_date, selectable?)}
+                aria-label={day_aria_label(day, @today_date, @selected_date, selectable?, @state_label.(state))}
                 aria-pressed={if @selected_date && selected?(day, @selected_date), do: "true", else: "false"}
                 aria-current={if day == @today_date, do: "date"}
                 aria-disabled={if not selectable?, do: "true"}
@@ -354,6 +367,8 @@ defmodule EdenflowersWeb.DatePicker do
     |> maybe_default(:on_click, :date_selected)
     |> maybe_default(:clickable_states, [:open])
     |> maybe_default(:weekday_class, &default_weekday_class/1)
+    |> maybe_default(:state_label, fn _ -> nil end)
+    |> maybe_default(:weekday_state_label, fn _ -> nil end)
   end
 
   @doc false
@@ -368,25 +383,26 @@ defmodule EdenflowersWeb.DatePicker do
     end
   end
 
-  defp weekday_aria_label(date) do
-    full = Localize.DateTime.to_string!(date, format: "EEEE")
-    ~t"Toggle " <> full
+  defp weekday_aria_label(date, state_label) do
+    weekday = Localize.DateTime.to_string!(date, format: "EEEE")
+    label = ~t"Toggle #{weekday}"
+    if state_label, do: "#{label}, #{state_label}", else: label
   end
 
   defp week_aria_label(week) do
     first = Localize.DateTime.to_string!(List.first(week), format: "d MMM")
     last = Localize.DateTime.to_string!(List.last(week), format: "d MMM")
-    ~t"Toggle week" <> " #{first} – #{last}"
+    ~t"Toggle week #{first} to #{last}"
   end
 
-  defp day_aria_label(day, today_date, selected_date, selectable?) do
+  defp day_aria_label(day, today_date, selected_date, selectable?, state_label) do
     base = Localize.DateTime.to_string!(day, format: "EEEE, d MMMM y")
 
     suffixes =
       [
         if(day == today_date, do: ~t"today"),
         if(selected_date && selected?(day, selected_date), do: ~t"selected"),
-        if(not selectable?, do: ~t"not available")
+        state_label || if(not selectable?, do: ~t"not available")
       ]
       |> Enum.reject(&is_nil/1)
 

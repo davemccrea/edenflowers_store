@@ -46,24 +46,21 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="date" sort label={~t"Date"}>
-            <span class="whitespace-nowrap tabular-nums">
-              {Format.date(expense.date, @locale) || "—"}
+            <span :if={expense.date} class="whitespace-nowrap tabular-nums">
+              {Format.date(expense.date, @locale)}
             </span>
+            <.blank :if={is_nil(expense.date)} />
           </:col>
           <:col :let={expense} field="vendor_name" search label={~t"Vendor"}>
-            <span class="font-medium">{expense.vendor_name || "—"}</span>
+            <.link navigate={~p"/admin/expenses/#{expense.id}"} class="font-medium hover:underline">
+              {expense.vendor_name || ~t"Unknown vendor"}
+            </.link>
           </:col>
           <:col :let={expense} field="total_amount" sort label={~t"Amount"}>
-            <span class="whitespace-nowrap tabular-nums">
-              {Format.amount(expense.total_amount, expense.currency, @locale) || "—"}
+            <span :if={expense.total_amount && expense.currency} class="whitespace-nowrap tabular-nums">
+              {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
-          </:col>
-          <:col
-            :let={expense}
-            field="category"
-            filter={[type: :select, label: ~t"Category", prompt: ~t"All"]}
-          >
-            <.category_badge category={expense.category} />
+            <.blank :if={is_nil(expense.total_amount) or is_nil(expense.currency)} />
           </:col>
           <:col
             :let={expense}
@@ -77,9 +74,15 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               <.icon name="hero-check" class="text-base-content h-4 w-4" />
               <span class="sr-only">{~t"Reviewed"}</span>
             </span>
-            <span :if={is_nil(expense.reviewed_at)} class="text-base-content/30" aria-hidden="true">
-              —
-            </span>
+            <span :if={is_nil(expense.reviewed_at)} class="sr-only">{~t"Not reviewed"}</span>
+            <.blank :if={is_nil(expense.reviewed_at)} />
+          </:col>
+          <:col
+            :let={expense}
+            field="category"
+            filter={[type: :select, label: ~t"Category", prompt: ~t"All"]}
+          >
+            <.category_badge category={expense.category} />
           </:col>
         </Cinder.collection>
       </.admin_page>

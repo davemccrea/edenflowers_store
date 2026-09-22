@@ -117,7 +117,8 @@ defmodule Edenflowers.Orders.Order do
                   :distance_km,
                   :gift,
                   :recipient_name,
-                  :card_message
+                  :card_message,
+                  :line_items
                 ]
               )
     end

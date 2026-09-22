@@ -54,6 +54,17 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     end
   end
 
+  describe "accessible state" do
+    test "weekday toggles announce open, closed and mixed", %{conn: conn, delivery: delivery} do
+      {:ok, view, html} = live(conn, ~p"/admin/fulfillments")
+
+      assert html =~ ~s(aria-label="Toggle Monday, open")
+      assert html =~ ~s(aria-label="Toggle Saturday, options have different settings")
+
+      assert choose_scope(view, delivery.id) =~ ~s(aria-label="Toggle Sunday, closed")
+    end
+  end
+
   describe "rendered styling" do
     # Guardrail: the strike lives on ::after so ::before stays free for the
     # override corner, and cells and legend swatches share the one utility.
@@ -277,7 +288,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
     test "renders a data-confirm attribute on the reset button", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
-      assert html =~ "Are you sure you want to reset the calendar?"
+      assert html =~ "Reset every fulfillment option?"
     end
   end
 

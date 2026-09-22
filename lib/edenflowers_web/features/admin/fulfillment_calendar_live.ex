@@ -73,13 +73,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
             <.button
               type="button"
               phx-click="reset-calendar"
-              data-confirm={reset_confirm_message()}
-              aria-label={~t"Reset calendar to defaults"}
+              data-confirm={reset_confirm_message(@scope, @options)}
               variant="destructive"
               size="sm"
               class="self-start"
             >
-              {~t"Reset"}
+              <.icon name="hero-arrow-path" class="h-4 w-4" />
+              {~t"Reset calendar"}
             </.button>
           </div>
         </div>
@@ -140,6 +140,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
-  defp reset_confirm_message,
-    do: ~t"Are you sure you want to reset the calendar? This action is destructive."
+  defp reset_confirm_message(:all, _options),
+    do: ~t"Reset every fulfillment option? All weekdays and dates reopen, and your closed days are lost."
+
+  defp reset_confirm_message(option_id, options) do
+    name = options |> Enum.find(&(&1.id == option_id)) |> Map.fetch!(:name)
+    ~t"Reset #{name}? All weekdays and dates reopen, and your closed days are lost."
+  end
 end
