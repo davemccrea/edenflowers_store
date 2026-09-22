@@ -72,6 +72,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
       [
         :customer_first_name,
         :items_subtotal,
+        :items_total,
         :items_tax,
         :discount,
         :promotion_applied?,

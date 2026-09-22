@@ -142,7 +142,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
             <.detail_section id="order-payment-summary" title={~t"Payment"}>
               <dl class="text-sm">
-                <.money_row label={~t"Items subtotal"} amount={@order.items_subtotal} locale={@locale} />
+                <.money_row
+                  label={~t"Items subtotal"}
+                  amount={@order.items_subtotal}
+                  locale={@locale}
+                />
                 <.money_row
                   :if={positive?(@order.discount)}
                   label={discount_label(@order)}

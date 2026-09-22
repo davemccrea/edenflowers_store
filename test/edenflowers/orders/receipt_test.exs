@@ -86,8 +86,6 @@ defmodule Edenflowers.Orders.ReceiptTest do
     end
 
     test "states the pre-discount subtotal so the totals column balances" do
-      # items_subtotal is net of the promotion and grand_total never subtracts it,
-      # so printing it raw next to a Discount row double-counts the discount.
       payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
 
       # The real newsletter rate produces fractional cents before each line's discount is rounded:
@@ -202,7 +200,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
   end
 
   defp build_order(line_items, fee, attrs) do
-    items_subtotal = sum(line_items, :total)
+    items_subtotal = sum(line_items, :subtotal)
+    items_total = sum(line_items, :total)
 
     struct!(
       %Order{
@@ -222,7 +221,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
         promotion_applied?: Decimal.compare(sum(line_items, :discount), 0) == :gt,
         discount: sum(line_items, :discount),
         items_subtotal: items_subtotal,
-        grand_total: Decimal.add(items_subtotal, fee),
+        items_total: items_total,
+        grand_total: Decimal.add(items_total, fee),
         line_items: line_items
       },
       attrs

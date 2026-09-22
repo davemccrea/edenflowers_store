@@ -20,6 +20,7 @@ defmodule Edenflowers.Orders.Order do
     :total_items_in_cart,
     :discount,
     :items_subtotal,
+    :items_total,
     :items_tax,
     :promotion_applied?,
     :grand_total,
@@ -35,6 +36,7 @@ defmodule Edenflowers.Orders.Order do
     :customer_name,
     :grand_total,
     :items_subtotal,
+    :items_total,
     :items_tax,
     :tax,
     :fulfillment_tax,
@@ -487,7 +489,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :distance_km, :string, Calculations.DistanceKm
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
-    calculate :grand_total, :decimal, expr(items_subtotal + (fulfillment_fee || 0))
+    calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
 
     # The fee is quoted tax-inclusive like every other price, so its VAT is
     # contained in it — see the note on `LineItem.tax`.
@@ -509,7 +511,8 @@ defmodule Edenflowers.Orders.Order do
 
   aggregates do
     sum :total_items_in_cart, :line_items, :quantity, default: 0
-    sum :items_subtotal, :line_items, :total
+    sum :items_subtotal, :line_items, :subtotal
+    sum :items_total, :line_items, :total
     sum :items_tax, :line_items, :tax
     sum :discount, :line_items, :discount
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
