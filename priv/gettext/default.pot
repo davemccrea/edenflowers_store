@@ -1259,7 +1259,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:56
 #, elixir-autogen, elixir-format
-msgid "Mark as Reviewed"
+msgid "Mark as reviewed"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:85
@@ -1303,7 +1303,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:29
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:116
 #, elixir-autogen, elixir-format
-msgid "Office Supplies"
+msgid "Office supplies"
 msgstr ""
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:55
@@ -1398,7 +1398,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:35
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:122
 #, elixir-autogen, elixir-format
-msgid "Professional Services"
+msgid "Professional services"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:199
@@ -1440,7 +1440,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:133
 #, elixir-autogen, elixir-format
-msgid "Save Corrections"
+msgid "Save corrections"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:184
@@ -1496,7 +1496,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:63
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:109
 #, elixir-autogen, elixir-format
-msgid "Total Amount"
+msgid "Total amount"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:30
@@ -1544,12 +1544,12 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
 #, elixir-autogen, elixir-format
-msgid "VAT Amount"
+msgid "VAT amount"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:100
 #, elixir-autogen, elixir-format
-msgid "VAT Number"
+msgid "VAT number"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/expenses_live.ex:53
@@ -1559,7 +1559,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:99
 #, elixir-autogen, elixir-format
-msgid "Vendor Name"
+msgid "Vendor name"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:100
@@ -2441,3 +2441,33 @@ msgid "You have %{count} place(s) on this course."
 msgid_plural "You have %{count} place(s) on this course."
 msgstr[0] ""
 msgstr[1] ""
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex
+#, elixir-autogen, elixir-format
+msgid "Open receipt in Papra"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex
+#, elixir-autogen, elixir-format
+msgid "No amount"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex
+#, elixir-autogen, elixir-format
+msgid "Not reviewed"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex
+#, elixir-autogen, elixir-format
+msgid "Review"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/orders_live.ex
+#, elixir-autogen, elixir-format
+msgid "Order"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/orders_live.ex
+#, elixir-autogen, elixir-format
+msgid "Search name or order number…"
+msgstr ""

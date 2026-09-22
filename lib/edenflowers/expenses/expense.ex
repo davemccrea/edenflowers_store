@@ -36,6 +36,11 @@ defmodule Edenflowers.Expenses.Expense do
   actions do
     defaults [:read, :destroy]
 
+    read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+      prepare build(sort: [date: :desc_nils_first, processed_at: :desc])
+    end
+
     read :needs_review do
       filter expr(is_nil(reviewed_at) and confidence != :high)
       prepare build(sort: [date: :desc])
@@ -117,6 +122,10 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :reviewed_at, :utc_datetime
 
     timestamps()
+  end
+
+  calculations do
+    calculate :reviewed, :boolean, expr(not is_nil(reviewed_at))
   end
 
   identities do

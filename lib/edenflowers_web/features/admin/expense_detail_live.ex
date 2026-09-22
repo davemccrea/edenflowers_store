@@ -53,16 +53,22 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               variant="primary"
               size="sm"
             >
-              {~t"Mark as Reviewed"}
+              {~t"Mark as reviewed"}
             </.button>
           </:actions>
         </.admin_page_header>
 
         <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
           <div class="min-w-0">
-            <p class="eyebrow text-base-content/65 mb-1">{~t"Total Amount"}</p>
+            <p class="eyebrow text-base-content/65 mb-1">{~t"Total amount"}</p>
             <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
-              {Format.amount(@expense.total_amount, @expense.currency, @locale) || "—"}
+              <span :if={@expense.total_amount && @expense.currency}>
+                {Format.amount(@expense.total_amount, @expense.currency, @locale)}
+              </span>
+              <.blank :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} />
+              <span :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} class="sr-only">
+                {~t"No amount"}
+              </span>
             </p>
           </div>
           <div class="sm:text-right">
@@ -72,17 +78,15 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </section>
 
         <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <span>
-            {~t"Document"}
-            <a
-              href={Edenflowers.Papra.document_url(@expense.document_id)}
-              target="_blank"
-              rel="noopener"
-              class="link link-primary"
-            >
-              {@expense.document_id}
-            </a>
-          </span>
+          <a
+            href={Edenflowers.Papra.document_url(@expense.document_id)}
+            target="_blank"
+            rel="noopener"
+            class="link link-primary inline-flex items-center gap-1"
+          >
+            {~t"Open receipt in Papra"}
+            <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+          </a>
           <span :if={@expense.processed_at} aria-hidden="true">·</span>
           <span :if={@expense.processed_at}>
             {~t"Processed"} {Format.datetime(@expense.processed_at, @locale)}
@@ -96,8 +100,8 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         <section>
           <.form for={@form} phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input field={@form[:vendor_name]} type="text" label={~t"Vendor Name"} class="input w-full" />
-              <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT Number"} class="input w-full" />
+              <.input field={@form[:vendor_name]} type="text" label={~t"Vendor name"} class="input w-full" />
+              <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT number"} class="input w-full" />
               <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
               <.input
                 field={@form[:currency]}
@@ -106,22 +110,25 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 options={[EUR: :eur, SEK: :sek]}
                 class="select w-full"
               />
-              <.input field={@form[:total_amount]} type="text" label={~t"Total Amount"} class="input w-full" />
-              <.input field={@form[:vat_amount]} type="text" label={~t"VAT Amount"} class="input w-full" />
+              <.input
+                field={@form[:total_amount]}
+                type="text"
+                inputmode="decimal"
+                label={~t"Total amount"}
+                class="input w-full"
+              />
+              <.input
+                field={@form[:vat_amount]}
+                type="text"
+                inputmode="decimal"
+                label={~t"VAT amount"}
+                class="input w-full"
+              />
               <.input
                 field={@form[:category]}
                 type="select"
                 label={~t"Category"}
-                options={[
-                  {~t"Office Supplies", :office_supplies},
-                  {~t"Travel", :travel},
-                  {~t"Meals", :meals},
-                  {~t"Software", :software},
-                  {~t"Marketing", :marketing},
-                  {~t"Utilities", :utilities},
-                  {~t"Professional Services", :professional_services},
-                  {~t"Other", :other}
-                ]}
+                options={category_options()}
                 class="select w-full"
               />
               <div class="sm:col-span-2">
@@ -130,7 +137,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </div>
             <div class="mt-6">
               <.button type="submit" variant="primary" size="sm" class="w-full sm:w-auto">
-                {~t"Save Corrections"}
+                {~t"Save corrections"}
               </.button>
             </div>
           </.form>

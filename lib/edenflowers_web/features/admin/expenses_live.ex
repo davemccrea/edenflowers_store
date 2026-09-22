@@ -33,6 +33,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         <Cinder.collection
           id="expenses-table"
           resource={Expense}
+          action={:admin_list}
           actor={@current_user}
           search={[
             label: ~t"Expense",
@@ -65,11 +66,21 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           <:col
             :let={expense}
             field="confidence"
-            filter={[type: :select, label: ~t"Confidence", prompt: ~t"All"]}
+            filter={[type: :select, label: ~t"Confidence", prompt: ~t"All", options: confidence_options()]}
+            label={~t"Confidence"}
           >
             <.confidence_badge confidence={expense.confidence} />
           </:col>
-          <:col :let={expense} field="reviewed_at" label={~t"Reviewed"}>
+          <:col
+            :let={expense}
+            field="reviewed"
+            filter={[
+              type: :boolean,
+              label: ~t"Review",
+              labels: %{true: ~t"Reviewed", false: ~t"Not reviewed"}
+            ]}
+            label={~t"Reviewed"}
+          >
             <span :if={expense.reviewed_at} class="inline-flex" title={~t"Reviewed"}>
               <.icon name="hero-check" class="text-base-content h-4 w-4" />
               <span class="sr-only">{~t"Reviewed"}</span>
@@ -80,7 +91,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           <:col
             :let={expense}
             field="category"
-            filter={[type: :select, label: ~t"Category", prompt: ~t"All"]}
+            filter={[type: :select, label: ~t"Category", prompt: ~t"All", options: category_options()]}
+            label={~t"Category"}
           >
             <.category_badge category={expense.category} />
           </:col>

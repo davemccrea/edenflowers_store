@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def category_badge(assigns) do
     ~H"""
     <span :if={@category} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
-      {humanize_category(@category)}
+      {category_label(@category)}
     </span>
     <.blank :if={is_nil(@category)} />
     """
@@ -52,19 +52,20 @@ defmodule EdenflowersWeb.Admin.Components do
   defp fulfillment_method_icon(:pickup), do: "hero-building-storefront"
   defp fulfillment_method_icon(_), do: "hero-question-mark-circle"
 
-  defp humanize_category(category) do
-    case category do
-      :office_supplies -> ~t"Office Supplies"
-      :travel -> ~t"Travel"
-      :meals -> ~t"Meals"
-      :software -> ~t"Software"
-      :marketing -> ~t"Marketing"
-      :utilities -> ~t"Utilities"
-      :professional_services -> ~t"Professional Services"
-      :other -> ~t"Other"
-      _ -> to_string(category)
-    end
+  def category_options do
+    Edenflowers.Expenses.Expense.Category.values()
+    |> Enum.map(fn value -> {category_label(value), value} end)
   end
+
+  def category_label(:office_supplies), do: ~t"Office supplies"
+  def category_label(:travel), do: ~t"Travel"
+  def category_label(:meals), do: ~t"Meals"
+  def category_label(:software), do: ~t"Software"
+  def category_label(:marketing), do: ~t"Marketing"
+  def category_label(:utilities), do: ~t"Utilities"
+  def category_label(:professional_services), do: ~t"Professional services"
+  def category_label(:other), do: ~t"Other"
+  def category_label(value), do: to_string(value)
 
   attr :confidence, :atom, required: true
 
@@ -157,7 +158,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <div :if={@back} class="mb-4">
         <.link
           navigate={@back}
-          class="text-base-content/65 -my-1 inline-flex items-center gap-1 py-1 text-xs transition-colors hover:text-base-content"
+          class="text-base-content/65 -my-2 inline-flex items-center gap-1 py-2 text-xs transition-colors hover:text-base-content"
         >
           <.icon name="hero-chevron-left" class="h-3 w-3" />
           {@back_label || ~t"Back"}
@@ -184,6 +185,11 @@ defmodule EdenflowersWeb.Admin.Components do
   defp confidence_badge_class(:medium), do: "badge-warning admin-badge-warning"
   defp confidence_badge_class(:high), do: "badge-success admin-badge-success"
   defp confidence_badge_class(_), do: "admin-badge-neutral"
+
+  def confidence_options do
+    Edenflowers.Expenses.Expense.Confidence.values()
+    |> Enum.map(fn value -> {confidence_label(value), value} end)
+  end
 
   defp confidence_label(:low), do: ~t"Low"
   defp confidence_label(:medium), do: ~t"Medium"
