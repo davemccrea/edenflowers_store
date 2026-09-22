@@ -103,3 +103,6 @@ msgstr "måste vara lika med %{number}"
 
 msgid "is required"
 msgstr "Det här fältet är obligatoriskt"
+
+msgid "must be present"
+msgstr "Det här fältet är obligatoriskt"
