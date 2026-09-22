@@ -463,7 +463,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       id="card-drawer"
       placement="right"
       label={gettext("Select a card")}
-      class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem]"
+      class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem] lg:w-[34rem]"
     >
       <div class="flex flex-col gap-6" data-testid="card-drawer">
         <div class="flex flex-row items-center justify-between">
@@ -483,7 +483,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           class="flex flex-col gap-3"
         >
           <h3 class="font-semibold">{size_label(size)}</h3>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <button
               :for={variant <- variants}
               type="button"
@@ -497,10 +497,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               <.image
                 src={variant.image_slug}
                 alt={variant.product.name}
-                width={96}
-                height={96}
-                sizes="96px"
-                class="h-24 w-24 object-cover"
+                width={240}
+                height={240}
+                sizes="(min-width: 1024px) 10rem, 40vw"
+                class="aspect-square w-full object-cover"
               />
               <span class="text-sm">{variant.product.name}</span>
               <span class="text-base-content/70 text-xs">
