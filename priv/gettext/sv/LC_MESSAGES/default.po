@@ -57,7 +57,7 @@ msgstr "Kontakt"
 
 #: lib/edenflowers_web/components/layouts.ex:472
 #: lib/edenflowers_web/features/account/account_live.ex:104
-#: lib/edenflowers_web/features/courses/course_live.ex:56
+#: lib/edenflowers_web/features/courses/course_live.ex:57
 #: lib/edenflowers_web/features/courses/courses_live.ex:16
 #: lib/edenflowers_web/features/courses/courses_live.ex:25
 #: lib/edenflowers_web/features/marketing/home_live.ex:183
@@ -132,7 +132,7 @@ msgstr "Kassa"
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:213
 #: lib/edenflowers_web/features/admin/orders_live.ex:88
 #: lib/edenflowers_web/features/checkout/components/fields.ex:123
-#: lib/edenflowers_web/features/courses/course_live.ex:143
+#: lib/edenflowers_web/features/courses/course_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Payment"
 msgstr "Betalning"
@@ -184,14 +184,14 @@ msgid "Do you offer subscription services?"
 msgstr "Erbjuder ni prenumerationstjänster?"
 
 #: lib/edenflowers_web/features/admin/account_live.ex:43
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:112
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:111
 #: lib/edenflowers_web/features/marketing/contact_live.ex:32
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr "E-post"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:100
-#: lib/edenflowers_web/features/courses/course_live.ex:114
+#: lib/edenflowers_web/features/courses/course_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Email *"
 msgstr "E-post *"
@@ -228,7 +228,7 @@ msgid "Outside delivery range"
 msgstr "Utanför leveransområdet"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:254
-#: lib/edenflowers_web/features/courses/course_live.ex:170
+#: lib/edenflowers_web/features/courses/course_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "Pay"
 msgstr "Betala"
@@ -260,8 +260,8 @@ msgstr "Ta bort"
 msgid "Sign In"
 msgstr "Logga in"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:61
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:82
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:60
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:81
 #, elixir-autogen, elixir-format
 msgid "Sign in"
 msgstr "Logga in"
@@ -287,7 +287,7 @@ msgid "What is your delivery policy?"
 msgstr "Vad är er leveranspolicy?"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:92
-#: lib/edenflowers_web/features/courses/course_live.ex:113
+#: lib/edenflowers_web/features/courses/course_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Your name *"
 msgstr "Ditt namn *"
@@ -504,7 +504,7 @@ msgid "Next slide"
 msgstr "Nästa bild"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:618
-#: lib/edenflowers_web/features/courses/course_live.ex:216
+#: lib/edenflowers_web/features/courses/course_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
 msgstr "Betalningen är tillfälligt otillgänglig. Ladda om sidan och försök igen."
@@ -512,7 +512,7 @@ msgstr "Betalningen är tillfälligt otillgänglig. Ladda om sidan och försök 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:259
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:561
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:835
-#: lib/edenflowers_web/features/courses/course_live.ex:196
+#: lib/edenflowers_web/features/courses/course_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr "Betalningen är tillfälligt otillgänglig. Försök igen om en stund."
@@ -718,17 +718,17 @@ msgstr "Hej %{name},"
 msgid "Hi,"
 msgstr "Hej,"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:73
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Resend code"
 msgstr "Skicka koden igen"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:69
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Resend code in"
 msgstr "Skicka koden igen om"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:119
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Send sign-in code"
 msgstr "Skicka inloggningskod"
@@ -738,7 +738,7 @@ msgstr "Skicka inloggningskod"
 msgid "Sign-in code"
 msgstr "Inloggningskod"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:208
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:207
 #, elixir-autogen, elixir-format
 msgid "Too many requests. Please wait a few minutes and try again."
 msgstr "För många försök. Vänta några minuter och försök igen."
@@ -748,12 +748,12 @@ msgstr "För många försök. Vänta några minuter och försök igen."
 msgid "Upcoming"
 msgstr "Kommande"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:77
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Use a different email"
 msgstr "Använd en annan e-postadress"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:210
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "We couldn't send your sign-in code. Please try again in a moment."
 msgstr "Vi kunde inte skicka din inloggningskod. Försök igen om en stund."
@@ -763,7 +763,7 @@ msgstr "Vi kunde inte skicka din inloggningskod. Försök igen om en stund."
 msgid "We couldn't sign you in with Google. Please try again or use a sign-in code."
 msgstr "Vi kunde inte logga in dig med Google. Försök igen eller använd en inloggningskod."
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:150
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "We've sent you a new code."
 msgstr "Vi har skickat en ny kod till dig."
@@ -778,7 +778,7 @@ msgstr "Din inloggningskod till Eden Flowers"
 msgid "go to current month"
 msgstr "gå till aktuell månad"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:113
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:112
 #, elixir-autogen, elixir-format
 msgid "info@edenflowers.fi"
 msgstr "info@edenflowers.fi"
@@ -788,7 +788,7 @@ msgstr "info@edenflowers.fi"
 msgid "not available"
 msgstr "inte tillgänglig"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:98
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:97
 #, elixir-autogen, elixir-format
 msgid "or"
 msgstr "eller"
@@ -1638,7 +1638,7 @@ msgstr "Favoriter"
 msgid "Check your email"
 msgstr "Kolla din e-post"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:84
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "Continue with Google, or we'll email you a sign-in code."
 msgstr "Fortsätt med Google, eller så mejlar vi dig en inloggningskod."
@@ -1773,7 +1773,7 @@ msgstr "Vi träffas och pratar färger, blommor och stil, i butiken eller online
 msgid "Your flowers are made fresh and delivered, and I can decorate the venue on site."
 msgstr "Blommorna görs färska och levereras, och jag kan dekorera på plats."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:336
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:330
 #, elixir-autogen, elixir-format
 msgid "from %{amount}"
 msgstr "från %{amount}"
@@ -1934,7 +1934,7 @@ msgid "Bouquet of roses and greenery on a wooden jetty"
 msgstr "Bukett med rosor och grönt på en träbrygga"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:50
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:348
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:342
 #, elixir-autogen, elixir-format
 msgid "Photo:"
 msgstr "Foto:"
@@ -2117,7 +2117,7 @@ msgstr "Gå till butiken"
 
 #: lib/edenflowers_web/features/account/account_live.ex:120
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:51
-#: lib/edenflowers_web/features/courses/course_live.ex:64
+#: lib/edenflowers_web/features/courses/course_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "When"
 msgstr "När"
@@ -2236,14 +2236,14 @@ msgstr "Ditt kvitto bifogas. Om något behöver ändras, svara bara på det här
 msgid "Thank you for your order. I'll have everything ready on %{date}."
 msgstr "Tack för din beställning. Jag har allt klart %{date}."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:145
+#: lib/edenflowers_web/features/courses/course_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) for %{name}"
 msgid_plural "%{count} place(s) for %{name}"
 msgstr[0] "%{count} plats för %{name}"
 msgstr[1] "%{count} platser för %{name}"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:283
+#: lib/edenflowers_web/features/courses/course_live.ex:299
 #: lib/edenflowers_web/features/courses/courses_live.ex:97
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
@@ -2266,7 +2266,7 @@ msgstr "Bokningen stängd"
 msgid "Booking not found."
 msgstr "Bokningen hittades inte."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:132
+#: lib/edenflowers_web/features/courses/course_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "Cancel at least 7 days before the course for a full refund."
 msgstr "Avboka senast 7 dagar före kursen så får du hela summan tillbaka."
@@ -2286,18 +2286,18 @@ msgstr "Kommande"
 msgid "Confirming your payment"
 msgstr "Vi bekräftar din betalning"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:128
+#: lib/edenflowers_web/features/courses/course_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Continue to payment"
 msgstr "Fortsätt till betalning"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:28
-#: lib/edenflowers_web/features/courses/course_live.ex:232
+#: lib/edenflowers_web/features/courses/course_live.ex:29
+#: lib/edenflowers_web/features/courses/course_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "Course not found."
 msgstr "Kursen hittades inte."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:282
+#: lib/edenflowers_web/features/courses/course_live.ex:298
 #: lib/edenflowers_web/features/courses/courses_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
@@ -2310,8 +2310,8 @@ msgstr "Kom och prova på floristik med mig i några timmar. Jag står för blom
 
 #: lib/edenflowers_web/features/account/account_live.ex:121
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:65
-#: lib/edenflowers_web/features/courses/course_live.ex:81
-#: lib/edenflowers_web/features/courses/course_live.ex:116
+#: lib/edenflowers_web/features/courses/course_live.ex:82
+#: lib/edenflowers_web/features/courses/course_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Places"
 msgstr "Platser"
@@ -2321,7 +2321,7 @@ msgstr "Platser"
 msgid "See you there,"
 msgstr "Vi ses,"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:92
+#: lib/edenflowers_web/features/courses/course_live.ex:100
 #: lib/edenflowers_web/features/courses/courses_live.ex:51
 #, elixir-autogen, elixir-format
 msgid "Sign up for the newsletter"
@@ -2344,7 +2344,7 @@ msgstr "Just nu finns inga kurser i kalendern. Nya datum meddelar jag först i n
 msgid "This booking has been cancelled. Get in touch if that's a surprise."
 msgstr "Den här bokningen har avbokats. Hör av dig om det kommer som en överraskning."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:90
+#: lib/edenflowers_web/features/courses/course_live.ex:98
 #, elixir-autogen, elixir-format
 msgid "This course is no longer taking bookings. I announce new dates in the newsletter first."
 msgstr "Den här kursen tar inte längre emot bokningar. Nya datum meddelar jag först i nyhetsbrevet."
@@ -2360,7 +2360,7 @@ msgid "When: %{date}, %{start}–%{end}"
 msgstr "När: %{date}, %{start}–%{end}"
 
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:59
-#: lib/edenflowers_web/features/courses/course_live.ex:72
+#: lib/edenflowers_web/features/courses/course_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Where"
 msgstr "Var"
@@ -2390,12 +2390,12 @@ msgstr "Bekräftelsen och kvittot är på väg till din inkorg. Vi ses!"
 msgid "Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full."
 msgstr "Kvittot finns bifogat. Om dina planer ändras, svara på det här mejlet senast 7 dagar före kursen så betalar jag tillbaka hela summan."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:103
+#: lib/edenflowers_web/features/courses/course_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Book a place"
 msgstr "Boka en plats"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:151
+#: lib/edenflowers_web/features/courses/course_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Change booking"
 msgstr "Ändra bokningen"
@@ -2405,22 +2405,39 @@ msgstr "Ändra bokningen"
 msgid "You're booked: %{course}"
 msgstr "Din plats är bokad: %{course}"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:295
+#: lib/edenflowers_web/features/courses/course_live.ex:311
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
 msgstr "(öppnar en karta i en ny flik)"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:79
+#: lib/edenflowers_web/features/courses/course_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "%{price} per person"
 msgstr "%{price} per person"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:84
+#: lib/edenflowers_web/features/courses/course_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Book by"
 msgstr "Boka senast"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:78
+#: lib/edenflowers_web/features/courses/course_live.ex:79
 #, elixir-autogen, elixir-format
 msgid "Price"
 msgstr "Pris"
+
+#: lib/edenflowers_web/features/courses/course_live.ex:111
+#, elixir-autogen, elixir-format
+msgid "Book more places"
+msgstr "Boka fler platser"
+
+#: lib/edenflowers_web/features/courses/course_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "See your bookings"
+msgstr "Se dina bokningar"
+
+#: lib/edenflowers_web/features/courses/course_live.ex:90
+#, elixir-autogen, elixir-format
+msgid "You have %{count} place(s) on this course."
+msgid_plural "You have %{count} place(s) on this course."
+msgstr[0] "Du har %{count} plats på den här kursen."
+msgstr[1] "Du har %{count} platser på den här kursen."
