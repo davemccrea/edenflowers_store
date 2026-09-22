@@ -16,6 +16,7 @@ alias Edenflowers.Actors
 alias Edenflowers.Repo
 alias Edenflowers.Catalog.ProductCategory
 alias Edenflowers.Catalog.{Product, ProductVariant}
+alias Edenflowers.Courses.Course
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
 alias Edenflowers.Orders.{Order, LineItem}
 alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
@@ -350,6 +351,131 @@ for {document_id, vendor, vat, date, total, vat_amount, currency, category, desc
   })
   |> Ash.create!(authorize?: false)
 end
+
+# Dates are relative to today so a fresh seed always has courses open for
+# booking, plus one that has already happened.
+today = Date.utc_today()
+
+[
+  %{
+    name: "Autumn Wreath Workshop",
+    description:
+      "Make a wreath for your front door from heather, rose hips, dried hydrangea and whatever the season " <>
+        "has left in the forest. I provide the base, the materials and the tools; you take home a finished " <>
+        "wreath. Coffee and something sweet included.",
+    translations: %{
+      "sv-FI": %{
+        name: "Höstkranskurs",
+        description:
+          "Gör en krans till ytterdörren av ljung, nypon, torkad hortensia och det som finns kvar i skogen. " <>
+            "Jag står för stomme, material och verktyg, du tar hem en färdig krans. Kaffe och något sött ingår."
+      },
+      fi: %{
+        name: "Syyskranssikurssi",
+        description:
+          "Tee ulko-oveen kranssi kanervasta, ruusunmarjoista, kuivatusta hortensiasta ja metsän antimista. " <>
+            "Minä tuon pohjan, materiaalit ja työkalut, sinä viet kotiin valmiin kranssin. Kahvi ja jotain makeaa kuuluu hintaan."
+      }
+    },
+    date: Date.add(today, 18),
+    start_time: ~T[10:00:00],
+    end_time: ~T[13:00:00],
+    register_before: Date.add(today, 11),
+    total_places: 8,
+    price: "75.00"
+  },
+  %{
+    name: "Christmas Door Wreath",
+    description:
+      "An evening of spruce, pine, cones and ribbon. We bind a full evergreen wreath on a straw base that " <>
+        "lasts well into January outdoors. Mulled juice and gingerbread while we work.",
+    translations: %{
+      "sv-FI": %{
+        name: "Julkrans till dörren",
+        description:
+          "En kväll med gran, tall, kottar och band. Vi binder en tät vintergrön krans på halmstomme som håller " <>
+            "långt in i januari utomhus. Glögg och pepparkakor medan vi jobbar."
+      },
+      fi: %{
+        name: "Joulukranssi oveen",
+        description:
+          "Ilta kuusen, männyn, käpyjen ja nauhojen parissa. Sidomme tuuhean havukranssin olkipohjalle, ja se " <>
+            "kestää ulkona pitkälle tammikuuhun. Glögiä ja pipareita työskennellessä."
+      }
+    },
+    date: Date.add(today, 64),
+    start_time: ~T[17:30:00],
+    end_time: ~T[20:30:00],
+    register_before: Date.add(today, 57),
+    total_places: 10,
+    price: "85.00"
+  },
+  %{
+    name: "Christmas Table Arrangement",
+    description:
+      "A low arrangement for the Christmas table in a bowl of your choosing, with amaryllis, hyacinth, moss " <>
+        "and evergreens. I'll show you how to keep it fresh through the holidays.",
+    translations: %{
+      "sv-FI": %{
+        name: "Juldekoration till bordet",
+        description:
+          "Ett lågt arrangemang för julbordet i en skål du väljer själv, med amaryllis, hyacint, mossa och " <>
+            "vintergröna kvistar. Jag visar hur du håller det fräscht över helgerna."
+      },
+      fi: %{
+        name: "Joulupöydän asetelma",
+        description:
+          "Matala asetelma joulupöytään itse valitsemaasi kulhoon: amaryllista, hyasinttia, sammalta ja havuja. " <>
+            "Näytän, miten pidät sen raikkaana pyhien yli."
+      }
+    },
+    date: Date.add(today, 78),
+    start_time: ~T[17:30:00],
+    end_time: ~T[20:00:00],
+    register_before: Date.add(today, 71),
+    total_places: 10,
+    price: "80.00"
+  },
+  %{
+    name: "Midsummer Flower Crown",
+    description:
+      "Bind a crown from meadow flowers and garden greenery, in time for midsummer eve. Suitable for " <>
+        "beginners and children from ten years old with an adult.",
+    translations: %{
+      "sv-FI": %{
+        name: "Midsommarkrans",
+        description:
+          "Bind en krans av ängsblommor och grönt från trädgården, lagom till midsommarafton. Passar nybörjare " <>
+            "och barn från tio år tillsammans med en vuxen."
+      },
+      fi: %{
+        name: "Juhannusseppele",
+        description:
+          "Sido seppele niittykukista ja puutarhan vihreästä juhannusaatoksi. Sopii aloittelijoille ja " <>
+            "yli kymmenvuotiaille lapsille aikuisen kanssa."
+      }
+    },
+    date: Date.add(today, -90),
+    start_time: ~T[13:00:00],
+    end_time: ~T[15:00:00],
+    register_before: Date.add(today, -97),
+    total_places: 12,
+    price: "45.00"
+  }
+]
+|> Enum.each(fn attrs ->
+  Course
+  |> Ash.Changeset.for_create(
+    :create,
+    Map.merge(attrs, %{
+      location_name: "Minimossen",
+      location_address: "Myrvägen 1, 65230 Vasa",
+      image_slug: "https://placehold.co/1000x1250",
+      tax_rate_id: tax_rate.id
+    })
+  )
+  |> Ash.create!(authorize?: false)
+end)
 
 # Placed orders. Checkout drives orders through a state machine and seals them
 # once placed, so normal Ash actions can't construct a finished order. Ash.Seed
