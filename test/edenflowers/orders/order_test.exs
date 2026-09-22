@@ -69,16 +69,14 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      order = Ash.load!(order, [:items_subtotal, :items_total, :items_tax], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_total, :vat], authorize?: false)
 
       assert Decimal.equal?(order.items_subtotal, "86.00")
       assert Decimal.equal?(order.items_total, "86.00")
 
       # Prices are tax-inclusive, so the VAT is contained in the gross:
       # 80.00 × 25.5/125.5 + 6.00 × 10/110 = 16.25 + 0.55.
-      assert order.items_tax
-             |> Decimal.round(2)
-             |> Decimal.equal?("16.80")
+      assert Decimal.equal?(order.vat, "16.80")
     end
 
     test "sums item amounts and tax correctly when promotion is applied" do
@@ -108,7 +106,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       order = Orders.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
 
-      order = Ash.load!(order, [:items_subtotal, :items_total, :items_tax], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_total, :vat], authorize?: false)
 
       assert Decimal.equal?(order.items_subtotal, "109.97")
 
@@ -117,9 +115,7 @@ defmodule Edenflowers.Orders.OrderTest do
              |> Decimal.equal?("87.97")
 
       # Discounts are rounded per line: 49.99 − 10.00 + 59.98 − 12.00 = 87.97.
-      assert order.items_tax
-             |> Decimal.round(2)
-             |> Decimal.equal?("17.87")
+      assert Decimal.equal?(order.vat, "17.87")
     end
 
     test "promotion_applied? returns true if promotion applied" do
@@ -211,14 +207,14 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-    order = Ash.load!(order, [:grand_total, :tax], authorize?: false)
+    order = Ash.load!(order, [:grand_total, :vat], authorize?: false)
 
     assert order.grand_total
            |> Decimal.round(2)
            |> Decimal.equal?("64.97")
 
     # 59.98 goods × 25.5/125.5 + 4.99 fee × 15/115 — both quoted tax-inclusive.
-    assert order.tax
+    assert order.vat
            |> Decimal.round(2)
            |> Decimal.equal?("12.84")
   end
@@ -238,9 +234,9 @@ defmodule Edenflowers.Orders.OrderTest do
 
     generate(line_item(order_id: order.id, product_variant_id: product_variant.id))
 
-    order = Ash.load!(order, :tax, authorize?: false)
+    order = Ash.load!(order, :vat, authorize?: false)
 
-    assert Decimal.equal?(order.tax, "0.00")
+    assert Decimal.equal?(order.vat, "0.00")
   end
 
   test "calling finalise_checkout updates state and payment_state" do
@@ -250,6 +246,22 @@ defmodule Edenflowers.Orders.OrderTest do
     assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
+  end
+
+  test "finalize_checkout snapshots the VAT breakdown" do
+    tax_rate = generate(tax_rate(percentage: "0.255"))
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+    order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id))
+
+    assert {:ok, order} = Orders.finalize_checkout(order.id, authorize?: false)
+    assert [%{rate: rate, vat: vat}] = order.vat_breakdown
+    assert Decimal.equal?(rate, "0.255")
+    assert Decimal.equal?(vat, "8.11")
+
+    reloaded = Ash.get!(Edenflowers.Orders.Order, order.id, authorize?: false)
+    assert reloaded.vat_breakdown == order.vat_breakdown
   end
 
   # InitStore opens a cart per browser session, so the reference is minted at

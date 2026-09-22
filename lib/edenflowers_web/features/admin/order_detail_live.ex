@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   locale={@locale}
                 />
                 <.money_row label={~t"Fulfillment fee"} amount={@order.fulfillment_fee} locale={@locale} />
-                <.money_row label={~t"VAT"} amount={@order.tax} locale={@locale} />
+                <.money_row label={~t"VAT"} amount={@order.vat} locale={@locale} />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
               </dl>
               <.button

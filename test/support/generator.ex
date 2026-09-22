@@ -111,7 +111,8 @@ defmodule Generator do
     seed_generator(
       %Order{
         state: :contact_details,
-        order_reference: GenerateOrderReference.generate()
+        order_reference: GenerateOrderReference.generate(),
+        vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
       },
       overrides: opts,
       authorize?: false

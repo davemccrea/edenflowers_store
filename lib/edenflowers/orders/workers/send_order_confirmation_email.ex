@@ -73,12 +73,10 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmail do
         :customer_first_name,
         :items_subtotal,
         :items_total,
-        :items_tax,
         :discount,
         :promotion_applied?,
         :grand_total,
-        :tax,
-        :fulfillment_tax,
+        :vat,
         line_items: [:subtotal, :total, :unit_price_ex_tax]
       ],
       actor: system_actor(),

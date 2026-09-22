@@ -21,11 +21,9 @@ defmodule Edenflowers.Orders.Order do
     :discount,
     :items_subtotal,
     :items_total,
-    :items_tax,
     :promotion_applied?,
     :grand_total,
-    :tax,
-    :fulfillment_tax,
+    :vat,
     :cart_effectively_empty?,
     :promotion,
     :fulfillment_option,
@@ -37,9 +35,7 @@ defmodule Edenflowers.Orders.Order do
     :grand_total,
     :items_subtotal,
     :items_total,
-    :items_tax,
-    :tax,
-    :fulfillment_tax,
+    :vat,
     :discount,
     :distance_km,
     :promotion,
@@ -225,6 +221,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {Changes.GenerateOrderReference, []}
+      change {Changes.SnapshotVatBreakdown, []}
       change {Changes.UpdatePromotionUsageCount, []}
       require_atomic? false
     end
@@ -469,6 +466,7 @@ defmodule Edenflowers.Orders.Order do
     # over the placed order's snapshot columns, so a re-render should reproduce these bytes.
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
+    attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
 
     timestamps()
   end
@@ -491,16 +489,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
 
-    # The fee is quoted tax-inclusive like every other price, so its VAT is
-    # contained in it — see the note on `LineItem.tax`.
-    calculate :fulfillment_tax,
-              :decimal,
-              expr(
-                (fulfillment_fee || 0) * (fulfillment_tax_rate || 0) /
-                  (1 + (fulfillment_tax_rate || 0))
-              )
-
-    calculate :tax, :decimal, Calculations.Tax
+    calculate :vat, :decimal, Calculations.Vat
 
     # A cart with only a card line item is presented as empty in the UI
     # (card controls are hidden in the cart sidebar) and shouldn't keep
@@ -513,7 +502,6 @@ defmodule Edenflowers.Orders.Order do
     sum :total_items_in_cart, :line_items, :quantity, default: 0
     sum :items_subtotal, :line_items, :subtotal
     sum :items_total, :line_items, :total
-    sum :items_tax, :line_items, :tax
     sum :discount, :line_items, :discount
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
   end

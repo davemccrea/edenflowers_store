@@ -136,6 +136,24 @@ defmodule Edenflowers.Orders.ReceiptTest do
                parse_eur(payload.grand_total)
     end
 
+    test "uses the finalized VAT snapshot instead of recalculating it" do
+      order =
+        build_delivery_order(locale: "en-GB")
+        |> Map.put(:state, :placed)
+        |> Map.put(:vat_breakdown, [
+          %{
+            rate: Decimal.new("0.14"),
+            base: Decimal.new("10.00"),
+            vat: Decimal.new("1.40"),
+            gross: Decimal.new("11.40")
+          }
+        ])
+
+      assert Receipt.build_payload(order).vat_breakdown == [
+               %{rate: "14.0%", base: "€10.00", tax: "€1.40", gross: "€11.40"}
+             ]
+    end
+
     test "omits a zero fulfillment fee rather than printing a 0,00 row" do
       assert Receipt.build_payload(build_pickup_order(locale: "en-GB")).fulfillment_fee == nil
       assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_fee == "€9.00"
