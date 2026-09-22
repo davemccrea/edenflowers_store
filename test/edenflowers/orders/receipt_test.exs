@@ -90,11 +90,12 @@ defmodule Edenflowers.Orders.ReceiptTest do
       # so printing it raw next to a Discount row double-counts the discount.
       payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
 
-      # 56.90 goods − 5.69 discount + 9.00 fee = 60.21
+      # The real newsletter rate produces fractional cents before each line's discount is rounded:
+      # 56.90 goods − (5.99 + 2.55) discount + 9.00 fee = 57.36.
       assert payload.items_subtotal == "€56.90"
-      assert payload.discount == "€5.69"
+      assert payload.discount == "€8.54"
       assert payload.fulfillment_fee == "€9.00"
-      assert payload.grand_total == "€60.21"
+      assert payload.grand_total == "€57.36"
     end
 
     test "line item totals sum to the subtotal row above them" do
@@ -181,7 +182,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
     price = Decimal.new(price)
     rate = Decimal.new(rate)
     subtotal = Decimal.mult(price, quantity)
-    discount = Decimal.mult(subtotal, discount_rate)
+    discount = subtotal |> Decimal.mult(discount_rate) |> Decimal.round(2)
 
     %LineItem{
       product_name: name,
@@ -230,7 +231,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
   defp build_delivery_order(opts) do
     discount_rate =
-      if Keyword.get(opts, :with_promotion, false), do: Decimal.new("0.10"), else: Decimal.new("0")
+      if Keyword.get(opts, :with_promotion, false), do: Decimal.new("0.15"), else: Decimal.new("0")
 
     line_items =
       Enum.map(
