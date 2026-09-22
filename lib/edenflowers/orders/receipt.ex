@@ -9,6 +9,7 @@ defmodule Edenflowers.Orders.Receipt do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Order.Calculations.Tax
 
   @typst_bin "typst"
 
@@ -92,32 +93,16 @@ defmodule Edenflowers.Orders.Receipt do
   # taxable base and the VAT contained in it. Rounding the base first and
   # taking the VAT as the remainder keeps the printed row adding up.
   defp vat_breakdown(order, locale) do
-    order.line_items
-    |> Enum.map(&{&1.tax_rate, &1.total})
-    |> Enum.concat(fulfillment_fee_entry(order))
-    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    |> Enum.sort_by(&elem(&1, 0), {:desc, Decimal})
-    |> Enum.map(fn {rate, amounts} ->
-      gross = Enum.reduce(amounts, &Decimal.add/2)
-      base = gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
-
+    order
+    |> Tax.breakdown()
+    |> Enum.map(fn %{rate: rate, base: base, tax: tax, gross: gross} ->
       %{
         rate: Format.percentage(rate, locale),
         base: Format.currency(base, locale),
-        tax: Format.currency(Decimal.sub(gross, base), locale),
+        tax: Format.currency(tax, locale),
         gross: Format.currency(gross, locale)
       }
     end)
-  end
-
-  # The fee carries its own snapshotted rate, so it buckets alongside the
-  # line items rather than getting a row of its own.
-  defp fulfillment_fee_entry(order) do
-    if positive?(order.fulfillment_fee) and order.fulfillment_tax_rate do
-      [{order.fulfillment_tax_rate, order.fulfillment_fee}]
-    else
-      []
-    end
   end
 
   defp positive?(nil), do: false
