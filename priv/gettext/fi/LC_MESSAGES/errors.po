@@ -106,3 +106,14 @@ msgstr "Tämä kenttä on pakollinen"
 
 msgid "must be present"
 msgstr "Tämä kenttä on pakollinen"
+
+msgid "only %{count} places left"
+msgid_plural "only %{count} places left"
+msgstr[0] "vain %{count} paikka jäljellä"
+msgstr[1] "vain %{count} paikkaa jäljellä"
+
+msgid "booking has closed"
+msgstr "Tämän kurssin varaus on päättynyt."
+
+msgid "course not found"
+msgstr "Tätä kurssia ei ole enää olemassa."

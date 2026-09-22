@@ -1,9 +1,9 @@
 defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
   @moduledoc """
-  Safety net for the Stripe webhook. Places orders whose PaymentIntent succeeded
-  but which are still in checkout, e.g. because the webhook endpoint is
-  misconfigured or was unreachable. Any order placed here is logged as an error,
-  since it means the webhook is not working.
+  Safety net for the Stripe webhook. Places orders and confirms course bookings
+  whose PaymentIntent succeeded but which were never updated, e.g. because the
+  webhook endpoint is misconfigured or was unreachable. Anything completed here
+  is logged as an error, since it means the webhook is not working.
   """
 
   use Oban.Worker, max_attempts: 1
@@ -12,6 +12,8 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
   require Logger
   import Edenflowers.Actors
 
+  alias Edenflowers.Courses
+  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Orders.{Order, Payment}
 
   # Give the webhook time to arrive before stepping in.
@@ -22,6 +24,7 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
   @impl true
   def perform(_job) do
     Enum.each(stale_payment_orders(), &reconcile/1)
+    Enum.each(stale_course_registrations(), &reconcile_registration/1)
   end
 
   defp stale_payment_orders do
@@ -35,6 +38,35 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
         updated_at < ^settled_before and updated_at > ^abandoned_before
     )
     |> Ash.read!(actor: system_actor())
+  end
+
+  defp stale_course_registrations do
+    now = DateTime.utc_now()
+    settled_before = DateTime.add(now, -@grace_period_minutes, :minute)
+    abandoned_before = DateTime.add(now, -@lookback_days, :day)
+
+    CourseRegistration
+    |> Ash.Query.filter(
+      status == :pending and not is_nil(payment_intent_id) and
+        updated_at < ^settled_before and updated_at > ^abandoned_before
+    )
+    |> Ash.read!(actor: system_actor())
+  end
+
+  defp reconcile_registration(registration) do
+    with {:ok, %{status: "succeeded"} = payment_intent} <- stripe_api().retrieve_payment_intent(registration),
+         {:ok, %CourseRegistration{}} <- Courses.Payment.complete_payment(registration.id, payment_intent) do
+      Logger.error(
+        "Reconciliation confirmed course registration #{registration.id} for succeeded PaymentIntent " <>
+          "#{payment_intent.id}. The Stripe payment_intent.succeeded webhook did not arrive; check the webhook endpoint."
+      )
+    else
+      {:ok, _not_succeeded_or_already_confirmed} ->
+        :ok
+
+      {:error, reason} ->
+        Logger.error("Reconciliation failed for course registration #{registration.id}: #{inspect(reason)}")
+    end
   end
 
   defp reconcile(order) do

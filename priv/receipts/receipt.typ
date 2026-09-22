@@ -24,6 +24,7 @@
     "recipient_name", "recipient_phone_number",
     "delivery_address", "delivery_instructions",
     "fulfillment_fee", "discount",
+    "venue_name", "venue_address",
   )
   for key in required {
     assert(key in order, message: "receipt: missing required key `" + key + "`")
@@ -49,6 +50,8 @@
   let t(key) = translate(key, order.lang)
   let fulfillment-label = if order.fulfillment_method == "delivery" {
     t("delivery")
+  } else if order.fulfillment_method == "course" {
+    t("course")
   } else {
     t("pickup")
   }
@@ -112,6 +115,8 @@
   // shape: who/where, then a single inline date line at the bottom.
   let date-label = if order.fulfillment_method == "delivery" {
     t("delivery-date")
+  } else if order.fulfillment_method == "course" {
+    t("course-date")
   } else {
     t("pickup-date")
   }
@@ -134,6 +139,12 @@
       if order.delivery_instructions != none {
         text(font: fonts.serif, style: "italic")[#order.delivery_instructions]
       },
+    )
+  } else if order.fulfillment_method == "course" {
+    // Courses move between venues, so the receipt says where this one is.
+    (
+      text(weight: "semibold")[#order.venue_name],
+      order.venue_address,
     )
   } else {
     // `recipient_phone_number` is mandatory for pickup precisely so Jennie can

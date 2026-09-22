@@ -5,6 +5,7 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   """
 
   @callback create_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_course_payment_intent(registration :: map()) :: {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
@@ -39,6 +40,18 @@ defmodule Edenflowers.External.StripeAPI do
       automatic_payment_methods: %{enabled: true, allow_redirects: :never},
       metadata: %{
         "order_id" => id
+      }
+    })
+  end
+
+  @impl true
+  def create_course_payment_intent(%{amount: amount, id: id}) do
+    Stripe.PaymentIntent.create(%{
+      amount: to_stripe_amount(amount),
+      currency: "EUR",
+      automatic_payment_methods: %{enabled: true, allow_redirects: :never},
+      metadata: %{
+        "course_registration_id" => id
       }
     })
   end

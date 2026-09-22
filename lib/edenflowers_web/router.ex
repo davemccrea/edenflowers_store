@@ -45,7 +45,6 @@ defmodule EdenflowersWeb.Router do
       scope "/", Marketing do
         live "/", HomeLive
         live "/maternity", MaternityLive
-        live "/courses", CoursesLive
         live "/weddings", WeddingsLive
         live "/condolences", CondolencesLive
         live "/about", AboutLive
@@ -57,6 +56,12 @@ defmodule EdenflowersWeb.Router do
         live "/store", StoreLive
         live "/store/:category", StoreLive
         live "/product/:id", ProductLive
+      end
+
+      scope "/", Courses do
+        live "/courses", CoursesLive
+        live "/courses/bookings/:id", CourseBookingLive
+        live "/courses/:id", CourseLive
       end
 
       scope "/", Checkout do

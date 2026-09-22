@@ -106,3 +106,14 @@ msgstr "Det här fältet är obligatoriskt"
 
 msgid "must be present"
 msgstr "Det här fältet är obligatoriskt"
+
+msgid "only %{count} places left"
+msgid_plural "only %{count} places left"
+msgstr[0] "bara %{count} plats kvar"
+msgstr[1] "bara %{count} platser kvar"
+
+msgid "booking has closed"
+msgstr "Bokningen till den här kursen har stängt."
+
+msgid "course not found"
+msgstr "Den här kursen finns inte längre."

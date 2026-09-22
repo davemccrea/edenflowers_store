@@ -30,6 +30,7 @@ defmodule Edenflowers.Courses.Course do
       :register_before,
       :total_places,
       :price,
+      :tax_rate_id,
       :translations
     ]
 
@@ -84,11 +85,28 @@ defmodule Edenflowers.Courses.Course do
 
   relationships do
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration
+    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate, allow_nil?: false
+  end
+
+  calculations do
+    calculate :seats_left, :integer, expr(total_places - seats_taken)
+    # Helsinki's date, not the database's UTC `today()`, so the page and the
+    # cutoff in ReserveSeats agree around midnight.
+    calculate :booking_open?,
+              :boolean,
+              expr(
+                register_before >= fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date") and
+                  seats_left > 0
+              )
   end
 
   aggregates do
-    count :total_registrations, :course_registrations do
-      filter expr(status == :confirmed)
+    # Unauthorized on purpose: a visitor may not read other people's bookings,
+    # but everyone needs the count to see how many seats are left.
+    sum :seats_taken, :course_registrations, :seats do
+      filter expr(holds_seats?)
+      default 0
+      authorize? false
     end
   end
 end

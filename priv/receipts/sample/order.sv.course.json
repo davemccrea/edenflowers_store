@@ -1,0 +1,38 @@
+{
+  "lang": "sv",
+  "order_reference": "K7M2QX",
+  "ordered_at": "22.9.2026 18.40",
+  "customer_name": "Anna Lindqvist",
+  "customer_email": "anna.lindqvist@example.fi",
+  "fulfillment_method": "course",
+  "fulfillment_date": "lördag 14.11.2026, 10.00–14.00",
+  "venue_name": "Minimossen",
+  "venue_address": "Myrvägen 1, 65230 Vasa",
+  "line_items": [
+    {
+      "product_name": "Adventskransar",
+      "variant_size": null,
+      "quantity": 3,
+      "tax_rate": "25,5 %",
+      "unit_price_ex_tax": "67,73 €",
+      "total": "255,00 €"
+    }
+  ],
+  "items_subtotal": "255,00 €",
+  "grand_total": "255,00 €",
+  "vat_breakdown": [
+    {
+      "rate": "25,5 %",
+      "base": "203,19 €",
+      "tax": "51,81 €",
+      "gross": "255,00 €"
+    }
+  ],
+  "card_message": null,
+  "recipient_name": null,
+  "recipient_phone_number": null,
+  "delivery_address": null,
+  "delivery_instructions": null,
+  "fulfillment_fee": null,
+  "discount": null
+}
