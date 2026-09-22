@@ -119,7 +119,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
             <tbody>
               <tr :for={registration <- @registrations} class="border-base-content/12 border-t align-top">
                 <th scope="row" class="py-4 pr-4 font-normal">
-                  {registration.course.name}
+                  <.link navigate={~p"/courses/#{registration.course.id}"} class="link-underline-hover">
+                    {registration.course.name}
+                  </.link>
                   <span :if={registration.seats > 1} class="text-base-content/70 tabular-nums">
                     × {registration.seats}
                   </span>
