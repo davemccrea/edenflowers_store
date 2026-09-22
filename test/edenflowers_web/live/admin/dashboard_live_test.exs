@@ -50,6 +50,46 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
+  test "shows paid sales and revenue for the current month only", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+
+    conn =
+      conn
+      |> Plug.Test.init_test_session(%{})
+      |> Helpers.store_in_session(admin)
+
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "40.00"))
+
+    placed = fn ordered_at, payment_status ->
+      order =
+        generate(
+          order(
+            state: :placed,
+            payment_status: payment_status,
+            fulfillment_status: :fulfilled,
+            fulfillment_fee: "5.00",
+            ordered_at: ordered_at
+          )
+        )
+
+      generate(line_item(order_id: order.id, product_variant_id: variant.id))
+    end
+
+    now = DateTime.utc_now()
+    placed.(now, :paid)
+    placed.(now, :paid)
+    placed.(now, :refunded)
+    placed.(DateTime.add(now, -40, :day), :paid)
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    sales = view |> element("dl") |> render()
+    assert sales =~ ~r/>\s*2\s*</
+    assert sales =~ "90.00"
+  end
+
   defp with_token(user) do
     {:ok, token, _claims} = Jwt.token_for_user(user)
     %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
