@@ -36,7 +36,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :pending)
-      change {Changes.SetUserFromActor, []}
+      change {Changes.UpsertUser, []}
       change {Changes.ReserveSeats, []}
     end
 
@@ -87,8 +87,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
       authorize_if always()
     end
 
-    # Guest registrations have a nil user_id, so this expr only ever matches
-    # a logged-in user's own rows. Guest rows stay admin-only via the bypass.
+    # Every registration is linked to the user with its email, so a customer
+    # sees their bookings, guest or not, once that email signs in.
     # Customers never update a registration: payment confirms it.
     policy action_type(:read) do
       authorize_if expr(user_id == ^actor(:id))
