@@ -401,13 +401,13 @@ defmodule EdenflowersWeb.Layouts do
         tabindex="0"
         class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 border p-1 shadow"
       >
-        <li class="px-3 py-2">
+        <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
             <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
             <span class="text-base-content/65 block truncate text-xs">{@email}</span>
           </span>
         </li>
-        <li></li>
+        <li :if={@compact}></li>
         <li>
           <.link navigate={~p"/admin/account"}>
             <.icon name="hero-user-circle" class="h-4 w-4" />
