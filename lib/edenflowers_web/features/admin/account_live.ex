@@ -79,7 +79,12 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               <h2 class="text-base-content truncate text-lg font-semibold">
                 {display_name(@current_user)}
               </h2>
-              <p class="text-base-content/65 truncate text-sm">{user_email(@current_user)}</p>
+              <p
+                :if={display_name(@current_user) != user_email(@current_user)}
+                class="text-base-content/65 truncate text-sm"
+              >
+                {user_email(@current_user)}
+              </p>
             </div>
           </div>
 
@@ -91,7 +96,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                   <div class="flex items-center gap-2">
                     <.live_file_input
                       upload={@uploads.avatar}
-                      class="file-input file-input-sm min-w-0 flex-1 sm:max-w-xs"
+                      class="file-input file-input-sm min-w-0 flex-1 max-sm:h-11 sm:max-w-xs"
                       aria-labelledby="avatar-label"
                       aria-describedby="avatar-help"
                       aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
@@ -102,6 +107,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                       phx-click="remove_avatar"
                       variant="secondary"
                       size="sm"
+                      class="max-sm:h-11"
                     >
                       {~t"Remove"}
                     </.button>
@@ -124,21 +130,13 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/65 text-sm">{~t"Name"}</dt>
-              <dd class="text-base-content text-sm">{display_name(@current_user)}</dd>
-            </div>
-            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/65 text-sm">{~t"Email"}</dt>
-              <dd class="text-base-content break-all text-sm">{user_email(@current_user)}</dd>
-            </div>
-            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/65 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
           </dl>
 
           <div class="border-base-300/70 mt-5 border-t pt-5">
-            <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm">
+            <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="max-sm:h-11">
               <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
               {~t"Sign out"}
             </.button>
