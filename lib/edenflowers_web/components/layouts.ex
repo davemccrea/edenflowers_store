@@ -547,8 +547,8 @@ defmodule EdenflowersWeb.Layouts do
     <div
       id="hotfx-shy-header"
       phx-hook="HotFxShyHeader"
-      data-hide={JS.add_class("hidden")}
-      data-show={JS.remove_class("hidden")}
+      data-hide={JS.add_class("shy-header--hidden")}
+      data-show={JS.remove_class("shy-header--hidden")}
     >
       <header class="w-full">
         <%!-- Main header --%>
