@@ -119,6 +119,8 @@ defmodule EdenflowersWeb.Router do
       live "/account", EdenflowersWeb.Admin.AccountLive
     end
 
+    get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
+
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 
     error_tracker_dashboard("/errors",

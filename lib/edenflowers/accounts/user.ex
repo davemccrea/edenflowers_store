@@ -104,6 +104,15 @@ defmodule Edenflowers.Accounts.User do
       accept [:name]
     end
 
+    update :update_avatar do
+      accept [:avatar, :avatar_content_type]
+    end
+
+    update :remove_avatar do
+      change set_attribute(:avatar, nil)
+      change set_attribute(:avatar_content_type, nil)
+    end
+
     update :update_newsletter_preference do
       accept [:newsletter_opt_in]
     end
@@ -171,6 +180,9 @@ defmodule Edenflowers.Accounts.User do
     attribute :newsletter_opt_in, :boolean, default: false, public?: true
 
     attribute :admin, :boolean, default: false, public?: true, writable?: false
+
+    attribute :avatar, :binary, allow_nil?: true, select_by_default?: false
+    attribute :avatar_content_type, :string, allow_nil?: true
   end
 
   relationships do

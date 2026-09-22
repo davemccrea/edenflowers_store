@@ -378,7 +378,16 @@ defmodule EdenflowersWeb.Layouts do
         aria-label={~t"Admin account menu"}
         class={["inline-flex cursor-pointer items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
-        <span class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+        <img
+          :if={@current_user.avatar_content_type}
+          src={~p"/admin/account/avatar"}
+          alt=""
+          class="h-7 w-7 shrink-0 rounded-full object-cover"
+        />
+        <span
+          :if={!@current_user.avatar_content_type}
+          class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+        >
           {@initials}
         </span>
         <span :if={!@compact} class="min-w-0 text-left">

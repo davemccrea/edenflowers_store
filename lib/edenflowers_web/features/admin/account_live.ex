@@ -9,7 +9,47 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, ~t"Account")}
+    {:ok,
+     socket
+     |> assign(:page_title, ~t"Account")
+     |> allow_upload(:avatar,
+       accept: ~w(.jpg .jpeg .png .webp),
+       max_file_size: 2_000_000,
+       auto_upload: true,
+       progress: &handle_avatar_progress/3
+     )}
+  end
+
+  @impl true
+  def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
+
+  def handle_event("remove_avatar", _params, socket) do
+    user = socket.assigns.current_user
+
+    case Ash.update(user, %{}, action: :remove_avatar, actor: user) do
+      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
+    end
+  end
+
+  defp handle_avatar_progress(:avatar, %{done?: false}, socket), do: {:noreply, socket}
+
+  defp handle_avatar_progress(:avatar, entry, socket) do
+    user = socket.assigns.current_user
+
+    # Content type comes from the extension, which allow_upload has already
+    # checked against the accept list; the client-reported type is untrusted.
+    result =
+      consume_uploaded_entry(socket, entry, fn %{path: path} ->
+        params = %{avatar: File.read!(path), avatar_content_type: MIME.from_path(entry.client_name)}
+        {:ok, Ash.update(user, params, action: :update_avatar, actor: user)}
+      end)
+
+    case result do
+      # A full reload so the browser refetches the image at the unchanged URL.
+      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
+    end
   end
 
   @impl true
@@ -18,12 +58,21 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="narrow">
         <.admin_page_header title={~t"Account"}>
-          <:subtitle>{~t"Manage your signed-in admin session."}</:subtitle>
+          <:subtitle>{~t"Your admin profile and session."}</:subtitle>
         </.admin_page_header>
 
         <section class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
           <div class="mb-5 flex items-center gap-3">
-            <span class="bg-primary/10 text-primary inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-semibold">
+            <img
+              :if={@current_user.avatar_content_type}
+              src={~p"/admin/account/avatar"}
+              alt=""
+              class="h-12 w-12 shrink-0 rounded-full object-cover"
+            />
+            <span
+              :if={!@current_user.avatar_content_type}
+              class="bg-primary/10 text-primary inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-semibold"
+            >
               {user_initials(@current_user)}
             </span>
             <div class="min-w-0">
@@ -35,6 +84,45 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           </div>
 
           <dl class="divide-base-300/50 divide-y">
+            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <dt id="avatar-label" class="text-base-content/65 text-sm sm:pt-1.5">{~t"Picture"}</dt>
+              <dd>
+                <form id="avatar-form" phx-change="validate_avatar" class="grid gap-2">
+                  <div class="flex items-center gap-2">
+                    <.live_file_input
+                      upload={@uploads.avatar}
+                      class="file-input file-input-sm min-w-0 flex-1 sm:max-w-xs"
+                      aria-labelledby="avatar-label"
+                      aria-describedby="avatar-help"
+                      aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
+                    />
+                    <.button
+                      :if={@current_user.avatar_content_type}
+                      type="button"
+                      phx-click="remove_avatar"
+                      variant="secondary"
+                      size="sm"
+                    >
+                      {~t"Remove"}
+                    </.button>
+                  </div>
+                  <progress
+                    :for={entry <- Enum.filter(@uploads.avatar.entries, & &1.valid?)}
+                    class="progress progress-primary w-full sm:max-w-xs"
+                    value={entry.progress}
+                    max="100"
+                  />
+                  <p id="avatar-help" class="text-sm" aria-live="polite">
+                    <span :if={avatar_errors(@uploads.avatar) == []} class="text-base-content/65">
+                      {~t"JPG, PNG or WebP, up to 2 MB."}
+                    </span>
+                    <span :for={err <- avatar_errors(@uploads.avatar)} class="text-error block">
+                      {avatar_error(err)}
+                    </span>
+                  </p>
+                </form>
+              </dd>
+            </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/65 text-sm">{~t"Name"}</dt>
               <dd class="text-base-content text-sm">{display_name(@current_user)}</dd>
@@ -60,6 +148,13 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     </Layouts.admin>
     """
   end
+
+  defp avatar_errors(upload),
+    do: upload_errors(upload) ++ Enum.flat_map(upload.entries, &upload_errors(upload, &1))
+
+  defp avatar_error(:too_large), do: ~t"The picture must be under 2 MB."
+  defp avatar_error(:not_accepted), do: ~t"Use a JPG, PNG or WebP image."
+  defp avatar_error(_), do: ~t"Could not upload the picture."
 
   defp display_name(user) do
     user
