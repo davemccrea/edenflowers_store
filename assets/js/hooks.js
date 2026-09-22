@@ -649,11 +649,23 @@ Hooks.Stripe = {
     const v = (name, fallback = "") =>
       css.getPropertyValue(name).trim() || fallback;
 
-    const baseContent = v("--color-base-content", "#1f2937");
-    const base100 = v("--color-base-100", "#ffffff");
-    const primary = v("--color-primary", "#0570de");
-    const error = v("--color-error", "#dc2626");
-    const base300 = v("--color-base-300", "#e5e7eb");
+    // Stripe's colour variables only accept hex, rgb() or hsl() and silently
+    // drop our oklch() tokens, so paint each one to a canvas pixel to get sRGB.
+    const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    const rgb = (name, fallback) => {
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillStyle = fallback;
+      ctx.fillStyle = v(name, fallback);
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return `rgb(${r}, ${g}, ${b})`;
+    };
+
+    const baseContent = rgb("--color-base-content", "#1f2937");
+    const base100 = rgb("--color-base-100", "#ffffff");
+    const primary = rgb("--color-primary", "#0570de");
+    const error = rgb("--color-error", "#dc2626");
+    const base300 = rgb("--color-base-300", "#e5e7eb");
 
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
     // Checkboxes carry a heavier hairline than inputs -- see `.checkbox` in app.css.
@@ -671,6 +683,8 @@ Hooks.Stripe = {
         fontSizeBase: "16px",
         borderRadius: v("--radius-field", "0.25rem"),
         spacingUnit: "4px",
+        // Our form stacks fields with `space-y-6`.
+        gridRowSpacing: "24px",
       },
       rules: {
         ".Input": {
@@ -680,8 +694,11 @@ Hooks.Stripe = {
           fontSize: "18px",
           fontWeight: "400",
           lineHeight: "27px",
-          // 10.5px vertical + 18px font + 27px line-height ≈ 48px (input-lg).
-          padding: "10.5px 12px",
+          // Stripe's inputs are border-box: 2 × 9.5px + 27px line-height + 2px border = 48px (input-lg).
+          padding: "9.5px 12px",
+        },
+        ".Input::placeholder": {
+          color: `color-mix(in oklab, ${baseContent} 50%, transparent)`,
         },
         ".Input:focus": {
           backgroundColor: base100,
@@ -694,6 +711,8 @@ Hooks.Stripe = {
           backgroundColor: base100,
           border: `1px solid ${error}`,
           boxShadow: "none",
+          // Stripe tints invalid text with colorDanger; `.input-error` only reddens the frame.
+          color: baseContent,
         },
         ".Input--invalid:focus": {
           backgroundColor: base100,
