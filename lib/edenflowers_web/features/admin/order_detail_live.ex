@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Order not found.")
-         |> push_navigate(to: ~p"/admin/orders")}
+         |> push_navigate(to: EdenflowersWeb.Admin.OrdersLive.default_path())}
     end
   end
 
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.admin_page width="wide">
         <.admin_page_header
           title={@order.customer_name || @order.order_reference}
-          back={~p"/admin/orders"}
+          back={EdenflowersWeb.Admin.OrdersLive.default_path()}
           back_label={~t"Orders"}
         >
           <:subtitle>
