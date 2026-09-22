@@ -46,9 +46,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
               <.gift_badge :if={@order.gift} order={@order} />
-              <span class="tabular-nums">{~t"Order #{@order.order_reference}"}</span>
+              <span class="tabular-nums">{@order.order_reference}</span>
               <span :if={@order.ordered_at} aria-hidden="true">·</span>
-              <span :if={@order.ordered_at}>{~t"Ordered"} {Format.datetime(@order.ordered_at, @locale)}</span>
+              <span :if={@order.ordered_at}>{Format.datetime(@order.ordered_at, @locale)}</span>
             </span>
           </:subtitle>
           <:actions>
@@ -84,33 +84,30 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.button>
           </div>
 
-          <div class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p class="text-base-content text-2xl font-semibold tracking-tight">
+          <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
+            <.summary_fact label={~t"Date"}>
               {Format.weekday_day_month(@order.fulfillment_date, @locale)}
-            </p>
-            <.relative_date_badge
-              :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
-              label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
-              tone={date_tone(@order.fulfillment_date)}
-            />
-          </div>
-
-          <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+              <.relative_date_badge
+                :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
+                label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
+                tone={date_tone(@order.fulfillment_date)}
+              />
+            </.summary_fact>
             <.summary_fact label={~t"Method"}>
               <.fulfillment_method
                 method={@order.fulfillment_method}
                 label={present?(@order.fulfillment_option_name) && @order.fulfillment_option_name}
                 class="whitespace-normal"
               />
-              <span :if={@order.distance_km} class="text-base-content/65 ml-6 block text-sm font-normal tabular-nums">
-                {~t"#{@order.distance_km} km from the shop"}
-              </span>
             </.summary_fact>
             <.summary_fact
               :if={@order.fulfillment_method == :delivery && present?(@order.delivery_address)}
               label={~t"Deliver to"}
             >
               {@order.delivery_address}
+              <span :if={@order.distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
+                {@order.distance_km} km
+              </span>
             </.summary_fact>
           </div>
 
@@ -332,9 +329,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :label, :string, required: true
   attr :tone, :atom, required: true, values: [:overdue, :today, :upcoming]
 
+  defp relative_date_badge(%{tone: :upcoming} = assigns) do
+    ~H"""
+    <span class="text-base-content/65 block text-sm font-normal first-letter:uppercase">{@label}</span>
+    """
+  end
+
   defp relative_date_badge(assigns) do
     ~H"""
-    <span class={["badge whitespace-nowrap font-medium first-letter:uppercase", relative_date_badge_class(@tone)]}>
+    <span class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium first-letter:uppercase", relative_date_badge_class(@tone)]}>
       {@label}
     </span>
     """
@@ -437,7 +440,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge_class(:overdue), do: "admin-badge-error"
   defp relative_date_badge_class(:today), do: "admin-badge-success"
-  defp relative_date_badge_class(:upcoming), do: "admin-badge-neutral"
 
   defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
