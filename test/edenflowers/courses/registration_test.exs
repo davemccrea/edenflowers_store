@@ -28,6 +28,15 @@ defmodule Edenflowers.Courses.RegistrationTest do
     assert registration.reference =~ ~r/^[0-9A-Z]{6}$/
   end
 
+  test "a guest booking is linked to the user with its email" do
+    course = generate(course())
+    {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada", actor: Edenflowers.Actors.system_actor())
+
+    assert {:ok, registration} = register(course, 1)
+
+    assert registration.user_id == user.id
+  end
+
   test "a pending booking holds its seats" do
     course = generate(course(total_places: 8))
 

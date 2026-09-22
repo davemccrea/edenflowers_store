@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Courses.CourseReceiptController do
   alias Edenflowers.Translations
 
   # Read as the signed-in customer, so the owner policy decides: the receipt
-  # carries their email address. Guests get theirs in the confirmation email.
+  # carries their email address.
   def show(conn, %{"id" => id}) do
     with {:ok, %{status: :confirmed} = registration} <-
            Courses.get_registration_by_id(id, actor: conn.assigns[:current_user], load: [:course]),
