@@ -113,7 +113,7 @@ defmodule Edenflowers.Orders.LineItem do
               expr(
                 if(
                   promotion_applied?,
-                  do: subtotal * order.discount_rate,
+                  do: round(subtotal * order.discount_rate, 2),
                   else: 0
                 )
               )

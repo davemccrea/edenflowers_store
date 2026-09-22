@@ -111,12 +111,12 @@ defmodule Edenflowers.Orders.OrderTest do
 
       assert order.items_subtotal
              |> Decimal.round(2)
-             |> Decimal.equal?("87.98")
+             |> Decimal.equal?("87.97")
 
-      # Contained VAT on the discounted gross: 87.976 × 25.5/125.5.
+      # Discounts are rounded per line: 49.99 − 10.00 + 59.98 − 12.00 = 87.97.
       assert order.items_tax
              |> Decimal.round(2)
-             |> Decimal.equal?("17.88")
+             |> Decimal.equal?("17.87")
     end
 
     test "promotion_applied? returns true if promotion applied" do
