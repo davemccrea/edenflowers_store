@@ -39,6 +39,24 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
   end
 
+  test "payment summary subtracts the discount once", %{conn: conn} do
+    promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
+
+    order =
+      placed_order(
+        promotion_id: promotion.id,
+        promotion_name: promotion.name,
+        promotion_code: promotion.code,
+        discount_rate: promotion.discount_rate
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-payment-summary", "€84.00")
+    assert has_element?(view, "#order-payment-summary", "-€16.80")
+    assert has_element?(view, "#order-payment-summary", "€71.70")
+  end
+
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
     order = placed_order()
 

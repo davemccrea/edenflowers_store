@@ -8,9 +8,6 @@
 //   en.pickup | fi.pickup | sv.pickup
 //   sv.nongift            (delivery with no recipient, phone, notes or card)
 //   sv.mixed-vat          (two VAT rates, so the breakdown has two rows)
-//
-// Regenerate them all through the real payload builder with
-// priv/receipts/sample/regenerate.exs — never hand-edit.
 #let order = if "order" in sys.inputs {
   // `json()` accepts bytes directly — `json.decode` is deprecated in
   // Typst 0.14 and removed in 0.15.

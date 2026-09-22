@@ -17,6 +17,7 @@ defmodule Edenflowers.Orders.Receipt do
       order,
       [
         :items_subtotal,
+        :items_total,
         :discount,
         :promotion_applied?,
         :grand_total,
@@ -36,7 +37,7 @@ defmodule Edenflowers.Orders.Receipt do
     end
   end
 
-  # Exposed so tests can golden-diff against sample JSON without invoking Typst.
+  # Exposed so payload serialization can be tested without invoking Typst.
   def build_payload(%Order{} = order) do
     locale = order.locale
 
@@ -55,7 +56,7 @@ defmodule Edenflowers.Orders.Receipt do
       delivery_instructions: order.delivery_instructions,
       card_message: order.card_message,
       line_items: Enum.map(order.line_items, &line_item_payload(&1, locale)),
-      items_subtotal: Format.currency(gross_items_subtotal(order), locale),
+      items_subtotal: Format.currency(order.items_subtotal, locale),
       fulfillment_fee: fulfillment_fee_payload(order, locale),
       discount: discount_payload(order, locale),
       vat_breakdown: vat_breakdown(order, locale),
@@ -75,13 +76,6 @@ defmodule Edenflowers.Orders.Receipt do
       tax_rate: Format.percentage(item.tax_rate, locale),
       total: Format.currency(item.subtotal, locale)
     }
-  end
-
-  # `items_subtotal` sums `LineItem.total`, which already has the promotion
-  # taken off. Adding `discount` (the sum of the same lines' discounts) back
-  # recovers the pre-discount figure the "Subtotal" row is supposed to state.
-  defp gross_items_subtotal(order) do
-    Decimal.add(order.items_subtotal, order.discount || 0)
   end
 
   # A zero fee is noise on a pickup receipt — drop the row rather than print

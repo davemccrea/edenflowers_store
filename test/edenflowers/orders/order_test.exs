@@ -42,7 +42,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.total_items_in_cart == 3
     end
 
-    test "sums items_subtotal and items_tax correctly when no promotion is applied" do
+    test "sums item amounts and tax correctly when no promotion is applied" do
       tax_rate_1 = generate(tax_rate(percentage: "0.255"))
       product_1 = generate(product(tax_rate_id: tax_rate_1.id))
       product_1_product_variant_1 = generate(product_variant(product_id: product_1.id, price: "40.00"))
@@ -69,9 +69,10 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      order = Ash.load!(order, [:items_subtotal, :items_tax], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_total, :items_tax], authorize?: false)
 
       assert Decimal.equal?(order.items_subtotal, "86.00")
+      assert Decimal.equal?(order.items_total, "86.00")
 
       # Prices are tax-inclusive, so the VAT is contained in the gross:
       # 80.00 × 25.5/125.5 + 6.00 × 10/110 = 16.25 + 0.55.
@@ -80,7 +81,7 @@ defmodule Edenflowers.Orders.OrderTest do
              |> Decimal.equal?("16.80")
     end
 
-    test "sums items_subtotal and items_tax correctly when promotion is applied" do
+    test "sums item amounts and tax correctly when promotion is applied" do
       tax_rate = generate(tax_rate(percentage: "0.255"))
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant_1 = generate(product_variant(product_id: product.id, price: "49.99"))
@@ -107,9 +108,11 @@ defmodule Edenflowers.Orders.OrderTest do
 
       order = Orders.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
 
-      order = Ash.load!(order, [:items_subtotal, :items_tax], authorize?: false)
+      order = Ash.load!(order, [:items_subtotal, :items_total, :items_tax], authorize?: false)
 
-      assert order.items_subtotal
+      assert Decimal.equal?(order.items_subtotal, "109.97")
+
+      assert order.items_total
              |> Decimal.round(2)
              |> Decimal.equal?("87.97")
 
@@ -901,11 +904,14 @@ defmodule Edenflowers.Orders.OrderTest do
       )
 
       assert {:ok, order} =
-               Orders.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:items_subtotal])
+               Orders.add_promotion_with_id(order, promotion.id,
+                 authorize?: false,
+                 load: [:items_subtotal, :items_total]
+               )
 
       assert order.promotion_id == promotion.id
-      # After 20% discount: 50.00 - 10.00 = 40.00
-      assert Decimal.equal?(order.items_subtotal, "40.00")
+      assert Decimal.equal?(order.items_subtotal, "50.00")
+      assert Decimal.equal?(order.items_total, "40.00")
     end
 
     test "rejects promotion when cart total is below minimum requirement" do
@@ -947,11 +953,14 @@ defmodule Edenflowers.Orders.OrderTest do
       )
 
       assert {:ok, order} =
-               Orders.add_promotion_with_id(order, promotion.id, authorize?: false, load: [:items_subtotal])
+               Orders.add_promotion_with_id(order, promotion.id,
+                 authorize?: false,
+                 load: [:items_subtotal, :items_total]
+               )
 
       assert order.promotion_id == promotion.id
-      # After 15% discount: 50.00 - 7.50 = 42.50
-      assert Decimal.equal?(order.items_subtotal, "42.50")
+      assert Decimal.equal?(order.items_subtotal, "50.00")
+      assert Decimal.equal?(order.items_total, "42.50")
     end
 
     test "rejects promotion when cart is empty" do

@@ -44,7 +44,7 @@ this feature. Start fresh from the spec below.
 - New read action `:admin_show` — `argument :id, :uuid`, `get? true`,
   `filter expr(id == ^arg(:id) and state == :placed)`, and a `prepare build(load: ...)`
   loading line_items (+ their `:subtotal`) and the order calcs/aggregates needed for the
-  totals breakdown: `:customer_name, :grand_total, :items_subtotal, :items_tax, :tax,
+  totals breakdown: `:customer_name, :grand_total, :items_subtotal, :items_total, :items_tax, :tax,
   :fulfillment_tax, :discount, :distance_km, :promotion, :fulfillment_option`.
   Consider a module attr `@admin_show_load` mirroring `@checkout_load`. Keep separate
   from `:admin_list` (the codebase deliberately splits table vs detail loads).
