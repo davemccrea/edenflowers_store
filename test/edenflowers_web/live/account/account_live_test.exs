@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=courses-table]", "Autumn Wreaths")
+      assert has_element?(view, ~s|[data-testid=courses-table] a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
     end
 
     test "does not list a booking that hasn't been paid for", %{conn: conn, user: user} do
