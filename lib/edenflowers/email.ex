@@ -17,7 +17,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(@from_address)
       |> to(order.customer_email)
-      |> subject("#{~t"Order Confirmation"} - #{order.order_reference}")
+      |> subject(~t"Your Eden Flowers order #{order.order_reference}")
       |> text_body(render_order_confirmation(order))
     end)
   end

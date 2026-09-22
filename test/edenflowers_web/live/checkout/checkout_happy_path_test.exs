@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Order Confirmation"
+      assert email.subject =~ "Your Eden Flowers order"
       assert email.subject =~ finalized.order_reference
     end)
   end
@@ -208,7 +208,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Order Confirmation"
+      assert email.subject =~ "Your Eden Flowers order"
       assert email.subject =~ finalized.order_reference
     end)
   end
@@ -296,9 +296,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Order Confirmation"
+      assert email.subject =~ "Your Eden Flowers order"
       assert email.subject =~ finalized.order_reference
-      assert email.text_body =~ finalized.order_reference
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
@@ -375,7 +374,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
-      assert email.text_body =~ finalized.order_reference
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end

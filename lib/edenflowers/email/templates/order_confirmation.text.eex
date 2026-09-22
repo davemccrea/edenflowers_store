@@ -1,10 +1,10 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Thank you for your order. Your reference is %{reference}, and I'll have everything ready on %{date}.", reference: @order.order_reference, date: @format_date.(@order.fulfillment_date)) %>
+<%= gettext("Thank you for your order. I'll have everything ready on %{date}.", date: @format_date.(@order.fulfillment_date)) %>
 
-<%= gettext("Your receipt is attached to this email. If you need to change anything, just reply and I'll take care of it.") %>
+<%= gettext("Your receipt is attached. If you need to change anything, just reply and I'll take care of it.") %>
 
-<%= gettext("Warm wishes") %>,
+<%= gettext("Warm wishes,") %>
 
 Jennie
 Eden Flowers

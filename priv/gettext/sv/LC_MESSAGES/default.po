@@ -64,7 +64,7 @@ msgid "Courses"
 msgstr "Kurser"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:232
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:467
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:471
 #: lib/edenflowers_web/features/admin/orders_live.ex:115
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:285
 #: lib/edenflowers_web/features/checkout/components/fields.ex:122
@@ -72,7 +72,7 @@ msgstr "Kurser"
 msgid "Delivery"
 msgstr "Leverans"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:465
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:469
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:304
 #, elixir-autogen, elixir-format
 msgid "Discount"
@@ -99,7 +99,7 @@ msgid "Store"
 msgstr "Butik"
 
 #: lib/edenflowers_web/features/account/account_live.ex:67
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:154
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:158
 #: lib/edenflowers_web/features/admin/orders_live.ex:74
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:316
 #, elixir-autogen, elixir-format
@@ -127,7 +127,7 @@ msgstr "Kassa"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:59
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:143
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:209
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:213
 #: lib/edenflowers_web/features/admin/orders_live.ex:88
 #: lib/edenflowers_web/features/checkout/components/fields.ex:123
 #, elixir-autogen, elixir-format
@@ -291,36 +291,10 @@ msgstr "Ditt namn *"
 msgid "Your cart is empty."
 msgstr "Din varukorg är tom."
 
-#: lib/edenflowers/email.ex:20
-#, elixir-autogen, elixir-format
-msgid "Order Confirmation"
-msgstr "Orderbekräftelse"
-
-#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:9
-#: lib/edenflowers/email/templates/newsletter_promo.text.eex:11
-#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:7
-#: lib/edenflowers/email/templates/otp_sign_in.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "Best regards"
-msgstr "Med vänliga hälsningar"
-
-#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:1
-#: lib/edenflowers/email/templates/newsletter_promo.text.eex:1
-#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:1
-#: lib/edenflowers/email/templates/otp_sign_in.text.eex:1
-#, elixir-autogen, elixir-format
-msgid "Hi"
-msgstr "Hej"
-
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:668
 #, elixir-autogen, elixir-format
 msgid "Address *"
 msgstr "Adress *"
-
-#: lib/edenflowers/email/templates/newsletter_promo.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, here is your 15% off promo code for your first order:"
-msgstr "Som välkomstgåva får du 15 % rabatt på din första beställning med den här koden:"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:61
 #, elixir-autogen, elixir-format
@@ -368,11 +342,6 @@ msgstr "Ogiltig kod"
 msgid "Invalid promotion"
 msgstr "Ogiltig kampanj"
 
-#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "It looks like you're already subscribed to the Eden Flowers newsletter."
-msgstr "Det ser ut som att du redan prenumererar på Eden Flowers nyhetsbrev."
-
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:519
 #, elixir-autogen, elixir-format
 msgid "Large"
@@ -401,30 +370,10 @@ msgstr "Ett fel uppstod vid betalningen. Försök igen."
 msgid "Small"
 msgstr "Liten"
 
-#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Thank you for resubscribing."
-msgstr "Tack för att du prenumererar igen."
-
-#: lib/edenflowers/email/templates/newsletter_promo.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for subscribing to the Eden Flowers newsletter!"
-msgstr "Tack för att du prenumererar på Eden Flowers nyhetsbrev!"
-
-#: lib/edenflowers/email/templates/newsletter_promo.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "The code is valid for 30 days and can be used once at checkout."
-msgstr "Koden gäller i 30 dagar och kan användas en gång i kassan."
-
 #: lib/edenflowers/email.ex:52
 #, elixir-autogen, elixir-format
 msgid "Welcome back to the Eden Flowers newsletter"
 msgstr "Välkommen tillbaka till Eden Flowers nyhetsbrev"
-
-#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Welcome back to the Eden Flowers newsletter!"
-msgstr "Välkommen tillbaka till Eden Flowers nyhetsbrev!"
 
 #: lib/edenflowers/email.ex:36
 #, elixir-autogen, elixir-format
@@ -445,11 +394,6 @@ msgstr "Du är nu utloggad"
 #, elixir-autogen, elixir-format
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr "Du har redan loggat in på ett annat sätt, men har inte bekräftat ditt konto. Du kan bekräfta kontot via länken vi skickade till dig, eller genom att återställa lösenordet."
-
-#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Your 15% off welcome code is still valid. Here it is again:"
-msgstr "Din välkomstkod på 15 % rabatt gäller fortfarande. Här är den igen:"
 
 #: lib/edenflowers/email.ex:44
 #, elixir-autogen, elixir-format
@@ -755,15 +699,14 @@ msgstr "Har du en kampanjkod?"
 msgid "Hi %{name},"
 msgstr "Hej %{name},"
 
+#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:1
+#: lib/edenflowers/email/templates/newsletter_promo.text.eex:1
+#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:1
 #: lib/edenflowers/email/templates/order_confirmation.text.eex:1
+#: lib/edenflowers/email/templates/otp_sign_in.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Hi,"
 msgstr "Hej,"
-
-#: lib/edenflowers/email/templates/otp_sign_in.text.eex:7
-#, elixir-autogen, elixir-format
-msgid "It expires in 10 minutes. If you didn't request this, you can safely ignore this email."
-msgstr "Den gäller i 10 minuter. Om du inte har begärt den kan du bortse från det här meddelandet."
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:73
 #, elixir-autogen, elixir-format
@@ -785,11 +728,6 @@ msgstr "Skicka inloggningskod"
 msgid "Sign-in code"
 msgstr "Inloggningskod"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for your order. Your reference is %{reference}, and I'll have everything ready on %{date}."
-msgstr "Tack för din beställning. Ditt referensnummer är %{reference} och jag har allt klart den %{date}."
-
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Too many requests. Please wait a few minutes and try again."
@@ -804,16 +742,6 @@ msgstr "Kommande"
 #, elixir-autogen, elixir-format
 msgid "Use a different email"
 msgstr "Använd en annan e-postadress"
-
-#: lib/edenflowers/email/templates/otp_sign_in.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Use this code to sign in to your Eden Flowers account:"
-msgstr "Använd den här koden för att logga in på ditt Eden Flowers-konto:"
-
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:7
-#, elixir-autogen, elixir-format
-msgid "Warm wishes"
-msgstr "Med vänliga hälsningar"
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:210
 #, elixir-autogen, elixir-format
@@ -834,11 +762,6 @@ msgstr "Vi har skickat en ny kod till dig."
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers sign-in code"
 msgstr "Din inloggningskod till Eden Flowers"
-
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Your receipt is attached to this email. If you need to change anything, just reply and I'll take care of it."
-msgstr "Ditt kvitto bifogas i detta e-postmeddelande. Om något behöver ändras, svara bara på det här mejlet så ordnar jag det."
 
 #: lib/edenflowers_web/components/date_picker.ex:150
 #, elixir-autogen, elixir-format
@@ -1047,7 +970,7 @@ msgstr "Belopp"
 msgid "Are you sure you want to reset the calendar? This action is destructive."
 msgstr "Är du säker på att du vill återställa kalendern? Åtgärden kan inte ångras."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:385
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:389
 #, elixir-autogen, elixir-format
 msgid "Awaiting payment"
 msgstr "Väntar på betalning"
@@ -1095,7 +1018,7 @@ msgstr "Fortsätt till kassan"
 msgid "Could not mark expense as reviewed."
 msgstr "Det gick inte att markera utgiften som granskad."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:238
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Could not mark order as fulfilled."
 msgstr "Kunde inte markera beställningen som uppfylld."
@@ -1105,7 +1028,7 @@ msgstr "Kunde inte markera beställningen som uppfylld."
 msgid "Currency"
 msgstr "Valuta"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:172
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:176
 #: lib/edenflowers_web/features/admin/orders_live.ex:38
 #: lib/edenflowers_web/features/admin/orders_live.ex:55
 #, elixir-autogen, elixir-format
@@ -1127,7 +1050,7 @@ msgstr "Översikt"
 msgid "Date"
 msgstr "Datum"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:416
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:420
 #, elixir-autogen, elixir-format
 msgid "Delivery location map"
 msgstr "Karta över leveransplatsen"
@@ -1147,12 +1070,12 @@ msgstr "Destination"
 msgid "Differs from the weekly schedule"
 msgstr "Avviker från veckoschemat"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:463
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:467
 #, elixir-autogen, elixir-format
 msgid "Discount (%{code})"
 msgstr "Rabatt (%{code})"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:464
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:468
 #, elixir-autogen, elixir-format
 msgid "Discount (%{name})"
 msgstr "Rabatt (%{name})"
@@ -1201,14 +1124,14 @@ msgid "Expenses"
 msgstr "Utgifter"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:171
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:384
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:388
 #: lib/edenflowers_web/features/admin/orders_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "Failed"
 msgstr "Misslyckad"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:179
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:213
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:217
 #: lib/edenflowers_web/features/admin/orders_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "Fulfilled"
@@ -1232,7 +1155,7 @@ msgstr "Leveranskalender"
 msgid "Fulfillment date"
 msgstr "Leveransdatum"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:152
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "Fulfillment fee"
 msgstr "Leveransavgift"
@@ -1257,14 +1180,14 @@ msgstr "Leveransalternativ"
 msgid "Fulfillment status"
 msgstr "Leveransstatus"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:422
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:426
 #, elixir-autogen, elixir-format
 msgid "Get directions"
 msgstr "Hämta vägbeskrivning"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:127
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:155
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:335
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Gift"
 msgstr "Gåva"
@@ -1274,12 +1197,12 @@ msgstr "Gåva"
 msgid "Gift for %{name}"
 msgstr "Present till %{name}"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:331
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:335
 #, elixir-autogen, elixir-format
 msgid "Gift for %{order_recipient_name}"
 msgstr "Present till %{order_recipient_name}"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:331
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:335
 #, elixir-autogen, elixir-format
 msgid "Gift order"
 msgstr "Presentbeställning"
@@ -1289,7 +1212,7 @@ msgstr "Presentbeställning"
 msgid "High"
 msgstr "Hög"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:264
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:268
 #, elixir-autogen, elixir-format
 msgid "Image of %{line_item_product_name}"
 msgstr "Bild av %{line_item_product_name}"
@@ -1299,7 +1222,7 @@ msgstr "Bild av %{line_item_product_name}"
 msgid "Instructions"
 msgstr "Instruktioner"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:145
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:146
 #, elixir-autogen, elixir-format
 msgid "Items subtotal"
 msgstr "Delsumma varor"
@@ -1379,7 +1302,7 @@ msgstr "Kontorsmaterial"
 msgid "Only occasional emails. Unsubscribe at any time."
 msgstr "Bara enstaka utskick. Avsluta prenumerationen när du vill."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:411
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:415
 #, elixir-autogen, elixir-format
 msgid "Open directions in Google Maps"
 msgstr "Öppna vägbeskrivningen i Google Maps"
@@ -1394,7 +1317,7 @@ msgstr "Alternativen har olika inställningar"
 msgid "Order %{order_order_reference}"
 msgstr "Beställning %{order_order_reference}"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:235
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:239
 #, elixir-autogen, elixir-format
 msgid "Order marked as fulfilled."
 msgstr "Beställningen har markerats som uppfylld."
@@ -1405,7 +1328,7 @@ msgstr "Beställningen har markerats som uppfylld."
 msgid "Order not found."
 msgstr "Beställningen hittades inte."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:206
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "Order placed"
 msgstr "Beställningen gjord"
@@ -1431,7 +1354,7 @@ msgid "Other"
 msgstr "Övrigt"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:170
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:382
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:386
 #: lib/edenflowers_web/features/admin/orders_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Paid"
@@ -1444,14 +1367,14 @@ msgstr "Betalningsstatus"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:173
 #: lib/edenflowers_web/features/admin/components/components.ex:180
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:217
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:221
 #: lib/edenflowers_web/features/admin/orders_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Pending"
 msgstr "Väntande"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:233
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:468
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:472
 #: lib/edenflowers_web/features/admin/orders_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Pickup"
@@ -1468,14 +1391,14 @@ msgstr "Behandlad"
 msgid "Professional Services"
 msgstr "Professionella tjänster"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:195
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "Recipient"
 msgstr "Mottagare"
 
 #: lib/edenflowers_web/features/account/account_live.ex:235
 #: lib/edenflowers_web/features/admin/components/components.ex:172
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:383
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:387
 #: lib/edenflowers_web/features/admin/orders_live.ex:141
 #, elixir-autogen, elixir-format
 msgid "Refunded"
@@ -1510,7 +1433,7 @@ msgstr "Granskad"
 msgid "Save Corrections"
 msgstr "Spara korrigeringar"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:180
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Search Fastmail for this address"
 msgstr "Sök efter adressen i Fastmail"
@@ -1545,7 +1468,7 @@ msgstr "Programvara"
 msgid "System"
 msgstr "System"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:204
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Timeline"
 msgstr "Tidslinje"
@@ -1604,7 +1527,7 @@ msgstr "Kommande beställningar"
 msgid "Utilities"
 msgstr "Driftskostnader"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:153
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "VAT"
 msgstr "Moms"
@@ -1634,7 +1557,7 @@ msgstr "Leverantörens namn"
 msgid "View all orders"
 msgstr "Visa alla beställningar"
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:165
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "View payment in Stripe"
 msgstr "Visa betalningen i Stripe"
@@ -2250,3 +2173,66 @@ msgstr "Betalningen är bekräftad. Ett bekräftelsemejl är på väg."
 #, elixir-autogen, elixir-format
 msgid "Of which VAT"
 msgstr "Varav moms"
+
+#: lib/edenflowers/email/templates/newsletter_promo.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, here's 15% off your first order:"
+msgstr "Som välkomstgåva får du 15 % rabatt på din första beställning:"
+
+#: lib/edenflowers/email/templates/otp_sign_in.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here's your code to sign in to Eden Flowers:"
+msgstr "Här är din inloggningskod till Eden Flowers:"
+
+#: lib/edenflowers/email/templates/otp_sign_in.text.eex:7
+#, elixir-autogen, elixir-format
+msgid "It expires in 10 minutes. If you didn't ask for it, you can ignore this email."
+msgstr "Den gäller i 10 minuter. Om du inte har begärt den kan du bortse från det här meddelandet."
+
+#: lib/edenflowers/email/templates/newsletter_promo.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thanks for subscribing to the Eden Flowers newsletter."
+msgstr "Tack för att du prenumererar på Eden Flowers nyhetsbrev."
+
+#: lib/edenflowers/email/templates/newsletter_promo.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "Use it once at checkout within the next 30 days."
+msgstr "Använd den en gång i kassan inom 30 dagar."
+
+#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:9
+#: lib/edenflowers/email/templates/newsletter_promo.text.eex:11
+#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:5
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:7
+#, elixir-autogen, elixir-format
+msgid "Warm wishes,"
+msgstr "Varma hälsningar,"
+
+#: lib/edenflowers/email/templates/newsletter_resubscribed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Welcome back to the Eden Flowers newsletter."
+msgstr "Välkommen tillbaka till Eden Flowers nyhetsbrev."
+
+#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "You're already on the Eden Flowers newsletter list, so there's no need to sign up again."
+msgstr "Du finns redan med på Eden Flowers nyhetsbrevslista, så du behöver inte anmäla dig igen."
+
+#: lib/edenflowers/email/templates/newsletter_already_subscribed.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Your 15% welcome code is still valid:"
+msgstr "Din välkomstkod på 15 % gäller fortfarande:"
+
+#: lib/edenflowers/email.ex:20
+#, elixir-autogen, elixir-format
+msgid "Your Eden Flowers order %{order_order_reference}"
+msgstr "Din Eden Flowers-beställning %{order_order_reference}"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Your receipt is attached. If you need to change anything, just reply and I'll take care of it."
+msgstr "Ditt kvitto bifogas. Om något behöver ändras, svara bara på det här mejlet så ordnar jag det."
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order. I'll have everything ready on %{date}."
+msgstr "Tack för din beställning. Jag har allt klart %{date}."
