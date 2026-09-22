@@ -26,6 +26,7 @@ defmodule Edenflowers.Accounts.User do
         identity_field :email
         registration_enabled? true
         brute_force_strategy :rate_limit
+        otp_characters :digits_only
 
         sender Edenflowers.Accounts.User.Senders.SendOtp
       end

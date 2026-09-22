@@ -1660,7 +1660,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:33
 #, elixir-autogen, elixir-format
-msgid "We sent a 6-character code to"
+msgid "We sent a 6-digit code to"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:16

@@ -1660,8 +1660,8 @@ msgstr "Vi kunde inte logga in dig. Försök igen."
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:33
 #, elixir-autogen, elixir-format
-msgid "We sent a 6-character code to"
-msgstr "Vi skickade en kod på 6 tecken till"
+msgid "We sent a 6-digit code to"
+msgstr "Vi skickade en sexsiffrig kod till"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:16
 #, elixir-autogen, elixir-format

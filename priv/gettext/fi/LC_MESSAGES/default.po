@@ -1660,8 +1660,8 @@ msgstr "Kirjautuminen ei onnistunut. Yritä uudelleen."
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:33
 #, elixir-autogen, elixir-format
-msgid "We sent a 6-character code to"
-msgstr "Lähetimme 6-merkkisen koodin osoitteeseen"
+msgid "We sent a 6-digit code to"
+msgstr "Lähetimme 6-numeroisen koodin osoitteeseen"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:16
 #, elixir-autogen, elixir-format
