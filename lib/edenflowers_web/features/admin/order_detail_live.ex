@@ -435,7 +435,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-300/70 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65 text-xs"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-300/70 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>
