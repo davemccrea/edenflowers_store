@@ -191,6 +191,28 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
+
+    test "newsletter checkbox is hidden on arrival for a signed-in subscriber", %{conn: conn, order: order} do
+      user = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
+    test "newsletter checkbox is shown on arrival for a signed-in non-subscriber", %{conn: conn, order: order} do
+      user = generate(admin_user(admin: false, newsletter_opt_in: false)) |> with_token()
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
   end
 
   describe "Step 2: Gift Options" do
@@ -697,5 +719,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
     end
+  end
+
+  defp with_token(user) do
+    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
+    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end
