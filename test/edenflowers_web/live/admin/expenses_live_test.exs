@@ -39,14 +39,41 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     refute has_element?(view, "[data-item-id]", "Contoso Oy")
   end
 
-  defp create_expense(document_id, vendor_name, description) do
+  test "lists the newest expenses first", %{conn: conn} do
+    create_expense("older", "Older Vendor", "Older", date: ~D[2026-01-05])
+    create_expense("newer", "Newer Vendor", "Newer", date: ~D[2026-03-10])
+
+    {:ok, _view, html} = live(conn, ~p"/admin/expenses")
+
+    {newer_position, _} = :binary.match(html, "Newer Vendor")
+    {older_position, _} = :binary.match(html, "Older Vendor")
+    assert newer_position < older_position
+  end
+
+  test "filters to expenses that have not been reviewed", %{conn: conn} do
+    create_expense("unreviewed", "Unreviewed Vendor", "Pending")
+
+    "reviewed"
+    |> create_expense("Reviewed Vendor", "Done")
+    |> Expenses.mark_expense_reviewed!(authorize?: false)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses?reviewed=false")
+
+    assert has_element?(view, "[data-item-id]", "Unreviewed Vendor")
+    refute has_element?(view, "[data-item-id]", "Reviewed Vendor")
+  end
+
+  defp create_expense(document_id, vendor_name, description, attrs \\ []) do
     Expenses.ingest_expense!(
-      %{
-        document_id: document_id,
-        vendor_name: vendor_name,
-        description: description,
-        confidence: :high
-      },
+      Map.merge(
+        %{
+          document_id: document_id,
+          vendor_name: vendor_name,
+          description: description,
+          confidence: :high
+        },
+        Map.new(attrs)
+      ),
       actor: Edenflowers.Actors.system_actor()
     )
   end

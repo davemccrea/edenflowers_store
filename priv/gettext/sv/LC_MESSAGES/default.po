@@ -1259,7 +1259,7 @@ msgstr "Hantera din inloggade administratörssession."
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:56
 #, elixir-autogen, elixir-format
-msgid "Mark as Reviewed"
+msgid "Mark as reviewed"
 msgstr "Markera som granskad"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:85
@@ -1303,7 +1303,7 @@ msgstr "Inga kommande beställningar just nu"
 #: lib/edenflowers_web/features/admin/components/components.ex:29
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:116
 #, elixir-autogen, elixir-format
-msgid "Office Supplies"
+msgid "Office supplies"
 msgstr "Kontorsmaterial"
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:55
@@ -1398,7 +1398,7 @@ msgstr "Behandlad"
 #: lib/edenflowers_web/features/admin/components/components.ex:35
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:122
 #, elixir-autogen, elixir-format
-msgid "Professional Services"
+msgid "Professional services"
 msgstr "Professionella tjänster"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:199
@@ -1440,7 +1440,7 @@ msgstr "Granskad"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:133
 #, elixir-autogen, elixir-format
-msgid "Save Corrections"
+msgid "Save corrections"
 msgstr "Spara korrigeringar"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:184
@@ -1496,7 +1496,7 @@ msgstr "I morgon · %{format_day_month}"
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:63
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:109
 #, elixir-autogen, elixir-format
-msgid "Total Amount"
+msgid "Total amount"
 msgstr "Totalbelopp"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:30
@@ -1544,12 +1544,12 @@ msgstr "Moms"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
 #, elixir-autogen, elixir-format
-msgid "VAT Amount"
+msgid "VAT amount"
 msgstr "Momsbelopp"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:100
 #, elixir-autogen, elixir-format
-msgid "VAT Number"
+msgid "VAT number"
 msgstr "Momsnummer"
 
 #: lib/edenflowers_web/features/admin/expenses_live.ex:53
@@ -1559,7 +1559,7 @@ msgstr "Leverantör"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:99
 #, elixir-autogen, elixir-format
-msgid "Vendor Name"
+msgid "Vendor name"
 msgstr "Leverantörens namn"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:100
@@ -2441,3 +2441,33 @@ msgid "You have %{count} place(s) on this course."
 msgid_plural "You have %{count} place(s) on this course."
 msgstr[0] "Du har %{count} plats på den här kursen."
 msgstr[1] "Du har %{count} platser på den här kursen."
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex
+#, elixir-autogen, elixir-format
+msgid "Open receipt in Papra"
+msgstr "Öppna kvittot i Papra"
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex
+#, elixir-autogen, elixir-format
+msgid "No amount"
+msgstr "Inget belopp"
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex
+#, elixir-autogen, elixir-format
+msgid "Not reviewed"
+msgstr "Inte granskad"
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex
+#, elixir-autogen, elixir-format
+msgid "Review"
+msgstr "Granskning"
+
+#: lib/edenflowers_web/features/admin/orders_live.ex
+#, elixir-autogen, elixir-format
+msgid "Order"
+msgstr "Beställning"
+
+#: lib/edenflowers_web/features/admin/orders_live.ex
+#, elixir-autogen, elixir-format
+msgid "Search name or order number…"
+msgstr "Sök namn eller ordernummer…"

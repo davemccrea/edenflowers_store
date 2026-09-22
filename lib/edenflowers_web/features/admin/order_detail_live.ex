@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.detail_section :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
               <blockquote
                 phx-no-format
-                class="border-warning text-base-content whitespace-pre-wrap break-words border-l-4 pl-4 text-lg leading-relaxed"
+                class="text-base-content font-serif whitespace-pre-wrap break-words text-xl italic leading-relaxed"
               >{@order.card_message}</blockquote>
             </.detail_section>
 
@@ -179,7 +179,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
           <aside class="space-y-6">
             <.detail_section id="order-customer" title={~t"Customer"}>
-              <.person_block name={@order.customer_name}>
+              <.person_block>
                 <:contact :if={@order.customer_email}>
                   <a
                     href={fastmail_search_url(@order.customer_email)}
@@ -208,24 +208,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
-            </.detail_section>
-
-            <.detail_section id="order-timeline" title={~t"Timeline"}>
-              <ul class="timeline timeline-compact timeline-vertical">
-                <.timeline_step label={~t"Order placed"} status={:done} first>
-                  {Format.datetime(@order.ordered_at, @locale)}
-                </.timeline_step>
-                <.timeline_step label={~t"Payment"} status={payment_step_status(@order.payment_status)}>
-                  {payment_step_detail(@order.payment_status)}
-                </.timeline_step>
-                <.timeline_step
-                  label={~t"Fulfilled"}
-                  status={(@order.fulfillment_status == :fulfilled && :done) || :pending}
-                  last
-                >
-                  <span :if={@order.fulfillment_status != :fulfilled}>{~t"Pending"}</span>
-                </.timeline_step>
-              </ul>
             </.detail_section>
           </aside>
         </div>
@@ -311,9 +293,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp person_block(assigns) do
     ~H"""
-    <div>
-      <p class="text-base-content text-base font-medium">{@name || ~t"No name given"}</p>
-      <div :for={contact <- @contact} class="mt-1.5 text-sm">{render_slot(contact)}</div>
+    <div class="space-y-1.5">
+      <p :if={@name} class="text-base-content text-base font-medium">{@name}</p>
+      <div :for={contact <- @contact} class="text-sm">{render_slot(contact)}</div>
     </div>
     """
   end
@@ -346,53 +328,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     </span>
     """
   end
-
-  attr :label, :string, required: true
-  attr :status, :atom, required: true, values: [:done, :pending, :error]
-  attr :first, :boolean, default: false
-  attr :last, :boolean, default: false
-  slot :inner_block
-
-  defp timeline_step(assigns) do
-    ~H"""
-    <li>
-      <hr :if={!@first} class={timeline_connector_class(@status)} />
-      <div class="timeline-middle">
-        <.icon name={timeline_icon(@status)} class={["h-5 w-5", timeline_icon_class(@status)]} />
-      </div>
-      <div class="timeline-end py-2 text-start">
-        <p class={["text-sm leading-tight", (@status == :pending && "text-base-content/65") || "text-base-content"]}>
-          {@label}
-        </p>
-        <p class="text-base-content/65 text-xs">{render_slot(@inner_block)}</p>
-      </div>
-      <hr :if={!@last} class={timeline_connector_class(@status)} />
-    </li>
-    """
-  end
-
-  defp timeline_icon(:done), do: "hero-check-circle-solid"
-  defp timeline_icon(:error), do: "hero-x-circle-solid"
-  defp timeline_icon(:pending), do: "hero-clock"
-
-  defp timeline_icon_class(:done), do: "text-success"
-  defp timeline_icon_class(:error), do: "text-error"
-  defp timeline_icon_class(:pending), do: "text-base-content/60"
-
-  defp timeline_connector_class(:done), do: "bg-success"
-  defp timeline_connector_class(_), do: ""
-
-  # A refund still means payment was received, so it reads as done; a failure is a
-  # distinct error state, not merely "not yet paid".
-  defp payment_step_status(:paid), do: :done
-  defp payment_step_status(:refunded), do: :done
-  defp payment_step_status(:failed), do: :error
-  defp payment_step_status(:pending), do: :pending
-
-  defp payment_step_detail(:paid), do: ~t"Paid"
-  defp payment_step_detail(:refunded), do: ~t"Refunded"
-  defp payment_step_detail(:failed), do: ~t"Failed"
-  defp payment_step_detail(:pending), do: ~t"Awaiting payment"
 
   attr :label, :string, required: true
   attr :tone, :atom, required: true, values: [:overdue, :today, :upcoming]

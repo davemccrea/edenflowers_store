@@ -271,7 +271,8 @@ defmodule EdenflowersWeb.CoreComponents do
     default: false,
     doc: "opt out of the blur-first debounce and validate from the first keystroke (e.g. search inputs)"
 
-  attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form inputmode list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
                 phx-blur phx-debounce phx-focus phx-change)
 

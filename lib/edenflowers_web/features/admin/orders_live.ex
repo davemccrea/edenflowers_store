@@ -35,7 +35,11 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           resource={Order}
           action={:admin_list}
           actor={@current_user}
-          search={[label: ~t"Customer", placeholder: ~t"Search by name…"]}
+          search={[
+            label: ~t"Order",
+            placeholder: ~t"Search name or order number…",
+            fn: &search_orders/3
+          ]}
           url_state={@url_state}
           show_filters={:toggle}
           page_size={[default: 25, options: [10, 25, 50, 100]]}
@@ -105,6 +109,21 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search_orders(query, _searchable_columns, search_term) do
+    require Ash.Query
+    import Ash.Expr
+
+    case_insensitive_term = Ash.CiString.new(search_term)
+
+    Ash.Query.filter(
+      query,
+      expr(
+        contains(customer_name, ^case_insensitive_term) or
+          contains(order_reference, ^case_insensitive_term)
+      )
+    )
   end
 
   # Reuse the enum's own values and the shared method labels so the filter options
