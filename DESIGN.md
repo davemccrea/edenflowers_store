@@ -150,6 +150,8 @@ A single warm family — paper at hue ~75, forest at hue ~150 — with one amber
 
 **The One Family Rule.** Every surface, text and border colour sits at hue 60–80 (paper) or hue ~150 (forest). A colour outside those two families is a defect unless it is a semantic status colour inside `/admin`.
 
+**The Admin Status Carve-out.** The admin is an operating tool, and its status colours are deliberately bright Tailwind palette (emerald, amber, orange, red) rather than the storefront's muted tokens. `.admin-theme` on the admin layout re-points `--color-success`, `--color-warning` and `--color-error` (and their `-content` text shades) at the palette, and the `admin-badge-*` pills use the Tailwind UI 50-fill / 700-text / 600-ring recipe. Keep that vividness inside `/admin`; it never leaks into the storefront.
+
 **The Honey-Only Rule.** The amber accent exists as a 2px text-decoration and nothing else. Never a background, never a border, never a text colour, never a badge. Its scarcity is what makes an underline read as "this responds to you".
 
 **The Opacity-Not-New-Token Rule.** Secondary text, dividers and decoration are produced by mixing `base-content` with transparency (`/70`, `/65`, `/40`, `/15`), not by adding grey tokens. Reach for an opacity step before proposing a new colour.

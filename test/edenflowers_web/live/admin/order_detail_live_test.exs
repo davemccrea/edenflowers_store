@@ -24,12 +24,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "h1", order.order_reference)
-    assert has_element?(view, "header", "Ada Lovelace")
+    assert has_element?(view, "h1", "Ada Lovelace")
+    assert has_element?(view, "header", order.order_reference)
     assert has_element?(view, "header", "Payment")
     assert has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
-    assert has_element?(view, "#order-fulfillment-summary", "2026")
+
+    assert has_element?(
+             view,
+             "#order-fulfillment-summary",
+             Edenflowers.Format.weekday_day_month(order.fulfillment_date, "en-GB")
+           )
+
     assert has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-customer", "ada@example.com")
     assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)

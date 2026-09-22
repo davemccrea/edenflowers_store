@@ -20,9 +20,37 @@ defmodule EdenflowersWeb.Admin.Components do
     <span :if={@category} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
       {humanize_category(@category)}
     </span>
-    <span :if={is_nil(@category)} class="text-base-content/30" aria-hidden="true">—</span>
+    <.blank :if={is_nil(@category)} />
     """
   end
+
+  @doc "Placeholder for an empty table value. Hidden from screen readers, which would otherwise read out \"em dash\"."
+  def blank(assigns) do
+    ~H"""
+    <span class="text-base-content/30" aria-hidden="true">—</span>
+    """
+  end
+
+  attr :method, :atom, required: true
+  attr :label, :string, default: nil, doc: "overrides the method name, e.g. with the fulfillment option's own name"
+  attr :class, :any, default: nil
+
+  def fulfillment_method(assigns) do
+    ~H"""
+    <span class={["inline-flex items-center gap-1.5 whitespace-nowrap", @class]}>
+      <.icon name={fulfillment_method_icon(@method)} class="text-base-content/60 h-[1.2em] w-[1.2em] shrink-0" />
+      {@label || fulfillment_method_label(@method)}
+    </span>
+    """
+  end
+
+  def fulfillment_method_label(:delivery), do: ~t"Delivery"
+  def fulfillment_method_label(:pickup), do: ~t"Pickup"
+  def fulfillment_method_label(_), do: ~t"Unknown method"
+
+  defp fulfillment_method_icon(:delivery), do: "hero-truck"
+  defp fulfillment_method_icon(:pickup), do: "hero-building-storefront"
+  defp fulfillment_method_icon(_), do: "hero-question-mark-circle"
 
   defp humanize_category(category) do
     case category do
@@ -56,7 +84,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :status, :atom, required: true
 
-  @doc "Payment-status pill for an order: paid reads as success, failed as error, refunds and pending stay neutral."
+  @doc "Payment-status pill for an order: paid reads as success, refunded as attention, failed as error, pending stays neutral."
   def payment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
@@ -129,7 +157,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <div :if={@back} class="mb-4">
         <.link
           navigate={@back}
-          class="text-base-content/65 inline-flex items-center gap-1 text-xs transition-colors hover:text-base-content"
+          class="text-base-content/65 -my-1 inline-flex items-center gap-1 py-1 text-xs transition-colors hover:text-base-content"
         >
           <.icon name="hero-chevron-left" class="h-3 w-3" />
           {@back_label || ~t"Back"}
@@ -164,7 +192,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"
   defp payment_status_badge_class(:failed), do: "badge-error admin-badge-error"
-  defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-warning"
+  defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-attention"
   defp payment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp payment_status_label(:paid), do: ~t"Paid"

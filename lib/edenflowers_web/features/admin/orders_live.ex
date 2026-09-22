@@ -53,41 +53,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             </span>
           </:col>
           <:col :let={order} field="customer_name" search label={~t"Customer"}>
-            <span class="font-medium">{order.customer_name || "—"}</span>
-          </:col>
-          <:col
-            :let={order}
-            field="fulfillment_method"
-            filter={[
-              type: :select,
-              label: ~t"Fulfillment method",
-              prompt: ~t"All",
-              options: fulfillment_method_options()
-            ]}
-            label={~t"Method"}
-          >
-            <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
-              <.icon name={fulfillment_icon(order.fulfillment_method)} class="text-base-content/65 h-4 w-4" />
-              {fulfillment_label(order.fulfillment_method)}
-            </span>
-          </:col>
-          <:col :let={order} field="grand_total" label={~t"Total"}>
-            <span class="whitespace-nowrap tabular-nums">
-              {Format.currency(order.grand_total, @locale)}
-            </span>
-          </:col>
-          <:col
-            :let={order}
-            field="payment_status"
-            filter={[
-              type: :select,
-              label: ~t"Payment status",
-              prompt: ~t"All",
-              options: payment_status_options()
-            ]}
-            label={~t"Payment"}
-          >
-            <.payment_status_badge status={order.payment_status} />
+            <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
+              {order.customer_name || ~t"Unnamed customer"}
+            </.link>
           </:col>
           <:col
             :let={order}
@@ -102,25 +70,48 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           >
             <.fulfillment_status_badge status={order.fulfillment_status} />
           </:col>
+          <:col
+            :let={order}
+            field="payment_status"
+            filter={[
+              type: :select,
+              label: ~t"Payment status",
+              prompt: ~t"All",
+              options: payment_status_options()
+            ]}
+            label={~t"Payment"}
+          >
+            <.payment_status_badge status={order.payment_status} />
+          </:col>
+          <:col :let={order} field="grand_total" label={~t"Total"}>
+            <span class="whitespace-nowrap tabular-nums">
+              {Format.currency(order.grand_total, @locale)}
+            </span>
+          </:col>
+          <:col
+            :let={order}
+            field="fulfillment_method"
+            filter={[
+              type: :select,
+              label: ~t"Fulfillment method",
+              prompt: ~t"All",
+              options: fulfillment_method_options()
+            ]}
+            label={~t"Method"}
+          >
+            <.fulfillment_method method={order.fulfillment_method} />
+          </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
   end
 
-  defp fulfillment_icon(:delivery), do: "hero-truck"
-  defp fulfillment_icon(:pickup), do: "hero-building-storefront"
-  defp fulfillment_icon(_), do: "hero-question-mark-circle"
-
-  defp fulfillment_label(:delivery), do: ~t"Delivery"
-  defp fulfillment_label(:pickup), do: ~t"Pickup"
-  defp fulfillment_label(_), do: ~t"Unknown"
-
-  # Reuse the enum's own values and the label map above so the filter options
+  # Reuse the enum's own values and the shared method labels so the filter options
   # can't drift from the type definition or the cell rendering.
   defp fulfillment_method_options do
     Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod.values()
-    |> Enum.map(fn value -> {fulfillment_label(value), value} end)
+    |> Enum.map(fn value -> {fulfillment_method_label(value), value} end)
   end
 
   # Built from the resource's own one_of constraints so the select options
