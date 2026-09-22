@@ -310,19 +310,21 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   </div>
 
                   <div
-                    :if={@order.tax && Decimal.gt?(@order.tax, 0)}
-                    class="flex items-baseline justify-between"
-                    data-testid="vat-line"
+                    class="mt-3 flex items-baseline justify-between font-semibold"
+                    data-testid="order-total"
                   >
-                    <span>{~t"Incl. VAT"}</span>
-                    <span class="tabular-nums">{Edenflowers.Format.currency(@order.tax, @order.locale)}</span>
-                  </div>
-
-                  <div class="mt-3 flex items-baseline justify-between font-semibold" data-testid="order-total">
                     <span>{~t"Total"}</span>
                     <span class="tabular-nums" data-testid="total-amount">
                       {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                     </span>
+                  </div>
+
+                  <div
+                    :if={@order.tax && Decimal.gt?(@order.tax, 0)}
+                    class="text-base-content/70 text-right text-sm"
+                    data-testid="vat-line"
+                  >
+                    {~t"Including #{amount = Edenflowers.Format.currency(@order.tax, @order.locale)} in VAT"}
                   </div>
                 </div>
               </section>
