@@ -660,6 +660,16 @@ defmodule EdenflowersWeb.Layouts do
       {render_slot(@inner_block)}
     </main>
 
+    <.link
+      :if={@current_user && @current_user.admin}
+      id="admin-shortcut"
+      navigate={~p"/admin"}
+      class="bg-base-content text-base-100 fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90"
+    >
+      <.icon name="hero-document-text" class="h-5 w-5" />
+      {~t"Admin"}
+    </.link>
+
     <footer>
       <div class="bg-cream relative overflow-hidden border-t border-b">
         <.flower
