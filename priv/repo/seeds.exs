@@ -557,7 +557,7 @@ for order_attrs <- orders do
       fulfillment_option_name: fulfillment_option.name,
       fulfillment_method: fulfillment_option.fulfillment_method,
       fulfillment_fee: fulfillment_fee,
-      fulfillment_tax_percentage: tax_rate.percentage,
+      fulfillment_tax_rate: tax_rate.percentage,
       payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
       locale: order_attrs[:locale] || "sv-FI",
       # Snapshot the promotion the same way SnapshotPromotion does at checkout.

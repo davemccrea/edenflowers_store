@@ -113,8 +113,8 @@ defmodule Edenflowers.Orders.Receipt do
   # The fee carries its own snapshotted rate, so it buckets alongside the
   # line items rather than getting a row of its own.
   defp fulfillment_fee_entry(order) do
-    if positive?(order.fulfillment_fee) and order.fulfillment_tax_percentage do
-      [{order.fulfillment_tax_percentage, order.fulfillment_fee}]
+    if positive?(order.fulfillment_fee) and order.fulfillment_tax_rate do
+      [{order.fulfillment_tax_rate, order.fulfillment_fee}]
     else
       []
     end

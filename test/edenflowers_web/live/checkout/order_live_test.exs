@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-06-10],
           fulfillment_fee: "4.50",
-          fulfillment_tax_percentage: tax_rate.percentage,
+          fulfillment_tax_rate: tax_rate.percentage,
           payment_status: :paid,
           payment_intent_id: "pi_test_confirm",
           ordered_at: DateTime.utc_now(),
