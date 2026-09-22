@@ -119,11 +119,35 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   describe "courses" do
     test "lists the customer's own registrations", %{conn: conn, user: user} do
       course = generate(course(name: "Autumn Wreaths"))
-      generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed))
+
+      registration =
+        generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, ~s|[data-testid=courses-table] a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
+      assert has_element?(view, "[data-testid=courses-table] td", "2")
+      assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
+    end
+
+    @tag :typst
+    test "opens a booking's receipt PDF inline", %{conn: conn, user: user} do
+      registration = generate(course_registration(user_id: user.id, status: :confirmed))
+
+      conn = get(conn, ~p"/courses/bookings/#{registration.id}/receipt")
+
+      assert "%PDF" <> _ = response(conn, 200)
+
+      assert get_resp_header(conn, "content-disposition") == [
+               ~s|inline; filename="eden-flowers-#{registration.reference}.pdf"|
+             ]
+    end
+
+    test "hides another customer's booking receipt", %{conn: conn} do
+      other = generate(admin_user(admin: false))
+      registration = generate(course_registration(user_id: other.id, status: :confirmed))
+
+      assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
     end
 
     test "does not list a booking that hasn't been paid for", %{conn: conn, user: user} do

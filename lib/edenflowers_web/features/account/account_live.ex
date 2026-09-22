@@ -79,7 +79,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   <span class="text-base-content/70 block text-xs tabular-nums sm:hidden">
                     {order.order_reference}
                   </span>
-                  <.receipt_link order={order} class="mt-1 block sm:hidden" />
+                  <.receipt_link
+                    :if={order.payment_status == :paid}
+                    href={~p"/order/#{order.id}/receipt"}
+                    class="mt-1 block sm:hidden"
+                  />
                 </th>
                 <td class="hidden py-4 pr-4 tabular-nums sm:table-cell">{order.order_reference}</td>
                 <td class="py-4 pr-4">{status_label(order, @locale)}</td>
@@ -89,7 +93,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   {Format.currency(order.grand_total, @locale)}
                 </td>
                 <td class="hidden py-4 text-right sm:table-cell">
-                  <.receipt_link order={order} />
+                  <.receipt_link :if={order.payment_status == :paid} href={~p"/order/#{order.id}/receipt"} />
                 </td>
               </tr>
             </tbody>
@@ -113,7 +117,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
               <tr class="text-base-content/70">
                 <th scope="col" class="eyebrow pr-4 pb-3">{~t"Course"}</th>
                 <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/4">{~t"Location"}</th>
-                <th scope="col" class="eyebrow w-1/4 pb-3 sm:w-1/5">{~t"When"}</th>
+                <th scope="col" class="eyebrow w-1/4 pr-4 pb-3 sm:w-1/6">{~t"When"}</th>
+                <th scope="col" class="eyebrow w-1/5 pb-3 text-right sm:w-[10%] sm:pr-4">{~t"Places"}</th>
+                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
+                  <span class="sr-only">{~t"Receipt"}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -122,20 +130,23 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   <.link navigate={~p"/courses/#{registration.course.id}"} class="link-underline-hover">
                     {registration.course.name}
                   </.link>
-                  <span :if={registration.seats > 1} class="text-base-content/70 tabular-nums">
-                    × {registration.seats}
-                  </span>
-                  <%!-- Below sm the location has no column of its own; it rides under the name. --%>
+                  <%!-- Below sm neither the location nor the receipt has a column of its
+                       own; both ride under the name. --%>
                   <span class="text-base-content/70 block text-xs sm:hidden">
                     {registration.course.location_name}
                   </span>
+                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} class="mt-1 block sm:hidden" />
                 </th>
                 <td class="hidden py-4 pr-4 sm:table-cell">{registration.course.location_name}</td>
-                <td class="py-4 tabular-nums">
+                <td class="py-4 pr-4 tabular-nums">
                   {Format.day_month(registration.course.date, @locale)}
                   <span class="text-base-content/70 block text-xs tabular-nums sm:text-sm">
                     {Format.time(registration.course.start_time, @locale)}
                   </span>
+                </td>
+                <td class="py-4 text-right tabular-nums sm:pr-4">{registration.seats}</td>
+                <td class="hidden py-4 text-right sm:table-cell">
+                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} />
                 </td>
               </tr>
             </tbody>
@@ -174,14 +185,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
     """
   end
 
-  attr :order, :any, required: true
+  attr :href, :string, required: true
   attr :class, :string, default: nil
 
   defp receipt_link(assigns) do
     ~H"""
     <.link
-      :if={@order.payment_status == :paid}
-      href={~p"/order/#{@order.id}/receipt"}
+      href={@href}
       target="_blank"
       rel="noopener"
       aria-label={~t"Receipt (opens in a new tab)"}
