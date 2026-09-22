@@ -36,10 +36,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
              Edenflowers.Format.weekday_day_month(order.fulfillment_date, "en-GB")
            )
 
-    assert has_element?(view, "#order-customer", "Ada Lovelace")
+    refute has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-customer", "ada@example.com")
     assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
-    assert has_element?(view, "#order-timeline", "Order placed")
     assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
@@ -89,7 +88,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-recipient", "Grace Hopper")
     # The buyer collects a gift pickup, so the number is theirs.
     assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
@@ -115,12 +113,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, ~s|#order-customer a[href^="tel:"]|)
   end
 
-  test "timeline reflects a refunded payment as a received-but-refunded state", %{conn: conn} do
+  test "header shows a refunded payment", %{conn: conn} do
     order = placed_order(payment_status: :refunded)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-timeline", "Refunded")
+    assert has_element?(view, "header", "Refunded")
   end
 
   test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
