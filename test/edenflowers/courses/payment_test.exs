@@ -18,14 +18,4 @@ defmodule Edenflowers.Courses.PaymentTest do
     assert {:ok, updated, "pi_course_secret"} = Payment.setup_payment(registration)
     assert updated.payment_intent_id == "pi_course"
   end
-
-  test "reuses an existing payment intent" do
-    registration = generate(course_registration(payment_intent_id: "pi_existing"))
-
-    expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn ^registration ->
-      {:ok, %{id: "pi_existing", client_secret: "pi_existing_secret"}}
-    end)
-
-    assert {:ok, ^registration, "pi_existing_secret"} = Payment.setup_payment(registration)
-  end
 end

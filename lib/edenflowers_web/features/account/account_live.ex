@@ -113,8 +113,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
               <tr class="text-base-content/70">
                 <th scope="col" class="eyebrow pr-4 pb-3">{~t"Course"}</th>
                 <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/4">{~t"Location"}</th>
-                <th scope="col" class="eyebrow w-1/4 pr-4 pb-3 sm:w-1/5">{~t"When"}</th>
-                <th scope="col" class="eyebrow w-1/4 pb-3 sm:w-1/6">{~t"Status"}</th>
+                <th scope="col" class="eyebrow w-1/4 pb-3 sm:w-1/5">{~t"When"}</th>
               </tr>
             </thead>
             <tbody>
@@ -130,13 +129,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   </span>
                 </th>
                 <td class="hidden py-4 pr-4 sm:table-cell">{registration.course.location_name}</td>
-                <td class="py-4 pr-4 tabular-nums">
+                <td class="py-4 tabular-nums">
                   {Format.day_month(registration.course.date, @locale)}
                   <span class="text-base-content/70 block text-xs tabular-nums sm:text-sm">
                     {Format.time(registration.course.start_time, @locale)}
                   </span>
                 </td>
-                <td class="py-4">{registration_label(registration.status)}</td>
               </tr>
             </tbody>
           </table>
@@ -260,10 +258,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
       {:lt, _} -> ~t"Delivery on #{date}"
     end
   end
-
-  defp registration_label(:confirmed), do: ~t"Booked"
-  defp registration_label(:cancelled), do: ~t"Cancelled"
-  defp registration_label(_pending), do: ~t"Awaiting payment"
 
   defp registrations(user) do
     Courses.list_my_registrations!(actor: user, load: [:course])

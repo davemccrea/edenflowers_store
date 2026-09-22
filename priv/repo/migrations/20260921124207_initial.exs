@@ -323,7 +323,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create table(:promotions, primary_key: false) do
