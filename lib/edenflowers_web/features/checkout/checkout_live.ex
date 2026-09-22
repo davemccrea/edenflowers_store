@@ -270,6 +270,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                 <.live_component id="checkout-line-items" module={EdenflowersWeb.Cart.LineItems} order={@order} />
 
+                <div class="border-base-content/12 border-t"></div>
+
                 <.live_component
                   id="checkout-promo"
                   module={EdenflowersWeb.Cart.PromoCode}
@@ -277,8 +279,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   current_user={@current_user}
                   show_applied={false}
                 />
-
-                <div class="border-base-content/12 border-t"></div>
 
                 <div class="flex flex-col gap-2 text-base">
                   <div class="flex items-baseline justify-between" data-testid="delivery-cost">
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   </div>
 
                   <div
-                    class="mt-3 flex items-baseline justify-between font-semibold"
+                    class="flex items-baseline justify-between font-semibold"
                     data-testid="order-total"
                   >
                     <span>{~t"Total"}</span>
