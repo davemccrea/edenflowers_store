@@ -18,6 +18,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      |> assign(:locale, Localize.get_locale())}
   end
 
+  @doc "The orders list filtered to the work still to do: paid and not yet fulfilled."
+  def default_path, do: ~p"/admin/orders?fulfillment_status=pending&payment_status=paid"
+
   @impl true
   def handle_params(params, uri, socket) do
     {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}

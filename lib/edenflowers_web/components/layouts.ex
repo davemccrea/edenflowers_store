@@ -184,7 +184,7 @@ defmodule EdenflowersWeb.Layouts do
 
     primary_nav = [
       {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
-      {"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
+      {EdenflowersWeb.Admin.OrdersLive.default_path(), ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"}
     ]
@@ -347,6 +347,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.link
       {if @live?, do: [navigate: @path], else: [href: @path]}
+      aria-current={@active && "page"}
       class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
     else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
@@ -357,8 +358,12 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  defp admin_nav_active?(current_path, path, _exact = true), do: current_path == path
-  defp admin_nav_active?(current_path, path, _exact = false), do: String.starts_with?(current_path, path)
+  defp admin_nav_active?(current_path, path, exact) do
+    # Nav paths may carry default filters in their query string; only the path decides the active item.
+    nav_path = URI.parse(path).path
+
+    if exact, do: current_path == nav_path, else: String.starts_with?(current_path, nav_path)
+  end
 
   attr :current_user, :map, required: true
   attr :compact, :boolean, default: false

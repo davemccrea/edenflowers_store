@@ -33,6 +33,19 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
+  test "the default path lists only paid orders still to fulfil", %{conn: conn} do
+    placed_order(customer_name: "To Make", payment_status: :paid, fulfillment_status: :pending)
+    placed_order(customer_name: "Already Done", payment_status: :paid, fulfillment_status: :fulfilled)
+    placed_order(customer_name: "Unpaid", payment_status: :pending, fulfillment_status: :pending)
+
+    {:ok, view, _html} = live(conn, EdenflowersWeb.Admin.OrdersLive.default_path())
+
+    assert has_element?(view, "[data-item-id]", "To Make")
+    refute has_element?(view, "[data-item-id]", "Already Done")
+    refute has_element?(view, "[data-item-id]", "Unpaid")
+    assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
+  end
+
   defp placed_order(attrs) do
     generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
   end
