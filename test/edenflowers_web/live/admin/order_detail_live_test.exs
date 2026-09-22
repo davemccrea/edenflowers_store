@@ -164,6 +164,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
            )
   end
 
+  test "steps through the orders still to fulfil by fulfillment date", %{conn: conn} do
+    later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])
+    current = placed_order(order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
+    earlier = placed_order(order_reference: "EARLIER", fulfillment_date: ~D[2026-06-10])
+    placed_order(order_reference: "DONE", fulfillment_date: ~D[2026-06-11], fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
+
+    assert has_element?(view, "header nav", "2 of 3 to fulfil")
+    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{earlier.id}"]|)
+    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{later.id}"]|)
+  end
+
+  test "omits queue stepping for an order already fulfilled", %{conn: conn} do
+    order = placed_order(fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    refute has_element?(view, "header nav")
+  end
+
   test "redirects missing orders back to the admin orders table", %{conn: conn} do
     missing_id = Ash.UUID.generate()
 
@@ -175,7 +196,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "42.00"))
-    fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id, name: "Pickup"))
+    fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
     attrs =
       Keyword.merge(

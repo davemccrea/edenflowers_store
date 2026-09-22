@@ -151,18 +151,21 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :back_label, :string, default: nil
   slot :subtitle, doc: "supporting text rendered under the title"
   slot :actions
+  slot :nav, doc: "sibling navigation rendered opposite the back link"
 
   def admin_page_header(assigns) do
     ~H"""
     <header class="mb-8 sm:mb-10">
-      <div :if={@back} class="mb-4">
+      <div :if={@back || @nav != []} class="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 sm:mb-8">
         <.link
+          :if={@back}
           navigate={@back}
-          class="text-base-content/65 -my-2 inline-flex items-center gap-1 py-2 text-xs transition-colors hover:text-base-content"
+          class="text-base-content/80 -my-2 -ml-1 inline-flex items-center gap-1.5 py-2 pr-2 pl-1 text-sm font-medium transition-colors hover:text-base-content"
         >
-          <.icon name="hero-chevron-left" class="h-3 w-3" />
+          <.icon name="hero-arrow-left" class="h-4 w-4" />
           {@back_label || ~t"Back"}
         </.link>
+        {render_slot(@nav)}
       </div>
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">

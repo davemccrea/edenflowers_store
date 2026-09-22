@@ -23,7 +23,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:page_title, ~t"Order #{order.order_reference}")
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
-         |> assign(:order, order)}
+         |> assign(:order, order)
+         |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
       _ ->
         {:ok,
@@ -43,6 +44,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           back={EdenflowersWeb.Admin.OrdersLive.default_path()}
           back_label={~t"Orders"}
         >
+          <:nav :if={@queue}>
+            <.queue_nav queue={@queue} />
+          </:nav>
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
               <.gift_badge :if={@order.gift} order={@order} />
@@ -227,6 +231,53 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  attr :queue, :map, required: true
+
+  defp queue_nav(assigns) do
+    ~H"""
+    <nav
+      id="order-queue-nav"
+      phx-hook="ArrowKeyNav"
+      aria-label={~t"Orders to fulfil"}
+      class="border-base-300 bg-base-100 divide-base-300 flex h-9 items-stretch divide-x border text-sm"
+    >
+      <.queue_link to={@queue.previous} icon="hero-chevron-left" label={~t"Previous order"} arrow_key="ArrowLeft" />
+      <span class="text-base-content/80 flex items-center px-3 tabular-nums">
+        {~t"#{@queue.position} of #{@queue.total} to fulfil"}
+      </span>
+      <.queue_link to={@queue.next} icon="hero-chevron-right" label={~t"Next order"} arrow_key="ArrowRight" />
+    </nav>
+    """
+  end
+
+  attr :to, :any, required: true
+  attr :icon, :string, required: true
+  attr :label, :string, required: true
+  attr :arrow_key, :string, required: true
+
+  defp queue_link(%{to: nil} = assigns) do
+    ~H"""
+    <span class="text-base-content/25 flex w-9 items-center justify-center" aria-hidden="true">
+      <.icon name={@icon} class="h-4 w-4" />
+    </span>
+    """
+  end
+
+  defp queue_link(assigns) do
+    ~H"""
+    <.link
+      navigate={~p"/admin/orders/#{@to}"}
+      class="text-base-content/80 flex w-9 items-center justify-center transition-colors hover:bg-base-200 hover:text-base-content"
+      aria-label={@label}
+      aria-keyshortcuts={@arrow_key}
+      title={~t"#{@label} (#{arrow_symbol(@arrow_key)})"}
+      data-arrow-key={@arrow_key}
+    >
+      <.icon name={@icon} class="h-4 w-4" />
+    </.link>
+    """
+  end
+
   attr :id, :string, default: nil
   attr :title, :string, required: true
   slot :inner_block, required: true
@@ -258,7 +309,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <div class="min-w-0 flex-1">
           <div class="flex gap-3">
             <div class="min-w-0 flex-1">
-              <p class="text-base-content text-base font-semibold">
+              <p class="text-base-content text-base font-medium">
                 <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
               </p>
               <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm capitalize">
@@ -280,7 +331,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     ~H"""
     <div>
       <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
-      <div class="text-base-content text-base font-semibold leading-relaxed">{render_slot(@inner_block)}</div>
+      <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -399,6 +450,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp money_row_tone(true = _strong, _muted, _default), do: "text-base-content"
   defp money_row_tone(_strong, true = _muted, _default), do: nil
   defp money_row_tone(_strong, _muted, default), do: default
+
+  # Steps through the same queue the orders list opens on. Orders outside it,
+  # like fulfilled ones, get no stepping. Computed once at mount so marking this
+  # order fulfilled still leaves "next" pointing at the following one.
+  defp queue_position(order, actor) do
+    ids = Enum.map(Orders.list_orders_to_fulfil!(actor: actor), & &1.id)
+
+    case Enum.find_index(ids, &(&1 == order.id)) do
+      nil ->
+        nil
+
+      index ->
+        %{
+          position: index + 1,
+          total: length(ids),
+          previous: if(index > 0, do: Enum.at(ids, index - 1)),
+          next: Enum.at(ids, index + 1)
+        }
+    end
+  end
+
+  defp arrow_symbol("ArrowLeft"), do: "←"
+  defp arrow_symbol("ArrowRight"), do: "→"
 
   defp money(amount, locale), do: Format.currency(amount || 0, locale)
 

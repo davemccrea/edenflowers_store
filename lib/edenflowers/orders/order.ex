@@ -150,6 +150,11 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    read :to_fulfil do
+      filter expr(state == :placed and payment_status == :paid and fulfillment_status == :pending)
+      prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc])
+    end
+
     read :admin_show do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id) and state == :placed)
