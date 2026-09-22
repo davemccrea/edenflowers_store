@@ -652,20 +652,18 @@ Hooks.Stripe = {
     // Stripe's colour variables only accept hex, rgb() or hsl() and silently
     // drop our oklch() tokens, so paint each one to a canvas pixel to get sRGB.
     const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
-    const rgb = (name, fallback) => {
-      ctx.clearRect(0, 0, 1, 1);
-      ctx.fillStyle = fallback;
-      ctx.fillStyle = v(name, fallback);
+    const rgb = (name) => {
+      ctx.fillStyle = v(name);
       ctx.fillRect(0, 0, 1, 1);
       const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
       return `rgb(${r}, ${g}, ${b})`;
     };
 
-    const baseContent = rgb("--color-base-content", "#1f2937");
-    const base100 = rgb("--color-base-100", "#ffffff");
-    const primary = rgb("--color-primary", "#0570de");
-    const error = rgb("--color-error", "#dc2626");
-    const base300 = rgb("--color-base-300", "#e5e7eb");
+    const baseContent = rgb("--color-base-content");
+    const base100 = rgb("--color-base-100");
+    const primary = rgb("--color-primary");
+    const error = rgb("--color-error");
+    const base300 = rgb("--color-base-300");
 
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
     // Checkboxes carry a heavier hairline than inputs -- see `.checkbox` in app.css.
