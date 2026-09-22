@@ -63,7 +63,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
 
   attributes do
     uuid_primary_key :id
-    attribute :price, :decimal, allow_nil?: false
+    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
     attribute :image_slug, :string, allow_nil?: false
     attribute :stock_trackable, :boolean, default: false

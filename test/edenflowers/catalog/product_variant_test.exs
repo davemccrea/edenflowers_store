@@ -65,6 +65,34 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
       assert msg =~ "must be greater than or equal to"
     end
 
+    test "rejects a negative price", %{product: product} do
+      changeset =
+        Ash.Changeset.for_create(ProductVariant, :create, %{
+          product_id: product.id,
+          price: "-0.01",
+          image_slug: "image.jpg"
+        })
+
+      refute changeset.valid?
+      assert Enum.any?(changeset.errors, &(&1.field == :price and &1.message =~ "greater than or equal to"))
+    end
+
+    test "rejects a price with more than two decimal places", %{product: product} do
+      changeset =
+        Ash.Changeset.for_create(ProductVariant, :create, %{
+          product_id: product.id,
+          price: "10.001",
+          image_slug: "image.jpg"
+        })
+
+      refute changeset.valid?
+
+      assert Enum.any?(
+               changeset.errors,
+               &(&1.field == :price and &1.message =~ "decimal places" and &1.vars[:scale] == 2)
+             )
+    end
+
     test "updates product variant price", %{product: product} do
       variant = generate(product_variant(product_id: product.id, price: Decimal.new("9.99")))
 
