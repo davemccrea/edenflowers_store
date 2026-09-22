@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             {format_order_date(date, @today, @locale)}
           </p>
           <ul class={["divide-y", date_divider_class(date_group(date, @today))]}>
-            <.order_row :for={order <- orders} order={order} />
+            <.order_row :for={order <- orders} order={order} hover_class={date_row_hover_class(date_group(date, @today))} />
           </ul>
         </section>
       </div>
@@ -138,6 +138,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   end
 
   attr :order, :map, required: true
+  attr :hover_class, :string, required: true
 
   # What the florist needs to act on, in reading order: whose order, what to make,
   # whether there's a card to write, and how it leaves the shop. Price lives on the
@@ -149,7 +150,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     <li>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class="grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2"
+        class={[
+          "grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors focus-visible:-outline-offset-2",
+          @hover_class
+        ]}
       >
         <div class="min-w-0">
           <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -279,6 +283,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   defp date_divider_class(:overdue), do: "divide-error/15"
   defp date_divider_class(:today), do: "divide-success/20"
   defp date_divider_class(:upcoming), do: "divide-base-300/50"
+
+  defp date_row_hover_class(:overdue), do: "hover:bg-error/10"
+  defp date_row_hover_class(:today), do: "hover:bg-success/15"
+  defp date_row_hover_class(:upcoming), do: "hover:bg-base-200/60"
 
   defp format_order_date(date, today, locale) do
     cond do
