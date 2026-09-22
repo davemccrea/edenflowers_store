@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Check your email"}</h1>
             <p class="text-base-content/70 text-sm">
-              {~t"We sent a 6-character code to"} <span class="text-base-content break-all font-medium">{@email}</span>. {~t"It expires in 10 minutes."}
+              {~t"We sent a 6-digit code to"} <span class="text-base-content break-all font-medium">{@email}</span>. {~t"It expires in 10 minutes."}
             </p>
           </div>
 
@@ -50,11 +50,10 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
               field={@sign_in_form[:otp]}
               label={~t"Sign-in code"}
               autocomplete="one-time-code"
-              inputmode="text"
+              inputmode="numeric"
               maxlength="6"
-              pattern="[A-Za-z0-9]{6}"
+              pattern="[0-9]{6}"
               spellcheck="false"
-              autocapitalize="characters"
             />
 
             <.button type="submit" variant="primary" size="lg">
