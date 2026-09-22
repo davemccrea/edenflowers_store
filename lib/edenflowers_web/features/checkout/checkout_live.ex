@@ -503,7 +503,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 class="aspect-square w-full object-cover"
               />
               <span class="text-sm">{variant.product.name}</span>
-              <span class="text-base-content/70 text-xs">
+              <span class="text-base-content text-sm">
                 {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
             </button>

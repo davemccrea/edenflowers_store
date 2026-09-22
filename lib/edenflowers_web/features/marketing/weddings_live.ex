@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <dl class="border-t">
               <div :for={{item, price} <- @prices} class="flex items-baseline justify-between gap-6 border-b py-4">
                 <dt class="text-lg">{item}</dt>
-                <dd class="text-base-content/80 shrink-0 tabular-nums">
+                <dd class="text-base-content font-serif shrink-0 text-lg tabular-nums">
                   {starting_price(price)}
                 </dd>
               </div>
@@ -326,13 +326,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   defp starting_price(nil), do: ~t"On request"
 
   defp starting_price(euros) do
-    amount =
-      Localize.Number.to_string!(euros,
-        locale: Edenflowers.Format.locale(),
-        currency: :EUR,
-        fractional_digits: 0
-      )
-
+    amount = Edenflowers.Format.price(euros, Edenflowers.Format.locale())
     ~t"from #{amount}"
   end
 

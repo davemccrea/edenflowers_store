@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </dd>
 
               <dt class="eyebrow text-base-content/70">{~t"Price"}</dt>
-              <dd class="tabular-nums">{~t"#{price = Format.currency(@course.price, @locale)} per person"}</dd>
+              <dd class="tabular-nums">{~t"#{price = Format.price(@course.price, @locale)} per person"}</dd>
 
               <dt class="eyebrow text-base-content/70">{~t"Places"}</dt>
               <dd data-testid="seats-left">{availability(@course)}</dd>

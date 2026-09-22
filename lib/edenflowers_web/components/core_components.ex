@@ -929,11 +929,11 @@ defmodule EdenflowersWeb.CoreComponents do
         <h3 class="card-title link-underline-group-hover">
           {@product.name}
         </h3>
-        <p class="font-serif text-base-content/65 text-base italic leading-none">
-          <span :if={@from_price?} class="eyebrow mr-1 not-italic">
+        <p class="font-serif text-base-content text-lg leading-none">
+          <span :if={@from_price?} class="eyebrow mr-1">
             {~t"From"}
           </span>
-          {Edenflowers.Format.currency(@product.cheapest_price, @locale)}
+          {Edenflowers.Format.price(@product.cheapest_price, @locale)}
         </p>
       </div>
     </.link>
