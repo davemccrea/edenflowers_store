@@ -184,7 +184,7 @@ defmodule Generator do
   end
 
   # seed_generator, not the :register action, so a registration can be attached
-  # to a user directly — :register only ever takes user_id from the actor.
+  # to any user directly: :register always links the user with its email.
   def course_registration(opts \\ []) do
     opts = Keyword.put_new_lazy(opts, :course_id, fn -> generate(course()).id end)
 

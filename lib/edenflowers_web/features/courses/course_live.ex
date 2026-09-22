@@ -19,6 +19,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
         {:ok,
          socket
          |> assign(page_title: course.name, locale: Format.locale(), course: course)
+         |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
          |> assign(registration: nil, client_secret: nil, focus_booking?: false)
          |> assign_form()}
 
@@ -85,6 +86,13 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <dd :if={@course.booking_open?}>{Format.weekday_date(@course.register_before, @locale)}</dd>
             </dl>
 
+            <p :if={@booked_seats > 0} data-testid="already-booked">
+              {~t"You have #{count = @booked_seats} place(s) on this course."N}
+              <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
+                {~t"See your bookings"}
+              </.link>
+            </p>
+
             <section :if={!@course.booking_open?} data-testid="booking-closed">
               <p>
                 {~t"This course is no longer taking bookings. I announce new dates in the newsletter first."}
@@ -100,7 +108,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 phx-mounted={@focus_booking? && JS.focus()}
                 class="section-title mb-6 focus-visible:outline-none"
               >
-                {~t"Book a place"}
+                {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
               </h2>
               <.form
                 id="booking-form"
@@ -214,6 +222,14 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
     {:noreply,
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
+  end
+
+  defp booked_seats(nil, _course), do: 0
+
+  defp booked_seats(user, course) do
+    Courses.list_my_registrations!(actor: user, query: [filter: [course_id: course.id]])
+    |> Enum.map(& &1.seats)
+    |> Enum.sum()
   end
 
   defp load_course(id) do
