@@ -124,7 +124,15 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=courses-table]", "Autumn Wreaths")
-      assert has_element?(view, "[data-testid=courses-table]", "Booked")
+    end
+
+    test "does not list a booking that hasn't been paid for", %{conn: conn, user: user} do
+      course = generate(course(name: "Spring Posies"))
+      generate(course_registration(course_id: course.id, user_id: user.id, status: :pending))
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      refute render(view) =~ "Spring Posies"
     end
 
     test "does not list a guest registration made with the same email", %{conn: conn, user: user} do

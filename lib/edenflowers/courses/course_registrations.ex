@@ -10,7 +10,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   @locales Edenflowers.Locales.all()
 
   # How long a pending booking holds its seats while the customer pays.
-  @hold_minutes 30
+  @hold_minutes 10
 
   # Enough for the usual group of friends without letting one booking empty a course.
   @max_seats 4
@@ -29,7 +29,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # read, so the customer-facing list narrows itself with a filter. The plain
     # :read stays unscoped because Course.seats_taken counts through it.
     read :mine do
-      filter expr(user_id == ^actor(:id) and holds_seats?)
+      filter expr(user_id == ^actor(:id) and status == :confirmed)
     end
 
     create :register do

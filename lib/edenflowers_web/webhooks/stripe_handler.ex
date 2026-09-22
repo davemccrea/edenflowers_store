@@ -101,33 +101,32 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
     :ok
   end
 
-  defp handle_error({:error, {:payment_intent_mismatch, order_id, expected_id, actual_id}}, event) do
+  # Shared by orders and course bookings, so id is either an order or a registration id.
+  defp handle_error({:error, {:payment_intent_mismatch, id, expected_id, actual_id}}, event) do
     Logger.error(
-      "Stripe #{event.type} event #{event.id}: payment_intent mismatch for order #{order_id} (expected: #{expected_id}, got: #{actual_id})"
+      "Stripe #{event.type} event #{event.id}: payment_intent mismatch for #{id} (expected: #{expected_id}, got: #{actual_id})"
     )
 
     :ok
   end
 
-  defp handle_error({:error, {:amount_mismatch, order_id, expected_cents, actual_cents}}, event) do
+  defp handle_error({:error, {:amount_mismatch, id, expected_cents, actual_cents}}, event) do
     Logger.error(
-      "Stripe #{event.type} event #{event.id}: amount mismatch for order #{order_id} (expected: #{expected_cents}, got: #{actual_cents})"
+      "Stripe #{event.type} event #{event.id}: amount mismatch for #{id} (expected: #{expected_cents}, got: #{actual_cents})"
     )
 
     :ok
   end
 
-  defp handle_error({:error, {:payment_update_failed, order_id, reason}}, event) do
-    Logger.error(
-      "Failed to update payment for order #{order_id} on Stripe #{event.type} event #{event.id}: #{inspect(reason)}"
-    )
+  defp handle_error({:error, {:payment_update_failed, id, reason}}, event) do
+    Logger.error("Failed to update payment for #{id} on Stripe #{event.type} event #{event.id}: #{inspect(reason)}")
 
     :error
   end
 
-  defp handle_error({:error, {:enqueue_failed, order_id, changeset}}, event) do
+  defp handle_error({:error, {:enqueue_failed, id, changeset}}, event) do
     Logger.error(
-      "Failed to enqueue Oban job for order #{order_id} with Stripe #{event.type} event #{event.id}: #{inspect(changeset)}"
+      "Failed to enqueue Oban job for #{id} with Stripe #{event.type} event #{event.id}: #{inspect(changeset)}"
     )
 
     :error

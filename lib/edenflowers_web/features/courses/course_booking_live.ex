@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
         <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-10 grid items-baseline gap-x-6 gap-y-3 border-y py-6">
           <dt class="eyebrow text-base-content/70">{~t"Course"}</dt>
-          <dd class="font-serif text-xl">{@registration.course.name}</dd>
+          <dd>{@registration.course.name}</dd>
 
           <dt class="eyebrow text-base-content/70">{~t"When"}</dt>
           <dd class="tabular-nums">

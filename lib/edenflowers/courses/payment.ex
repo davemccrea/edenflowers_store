@@ -12,7 +12,7 @@ defmodule Edenflowers.Courses.Payment do
   alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
   alias Edenflowers.External.StripeAPI
 
-  def setup_payment(%{payment_intent_id: nil} = registration) do
+  def setup_payment(registration) do
     case stripe_api().create_course_payment_intent(registration) do
       {:ok, payment_intent} ->
         persist_payment_intent(registration, payment_intent)
@@ -20,17 +20,6 @@ defmodule Edenflowers.Courses.Payment do
       {:error, reason} ->
         Logger.error("Failed to create payment intent for course registration #{registration.id}: #{inspect(reason)}")
         {:error, :payment_intent_create_failed}
-    end
-  end
-
-  def setup_payment(registration) do
-    case stripe_api().retrieve_payment_intent(registration) do
-      {:ok, payment_intent} ->
-        {:ok, registration, payment_intent.client_secret}
-
-      {:error, reason} ->
-        Logger.error("Failed to retrieve payment intent for course registration #{registration.id}: #{inspect(reason)}")
-        {:error, :payment_intent_retrieve_failed}
     end
   end
 
