@@ -321,10 +321,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                   <div
                     :if={@order.tax && Decimal.gt?(@order.tax, 0)}
-                    class="text-base-content/70 text-right text-sm"
+                    class="text-base-content/70 -mt-1.5 flex items-baseline justify-between text-sm"
                     data-testid="vat-line"
                   >
-                    {~t"Including #{amount = Edenflowers.Format.currency(@order.tax, @order.locale)} in VAT"}
+                    <span>{~t"Of which VAT"}</span>
+                    <span class="tabular-nums">{Edenflowers.Format.currency(@order.tax, @order.locale)}</span>
                   </div>
                 </div>
               </section>

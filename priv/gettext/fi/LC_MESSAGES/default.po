@@ -134,7 +134,7 @@ msgstr "Kassa"
 msgid "Payment"
 msgstr "Maksu"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:669
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:670
 #, elixir-autogen, elixir-format
 msgid "Phone number"
 msgstr "Puhelinnumero"
@@ -312,7 +312,7 @@ msgstr "Ystävällisin terveisin"
 msgid "Hi"
 msgstr "Hei"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:667
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:668
 #, elixir-autogen, elixir-format
 msgid "Address *"
 msgstr "Osoite *"
@@ -327,8 +327,8 @@ msgstr "Tervetuliaislahjaksi saat 15 %:n alennuskoodin ensimmäiseen tilaukseesi
 msgid "Cart is empty"
 msgstr "Ostoskori on tyhjä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:419
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:429
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:420
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:430
 #, elixir-autogen, elixir-format
 msgid "Change card"
 msgstr "Vaihda kortti"
@@ -373,13 +373,13 @@ msgstr "Virheellinen kampanja"
 msgid "It looks like you're already subscribed to the Eden Flowers newsletter."
 msgstr "Näyttää siltä, että tilaat jo Eden Flowersin uutiskirjettä."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:518
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:519
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Suuri"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:161
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:517
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:518
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Keskitaso"
@@ -391,12 +391,12 @@ msgstr "Keskitaso"
 msgid "Next"
 msgstr "Seuraava"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:570
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:571
 #, elixir-autogen, elixir-format
 msgid "Payment processing error. Please try again."
 msgstr "Maksun käsittelyssä tapahtui virhe. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:516
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:517
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Pieni"
@@ -471,12 +471,12 @@ msgstr "Salasanasi on palautettu"
 msgid "e.g. Door code 1234, leave at the front door"
 msgstr "esim. Ovikoodi 1234, jätä ulko-oven eteen"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:660
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:661
 #, elixir-autogen, elixir-format
 msgid "%{name}'s address *"
 msgstr "%{name} – osoite *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:661
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:662
 #, elixir-autogen, elixir-format
 msgid "%{name}'s phone number"
 msgstr "%{name} – puhelinnumero"
@@ -553,14 +553,14 @@ msgstr "Siirry kuvaan __N__"
 msgid "Next slide"
 msgstr "Seuraava kuva"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:617
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:618
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
 msgstr "Maksaminen ei ole juuri nyt käytettävissä. Päivitä sivu ja yritä uudelleen."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:259
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:560
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:827
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:561
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:828
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr "Maksaminen ei ole juuri nyt käytettävissä. Yritä hetken kuluttua uudelleen."
@@ -646,11 +646,6 @@ msgstr "Apua"
 msgid "If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."
 msgstr "Jos et ole paikalla, kukat jätetään turvalliseen ja varjoisaan paikkaan. Jos sopivaa paikkaa ei ole, jätämme lapun, jossa on ohjeet uutta toimitusta varten. Voit myös antaa toimitusohjeet kassalla."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:327
-#, elixir-autogen, elixir-format
-msgid "Including %{amount} in VAT"
-msgstr "Sisältää arvonlisäveroa %{amount}"
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
@@ -683,9 +678,9 @@ msgstr "Toimitus samana päivänä onnistuu arkisin ennen klo 14 tehdyille tilau
 msgid "See the FAQ"
 msgstr "Lue usein kysytyt kysymykset"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:450
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:464
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:469
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:451
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:465
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "Select a card"
 msgstr "Valitse kortti"
@@ -922,7 +917,7 @@ msgid "In-store pickup"
 msgstr "Nouto myymälästä"
 
 #: lib/edenflowers_web/components/core_components.ex:83
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:474
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:475
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr "sulje"
@@ -1068,7 +1063,7 @@ msgid "Calendar"
 msgstr "Kalenteri"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:133
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:401
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:402
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr "Korttiviesti"
@@ -2089,7 +2084,7 @@ msgstr "Tilauksesi on noudettavissa liikkeestä %{date}."
 msgid "I'll send a text message when it's ready."
 msgstr "Ilmoitan tekstiviestillä, kun tilaus on valmis."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:668
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:669
 #, elixir-autogen, elixir-format
 msgid "Phone number *"
 msgstr "Puhelinnumero *"
@@ -2250,3 +2245,8 @@ msgstr "Vastaanottaja: %{shown_order_recipient_name}"
 #, elixir-autogen, elixir-format
 msgid "Payment received. A confirmation email is on its way."
 msgstr "Maksu vastaanotettu. Vahvistussähköposti on matkalla."
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:327
+#, elixir-autogen, elixir-format
+msgid "Of which VAT"
+msgstr "Josta alv"
