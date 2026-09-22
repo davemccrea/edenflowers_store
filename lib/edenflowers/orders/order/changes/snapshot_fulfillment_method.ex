@@ -25,7 +25,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotFulfillmentMethod do
       nil ->
         Ash.Changeset.force_change_attributes(changeset,
           fulfillment_method: nil,
-          fulfillment_tax_percentage: nil,
+          fulfillment_tax_rate: nil,
           fulfillment_option_name: nil
         )
 
@@ -34,7 +34,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotFulfillmentMethod do
           {:ok, %{fulfillment_method: method, name: name, tax_rate: %{percentage: percentage}}} ->
             Ash.Changeset.force_change_attributes(changeset,
               fulfillment_method: method,
-              fulfillment_tax_percentage: percentage,
+              fulfillment_tax_rate: percentage,
               fulfillment_option_name: name
             )
 

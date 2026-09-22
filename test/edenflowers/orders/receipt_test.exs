@@ -211,7 +211,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         customer_email: "anna.lindqvist@example.fi",
         fulfillment_date: ~D[2026-05-16],
         fulfillment_fee: fee,
-        fulfillment_tax_percentage: Decimal.new("0.255"),
+        fulfillment_tax_rate: Decimal.new("0.255"),
         recipient_name: nil,
         recipient_phone_number: nil,
         delivery_address: nil,

@@ -447,7 +447,7 @@ defmodule Edenflowers.Orders.Order do
     # Snapshotted from FulfillmentOption (+ its TaxRate) by
     # SnapshotFulfillmentMethod. Frozen once the order is placed.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
-    attribute :fulfillment_tax_percentage, :decimal
+    attribute :fulfillment_tax_rate, :decimal
     attribute :fulfillment_option_name, :string
     attribute :geocoded_address, :string
     attribute :here_id, :string
@@ -496,8 +496,8 @@ defmodule Edenflowers.Orders.Order do
     calculate :fulfillment_tax,
               :decimal,
               expr(
-                (fulfillment_fee || 0) * (fulfillment_tax_percentage || 0) /
-                  (1 + (fulfillment_tax_percentage || 0))
+                (fulfillment_fee || 0) * (fulfillment_tax_rate || 0) /
+                  (1 + (fulfillment_tax_rate || 0))
               )
 
     calculate :tax, :decimal, expr(items_tax + fulfillment_tax)

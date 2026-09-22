@@ -198,7 +198,7 @@ defmodule Edenflowers.Orders.OrderTest do
         order(
           fulfillment_option_id: fulfillment_option.id,
           fulfillment_fee: fulfillment_fee,
-          fulfillment_tax_percentage: tax_rate_1.percentage
+          fulfillment_tax_rate: tax_rate_1.percentage
         )
       )
 
@@ -1572,7 +1572,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(order.discount_rate)
     end
 
-    test "fulfillment_tax_percentage is snapshotted and immune to later edits" do
+    test "fulfillment_tax_rate is snapshotted and immune to later edits" do
       tax_rate = generate(tax_rate(percentage: "0.10"))
 
       option =
@@ -1588,7 +1588,7 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Orders.create_for_checkout!(authorize?: false)
 
       {:ok, order} = Orders.update_fulfillment_option(order, option.id, authorize?: false)
-      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+      assert Decimal.equal?(order.fulfillment_tax_rate, Decimal.new("0.10"))
 
       Edenflowers.Repo.update_all(
         from(t in "tax_rates", where: t.id == ^Ecto.UUID.dump!(tax_rate.id)),
@@ -1596,7 +1596,7 @@ defmodule Edenflowers.Orders.OrderTest do
       )
 
       order = Orders.get_order_for_checkout!(order.id, authorize?: false)
-      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+      assert Decimal.equal?(order.fulfillment_tax_rate, Decimal.new("0.10"))
     end
 
     test "promotion name and code are snapshotted and immune to later edits" do
@@ -1682,11 +1682,11 @@ defmodule Edenflowers.Orders.OrderTest do
 
       {:ok, order} = Orders.update_fulfillment_option(order, pickup.id, authorize?: false)
       assert order.fulfillment_method == :pickup
-      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.10"))
+      assert Decimal.equal?(order.fulfillment_tax_rate, Decimal.new("0.10"))
 
       {:ok, order} = Orders.update_fulfillment_option(order, delivery.id, authorize?: false)
       assert order.fulfillment_method == :delivery
-      assert Decimal.equal?(order.fulfillment_tax_percentage, Decimal.new("0.25"))
+      assert Decimal.equal?(order.fulfillment_tax_rate, Decimal.new("0.25"))
     end
   end
 end
