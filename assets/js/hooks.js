@@ -902,4 +902,29 @@ Hooks.AutoDismissFlash = {
   },
 };
 
+/**
+ * Follows the link inside the hook element whose `data-arrow-key` matches the
+ * pressed arrow key. Clicking the link keeps LiveView's own navigation.
+ */
+Hooks.ArrowKeyNav = {
+  mounted() {
+    this.onKeydown = (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]")) return;
+
+      const link = this.el.querySelector(`a[data-arrow-key="${e.key}"]`);
+      if (!(link instanceof HTMLElement)) return;
+
+      e.preventDefault();
+      link.click();
+    };
+
+    window.addEventListener("keydown", this.onKeydown);
+  },
+
+  destroyed() {
+    window.removeEventListener("keydown", this.onKeydown);
+  },
+};
+
 export default Hooks;
