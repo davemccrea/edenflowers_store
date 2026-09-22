@@ -29,7 +29,7 @@ defmodule Edenflowers.Orders.Order do
     :cart_effectively_empty?,
     :promotion,
     :fulfillment_option,
-    :line_items
+    line_items: [:total]
   ]
 
   @admin_show_load [
@@ -44,7 +44,7 @@ defmodule Edenflowers.Orders.Order do
     :distance_km,
     :promotion,
     :fulfillment_option,
-    line_items: [:subtotal]
+    line_items: [:subtotal, :total]
   ]
 
   postgres do
@@ -500,7 +500,7 @@ defmodule Edenflowers.Orders.Order do
                   (1 + (fulfillment_tax_rate || 0))
               )
 
-    calculate :tax, :decimal, expr(items_tax + fulfillment_tax)
+    calculate :tax, :decimal, Calculations.Tax
 
     # A cart with only a card line item is presented as empty in the UI
     # (card controls are hidden in the cart sidebar) and shouldn't keep

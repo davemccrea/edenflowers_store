@@ -223,6 +223,26 @@ defmodule Edenflowers.Orders.OrderTest do
            |> Decimal.equal?("12.84")
   end
 
+  test "rounds VAT per rate before calculating total tax" do
+    tax_rate = generate(tax_rate(percentage: "0.255"))
+    product = generate(product(tax_rate_id: tax_rate.id))
+    product_variant = generate(product_variant(product_id: product.id, price: "0.02"))
+
+    order =
+      generate(
+        order(
+          fulfillment_fee: "0.03",
+          fulfillment_tax_rate: "0.14"
+        )
+      )
+
+    generate(line_item(order_id: order.id, product_variant_id: product_variant.id))
+
+    order = Ash.load!(order, :tax, authorize?: false)
+
+    assert Decimal.equal?(order.tax, "0.00")
+  end
+
   test "calling finalise_checkout updates state and payment_state" do
     order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
