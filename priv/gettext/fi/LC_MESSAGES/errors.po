@@ -103,3 +103,6 @@ msgstr "on oltava yhtä suuri kuin %{number}"
 
 msgid "is required"
 msgstr "Tämä kenttä on pakollinen"
+
+msgid "must be present"
+msgstr "Tämä kenttä on pakollinen"

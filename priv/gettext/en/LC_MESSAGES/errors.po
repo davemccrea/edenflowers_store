@@ -113,3 +113,6 @@ msgstr "Must be equal to %{number}"
 
 msgid "is required"
 msgstr "This field is required"
+
+msgid "must be present"
+msgstr "This field is required"
