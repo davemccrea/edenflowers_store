@@ -1,11 +1,12 @@
-<%= gettext("Hi") %>,
+<%= gettext("Hi,") %>
 
-<%= gettext("It looks like you're already subscribed to the Eden Flowers newsletter.") %>
+<%= gettext("You're already on the Eden Flowers newsletter list, so there's no need to sign up again.") %>
 
-<%= gettext("Your 15% off welcome code is still valid. Here it is again:") %>
+<%= gettext("Your 15% welcome code is still valid:") %>
 
     <%= @promo_code %>
 
-<%= gettext("Best regards") %>,
+<%= gettext("Warm wishes,") %>
 
+Jennie
 Eden Flowers

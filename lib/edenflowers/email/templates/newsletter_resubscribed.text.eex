@@ -1,9 +1,8 @@
-<%= gettext("Hi") %>,
+<%= gettext("Hi,") %>
 
-<%= gettext("Welcome back to the Eden Flowers newsletter!") %>
+<%= gettext("Welcome back to the Eden Flowers newsletter.") %>
 
-<%= gettext("Thank you for resubscribing.") %>
+<%= gettext("Warm wishes,") %>
 
-<%= gettext("Best regards") %>,
-
+Jennie
 Eden Flowers

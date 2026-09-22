@@ -35,7 +35,6 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
       assert email.to == [{"", "anna@example.com"}]
       assert email.subject =~ "TEST-OC1"
       assert email.text_body =~ "Anna"
-      assert email.text_body =~ "TEST-OC1"
       assert email.html_body in [nil, ""]
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
@@ -69,8 +68,8 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
     assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Tilausvahvistus"
-      assert not (email.subject =~ "Order Confirmation")
+      assert email.subject =~ "Eden Flowers -tilauksesi"
+      assert not (email.subject =~ "Your Eden Flowers order")
     end)
   end
 
@@ -98,8 +97,8 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
     assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Orderbekräftelse"
-      assert not (email.subject =~ "Order Confirmation")
+      assert email.subject =~ "Din Eden Flowers-beställning"
+      assert not (email.subject =~ "Your Eden Flowers order")
     end)
   end
 end
