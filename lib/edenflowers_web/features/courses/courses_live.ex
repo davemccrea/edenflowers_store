@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       </div>
 
       <div class="col-start-2 sm:col-start-3 sm:row-start-1 sm:text-right">
-        <p class="text-base-content/70 font-serif italic tabular-nums">{Format.currency(@course.price, @locale)}</p>
+        <p class="text-base-content font-serif text-xl tabular-nums">{Format.price(@course.price, @locale)}</p>
         <p class="text-base-content/70 text-sm">{availability(@course)}</p>
       </div>
     </div>

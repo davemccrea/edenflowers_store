@@ -176,6 +176,8 @@ A single warm family — paper at hue ~75, forest at hue ~150 — with one amber
 
 **The Serif-Sans Split Rule.** Serif is for what the shop says — headings, product names, prices, quotes, addresses, opening hours. Sans is for what the interface says about itself — eyebrows, buttons, nav, form labels, the wordmark. A serif button or a sans product name is a defect.
 
+**The Open Price Rule.** A price is never smaller or fainter than the thing it prices: serif, upright, full `base-content`, `text-lg` or larger beside a title. No italic, no muted opacity, no `text-xs`. A price that whispers reads as one being hidden. Storefront prices go through `Format.price/2`, which drops the cents on whole euros.
+
 **The Eyebrow Rule.** A section that needs a category label above its heading uses the eyebrow (0.75rem, 700, uppercase, 0.18em) at `base-content/70`. Never a smaller heading, never a coloured chip, never a pill.
 
 **The Balanced Heading Rule.** Every display, headline, section and pull-quote utility carries `text-balance`. Body copy carries `text-wrap: pretty`. Neither is optional — Swedish and Finnish produce much longer strings than English, and unbalanced headings break first in those locales.
@@ -265,7 +267,7 @@ There are no cards. The product card is a link, a figure and two lines of text w
 - **Figure:** `aspect-[4/5]` (square at `sm`), `bg-cream` behind the image so the loading state is warm rather than blank, `overflow-hidden`.
 - **Image:** scales to 1.04 over 700ms `ease-out` on group hover.
 - **Name:** `card-title`, with the honey underline fading in on group hover.
-- **Price:** serif italic at `base-content/65`, prefixed by the `eyebrow` utility reading "From" (plus `not-italic`, since it sits inside the italic price line).
+- **Price:** serif `text-lg` at full `base-content`, prefixed by the `eyebrow` utility reading "From".
 - **Focus:** a full-bleed `::after` pseudo-element becomes a 2px primary border on `focus-visible`, so the ring frames the whole card rather than the text.
 
 ### Navigation

@@ -12,6 +12,22 @@ defmodule Edenflowers.Format do
   def currency(amount, locale), do: Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
 
   @doc """
+  A storefront price: whole euros drop the cents ("45 €"), anything else keeps
+  them ("45,50 €"). Checkout, receipts and admin use `currency/2` instead, so
+  their columns of totals line up.
+  """
+  @spec price(Decimal.t() | integer | nil, Localize.Locale.locale_id()) :: String.t()
+  def price(nil, locale), do: price(0, locale)
+
+  def price(amount, locale) do
+    if amount |> Decimal.new() |> Decimal.integer?() do
+      Localize.Number.to_string!(amount, locale: locale, currency: :EUR, fractional_digits: 0)
+    else
+      currency(amount, locale)
+    end
+  end
+
+  @doc """
   Money in an explicit currency. Accepts the lowercase currency atoms stored
   on expenses (`:eur`, `:sek`) and upcases them to the ISO codes CLDR expects.
 
