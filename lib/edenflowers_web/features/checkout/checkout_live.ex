@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     />
 
                     <.input
-                      :if={!@order.newsletter_offer_hidden?}
+                      :if={!hide_newsletter_offer?(@order, @current_user)}
                       label={~t"Subscribe to the newsletter to receive 15% off your first order by email."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
@@ -674,6 +674,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # Autofill offers the buyer's own saved details, which are wrong for a gift's recipient.
   defp own_details_autocomplete(%{gift: true, fulfillment_method: :delivery}, _token), do: "off"
   defp own_details_autocomplete(_order, token), do: token
+
+  # The order flag is only stamped once step 1 is submitted, so signed-in
+  # customers need the same check up front or the offer flashes then vanishes.
+  defp hide_newsletter_offer?(%{newsletter_offer_hidden?: true}, _current_user), do: true
+  defp hide_newsletter_offer?(_order, %{newsletter_subscribed?: true}), do: true
+  defp hide_newsletter_offer?(_order, %{newsletter_promo_used?: true}), do: true
+  defp hide_newsletter_offer?(_order, _current_user), do: false
 
   defp actor(socket), do: socket.assigns[:current_user]
 
