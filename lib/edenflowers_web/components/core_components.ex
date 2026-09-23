@@ -232,6 +232,11 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
+
+  attr :help, :string,
+    default: nil,
+    doc: "hint text shown under the input, e.g. why a field is asked for (default text-like inputs only)"
+
   attr :value, :any
   attr :button_text, :string, default: nil
   attr :hidden, :boolean, default: false
@@ -446,7 +451,7 @@ defmodule EdenflowersWeb.CoreComponents do
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
             class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != [] && "true"}
-            aria-describedby={@errors != [] && "#{@id}-error"}
+            aria-describedby={describedby(@id, @errors, @help)}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}
             {@rest}
           />
@@ -466,11 +471,20 @@ defmodule EdenflowersWeb.CoreComponents do
           </div>
         </div>
       </label>
+      <%!-- Outside the label, so it describes the field rather than becoming part of its name. --%>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
     </fieldset>
     """
+  end
+
+  defp describedby(id, errors, help) do
+    case Enum.filter([help && "#{id}-help", errors != [] && "#{id}-error"], & &1) do
+      [] -> nil
+      ids -> Enum.join(ids, " ")
+    end
   end
 
   def error(assigns) do
@@ -933,7 +947,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <p class="font-serif text-base-content text-lg leading-none">
           <span
             :if={@from_price?}
-            class="text-base-content/60 mr-1 font-sans text-xs uppercase tracking-[0.18em]"
+            class="text-base-content/60 font-sans tracking-[0.18em] mr-1 text-xs uppercase"
           >
             {~t"From"}
           </span>
