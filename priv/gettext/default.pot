@@ -2527,3 +2527,34 @@ msgstr ""
 msgctxt "expense confidence"
 msgid "Medium"
 msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:544
+#, elixir-autogen, elixir-format
+msgid "Breadcrumb"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:765
+#, elixir-autogen, elixir-format
+msgid "Business ID:"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1008
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Facebook"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1023
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Instagram"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:239
+#: lib/edenflowers_web/features/marketing/home_live.ex:243
+#, elixir-autogen, elixir-format
+msgid "Evangelical Lutheran Church of Finland"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:501
+#, elixir-autogen, elixir-format
+msgid "Navigation menu"
+msgstr ""

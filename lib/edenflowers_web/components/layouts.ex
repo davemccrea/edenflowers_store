@@ -498,7 +498,7 @@ defmodule EdenflowersWeb.Layouts do
     <.drawer
       id="nav-drawer"
       placement="left"
-      label="Navigation menu"
+      label={~t"Navigation menu"}
       class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
     >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
@@ -762,7 +762,7 @@ defmodule EdenflowersWeb.Layouts do
           </.locale_picker>
 
           <span class="text-xs">
-            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • Y-tunnus:
+            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • {~t"Business ID:"}
             <a
               class="text-base-content link-underline-hover whitespace-nowrap"
               href="https://tietopalvelu.ytj.fi/yritys/2944459-6"

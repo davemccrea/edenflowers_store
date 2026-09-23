@@ -1431,7 +1431,7 @@ msgstr "Kukkia arjen hetkiin"
 #: lib/edenflowers_web/features/marketing/about_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"
-msgstr ""
+msgstr "Poikkea hakemaan valmiita kimppuja, huonekasveja sekä kierrätettyjä ruukkuja ja maljakoita. Jos haluat jotain tilauksesta tehtyä,"
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:18
 #, elixir-autogen, elixir-format
@@ -1441,7 +1441,7 @@ msgstr "Hei, olen Jennie! Olen pyörittänyt Eden Flowersia Vaasassa vuodesta 20
 #: lib/edenflowers_web/features/marketing/about_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "I make flowers for every occasion: christenings, weddings, funerals and everything in between. Whether it's for your own home or for a friend, ordering should be easy, so"
-msgstr ""
+msgstr "Teen kukkia kaikkiin tilaisuuksiin: ristiäisiin, häihin, hautajaisiin ja kaikkeen siltä väliltä. Olipa kyse omasta kodistasi tai ystävästä, tilaamisen pitäisi olla helppoa, joten"
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:22
 #, elixir-autogen, elixir-format
@@ -1451,12 +1451,12 @@ msgstr "ota yhteyttä"
 #: lib/edenflowers_web/features/marketing/about_live.ex:27
 #, elixir-autogen, elixir-format
 msgid "or just pop in."
-msgstr ""
+msgstr "tai poikkea liikkeeseen."
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:26
 #, elixir-autogen, elixir-format
 msgid "order online"
-msgstr ""
+msgstr "tilaa verkosta"
 
 #: lib/edenflowers_web/features/marketing/contact_live.ex:27
 #, elixir-autogen, elixir-format
@@ -1924,7 +1924,7 @@ msgstr "Kuitti"
 #: lib/edenflowers_web/components/cart/line_items.ex:99
 #, elixir-autogen, elixir-format
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
-msgstr ""
+msgstr "Tämän poistaminen tyhjentää ostoskorisi ja poistaa syöttämäsi kassatiedot. Jatketaanko?"
 
 #: lib/edenflowers_web/features/account/account_live.ex:180
 #, elixir-autogen, elixir-format
@@ -2527,3 +2527,34 @@ msgstr "Alhainen"
 msgctxt "expense confidence"
 msgid "Medium"
 msgstr "Keskitaso"
+
+#: lib/edenflowers_web/components/core_components.ex:544
+#, elixir-autogen, elixir-format
+msgid "Breadcrumb"
+msgstr "Murupolku"
+
+#: lib/edenflowers_web/components/layouts.ex:765
+#, elixir-autogen, elixir-format
+msgid "Business ID:"
+msgstr "Y-tunnus:"
+
+#: lib/edenflowers_web/components/core_components.ex:1008
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Facebook"
+msgstr "Eden Flowers Facebookissa"
+
+#: lib/edenflowers_web/components/core_components.ex:1023
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Instagram"
+msgstr "Eden Flowers Instagramissa"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:239
+#: lib/edenflowers_web/features/marketing/home_live.ex:243
+#, elixir-autogen, elixir-format
+msgid "Evangelical Lutheran Church of Finland"
+msgstr "Suomen evankelis-luterilainen kirkko"
+
+#: lib/edenflowers_web/components/layouts.ex:501
+#, elixir-autogen, elixir-format
+msgid "Navigation menu"
+msgstr "Navigointivalikko"
