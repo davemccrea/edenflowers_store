@@ -160,6 +160,7 @@ defmodule EdenflowersWeb.CoreComponents do
   reflect the in-flight submit state. The label and spinner share one grid
   cell, so the button width is stable across idle/loading (no layout shift).
   Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
+  With reduced motion, a static "Processing…" label replaces the spinner.
 
   ## Examples
 
@@ -185,6 +186,7 @@ defmodule EdenflowersWeb.CoreComponents do
         class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
         aria-hidden="true"
       ></span>
+      <span class="form-button-processing col-start-1 row-start-1">{~t"Processing…"}</span>
     </.button>
     """
   end

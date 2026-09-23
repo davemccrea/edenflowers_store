@@ -621,10 +621,15 @@ Hooks.Stripe = {
   },
 
   stripeReady() {
+    this.button.removeAttribute("aria-busy");
     this.liveSocket.execJS(this.el, this.stripeReadyJS);
   },
 
+  // The form's .phx-submit-loading ends when the server acks "pay", but
+  // confirmPayment (and any 3DS challenge) runs long after, so the button
+  // carries its own busy state to keep the spinner up until Stripe settles.
   stripeLoading() {
+    this.button.setAttribute("aria-busy", "true");
     this.liveSocket.execJS(this.el, this.stripeLoadingJS);
   },
 
