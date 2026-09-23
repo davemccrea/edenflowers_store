@@ -285,7 +285,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert reloaded.here_id == "here-id-123"
       assert reloaded.distance == 3000
       assert Decimal.eq?(reloaded.fulfillment_fee, Decimal.new("5.00"))
-      assert reloaded.recipient_phone_number == "045 1234567"
+      assert reloaded.recipient_phone_number == "+358 45 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
     end

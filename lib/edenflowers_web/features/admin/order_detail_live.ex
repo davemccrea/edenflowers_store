@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.PhoneNumber
   alias Edenflowers.External.StripeAPI
   alias EdenflowersWeb.Layouts
 
@@ -196,6 +197,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={customer_phone?(@order) && present?(@order.recipient_phone_number)}>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
+                <:contact :if={pickup_message_urls(@order)}>
+                  <.ready_for_pickup_links urls={pickup_message_urls(@order)} />
+                </:contact>
               </.person_block>
             </.detail_section>
 
@@ -362,6 +366,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
+  attr :urls, :map, required: true
+
+  defp ready_for_pickup_links(assigns) do
+    ~H"""
+    <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+      <a href={@urls.sms} class="link link-primary inline-flex items-center gap-1.5">
+        <.icon name="hero-chat-bubble-left-ellipsis" class="h-3.5 w-3.5 shrink-0" />
+        {~t"Text ready for pickup"}
+      </a>
+      <a
+        href={@urls.whatsapp}
+        target="_blank"
+        rel="noopener"
+        class="link link-primary inline-flex items-center gap-1.5"
+      >
+        <.icon name="hero-chat-bubble-oval-left" class="h-3.5 w-3.5 shrink-0" />
+        {~t"WhatsApp ready for pickup"}
+      </a>
+    </div>
+    """
+  end
+
   attr :order, :map, required: true
 
   defp gift_badge(assigns) do
@@ -478,6 +504,31 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # The phone number is the recipient's only on gift deliveries; the buyer collects pickups.
   defp customer_phone?(order), do: !order.gift or order.fulfillment_method == :pickup
+
+  defp pickup_message_urls(%{fulfillment_method: :pickup, fulfillment_status: :pending} = order) do
+    case PhoneNumber.format(order.recipient_phone_number, :e164) do
+      {:ok, e164} ->
+        body = URI.encode(pickup_message(order), &URI.char_unreserved?/1)
+
+        # iOS reads `&body=`, Android reads `?body=`; `?&body=` satisfies both.
+        %{
+          sms: "sms:#{e164}?&body=#{body}",
+          whatsapp: "https://wa.me/#{String.trim_leading(e164, "+")}?text=#{body}"
+        }
+
+      :error ->
+        nil
+    end
+  end
+
+  defp pickup_message_urls(_order), do: nil
+
+  # Written in the customer's language, not the admin's.
+  defp pickup_message(order) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      ~t"Hi #{order.customer_first_name}, your Eden Flowers order #{order.order_reference} is ready for pick up."
+    end)
+  end
 
   defp present?(nil), do: false
   defp present?(""), do: false

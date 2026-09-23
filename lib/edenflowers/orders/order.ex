@@ -32,6 +32,7 @@ defmodule Edenflowers.Orders.Order do
 
   @admin_show_load [
     :customer_name,
+    :customer_first_name,
     :grand_total,
     :items_subtotal,
     :items_total,
@@ -203,6 +204,7 @@ defmodule Edenflowers.Orders.Order do
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
       validate present(:recipient_phone_number)
+      change {Changes.NormalizePhoneNumber, []}
       change {Changes.CalculateFulfillmentCost, []}
       change transition_state(:payment)
       change load(@checkout_load)

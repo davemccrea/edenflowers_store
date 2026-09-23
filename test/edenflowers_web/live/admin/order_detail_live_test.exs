@@ -140,6 +140,37 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-recipient")
   end
 
+  test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do
+    order = placed_order(recipient_phone_number: "040 123 4567", locale: "sv-FI")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    body = "Hej%20Ada%2C%20din%20best%C3%A4llning%20DETAIL"
+    assert has_element?(view, ~s|#order-customer a[href^="sms:+358401234567?&body=#{body}"]|)
+    assert has_element?(view, ~s|#order-customer a[href^="https://wa.me/358401234567?text=#{body}"]|)
+  end
+
+  test "omits ready-for-pickup links for deliveries and fulfilled pickups", %{conn: conn} do
+    delivery =
+      placed_order(
+        recipient_phone_number: "040 123 4567",
+        fulfillment_method: :delivery,
+        delivery_address: "Kauppapuistikko 20, 65100 Vaasa"
+      )
+
+    fulfilled =
+      placed_order(
+        order_reference: "FULFILLED",
+        recipient_phone_number: "040 123 4567",
+        fulfillment_status: :fulfilled
+      )
+
+    for order <- [delivery, fulfilled] do
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      refute has_element?(view, ~s|a[href^="sms:"]|)
+    end
+  end
+
   test "offers a directions link for a delivery order even without geocoded coordinates", %{conn: conn} do
     order =
       placed_order(
