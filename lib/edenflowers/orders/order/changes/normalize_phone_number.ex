@@ -24,7 +24,7 @@ defmodule Edenflowers.Orders.Order.Changes.NormalizePhoneNumber do
       :error ->
         Ash.Changeset.add_error(changeset,
           field: :recipient_phone_number,
-          message: ~t"Enter a valid phone number"
+          message: ~t"Enter a valid phone number. For non-Finnish numbers, start with the country code, e.g. +44."
         )
     end
   end

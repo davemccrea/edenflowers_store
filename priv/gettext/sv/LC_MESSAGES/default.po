@@ -2509,8 +2509,8 @@ msgstr "Leverans %{fee}"
 
 #: lib/edenflowers/orders/order/changes/normalize_phone_number.ex:27
 #, elixir-autogen, elixir-format
-msgid "Enter a valid phone number"
-msgstr "Ange ett giltigt telefonnummer"
+msgid "Enter a valid phone number. For non-Finnish numbers, start with the country code, e.g. +44."
+msgstr "Ange ett giltigt telefonnummer. För utländska nummer, börja med landsnumret, t.ex. +44."
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:529
 #, elixir-autogen, elixir-format
