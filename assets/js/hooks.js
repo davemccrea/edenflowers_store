@@ -180,7 +180,7 @@ Hooks.FocusElement = {
   // No autofocus on page load: on a phone it opens the keyboard over the page
   // before the customer has seen it.
   mounted() {
-    this.handleEvent("focus-element", ({ id }) => {
+    this.handleEvent("focus-element", ({ id, focus = true }) => {
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         const element = document.getElementById(id);
@@ -196,6 +196,8 @@ Hooks.FocusElement = {
           block: "start",
           behavior: reducedMotion ? "auto" : "smooth",
         });
+
+        if (!focus) return;
 
         // preventScroll keeps keyboard focus working without overriding the
         // scroll position we just set above.
