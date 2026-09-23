@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Order.Changes.NormalizePhoneNumber do
   @moduledoc """
-  Stores the phone number in international format, so the admin's SMS and
+  Stores the phone number in a consistent format, so the admin's SMS and
   WhatsApp links can rely on it. A blank number is left to `present/1`.
   """
   use Ash.Resource.Change
