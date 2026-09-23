@@ -22,6 +22,25 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     {:ok, assign(socket, email: Phoenix.Flash.get(socket.assigns.flash, :otp_email))}
   end
 
+  # The code step keeps the email in the URL so switching language, which
+  # reloads the page, lands back on it. current_path carries the query
+  # because the locale links redirect back to it.
+  def handle_params(params, uri, socket) do
+    socket =
+      case params do
+        %{"email" => email} when email != "" -> assign(socket, email: email)
+        _ -> socket
+      end
+
+    current_path =
+      case URI.parse(uri) do
+        %URI{path: path, query: nil} -> path
+        %URI{path: path, query: query} -> path <> "?" <> query
+      end
+
+    {:noreply, assign(socket, current_path: current_path)}
+  end
+
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash} current_path={@current_path}>
@@ -154,7 +173,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   def handle_event("resend", _params, socket), do: {:noreply, socket}
 
   def handle_event("reset", _params, socket) do
-    {:noreply, reset_state(socket)}
+    {:noreply, socket |> reset_state() |> push_patch(to: ~p"/sign-in")}
   end
 
   def handle_info(:resend_tick, socket) do
@@ -186,7 +205,13 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
 
       _ok ->
         Process.send_after(self(), :resend_tick, 1_000)
-        {:ok, assign(socket, email: email, request_form: form, resend_remaining: @resend_cooldown_seconds)}
+
+        socket =
+          socket
+          |> assign(email: email, request_form: form, resend_remaining: @resend_cooldown_seconds)
+          |> push_patch(to: ~p"/sign-in?#{[email: email]}")
+
+        {:ok, socket}
     end
   end
 
