@@ -431,7 +431,7 @@ msgstr ""
 msgid "Delivery address required"
 msgstr "Delivery address required"
 
-#: lib/edenflowers_web/features/checkout/components/address_input.ex:190
+#: lib/edenflowers_web/features/checkout/components/address_input.ex:198
 #, elixir-autogen, elixir-format
 msgid "Free delivery!"
 msgstr ""
@@ -2499,4 +2499,9 @@ msgstr ""
 #: lib/edenflowers_web/components/layouts.ex:501
 #, elixir-autogen, elixir-format
 msgid "Navigation menu"
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/components/address_input.ex:199
+#, elixir-autogen, elixir-format
+msgid "Delivery %{fee}"
 msgstr ""
