@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Auth.AuthController do
   use AshAuthentication.Phoenix.Controller
 
   def success(conn, activity, user, _token) do
-    return_to = get_session(conn, :return_to) || default_return_to(user)
+    return_to = get_session(conn, :return_to) || ~p"/"
 
     message =
       case activity do
@@ -19,9 +19,6 @@ defmodule EdenflowersWeb.Auth.AuthController do
     |> put_flash(:info, message)
     |> redirect(to: return_to)
   end
-
-  defp default_return_to(%{admin: true}), do: ~p"/admin"
-  defp default_return_to(_user), do: ~p"/"
 
   def failure(conn, activity, reason) do
     message =
