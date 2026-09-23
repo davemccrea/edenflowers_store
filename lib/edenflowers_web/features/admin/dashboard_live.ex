@@ -150,10 +150,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     <li>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class={[
-          "grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors focus-visible:-outline-offset-2",
-          @hover_class
-        ]}
+        class={["grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors focus-visible:-outline-offset-2", @hover_class]}
       >
         <div class="min-w-0">
           <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -178,7 +175,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           </div>
 
           <ul class="text-base-content/85 mt-1 space-y-0.5 text-sm">
-            <li :for={item <- @items} class="truncate">
+            <li :for={item <- @items} class="truncate" phx-no-format>
               <span class="text-base-content font-semibold tabular-nums">{item.quantity} ×</span>
               {item.product_name}<span :if={item.variant_size} class="text-base-content/65">, {variant_size_label(item.variant_size)}</span>
             </li>
