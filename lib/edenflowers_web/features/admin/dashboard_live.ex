@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Orders
-  alias Edenflowers.Expenses
   alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -16,7 +15,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
     open_orders = Orders.list_open_orders!(actor: actor)
-    expenses_to_review = Expenses.list_expenses_needing_review!(actor: actor)
 
     today = @timezone |> DateTime.now!() |> DateTime.to_date()
 
@@ -33,17 +31,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       |> Enum.group_by(& &1.fulfillment_date)
       |> Enum.sort_by(fn {date, _} -> date end, Date)
 
-    low_confidence_count =
-      Enum.count(expenses_to_review, &(&1.confidence == :low))
-
     {:ok,
      socket
      |> assign(:page_title, ~t"Dashboard")
      |> assign(:locale, Localize.get_locale())
      |> assign(:orders_by_date, orders_by_date)
      |> assign(:open_order_count, length(open_orders))
-     |> assign(:expenses_to_review, expenses_to_review)
-     |> assign(:low_confidence_count, low_confidence_count)
      |> assign(:sales_count, length(sales_this_month))
      |> assign(:revenue, sales_this_month |> Enum.map(& &1.grand_total) |> Enum.reduce(Decimal.new(0), &Decimal.add/2))
      |> assign(:today, today)}
@@ -62,11 +55,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             orders_by_date={@orders_by_date}
             open_order_count={@open_order_count}
             today={@today}
-            locale={@locale}
-          />
-          <.expenses_widget
-            expenses_to_review={@expenses_to_review}
-            low_confidence_count={@low_confidence_count}
             locale={@locale}
           />
         </div>
@@ -195,69 +183,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp present?(nil), do: false
   defp present?(value), do: String.trim(value) != ""
-
-  attr :expenses_to_review, :list, required: true
-  attr :low_confidence_count, :integer, required: true
-  attr :locale, :any, required: true
-
-  defp expenses_widget(assigns) do
-    ~H"""
-    <.widget title={~t"Unreviewed Expenses"} count={length(@expenses_to_review)}>
-      <div :if={@expenses_to_review == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
-        <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
-        <p class="text-sm">{~t"All caught up"}</p>
-      </div>
-
-      <div :if={@expenses_to_review != []}>
-        <div
-          :if={@low_confidence_count > 0}
-          class="bg-warning/15 border-warning/40 mb-3 flex items-center gap-2 border px-3 py-2 text-sm"
-        >
-          <.icon name="hero-exclamation-triangle" class="text-warning-content h-4 w-4 shrink-0" />
-          <span class="text-warning-content font-medium">
-            {if @low_confidence_count == 1,
-              do: ~t"1 expense needs attention",
-              else: ~t"#{@low_confidence_count} expenses need attention"}
-          </span>
-        </div>
-
-        <ul class="divide-base-content/8 -mx-3 divide-y">
-          <li :for={expense <- Enum.take(@expenses_to_review, 5)}>
-            <.link
-              navigate={~p"/admin/expenses/#{expense.id}"}
-              class="flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2"
-            >
-              <span class="flex min-w-0 items-center gap-2">
-                <span
-                  :if={expense.confidence == :low}
-                  aria-hidden="true"
-                  class="bg-warning h-1.5 w-1.5 shrink-0 rounded-full"
-                />
-                <span class={["text-base-content truncate", expense.confidence == :low && "font-medium"]}>
-                  {expense.vendor_name || ~t"Unknown"}
-                  <span :if={expense.confidence == :low} class="sr-only">{~t"(low confidence)"}</span>
-                </span>
-              </span>
-              <span class="text-base-content/65 shrink-0 text-sm tabular-nums">
-                {Format.amount(expense.total_amount, expense.currency, @locale) || "—"}
-              </span>
-            </.link>
-          </li>
-        </ul>
-
-        <div :if={length(@expenses_to_review) > 5} class="text-base-content/65 mt-2 text-xs">
-          {~t"+#{length(@expenses_to_review) - 5} more"}
-        </div>
-
-        <div class="border-base-content/12 mt-4 border-t pt-2">
-          <.link navigate={~p"/admin/expenses"} class="text-primary inline-block py-1 text-sm hover:underline">
-            {~t"Review all"} →
-          </.link>
-        </div>
-      </div>
-    </.widget>
-    """
-  end
 
   defp date_group(date, today) do
     case Date.compare(date, today) do
