@@ -195,6 +195,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                       <.input
                         label={recipient_label(@order, :phone)}
+                        help={phone_help(@order)}
                         placeholder="040 123 4567"
                         field={@form[:recipient_phone_number]}
                         type="tel"
@@ -670,6 +671,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       {:phone, _} -> gettext("Phone number *")
     end
   end
+
+  defp phone_help(%{fulfillment_method: :pickup}),
+    do: gettext("I'll send a message when your order is ready for pick up.")
+
+  defp phone_help(%{gift: true, fulfillment_method: :delivery, recipient_first_name: first_name})
+       when is_binary(first_name),
+       do: gettext("I'll only call if I need to reach %{name} about the delivery.", name: first_name)
+
+  defp phone_help(_order), do: gettext("I'll only call if I need to reach you about the delivery.")
 
   # Autofill offers the buyer's own saved details, which are wrong for a gift's recipient.
   defp own_details_autocomplete(%{gift: true, fulfillment_method: :delivery}, _token), do: "off"
