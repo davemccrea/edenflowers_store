@@ -143,8 +143,8 @@ A single warm family — paper at hue ~75, forest at hue ~150 — with one amber
 ### Neutral
 - **Warm Off-White** (`{colors.base-100}`): the page. Header background, input backgrounds, the base of the product mark.
 - **Light Warm Oat** (`{colors.base-200}`): the first tonal step up — admin table tracks, subtle recessed areas.
-- **Warm Oat** (`{colors.base-300}`): borders and dividers, including the default rule between sections and the resting border of radio cards.
-- **Near-Black Warm Grey** (`{colors.base-content}`): all body and heading text. Its `/65`, `/70`, `/60`, `/40` and `/15` mixes are the system's entire secondary-text and decoration scale — there is no separate muted-text token.
+- **Warm Oat** (`{colors.base-300}`): the resting border of radio cards and floating menus, and hover fills in the admin sidebar. It is not the rule colour: at 93.5% on a 99% page it is too faint to structure anything. Rules use `base-content/12` (see The Hairline Rule).
+- **Near-Black Warm Grey** (`{colors.base-content}`): all body and heading text. Its `/65`, `/70`, `/60`, `/40`, `/15`, `/12` and `/8` mixes are the system's entire secondary-text, rule and decoration scale — there is no separate muted-text token.
 
 ### Named Rules
 
@@ -198,7 +198,7 @@ A single centred container (`mx-auto px-4 sm:px-8`) governs horizontal rhythm, a
 
 ### Named Rules
 
-**The Rule-Not-Card Rule.** Vertical separation between sections is a one-pixel border (`not-last:border-b`) in `base-300`. Do not introduce a card, a panel, a margin-only gap, or an alternating background to separate sections. A background change (`cream`, `forest`) is reserved for sections that are genuinely a different kind of thing.
+**The Rule-Not-Card Rule.** Vertical separation between sections is a one-pixel border (`not-last:border-b`). Between full-width page sections it carries no colour class and so draws in full `base-content` ink; rules inside content use `base-content/12` (see The Hairline Rule). Do not introduce a card, a panel, a margin-only gap, or an alternating background to separate sections. A background change (`cream`, `forest`) is reserved for sections that are genuinely a different kind of thing.
 
 **The Full-Bleed Rule.** Photographs run to the container edge or past it. On mobile the carousel deliberately breaks out to the viewport edges (`margin-inline: calc(50% - 50vw)`). Never frame a photograph with a border, a radius, a shadow, or a caption box.
 
@@ -228,7 +228,7 @@ Square is the system. Buttons are explicitly `rounded-none` against daisyUI's de
 - **No 0.25rem tier.** There used to be one — the radio card, the checkout date-picker frame, the admin warning banner, the admin calendar's cells, swatches and weekday chips, the admin nav's `rounded-r`, and the skip link all carried `0.25rem`. None of it was a deliberate tier: every one was hand-matching daisyUI's old `--radius-field` default. When that token went to `0` they were orphaned, and a soft radio card sitting above a square text input in the same checkout step is what it looked like. All removed.
 - **Badges:** daisyUI rounds `.badge` with `--radius-selector`, so the admin status badges (confidence, payment, fulfillment, category) are soft pills. That is intended: a status reads as a tag, not as a field.
 - **Pills:** `9999px` on the cart count badge, avatar initials, carousel dots, the calendar strike and the admin scrollbar thumb, where the shape *is* the meaning. These are the only curves left in the system.
-- **Borders:** one pixel, `base-300`, used as separation rather than as containment. The product mark is the exception: a hairline frame at `base-content/55` over a 85%-opaque `base-100` backdrop with a 2px blur, so a label sits *on* a photograph instead of being burned into it.
+- **Borders:** one pixel, in ink or `base-content/12` (see The Hairline Rule), used as separation rather than as containment. The product mark is the exception: a hairline frame at `base-content/55` over a 85%-opaque `base-100` backdrop with a 2px blur, so a label sits *on* a photograph instead of being burned into it.
 - **Decoration:** line-drawn flower SVGs (`priv/svg/`, inlined at compile time, `fill: currentColor`) are the only ornament. They appear at low opacity (`/15`, `/70`) as watermarks in quiet corners — the footer's top-right, reverse-out sections. They are always `aria-hidden`.
 - **Calendar primitives:** the admin fulfillment calendar has its own tiny shape vocabulary — a 45° strike through a closed cell (`::after`), a top-right triangle for a rule override (`::before`), and 45° repeating stripes for a mixed state. Two of them layer, which is why they use different pseudo-elements.
 
@@ -238,7 +238,13 @@ Square is the system. Buttons are explicitly `rounded-none` against daisyUI's de
 
 **The Orphan Rule.** A hand-written value that duplicates a token is a future defect. The old `0.25rem` sites were invisible until the token beneath them moved — then a radio card and the text input below it disagreed in the same form. If you find yourself typing a value that a token already sets, delete the value.
 
-**The Hairline Rule.** Borders are 1px. If a boundary needs more weight than a hairline, it needs a different colour surface, not a thicker border.
+**The Hairline Rule.** Borders are 1px. If a boundary needs more weight than a hairline, it needs a different colour surface, not a thicker border. The weight comes from colour, in three steps:
+
+- **Ink** (a bare `border-b`, which Tailwind v4 draws in `currentColor`, so full `base-content`): the rule between full-width page sections on the home and weddings pages. The one line that is meant to be seen from across the room. The admin does not use ink anywhere: tried on its sidebar, top bars, page-header and totals rules, it read heavier than the tool wants. Its strongest line is the `/12` rule.
+- **Rule** (`border-base-content/12`): rules inside content (account, checkout steps, course details, FAQ), table and list edges, the edge of an admin panel, the admin sidebar and top bars, a totals rule.
+- **Row** (`divide-base-content/8`): dividers between rows inside something that already has a rule around it, so the container still reads above its rows.
+
+A tinted divider that carries meaning (the admin dashboard's overdue `divide-error/15` and today `divide-success/20`) keeps its tint. The admin used to draw its lines in `base-300/70` and `/50`, about half the contrast of the storefront's, and on a panel that sits on the same `base-100` as the page, that left the border as the only edge and made it nearly invisible. Do not reach for `base-300` to draw a line.
 
 ## Components
 

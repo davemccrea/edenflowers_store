@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           <:subtitle>{~t"Your admin profile and session."}</:subtitle>
         </.admin_page_header>
 
-        <section class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
+        <section class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
           <div class="mb-5 flex items-center gap-3">
             <img
               :if={@current_user.avatar_content_type}
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </div>
           </div>
 
-          <dl class="divide-base-300/50 divide-y">
+          <dl class="divide-base-content/8 divide-y">
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt id="avatar-label" class="text-base-content/65 text-sm sm:pt-1.5">{~t"Picture"}</dt>
               <dd>
@@ -135,7 +135,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </div>
           </dl>
 
-          <div class="border-base-300/70 mt-5 border-t pt-5">
+          <div class="border-base-content/12 mt-5 border-t pt-5">
             <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="max-sm:h-11">
               <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
               {~t"Sign out"}
