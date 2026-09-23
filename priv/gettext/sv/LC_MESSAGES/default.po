@@ -431,7 +431,7 @@ msgstr "%{name}s telefonnummer *"
 msgid "Delivery address required"
 msgstr "Leveransadress krävs"
 
-#: lib/edenflowers_web/features/checkout/components/address_input.ex:190
+#: lib/edenflowers_web/features/checkout/components/address_input.ex:198
 #, elixir-autogen, elixir-format
 msgid "Free delivery!"
 msgstr "Gratis leverans!"
@@ -2500,3 +2500,8 @@ msgstr "Evangelisk-lutherska kyrkan i Finland"
 #, elixir-autogen, elixir-format
 msgid "Navigation menu"
 msgstr "Navigeringsmeny"
+
+#: lib/edenflowers_web/features/checkout/components/address_input.ex:199
+#, elixir-autogen, elixir-format
+msgid "Delivery %{fee}"
+msgstr "Leverans %{fee}"

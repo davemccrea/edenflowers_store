@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   @moduledoc """
   Delivery address input with asynchronous geocoding on blur.
 
-  Geocoding runs on blur for the visual feedback ("3.0 km • 5.00") but
+  Geocoding runs on blur for the visual feedback ("Delivery 5,00 € (3,0 km)") but
   the result is *not* trusted by the server. On submit, `submit_delivery`
   re-derives `geocoded_address`, `position`, `here_id`, `distance`, and
   `fulfillment_fee` server-side via `CalculateFulfillmentCost`, so a
@@ -63,13 +63,20 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         loading={@loading}
         confirmed={confirmed?(@typed, @confirmed, @loading)}
       />
-      <p
-        :if={confirmed?(@typed, @confirmed, @loading)}
-        data-testid="address-distance"
-        class="mt-1.5 text-sm"
-      >
-        {format_distance(@confirmed.result.distance)} • {format_delivery_amount(@confirmed.result.fulfillment_fee, @order)}
-      </p>
+      <div aria-live="polite">
+        <p
+          :if={confirmed?(@typed, @confirmed, @loading)}
+          data-testid="address-distance"
+          class="mt-1.5 text-sm"
+        >
+          <span class={free?(@confirmed.result.fulfillment_fee) && "text-success"}>
+            {format_delivery_amount(@confirmed.result.fulfillment_fee, @order)}
+          </span>
+          <span :if={@confirmed.result.distance} class="text-base-content/65">
+            ({format_distance(@confirmed.result.distance, @order)})
+          </span>
+        </p>
+      </div>
     </div>
     """
   end
@@ -177,16 +184,21 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   defp errors({_kind, message}, _touched), do: [message]
   defp errors(nil, _touched), do: []
 
-  defp format_distance(nil), do: ""
+  defp format_distance(meters, _order) when meters < 1000, do: "#{meters} m"
 
-  defp format_distance(meters) when is_integer(meters) do
-    km = meters / 1000
-    if km < 1, do: "#{meters} m", else: "#{:erlang.float_to_binary(km, decimals: 1)} km"
+  defp format_distance(meters, order) do
+    km = Localize.Number.to_string!(meters / 1000, locale: order.locale, fractional_digits: 1)
+    "#{km} km"
   end
 
   defp format_delivery_amount(nil, _order), do: ""
 
   defp format_delivery_amount(amount, order) do
-    if Decimal.eq?(amount, 0), do: ~t"Free delivery!", else: Edenflowers.Format.currency(amount, order.locale)
+    if free?(amount),
+      do: ~t"Free delivery!",
+      else: ~t"Delivery #{fee = Edenflowers.Format.currency(amount, order.locale)}"
   end
+
+  defp free?(nil), do: false
+  defp free?(amount), do: Decimal.eq?(amount, 0)
 end
