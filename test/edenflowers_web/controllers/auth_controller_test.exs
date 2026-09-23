@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.AuthControllerTest do
   alias EdenflowersWeb.Auth.AuthController
 
   describe "success/4" do
-    test "redirects admins to /admin when no return_to was captured", %{conn: conn} do
+    test "redirects admins to / when no return_to was captured", %{conn: conn} do
       admin = generate(admin_user()) |> with_token()
 
       conn =
@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.AuthControllerTest do
         |> init_auth_session(%{})
         |> AuthController.success({:password, :sign_in}, admin, nil)
 
-      assert redirected_to(conn) == ~p"/admin"
+      assert redirected_to(conn) == ~p"/"
     end
 
     test "redirects non-admin users to / when no return_to was captured", %{conn: conn} do
@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.AuthControllerTest do
   end
 
   describe "GET /sign-in" do
-    test "redirects an already-signed-in admin to /admin", %{conn: conn} do
+    test "redirects an already-signed-in admin to /", %{conn: conn} do
       admin = generate(admin_user()) |> with_token()
 
       conn =
@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.AuthControllerTest do
         |> Plug.Test.init_test_session(%{})
         |> Helpers.store_in_session(admin)
 
-      assert {:error, {:redirect, %{to: "/admin"}}} = live(conn, ~p"/sign-in")
+      assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/sign-in")
     end
 
     test "redirects an already-signed-in non-admin user to /", %{conn: conn} do

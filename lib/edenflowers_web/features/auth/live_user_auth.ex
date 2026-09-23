@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
     current_user = socket.assigns[:current_user]
 
     if current_user do
-      {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_redirect(current_user))}
+      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
     else
       {:cont, assign(socket, :current_user, nil)}
     end
@@ -82,7 +82,4 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
       _ -> path
     end
   end
-
-  defp signed_in_redirect(%{admin: true}), do: ~p"/admin"
-  defp signed_in_redirect(_user), do: ~p"/"
 end
