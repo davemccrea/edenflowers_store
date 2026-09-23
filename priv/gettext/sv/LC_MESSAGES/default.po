@@ -2170,8 +2170,8 @@ msgstr "Betalningen är bekräftad. Ett bekräftelsemejl är på väg."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:327
 #, elixir-autogen, elixir-format
-msgid "Of which VAT"
-msgstr "Varav moms"
+msgid "Includes VAT"
+msgstr "Inklusive moms"
 
 #: lib/edenflowers/email/templates/newsletter_promo.text.eex:5
 #, elixir-autogen, elixir-format

@@ -2170,7 +2170,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:327
 #, elixir-autogen, elixir-format
-msgid "Of which VAT"
+msgid "Includes VAT"
 msgstr ""
 
 #: lib/edenflowers/email/templates/newsletter_promo.text.eex:5

@@ -2170,8 +2170,8 @@ msgstr "Maksu vastaanotettu. Vahvistussähköposti on matkalla."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:327
 #, elixir-autogen, elixir-format
-msgid "Of which VAT"
-msgstr "Josta alv"
+msgid "Includes VAT"
+msgstr "Sisältää ALV:n"
 
 #: lib/edenflowers/email/templates/newsletter_promo.text.eex:5
 #, elixir-autogen, elixir-format
