@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Endpoint do
     raise_on_missing_only: code_reloading?
 
   if Code.ensure_loaded?(Tidewave) do
-    plug Tidewave
+    plug Tidewave, toolbar: false
   end
 
   # Code reloading can be explicitly enabled under the
