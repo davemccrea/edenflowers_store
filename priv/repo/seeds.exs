@@ -26,17 +26,21 @@ alias Edenflowers.Expenses.Expense
 
 require Ash.Query
 
-# Admin user. `admin` is writable?: false on the resource so normal Ash actions
+# Admin users. `admin` is writable?: false on the resource so normal Ash actions
 # can't set it — raw SQL is the appropriate escape hatch for seed setup.
-admin_email = "mail@dmccrea.me"
-admin_name = "David McCrea"
+admins = [
+  {"mail@dmccrea.me", "David McCrea"},
+  {"info@edenflowers.fi", "Jennie McCrea"}
+]
 
-case Repo.query!("SELECT id FROM users WHERE email = $1", [admin_email]).rows do
-  [] ->
-    Ash.Seed.seed!(User, %{email: admin_email, name: admin_name, admin: true})
+for {admin_email, admin_name} <- admins do
+  case Repo.query!("SELECT id FROM users WHERE email = $1", [admin_email]).rows do
+    [] ->
+      Ash.Seed.seed!(User, %{email: admin_email, name: admin_name, admin: true})
 
-  [[_id]] ->
-    Repo.query!("UPDATE users SET admin = true, name = $1 WHERE email = $2", [admin_name, admin_email])
+    [[_id]] ->
+      Repo.query!("UPDATE users SET admin = true, name = $1 WHERE email = $2", [admin_name, admin_email])
+  end
 end
 
 tax_rate =
