@@ -15,7 +15,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       render_blur: 2,
       render_submit: 2,
       render_async: 1,
-      assert_redirect: 2
+      assert_redirect: 2,
+      assert_push_event: 3,
+      refute_push_event: 3
     ]
 
   import ExUnit.CaptureLog
@@ -656,6 +658,29 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
 
       assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
+    end
+  end
+
+  describe "Returning to checkout" do
+    test "scrolls to the current step without focusing it", %{conn: conn, variant: variant} do
+      gift_order = generate(order(state: :gift_options, gift: true))
+      Orders.add_line_item!(gift_order, variant.id, 1, authorize?: false)
+
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+        |> live("/checkout")
+
+      assert_push_event(view, "focus-element", %{id: "checkout-section-gift_options", focus: false})
+    end
+
+    test "does not scroll on the first step", %{conn: conn, order: order} do
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> live("/checkout")
+
+      refute_push_event(view, "focus-element", %{})
     end
   end
 

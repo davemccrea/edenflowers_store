@@ -50,7 +50,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:order, order)
        |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
        |> assign(:client_secret, nil)
-       |> maybe_setup_payment(order, actor(socket))}
+       |> maybe_setup_payment(order, actor(socket))
+       |> maybe_scroll_to_current_step()}
     else
       {:error, :empty_cart} ->
         # Mounting with an effectively-empty cart means the customer either
@@ -800,6 +801,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp scroll_to_state(socket, state) do
     push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
+  end
+
+  # Returning to checkout mid-way lands the customer on the step they left.
+  # No focus: on a phone it would open the keyboard before they see the page.
+  defp maybe_scroll_to_current_step(%{assigns: %{order: %{state: :contact_details}}} = socket), do: socket
+
+  defp maybe_scroll_to_current_step(socket) do
+    if connected?(socket) do
+      push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, socket.assigns.order.state), focus: false})
+    else
+      socket
+    end
   end
 
   # We only touch Stripe once the customer is on the payment state. Earlier
