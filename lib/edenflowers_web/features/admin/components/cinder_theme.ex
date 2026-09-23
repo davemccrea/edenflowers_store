@@ -21,8 +21,8 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   extends :daisy_ui
 
   set :container_class, "min-w-0"
-  set :controls_class, "card card-sm card-border bg-base-100 mb-4 overflow-visible"
-  set :table_wrapper_class, "admin-table-scroll card card-border bg-base-100 overflow-x-auto max-w-full"
+  set :controls_class, "card card-sm card-border border-base-content/12 bg-base-100 mb-4 overflow-visible"
+  set :table_wrapper_class, "admin-table-scroll card card-border border-base-content/12 bg-base-100 overflow-x-auto max-w-full"
   set :table_class, "table table-zebra w-full min-w-max"
   set :td_class, "align-top"
 

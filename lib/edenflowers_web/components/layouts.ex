@@ -210,7 +210,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={~t"Admin navigation"}
-        class="bg-base-200 border-base-300 flex h-full w-64 flex-col border-r"
+        class="bg-base-200 border-base-content/12 flex h-full w-64 flex-col border-r"
       >
         <.admin_sidebar_content
           primary_nav={@primary_nav}
@@ -222,7 +222,7 @@ defmodule EdenflowersWeb.Layouts do
       </.drawer>
 
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
-      <aside class="bg-base-200 border-base-300 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
+      <aside class="bg-base-200 border-base-content/12 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
         <.admin_sidebar_content
           primary_nav={@primary_nav}
           system_nav={@system_nav}
@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Layouts do
         <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
              The trailing spacer matches the button cell so the center column is
              truly centered on the bar, not on the leftover space. --%>
-        <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-300/70 grid items-center border-b px-2 py-2.5 lg:hidden">
+        <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-content/12 grid items-center border-b px-2 py-2.5 lg:hidden">
           <button
             type="button"
             phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
@@ -254,7 +254,7 @@ defmodule EdenflowersWeb.Layouts do
           <.admin_account_menu current_user={@current_user} compact={true} />
         </div>
 
-        <div class="border-base-300/70 hidden items-center justify-end border-b px-8 py-3 lg:flex">
+        <div class="border-base-content/12 hidden items-center justify-end border-b px-8 py-3 lg:flex">
           <.admin_account_menu current_user={@current_user} />
         </div>
 
@@ -309,7 +309,7 @@ defmodule EdenflowersWeb.Layouts do
         />
       </nav>
 
-      <div class="border-base-300/70 mt-auto border-t px-3 pt-4">
+      <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
         <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
           <span class="text-base-content/65 flex items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
             <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />

@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </:actions>
         </.admin_page_header>
 
-        <section class="border-base-300/70 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
+        <section class="border-base-content/12 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
           <div class="min-w-0">
             <p class="eyebrow text-base-content/65 mb-1">{~t"Total amount"}</p>
             <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">

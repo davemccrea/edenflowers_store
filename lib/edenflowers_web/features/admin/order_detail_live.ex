@@ -71,7 +71,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
         <section
           id="order-fulfillment-summary"
-          class="bg-base-100 border-base-300/70 mb-6 border p-4 sm:p-5"
+          class="bg-base-100 border-base-content/12 mb-6 border p-4 sm:p-5"
         >
           <div class="mb-5 flex items-center justify-between gap-4">
             <h2 class="text-base-content text-base font-semibold">{~t"Fulfillment"}</h2>
@@ -239,7 +239,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       id="order-queue-nav"
       phx-hook="ArrowKeyNav"
       aria-label={~t"Orders to fulfil"}
-      class="border-base-300 bg-base-100 divide-base-300 flex h-9 items-stretch divide-x border text-sm"
+      class="border-base-content/12 bg-base-100 divide-base-content/12 flex h-9 items-stretch divide-x border text-sm"
     >
       <.queue_link to={@queue.previous} icon="hero-chevron-left" label={~t"Previous order"} arrow_key="ArrowLeft" />
       <span class="text-base-content/80 flex items-center px-3 tabular-nums">
@@ -284,7 +284,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp detail_section(assigns) do
     ~H"""
-    <section id={@id} class="bg-base-100 border-base-300/70 border p-4 sm:p-5">
+    <section id={@id} class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
       <h2 class="text-base-content mb-4 text-base font-semibold">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
@@ -296,7 +296,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp readonly_line_items(assigns) do
     ~H"""
-    <ul class="divide-base-300/70 divide-y">
+    <ul class="divide-base-content/8 divide-y">
       <li :for={line_item <- @line_items} class="flex gap-4 py-4 first:pt-0 last:pb-0">
         <.image
           src={line_item.product_image_slug}
@@ -402,7 +402,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
 
     ~H"""
-    <div :if={@directions} class="border-base-300/70 mt-6 overflow-hidden border">
+    <div :if={@directions} class="border-base-content/12 mt-6 overflow-hidden border">
       <a
         href={@directions}
         target="_blank"
@@ -435,7 +435,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-300/70 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>

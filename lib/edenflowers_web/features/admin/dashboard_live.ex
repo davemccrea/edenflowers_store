@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         </section>
       </div>
 
-      <div :if={@orders_by_date != []} class="border-base-300/70 mt-4 border-t pt-3">
+      <div :if={@orders_by_date != []} class="border-base-content/12 mt-4 border-t pt-3">
         <.link navigate={~p"/admin/orders"} class="text-primary inline-block py-1 text-sm hover:underline">
           {~t"View all orders"} →
         </.link>
@@ -226,7 +226,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           </span>
         </div>
 
-        <ul class="divide-base-300/50 -mx-3 divide-y">
+        <ul class="divide-base-content/8 -mx-3 divide-y">
           <li :for={expense <- Enum.take(@expenses_to_review, 5)}>
             <.link
               navigate={~p"/admin/expenses/#{expense.id}"}
@@ -254,7 +254,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           {~t"+#{length(@expenses_to_review) - 5} more"}
         </div>
 
-        <div class="border-base-300/70 mt-4 border-t pt-2">
+        <div class="border-base-content/12 mt-4 border-t pt-2">
           <.link navigate={~p"/admin/expenses"} class="text-primary inline-block py-1 text-sm hover:underline">
             {~t"Review all"} →
           </.link>
@@ -282,7 +282,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp date_divider_class(:overdue), do: "divide-error/15"
   defp date_divider_class(:today), do: "divide-success/20"
-  defp date_divider_class(:upcoming), do: "divide-base-300/50"
+  defp date_divider_class(:upcoming), do: "divide-base-content/8"
 
   defp date_row_hover_class(:overdue), do: "hover:bg-error/10"
   defp date_row_hover_class(:today), do: "hover:bg-success/15"
