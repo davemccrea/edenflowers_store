@@ -15,7 +15,7 @@ defmodule Generator do
   def admin_user(opts \\ []) do
     seed_generator(
       %User{
-        email: sequence(:admin_email, &"admin#{&1}@example.com"),
+        email: StreamData.repeatedly(fn -> "admin#{System.unique_integer([:positive])}@example.com" end),
         name: "Admin",
         admin: true
       },
@@ -29,7 +29,7 @@ defmodule Generator do
       TaxRate,
       :create,
       defaults: %{
-        name: sequence(:tax_rate_name, &"Tax Rate #{&1}"),
+        name: StreamData.repeatedly(fn -> "Tax Rate #{System.unique_integer([:positive])}" end),
         percentage: "0.255"
       },
       overrides: opts,
@@ -43,7 +43,7 @@ defmodule Generator do
       :create,
       defaults: %{
         name: words(),
-        code: sequence(:promotion_code, &"PROMO-#{&1}"),
+        code: StreamData.repeatedly(fn -> "PROMO-#{System.unique_integer([:positive])}" end),
         discount_rate: "0.20",
         minimum_cart_total: "0",
         start_date: nil,
@@ -80,7 +80,7 @@ defmodule Generator do
       defaults: %{
         product_category_id: product_category_id,
         tax_rate_id: tax_rate_id,
-        name: sequence(:product_name, &"Product #{&1}"),
+        name: StreamData.repeatedly(fn -> "Product #{System.unique_integer([:positive])}" end),
         description: words(),
         image_slug: "image.png"
       },
@@ -138,7 +138,7 @@ defmodule Generator do
     changeset_generator(FulfillmentOption, :create,
       defaults: %{
         tax_rate_id: tax_rate_id,
-        name: sequence(:fulfillment_option_name, &"Fulfillment Option #{&1}"),
+        name: StreamData.repeatedly(fn -> "Fulfillment Option #{System.unique_integer([:positive])}" end),
         fulfillment_method: :pickup,
         sort_key: sort_key,
         rate_type: :fixed,
