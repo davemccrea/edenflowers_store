@@ -541,7 +541,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def breadcrumb(assigns) do
     ~H"""
-    <div class={["breadcrumbs", @class]} role="navigation" aria-label="Breadcrumb" data-testid="breadcrumb">
+    <div class={["breadcrumbs", @class]} role="navigation" aria-label={~t"Breadcrumb"} data-testid="breadcrumb">
       <ul>
         <%= for {item, index} <- Enum.with_index(@item) do %>
           <li :if={index == length(@item) - 1} aria-current="page" data-testid="breadcrumb-current">
@@ -1005,7 +1005,7 @@ defmodule EdenflowersWeb.CoreComponents do
         href="https://www.facebook.com/edenflowers.fi/"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Eden Flowers on Facebook"
+        aria-label={~t"Eden Flowers on Facebook"}
         class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image
@@ -1020,7 +1020,7 @@ defmodule EdenflowersWeb.CoreComponents do
         href="https://www.instagram.com/edenflowers.fi/"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Eden Flowers on Instagram"
+        aria-label={~t"Eden Flowers on Instagram"}
         class="inline-block transition duration-300 hover:opacity-60"
       >
         <.image

@@ -236,11 +236,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 class="block"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Evangelical Lutheran Church of Finland"
+                aria-label={~t"Evangelical Lutheran Church of Finland"}
               >
                 <img
                   src="/images/logo-evl.svg"
-                  alt="Evangelical Lutheran Church of Finland"
+                  alt={~t"Evangelical Lutheran Church of Finland"}
                   width="363"
                   height="81"
                   loading="lazy"
