@@ -312,8 +312,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <p class="text-base-content text-base font-medium">
                 <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
               </p>
-              <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm capitalize">
-                {line_item.variant_size}
+              <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">
+                {variant_size_label(line_item.variant_size)}
               </p>
             </div>
             <p class="text-base-content/65 text-sm tabular-nums">{money(line_item.subtotal, @locale)}</p>

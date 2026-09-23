@@ -48,6 +48,11 @@ defmodule EdenflowersWeb.Admin.Components do
   def fulfillment_method_label(:pickup), do: ~t"Pickup"
   def fulfillment_method_label(_), do: ~t"Unknown method"
 
+  def variant_size_label(:small), do: ~t"Small"
+  def variant_size_label(:medium), do: ~t"Medium"
+  def variant_size_label(:large), do: ~t"Large"
+  def variant_size_label(value), do: to_string(value)
+
   defp fulfillment_method_icon(:delivery), do: "hero-truck"
   defp fulfillment_method_icon(:pickup), do: "hero-building-storefront"
   defp fulfillment_method_icon(_), do: "hero-question-mark-circle"
@@ -194,9 +199,10 @@ defmodule EdenflowersWeb.Admin.Components do
     |> Enum.map(fn value -> {confidence_label(value), value} end)
   end
 
-  defp confidence_label(:low), do: ~t"Low"
-  defp confidence_label(:medium), do: ~t"Medium"
-  defp confidence_label(:high), do: ~t"High"
+  # Context keeps "Medium" apart from the variant size, which translates differently.
+  defp confidence_label(:low), do: pgettext("expense confidence", "Low")
+  defp confidence_label(:medium), do: pgettext("expense confidence", "Medium")
+  defp confidence_label(:high), do: pgettext("expense confidence", "High")
   defp confidence_label(value), do: to_string(value)
 
   defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"

@@ -180,7 +180,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           <ul class="text-base-content/85 mt-1 space-y-0.5 text-sm">
             <li :for={item <- @items} class="truncate">
               <span class="text-base-content font-semibold tabular-nums">{item.quantity} ×</span>
-              {item.product_name}<span :if={item.variant_size} class="text-base-content/65">, {size_label(item.variant_size)}</span>
+              {item.product_name}<span :if={item.variant_size} class="text-base-content/65">, {variant_size_label(item.variant_size)}</span>
             </li>
           </ul>
         </div>
@@ -195,8 +195,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     </li>
     """
   end
-
-  defp size_label(size), do: size |> to_string() |> String.capitalize()
 
   defp present?(nil), do: false
   defp present?(value), do: String.trim(value) != ""
