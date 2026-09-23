@@ -39,22 +39,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           back={~p"/admin/expenses"}
           back_label={~t"Expenses"}
         >
-          <:actions>
-            <span
-              :if={not is_nil(@expense.reviewed_at)}
-              class="badge badge-sm badge-success admin-badge-success gap-1"
-            >
+          <:actions :if={@expense.reviewed_at}>
+            <span class="badge badge-sm badge-success admin-badge-success gap-1">
               <.icon name="hero-check" class="h-3 w-3" /> {~t"Reviewed"}
             </span>
-            <.button
-              :if={is_nil(@expense.reviewed_at)}
-              type="button"
-              phx-click="mark_reviewed"
-              variant="primary"
-              size="sm"
-            >
-              {~t"Mark as reviewed"}
-            </.button>
           </:actions>
         </.admin_page_header>
 
@@ -77,28 +65,28 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </div>
         </section>
 
-        <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <a
             href={Edenflowers.Papra.document_url(@expense.document_id)}
             target="_blank"
             rel="noopener"
-            class="link link-primary inline-flex items-center gap-1"
+            class="link link-primary -my-2 inline-flex items-center gap-1 py-2 font-medium"
           >
             {~t"Open receipt in Papra"}
-            <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+            <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
           </a>
-          <span :if={@expense.processed_at} aria-hidden="true">·</span>
+          <span :if={@expense.processed_at} class="max-sm:hidden" aria-hidden="true">·</span>
           <span :if={@expense.processed_at}>
             {~t"Processed"} {Format.datetime(@expense.processed_at, @locale)}
           </span>
-          <span :if={@expense.reviewed_at} aria-hidden="true">·</span>
+          <span :if={@expense.reviewed_at} class="max-sm:hidden" aria-hidden="true">·</span>
           <span :if={@expense.reviewed_at}>
             {~t"Reviewed"} {Format.datetime(@expense.reviewed_at, @locale)}
           </span>
         </section>
 
         <section>
-          <.form for={@form} phx-submit="correct" phx-change="validate">
+          <.form for={@form} id="expense-form" phx-submit="correct" phx-change="validate">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input field={@form[:vendor_name]} type="text" label={~t"Vendor name"} class="input w-full" />
               <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT number"} class="input w-full" />
@@ -135,9 +123,24 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 <.input field={@form[:description]} type="textarea" label={~t"Description"} class="textarea w-full" />
               </div>
             </div>
-            <div class="mt-6">
-              <.button type="submit" variant="primary" size="sm" class="w-full sm:w-auto">
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+              <%!-- First in source order so Enter in a field saves without marking the expense reviewed. --%>
+              <.button
+                type="submit"
+                variant={if is_nil(@expense.reviewed_at), do: "secondary", else: "primary"}
+                class="w-full sm:w-auto"
+              >
                 {~t"Save corrections"}
+              </.button>
+              <.button
+                :if={is_nil(@expense.reviewed_at)}
+                type="submit"
+                name="review"
+                value="true"
+                variant="primary"
+                class="w-full sm:w-auto"
+              >
+                {~t"Save and mark reviewed"}
               </.button>
             </div>
           </.form>
@@ -148,36 +151,47 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   end
 
   @impl true
-  def handle_event("mark_reviewed", _params, socket) do
-    case Expenses.mark_expense_reviewed(socket.assigns.expense, actor: socket.assigns.current_user) do
-      {:ok, updated} ->
-        {:noreply,
-         socket
-         |> assign(:expense, updated)
-         |> put_flash(:info, ~t"Expense marked as reviewed.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not mark expense as reviewed.")}
-    end
-  end
-
   def handle_event("validate", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, :form, form)}
   end
 
-  def handle_event("correct", %{"form" => params}, socket) do
+  def handle_event("correct", %{"form" => params} = submit_params, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, updated} when is_map_key(submit_params, "review") ->
+        mark_reviewed(socket, updated)
+
       {:ok, updated} ->
         {:noreply,
          socket
-         |> assign(:expense, updated)
-         |> assign(:form, build_form(updated, socket.assigns.current_user))
+         |> assign_expense(updated)
          |> put_flash(:info, ~t"Expense updated.")}
 
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
     end
+  end
+
+  defp mark_reviewed(socket, expense) do
+    case Expenses.mark_expense_reviewed(expense, actor: socket.assigns.current_user) do
+      {:ok, reviewed} ->
+        {:noreply,
+         socket
+         |> assign_expense(reviewed)
+         |> put_flash(:info, ~t"Expense saved and marked as reviewed.")}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> assign_expense(expense)
+         |> put_flash(:error, ~t"Corrections saved, but the expense could not be marked as reviewed.")}
+    end
+  end
+
+  defp assign_expense(socket, expense) do
+    socket
+    |> assign(:expense, expense)
+    |> assign(:form, build_form(expense, socket.assigns.current_user))
   end
 
   defp build_form(expense, actor) do

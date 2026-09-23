@@ -1,0 +1,71 @@
+## Translations for the Cinder table library (deps/cinder), which uses
+## EdenflowersWeb.Gettext via `config :cinder, gettext_backend:`.
+msgid ""
+msgstr ""
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%{total} items"
+msgstr "%{total} riviä"
+
+msgid "An error occurred while loading data"
+msgstr "Tietojen lataamisessa tapahtui virhe"
+
+msgid "Clear all"
+msgstr "Tyhjennä kaikki"
+
+msgid "Clear filter"
+msgstr "Tyhjennä suodatin"
+
+msgid "Clear search"
+msgstr "Tyhjennä haku"
+
+msgid "Filters"
+msgstr "Suodattimet"
+
+msgid "First page"
+msgstr "Ensimmäinen sivu"
+
+msgid "Go to page %{page}"
+msgstr "Siirry sivulle %{page}"
+
+msgid "Last page"
+msgstr "Viimeinen sivu"
+
+msgid "Loading..."
+msgstr "Ladataan..."
+
+msgid "Next"
+msgstr "Seuraava"
+
+msgid "Next page"
+msgstr "Seuraava sivu"
+
+msgid "No results found"
+msgstr "Ei tuloksia"
+
+msgid "Page %{current} of %{total}"
+msgstr "Sivu %{current}/%{total}"
+
+msgid "Prev"
+msgstr "Edellinen"
+
+msgid "Previous page"
+msgstr "Edellinen sivu"
+
+msgid "Search"
+msgstr "Hae"
+
+msgid "Search..."
+msgstr "Hae..."
+
+msgid "Show {selector} per page"
+msgstr "Näytä {selector} sivulla"
+
+msgid "showing %{start}-%{end} of %{total}"
+msgstr "näytetään %{start}–%{end}/%{total}"
+
+msgid "active"
+msgid_plural "active"
+msgstr[0] "aktiivinen"
+msgstr[1] "aktiivista"

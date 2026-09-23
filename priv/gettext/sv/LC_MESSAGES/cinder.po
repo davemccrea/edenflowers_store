@@ -1,0 +1,71 @@
+## Translations for the Cinder table library (deps/cinder), which uses
+## EdenflowersWeb.Gettext via `config :cinder, gettext_backend:`.
+msgid ""
+msgstr ""
+"Language: sv\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%{total} items"
+msgstr "%{total} poster"
+
+msgid "An error occurred while loading data"
+msgstr "Ett fel uppstod när data laddades"
+
+msgid "Clear all"
+msgstr "Rensa alla"
+
+msgid "Clear filter"
+msgstr "Rensa filter"
+
+msgid "Clear search"
+msgstr "Rensa sökning"
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "First page"
+msgstr "Första sidan"
+
+msgid "Go to page %{page}"
+msgstr "Gå till sida %{page}"
+
+msgid "Last page"
+msgstr "Sista sidan"
+
+msgid "Loading..."
+msgstr "Laddar..."
+
+msgid "Next"
+msgstr "Nästa"
+
+msgid "Next page"
+msgstr "Nästa sida"
+
+msgid "No results found"
+msgstr "Inga resultat"
+
+msgid "Page %{current} of %{total}"
+msgstr "Sida %{current} av %{total}"
+
+msgid "Prev"
+msgstr "Föreg."
+
+msgid "Previous page"
+msgstr "Föregående sida"
+
+msgid "Search"
+msgstr "Sök"
+
+msgid "Search..."
+msgstr "Sök..."
+
+msgid "Show {selector} per page"
+msgstr "Visa {selector} per sida"
+
+msgid "showing %{start}-%{end} of %{total}"
+msgstr "visar %{start}–%{end} av %{total}"
+
+msgid "active"
+msgid_plural "active"
+msgstr[0] "aktivt"
+msgstr[1] "aktiva"

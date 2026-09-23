@@ -43,21 +43,32 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           url_state={@url_state}
           show_filters={:toggle}
+          sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
-          <:col :let={expense} field="date" sort label={~t"Date"}>
+          <:col :let={expense} field="date" sort label={~t"Date"} class="max-sm:hidden">
             <span :if={expense.date} class="whitespace-nowrap tabular-nums">
               {Format.date(expense.date, @locale)}
             </span>
             <.blank :if={is_nil(expense.date)} />
           </:col>
-          <:col :let={expense} field="vendor_name" search label={~t"Vendor"}>
+          <:col :let={expense} field="vendor_name" search sort label={~t"Vendor"}>
             <.link navigate={~p"/admin/expenses/#{expense.id}"} class="font-medium hover:underline">
               {expense.vendor_name || ~t"Unknown vendor"}
             </.link>
+            <div class="text-base-content/65 mt-1 flex items-center gap-2 text-sm sm:hidden">
+              <span :if={expense.date} class="whitespace-nowrap tabular-nums">
+                {Format.date(expense.date, @locale)}
+              </span>
+              <.confidence_badge confidence={expense.confidence} />
+              <span :if={expense.reviewed_at} class="inline-flex items-center gap-1 whitespace-nowrap">
+                <.icon name="hero-check" class="h-4 w-4" />
+                {~t"Reviewed"}
+              </span>
+            </div>
           </:col>
-          <:col :let={expense} field="total_amount" sort label={~t"Amount"}>
+          <:col :let={expense} field="total_amount" sort label={~t"Amount"} class="text-right">
             <span :if={expense.total_amount && expense.currency} class="whitespace-nowrap tabular-nums">
               {Format.amount(expense.total_amount, expense.currency, @locale)}
             </span>
@@ -68,31 +79,37 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             field="confidence"
             filter={[type: :select, label: ~t"Confidence", prompt: ~t"All", options: confidence_options()]}
             label={~t"Confidence"}
+            class="max-sm:hidden"
           >
             <.confidence_badge confidence={expense.confidence} />
           </:col>
           <:col
             :let={expense}
             field="reviewed"
+            sort
             filter={[
               type: :boolean,
               label: ~t"Review",
               labels: %{true: ~t"Reviewed", false: ~t"Not reviewed"}
             ]}
             label={~t"Reviewed"}
+            class="max-sm:hidden"
           >
-            <span :if={expense.reviewed_at} class="inline-flex" title={~t"Reviewed"}>
-              <.icon name="hero-check" class="text-base-content h-4 w-4" />
-              <span class="sr-only">{~t"Reviewed"}</span>
+            <span :if={expense.reviewed_at} class="inline-flex items-center gap-1 whitespace-nowrap">
+              <.icon name="hero-check" class="h-4 w-4" />
+              {~t"Reviewed"}
             </span>
-            <span :if={is_nil(expense.reviewed_at)} class="sr-only">{~t"Not reviewed"}</span>
-            <.blank :if={is_nil(expense.reviewed_at)} />
+            <span :if={is_nil(expense.reviewed_at)} class="text-base-content/65 whitespace-nowrap">
+              {~t"Not reviewed"}
+            </span>
           </:col>
           <:col
             :let={expense}
             field="category"
+            sort
             filter={[type: :select, label: ~t"Category", prompt: ~t"All", options: category_options()]}
             label={~t"Category"}
+            class="max-sm:hidden"
           >
             <.category_badge category={expense.category} />
           </:col>

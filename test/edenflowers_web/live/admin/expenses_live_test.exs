@@ -50,6 +50,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert newer_position < older_position
   end
 
+  test "lists unreviewed expenses above reviewed ones", %{conn: conn} do
+    create_expense("older-unreviewed", "Unreviewed Vendor", "Pending", date: ~D[2026-01-05])
+
+    "newer-reviewed"
+    |> create_expense("Reviewed Vendor", "Done", date: ~D[2026-03-10])
+    |> Expenses.mark_expense_reviewed!(authorize?: false)
+
+    {:ok, _view, html} = live(conn, ~p"/admin/expenses")
+
+    {unreviewed_position, _} = :binary.match(html, "Unreviewed Vendor")
+    {reviewed_position, _} = :binary.match(html, "Reviewed Vendor")
+    assert unreviewed_position < reviewed_position
+  end
+
   test "filters to expenses that have not been reviewed", %{conn: conn} do
     create_expense("unreviewed", "Unreviewed Vendor", "Pending")
 
@@ -61,6 +75,42 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     assert has_element?(view, "[data-item-id]", "Unreviewed Vendor")
     refute has_element?(view, "[data-item-id]", "Reviewed Vendor")
+  end
+
+  test "translates the table controls", %{conn: conn} do
+    conn = Plug.Conn.put_session(conn, Localize.Plug.PutLocale.session_key(), "fi")
+
+    {:ok, _view, html} = live(conn, ~p"/admin/expenses")
+
+    assert html =~ "Suodattimet"
+  end
+
+  test "saving and marking reviewed keeps the corrections", %{conn: conn} do
+    expense = create_expense("save-review", "Typo Vendr", "Flowers")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+
+    view
+    |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
+    |> render_submit(%{review: "true"})
+
+    reviewed = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
+    assert reviewed.vendor_name == "Typo Vendor"
+    assert reviewed.reviewed_at
+  end
+
+  test "saving corrections alone leaves the expense unreviewed", %{conn: conn} do
+    expense = create_expense("save-only", "Typo Vendr", "Flowers")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+
+    view
+    |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
+    |> render_submit()
+
+    saved = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
+    assert saved.vendor_name == "Typo Vendor"
+    refute saved.reviewed_at
   end
 
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do

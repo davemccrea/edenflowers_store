@@ -117,7 +117,7 @@ Density is generous and editorial. Sections breathe at 5–9rem of vertical padd
 **Key Characteristics:**
 - Warm oat paper (hue ~75) under everything; no cold grey anywhere.
 - Serif for voice, sans for interface — an absolute split.
-- Square at the token level — `--radius-field` and `--radius-box` are `0`; only radios stay soft.
+- Square at the token level — `--radius-field` and `--radius-box` are `0`; only radios and status badges stay soft.
 - Hairline rules instead of cards, panels, or elevation.
 - One honey underline is the entire interactive vocabulary.
 - Photographs are full-bleed and unframed; they carry the persuasion.
@@ -209,7 +209,7 @@ Flat by default. Depth comes from three sources — the one-pixel rule, the tona
 A shadow is permitted only when it carries information: something genuinely floating above the page (drawer, modal, lightbox), or a signal the user could not otherwise get. The system currently has exactly one such shadow, and one exception that is drift.
 
 ### Shadow Vocabulary
-- **Overflow cue** (`box-shadow: inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)`): on `.admin-table-scroll` below `lg`, telling the user a compact admin table continues horizontally. Functional — keep.
+- **Overflow cue** (`box-shadow: inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)`): on `.admin-table-scroll` below `lg`, telling the user a compact admin table continues horizontally. A scroll-driven animation shows it only while the table actually overflows and fades it out at the last column; browsers without `animation-timeline` get no cue. Functional — keep.
 - **Lightbox credit** (`text-shadow: 0 1px 3px rgb(0 0 0 / 0.6)`): keeps the photographer credit legible over an arbitrary photograph in PhotoSwipe. Functional — keep.
 - **Drift:** the portrait on `/maternity` carries `shadow-md`. It is decorative, it frames a photograph, and it should be removed.
 
@@ -223,9 +223,10 @@ A shadow is permitted only when it carries information: something genuinely floa
 
 Square is the system. Buttons are explicitly `rounded-none` against daisyUI's default. Product figures, category tiles, the product mark, section rules and the header are all hard-cornered. The form language is a rectangle and a hairline.
 
-- **Corners:** square is set at the token, not at the call site. The theme block pins daisyUI's `--radius-field` and `--radius-box` to `0`, so every input, select, textarea, badge, dropdown, modal and drawer is square without any markup saying so. There are no radius utilities in the storefront or admin markup, and none should be added.
+- **Corners:** square is set at the token, not at the call site. The theme block pins daisyUI's `--radius-field` and `--radius-box` to `0`, so every input, select, textarea, dropdown, modal and drawer is square without any markup saying so. There are no radius utilities in the storefront or admin markup, and none should be added.
 - **The radio carve-out:** `--radius-selector` deliberately keeps daisyUI's `0.5rem`. It shapes radios, and a square radio reads as a checkbox — the checkout fulfillment picker depends on that distinction. This is the one place softness is load-bearing.
 - **No 0.25rem tier.** There used to be one — the radio card, the checkout date-picker frame, the admin warning banner, the admin calendar's cells, swatches and weekday chips, the admin nav's `rounded-r`, and the skip link all carried `0.25rem`. None of it was a deliberate tier: every one was hand-matching daisyUI's old `--radius-field` default. When that token went to `0` they were orphaned, and a soft radio card sitting above a square text input in the same checkout step is what it looked like. All removed.
+- **Badges:** daisyUI rounds `.badge` with `--radius-selector`, so the admin status badges (confidence, payment, fulfillment, category) are soft pills. That is intended: a status reads as a tag, not as a field.
 - **Pills:** `9999px` on the cart count badge, avatar initials, carousel dots, the calendar strike and the admin scrollbar thumb, where the shape *is* the meaning. These are the only curves left in the system.
 - **Borders:** one pixel, `base-300`, used as separation rather than as containment. The product mark is the exception: a hairline frame at `base-content/55` over a 85%-opaque `base-100` backdrop with a 2px blur, so a label sits *on* a photograph instead of being burned into it.
 - **Decoration:** line-drawn flower SVGs (`priv/svg/`, inlined at compile time, `fill: currentColor`) are the only ornament. They appear at low opacity (`/15`, `/70`) as watermarks in quiet corners — the footer's top-right, reverse-out sections. They are always `aria-hidden`.
@@ -233,7 +234,7 @@ Square is the system. Buttons are explicitly `rounded-none` against daisyUI's de
 
 ### Named Rules
 
-**The Square Edge Rule.** Radius is `0`, set at the token so nothing has to remember. Exactly two exceptions exist: `--radius-selector` (radios stay circular) and `rounded-full` (things whose roundness is their meaning). `rounded-full` is the only radius utility in the entire codebase — nine of them. Any other radius in markup is a defect by construction, because the token already gives you square and a utility can only move away from it.
+**The Square Edge Rule.** Radius is `0`, set at the token so nothing has to remember. Exactly two exceptions exist: `--radius-selector` (radios stay circular, status badges stay pills) and `rounded-full` (things whose roundness is their meaning). `rounded-full` is the only radius utility in the entire codebase — nine of them. Any other radius in markup is a defect by construction, because the token already gives you square and a utility can only move away from it.
 
 **The Orphan Rule.** A hand-written value that duplicates a token is a future defect. The old `0.25rem` sites were invisible until the token beneath them moved — then a radio card and the text input below it disagreed in the same form. If you find yourself typing a value that a token already sets, delete the value.
 
