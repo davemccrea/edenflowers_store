@@ -102,9 +102,9 @@
 
   /* Square is the system. daisyUI's defaults (0.25rem field, 0.5rem box) are
      what made `.btn` need an explicit `rounded-none`; setting them here squares
-     inputs, selects, dropdowns, modals, drawers and badges at the source.
+     inputs, selects, dropdowns, modals and drawers at the source.
      --radius-selector stays soft on purpose: it shapes radios, and a square
-     radio reads as a checkbox. */
+     radio reads as a checkbox. It also rounds badges, which stay pills. */
   --radius-field: 0;
   --radius-box: 0;
 }
@@ -403,8 +403,19 @@ main p {
   scrollbar-width: thin;
 }
 
+/* The cue follows the table's own scroll: a table that fits has an inactive
+   timeline, so the cue never shows, and it fades out as the last column
+   scrolls into view. Browsers without scroll timelines get no cue. */
 @media (width < theme(--breakpoint-lg)) {
   .admin-table-scroll {
+    animation: admin-table-overflow-cue linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+@keyframes admin-table-overflow-cue {
+  from,
+  90% {
     border-right-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
     box-shadow: inset -0.75rem 0 0.75rem -0.75rem
       color-mix(in oklab, var(--color-base-content) 38%, transparent);

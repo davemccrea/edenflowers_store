@@ -45,6 +45,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           ]}
           url_state={@url_state}
           show_filters={:toggle}
+          sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
@@ -59,7 +60,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               {Format.date(order.fulfillment_date, @locale)}
             </span>
           </:col>
-          <:col :let={order} field="customer_name" search label={~t"Customer"}>
+          <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
               {order.customer_name || ~t"Unnamed customer"}
             </.link>
@@ -67,6 +68,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           <:col
             :let={order}
             field="fulfillment_status"
+            sort
             filter={[
               type: :select,
               label: ~t"Fulfillment status",
@@ -80,6 +82,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           <:col
             :let={order}
             field="payment_status"
+            sort
             filter={[
               type: :select,
               label: ~t"Payment status",
@@ -98,6 +101,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           <:col
             :let={order}
             field="fulfillment_method"
+            sort
             filter={[
               type: :select,
               label: ~t"Fulfillment method",

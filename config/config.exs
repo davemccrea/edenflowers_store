@@ -7,7 +7,7 @@
 # General application configuration
 import Config
 
-config :cinder, default_theme: "daisy_ui"
+config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext
 
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,

@@ -26,11 +26,12 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :table_class, "table table-zebra w-full min-w-max"
   set :td_class, "align-top"
 
-  set :filter_header_class, "flex items-center justify-between mb-4"
+  # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.
+  set :filter_header_class, "flex items-center justify-between"
   set :filter_title_class, "flex items-center gap-2 text-base font-semibold text-base-content"
   set :filter_count_class, "badge badge-primary badge-sm tabular-nums"
   set :filter_container_class, "card-body p-4 sm:p-5"
-  set :filter_inputs_class, "fieldset grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap"
+  set :filter_inputs_class, "fieldset mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap"
   set :filter_input_wrapper_class, "form-control min-w-0"
 
   set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/65"

@@ -38,7 +38,7 @@ defmodule Edenflowers.Expenses.Expense do
 
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
-      prepare build(sort: [date: :desc_nils_first, processed_at: :desc])
+      prepare build(sort: [reviewed: :asc, date: :desc_nils_first, processed_at: :desc])
     end
 
     read :needs_review do
