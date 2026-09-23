@@ -498,7 +498,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     today = store_today()
 
     if Date.diff(date, today) == 0,
-      do: Localize.DateTime.Relative.to_string!(0, unit: :day, locale: locale),
+      do: ~t"Today",
       else: Localize.DateTime.Relative.to_string!(date, relative_to: today, locale: locale)
   end
 
