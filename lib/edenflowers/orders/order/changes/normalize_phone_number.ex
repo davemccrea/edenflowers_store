@@ -11,8 +11,8 @@ defmodule Edenflowers.Orders.Order.Changes.NormalizePhoneNumber do
   @impl true
   def change(changeset, _opts, _context) do
     case Ash.Changeset.get_attribute(changeset, :recipient_phone_number) do
-      input when is_binary(input) and input != "" -> normalize(changeset, input)
-      _blank -> changeset
+      nil -> changeset
+      input -> normalize(changeset, input)
     end
   end
 

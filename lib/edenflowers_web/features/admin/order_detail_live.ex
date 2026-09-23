@@ -25,6 +25,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign(:order, order)
+         |> assign(:pickup_message_urls, pickup_message_urls(order))
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
       _ ->
@@ -197,8 +198,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={customer_phone?(@order) && present?(@order.recipient_phone_number)}>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
-                <:contact :if={pickup_message_urls(@order)}>
-                  <.ready_for_pickup_links urls={pickup_message_urls(@order)} />
+                <:contact :if={@pickup_message_urls}>
+                  <.ready_for_pickup_links urls={@pickup_message_urls} />
                 </:contact>
               </.person_block>
             </.detail_section>
@@ -228,6 +229,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply,
          socket
          |> assign(:order, order)
+         |> assign(:pickup_message_urls, pickup_message_urls(order))
          |> put_flash(:info, ~t"Order marked as fulfilled.")}
 
       {:error, _} ->
