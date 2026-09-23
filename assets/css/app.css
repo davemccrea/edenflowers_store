@@ -175,41 +175,53 @@ summary {
 }
 
 .phx-submit-loading [type="submit"],
-.phx-submit-loading button[phx-click] {
+.phx-submit-loading button[phx-click],
+[type="submit"][aria-busy="true"] {
   cursor: progress;
 }
 
 /* Submit button: label↔spinner swap with 300ms-delayed reveal.
-   Both children share one grid cell so the button width stays stable.
+   All children share one grid cell so the button width stays stable.
    Under 300ms the spinner never appears — fast submits look instant.
-   The explicit `transition: opacity 0s` on the base rule is the swap-back
-   path: when `.phx-submit-loading` is removed mid-transition, the more
-   specific selectors stop matching and opacity snaps without delay. */
+   The explicit 0s transitions on the base rule are the swap-back path:
+   when the loading state ends mid-transition, the more specific selectors
+   stop matching and the swap snaps back without delay.
+   `.form-button-processing` uses visibility rather than opacity so its
+   text stays out of the button's accessible name until it is shown. */
 .form-button-label,
-.form-button-spinner {
-  transition: opacity 0s;
+.form-button-spinner,
+.form-button-processing {
+  transition:
+    opacity 0s,
+    visibility 0s;
 }
 .form-button-spinner {
   opacity: 0;
 }
-.phx-submit-loading .form-button-label {
+.form-button-processing {
+  visibility: hidden;
+}
+.phx-submit-loading .form-button-label,
+[aria-busy="true"] .form-button-label {
   opacity: 0;
   transition: opacity 0s 300ms;
 }
-.phx-submit-loading .form-button-spinner {
+.phx-submit-loading .form-button-spinner,
+[aria-busy="true"] .form-button-spinner {
   opacity: 1;
   transition: opacity 0s 300ms;
 }
 
+/* Reduced motion swaps the spinning icon for a static "Processing…" label. */
 @media (prefers-reduced-motion: reduce) {
-  .phx-submit-loading .form-button-label {
-    opacity: 1;
-    transition: none;
+  .form-button-spinner {
+    visibility: hidden;
   }
 
-  .phx-submit-loading .form-button-spinner {
-    opacity: 0;
-    transition: none;
+  .phx-submit-loading .form-button-processing,
+  [aria-busy="true"] .form-button-processing {
+    visibility: visible;
+    transition: visibility 0s 300ms;
   }
 }
 
