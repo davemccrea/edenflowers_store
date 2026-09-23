@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Orders.{Order}
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
+  alias Edenflowers.PhoneNumber
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -198,6 +199,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         help={phone_help(@order)}
                         placeholder="040 123 4567"
                         field={@form[:recipient_phone_number]}
+                        value={typed_phone_number(@form)}
+                        phx-blur="format_phone_number"
                         type="tel"
                         autocomplete={own_details_autocomplete(@order, "tel")}
                         aria-required="true"
@@ -527,6 +530,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
+  def handle_event("format_phone_number", %{"value" => typed}, socket) do
+    case PhoneNumber.format(typed) do
+      {:ok, formatted} ->
+        params = Map.put(socket.assigns.form.params, "recipient_phone_number", formatted)
+        {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
   # Checkout.AddressInput owns the address field's lifecycle independently
   # of the parent form, so submit is the only moment the parent learns the
   # typed value — bridge it into the form params here.
@@ -680,6 +694,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        do: gettext("I'll only call if I need to reach %{name} about the delivery.", name: first_name)
 
   defp phone_help(_order), do: gettext("I'll only call if I need to reach you about the delivery.")
+
+  # The form's own value is the changeset's already-formatted number. Rendering
+  # that while typing leaves the value attribute unchanged when the blur handler
+  # formats it, so LiveView never repaints the box. Show what was typed until blur.
+  defp typed_phone_number(form) do
+    Map.get(form.params, "recipient_phone_number", form[:recipient_phone_number].value)
+  end
 
   # Autofill offers the buyer's own saved details, which are wrong for a gift's recipient.
   defp own_details_autocomplete(%{gift: true, fulfillment_method: :delivery}, _token), do: "off"

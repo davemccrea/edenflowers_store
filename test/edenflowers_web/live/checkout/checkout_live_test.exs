@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       render_click: 3,
       render_change: 2,
       element: 2,
+      has_element?: 2,
       render_blur: 2,
       render_submit: 2,
       render_async: 1,
@@ -350,6 +351,20 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert reloaded.fulfillment_option_id == delivery_option.id
       assert reloaded.fulfillment_method == :delivery
       assert reloaded.state == :payment
+    end
+
+    test "formats the phone number every time the customer tabs out of it", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      phone_input = ~s|#checkout-form-3b input[name="form[recipient_phone_number]"]|
+
+      for typed <- ["0451505141", "045 150 5141"] do
+        view |> element("#checkout-form-3b") |> render_change(%{"form" => %{"recipient_phone_number" => typed}})
+        assert has_element?(view, ~s|#{phone_input}[value="#{typed}"]|)
+
+        view |> element(phone_input) |> render_blur(%{"value" => typed})
+        assert has_element?(view, ~s|#{phone_input}[value="+358 45 1505141"]|)
+      end
     end
 
     test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
