@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
             </.button>
 
             <div class="text-center text-sm">
-              <.button navigate={stay_path(@current_user)} variant="text">
+              <.button navigate={~p"/"} variant="text">
                 {~t"Stay signed in"}
               </.button>
             </div>
@@ -46,7 +46,4 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
     </Layouts.auth>
     """
   end
-
-  defp stay_path(%{admin: true}), do: ~p"/admin"
-  defp stay_path(_user), do: ~p"/"
 end

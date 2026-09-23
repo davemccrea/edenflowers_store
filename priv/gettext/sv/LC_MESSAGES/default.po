@@ -386,12 +386,12 @@ msgstr "Välkommen till Eden Flowers: här är din kod på 15 % rabatt"
 msgid "You are now signed in"
 msgstr "Du är nu inloggad"
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:68
+#: lib/edenflowers_web/features/auth/auth_controller.ex:65
 #, elixir-autogen, elixir-format
 msgid "You are now signed out"
 msgstr "Du är nu utloggad"
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:35
+#: lib/edenflowers_web/features/auth/auth_controller.ex:32
 #, elixir-autogen, elixir-format
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr "Du har redan loggat in på ett annat sätt, men har inte bekräftat ditt konto. Du kan bekräfta kontot via länken vi skickade till dig, eller genom att återställa lösenordet."
@@ -723,7 +723,7 @@ msgstr "Skicka koden igen"
 msgid "Resend code in"
 msgstr "Skicka koden igen om"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:137
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Send sign-in code"
 msgstr "Skicka inloggningskod"
@@ -733,7 +733,7 @@ msgstr "Skicka inloggningskod"
 msgid "Sign-in code"
 msgstr "Inloggningskod"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:232
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "Too many requests. Please wait a few minutes and try again."
 msgstr "För många försök. Vänta några minuter och försök igen."
@@ -748,17 +748,17 @@ msgstr "Kommande"
 msgid "Use a different email"
 msgstr "Använd en annan e-postadress"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:234
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "We couldn't send your sign-in code. Please try again in a moment."
 msgstr "Vi kunde inte skicka din inloggningskod. Försök igen om en stund."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:38
+#: lib/edenflowers_web/features/auth/auth_controller.ex:35
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in with Google. Please try again or use a sign-in code."
 msgstr "Vi kunde inte logga in dig med Google. Försök igen eller använd en inloggningskod."
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:168
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "We've sent you a new code."
 msgstr "Vi har skickat en ny kod till dig."
@@ -772,11 +772,6 @@ msgstr "Din inloggningskod till Eden Flowers"
 #, elixir-autogen, elixir-format
 msgid "go to current month"
 msgstr "gå till aktuell månad"
-
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:131
-#, elixir-autogen, elixir-format
-msgid "info@edenflowers.fi"
-msgstr "info@edenflowers.fi"
 
 #: lib/edenflowers_web/components/date_picker.ex:405
 #, elixir-autogen, elixir-format
@@ -1444,12 +1439,12 @@ msgstr "Fortsätt med Google, eller så mejlar vi dig en inloggningskod."
 msgid "It expires in 10 minutes."
 msgstr "Koden gäller i 10 minuter."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:41
+#: lib/edenflowers_web/features/auth/auth_controller.ex:38
 #, elixir-autogen, elixir-format
 msgid "That code didn't work. Check it and try again, or send a new code."
 msgstr "Koden fungerade inte. Kontrollera den och försök igen, eller skicka en ny kod."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:44
+#: lib/edenflowers_web/features/auth/auth_controller.ex:41
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in. Please try again."
 msgstr "Vi kunde inte logga in dig. Försök igen."

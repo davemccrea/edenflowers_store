@@ -386,12 +386,12 @@ msgstr ""
 msgid "You are now signed in"
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:68
+#: lib/edenflowers_web/features/auth/auth_controller.ex:65
 #, elixir-autogen, elixir-format
 msgid "You are now signed out"
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:35
+#: lib/edenflowers_web/features/auth/auth_controller.ex:32
 #, elixir-autogen, elixir-format
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr ""
@@ -723,7 +723,7 @@ msgstr ""
 msgid "Resend code in"
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:137
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Send sign-in code"
 msgstr ""
@@ -733,7 +733,7 @@ msgstr ""
 msgid "Sign-in code"
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:232
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "Too many requests. Please wait a few minutes and try again."
 msgstr ""
@@ -748,17 +748,17 @@ msgstr ""
 msgid "Use a different email"
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:234
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "We couldn't send your sign-in code. Please try again in a moment."
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:38
+#: lib/edenflowers_web/features/auth/auth_controller.ex:35
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in with Google. Please try again or use a sign-in code."
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:168
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "We've sent you a new code."
 msgstr ""
@@ -771,11 +771,6 @@ msgstr ""
 #: lib/edenflowers_web/components/date_picker.ex:163
 #, elixir-autogen, elixir-format
 msgid "go to current month"
-msgstr ""
-
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:131
-#, elixir-autogen, elixir-format
-msgid "info@edenflowers.fi"
 msgstr ""
 
 #: lib/edenflowers_web/components/date_picker.ex:405
@@ -1444,12 +1439,12 @@ msgstr ""
 msgid "It expires in 10 minutes."
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:41
+#: lib/edenflowers_web/features/auth/auth_controller.ex:38
 #, elixir-autogen, elixir-format
 msgid "That code didn't work. Check it and try again, or send a new code."
 msgstr ""
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:44
+#: lib/edenflowers_web/features/auth/auth_controller.ex:41
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in. Please try again."
 msgstr ""

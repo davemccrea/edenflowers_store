@@ -128,7 +128,6 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
               autofocus
               field={@request_form[:email]}
               label={~t"Email"}
-              placeholder={~t"info@edenflowers.fi"}
               type="email"
               autocomplete="email"
             />

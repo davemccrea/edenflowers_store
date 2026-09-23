@@ -386,12 +386,12 @@ msgstr "Tervetuloa Eden Flowersiin: 15 %:n alennuskoodisi on tässä"
 msgid "You are now signed in"
 msgstr "Olet nyt kirjautunut sisään"
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:68
+#: lib/edenflowers_web/features/auth/auth_controller.ex:65
 #, elixir-autogen, elixir-format
 msgid "You are now signed out"
 msgstr "Olet nyt kirjautunut ulos"
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:35
+#: lib/edenflowers_web/features/auth/auth_controller.ex:32
 #, elixir-autogen, elixir-format
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr "Olet jo kirjautunut sisään toisella tavalla, mutta et ole vahvistanut tiliäsi. Voit vahvistaa tilisi lähettämällämme linkillä tai palauttamalla salasanasi."
@@ -723,7 +723,7 @@ msgstr "Lähetä koodi uudelleen"
 msgid "Resend code in"
 msgstr "Lähetä koodi uudelleen"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:137
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Send sign-in code"
 msgstr "Lähetä kirjautumiskoodi"
@@ -733,7 +733,7 @@ msgstr "Lähetä kirjautumiskoodi"
 msgid "Sign-in code"
 msgstr "Kirjautumiskoodi"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:232
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "Too many requests. Please wait a few minutes and try again."
 msgstr "Liian monta yritystä. Odota muutama minuutti ja yritä uudelleen."
@@ -748,17 +748,17 @@ msgstr "Tulossa"
 msgid "Use a different email"
 msgstr "Käytä toista sähköpostiosoitetta"
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:234
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "We couldn't send your sign-in code. Please try again in a moment."
 msgstr "Kirjautumiskoodin lähettäminen ei onnistunut. Yritä hetken kuluttua uudelleen."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:38
+#: lib/edenflowers_web/features/auth/auth_controller.ex:35
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in with Google. Please try again or use a sign-in code."
 msgstr "Google-kirjautuminen ei onnistunut. Yritä uudelleen tai käytä kirjautumiskoodia."
 
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:168
+#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "We've sent you a new code."
 msgstr "Lähetimme sinulle uuden koodin."
@@ -772,11 +772,6 @@ msgstr "Eden Flowers -kirjautumiskoodisi"
 #, elixir-autogen, elixir-format
 msgid "go to current month"
 msgstr "siirry kuluvaan kuukauteen"
-
-#: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:131
-#, elixir-autogen, elixir-format
-msgid "info@edenflowers.fi"
-msgstr "info@edenflowers.fi"
 
 #: lib/edenflowers_web/components/date_picker.ex:405
 #, elixir-autogen, elixir-format
@@ -1444,12 +1439,12 @@ msgstr "Jatka Googlella, tai lähetämme sinulle kirjautumiskoodin sähköpostii
 msgid "It expires in 10 minutes."
 msgstr "Koodi on voimassa 10 minuuttia."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:41
+#: lib/edenflowers_web/features/auth/auth_controller.ex:38
 #, elixir-autogen, elixir-format
 msgid "That code didn't work. Check it and try again, or send a new code."
 msgstr "Koodi ei kelpaa. Tarkista se ja yritä uudelleen tai lähetä uusi koodi."
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:44
+#: lib/edenflowers_web/features/auth/auth_controller.ex:41
 #, elixir-autogen, elixir-format
 msgid "We couldn't sign you in. Please try again."
 msgstr "Kirjautuminen ei onnistunut. Yritä uudelleen."
