@@ -247,7 +247,7 @@ defmodule EdenflowersWeb.Layouts do
           </button>
           <.link
             href={~p"/"}
-            class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-base transition-colors active:text-primary/70"
+            class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-lg transition-colors active:text-primary/70"
           >
             Eden Flowers
           </.link>
@@ -283,7 +283,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <div class="flex h-full flex-col py-5">
       <div class="mb-6 flex items-center justify-between px-5">
-        <.link href={~p"/"} class="text-primary logo-wordmark text-base">
+        <.link href={~p"/"} class="text-primary logo-wordmark text-lg">
           Eden Flowers
         </.link>
         <button
