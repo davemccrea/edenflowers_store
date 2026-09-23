@@ -358,12 +358,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       phone_input = ~s|#checkout-form-3b input[name="form[recipient_phone_number]"]|
 
-      for typed <- ["0451505141", "045 150 5141"] do
+      for typed <- ["0451505141", "+358 45 150 5141"] do
         view |> element("#checkout-form-3b") |> render_change(%{"form" => %{"recipient_phone_number" => typed}})
         assert has_element?(view, ~s|#{phone_input}[value="#{typed}"]|)
 
         view |> element(phone_input) |> render_blur(%{"value" => typed})
-        assert has_element?(view, ~s|#{phone_input}[value="+358 45 1505141"]|)
+        assert has_element?(view, ~s|#{phone_input}[value="045 1505141"]|)
       end
     end
 

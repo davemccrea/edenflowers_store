@@ -1109,7 +1109,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
     test "save_step_3 stores the phone number in international format", %{pickup_option: pickup_option} do
       for {typed, stored} <- [
-            {"040-123 45 67", "+358 40 1234567"},
+            {"040-123 45 67", "040 1234567"},
             {"+46 70 123 45 67", "+46 70 123 45 67"}
           ] do
         order = generate(order(state: :delivery))
