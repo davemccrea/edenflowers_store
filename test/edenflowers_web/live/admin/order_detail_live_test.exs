@@ -62,6 +62,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-payment-summary", "€71.70")
   end
 
+  test "capitalizes the today badge", %{conn: conn} do
+    today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+    order = placed_order(fulfillment_date: today)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ".admin-badge-success", "Today")
+  end
+
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
     order = placed_order()
 
