@@ -109,15 +109,16 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/bookings/:id" do
-    test "flips from pending to booked when the payment confirms", %{conn: conn} do
+    test "shows the booking straight away and flips the payment line when it confirms", %{conn: conn} do
       registration = generate(course_registration(payment_intent_id: "pi_x"))
 
-      {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
-      assert has_element?(view, "[data-testid=booking-status]", "Confirming your payment")
+      {:ok, view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+      assert html =~ "You&#39;re booked"
+      assert has_element?(view, "[data-testid=payment-status]", "Confirming your payment")
 
       Edenflowers.Courses.confirm_registration_payment!(registration, actor: Edenflowers.Actors.system_actor())
 
-      assert render(view) =~ "You&#39;re booked"
+      assert has_element?(view, "[data-testid=payment-status]", "Payment received")
     end
   end
 
