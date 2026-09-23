@@ -19,6 +19,7 @@ alias Edenflowers.Catalog.{Product, ProductVariant}
 alias Edenflowers.Courses.Course
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
 alias Edenflowers.Orders.{Order, LineItem}
+alias Edenflowers.Orders.Order.Calculations.Vat
 alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
@@ -729,4 +730,10 @@ for order_attrs <- orders do
       is_card: true
     })
   end
+
+  # Snapshot the VAT breakdown the same way SnapshotVatBreakdown does at checkout.
+  # Clearing state makes Vat.breakdown compute from the line items rather than
+  # read the snapshot this is about to write.
+  order = Ash.load!(order, Vat.load(nil, nil, nil), authorize?: false)
+  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
 end
