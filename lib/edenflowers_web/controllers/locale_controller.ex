@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.LocaleController do
     end
   end
 
-  defp get_redirect_path(_conn, %{"redirect_to" => redirect_to}), do: URI.decode_www_form(redirect_to)
+  defp get_redirect_path(_conn, %{"redirect_to" => redirect_to}), do: redirect_to
 
   defp get_redirect_path(conn, _params) do
     with [referer] <- get_req_header(conn, "referer"),
