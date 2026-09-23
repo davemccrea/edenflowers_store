@@ -2509,7 +2509,7 @@ msgstr ""
 
 #: lib/edenflowers/orders/order/changes/normalize_phone_number.ex:27
 #, elixir-autogen, elixir-format
-msgid "Enter a valid phone number"
+msgid "Enter a valid phone number. For non-Finnish numbers, start with the country code, e.g. +44."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:529
