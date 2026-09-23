@@ -199,7 +199,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         field={@form[:recipient_phone_number]}
                         type="tel"
                         autocomplete={own_details_autocomplete(@order, "tel")}
-                        aria-required={to_string(@order.fulfillment_method == :pickup)}
+                        aria-required="true"
                       />
 
                       <fieldset class="flex flex-col">
@@ -660,15 +660,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        when is_binary(first_name) do
     case field do
       :address -> gettext("%{name}'s address *", name: first_name)
-      :phone -> gettext("%{name}'s phone number", name: first_name)
+      :phone -> gettext("%{name}'s phone number *", name: first_name)
     end
   end
 
   defp recipient_label(order, field) do
     case {field, order.fulfillment_method} do
       {:address, _} -> gettext("Address *")
-      {:phone, :pickup} -> gettext("Phone number *")
-      {:phone, _} -> gettext("Phone number")
+      {:phone, _} -> gettext("Phone number *")
     end
   end
 

@@ -1093,7 +1093,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "save_step_3 with pickup requires a phone number", %{pickup_option: pickup_option} do
+    test "save_step_3 requires a phone number", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
       assert {:error, %Ash.Error.Invalid{errors: errors}} =
