@@ -1107,6 +1107,41 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Enum.any?(errors, &(&1.field == :recipient_phone_number))
     end
 
+    test "save_step_3 stores the phone number in international format", %{pickup_option: pickup_option} do
+      for {typed, stored} <- [
+            {"040-123 45 67", "+358 40 1234567"},
+            {"+46 70 123 45 67", "+46 70 123 45 67"}
+          ] do
+        order = generate(order(state: :delivery))
+
+        assert {:ok, order} =
+                 order
+                 |> Ash.Changeset.for_update(:submit_delivery, %{
+                   fulfillment_option_id: pickup_option.id,
+                   fulfillment_date: Date.add(Date.utc_today(), 1),
+                   recipient_phone_number: typed
+                 })
+                 |> Ash.update(authorize?: false)
+
+        assert order.recipient_phone_number == stored
+      end
+    end
+
+    test "save_step_3 rejects an invalid phone number", %{pickup_option: pickup_option} do
+      order = generate(order(state: :delivery))
+
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
+               order
+               |> Ash.Changeset.for_update(:submit_delivery, %{
+                 fulfillment_option_id: pickup_option.id,
+                 fulfillment_date: Date.add(Date.utc_today(), 1),
+                 recipient_phone_number: "123"
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Enum.any?(errors, &(&1.field == :recipient_phone_number))
+    end
+
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
