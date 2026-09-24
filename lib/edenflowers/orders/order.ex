@@ -80,12 +80,6 @@ defmodule Edenflowers.Orders.Order do
       get? true
     end
 
-    read :by_order_reference do
-      argument :order_reference, :string, allow_nil?: false
-      filter expr(order_reference == ^arg(:order_reference))
-      get? true
-    end
-
     read :for_checkout do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))

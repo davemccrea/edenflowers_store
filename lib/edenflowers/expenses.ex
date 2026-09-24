@@ -10,8 +10,6 @@ defmodule Edenflowers.Expenses do
   resources do
     resource Edenflowers.Expenses.Expense do
       define :ingest_expense, action: :ingest
-      define :list_expenses, action: :read
-      define :list_expenses_needing_review, action: :needs_review
       define :mark_expense_reviewed, action: :mark_reviewed
       define :correct_expense, action: :correct
     end

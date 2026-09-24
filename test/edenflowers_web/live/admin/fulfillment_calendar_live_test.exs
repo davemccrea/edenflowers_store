@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Weekday
@@ -339,13 +338,5 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
     offset = Enum.find(1..21, &(Date.day_of_week(Date.add(today, &1)) == target))
     Date.add(today, offset)
-  end
-
-  # seed_generator skips the GenerateTokenChange that normal sign-in would
-  # run, so we mint a token by hand and stash it in __metadata__ where
-  # store_in_session/2 expects to find it.
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

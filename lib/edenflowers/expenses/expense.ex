@@ -41,11 +41,6 @@ defmodule Edenflowers.Expenses.Expense do
       prepare build(sort: [reviewed: :asc, date: :desc_nils_first, processed_at: :desc])
     end
 
-    read :needs_review do
-      filter expr(is_nil(reviewed_at) and confidence != :high)
-      prepare build(sort: [date: :desc])
-    end
-
     create :ingest do
       description "Upserts an expense record extracted from a receipt/invoice document."
       upsert? true

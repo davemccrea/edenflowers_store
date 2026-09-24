@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
 
   test "admin uploads, views and removes a profile picture", %{conn: conn} do
@@ -40,10 +39,5 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
 
     assert get(conn, ~p"/admin/account/avatar").status == 404
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

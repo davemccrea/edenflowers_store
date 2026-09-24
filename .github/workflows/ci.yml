@@ -57,9 +57,6 @@ jobs:
             ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-${{ env.MIX_ENV }}-
 
       - run: mix deps.get
-      - run: mix deps.compile
       - run: mix localize.download_locales
       - run: mix compile --warnings-as-errors
-      - run: mix ecto.create
-      - run: mix ecto.migrate
       - run: mix test

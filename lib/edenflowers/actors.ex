@@ -21,22 +21,4 @@ defmodule Edenflowers.Actors do
   def system_actor do
     %{system: true}
   end
-
-  @doc """
-  Returns a guest actor for use with unauthenticated checkout flows.
-
-  Guest actors can read and update orders in the checkout state, but cannot:
-  - Access completed orders
-  - Access orders belonging to other users
-
-  ## Examples
-
-      iex> Edenflowers.Actors.guest_actor()
-      %{guest: true}
-
-      iex> Orders.get_order_for_checkout!(order_id, actor: Edenflowers.Actors.guest_actor())
-  """
-  def guest_actor do
-    %{guest: true}
-  end
 end

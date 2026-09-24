@@ -1,5 +1,7 @@
 defmodule Edenflowers.Orders.OrderTest do
   use Edenflowers.DataCase
+
+  import Ecto.Query
   import ExUnit.CaptureLog
   import Generator
   alias Edenflowers.Orders

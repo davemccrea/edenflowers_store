@@ -1,6 +1,8 @@
 defmodule Edenflowers.ErrorTrackerLogHandlerTest do
   use Edenflowers.DataCase, async: false
 
+  alias Edenflowers.Repo
+
   alias Edenflowers.ErrorTrackerLogHandler
 
   setup do

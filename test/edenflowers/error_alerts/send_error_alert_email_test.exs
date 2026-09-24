@@ -1,5 +1,7 @@
 defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmailTest do
   use Edenflowers.DataCase, async: false
+
+  alias Edenflowers.Repo
   import Swoosh.TestAssertions
 
   alias Edenflowers.ErrorAlerts.SendErrorAlertEmail

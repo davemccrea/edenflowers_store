@@ -11,7 +11,6 @@ defmodule Edenflowers.Orders do
     resource Edenflowers.Orders.Order do
       define :create_for_checkout, action: :create_for_checkout
       define :get_order_by_id, action: :by_id, args: [:id]
-      define :get_order_by_reference, action: :by_order_reference, args: [:order_reference]
       define :get_order_for_checkout, action: :for_checkout, args: [:id]
       define :get_order_for_admin, action: :admin_show, args: [:id]
       define :list_my_orders, action: :mine
