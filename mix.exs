@@ -135,7 +135,6 @@ defmodule Edenflowers.MixProject do
       {:tidewave, "~> 0.9", only: [:dev]},
       {:usage_rules, "~> 1.1", only: [:dev]},
       # Test
-      {:faker, "~> 0.18", only: :test},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:mox, "~> 1.0", only: :test},
       {:phoenix_test, "~> 0.8", only: :test, runtime: false}

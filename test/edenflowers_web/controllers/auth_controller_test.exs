@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.AuthControllerTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
   alias EdenflowersWeb.Auth.AuthController
 
@@ -89,11 +88,6 @@ defmodule EdenflowersWeb.AuthControllerTest do
 
       assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/sign-in")
     end
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 
   defp init_auth_session(conn, session) do

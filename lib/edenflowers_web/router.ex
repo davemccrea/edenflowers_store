@@ -26,12 +26,6 @@ defmodule EdenflowersWeb.Router do
     plug :load_from_session
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug :load_from_bearer
-    plug :set_actor, :user
-  end
-
   scope "/", EdenflowersWeb do
     pipe_through :browser
 

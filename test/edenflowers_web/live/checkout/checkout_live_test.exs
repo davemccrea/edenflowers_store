@@ -63,8 +63,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   describe "Step 1: Your Details" do
     test "prefills the name and email of a signed-in customer", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, name: "Ada Lovelace", email: "ada@example.com"))
-      {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
-      user = %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
+      user = with_token(user)
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
@@ -759,10 +758,5 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert reloaded.line_items == []
     end
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

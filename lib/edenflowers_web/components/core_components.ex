@@ -499,154 +499,6 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders a header with title.
-  """
-  slot :inner_block, required: true
-  slot :subtitle
-  slot :actions
-
-  def header(assigns) do
-    ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8">
-          {render_slot(@inner_block)}
-        </h1>
-        <p :if={@subtitle != []} class="text-base-content/80 text-sm">
-          {render_slot(@subtitle)}
-        </p>
-      </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
-    </header>
-    """
-  end
-
-  @doc """
-  Renders a breadcrumb navigation component using DaisyUI.
-
-  ## Examples
-
-      <.breadcrumb>
-        <:item navigate={~p"/"} label={~t"Home"} />
-        <:item navigate={~p"/store"} label={~t"Store"} />
-        <:item label={~t"Product Name"} />
-      </.breadcrumb>
-
-  The last item is automatically marked as the current page with `aria-current="page"`.
-  """
-  attr :class, :string, default: "mb-8 text-sm", doc: "Additional CSS classes for the breadcrumbs wrapper"
-
-  slot :item, required: true, doc: "Individual breadcrumb items" do
-    attr :navigate, :string, doc: "Navigation path (optional for current page)"
-    attr :label, :string, required: true, doc: "The breadcrumb label text"
-  end
-
-  def breadcrumb(assigns) do
-    ~H"""
-    <div class={["breadcrumbs", @class]} role="navigation" aria-label={~t"Breadcrumb"} data-testid="breadcrumb">
-      <ul>
-        <%= for {item, index} <- Enum.with_index(@item) do %>
-          <li :if={index == length(@item) - 1} aria-current="page" data-testid="breadcrumb-current">
-            {item.label}
-          </li>
-          <li :if={index < length(@item) - 1}>
-            <.link navigate={item.navigate} data-testid={"breadcrumb-link-#{index}"}>
-              {item.label}
-            </.link>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a table with generic styling.
-
-  ## Examples
-
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
-  """
-  attr :id, :string, required: true
-  attr :rows, :list, required: true
-  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
-  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
-
-  attr :row_item, :any,
-    default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
-
-  slot :col, required: true do
-    attr :label, :string
-  end
-
-  slot :action, doc: "the slot for showing user actions in the last table column"
-
-  def table(assigns) do
-    assigns =
-      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
-      end
-
-    ~H"""
-    <table class="table-zebra table">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{~t"Actions"}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td :for={col <- @col} phx-click={@row_click && @row_click.(row)} class={@row_click && "hover:cursor-pointer"}>
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    """
-  end
-
-  @doc """
-  Renders a data list.
-
-  ## Examples
-
-      <.list>
-        <:item title="Title">{@post.title}</:item>
-        <:item title="Views">{@post.views}</:item>
-      </.list>
-  """
-  slot :item, required: true do
-    attr :title, :string, required: true
-  end
-
-  def list(assigns) do
-    ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
-        </div>
-      </li>
-    </ul>
-    """
-  end
-
-  @doc """
   Renders a [Heroicon](https://heroicons.com).
 
   Heroicons come in three styles – outline, solid, and mini.
@@ -707,7 +559,6 @@ defmodule EdenflowersWeb.CoreComponents do
   ## Examples
 
       <.flower name="flower-30" class="h-32 w-32 text-primary/80" />
-      <.flower name="flower-09" class="h-10 w-10 text-forest-content/70" />
   """
   attr :name, :string, required: true, values: Map.keys(@flowers)
   attr :class, :any, default: "h-6 w-6"
@@ -1129,21 +980,11 @@ defmodule EdenflowersWeb.CoreComponents do
       class: "justify-end",
       transition_in: "translate-x-0 opacity-100",
       transition_out: "translate-x-full opacity-0"
-    },
-    "top" => %{
-      class: "items-start",
-      transition_in: "translate-y-0 opacity-100",
-      transition_out: "-translate-y-full opacity-0"
-    },
-    "bottom" => %{
-      class: "items-end",
-      transition_in: "translate-y-0 opacity-100",
-      transition_out: "translate-y-full opacity-0"
     }
   }
 
   attr :id, :string, required: true
-  attr :placement, :string, default: "left", values: ["left", "right", "top", "bottom"]
+  attr :placement, :string, default: "left", values: ["left", "right"]
   attr :class, :string, default: "bg-base-100 min-w-96"
   attr :label, :string, default: nil
   slot :inner_block, required: true
@@ -1235,12 +1076,5 @@ defmodule EdenflowersWeb.CoreComponents do
     else
       Gettext.dgettext(EdenflowersWeb.Gettext, "errors", msg, opts)
     end
-  end
-
-  @doc """
-  Translates the errors for a field from a keyword list of errors.
-  """
-  def translate_errors(errors, field) when is_list(errors) do
-    for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
 end

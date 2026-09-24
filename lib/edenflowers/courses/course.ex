@@ -45,10 +45,6 @@ defmodule Edenflowers.Courses.Course do
     read :upcoming do
       filter expr(date >= today())
     end
-
-    read :past do
-      filter expr(date < today())
-    end
   end
 
   policies do

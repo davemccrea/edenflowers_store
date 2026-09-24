@@ -9,4 +9,3 @@ typst_opts = if System.find_executable("typst"), do: [], else: [exclude: [:typst
 
 ExUnit.start(typst_opts)
 Ecto.Adapters.SQL.Sandbox.mode(Edenflowers.Repo, :manual)
-Faker.start()

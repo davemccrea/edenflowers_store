@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Marketing.AdminShortcutTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
 
   test "shows the admin shortcut to admins", %{conn: conn} do
@@ -20,8 +19,7 @@ defmodule EdenflowersWeb.Marketing.AdminShortcutTest do
   end
 
   defp sign_in(conn, user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    user = %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
+    user = with_token(user)
 
     conn
     |> Plug.Test.init_test_session(%{})

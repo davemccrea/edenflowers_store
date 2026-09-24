@@ -1,6 +1,5 @@
 import Config
 config :edenflowers, token_signing_secret: "Ru1t3J1eZMoIIz6LEIYtCN9CK7SlGbKg"
-config :bcrypt_elixir, log_rounds: 1
 
 # Configure your database
 #

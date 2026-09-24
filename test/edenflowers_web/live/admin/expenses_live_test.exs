@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Expenses
 
@@ -126,10 +125,5 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       ),
       actor: Edenflowers.Actors.system_actor()
     )
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

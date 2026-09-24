@@ -100,10 +100,6 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:newsletter_opt_in, true)
     end
 
-    update :update_name do
-      accept [:name]
-    end
-
     update :update_avatar do
       accept [:avatar, :avatar_content_type]
     end

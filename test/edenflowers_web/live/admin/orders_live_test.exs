@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
 
   setup %{conn: conn} do
@@ -48,10 +47,5 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
   defp placed_order(attrs) do
     generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

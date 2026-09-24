@@ -121,9 +121,4 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert has_element?(view, "[data-testid=payment-status]", "Payment received")
     end
   end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
-  end
 end

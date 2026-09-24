@@ -42,7 +42,7 @@ defmodule Generator do
       Promotion,
       :create,
       defaults: %{
-        name: words(),
+        name: "Promotion",
         code: StreamData.repeatedly(fn -> "PROMO-#{System.unique_integer([:positive])}" end),
         discount_rate: "0.20",
         minimum_cart_total: "0",
@@ -58,7 +58,7 @@ defmodule Generator do
   def product_category(opts \\ []) do
     changeset_generator(ProductCategory, :create,
       defaults: %{
-        name: words(),
+        name: "Category",
         # slug has a unique index; without this Ash fills it with a random short
         # string that occasionally collides. Must be unique across concurrently
         # running tests (not sequence/2, which restarts per test process) or
@@ -81,7 +81,7 @@ defmodule Generator do
         product_category_id: product_category_id,
         tax_rate_id: tax_rate_id,
         name: StreamData.repeatedly(fn -> "Product #{System.unique_integer([:positive])}" end),
-        description: words(),
+        description: "Product description",
         image_slug: "image.png"
       },
       overrides: opts,
@@ -205,10 +205,8 @@ defmodule Generator do
     )
   end
 
-  defp words do
-    1..3
-    |> Faker.Lorem.words()
-    |> Enum.join(" ")
-    |> String.capitalize()
+  def with_token(user) do
+    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
+    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end

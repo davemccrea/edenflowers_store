@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Jwt
   alias AshAuthentication.Plug.Helpers
 
   test "renders the current admin account menu using the first-name calculation", %{conn: conn} do
@@ -88,10 +87,5 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     sales = view |> element("dl") |> render()
     assert sales =~ ~r/>\s*2\s*</
     assert sales =~ "90.00"
-  end
-
-  defp with_token(user) do
-    {:ok, token, _claims} = Jwt.token_for_user(user)
-    %{user | __metadata__: Map.put(user.__metadata__ || %{}, :token, token)}
   end
 end
