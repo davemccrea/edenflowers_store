@@ -6,6 +6,10 @@ default:
 dev:
     source .env && iex -S mix phx.server
 
+# Run the test suite with .env loaded (extra args go to mix test)
+test *args:
+    source .env && mix test {{args}}
+
 # Forward Stripe webhooks to the local dev server
 stripe:
     stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:4000/webhook/stripe
