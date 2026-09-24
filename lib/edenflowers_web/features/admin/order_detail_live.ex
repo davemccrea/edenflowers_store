@@ -410,13 +410,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge(%{tone: :upcoming} = assigns) do
     ~H"""
-    <span class="text-base-content/65 block text-sm font-normal first-letter:uppercase">{@label}</span>
+    <span class="text-base-content/65 block text-sm font-normal">{@label}</span>
     """
   end
 
   defp relative_date_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium first-letter:uppercase", relative_date_badge_class(@tone)]}>
+    <span class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium", relative_date_badge_class(@tone)]}>
       {@label}
     </span>
     """
@@ -552,10 +552,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     if Date.diff(date, today) == 0,
       do: ~t"Today",
-      else: Localize.DateTime.Relative.to_string!(date, relative_to: today, locale: locale)
+      else: Localize.DateTime.Relative.to_string!(date, relative_to: today, locale: locale) |> upcase_first()
   end
 
   defp fulfillment_relative(_date, _locale, _status), do: nil
+
+  defp upcase_first(string) do
+    {first, rest} = String.split_at(string, 1)
+    String.upcase(first) <> rest
+  end
 
   defp date_tone(date) do
     case Date.compare(date, store_today()) do
