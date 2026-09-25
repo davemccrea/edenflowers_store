@@ -6,6 +6,7 @@ defmodule Edenflowers.Orders.PaymentTest do
 
   import ExUnit.CaptureLog
 
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.Payment
 
   setup :verify_on_exit!
@@ -76,26 +77,58 @@ defmodule Edenflowers.Orders.PaymentTest do
     end
   end
 
-  describe "update_payment/1" do
-    test "updates the payment intent through the Stripe API" do
+  describe "update_payment/2" do
+    test "freezes the order before updating the payment intent" do
       order = generate(order(state: :payment, payment_intent_id: "pi_update"))
       payment_intent = %{id: "pi_update", amount: 7_500}
 
-      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn ^order ->
+      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn frozen_order ->
+        assert frozen_order.state == :confirming_payment
         {:ok, payment_intent}
       end)
 
-      assert {:ok, ^payment_intent} = Payment.update_payment(order)
+      assert {:ok, frozen_order} = Payment.update_payment(order, nil)
+      assert frozen_order.state == :confirming_payment
     end
 
-    test "returns Stripe update errors" do
+    test "returns Stripe update errors and releases the order" do
       order = generate(order(state: :payment, payment_intent_id: "pi_update"))
 
-      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn ^order ->
+      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn frozen_order ->
+        assert frozen_order.state == :confirming_payment
         {:error, :invalid_amount}
       end)
 
-      assert {:error, :invalid_amount} = Payment.update_payment(order)
+      assert {:error, :invalid_amount} = Payment.update_payment(order, nil)
+
+      assert %{state: :payment, payment_intent_id: "pi_update"} =
+               Edenflowers.Orders.get_order_by_id!(order.id, authorize?: false)
+    end
+
+    test "a stale concurrent request cannot release an active confirmation" do
+      order = generate(order(state: :payment, payment_intent_id: "pi_update"))
+      payment_intent = %{id: "pi_update", amount: 7_500}
+
+      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn _order ->
+        {:ok, payment_intent}
+      end)
+
+      assert {:ok, frozen_order} = Payment.update_payment(order, nil)
+      assert {:error, _reason} = Payment.update_payment(order, nil)
+      assert %{state: :confirming_payment} = Edenflowers.Orders.get_order_by_id!(frozen_order.id, authorize?: false)
+    end
+
+    test "retries with the same frozen order without touching Stripe" do
+      order = generate(order(state: :confirming_payment, payment_intent_id: "pi_update"))
+
+      assert {:ok, ^order} = Payment.update_payment(order, nil)
+    end
+
+    test "does not retry from stale state after cancellation" do
+      stale_order = generate(order(state: :confirming_payment, payment_intent_id: "pi_canceled"))
+      assert {:ok, %{state: :payment}} = Orders.cancel_payment_confirmation(stale_order, authorize?: false)
+
+      assert {:error, :payment_confirmation_not_active} = Payment.update_payment(stale_order, nil)
     end
   end
 end

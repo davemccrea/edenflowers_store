@@ -278,6 +278,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 <div class="border-base-content/12 border-t"></div>
 
                 <.live_component
+                  :if={@order.state != :confirming_payment}
                   id="checkout-promo"
                   module={EdenflowersWeb.Cart.PromoCode}
                   order={@order}
@@ -307,7 +308,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <span class="flex items-baseline gap-2">
                       {~t"Discount"}
-                      <EdenflowersWeb.Cart.PromoCode.badge code={@order.promotion_code} target="#checkout-promo" />
+                      <%= if @order.state == :confirming_payment do %>
+                        <span class="text-base-content/70 text-xs">{@order.promotion_code}</span>
+                      <% else %>
+                        <EdenflowersWeb.Cart.PromoCode.badge code={@order.promotion_code} target="#checkout-promo" />
+                      <% end %>
                     </span>
                     <span class="text-success tabular-nums" data-testid="discount-amount">
                       - {Edenflowers.Format.currency(@order.discount, @order.locale)}
@@ -339,7 +344,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </div>
       </.container>
 
-      <.card_drawer variants={@card_variants} locale={@order.locale} />
+      <.card_drawer :if={@order.state != :confirming_payment} variants={@card_variants} locale={@order.locale} />
     </Layouts.app>
     """
   end
@@ -353,7 +358,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp checkout_step(assigns) do
     ~H"""
     <section
-      :if={@order.state == @state}
+      :if={@order.state == @state or (@order.state == :confirming_payment and @state == :payment)}
       id={section_id(@id, @state)}
       class="scroll-anchor-below-header mb-12 flex flex-col gap-8"
       data-testid={@testid}
@@ -578,9 +583,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("pay", _, socket) do
-    case Payment.update_payment(socket.assigns.order) do
-      {:ok, _payment_intent} ->
-        {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    case Payment.update_payment(socket.assigns.order, actor(socket)) do
+      {:ok, order} ->
+        {:noreply, socket |> assign(order: order) |> push_event("stripe:process_payment", %{})}
 
       {:error, error} ->
         Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
@@ -848,7 +853,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # We only touch Stripe once the customer is on the payment state. Earlier
   # mounts (or mounts where the LiveView reconnects on a non-payment state)
   # skip the round trip entirely.
-  defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
+  defp maybe_setup_payment(socket, %{state: state} = order, actor) when state in [:payment, :confirming_payment] do
     case Payment.setup_payment(order, actor) do
       {:ok, order, client_secret} ->
         socket
@@ -862,7 +867,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp maybe_setup_payment(socket, _order, _actor), do: socket
 
-  defp ensure_payment_for_state(socket, %{state: :payment} = order, actor) do
+  defp ensure_payment_for_state(socket, %{state: state} = order, actor)
+       when state in [:payment, :confirming_payment] do
     if socket.assigns[:client_secret] do
       socket
     else

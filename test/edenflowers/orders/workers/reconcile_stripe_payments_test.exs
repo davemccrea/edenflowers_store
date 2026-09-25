@@ -28,7 +28,7 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
       order =
         Ash.Seed.seed!(Order, %{
           order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
-          state: :payment,
+          state: :confirming_payment,
           customer_name: "John Smith",
           customer_email: "john.smith@example.com",
           user_id: user.id,
@@ -74,15 +74,59 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
 
     assert :ok = perform_job(ReconcileStripePayments, %{})
 
-    assert %{state: :payment} = Orders.get_order_by_id!(order.id, authorize?: false)
+    assert %{state: :confirming_payment} = Orders.get_order_by_id!(order.id, authorize?: false)
     refute_enqueued(worker: SendOrderConfirmationEmail)
   end
 
-  test "skips orders still within the webhook grace period and abandoned checkouts", %{seed_order: seed_order} do
-    seed_order.(minutes_ago(1))
-    seed_order.(minutes_ago(8 * 24 * 60))
+  test "releases a canceled payment for editing", %{seed_order: seed_order} do
+    order = seed_order.(minutes_ago(10))
 
-    # verify_on_exit! fails the test if Stripe is called.
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+      {:ok, payment_intent(order, "canceled")}
+    end)
+
     assert :ok = perform_job(ReconcileStripePayments, %{})
+    assert %{state: :payment, payment_status: :failed} = Orders.get_order_by_id!(order.id, authorize?: false)
+  end
+
+  test "skips recent confirmations but keeps reconciling old ones", %{seed_order: seed_order} do
+    seed_order.(minutes_ago(1))
+    old_order = seed_order.(minutes_ago(8 * 24 * 60))
+
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{id: id} ->
+      assert id == old_order.id
+      {:ok, payment_intent(old_order, "processing")}
+    end)
+
+    assert :ok = perform_job(ReconcileStripePayments, %{})
+  end
+
+  test "cancels a payment abandoned mid-confirmation and unlocks the order", %{seed_order: seed_order} do
+    order = seed_order.(minutes_ago(90))
+
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, payment_intent(order, "requires_action")} end)
+
+    expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: id} ->
+      assert id == order.payment_intent_id
+      {:ok, %{id: id, status: "canceled"}}
+    end)
+
+    assert :ok = perform_job(ReconcileStripePayments, %{})
+
+    assert %{state: :payment, payment_intent_id: nil} = Orders.get_order_by_id!(order.id, authorize?: false)
+  end
+
+  test "keeps an abandoned payment locked when Stripe cancellation fails", %{seed_order: seed_order} do
+    order = seed_order.(minutes_ago(90))
+
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, payment_intent(order, "requires_action")} end)
+    expect(StripeAPI.Mock, :cancel_payment_intent, fn _payment_intent -> {:error, :network_error} end)
+
+    capture_log(fn -> assert :ok = perform_job(ReconcileStripePayments, %{}) end)
+
+    assert %{state: :confirming_payment, payment_intent_id: payment_intent_id} =
+             Orders.get_order_by_id!(order.id, authorize?: false)
+
+    assert payment_intent_id == order.payment_intent_id
   end
 end

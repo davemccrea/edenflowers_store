@@ -185,7 +185,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       order =
         generate(
           order(
-            state: :payment,
+            state: :confirming_payment,
             promotion_id: promotion.id,
             discount_rate: promotion.discount_rate,
             payment_intent_id: "pi_test"

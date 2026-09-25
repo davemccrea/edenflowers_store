@@ -49,9 +49,10 @@ defmodule Edenflowers.Orders.Order do
     table "orders"
   end
 
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+  @editable_checkout_states [:contact_details, :gift_options, :delivery, :payment]
+  @readable_checkout_states @editable_checkout_states ++ [:confirming_payment]
 
-  def checkout_states, do: @checkout_states
+  def checkout_states, do: @editable_checkout_states
 
   state_machine do
     initial_states([:contact_details])
@@ -61,13 +62,16 @@ defmodule Edenflowers.Orders.Order do
       transition(:submit_contact_details, from: :contact_details, to: :gift_options)
       transition(:submit_gift_options, from: :gift_options, to: :delivery)
       transition(:submit_delivery, from: :delivery, to: :payment)
-      transition(:finalize_checkout, from: :payment, to: :placed)
+      transition(:begin_payment_confirmation, from: :payment, to: :confirming_payment)
+      transition(:release_payment_confirmation, from: :confirming_payment, to: :payment)
+      transition(:cancel_payment_confirmation, from: :confirming_payment, to: :payment)
+      transition(:finalize_checkout, from: :confirming_payment, to: :placed)
 
       transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
       transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
       transition(:return_to_delivery, from: :payment, to: :delivery)
 
-      transition(:restart_checkout, from: @checkout_states, to: :contact_details)
+      transition(:restart_checkout, from: @editable_checkout_states, to: :contact_details)
     end
   end
 
@@ -166,6 +170,7 @@ defmodule Edenflowers.Orders.Order do
 
       argument :newsletter_opt_in, :boolean, default: false
 
+      change {Changes.EnsureEditable, []}
       validate {Validations.ValidateCustomerEmail, []}
       change {Changes.UpsertUserAndAssignToOrder, []}
       change transition_state(:gift_options)
@@ -175,6 +180,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :submit_gift_options do
       accept [:gift, :recipient_name, :card_message]
+      change {Changes.EnsureEditable, []}
       change {Changes.TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate {Validations.ValidateCardMessageLength, []}
@@ -194,6 +200,7 @@ defmodule Edenflowers.Orders.Order do
         :delivery_address
       ]
 
+      change {Changes.EnsureEditable, []}
       change {Changes.SnapshotFulfillmentMethod, []}
       validate {Validations.ValidateFulfillmentDate, []}
       validate {Validations.ValidateDeliveryAddress, []}
@@ -207,21 +214,42 @@ defmodule Edenflowers.Orders.Order do
 
     # Backward "edit" transitions
     update :return_to_contact_details do
+      change {Changes.EnsureEditable, []}
       change transition_state(:contact_details)
       change load(@checkout_load)
+      require_atomic? false
     end
 
     update :return_to_gift_options do
+      change {Changes.EnsureEditable, []}
       change transition_state(:gift_options)
       change load(@checkout_load)
+      require_atomic? false
     end
 
     update :return_to_delivery do
+      change {Changes.EnsureEditable, []}
       change transition_state(:delivery)
       change load(@checkout_load)
+      require_atomic? false
     end
 
     # Lifecycle transitions
+    update :begin_payment_confirmation do
+      change transition_state(:confirming_payment)
+      change load(@checkout_load)
+    end
+
+    update :release_payment_confirmation do
+      change transition_state(:payment)
+    end
+
+    update :cancel_payment_confirmation do
+      change transition_state(:payment)
+      change set_attribute(:payment_status, :failed)
+      change set_attribute(:payment_intent_id, nil)
+    end
+
     update :finalize_checkout do
       validate present(:payment_intent_id)
       change transition_state(:placed)
@@ -235,6 +263,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
+      change {Changes.EnsureEditable, []}
       change {Changes.SnapshotFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
       change {Changes.ClearDeliveryFields, []}
@@ -244,7 +273,9 @@ defmodule Edenflowers.Orders.Order do
 
     update :set_gift do
       accept [:gift]
+      change {Changes.EnsureEditable, []}
       change load(@checkout_load)
+      require_atomic? false
     end
 
     update :update_locale do
@@ -283,6 +314,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
+      change {Changes.EnsureEditable, []}
       validate {Validations.ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       change {Changes.SnapshotPromotion, []}
@@ -292,6 +324,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_promotion_with_code do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+      change {Changes.EnsureEditable, []}
       change {Changes.LookupPromotionCode, []}
       change {Changes.SnapshotPromotion, []}
       validate {Validations.ValidateMinimumCartTotal, []}
@@ -300,6 +333,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     update :clear_promotion do
+      change {Changes.EnsureEditable, []}
       change atomic_update(:promotion_id, expr(nil))
       change {Changes.SnapshotPromotion, []}
       change load(@checkout_load)
@@ -307,6 +341,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     update :restart_checkout do
+      change {Changes.EnsureEditable, []}
       change {Changes.ResetCheckout, []}
       change transition_state(:contact_details)
       require_atomic? false
@@ -314,12 +349,14 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_card do
       argument :product_variant_id, :uuid, allow_nil?: false
+      change {Changes.EnsureEditable, []}
       change {Changes.SwapCardLineItem, []}
       change load(@checkout_load)
       require_atomic? false
     end
 
     update :remove_card do
+      change {Changes.EnsureEditable, []}
       change set_attribute(:card_message, nil)
       change {Changes.RemoveCardLineItem, []}
       change load(@checkout_load)
@@ -328,6 +365,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :remove_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.EnsureEditable, []}
       change {Changes.RemoveLineItem, []}
       change load(@checkout_load)
       require_atomic? false
@@ -336,6 +374,7 @@ defmodule Edenflowers.Orders.Order do
     update :add_line_item do
       argument :product_variant_id, :uuid, allow_nil?: false
       argument :quantity, :integer, allow_nil?: false, constraints: [min: 1]
+      change {Changes.EnsureEditable, []}
       change {Changes.AddLineItem, []}
       change load(@checkout_load)
       require_atomic? false
@@ -343,6 +382,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :increment_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.EnsureEditable, []}
       change {Changes.AdjustLineItemQuantity, direction: :increment}
       change load(@checkout_load)
       require_atomic? false
@@ -350,6 +390,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :decrement_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
+      change {Changes.EnsureEditable, []}
       change {Changes.AdjustLineItemQuantity, direction: :decrement}
       change load(@checkout_load)
       require_atomic? false
@@ -360,7 +401,14 @@ defmodule Edenflowers.Orders.Order do
     # System bypass is scoped: anything outside this list (including updates
     # to a :placed order) falls through to the main policies.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:finalize_checkout, :mark_payment_failed, :mark_receipt_emailed])
+      authorize_if action([
+                     :finalize_checkout,
+                     :cancel_payment_confirmation,
+                     :release_payment_confirmation,
+                     :mark_payment_failed,
+                     :mark_receipt_emailed
+                   ])
+
       authorize_if action_type(:read)
     end
 
@@ -375,14 +423,14 @@ defmodule Edenflowers.Orders.Order do
     end
 
     policy action_type(:read) do
-      authorize_if expr(state in ^@checkout_states)
+      authorize_if expr(state in ^@readable_checkout_states)
       authorize_if expr(state == :placed and user_id == ^actor(:id))
     end
 
     # Placed orders are sealed for every actor, including admins and system.
     policy action_type(:update) do
       forbid_if expr(state == :placed)
-      authorize_if expr(state in ^@checkout_states)
+      authorize_if expr(state in ^@editable_checkout_states)
     end
   end
 
@@ -403,7 +451,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :state, :atom do
       allow_nil? false
       default :contact_details
-      constraints one_of: [:contact_details, :gift_options, :delivery, :payment, :placed]
+      constraints one_of: [:contact_details, :gift_options, :delivery, :payment, :confirming_payment, :placed]
     end
 
     attribute :ordered_at, :utc_datetime

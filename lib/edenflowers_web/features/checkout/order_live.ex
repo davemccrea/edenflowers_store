@@ -19,8 +19,9 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
       # order already carries everything this page shows, so it renders straight
       # away and only the payment line waits. Anyone can read an order still in
       # checkout, so only its owner may wait for it.
-      {:ok, %{state: :payment} = order}
-      when id == guest_order_id or (not is_nil(user) and order.user_id == user.id) ->
+      {:ok, %{state: state} = order}
+      when state in [:payment, :confirming_payment] and
+             (id == guest_order_id or (not is_nil(user) and order.user_id == user.id)) ->
         if connected?(socket) do
           Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
         end
