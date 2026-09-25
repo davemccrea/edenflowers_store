@@ -33,12 +33,6 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     <%!-- Hidden rather than removed: the badge rendered elsewhere targets this id. --%>
     <div id={@id} class={(@order.promotion_applied? and not @show_applied) && "hidden"}>
       <%= cond do %>
-        <% @order.state == :confirming_payment and @order.promotion_applied? -> %>
-          <div class="flex items-baseline justify-between text-sm" data-testid="promo-applied">
-            <span class="text-base-content/70">{~t"Promo code"}</span>
-            <span class="text-base-content/70 text-xs">{@order.promotion_code}</span>
-          </div>
-        <% @order.state == :confirming_payment -> %>
         <% @order.promotion_applied? and not @show_applied -> %>
         <% @order.promotion_applied? -> %>
           <div class="flex items-baseline justify-between text-sm" data-testid="promo-applied">
