@@ -25,6 +25,9 @@ defmodule EdenflowersWeb.Store.StoreLive do
           {:ok, products, selected_category} ->
             {:noreply, assign(socket, products: products, selected_category: selected_category)}
 
+          :error when category_slug == "bouquets" ->
+            {:noreply, assign(socket, products: [], selected_category: nil)}
+
           :error ->
             {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}
         end
@@ -43,14 +46,23 @@ defmodule EdenflowersWeb.Store.StoreLive do
   end
 
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :other_categories?,
+        Enum.any?(assigns.categories, fn {category, _idx} ->
+          is_nil(assigns.selected_category) or category.id != assigns.selected_category.id
+        end)
+      )
+
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
-        <h1 :if={@selected_category} class="page-title mb-12 md:mb-16">
-          {@selected_category.name}
+        <h1 class="page-title mb-12 md:mb-16">
+          {if @selected_category, do: @selected_category.name, else: ~t"Store"}
         </h1>
 
-        <nav aria-label={~t"Categories"} class="mb-20 md:mb-28">
+        <nav :if={@categories != []} aria-label={~t"Categories"} class="mb-20 md:mb-28">
           <ol class="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3 md:gap-10">
             <li
               :for={{category, idx} <- @categories}
@@ -91,12 +103,29 @@ defmodule EdenflowersWeb.Store.StoreLive do
           <%= if Enum.empty?(@products) do %>
             <div class="bg-cream flex flex-col items-center gap-5 px-8 py-20 text-center sm:py-24">
               <.flower name="flower-42" class="text-primary/80 h-20 w-20" />
-              <h3 class="section-title text-primary">{~t"Fresh stems on the way"}</h3>
+              <h2 class="section-title text-primary">{~t"I'm preparing the next collection"}</h2>
               <p class="text-base-content/75 max-w-md leading-relaxed">
-                {~t"This collection is being refreshed. Check back shortly, or browse another category in the meantime."}
+                <%= if @other_categories? do %>
+                  {~t"Check back soon, or browse another collection in the meantime."}
+                <% else %>
+                  {~t"Need flowers before then? Get in touch and I'll gladly help."}
+                <% end %>
               </p>
-              <.button patch={~p"/store/bouquets"} variant="secondary" class="mt-2">
+              <.button
+                :if={@selected_category && @selected_category.slug != "bouquets"}
+                patch={~p"/store/bouquets"}
+                variant="secondary"
+                class="mt-2"
+              >
                 {~t"Browse bouquets"}
+              </.button>
+              <.button
+                :if={!@other_categories?}
+                navigate={~p"/contact"}
+                variant="secondary"
+                class="mt-2"
+              >
+                {~t"Get in touch"}
               </.button>
             </div>
           <% else %>
