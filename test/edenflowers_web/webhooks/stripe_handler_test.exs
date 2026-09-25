@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
-    test "logs error and returns :ok when amount_received does not match grand_total", %{
+    test "places the order and flags the mismatch when amount_received does not match grand_total", %{
       order: order,
       expected_amount: expected_amount
     } do
@@ -130,12 +130,13 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                    })
         end)
 
-      assert log =~ "amount mismatch"
+      assert log =~ "Amount mismatch"
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert order.state == :payment
-      assert order.payment_status != :paid
-      refute_email_sent()
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?])
+      assert order.state == :placed
+      assert order.payment_status == :paid
+      assert Decimal.equal?(order.amount_paid, Decimal.div(expected_amount - 1, 100))
+      assert order.amount_mismatch?
     end
 
     test "logs error and returns :ok when payment_intent_id does not match", %{

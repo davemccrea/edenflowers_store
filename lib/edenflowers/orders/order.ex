@@ -34,6 +34,7 @@ defmodule Edenflowers.Orders.Order do
     :customer_name,
     :customer_first_name,
     :grand_total,
+    :amount_mismatch?,
     :items_subtotal,
     :items_total,
     :vat,
@@ -139,6 +140,7 @@ defmodule Edenflowers.Orders.Order do
                   :fulfillment_date,
                   :fulfillment_method,
                   :grand_total,
+                  :amount_mismatch?,
                   :payment_status,
                   :fulfillment_status
                 ]
@@ -223,7 +225,9 @@ defmodule Edenflowers.Orders.Order do
 
     # Lifecycle transitions
     update :finalize_checkout do
+      argument :amount_paid, :decimal
       validate present(:payment_intent_id)
+      change set_attribute(:amount_paid, arg(:amount_paid))
       change transition_state(:placed)
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
@@ -460,6 +464,9 @@ defmodule Edenflowers.Orders.Order do
 
     # Step 4 - Payment
     attribute :payment_intent_id, :string
+    # What Stripe actually charged. Differs from grand_total when the cart
+    # changed while payment was in flight.
+    attribute :amount_paid, :decimal
 
     # Snapshotted from Promotion by SnapshotPromotion. Frozen once the order
     # is placed.
@@ -495,6 +502,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
+    calculate :amount_mismatch?, :boolean, expr(not is_nil(amount_paid) and amount_paid != grand_total)
 
     calculate :vat, :decimal, Calculations.Vat
 

@@ -56,6 +56,18 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, ~s([data-item-id="#{done.id}"] .admin-badge-error))
   end
 
+  test "flags orders where Stripe charged a different amount", %{conn: conn} do
+    mismatched = placed_order(customer_name: "Mismatched", amount_paid: Decimal.new("0.01"))
+    matching = placed_order(customer_name: "Matching")
+    variant = generate(product_variant(product_id: generate(product()).id))
+    generate(line_item(order_id: mismatched.id, product_variant_id: variant.id))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+
+    assert has_element?(view, ~s([data-item-id="#{mismatched.id}"] .admin-badge-error), "Amount mismatch")
+    refute has_element?(view, ~s([data-item-id="#{matching.id}"] .admin-badge-error), "Amount mismatch")
+  end
+
   defp placed_order(attrs) do
     generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
   end

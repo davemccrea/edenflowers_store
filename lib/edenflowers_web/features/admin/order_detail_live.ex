@@ -163,6 +163,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.money_row label={~t"Fulfillment fee"} amount={@order.fulfillment_fee} locale={@locale} />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
+                <.money_row
+                  :if={@order.amount_mismatch?}
+                  label={~t"Charged by Stripe (mismatch)"}
+                  amount={@order.amount_paid}
+                  locale={@locale}
+                />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
               <.button
