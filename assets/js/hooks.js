@@ -573,6 +573,9 @@ Hooks.Stripe = {
         this.stripeReady();
       });
 
+      // The server couldn't update the PaymentIntent, so Stripe never started.
+      this.handleEvent("stripe:ready", () => this.stripeReady());
+
       this.handleEvent("stripe:process_payment", async () => {
         this.stripeLoading();
         this.stripeErrorMessage.textContent = ""; // Clear previous errors
