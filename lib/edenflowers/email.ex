@@ -10,13 +10,12 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Email.Templates
   alias Edenflowers.Format
 
-  @from_address Application.compile_env!(:edenflowers, :mailer_from_address)
-
   def order_confirmation(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
-      |> from(@from_address)
+      |> from(from_address())
       |> to(order.customer_email)
+      |> bcc(from_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference}")
       |> text_body(render_order_confirmation(order))
     end)
@@ -32,7 +31,7 @@ defmodule Edenflowers.Email do
   def course_confirmation(registration) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
-      |> from(@from_address)
+      |> from(from_address())
       |> to(registration.email)
       |> subject(~t"You're booked: #{course = registration.course.name}")
       |> text_body(render_course_confirmation(registration))
@@ -49,7 +48,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_promo(email_address, promo_code) do
     new()
-    |> from(@from_address)
+    |> from(from_address())
     |> to(email_address)
     |> subject(~t"Welcome to Eden Flowers: your 15% off code inside")
     |> text_body(Templates.newsletter_promo(%{promo_code: promo_code}))
@@ -57,7 +56,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_already_subscribed(email_address, promo_code) do
     new()
-    |> from(@from_address)
+    |> from(from_address())
     |> to(email_address)
     |> subject(~t"Your Eden Flowers promo code")
     |> text_body(Templates.newsletter_already_subscribed(%{promo_code: promo_code}))
@@ -65,7 +64,7 @@ defmodule Edenflowers.Email do
 
   def newsletter_resubscribed(email_address) do
     new()
-    |> from(@from_address)
+    |> from(from_address())
     |> to(email_address)
     |> subject(~t"Welcome back to the Eden Flowers newsletter")
     |> text_body(Templates.newsletter_resubscribed(%{}))
@@ -73,7 +72,7 @@ defmodule Edenflowers.Email do
 
   def error_alert(error) do
     new()
-    |> from(@from_address)
+    |> from(from_address())
     |> to(Application.fetch_env!(:edenflowers, :error_alert_email))
     |> subject("[Eden Flowers] #{String.slice(error.reason, 0, 80)}")
     |> text_body("""
@@ -89,9 +88,11 @@ defmodule Edenflowers.Email do
 
   def otp_sign_in(email_address, otp_code) do
     new()
-    |> from(@from_address)
+    |> from(from_address())
     |> to(email_address)
     |> subject(~t"Your Eden Flowers sign-in code")
     |> text_body(Templates.otp_sign_in(%{otp_code: otp_code}))
   end
+
+  defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)
 end

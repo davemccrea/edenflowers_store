@@ -33,6 +33,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
+      assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
       assert email.subject =~ "TEST-OC1"
       assert email.text_body =~ "Anna"
       assert email.html_body in [nil, ""]
