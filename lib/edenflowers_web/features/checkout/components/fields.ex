@@ -10,11 +10,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
   slot :inner_block
 
   def steps(assigns) do
-    assigns =
-      assigns
-      |> assign(:states, @checkout_states)
-      |> assign(:locked?, assigns.state == :confirming_payment)
-      |> assign(:state, if(assigns.state == :confirming_payment, do: :payment, else: assigns.state))
+    assigns = assign(assigns, :states, @checkout_states)
 
     ~H"""
     <ol class="flex flex-col">
@@ -23,7 +19,6 @@ defmodule EdenflowersWeb.Checkout.Fields do
         state={state}
         current_state={@state}
         order={@order}
-        locked?={@locked?}
       >
         <%= if state == @state do %>
           {render_slot(@inner_block)}
@@ -36,7 +31,6 @@ defmodule EdenflowersWeb.Checkout.Fields do
   attr :state, :atom, required: true
   attr :current_state, :atom, required: true
   attr :order, :map, required: true
-  attr :locked?, :boolean, required: true
   slot :inner_block
 
   defp checkout_step(assigns) do
@@ -72,7 +66,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
           </h2>
         </div>
         <.link
-          :if={@past? and not @locked?}
+          :if={@past?}
           phx-click={JS.push("edit_step", value: %{state: @state})}
           class="link-underline-hover shrink-0 text-sm"
         >

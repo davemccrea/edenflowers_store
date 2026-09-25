@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     order =
       Ash.Seed.seed!(Order, %{
         order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
-        state: :confirming_payment,
+        state: :payment,
         customer_name: "John Smith",
         customer_email: "john.smith@example.com",
         user_id: user.id,
@@ -133,7 +133,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert log =~ "amount mismatch"
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert order.state == :confirming_payment
+      assert order.state == :payment
       assert order.payment_status != :paid
       refute_email_sent()
     end
@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert log =~ "payment_intent mismatch"
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert order.state == :confirming_payment
+      assert order.state == :payment
       assert order.payment_status != :paid
       refute_email_sent()
     end
@@ -187,11 +187,11 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_failed_1",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert order.state == :confirming_payment
+      assert order.state == :payment
       assert order.payment_status == :failed
 
       refute_email_sent()
@@ -217,7 +217,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_late_failure",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -227,27 +227,17 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   end
 
   describe "payment_intent.canceled" do
-    test "marks the order failed and releases it for editing", %{order: order} do
-      payment_intent_id = order.payment_intent_id
-
+    test "marks the order's payment_status as :failed", %{order: order} do
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
                  type: "payment_intent.canceled",
-                 data: %{object: %{id: payment_intent_id, metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
-      assert is_nil(order.payment_intent_id)
-
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_canceled_duplicate",
-                 type: "payment_intent.canceled",
-                 data: %{object: %{id: payment_intent_id, metadata: %{"order_id" => order.id}}}
-               })
     end
   end
 

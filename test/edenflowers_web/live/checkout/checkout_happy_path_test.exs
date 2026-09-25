@@ -95,11 +95,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-4")
     |> render_submit()
 
-    assert %{state: :confirming_payment} = Orders.get_order_by_id!(order.id, authorize?: false)
-    refute has_element?(view, "[id^=checkout-line-items-increment]")
-    refute has_element?(view, "#checkout-promo")
-    refute has_element?(view, "a", "Edit")
-
     # Simulate Stripe firing payment_intent.succeeded — this finalizes the
     # order and enqueues the confirmation email Oban job.
     assert :ok =

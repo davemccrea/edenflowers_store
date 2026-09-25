@@ -60,10 +60,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
               <%!-- gap-2 and the 4rem mobile thumbnail are load-bearing: three 3rem
               buttons only fit on one line down to 320px with this budget. --%>
-              <div
-                :if={not line_item.is_card and @order.state != :confirming_payment}
-                class="text-base-content/70 flex flex-row items-center justify-between gap-2"
-              >
+              <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-2">
                 <div class="flex flex-row items-center gap-2">
                   <.icon_button
                     size="lg"
@@ -109,10 +106,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 </.icon_button>
               </div>
 
-              <div
-                :if={line_item.is_card and @order.state != :confirming_payment}
-                class="text-base-content/70 flex justify-end"
-              >
+              <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
                 <.icon_button
                   size="lg"
                   type="button"

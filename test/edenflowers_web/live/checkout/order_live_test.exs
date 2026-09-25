@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, state: :confirming_payment, ordered_at: nil)
+    order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, "h1", "Thank you, Ada.")
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
   test "does not let another customer wait on an order in payment", %{conn: conn} do
     other = generate(admin_user(admin: false))
-    order = placed_order(user_id: other.id, state: :confirming_payment, ordered_at: nil)
+    order = placed_order(user_id: other.id, state: :payment, ordered_at: nil)
 
     assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
   end
@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "waits for the webhook when Stripe's redirect arrives first", %{conn: conn} do
-      order = placed_order(state: :confirming_payment, ordered_at: nil)
+      order = placed_order(state: :payment, ordered_at: nil)
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       refute get_session(conn, :order_id) == order.id
