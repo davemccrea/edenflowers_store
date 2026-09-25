@@ -61,7 +61,7 @@ dump-production-db:
 reset-staging-db:
     #!/usr/bin/env bash
     set -euo pipefail
-    ssh edenflowers-staging bash -s <<'EOF'
+    ssh -T edenflowers-staging bash -s <<'EOF'
     set -euo pipefail
     cd /opt/edenflowers_store
     db=edenflowers_store_staging
