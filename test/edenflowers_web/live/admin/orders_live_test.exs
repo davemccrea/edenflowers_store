@@ -45,6 +45,17 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
   end
 
+  test "flags orders still to fulfil whose fulfillment date has passed", %{conn: conn} do
+    last_week = Date.add(Date.utc_today(), -7)
+    late = placed_order(customer_name: "Late", fulfillment_date: last_week, fulfillment_status: :pending)
+    done = placed_order(customer_name: "Done", fulfillment_date: last_week, fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+
+    assert has_element?(view, ~s([data-item-id="#{late.id}"] .admin-badge-error), "Overdue")
+    refute has_element?(view, ~s([data-item-id="#{done.id}"] .admin-badge-error))
+  end
+
   defp placed_order(attrs) do
     generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
   end
