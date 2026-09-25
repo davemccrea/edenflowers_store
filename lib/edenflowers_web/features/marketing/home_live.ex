@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </p>
       </section>
 
-      <section id="store" class="not-last:border-b">
+      <section :if={@products != []} id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
             <h2 class="section-title">{~t"Favourites"}</h2>
