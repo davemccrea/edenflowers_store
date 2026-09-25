@@ -11,7 +11,7 @@ brew install just
 
 `.githooks/pre-commit` formats staged Elixir (`mix format`) and JS/CSS (Prettier via `npx`). `pre-push` runs `mix precommit`.
 
-The server commands (`just images`, `logs`, `console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
+The server commands (`just sync-images`, `logs`, `console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
 
 ```
 Host edenflowers-staging
@@ -29,17 +29,17 @@ Run `just` to list everything. Each recipe wraps a script in `scripts/`, which y
 
 ```bash
 just dev                        # dev server at localhost:4000, with .env loaded
-just reset-db                   # drop, set up and seed dev + test databases
+just reset-local-db             # drop, set up and seed dev + test databases
 just deploy staging             # push current branch to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
-just images [staging|production] # sync images/ to servers (both if omitted)
+just sync-images [staging|production] # sync images/ to servers (both if omitted)
 just logs staging               # tail app logs on a server
 just console production         # remote IEx on a server
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.
 
-`images/` is gitignored, so photos reach the servers only through `just images`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
+`images/` is gitignored, so photos reach the servers only through `just sync-images`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
 
 ### Database
 
