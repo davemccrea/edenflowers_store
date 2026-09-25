@@ -11,8 +11,6 @@ mix ecto.drop
 ok "dropped"
 mix ash.setup
 ok "schema set up"
-mix run priv/repo/seeds.exs
-ok "seeded"
 
 section "Resetting test database"
 MIX_ENV=test mix ecto.drop

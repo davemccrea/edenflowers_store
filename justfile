@@ -17,10 +17,25 @@ test *args:
 stripe-listen:
     stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:4000/webhook/stripe
 
-# Drop, set up and seed the dev and test databases
+# Drop and set up the dev and test databases (run `just seed local` afterwards for data)
 [group('local')]
 reset-local-db:
     ./scripts/reset-db.sh
+
+# Seed a database (local or staging, never production)
+[group('local')]
+[group('server')]
+seed target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{target}}" in
+      local)
+        source .env && mix run priv/repo/seeds.exs ;;
+      staging)
+        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
+      *)
+        echo "Unknown target '{{target}}', use local or staging" >&2; exit 1 ;;
+    esac
 
 # Deploy to staging or production (asks if no target is given)
 [group('deploy')]
