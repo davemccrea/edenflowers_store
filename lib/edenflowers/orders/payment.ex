@@ -33,7 +33,32 @@ defmodule Edenflowers.Orders.Payment do
     end
   end
 
-  def update_payment(order), do: stripe_api().update_payment_intent(order)
+  def update_payment(%{state: :payment} = order, actor) do
+    case Orders.begin_payment_confirmation(order, actor: actor) do
+      {:ok, order} ->
+        case stripe_api().update_payment_intent(order) do
+          {:ok, _payment_intent} ->
+            {:ok, order}
+
+          error ->
+            release_confirmation(order)
+            error
+        end
+
+      error ->
+        error
+    end
+  end
+
+  # A retry after a declined card. The cart is frozen while confirming, so the
+  # PaymentIntent amount is already current; only check the lock is still held.
+  def update_payment(%{state: :confirming_payment} = order, actor) do
+    case Orders.get_order_by_id(order.id, actor: actor) do
+      {:ok, %{state: :confirming_payment}} -> {:ok, order}
+      {:ok, _order} -> {:error, :payment_confirmation_not_active}
+      error -> error
+    end
+  end
 
   @doc """
   Places the order for a succeeded PaymentIntent and enqueues its confirmation
@@ -123,6 +148,12 @@ defmodule Edenflowers.Orders.Payment do
         Logger.error("Failed to persist payment_intent_id for order #{order.id}: #{inspect(reason)}")
 
         {:error, :payment_intent_persist_failed}
+    end
+  end
+
+  defp release_confirmation(order) do
+    with {:error, reason} <- Orders.release_payment_confirmation(order, actor: system_actor()) do
+      Logger.error("Failed to release payment confirmation for order #{order.id}: #{inspect(reason)}")
     end
   end
 

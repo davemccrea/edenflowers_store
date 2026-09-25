@@ -23,6 +23,10 @@ defmodule Edenflowers.Orders do
       define :return_to_contact_details, action: :return_to_contact_details
       define :return_to_gift_options, action: :return_to_gift_options
       define :return_to_delivery, action: :return_to_delivery
+      define :begin_payment_confirmation, action: :begin_payment_confirmation
+      define :release_payment_confirmation, action: :release_payment_confirmation
+      define :cancel_payment_confirmation, action: :cancel_payment_confirmation
+
       define :finalize_checkout, action: :finalize_checkout
       define :mark_payment_failed, action: :mark_payment_failed
       define :mark_order_fulfilled, action: :mark_fulfilled

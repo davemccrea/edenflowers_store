@@ -50,10 +50,19 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   end
 
   @impl true
-  def handle_event(%Stripe.Event{type: type} = event)
-      when type in ["payment_intent.payment_failed", "payment_intent.canceled"] do
+  def handle_event(%Stripe.Event{type: "payment_intent.payment_failed"} = event) do
     with {:ok, order_id} <- fetch_order_id(event),
-         {:ok, outcome} <- mark_payment_failed(order_id) do
+         {:ok, outcome} <- mark_payment_failed(order_id, event.data.object.id) do
+      log_payment_failed(outcome, order_id, event)
+      :ok
+    else
+      error -> handle_error(error, event)
+    end
+  end
+
+  def handle_event(%Stripe.Event{type: "payment_intent.canceled"} = event) do
+    with {:ok, order_id} <- fetch_order_id(event),
+         {:ok, outcome} <- cancel_payment_confirmation(order_id, event.data.object.id) do
       log_payment_failed(outcome, order_id, event)
       :ok
     else
@@ -74,11 +83,34 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
 
   defp fetch_order_id(_event), do: {:error, :missing_order_id}
 
-  defp mark_payment_failed(order_id) do
+  defp mark_payment_failed(order_id, payment_intent_id) do
     case Orders.get_order_by_id(order_id, actor: system_actor()) do
       {:ok, %{payment_status: :paid}} -> {:ok, :already_paid}
-      {:ok, order} -> update_payment_failed(order, order_id)
+      {:ok, %{payment_intent_id: ^payment_intent_id} = order} -> update_payment_failed(order, order_id)
+      {:ok, order} -> {:error, {:payment_intent_mismatch, order.id, order.payment_intent_id, payment_intent_id}}
       {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
+    end
+  end
+
+  defp cancel_payment_confirmation(order_id, payment_intent_id) do
+    case Orders.get_order_by_id(order_id, actor: system_actor()) do
+      {:ok, %{state: :placed}} ->
+        {:ok, :already_paid}
+
+      {:ok, %{state: :payment, payment_intent_id: nil}} ->
+        {:ok, :already_released}
+
+      {:ok, %{payment_intent_id: ^payment_intent_id} = order} ->
+        case Orders.cancel_payment_confirmation(order, actor: system_actor()) do
+          {:ok, order} -> {:ok, order}
+          {:error, reason} -> {:error, {:payment_update_failed, order_id, reason}}
+        end
+
+      {:ok, order} ->
+        {:error, {:payment_intent_mismatch, order.id, order.payment_intent_id, payment_intent_id}}
+
+      {:error, reason} ->
+        {:error, {:payment_update_failed, order_id, reason}}
     end
   end
 

@@ -14,12 +14,16 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.{Order, Payment}
 
   # Give the webhook time to arrive before stepping in.
   @grace_period_minutes 5
   # Older checkouts are abandoned; don't keep asking Stripe about them.
   @lookback_days 7
+  # Long enough for a slow 3DS challenge to finish before the lock is dropped.
+  @abandoned_lock_minutes 60
+  @unconfirmed_statuses ["requires_payment_method", "requires_confirmation", "requires_action"]
 
   @impl true
   def perform(_job) do
@@ -30,12 +34,11 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
   defp stale_payment_orders do
     now = DateTime.utc_now()
     settled_before = DateTime.add(now, -@grace_period_minutes, :minute)
-    abandoned_before = DateTime.add(now, -@lookback_days, :day)
 
     Order
     |> Ash.Query.filter(
-      state == :payment and not is_nil(payment_intent_id) and
-        updated_at < ^settled_before and updated_at > ^abandoned_before
+      state == :confirming_payment and not is_nil(payment_intent_id) and
+        updated_at < ^settled_before
     )
     |> Ash.read!(actor: system_actor())
   end
@@ -74,11 +77,36 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
       {:ok, %{status: "succeeded"} = payment_intent} ->
         complete_payment(order, payment_intent)
 
+      {:ok, %{status: "canceled", id: payment_intent_id}}
+      when payment_intent_id == order.payment_intent_id ->
+        Orders.cancel_payment_confirmation(order, actor: system_actor())
+
+      {:ok, %{status: status} = payment_intent} when status in @unconfirmed_statuses ->
+        maybe_release_abandoned_lock(order, payment_intent)
+
       {:ok, _not_succeeded} ->
         :ok
 
       {:error, reason} ->
         Logger.error("Reconciliation: failed to retrieve PaymentIntent for order #{order.id}: #{inspect(reason)}")
+    end
+  end
+
+  # Canceling rather than releasing, so a customer who returns to a 3DS tab
+  # cannot complete a payment for an order they may have since edited.
+  defp maybe_release_abandoned_lock(order, payment_intent) do
+    abandoned_before = DateTime.add(DateTime.utc_now(), -@abandoned_lock_minutes, :minute)
+
+    if DateTime.before?(order.updated_at, abandoned_before) do
+      with {:ok, _canceled} <- stripe_api().cancel_payment_intent(payment_intent),
+           {:ok, _order} <- Orders.cancel_payment_confirmation(order, actor: system_actor()) do
+        :ok
+      else
+        {:error, reason} ->
+          Logger.error("Reconciliation failed to release abandoned order #{order.id}: #{inspect(reason)}")
+      end
+    else
+      :ok
     end
   end
 

@@ -242,7 +242,7 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
+    order = generate(order(state: :confirming_payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
     assert {:ok, order} = Orders.finalize_checkout(order.id, authorize?: false)
     assert order.state == :placed
@@ -254,7 +254,7 @@ defmodule Edenflowers.Orders.OrderTest do
     tax_rate = generate(tax_rate(percentage: "0.255"))
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "39.90"))
-    order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+    order = generate(order(state: :confirming_payment, payment_intent_id: "pi_test"))
     generate(line_item(order_id: order.id, product_variant_id: variant.id))
 
     assert {:ok, order} = Orders.finalize_checkout(order.id, authorize?: false)
@@ -275,7 +275,7 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   test "finalize_checkout mints the order reference" do
-    order = generate(order(state: :payment, payment_intent_id: "pi_test", order_reference: nil))
+    order = generate(order(state: :confirming_payment, payment_intent_id: "pi_test", order_reference: nil))
     refute order.order_reference
 
     assert {:ok, order} = Orders.finalize_checkout(order.id, authorize?: false)
@@ -1224,6 +1224,45 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   describe "Order state transitions" do
+    test "begin_payment_confirmation freezes a payment order" do
+      order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+
+      assert {:ok, order} = Orders.begin_payment_confirmation(order, authorize?: false)
+      assert order.state == :confirming_payment
+    end
+
+    test "cannot finalize an order before confirmation begins" do
+      order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+
+      assert {:error, %Ash.Error.Invalid{}} = Orders.finalize_checkout(order.id, authorize?: false)
+    end
+
+    test "commercial mutations are rejected while payment is confirming" do
+      order = generate(order(state: :confirming_payment, payment_intent_id: "pi_test"))
+      product = generate(product())
+      variant = generate(product_variant(product_id: product.id))
+      line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id))
+      promotion = generate(promotion())
+      fulfillment_option = generate(fulfillment_option())
+
+      mutations = [
+        fn -> Orders.add_line_item(order, variant.id, 1, authorize?: false) end,
+        fn -> Orders.increment_line_item(order, line_item.id, authorize?: false) end,
+        fn -> Orders.decrement_line_item(order, line_item.id, authorize?: false) end,
+        fn -> Orders.remove_line_item(order, line_item.id, authorize?: false) end,
+        fn -> Orders.add_card(order, variant.id, authorize?: false) end,
+        fn -> Orders.remove_card(order, authorize?: false) end,
+        fn -> Orders.add_promotion_with_id(order, promotion.id, authorize?: false) end,
+        fn -> Orders.clear_promotion(order, authorize?: false) end,
+        fn -> Orders.update_fulfillment_option(order, fulfillment_option.id, authorize?: false) end,
+        fn -> Orders.set_gift(order, true, authorize?: false) end
+      ]
+
+      assert Enum.all?(mutations, fn mutation -> match?({:error, %Ash.Error.Invalid{}}, mutation.()) end)
+      assert [%{id: id, quantity: 1}] = Ash.read!(Edenflowers.Orders.LineItem, authorize?: false)
+      assert id == line_item.id
+    end
+
     test "finalize_checkout requires payment_intent_id" do
       order = generate(order(payment_intent_id: nil))
 
@@ -1232,7 +1271,7 @@ defmodule Edenflowers.Orders.OrderTest do
     end
 
     test "payment_status transitions from pending to paid" do
-      order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
+      order = generate(order(state: :confirming_payment, payment_status: :pending, payment_intent_id: "pi_test"))
 
       assert {:ok, order} = Orders.finalize_checkout(order.id, authorize?: false)
       assert order.payment_status == :paid

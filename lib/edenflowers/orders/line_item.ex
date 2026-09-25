@@ -51,16 +51,8 @@ defmodule Edenflowers.Orders.LineItem do
       authorize_if expr(order.state == :placed and order.user_id == ^actor(:id))
     end
 
-    # Filter expressions can't authorize creates (no row to filter yet), so a
-    # custom check resolves the parent order's state at evaluation time.
-    policy action_type(:create) do
-      authorize_if Edenflowers.Orders.LineItem.Checks.OrderNotPlaced
-    end
-
-    policy action_type([:update, :destroy]) do
-      forbid_if expr(order.state == :placed)
-      authorize_if always()
-    end
+    # Writes enter through Order aggregate actions, which perform the parent-row
+    # lock before invoking these actions with authorization disabled.
   end
 
   pub_sub do
