@@ -8,6 +8,17 @@ defmodule Edenflowers.Catalog.ProductVariant do
   postgres do
     table "product_variants"
     repo Edenflowers.Repo
+
+    # The generator would carry `scale: 2` into the migration, which Ecto
+    # rejects without a precision. Ash still validates the scale; the check
+    # constraint enforces cents at the database.
+    migration_types price: :decimal
+
+    check_constraints do
+      check_constraint :price, "product_variants_valid_price",
+        check: "price >= 0 AND price = round(price, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 
   actions do

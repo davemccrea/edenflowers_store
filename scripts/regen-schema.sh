@@ -18,7 +18,9 @@ ok "cleared"
 section "Regenerating migrations from Ash resources"
 mix ash_postgres.generate_migrations initial
 sleep 1
-mix oban.install
+mix oban.install --yes
+sleep 1
+mix error_tracker.install --yes
 ok "migrations regenerated"
 
 section "Setting up dev database"

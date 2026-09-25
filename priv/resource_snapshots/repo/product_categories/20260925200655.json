@@ -9,56 +9,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "refresh_token",
-      "type": "text"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "access_token_expires_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "access_token",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "uid",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "strategy",
-      "type": "text"
+      "source": "translations",
+      "type": "map"
     },
     {
       "allow_nil?": false,
@@ -73,37 +25,52 @@
       "type": "uuid"
     },
     {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "name",
+      "type": "text"
+    },
+    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "user_identities_user_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "users"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "user_id",
-      "type": "uuid"
+      "source": "description",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "slug",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "visibility",
+      "type": "text"
     }
   ],
   "base_filter": null,
@@ -112,23 +79,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "00B16604251DB161784B7BB9865D5D0EC4EFDD1B6CC20B5EE432F96013ECE18E",
+  "hash": "E3107A9B1C202373F22D7A2ADDFC51A8060ECA728EB2E40F556E3966A85695BA",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "user_identities_unique_on_strategy_and_uid_index",
+      "index_name": "product_categories_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "strategy"
-        },
-        {
-          "type": "atom",
-          "value": "uid"
+          "value": "slug"
         }
       ],
-      "name": "unique_on_strategy_and_uid",
+      "name": "unique_slug",
       "nils_distinct?": true,
       "where": null
     }
@@ -140,5 +103,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "user_identities"
+  "table": "product_categories"
 }

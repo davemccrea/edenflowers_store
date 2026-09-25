@@ -66,6 +66,30 @@
       "generated?": false,
       "precision": null,
       "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "avatar",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "avatar_content_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
       "references": {
         "deferrable": false,
         "destination_attribute": "id",
@@ -100,7 +124,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "2E3C430DF70D63DE82F7619758B2CAE9332F8C7E3F51E2FB6C112E92DCF71E88",
+  "hash": "9E4DF244074C3101A9742FF7FAF1D09A573BA9DBCCA13D85D1ECAEE62588E29F",
   "identities": [
     {
       "all_tenants?": false,
