@@ -12,7 +12,17 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :name, :text, null: false
       add :email, :text, null: false
+      add :seats, :bigint, null: false, default: 1
+      add :locale, :text, null: false, default: "sv-FI"
       add :status, :text, default: "pending"
+      add :reference, :text, null: false
+      add :unit_price, :decimal, null: false
+      add :tax_rate, :decimal, null: false
+      add :amount, :decimal, null: false
+      add :payment_intent_id, :text
+      add :confirmed_at, :utc_datetime
+      add :receipt_emailed_at, :utc_datetime
+      add :receipt_sha256, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -23,7 +33,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         default: fragment("(now() AT TIME ZONE 'utc')")
 
       add :user_id, :uuid
-      add :course_id, :uuid
+      add :course_id, :uuid, null: false
     end
 
     create table(:courses, primary_key: false) do
@@ -61,6 +71,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :updated_at, :utc_datetime_usec,
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :tax_rate_id, :uuid, null: false
     end
 
     create table(:expenses, primary_key: false) do
@@ -177,19 +189,21 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :fulfillment_date, :date
       add :fulfillment_fee, :decimal
       add :fulfillment_method, :text
-      add :fulfillment_tax_percentage, :decimal
+      add :fulfillment_tax_rate, :decimal
       add :fulfillment_option_name, :text
       add :geocoded_address, :text
       add :here_id, :text
       add :distance, :bigint
       add :position, :text
       add :payment_intent_id, :text
+      add :amount_paid, :decimal
       add :discount_rate, :decimal
       add :promotion_name, :text
       add :promotion_code, :text
       add :locale, :text, default: "sv-FI"
       add :receipt_emailed_at, :utc_datetime
       add :receipt_sha256, :text
+      add :vat_breakdown, {:array, :map}
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -305,6 +319,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              )
     end
 
+    create constraint(:product_variants, :product_variants_valid_price,
+             check: """
+               price >= 0 AND price = round(price, 2)
+             """
+           )
+
     alter table(:products) do
       add :name, :text, null: false
       add :image_slug, :text, null: false
@@ -323,8 +343,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -356,6 +375,16 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:tax_rates, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+    end
+
+    alter table(:courses) do
+      modify :tax_rate_id,
+             references(:tax_rates,
+               column: :id,
+               name: "courses_tax_rate_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
     end
 
     alter table(:fulfillment_options) do
@@ -455,6 +484,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :email, :citext, null: false
       add :newsletter_opt_in, :boolean, default: false
       add :admin, :boolean, default: false
+      add :avatar, :binary
+      add :avatar_content_type, :text
 
       add :newsletter_promo_id,
           references(:promotions,
@@ -475,6 +506,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:users) do
       remove :newsletter_promo_id
+      remove :avatar_content_type
+      remove :avatar
       remove :admin
       remove :newsletter_opt_in
       remove :email
@@ -537,6 +570,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       modify :tax_rate_id, :uuid
     end
 
+    drop constraint(:courses, "courses_tax_rate_id_fkey")
+
+    alter table(:courses) do
+      modify :tax_rate_id, :uuid
+    end
+
     drop table(:tax_rates)
 
     drop_if_exists unique_index(:promotions, [:code], name: "promotions_unique_code_index")
@@ -572,6 +611,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :image_slug
       remove :name
     end
+
+    drop_if_exists constraint(:product_variants, :product_variants_valid_price)
 
     drop constraint(:product_variants, "product_variants_product_id_fkey")
 
@@ -643,19 +684,21 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :user_id
       remove :updated_at
       remove :inserted_at
+      remove :vat_breakdown
       remove :receipt_sha256
       remove :receipt_emailed_at
       remove :locale
       remove :promotion_code
       remove :promotion_name
       remove :discount_rate
+      remove :amount_paid
       remove :payment_intent_id
       remove :position
       remove :distance
       remove :here_id
       remove :geocoded_address
       remove :fulfillment_option_name
-      remove :fulfillment_tax_percentage
+      remove :fulfillment_tax_rate
       remove :fulfillment_method
       remove :fulfillment_fee
       remove :fulfillment_date
@@ -702,6 +745,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop table(:expenses)
 
     alter table(:courses) do
+      remove :tax_rate_id
       remove :updated_at
       remove :inserted_at
       remove :price

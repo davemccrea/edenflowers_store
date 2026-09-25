@@ -309,6 +309,18 @@
       "references": null,
       "scale": null,
       "size": null,
+      "source": "amount_paid",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
       "source": "discount_rate",
       "type": "decimal"
     },
@@ -371,6 +383,21 @@
       "size": null,
       "source": "receipt_sha256",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "vat_breakdown",
+      "type": [
+        "array",
+        "map"
+      ]
     },
     {
       "allow_nil?": false,
