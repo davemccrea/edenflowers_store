@@ -565,6 +565,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
       end)
 
     assert html =~ "Payment processing error"
+    assert_push_event(view, "stripe:ready", %{})
 
     stalled = Orders.get_order_by_id!(order.id, authorize?: false)
     assert stalled.state == :payment

@@ -244,12 +244,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
                     phx-hook="Stripe"
-                    phx-submit="pay"
+                    phx-submit={lock_while_paying() |> JS.push("pay")}
                     data-client-secret={@client_secret}
                     data-publishable-key={stripe_publishable_key()}
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
-                    data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
-                    data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
+                    data-stripe-loading={
+                      JS.set_attribute({"disabled", "true"}, to: "#payment-button") |> lock_while_paying()
+                    }
+                    data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button") |> unlock_after_paying()}
                     class="flex flex-col gap-4"
                   >
                     <div phx-update="ignore" id="payment-element"></div>
@@ -268,7 +270,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
             </div>
 
             <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
-              <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section">
+              <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section" data-locked-while-paying>
                 <p class="eyebrow text-base-content/70" data-testid="cart-heading">
                   {~t"Cart"} ({@order.total_items_in_cart})
                 </p>
@@ -584,7 +586,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
       {:error, error} ->
         Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Payment processing error. Please try again.")}
+
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"Payment processing error. Please try again.")
+         |> push_event("stripe:ready", %{})}
     end
   end
 
@@ -821,6 +827,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok
+
+  # A cart change after "pay" has updated the PaymentIntent would charge the
+  # old amount, so anything that changes the total is inert from the click
+  # until Stripe settles.
+  @locked_while_paying "#cart-drawer, [data-locked-while-paying]"
+
+  defp lock_while_paying(js \\ %JS{}), do: JS.set_attribute(js, {"inert", ""}, to: @locked_while_paying)
+
+  defp unlock_after_paying(js), do: JS.remove_attribute(js, "inert", to: @locked_while_paying)
 
   defp section_id(id, state) when state in @checkout_states do
     "#{id}-section-#{state}"
