@@ -15,7 +15,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Orders")
-     |> assign(:locale, Localize.get_locale())}
+     |> assign(:locale, Localize.get_locale())
+     |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
   end
 
   @doc "The orders list filtered to the work still to do: paid and not yet fulfilled."
@@ -58,6 +59,12 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           >
             <span class="whitespace-nowrap tabular-nums">
               {Format.date(order.fulfillment_date, @locale)}
+            </span>
+            <span
+              :if={overdue?(order, @today)}
+              class="badge badge-sm admin-badge-error ml-1.5 whitespace-nowrap align-middle font-medium"
+            >
+              {~t"Overdue"}
             </span>
           </:col>
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
@@ -117,6 +124,11 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     </Layouts.admin>
     """
   end
+
+  defp overdue?(%{fulfillment_status: :pending, fulfillment_date: %Date{} = date}, today),
+    do: Date.before?(date, today)
+
+  defp overdue?(_order, _today), do: false
 
   defp search_orders(query, _searchable_columns, search_term) do
     require Ash.Query
