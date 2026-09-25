@@ -55,7 +55,7 @@ dump-production-db:
     ssh edenflowers-production 'sudo -u postgres pg_dump -Fc edenflowers_store_prod' > tmp/production-$(date +%F).dump
     @ls -lh tmp/production-$(date +%F).dump
 
-# Wipe, migrate and seed the staging database (hardcoded to staging, never production)
+# Wipe the staging database, leaving an empty schema for the next deploy to migrate (hardcoded to staging, never production)
 [group('server')]
 [confirm("Wipe the STAGING database? [y/N]")]
 reset-staging-db:
@@ -65,15 +65,13 @@ reset-staging-db:
     set -euo pipefail
     cd /opt/edenflowers_store
     db=edenflowers_store_staging
-    owner=$(sudo -u postgres psql -tA -d "$db" -c "select tableowner from pg_tables where tablename = 'schema_migrations'")
+    # The app role is the one granted on the database by provisioning; schema_migrations may already be gone
+    app_role=$(sudo -u postgres psql -tA -d "$db" -c "select distinct grantee::regrole from pg_database, aclexplode(datacl) where datname = current_database() and grantee <> datdba and grantee <> 0")
+    if [ -z "$app_role" ]; then echo "Could not find the app role for $db" >&2; exit 1; fi
     docker compose stop app
     sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" \
       -c "drop schema public cascade" \
       -c "create schema public" \
-      -c "grant all on schema public to \"$owner\"" \
+      -c "grant all on schema public to $app_role" \
       -c "create extension citext"
-    docker compose run --rm app /app/bin/migrate
-    docker compose start app
-    until docker compose exec app /app/bin/edenflowers pid >/dev/null 2>&1; do sleep 1; done
-    docker compose exec app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, "priv/repo/seeds.exs"))'
     EOF
