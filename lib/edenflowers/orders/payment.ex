@@ -60,8 +60,8 @@ defmodule Edenflowers.Orders.Payment do
         {:ok, :already_placed}
 
       {:ok, order} ->
-        with :ok <- verify_payment_intent_id(payment_intent, order),
-             :ok <- verify_amount(payment_intent, order) do
+        with :ok <- verify_payment_intent_id(payment_intent, order) do
+          check_amount(payment_intent, order)
           place_order(order_id, payment_intent)
         end
 
@@ -78,18 +78,23 @@ defmodule Edenflowers.Orders.Payment do
     end
   end
 
-  defp verify_amount(%{amount_received: amount_received}, order) do
+  # The customer has paid, so the order is placed regardless. The admin
+  # orders list flags the mismatch for the florist to follow up.
+  defp check_amount(%{amount_received: amount_received}, order) do
     expected_cents = StripeAPI.to_stripe_amount(order.grand_total)
 
-    if amount_received == expected_cents do
-      :ok
-    else
-      {:error, {:amount_mismatch, order.id, expected_cents, amount_received}}
+    if amount_received != expected_cents do
+      Logger.error(
+        "Amount mismatch for order #{order.id} (expected: #{expected_cents}, got: #{amount_received}). " <>
+          "Placing it anyway; the cart likely changed while payment was in flight."
+      )
     end
   end
 
   defp place_order(order_id, payment_intent) do
-    case Orders.finalize_checkout(order_id, actor: system_actor()) do
+    amount_paid = Decimal.div(payment_intent.amount_received, 100)
+
+    case Orders.finalize_checkout(order_id, %{amount_paid: amount_paid}, actor: system_actor()) do
       {:ok, order} ->
         Logger.info(
           "Placed order #{order_id} for PaymentIntent #{payment_intent.id} (#{payment_intent.amount_received} cents)"

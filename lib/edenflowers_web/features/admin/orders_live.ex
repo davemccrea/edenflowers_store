@@ -104,6 +104,12 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             <span class="whitespace-nowrap tabular-nums">
               {Format.currency(order.grand_total, @locale)}
             </span>
+            <span
+              :if={order.amount_mismatch?}
+              class="badge badge-sm admin-badge-error ml-1.5 whitespace-nowrap align-middle font-medium"
+            >
+              {~t"Amount mismatch"}
+            </span>
           </:col>
           <:col
             :let={order}
