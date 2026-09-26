@@ -37,7 +37,7 @@ defmodule Edenflowers.External.StripeAPI do
     Stripe.PaymentIntent.create(%{
       amount: amount,
       currency: "EUR",
-      automatic_payment_methods: %{enabled: true, allow_redirects: :never},
+      automatic_payment_methods: %{enabled: true},
       metadata: %{
         "order_id" => id
       }
@@ -49,7 +49,7 @@ defmodule Edenflowers.External.StripeAPI do
     Stripe.PaymentIntent.create(%{
       amount: to_stripe_amount(amount),
       currency: "EUR",
-      automatic_payment_methods: %{enabled: true, allow_redirects: :never},
+      automatic_payment_methods: %{enabled: true},
       metadata: %{
         "course_registration_id" => id
       }

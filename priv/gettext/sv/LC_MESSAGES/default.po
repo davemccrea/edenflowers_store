@@ -1759,7 +1759,7 @@ msgid "Confirmed"
 msgstr "Bekräftad"
 
 #: lib/edenflowers_web/features/account/account_live.ex:118
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:62
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr "Kurs"
@@ -1827,7 +1827,7 @@ msgid "Visit the shop"
 msgstr "Gå till butiken"
 
 #: lib/edenflowers_web/features/account/account_live.ex:120
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:65
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:78
 #: lib/edenflowers_web/features/courses/course_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "When"
@@ -1859,13 +1859,13 @@ msgid "Location"
 msgstr "Plats"
 
 #: lib/edenflowers_web/features/account/account_live.ex:65
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:82
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Reference"
 msgstr "Referens"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:101
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:56
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Confirming your payment… You'll get a confirmation email once it's done."
 msgstr "Bekräftar din betalning… Du får ett bekräftelsemejl när det är klart."
@@ -1876,7 +1876,7 @@ msgid "For %{shown_order_recipient_name}"
 msgstr "Till %{shown_order_recipient_name}"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:99
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:54
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Payment received. A confirmation email is on its way."
 msgstr "Betalningen är bekräftad. Ett bekräftelsemejl är på väg."
@@ -1965,7 +1965,7 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} plats kvar"
 msgstr[1] "%{count} platser kvar"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:44
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Booking cancelled"
 msgstr "Bokningen avbokad"
@@ -1975,7 +1975,7 @@ msgstr "Bokningen avbokad"
 msgid "Booking closed"
 msgstr "Bokningen stängd"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Booking not found."
 msgstr "Bokningen hittades inte."
@@ -1985,7 +1985,7 @@ msgstr "Bokningen hittades inte."
 msgid "Cancel at least 7 days before the course for a full refund."
 msgstr "Avboka senast 7 dagar före kursen så får du hela summan tillbaka."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:87
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Cancel at least 7 days before the course for a full refund: reply to your confirmation email."
 msgstr "Avboka senast 7 dagar före kursen så får du hela summan tillbaka: svara på ditt bekräftelsemejl."
@@ -2018,7 +2018,7 @@ msgid "Join me for a few hours of hands-on floristry. I bring the flowers and sh
 msgstr "Kom och prova på floristik med mig i några timmar. Jag står för blommorna och visar hur man gör, och det du gör tar du med dig hem."
 
 #: lib/edenflowers_web/features/account/account_live.ex:121
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:79
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:92
 #: lib/edenflowers_web/features/courses/course_live.ex:82
 #: lib/edenflowers_web/features/courses/course_live.ex:124
 #, elixir-autogen, elixir-format
@@ -2048,7 +2048,7 @@ msgstr[1] "Tack för din bokning. Dina %{count} platser på %{course} är bekrä
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr "Just nu finns inga kurser i kalendern. Nya datum meddelar jag först i nyhetsbrevet."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:45
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "This booking has been cancelled. Get in touch if that's a surprise."
 msgstr "Den här bokningen har avbokats. Hör av dig om det kommer som en överraskning."
@@ -2063,7 +2063,7 @@ msgstr "Den här kursen tar inte längre emot bokningar. Nya datum meddelar jag 
 msgid "When: %{date}, %{start}–%{end}"
 msgstr "När: %{date}, %{start}–%{end}"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:73
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:86
 #: lib/edenflowers_web/features/courses/course_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Where"
@@ -2074,12 +2074,12 @@ msgstr "Var"
 msgid "Where: %{venue}, %{address}"
 msgstr "Var: %{venue}, %{address}"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:47
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "You're booked"
 msgstr "Din plats är bokad"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:22
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:35
 #, elixir-autogen, elixir-format
 msgid "Your booking"
 msgstr "Din bokning"
@@ -2705,3 +2705,9 @@ msgstr "Bröllopsblommor i Vasa och Korsholm: brudbuketter, dekoration och bloms
 #, elixir-autogen, elixir-format
 msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
 msgstr "Blommorna är en del av hela dagen, från den första bilden till det sista bordet som dukas av. Jag hjälper er att hitta de blommor som motsvarar era önskemål och känns som ni två."
+
+#: lib/edenflowers_web/features/checkout/checkout_complete_controller.ex:18
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "Your payment didn't go through. Please try again or choose another payment method."
+msgstr "Betalningen gick inte igenom. Försök igen eller välj ett annat betalningssätt."

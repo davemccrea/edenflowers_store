@@ -107,6 +107,19 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert has_element?(view, "[data-testid=order-paid]")
     end
 
+    test "goes back to checkout, keeping their cart, when a redirect payment fails", %{conn: conn} do
+      order = placed_order(state: :payment, ordered_at: nil)
+
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> get(~p"/checkout/complete/#{order.id}?redirect_status=failed")
+
+      assert redirected_to(conn) == ~p"/checkout"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "didn't go through"
+      assert get_session(conn, :order_id) == order.id
+    end
+
     test "is sent to sign in for an order that wasn't their cart, keeping their cart", %{conn: conn} do
       order = placed_order([])
       cart = generate(order())

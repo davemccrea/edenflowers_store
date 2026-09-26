@@ -9,6 +9,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
   # A guest's access to their order comes from the cart in their session. If the
   # webhook has already placed the order, `InitStore` granted it on this request;
   # otherwise the cart is still here, and is claimed below.
+  #
+  # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
+  # when the customer cancels or is declined in the app. The PaymentIntent is
+  # reusable, so the cart stays theirs and checkout picks it up again.
+  def index(conn, %{"redirect_status" => "failed"}) do
+    conn
+    |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
+    |> redirect(to: ~p"/checkout")
+  end
+
   def index(conn, %{"id" => order_id}) do
     conn
     |> claim_cart(order_id)

@@ -120,5 +120,20 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(view, "[data-testid=payment-status]", "Payment received")
     end
+
+    test "releases the hold and goes back to the course when a redirect payment fails", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_x"))
+
+      assert {:error, {:live_redirect, %{to: to, flash: flash}}} =
+               live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
+
+      assert to == ~p"/courses/#{registration.course_id}"
+      assert flash["error"] =~ "didn't go through"
+
+      {:ok, registration} =
+        Edenflowers.Courses.get_registration_by_id(registration.id, actor: Edenflowers.Actors.system_actor())
+
+      assert registration.status == :cancelled
+    end
   end
 end
