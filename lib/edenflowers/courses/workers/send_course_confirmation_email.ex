@@ -25,15 +25,28 @@ defmodule Edenflowers.Courses.Workers.SendCourseConfirmationEmail do
   def perform(%Oban.Job{args: %{"course_registration_id" => registration_id}}) do
     registration =
       registration_id
-      |> Courses.get_registration_by_id!(actor: system_actor(), load: [:course, :first_name])
+      |> Courses.get_registration_by_id!(actor: system_actor(), load: [:course, :first_name, :pays_at_course?])
       |> translate_course()
 
     # Skip if a prior Oban attempt already delivered + marked.
-    if registration.receipt_emailed_at do
-      Logger.info("Confirmation email for course registration #{registration_id} already sent")
+    cond do
+      registration.receipt_emailed_at ->
+        Logger.info("Confirmation email for course registration #{registration_id} already sent")
+        :ok
+
+      # Nothing has been paid yet, so there is no receipt to send.
+      registration.pays_at_course? ->
+        send_without_receipt(registration)
+
+      true ->
+        send_with_receipt(registration)
+    end
+  end
+
+  defp send_without_receipt(registration) do
+    with {:ok, _result} <- registration |> Email.course_confirmation() |> Mailer.deliver() do
+      Logger.info("Sent confirmation email for course registration #{registration.id}")
       :ok
-    else
-      send_with_receipt(registration)
     end
   end
 

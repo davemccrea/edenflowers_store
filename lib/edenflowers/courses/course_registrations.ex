@@ -40,6 +40,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change {Changes.ReserveSeats, []}
     end
 
+    # For people who pay Jennie at the course, so they hold a seat without
+    # Stripe. Allowed after online booking closes, but never beyond the
+    # course's places.
+    create :add_manually do
+      accept [:name, :email, :seats, :course_id, :locale]
+      validate attribute_in(:locale, @locales)
+      change set_attribute(:status, :confirmed)
+      change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      change {Changes.UpsertUser, []}
+      change {Changes.ReserveSeats, allow_after_cutoff?: true}
+    end
+
     update :add_payment_intent_id do
       accept [:payment_intent_id]
     end
@@ -52,6 +64,26 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       require_atomic? false
+    end
+
+    # Jennie ticks off manual bookings as people pay at the course.
+    # require_atomic? false: see Order.mark_receipt_emailed.
+    update :mark_paid do
+      validate attribute_equals(:paid_at, nil), message: "already marked as paid"
+      change set_attribute(:paid_at, &DateTime.utc_now/0)
+      require_atomic? false
+    end
+
+    # When someone in a group drops out. Removing the last seat is a cancel.
+    # The amount follows so a pay-at-course booking shows what is still owed;
+    # a Stripe booking is refunded for the seat in the Stripe dashboard.
+    update :remove_seat do
+      require_atomic? false
+
+      change fn changeset, _context ->
+        seats = changeset.data.seats - 1
+        Ash.Changeset.change_attributes(changeset, seats: seats, amount: Decimal.mult(changeset.data.unit_price, seats))
+      end
     end
 
     # Jennie refunds in the Stripe dashboard; cancelling here frees the seats.
@@ -82,8 +114,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
       authorize_if always()
     end
 
-    # Anyone can create registrations (for the guest registration flow).
-    policy action_type(:create) do
+    # Anyone can register (for the guest registration flow).
+    policy action(:register) do
       authorize_if always()
     end
 
@@ -123,6 +155,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     attribute :payment_intent_id, :string
     attribute :confirmed_at, :utc_datetime
+    # Only for manual bookings: a Stripe booking is paid when it is confirmed.
+    attribute :paid_at, :utc_datetime
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
 
@@ -139,6 +173,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+
+    calculate :pays_at_course?, :boolean, expr(is_nil(payment_intent_id) and is_nil(paid_at))
 
     calculate :holds_seats?,
               :boolean,

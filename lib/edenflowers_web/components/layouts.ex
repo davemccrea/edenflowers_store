@@ -186,7 +186,8 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
       {EdenflowersWeb.Admin.OrdersLive.default_path(), ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
-      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"}
+      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
+      {"/admin/courses", ~t"Courses", true, "hero-academic-cap"}
     ]
 
     system_nav = [
