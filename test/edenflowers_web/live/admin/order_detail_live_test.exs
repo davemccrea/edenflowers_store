@@ -39,8 +39,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-customer", "ada@example.com")
     assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
     assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
+    assert has_element?(view, ~s|#order-payment-summary a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+  end
+
+  @tag :typst
+  test "opens the receipt of another customer's order", %{conn: conn} do
+    order = placed_order()
+
+    assert "%PDF" <> _ = conn |> get(~p"/order/#{order.id}/receipt") |> response(200)
   end
 
   test "payment summary subtracts the discount once", %{conn: conn} do
