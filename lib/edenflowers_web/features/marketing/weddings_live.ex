@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             </div>
           </div>
 
-          <div class="border-base-content/12 mt-20 border-t pt-16">
+          <div :if={false} class="border-base-content/12 mt-20 border-t pt-16">
             <h3 class="tile-title text-balance mb-4">{~t"Example weddings"}</h3>
             <p class="text-base-content/80 mb-8 max-w-prose text-lg leading-relaxed">
               {~t"What a whole wedding typically costs. Your quote is built from the prices above, so add or leave out whatever you like."}
