@@ -9,13 +9,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   @locales Edenflowers.Locales.all()
 
-  # How long a pending booking holds its seats while the customer pays.
+  # How long a pending booking holds its place while the customer pays.
   @hold_minutes 10
-
-  # Enough for the usual group of friends without letting one booking empty a course.
-  @max_seats 4
-
-  def max_seats, do: @max_seats
 
   postgres do
     repo Edenflowers.Repo
@@ -33,18 +28,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     create :register do
-      accept [:name, :email, :seats, :course_id, :locale]
+      accept [:name, :email, :course_id, :locale]
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :pending)
       change {Changes.UpsertUser, []}
       change {Changes.ReserveSeats, []}
     end
 
-    # For people who pay Jennie at the course, so they hold a seat without
+    # For people who pay Jennie at the course, so they hold a place without
     # Stripe. Allowed after online booking closes, but never beyond the
     # course's places.
     create :add_manually do
-      accept [:name, :email, :seats, :course_id, :locale]
+      accept [:name, :email, :course_id, :locale]
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
@@ -74,19 +69,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # When someone in a group drops out. Removing the last seat is a cancel.
-    # The amount follows so a pay-at-course booking shows what is still owed;
-    # a Stripe booking is refunded for the seat in the Stripe dashboard.
-    update :remove_seat do
-      require_atomic? false
-
-      change fn changeset, _context ->
-        seats = changeset.data.seats - 1
-        Ash.Changeset.change_attributes(changeset, seats: seats, amount: Decimal.mult(changeset.data.unit_price, seats))
-      end
-    end
-
-    # Jennie refunds in the Stripe dashboard; cancelling here frees the seats.
+    # Jennie refunds in the Stripe dashboard; cancelling here frees the place.
     update :cancel do
       change set_attribute(:status, :cancelled)
     end
@@ -137,7 +120,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
     attribute :email, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
-    attribute :seats, :integer, allow_nil?: false, default: 1, constraints: [min: 1, max: @max_seats]
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :status, :atom,
@@ -176,7 +158,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :pays_at_course?, :boolean, expr(is_nil(payment_intent_id) and is_nil(paid_at))
 
-    calculate :holds_seats?,
+    calculate :holds_place?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
   end

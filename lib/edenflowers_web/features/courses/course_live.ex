@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
         {:ok,
          socket
          |> assign(page_title: course.name, locale: Format.locale(), course: course)
-         |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
+         |> assign(booked_places: booked_places(socket.assigns.current_user, course))
          |> assign(registration: nil, client_secret: nil, focus_booking?: false)
          |> assign_form()}
 
@@ -86,8 +86,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <dd :if={@course.booking_open?}>{Format.weekday_date(@course.register_before, @locale)}</dd>
             </dl>
 
-            <p :if={@booked_seats > 0} data-testid="already-booked">
-              {~t"You have #{count = @booked_seats} place(s) on this course."N}
+            <p :if={@booked_places > 0} data-testid="already-booked">
+              {~t"You have #{count = @booked_places} place(s) on this course."N}
               <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
                 {~t"See your bookings"}
               </.link>
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 phx-mounted={@focus_booking? && JS.focus()}
                 class="section-title mb-6 focus-visible:outline-none"
               >
-                {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
+                {if @booked_places > 0, do: ~t"Book another place", else: ~t"Book a place"}
               </h2>
               <.form
                 id="booking-form"
@@ -120,20 +120,12 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               >
                 <.input label={~t"Your name *"} field={@form[:name]} type="text" autocomplete="name" aria-required="true" />
                 <.input label={~t"Email *"} field={@form[:email]} type="email" autocomplete="email" aria-required="true" />
-                <.input
-                  label={~t"Places"}
-                  field={@form[:seats]}
-                  type="select"
-                  class="select select-lg w-full"
-                  options={seat_options(@course)}
-                  data-testid="seats-select"
-                />
 
                 <%!-- Errors about the booking as a whole have no field of their own to sit under. --%>
                 <.error :for={msg <- Enum.map(@form[:course_id].errors, &translate_error/1)}>{msg}</.error>
 
                 <.form_button data-testid="book-button">
-                  {~t"Continue to payment"} · {Format.currency(total(@course, @form), @locale)}
+                  {~t"Continue to payment"} · {Format.currency(@course.price, @locale)}
                 </.form_button>
               </.form>
 
@@ -150,7 +142,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               >
                 {~t"Payment"}
               </h2>
-              <p>{~t"#{count = @registration.seats} place(s) for #{name = @registration.name}"N}</p>
+              <p>{~t"One place for #{name = @registration.name}"}</p>
               <button
                 type="button"
                 phx-click="change"
@@ -212,7 +204,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     {:noreply, push_event(socket, "stripe:process_payment", %{})}
   end
 
-  # A fresh booking replaces this one, so its hold must not keep the seats.
+  # A fresh booking replaces this one, so its hold must not keep the place.
   def handle_event("change", _params, socket) do
     {:noreply, socket |> release_hold() |> reload_course() |> assign_form() |> assign(focus_booking?: true)}
   end
@@ -226,12 +218,11 @@ defmodule EdenflowersWeb.Courses.CourseLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
-  defp booked_seats(nil, _course), do: 0
+  defp booked_places(nil, _course), do: 0
 
-  defp booked_seats(user, course) do
+  defp booked_places(user, course) do
     Courses.list_my_registrations!(actor: user, query: [filter: [course_id: course.id]])
-    |> Enum.map(& &1.seats)
-    |> Enum.sum()
+    |> length()
   end
 
   defp load_course(id) do
@@ -271,8 +262,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
         actor: user,
         params: %{
           "name" => user && user.name,
-          "email" => user && to_string(user.email),
-          "seats" => "1"
+          "email" => user && to_string(user.email)
         },
         transform_params: fn _form, params, _action ->
           Map.merge(params, %{"course_id" => course_id, "locale" => locale})
@@ -281,20 +271,6 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       |> to_form()
 
     assign(socket, form: form)
-  end
-
-  defp seat_options(course) do
-    Enum.to_list(1..max(min(CourseRegistration.max_seats(), course.seats_left), 1))
-  end
-
-  defp total(course, form) do
-    seats =
-      case Integer.parse(to_string(form[:seats].value)) do
-        {seats, ""} -> seats
-        _ -> 1
-      end
-
-    Decimal.mult(course.price, seats)
   end
 
   defp availability(%{seats_left: seats_left}) when seats_left <= 0, do: ~t"Fully booked"

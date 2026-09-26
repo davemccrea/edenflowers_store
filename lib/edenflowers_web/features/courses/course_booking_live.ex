@@ -89,9 +89,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
               <EdenflowersWeb.Courses.CourseLive.maps_link address={@registration.course.location_address} />
             </dd>
 
-            <dt class="eyebrow text-base-content/70">{~t"Places"}</dt>
-            <dd class="tabular-nums">{@registration.seats}</dd>
-
             <dt class="eyebrow text-base-content/70">{~t"Reference"}</dt>
             <dd class="tabular-nums">{@registration.reference}</dd>
           </dl>

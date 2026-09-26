@@ -117,10 +117,8 @@ msgstr "This field is required"
 msgid "must be present"
 msgstr "This field is required"
 
-msgid "only %{count} places left"
-msgid_plural "only %{count} places left"
-msgstr[0] "only %{count} place left"
-msgstr[1] "only %{count} places left"
+msgid "course is fully booked"
+msgstr "This course is fully booked."
 
 msgid "booking has closed"
 msgstr "Booking for this course has closed."
