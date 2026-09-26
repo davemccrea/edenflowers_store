@@ -120,11 +120,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       course = generate(course(name: "Autumn Wreaths"))
 
       registration =
-        generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed))
+        generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, ~s|[data-testid=courses-table] a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
+      assert has_element?(view, "[data-testid=courses-table] td", "2")
       assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
     end
 

@@ -16,8 +16,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
     test "lists upcoming courses and keeps full ones as unlinked rows", %{conn: conn} do
       open = generate(course(name: "Autumn Wreaths"))
-      full = generate(course(name: "Winter Bouquets", total_places: 1))
-      generate(course_registration(course_id: full.id, status: :confirmed))
+      full = generate(course(name: "Winter Bouquets", total_places: 2))
+      generate(course_registration(course_id: full.id, seats: 2, status: :confirmed))
 
       {:ok, view, _html} = live(conn, ~p"/courses")
 
@@ -28,39 +28,41 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/:id" do
-    test "books a place and shows the payment form", %{conn: conn} do
+    test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
       expect(Edenflowers.External.StripeAPI.Mock, :create_course_payment_intent, fn registration ->
-        assert Decimal.equal?(registration.amount, "85.00")
-        {:ok, %{id: "pi_course", client_secret: "pi_course_secret", amount: 8_500}}
+        assert Decimal.equal?(registration.amount, "255.00")
+        {:ok, %{id: "pi_course", client_secret: "pi_course_secret", amount: 25_500}}
       end)
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course.id}")
 
       view
-      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com"})
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "3"})
       |> render_submit()
 
       assert has_element?(view, "#course-payment-form[data-client-secret=pi_course_secret]")
-      assert has_element?(view, "#payment-button", "85")
+      assert has_element?(view, "#payment-button", "255")
       assert has_element?(view, "#pay-heading[phx-mounted][tabindex='-1']")
     end
 
-    test "shows the course as full when someone else booked the last place first", %{conn: conn} do
-      course = generate(course(total_places: 1))
+    test "shows the seat error when others booked the places first", %{conn: conn} do
+      course = generate(course(total_places: 4))
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course.id}")
 
-      generate(course_registration(course_id: course.id, status: :confirmed))
+      generate(course_registration(course_id: course.id, seats: 3, status: :confirmed))
 
-      view
-      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com"})
-      |> render_submit()
+      html =
+        view
+        |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "2"})
+        |> render_submit()
 
-      assert has_element?(view, "[data-testid=seats-left]", "Fully booked")
-      assert has_element?(view, "[data-testid=booking-closed]")
+      assert html =~ "only 1 place left"
       refute has_element?(view, "#course-payment-form")
+      assert has_element?(view, "#booking-form [data-testid=seats-select] option", "1")
+      refute has_element?(view, "#booking-form [data-testid=seats-select] option[value='2']")
     end
 
     test "a closed course offers the newsletter instead of a form", %{conn: conn} do
@@ -85,15 +87,15 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       %{conn: conn, user: user}
     end
 
-    test "reminds the customer of their place and links to their bookings", %{conn: conn, user: user} do
+    test "reminds the customer of their places and links to their bookings", %{conn: conn, user: user} do
       course = generate(course())
-      generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed))
+      generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course.id}")
 
-      assert has_element?(view, "[data-testid=already-booked]", "You have 1 place on this course.")
+      assert has_element?(view, "[data-testid=already-booked]", "You have 2 places on this course.")
       assert has_element?(view, ~s|[data-testid=already-booked] a[href="/account#courses-heading"]|)
-      assert has_element?(view, "#book-heading", "Book another place")
+      assert has_element?(view, "#book-heading", "Book more places")
     end
 
     test "says nothing about an unpaid booking", %{conn: conn, user: user} do

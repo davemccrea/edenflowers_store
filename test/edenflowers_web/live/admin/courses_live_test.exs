@@ -22,7 +22,9 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   test "lists confirmed bookings with seat counts, hides unpaid ones and shows cancelled ones apart", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths", total_places: 10))
 
-    generate(course_registration(course_id: course.id, status: :confirmed, name: "Anna", email: "anna@example.com"))
+    generate(
+      course_registration(course_id: course.id, status: :confirmed, name: "Anna", email: "anna@example.com", seats: 3)
+    )
 
     generate(course_registration(course_id: course.id, status: :pending, name: "Pending Pete"))
     generate(course_registration(course_id: course.id, status: :cancelled, name: "Cancelled Carl"))
@@ -30,8 +32,9 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     {:ok, view, html} = live(conn, ~p"/admin/courses")
 
     assert html =~ "Autumn wreaths"
-    assert html =~ "1 / 10 places"
+    assert html =~ "3 / 10 seats"
     assert has_element?(view, "li", "Anna")
+    assert has_element?(view, "li", "+2")
     assert has_element?(view, ~s|a[href="https://app.fastmail.com/mail/compose?bcc=anna%40example.com"]|)
     refute html =~ "Pending Pete"
     assert has_element?(view, ".line-through", "Cancelled Carl")
@@ -58,13 +61,13 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     view
     |> form("#booking-form-#{course.id}",
-      form: %{name: "Birgitta", email: "birgitta@example.com", locale: "sv-FI"}
+      form: %{name: "Birgitta", email: "birgitta@example.com", seats: "2", locale: "sv-FI"}
     )
     |> render_submit()
 
     assert has_element?(view, "li", "Birgitta")
     assert has_element?(view, "li", "Pays at course")
-    assert render(view) =~ "1 / 10 places"
+    assert render(view) =~ "2 / 10 seats"
     assert render(view) =~ "1 still to pay at the course"
     assert_enqueued(worker: Edenflowers.Courses.Workers.SendCourseConfirmationEmail)
   end
@@ -88,19 +91,19 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, ~s|a[href$="/payments/pi_123"]|, "Stripe")
   end
 
-  test "explains why a booking can't be added to a full course", %{conn: conn} do
-    course = generate(course(total_places: 1))
-    generate(course_registration(course_id: course.id, status: :confirmed))
+  test "removing a seat shrinks the booking and frees the seat", %{conn: conn} do
+    course = generate(course(total_places: 10))
+
+    registration =
+      generate(course_registration(course_id: course.id, status: :confirmed, seats: 3, amount: Decimal.new("255.00")))
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
+    view |> element(~s|button[phx-click="remove_seat"][phx-value-id="#{registration.id}"]|) |> render_click()
 
-    html =
-      view
-      |> form("#booking-form-#{course.id}", form: %{name: "Birgitta", email: "birgitta@example.com", locale: "sv-FI"})
-      |> render_submit()
-
-    assert html =~ "This course is fully booked."
+    assert render(view) =~ "2 / 10 seats"
+    reloaded = Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false)
+    assert reloaded.seats == 2
+    assert Decimal.equal?(reloaded.amount, "170.00")
   end
 end
