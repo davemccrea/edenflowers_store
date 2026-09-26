@@ -144,7 +144,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       assigns
       |> assign(:cancelled, cancelled)
       |> assign(:registrations, registrations)
-      |> assign(:seats, length(registrations))
       |> assign(:still_to_pay, Enum.count(registrations, & &1.pays_at_course?))
       |> assign(:bcc, registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(","))
 
@@ -171,8 +170,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           />
         </div>
         <div class="mt-3 flex items-center gap-3 text-sm tabular-nums">
-          <progress class="progress progress-primary w-full" value={@seats} max={@course.total_places} />
-          <span class="whitespace-nowrap">{~t"#{@seats} / #{total = @course.total_places} seats"}</span>
+          <progress class="progress progress-primary w-full" value={length(@registrations)} max={@course.total_places} />
+          <span class="whitespace-nowrap">{~t"#{booked = length(@registrations)} / #{total = @course.total_places} places"}</span>
         </div>
       </summary>
 

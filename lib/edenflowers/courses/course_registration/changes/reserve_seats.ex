@@ -50,7 +50,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.ReserveSeats do
       true ->
         Ash.Changeset.force_change_attributes(changeset,
           reference: GenerateOrderReference.generate(),
-          unit_price: course.price,
           tax_rate: course.tax_rate.percentage,
           amount: course.price
         )
