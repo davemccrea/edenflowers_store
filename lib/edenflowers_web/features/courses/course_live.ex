@@ -229,8 +229,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   defp booked_seats(nil, _course), do: 0
 
   defp booked_seats(user, course) do
-    Courses.list_my_registrations!(actor: user, query: [filter: [course_id: course.id]])
-    |> Enum.map(& &1.seats)
+    Courses.list_my_registrations!(actor: user, query: [filter: [course_id: course.id]], load: [:seats_held])
+    |> Enum.map(& &1.seats_held)
     |> Enum.sum()
   end
 

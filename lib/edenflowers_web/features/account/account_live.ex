@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                     {Format.time(registration.course.start_time, @locale)}
                   </span>
                 </td>
-                <td class="py-4 text-right tabular-nums sm:pr-4">{registration.seats}</td>
+                <td class="py-4 text-right tabular-nums sm:pr-4">{registration.seats_held}</td>
                 <td class="hidden py-4 text-right sm:table-cell">
                   <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} />
                 </td>
@@ -272,7 +272,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   defp registrations(user) do
-    Courses.list_my_registrations!(actor: user, load: [:course])
+    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held])
     |> Translations.translate_assoc(:course)
     |> Enum.sort_by(& &1.course.date, Date)
   end
