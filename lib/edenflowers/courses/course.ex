@@ -99,8 +99,9 @@ defmodule Edenflowers.Courses.Course do
   aggregates do
     # Unauthorized on purpose: a visitor may not read other people's bookings,
     # but everyone needs the count to see how many seats are left.
-    count :seats_taken, :course_registrations do
-      filter expr(holds_place?)
+    sum :seats_taken, :course_registrations, :seats do
+      filter expr(holds_seats?)
+      default 0
       authorize? false
     end
   end

@@ -114,8 +114,10 @@ msgstr ""
 msgid "must be present"
 msgstr ""
 
-msgid "course is fully booked"
-msgstr ""
+msgid "only %{count} places left"
+msgid_plural "only %{count} places left"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "booking has closed"
 msgstr ""

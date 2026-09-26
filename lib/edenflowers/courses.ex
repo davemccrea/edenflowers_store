@@ -22,6 +22,7 @@ defmodule Edenflowers.Courses do
       define :confirm_registration_payment, action: :confirm_payment
       define :mark_registration_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]
       define :mark_registration_paid, action: :mark_paid
+      define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
     end
   end
