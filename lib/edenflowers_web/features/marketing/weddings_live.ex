@@ -20,7 +20,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     {:ok,
      socket
      |> assign(gallery: gallery(), thumb_width: @thumb_width, enquiry_mailto: enquiry_mailto())
-     |> assign(prices: prices(), steps: steps(), testimonial: testimonial())}
+     |> assign(personal_flowers: personal_flowers(), decorations: decorations(), packages: packages())
+     |> assign(steps: steps(), testimonial: testimonial())}
   end
 
   def render(assigns) do
@@ -99,33 +100,48 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       </section>
 
       <section class="not-last:border-b" aria-labelledby="prices-heading">
-        <div class="container grid items-center gap-10 py-24 md:grid-cols-2 md:gap-16">
-          <div>
-            <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
-            <p class="text-base-content/80 mb-8 text-lg leading-relaxed">
-              {~t"Every wedding is different, so these are starting prices. You'll get an exact quote once we've talked through your plans."}
-            </p>
-            <dl class="border-t">
-              <div :for={{item, price} <- @prices} class="flex items-baseline justify-between gap-6 border-b py-4">
-                <dt class="text-lg">{item}</dt>
-                <dd class="text-base-content font-serif shrink-0 text-lg tabular-nums">
-                  {starting_price(price)}
-                </dd>
-              </div>
-            </dl>
+        <div class="container py-24">
+          <div class="grid items-start gap-10 md:grid-cols-2 md:gap-16">
+            <div>
+              <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
+              <p class="text-base-content/80 mb-10 text-lg leading-relaxed">
+                {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans. Final prices depend on the flowers and techniques you choose."}
+              </p>
+              <h3 class="card-title mb-2">{~t"Bouquets and accessories"}</h3>
+              <.price_list items={@personal_flowers} />
+              <h3 class="card-title mt-10 mb-2">{~t"Decoration"}</h3>
+              <.price_list items={@decorations} />
+            </div>
+
+            <figure class="md:top-(--header-clearance) md:sticky">
+              <.image
+                src="local:///wedding/eden_flowers_2.jpg"
+                alt={~t"Wrist corsages of peach roses"}
+                width={800}
+                height={533}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                class="aspect-[3/2] w-full object-cover"
+              />
+              <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Eden Flowers" /></figcaption>
+            </figure>
           </div>
 
-          <figure>
-            <.image
-              src="local:///wedding/eden_flowers_2.jpg"
-              alt={~t"Wrist corsages of peach roses"}
-              width={800}
-              height={533}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              class="aspect-[3/2] w-full object-cover"
-            />
-            <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Eden Flowers" /></figcaption>
-          </figure>
+          <h3 class="card-title mt-16 mb-6">{~t"Flowers for the ceremony and reception"}</h3>
+          <div class="grid gap-6 md:grid-cols-3">
+            <div :for={package <- @packages} class="border p-6">
+              <p class="flex items-baseline justify-between gap-4">
+                <span class="font-serif text-2xl">{package.name}</span>
+                <span class="font-serif text-lg tabular-nums">{price_label({:from, package.from})}</span>
+              </p>
+              <p :if={package.intro} class="text-base-content/80 mt-4">{package.intro}</p>
+              <ul class="text-base-content/80 mt-4 list-disc space-y-2 pl-5">
+                <li :for={feature <- package.features}>{feature}</li>
+              </ul>
+            </div>
+          </div>
+          <p class="text-base-content/70 mt-6 text-sm">
+            {~t"Delivery costs are added outside Vaasa. Package prices are based on a normal-sized wedding."}
+          </p>
         </div>
       </section>
 
@@ -289,16 +305,66 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ]
   end
 
-  # Starting prices in euros; nil renders as "On request".
-  # Placeholders until Jennie confirms her real figures.
-  defp prices do
+  # Prices in euros, from Jennie's 2027 wedding price list.
+  defp personal_flowers do
     [
-      {~t"Bridal bouquet", 150},
-      {~t"Bridesmaids' bouquets", 70},
-      {~t"Flower girl bouquets", 40},
-      {~t"Corsages", 25},
-      {~t"Flower crowns and floral jewellery", 60},
-      {~t"Ceremony and reception decoration", nil}
+      {~t"Bridal bouquet, medium", {:range, 110, 150}},
+      {~t"Bridal bouquet, large", {:range, 150, 190}},
+      {~t"Corsage", {:fixed, 19}},
+      {~t"Pocket square flowers", {:fixed, 25}},
+      {~t"Bridesmaid's bouquet", {:from, 45}},
+      {~t"Flower crown", {:from, 38}},
+      {~t"Hair clip", {:from, 32}},
+      {~t"Tiara", {:from, 38}},
+      {~t"Bracelet", {:from, 38}},
+      {~t"Flower girl or toss bouquet", {:from, 35}},
+      {~t"Cake flowers", :on_request}
+    ]
+  end
+
+  defp decorations do
+    [
+      {~t"Silk flower garland, to rent", {:fixed, 95}},
+      {~t"Flower arch or flower gate", {:from, 320}},
+      {~t"Arrangement in an urn or on a pedestal", {:from, 95}},
+      {~t"Welcome sign arrangement", {:from, 70}}
+    ]
+  end
+
+  # Package names are the same in every language, as on the price list.
+  defp packages do
+    set_up = ~t"I come and set everything up on the morning of the wedding"
+    included = ~t"Delivery and a consultation meeting included"
+
+    [
+      %{
+        name: "Basic",
+        from: 250,
+        intro: nil,
+        features: [~t"Green garlands or flowers in vases on the tables", set_up, included]
+      },
+      %{
+        name: "Medium",
+        from: 350,
+        intro: nil,
+        features: [
+          ~t"Green garlands or single flowers on the tables",
+          set_up,
+          ~t"Two smaller arrangements for the ceremony or reception venue",
+          included
+        ]
+      },
+      %{
+        name: "Premium",
+        from: 550,
+        intro: ~t"We put together a package tailored to your wedding, for example:",
+        features: [
+          ~t"Garlands and/or flowers along the reception tables",
+          ~t"Decoration at the ceremony, such as aisle flowers or larger arrangements",
+          ~t"Flower arch",
+          included
+        ]
+      }
     ]
   end
 
@@ -310,7 +376,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       {~t"Consultation",
        ~t"If you'd like, we meet 1–2 months before the wedding to go through what you need. I want you to feel completely confident that the flowers will turn out exactly as you imagined."},
       {~t"Payment",
-       ~t"Half is invoiced as an advance payment about 4 weeks before the wedding, and the rest afterwards."},
+       ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, and the rest afterwards. The booking fee isn't refunded if you cancel later than four weeks before the wedding."},
       {~t"The wedding day",
        ~t"Your flowers are collected or delivered, whichever you prefer. If you've chosen decoration, I come to your venue and decorate it with the flowers we've agreed on."}
     ]
@@ -328,12 +394,29 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     "mailto:info@edenflowers.fi?subject=#{subject}&body=#{body}"
   end
 
-  defp starting_price(nil), do: ~t"On request"
+  attr :items, :list, required: true
 
-  defp starting_price(euros) do
-    amount = Edenflowers.Format.price(euros, Edenflowers.Format.locale())
+  defp price_list(assigns) do
+    ~H"""
+    <dl class="border-t">
+      <div :for={{item, price} <- @items} class="flex items-baseline justify-between gap-6 border-b py-3">
+        <dt class="text-lg">{item}</dt>
+        <dd class="text-base-content font-serif shrink-0 text-lg tabular-nums">{price_label(price)}</dd>
+      </div>
+    </dl>
+    """
+  end
+
+  defp price_label(:on_request), do: ~t"On request"
+  defp price_label({:fixed, euros}), do: euros(euros)
+  defp price_label({:range, low, high}), do: "#{euros(low)}–#{euros(high)}"
+
+  defp price_label({:from, low}) do
+    amount = euros(low)
     ~t"from #{amount}"
   end
+
+  defp euros(amount), do: Edenflowers.Format.price(amount, Edenflowers.Format.locale())
 
   # Returns %{quote: ..., couple: ...} once there's a testimonial to show.
   defp testimonial, do: nil
