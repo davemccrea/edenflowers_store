@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     {:ok,
      socket
      |> assign(gallery: gallery(), thumb_width: @thumb_width, enquiry_mailto: enquiry_mailto())
-     |> assign(personal_flowers: personal_flowers(), decorations: decorations(), packages: packages())
+     |> assign(personal_flowers: personal_flowers(), decorations: decorations(), decoration_photos: decoration_photos(), example_weddings: example_weddings())
      |> assign(steps: steps(), testimonial: testimonial())}
   end
 
@@ -107,13 +107,11 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               <p class="text-base-content/80 mb-10 text-lg leading-relaxed">
                 {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans. Final prices depend on the flowers and techniques you choose."}
               </p>
-              <h3 class="card-title mb-2">{~t"Bouquets and accessories"}</h3>
+              <h3 class="tile-title mb-3">{~t"Bouquets and accessories"}</h3>
               <.price_list items={@personal_flowers} />
-              <h3 class="card-title mt-10 mb-2">{~t"Decoration"}</h3>
-              <.price_list items={@decorations} />
             </div>
 
-            <figure class="md:top-(--header-clearance) md:sticky">
+            <figure>
               <.image
                 src="local:///wedding/eden_flowers_2.jpg"
                 alt={~t"Wrist corsages of peach roses"}
@@ -126,22 +124,48 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             </figure>
           </div>
 
-          <h3 class="card-title mt-16 mb-6">{~t"Flowers for the ceremony and reception"}</h3>
-          <div class="grid gap-6 md:grid-cols-3">
-            <div :for={package <- @packages} class="border p-6">
-              <p class="flex items-baseline justify-between gap-4">
-                <span class="font-serif text-2xl">{package.name}</span>
-                <span class="font-serif text-lg tabular-nums">{price_label({:from, package.from})}</span>
-              </p>
-              <p :if={package.intro} class="text-base-content/80 mt-4">{package.intro}</p>
-              <ul class="text-base-content/80 mt-4 list-disc space-y-2 pl-5">
-                <li :for={feature <- package.features}>{feature}</li>
-              </ul>
+          <div class="border-base-content/12 mt-20 grid gap-10 border-t pt-16 md:grid-cols-2 md:gap-16">
+            <div>
+              <h3 class="tile-title mb-3">{~t"Decoration"}</h3>
+              <.price_list items={@decorations} />
             </div>
           </div>
-          <p class="text-base-content/70 mt-6 text-sm">
-            {~t"Delivery costs are added outside Vaasa. Package prices are based on a normal-sized wedding."}
-          </p>
+
+          <div class="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
+            <figure :for={photo <- @decoration_photos}>
+              <.image
+                src={photo.src}
+                alt={photo.alt}
+                width={600}
+                height={800}
+                sizes="(min-width: 48rem) 25vw, 50vw"
+                class="aspect-[3/4] w-full object-cover"
+              />
+              <figcaption class="mt-2">{photo.caption}</figcaption>
+            </figure>
+          </div>
+
+          <div class="border-base-content/12 mt-20 border-t pt-16">
+            <h3 class="tile-title text-balance mb-4">{~t"Example weddings"}</h3>
+            <p class="text-base-content/80 mb-8 max-w-prose text-lg leading-relaxed">
+              {~t"What a whole wedding typically costs. Your quote is built from the prices above, so add or leave out whatever you like."}
+            </p>
+            <div class="grid gap-4 md:grid-cols-3 md:gap-6">
+              <article :for={wedding <- @example_weddings} class="bg-cream text-cream-content p-6 sm:p-8">
+                <header class="flex items-baseline justify-between gap-4">
+                  <h4 class="font-serif text-2xl">{wedding.name}</h4>
+                  <p class="font-serif shrink-0 text-lg tabular-nums">{price_label({:from, wedding.from})}</p>
+                </header>
+                <p class="text-cream-content/70 mt-1 text-sm">{wedding.guests}</p>
+                <ul class="text-cream-content/85 mt-4 list-disc space-y-1.5 pl-5">
+                  <li :for={item <- wedding.items}>{item}</li>
+                </ul>
+              </article>
+            </div>
+            <p class="text-base-content/70 mt-10 text-sm">
+              {~t"Delivery costs are added outside Vaasa."}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -326,39 +350,78 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ]
   end
 
-  # Package names are the same in every language, as on the price list.
-  defp packages do
-    set_up = ~t"I come and set everything up on the morning of the wedding"
-    included = ~t"Delivery and a consultation meeting included"
+  # All four photos are 3:4, so the 600x800 fill crop is a no-op.
+  defp decoration_photos do
+    [
+      %{
+        src: "local:///wedding/eden_flowers_arch.jpg",
+        caption: ~t"Flower arch",
+        alt: ~t"Round gold flower arch with white and peach roses"
+      },
+      %{
+        src: "local:///wedding/eden_flowers_gate.jpg",
+        caption: ~t"Flower gate",
+        alt: ~t"Wooden flower gate with white drapes and summer flowers"
+      },
+      %{
+        src: "local:///wedding/eden_flowers_garland.jpg",
+        caption: ~t"Silk flower garland, to rent",
+        alt: ~t"Silk flower garland cascading down a cake table"
+      },
+      %{
+        src: "local:///wedding/eden_flowers_urns.jpg",
+        caption: ~t"Arrangement in an urn or on a pedestal",
+        alt: ~t"Two urn arrangements of coral roses and delphiniums"
+      }
+    ]
+  end
+
+  # Totals are the sum of the price list items, rounded up to the nearest 5 euros.
+  # Table flowers are priced as the old Basic package (€250) and Classic's table
+  # and venue flowers as the old Medium package (€350).
+  defp example_weddings do
+    bridal_flowers = [
+      ~t"Bridal bouquet",
+      ~t"Two bridesmaids' bouquets",
+      ~t"Four corsages or pocket squares"
+    ]
 
     [
       %{
-        name: "Basic",
-        from: 250,
-        intro: nil,
-        features: [~t"Green garlands or flowers in vases on the tables", set_up, included]
-      },
-      %{
-        name: "Medium",
-        from: 350,
-        intro: nil,
-        features: [
-          ~t"Green garlands or single flowers on the tables",
-          set_up,
-          ~t"Two smaller arrangements for the ceremony or reception venue",
-          included
+        name: ~t"Small and simple",
+        guests: ~t"About 40 guests",
+        from: 265,
+        items: [
+          ~t"Bridal bouquet",
+          ~t"Bridesmaid's bouquet",
+          ~t"Two corsages or pocket squares",
+          ~t"Welcome sign arrangement"
         ]
       },
       %{
-        name: "Premium",
-        from: 550,
-        intro: ~t"We put together a package tailored to your wedding, for example:",
-        features: [
-          ~t"Garlands and/or flowers along the reception tables",
-          ~t"Decoration at the ceremony, such as aisle flowers or larger arrangements",
-          ~t"Flower arch",
-          included
-        ]
+        name: ~t"Classic",
+        guests: ~t"About 100 guests",
+        from: 630,
+        items:
+          bridal_flowers ++
+            [
+              ~t"Flowers in vases on every table",
+              ~t"Two arrangements for the ceremony or reception",
+              ~t"Consultation, delivery and set-up"
+            ]
+      },
+      %{
+        name: ~t"Full styling",
+        guests: ~t"About 100 guests",
+        from: 1040,
+        items:
+          bridal_flowers ++
+            [
+              ~t"Flowers in vases on every table",
+              ~t"Flower arch",
+              ~t"Two large arrangements in urns or on pedestals",
+              ~t"Consultation, delivery and set-up"
+            ]
       }
     ]
   end
