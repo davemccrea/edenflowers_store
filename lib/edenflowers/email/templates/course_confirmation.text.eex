@@ -5,7 +5,7 @@
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 
-<%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %>
+<%= if @registration.pays_at_course? do %><%= gettext("You pay at the course. If your plans change, reply to this email and let me know.") %><% else %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %><% end %>
 
 <%= gettext("See you there,") %>
 

@@ -33,6 +33,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(registration.email)
+      |> bcc(from_address())
       |> subject(~t"You're booked: #{course = registration.course.name}")
       |> text_body(render_course_confirmation(registration))
     end)

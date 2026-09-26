@@ -82,4 +82,35 @@ defmodule Edenflowers.Courses.RegistrationTest do
 
     assert {:error, %Ash.Error.Forbidden{}} = Courses.confirm_registration_payment(registration, actor: nil)
   end
+
+  describe "adding a booking manually" do
+    defp add_manually(course, seats, actor) do
+      Courses.add_registration_manually(
+        %{name: "Ada Lovelace", email: "ada@example.com", seats: seats, course_id: course.id, locale: "sv-FI"},
+        actor: actor
+      )
+    end
+
+    test "confirms the booking without a payment" do
+      course = generate(course())
+
+      assert {:ok, registration} = add_manually(course, 2, generate(admin_user()))
+      assert registration.status == :confirmed
+      assert registration.confirmed_at
+      assert is_nil(registration.payment_intent_id)
+    end
+
+    test "is allowed after register_before but not beyond the course's places" do
+      course = generate(course(register_before: Date.add(Date.utc_today(), -2), total_places: 3))
+      admin = generate(admin_user())
+
+      assert {:ok, _} = add_manually(course, 2, admin)
+      assert {:error, error} = add_manually(course, 2, admin)
+      assert Exception.message(error) =~ "only 1 places left"
+    end
+
+    test "is refused for customers" do
+      assert {:error, %Ash.Error.Forbidden{}} = add_manually(generate(course()), 1, nil)
+    end
+  end
 end
