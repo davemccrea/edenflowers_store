@@ -176,7 +176,7 @@ msgstr "Leveransmetod *"
 msgid "Do you offer subscription services?"
 msgstr "Erbjuder ni prenumerationstjänster?"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:217
+#: lib/edenflowers_web/features/admin/courses_live.ex:216
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:130
 #: lib/edenflowers_web/features/marketing/contact_live.ex:32
 #, elixir-autogen, elixir-format
@@ -2706,12 +2706,7 @@ msgstr "Betalningen gick inte igenom. Försök igen eller välj ett annat betaln
 msgid "See upcoming courses"
 msgstr "Se kommande kurser"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:175
-#, elixir-autogen, elixir-format
-msgid "%{seats} / %{total} seats"
-msgstr "%{seats} / %{total} platser"
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:282
+#: lib/edenflowers_web/features/admin/courses_live.ex:281
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr "Avboka"
@@ -2721,12 +2716,12 @@ msgstr "Avboka"
 msgid "Could not cancel the booking"
 msgstr "Bokningen kunde inte avbokas"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:194
+#: lib/edenflowers_web/features/admin/courses_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "Email everyone"
 msgstr "Mejla alla"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:180
+#: lib/edenflowers_web/features/admin/courses_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "No bookings yet"
 msgstr "Inga bokningar än"
@@ -2736,8 +2731,8 @@ msgstr "Inga bokningar än"
 msgid "No upcoming courses"
 msgstr "Inga kommande kurser"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:204
-#: lib/edenflowers_web/features/admin/courses_live.ex:230
+#: lib/edenflowers_web/features/admin/courses_live.ex:203
+#: lib/edenflowers_web/features/admin/courses_live.ex:229
 #, elixir-autogen, elixir-format
 msgid "Add booking"
 msgstr "Lägg till bokning"
@@ -2747,22 +2742,22 @@ msgstr "Lägg till bokning"
 msgid "Booking added"
 msgstr "Bokningen tillagd"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:231
+#: lib/edenflowers_web/features/admin/courses_live.ex:230
 #, elixir-autogen, elixir-format
 msgid "Close"
 msgstr "Stäng"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:221
+#: lib/edenflowers_web/features/admin/courses_live.ex:220
 #, elixir-autogen, elixir-format
 msgid "Language"
 msgstr "Språk"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:216
+#: lib/edenflowers_web/features/admin/courses_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr "Namn"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:182
+#: lib/edenflowers_web/features/admin/courses_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "%{count} still to pay at the course"
 msgstr "%{count} betalar på kursen"
@@ -2772,17 +2767,17 @@ msgstr "%{count} betalar på kursen"
 msgid "Could not mark the booking as paid"
 msgstr "Bokningen kunde inte markeras som betald"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:273
+#: lib/edenflowers_web/features/admin/courses_live.ex:272
 #, elixir-autogen, elixir-format
 msgid "Mark paid"
 msgstr "Markera som betald"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:244
+#: lib/edenflowers_web/features/admin/courses_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "Pays at course"
 msgstr "Betalar på kursen"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:225
+#: lib/edenflowers_web/features/admin/courses_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "They'll get a confirmation email. Payment is taken at the course."
 msgstr "De får en bekräftelse per mejl. Betalningen tas på kursen."
@@ -2802,12 +2797,17 @@ msgstr "Boka en plats till"
 msgid "One place for %{name}"
 msgstr "En plats för %{name}"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:305
+#: lib/edenflowers_web/features/admin/courses_live.ex:304
 #, elixir-autogen, elixir-format
 msgid "This frees the place but does not refund. Refund in Stripe first. Cancel this booking?"
 msgstr "Detta frigör platsen men återbetalar inte. Återbetala först i Stripe. Avboka bokningen?"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:303
+#: lib/edenflowers_web/features/admin/courses_live.ex:302
 #, elixir-autogen, elixir-format
 msgid "This frees the place. Refund them yourself if they paid. Cancel this booking?"
 msgstr "Detta frigör platsen. Återbetala själv om de har betalat. Avboka bokningen?"
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:174
+#, elixir-autogen, elixir-format
+msgid "%{booked} / %{total} places"
+msgstr "%{booked} / %{total} platser"

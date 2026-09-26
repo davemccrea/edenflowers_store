@@ -131,7 +131,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     # Snapshotted by ReserveSeats, so a later edit to the course can't change
     # what was charged or what the receipt says.
-    attribute :unit_price, :decimal, allow_nil?: false
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :amount, :decimal, allow_nil?: false
 

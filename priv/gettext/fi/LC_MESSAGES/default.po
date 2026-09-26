@@ -176,7 +176,7 @@ msgstr "Toimitustapa *"
 msgid "Do you offer subscription services?"
 msgstr "Tarjoatteko tilauspalveluita?"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:217
+#: lib/edenflowers_web/features/admin/courses_live.ex:216
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:130
 #: lib/edenflowers_web/features/marketing/contact_live.ex:32
 #, elixir-autogen, elixir-format
@@ -2706,12 +2706,7 @@ msgstr "Maksu ei mennyt läpi. Yritä uudelleen tai valitse toinen maksutapa."
 msgid "See upcoming courses"
 msgstr "Katso tulevat kurssit"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:175
-#, elixir-autogen, elixir-format
-msgid "%{seats} / %{total} seats"
-msgstr "%{seats} / %{total} paikkaa"
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:282
+#: lib/edenflowers_web/features/admin/courses_live.ex:281
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr "Peru"
@@ -2721,12 +2716,12 @@ msgstr "Peru"
 msgid "Could not cancel the booking"
 msgstr "Varausta ei voitu perua"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:194
+#: lib/edenflowers_web/features/admin/courses_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "Email everyone"
 msgstr "Lähetä sähköposti kaikille"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:180
+#: lib/edenflowers_web/features/admin/courses_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "No bookings yet"
 msgstr "Ei vielä varauksia"
@@ -2736,8 +2731,8 @@ msgstr "Ei vielä varauksia"
 msgid "No upcoming courses"
 msgstr "Ei tulevia kursseja"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:204
-#: lib/edenflowers_web/features/admin/courses_live.ex:230
+#: lib/edenflowers_web/features/admin/courses_live.ex:203
+#: lib/edenflowers_web/features/admin/courses_live.ex:229
 #, elixir-autogen, elixir-format
 msgid "Add booking"
 msgstr "Lisää varaus"
@@ -2747,22 +2742,22 @@ msgstr "Lisää varaus"
 msgid "Booking added"
 msgstr "Varaus lisätty"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:231
+#: lib/edenflowers_web/features/admin/courses_live.ex:230
 #, elixir-autogen, elixir-format
 msgid "Close"
 msgstr "Sulje"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:221
+#: lib/edenflowers_web/features/admin/courses_live.ex:220
 #, elixir-autogen, elixir-format
 msgid "Language"
 msgstr "Kieli"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:216
+#: lib/edenflowers_web/features/admin/courses_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr "Nimi"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:182
+#: lib/edenflowers_web/features/admin/courses_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "%{count} still to pay at the course"
 msgstr "%{count} maksaa vielä kurssilla"
@@ -2772,17 +2767,17 @@ msgstr "%{count} maksaa vielä kurssilla"
 msgid "Could not mark the booking as paid"
 msgstr "Varausta ei voitu merkitä maksetuksi"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:273
+#: lib/edenflowers_web/features/admin/courses_live.ex:272
 #, elixir-autogen, elixir-format
 msgid "Mark paid"
 msgstr "Merkitse maksetuksi"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:244
+#: lib/edenflowers_web/features/admin/courses_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "Pays at course"
 msgstr "Maksaa kurssilla"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:225
+#: lib/edenflowers_web/features/admin/courses_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "They'll get a confirmation email. Payment is taken at the course."
 msgstr "Asiakas saa vahvistuksen sähköpostilla. Maksu otetaan kurssilla."
@@ -2802,12 +2797,17 @@ msgstr "Varaa toinen paikka"
 msgid "One place for %{name}"
 msgstr "Yksi paikka: %{name}"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:305
+#: lib/edenflowers_web/features/admin/courses_live.ex:304
 #, elixir-autogen, elixir-format
 msgid "This frees the place but does not refund. Refund in Stripe first. Cancel this booking?"
 msgstr "Tämä vapauttaa paikan, mutta ei palauta rahoja. Tee palautus ensin Stripessä. Perutaanko varaus?"
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:303
+#: lib/edenflowers_web/features/admin/courses_live.ex:302
 #, elixir-autogen, elixir-format
 msgid "This frees the place. Refund them yourself if they paid. Cancel this booking?"
 msgstr "Tämä vapauttaa paikan. Palauta rahat itse, jos asiakas on maksanut. Perutaanko varaus?"
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:174
+#, elixir-autogen, elixir-format
+msgid "%{booked} / %{total} places"
+msgstr "%{booked} / %{total} paikkaa"
