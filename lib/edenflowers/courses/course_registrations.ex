@@ -75,15 +75,22 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     # When someone in a group drops out. Removing the last seat is a cancel.
-    # The amount follows so a pay-at-course booking shows what is still owed;
-    # a Stripe booking is refunded for the seat in the Stripe dashboard.
+    # seats and amount stay what was bought, because the receipt is rebuilt
+    # from them; a Stripe booking is refunded for the seat in the Stripe dashboard.
     update :remove_seat do
       require_atomic? false
 
       change fn changeset, _context ->
-        %{seats: seats, amount: amount} = changeset.data
-        seat_price = Decimal.div(amount, seats)
-        Ash.Changeset.change_attributes(changeset, seats: seats - 1, amount: Decimal.sub(amount, seat_price))
+        %{seats: seats, removed_seats: removed_seats} = changeset.data
+
+        if seats - removed_seats > 1 do
+          Ash.Changeset.change_attribute(changeset, :removed_seats, removed_seats + 1)
+        else
+          Ash.Changeset.add_error(changeset,
+            field: :removed_seats,
+            message: "cancel the booking to remove its last seat"
+          )
+        end
       end
     end
 
@@ -138,7 +145,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
     attribute :email, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+    # Seats bought, as on the receipt. Seats held is seats minus removed_seats.
     attribute :seats, :integer, allow_nil?: false, default: 1, constraints: [min: 1, max: @max_seats]
+    attribute :removed_seats, :integer, allow_nil?: false, default: 0, constraints: [min: 0]
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :status, :atom,
@@ -175,6 +184,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
 
     calculate :pays_at_course?, :boolean, expr(is_nil(payment_intent_id) and is_nil(paid_at))
+
+    calculate :seats_held, :integer, expr(seats - removed_seats)
 
     calculate :holds_seats?,
               :boolean,

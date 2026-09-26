@@ -99,7 +99,11 @@ defmodule Edenflowers.Orders.Receipt do
           product_name: course.name,
           variant_size: nil,
           quantity: registration.seats,
-          unit_price_ex_tax: Format.currency(net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate), locale),
+          unit_price_ex_tax:
+            Format.currency(
+              net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate),
+              locale
+            ),
           tax_rate: Format.percentage(registration.tax_rate, locale),
           total: amount
         }

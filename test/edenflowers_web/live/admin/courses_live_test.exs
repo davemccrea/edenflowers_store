@@ -91,7 +91,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, ~s|a[href$="/payments/pi_123"]|, "Stripe")
   end
 
-  test "removing a seat shrinks the booking and frees the seat", %{conn: conn} do
+  test "removing a seat frees it but leaves the sale the receipt shows", %{conn: conn} do
     course = generate(course(total_places: 10))
 
     registration =
@@ -103,7 +103,16 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     assert render(view) =~ "2 / 10 seats"
     reloaded = Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false)
-    assert reloaded.seats == 2
-    assert Decimal.equal?(reloaded.amount, "170.00")
+    assert reloaded.seats == 3
+    assert reloaded.removed_seats == 1
+    assert Decimal.equal?(reloaded.amount, "255.00")
+  end
+
+  test "the last seat can't be removed, only cancelled" do
+    registration = generate(course_registration(status: :confirmed, seats: 2))
+    admin = %{admin: true}
+
+    assert {:ok, registration} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
+    assert {:error, _} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
   end
 end
