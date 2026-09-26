@@ -567,7 +567,16 @@ Hooks.Stripe = {
         ],
       });
 
-      const paymentElement = elements.create("payment", {});
+      // Prefilling the email lets Link recognise a returning customer
+      // without them typing it again.
+      const paymentElement = elements.create("payment", {
+        defaultValues: {
+          billingDetails: {
+            name: this.el.dataset.billingName,
+            email: this.el.dataset.billingEmail,
+          },
+        },
+      });
       paymentElement.mount("#payment-element");
       paymentElement.on("ready", (event) => {
         this.stripeReady();
