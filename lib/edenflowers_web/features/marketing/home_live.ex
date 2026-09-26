@@ -171,7 +171,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <h2 class="section-title mb-10">{~t"Beyond bouquets"}</h2>
+          <h2 class="section-title mb-10">{~t"For bigger occasions"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <.category_tile
               navigate={~p"/weddings"}
