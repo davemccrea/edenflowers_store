@@ -1,17 +1,16 @@
 defmodule Edenflowers.Courses.CourseRegistration.Changes.ReserveSeats do
   @moduledoc """
-  Checks the course still takes bookings and has room for the requested seats,
-  then snapshots what the booking costs.
+  Checks the course still takes bookings and has a place left, then snapshots
+  what the booking costs.
 
   The course row is locked for the rest of the transaction, so two people
-  booking the last seats at once are counted one after the other.
+  booking the last place at once are counted one after the other.
   """
 
   use Ash.Resource.Change
 
   require Ash.Query
 
-  alias Ash.Error.Changes.InvalidAttribute
   alias Edenflowers.Courses.Course
   alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
 
@@ -19,11 +18,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.ReserveSeats do
   def change(changeset, opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       course_id = Ash.Changeset.get_attribute(changeset, :course_id)
-      seats = Ash.Changeset.get_attribute(changeset, :seats)
 
       case lock_course(course_id) do
         nil -> Ash.Changeset.add_error(changeset, field: :course_id, message: "course not found")
-        course -> reserve(changeset, course, seats, opts[:allow_after_cutoff?] || false)
+        course -> reserve(changeset, course, opts[:allow_after_cutoff?] || false)
       end
     end)
   end
@@ -41,27 +39,20 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.ReserveSeats do
     end
   end
 
-  defp reserve(changeset, course, seats, allow_after_cutoff?) do
+  defp reserve(changeset, course, allow_after_cutoff?) do
     cond do
       not allow_after_cutoff? and Date.before?(course.register_before, helsinki_today()) ->
         Ash.Changeset.add_error(changeset, field: :course_id, message: "booking has closed")
 
-      seats > course.seats_left ->
-        Ash.Changeset.add_error(
-          changeset,
-          InvalidAttribute.exception(
-            field: :seats,
-            message: "only %{count} places left",
-            vars: [count: course.seats_left]
-          )
-        )
+      course.seats_left < 1 ->
+        Ash.Changeset.add_error(changeset, field: :course_id, message: "course is fully booked")
 
       true ->
         Ash.Changeset.force_change_attributes(changeset,
           reference: GenerateOrderReference.generate(),
           unit_price: course.price,
           tax_rate: course.tax_rate.percentage,
-          amount: Decimal.mult(course.price, seats)
+          amount: course.price
         )
     end
   end

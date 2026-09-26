@@ -484,31 +484,33 @@ today = Date.utc_today()
   end)
 
 # Course bookings. Ash.Seed for the same reason as orders below: a booking is
-# confirmed by a Stripe payment or by Jennie. The pending and cancelled ones should not
-# show on the admin courses page. Emma was added by Jennie and pays at the
-# course, so she has no payment intent. The third course is left empty on purpose.
+# confirmed by a Stripe payment or by Jennie. The pending and cancelled ones
+# should not show on the admin courses page. Emma was added by Jennie and pays
+# at the course, so she has no payment intent. The third course is left empty
+# on purpose.
 [
-  {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI", :stripe},
-  {autumn_wreath, "Mikael Berg", "mikael.berg@example.com", 1, :confirmed, "sv-FI", :stripe},
-  {autumn_wreath, "Laura Virtanen", "laura.virtanen@example.com", 2, :confirmed, "fi", :stripe},
-  {autumn_wreath, "Emma Nyström", "emma.nystrom@example.com", 1, :confirmed, "sv-FI", :direct},
-  {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "sv-FI", :stripe},
-  {christmas_wreath, "Sofia Korhonen", "sofia.korhonen@example.com", 2, :confirmed, "fi", :stripe},
-  {christmas_wreath, "Sarah Mitchell", "sarah.mitchell@example.com", 1, :confirmed, "en-GB", :stripe},
-  {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe}
+  {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", :confirmed, "sv-FI", :stripe},
+  {autumn_wreath, "Lena Svensson", "lena.svensson@example.com", :confirmed, "sv-FI", :stripe},
+  {autumn_wreath, "Mikael Berg", "mikael.berg@example.com", :confirmed, "sv-FI", :stripe},
+  {autumn_wreath, "Laura Virtanen", "laura.virtanen@example.com", :confirmed, "fi", :stripe},
+  {autumn_wreath, "Aino Virtanen", "aino.virtanen@example.com", :confirmed, "fi", :stripe},
+  {autumn_wreath, "Emma Nyström", "emma.nystrom@example.com", :confirmed, "sv-FI", :at_course},
+  {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", :cancelled, "sv-FI", :stripe},
+  {christmas_wreath, "Sofia Korhonen", "sofia.korhonen@example.com", :confirmed, "fi", :stripe},
+  {christmas_wreath, "Sarah Mitchell", "sarah.mitchell@example.com", :confirmed, "en-GB", :stripe},
+  {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", :pending, "fi", :stripe}
 ]
-|> Enum.each(fn {course, name, email, seats, status, locale, paid_via} ->
+|> Enum.each(fn {course, name, email, status, locale, paid_via} ->
   Ash.Seed.seed!(CourseRegistration, %{
     course_id: course.id,
     name: name,
     email: email,
-    seats: seats,
     status: status,
     locale: locale,
     reference: GenerateOrderReference.generate(),
     unit_price: course.price,
     tax_rate: tax_rate.percentage,
-    amount: Decimal.mult(course.price, seats),
+    amount: course.price,
     confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
     payment_intent_id: if(paid_via == :stripe, do: "pi_seed_#{System.unique_integer([:positive])}")
   })

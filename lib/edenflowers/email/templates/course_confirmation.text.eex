@@ -1,6 +1,6 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= ngettext("Thank you for booking. Your place on %{course} is confirmed.", "Thank you for booking. Your %{count} places on %{course} are confirmed.", @registration.seats, course: @registration.course.name) %>
+<%= gettext("Thank you for booking. Your place on %{course} is confirmed.", course: @registration.course.name) %>
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
