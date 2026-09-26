@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <section class="not-last:border-b" aria-labelledby="process-heading">
         <div class="container py-24">
           <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
-          <ol class="grid gap-10 md:grid-cols-4">
+          <ol class="grid gap-10 md:grid-cols-3">
             <li :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}>
               <p class="text-primary font-serif text-4xl font-light leading-none">{index}</p>
               <h3 class="card-title mt-6 mb-2">{title}</h3>
@@ -304,10 +304,15 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   defp steps do
     [
-      {~t"Get in touch", ~t"Tell me your date, venue and a little about the day you're imagining."},
-      {~t"Consultation", ~t"We meet to talk through colours, flowers and style, in the shop or online."},
-      {~t"Design and quote", ~t"I put together a proposal and a quote. Once you're happy, your date is booked."},
-      {~t"The wedding day", ~t"Your flowers are made fresh and delivered, and I can decorate the venue on site."}
+      {~t"Get in touch",
+       ~t"Get in touch and tell me your date and a little about what you're looking for. It's best to reach out well in advance."},
+      {~t"Quote", ~t"I'll send you my quote, and you can come back to me with any questions and confirm your booking."},
+      {~t"Consultation",
+       ~t"If you'd like, we meet 1–2 months before the wedding to go through what you need. I want you to feel completely confident that the flowers will turn out exactly as you imagined."},
+      {~t"Payment",
+       ~t"Half is invoiced as an advance payment about 4 weeks before the wedding, and the rest afterwards."},
+      {~t"The wedding day",
+       ~t"Your flowers are collected or delivered, whichever you prefer. If you've chosen decoration, I come to your venue and decorate it with the flowers we've agreed on."}
     ]
   end
 
