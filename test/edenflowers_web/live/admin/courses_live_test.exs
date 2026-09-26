@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     {:ok, view, html} = live(conn, ~p"/admin/courses")
 
     assert html =~ "Autumn wreaths"
-    assert html =~ "1 / 10 seats"
+    assert html =~ "1 / 10 places"
     assert has_element?(view, "li", "Anna")
     assert has_element?(view, ~s|a[href="https://app.fastmail.com/mail/compose?bcc=anna%40example.com"]|)
     refute html =~ "Pending Pete"
@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     assert has_element?(view, "li", "Birgitta")
     assert has_element?(view, "li", "Pays at course")
-    assert render(view) =~ "1 / 10 seats"
+    assert render(view) =~ "1 / 10 places"
     assert render(view) =~ "1 still to pay at the course"
     assert_enqueued(worker: Edenflowers.Courses.Workers.SendCourseConfirmationEmail)
   end

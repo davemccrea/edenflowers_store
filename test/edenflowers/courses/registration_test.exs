@@ -22,7 +22,6 @@ defmodule Edenflowers.Courses.RegistrationTest do
     assert {:ok, registration} = register(course)
 
     assert registration.status == :pending
-    assert Decimal.equal?(registration.unit_price, "85.00")
     assert Decimal.equal?(registration.tax_rate, "0.255")
     assert Decimal.equal?(registration.amount, "85.00")
     assert registration.reference =~ ~r/^[0-9A-Z]{6}$/

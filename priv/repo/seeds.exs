@@ -508,7 +508,6 @@ today = Date.utc_today()
     status: status,
     locale: locale,
     reference: GenerateOrderReference.generate(),
-    unit_price: course.price,
     tax_rate: tax_rate.percentage,
     amount: course.price,
     confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),

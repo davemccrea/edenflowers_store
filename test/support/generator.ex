@@ -195,7 +195,6 @@ defmodule Generator do
         status: :pending,
         locale: "en-GB",
         reference: GenerateOrderReference.generate(),
-        unit_price: Decimal.new("85.00"),
         tax_rate: Decimal.new("0.255"),
         amount: Decimal.new("85.00")
       },
