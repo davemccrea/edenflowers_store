@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <div>
               <h1 class="page-title mb-6">{~t"Weddings"}</h1>
               <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-                {~t"Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."}
+                {~t"Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."}
               </p>
               <div class="mt-8 flex flex-wrap items-center gap-6">
                 <.button href="#enquire" variant="primary">{~t"Request a quote"}</.button>
