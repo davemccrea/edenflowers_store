@@ -248,6 +248,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     data-client-secret={@client_secret}
                     data-publishable-key={stripe_publishable_key()}
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
+                    data-billing-name={@order.customer_name}
+                    data-billing-email={@order.customer_email}
                     data-stripe-loading={
                       JS.set_attribute({"disabled", "true"}, to: "#payment-button") |> lock_while_paying()
                     }

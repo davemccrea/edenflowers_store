@@ -167,6 +167,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 data-client-secret={@client_secret}
                 data-publishable-key={stripe_publishable_key()}
                 data-return-url={url(~p"/courses/bookings/#{@registration.id}")}
+                data-billing-name={@registration.name}
+                data-billing-email={@registration.email}
                 data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
                 data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
                 class="flex flex-col gap-4"
