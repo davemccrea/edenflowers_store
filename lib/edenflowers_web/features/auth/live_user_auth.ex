@@ -43,7 +43,17 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
     current_user = socket.assigns[:current_user]
 
     if current_user do
-      {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/")}
+      # A page whose LiveView socket reconnects with a stale session (e.g. its token was
+      # revoked, or the user signed in again in another tab) bounces here via
+      # `bounce_to_sign_in/1`. Blank that "You must sign in" error so it doesn't follow a
+      # signed-in user to the home page. `clear_flash/2` wouldn't do: on the HTTP render the
+      # conn's flash is merged over, not replaced, so only overwriting the key removes it.
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, nil)
+        |> Phoenix.LiveView.redirect(to: ~p"/")
+
+      {:halt, socket}
     else
       {:cont, assign(socket, :current_user, nil)}
     end
