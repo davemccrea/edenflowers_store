@@ -12,8 +12,21 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   # Stripe returns guests here too, so the booking is read by its unguessable
   # id rather than through the owner policy. The page shows only what the
   # booker already knows: never the email address.
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(%{"id" => id} = params, _session, socket) do
+    payment_failed? = params["redirect_status"] == "failed"
+
     case load_registration(id) do
+      # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
+      # when the customer cancels or is declined in the app. Release the seat hold,
+      # as "Change booking" does, and send them back to book again.
+      {:ok, %{status: :pending} = registration} when payment_failed? ->
+        Courses.cancel_registration!(registration, actor: system_actor())
+
+        {:ok,
+         socket
+         |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
+         |> push_navigate(to: ~p"/courses/#{registration.course_id}")}
+
       {:ok, registration} ->
         if connected?(socket) and registration.status == :pending do
           Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:confirmed:#{id}")

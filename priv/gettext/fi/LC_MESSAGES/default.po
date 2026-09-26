@@ -1759,7 +1759,7 @@ msgid "Confirmed"
 msgstr "Vahvistettu"
 
 #: lib/edenflowers_web/features/account/account_live.ex:118
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:62
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr "Kurssi"
@@ -1827,7 +1827,7 @@ msgid "Visit the shop"
 msgstr "Siirry kauppaan"
 
 #: lib/edenflowers_web/features/account/account_live.ex:120
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:65
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:78
 #: lib/edenflowers_web/features/courses/course_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "When"
@@ -1859,13 +1859,13 @@ msgid "Location"
 msgstr "Paikka"
 
 #: lib/edenflowers_web/features/account/account_live.ex:65
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:82
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Reference"
 msgstr "Viite"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:101
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:56
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Confirming your payment… You'll get a confirmation email once it's done."
 msgstr "Vahvistetaan maksuasi… Saat vahvistussähköpostin, kun se on valmis."
@@ -1876,7 +1876,7 @@ msgid "For %{shown_order_recipient_name}"
 msgstr "Vastaanottaja: %{shown_order_recipient_name}"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:99
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:54
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Payment received. A confirmation email is on its way."
 msgstr "Maksu vastaanotettu. Vahvistussähköposti on matkalla."
@@ -1965,7 +1965,7 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} paikka jäljellä"
 msgstr[1] "%{count} paikkaa jäljellä"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:44
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Booking cancelled"
 msgstr "Varaus peruttu"
@@ -1975,7 +1975,7 @@ msgstr "Varaus peruttu"
 msgid "Booking closed"
 msgstr "Varaus suljettu"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Booking not found."
 msgstr "Varausta ei löytynyt."
@@ -1985,7 +1985,7 @@ msgstr "Varausta ei löytynyt."
 msgid "Cancel at least 7 days before the course for a full refund."
 msgstr "Peru viimeistään 7 päivää ennen kurssia, niin saat koko summan takaisin."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:87
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Cancel at least 7 days before the course for a full refund: reply to your confirmation email."
 msgstr "Peru viimeistään 7 päivää ennen kurssia, niin saat koko summan takaisin: vastaa vahvistussähköpostiisi."
@@ -2018,7 +2018,7 @@ msgid "Join me for a few hours of hands-on floristry. I bring the flowers and sh
 msgstr "Tule muutamaksi tunniksi kokeilemaan floristiikkaa kanssani. Minä tuon kukat ja näytän, miten se tehdään, ja tekemäsi työn saat viedä kotiin."
 
 #: lib/edenflowers_web/features/account/account_live.ex:121
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:79
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:92
 #: lib/edenflowers_web/features/courses/course_live.ex:82
 #: lib/edenflowers_web/features/courses/course_live.ex:124
 #, elixir-autogen, elixir-format
@@ -2048,7 +2048,7 @@ msgstr[1] "Kiitos varauksestasi. %{count} paikkaasi kurssilla %{course} on vahvi
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr "Kalenterissa ei ole juuri nyt kursseja. Kerron uusista päivistä ensimmäisenä uutiskirjeessä."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:45
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "This booking has been cancelled. Get in touch if that's a surprise."
 msgstr "Tämä varaus on peruttu. Ota yhteyttä, jos tämä tulee yllätyksenä."
@@ -2063,7 +2063,7 @@ msgstr "Tälle kurssille ei voi enää varata paikkaa. Kerron uusista päivistä
 msgid "When: %{date}, %{start}–%{end}"
 msgstr "Milloin: %{date}, %{start}–%{end}"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:73
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:86
 #: lib/edenflowers_web/features/courses/course_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Where"
@@ -2074,12 +2074,12 @@ msgstr "Missä"
 msgid "Where: %{venue}, %{address}"
 msgstr "Missä: %{venue}, %{address}"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:47
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "You're booked"
 msgstr "Paikkasi on varattu"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:22
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:35
 #, elixir-autogen, elixir-format
 msgid "Your booking"
 msgstr "Varauksesi"
@@ -2705,3 +2705,9 @@ msgstr "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaa
 #, elixir-autogen, elixir-format
 msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
 msgstr "Kukat ovat mukana koko päivän, ensimmäisestä kuvasta viimeisen pöydän korjaamiseen. Autan teitä löytämään kukat, jotka vastaavat toiveitanne ja tuntuvat juuri teiltä kahdelta."
+
+#: lib/edenflowers_web/features/checkout/checkout_complete_controller.ex:18
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "Your payment didn't go through. Please try again or choose another payment method."
+msgstr "Maksu ei mennyt läpi. Yritä uudelleen tai valitse toinen maksutapa."

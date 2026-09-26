@@ -1759,7 +1759,7 @@ msgid "Confirmed"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:118
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:62
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr ""
@@ -1827,7 +1827,7 @@ msgid "Visit the shop"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:120
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:65
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:78
 #: lib/edenflowers_web/features/courses/course_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "When"
@@ -1859,13 +1859,13 @@ msgid "Location"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:65
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:82
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Reference"
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:101
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:56
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Confirming your payment… You'll get a confirmation email once it's done."
 msgstr ""
@@ -1876,7 +1876,7 @@ msgid "For %{shown_order_recipient_name}"
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:99
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:54
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Payment received. A confirmation email is on its way."
 msgstr ""
@@ -1965,7 +1965,7 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} place left"
 msgstr[1] "%{count} places left"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:44
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Booking cancelled"
 msgstr ""
@@ -1975,7 +1975,7 @@ msgstr ""
 msgid "Booking closed"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Booking not found."
 msgstr ""
@@ -1985,7 +1985,7 @@ msgstr ""
 msgid "Cancel at least 7 days before the course for a full refund."
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:87
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Cancel at least 7 days before the course for a full refund: reply to your confirmation email."
 msgstr ""
@@ -2018,7 +2018,7 @@ msgid "Join me for a few hours of hands-on floristry. I bring the flowers and sh
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:121
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:79
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:92
 #: lib/edenflowers_web/features/courses/course_live.ex:82
 #: lib/edenflowers_web/features/courses/course_live.ex:124
 #, elixir-autogen, elixir-format
@@ -2048,7 +2048,7 @@ msgstr[1] "Thank you for booking. Your %{count} places on %{course} are confirme
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:45
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "This booking has been cancelled. Get in touch if that's a surprise."
 msgstr ""
@@ -2063,7 +2063,7 @@ msgstr ""
 msgid "When: %{date}, %{start}–%{end}"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:73
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:86
 #: lib/edenflowers_web/features/courses/course_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Where"
@@ -2074,12 +2074,12 @@ msgstr ""
 msgid "Where: %{venue}, %{address}"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:47
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "You're booked"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:22
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:35
 #, elixir-autogen, elixir-format
 msgid "Your booking"
 msgstr ""
@@ -2704,4 +2704,10 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/checkout_complete_controller.ex:18
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr ""
