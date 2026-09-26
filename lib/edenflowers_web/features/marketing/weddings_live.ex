@@ -308,16 +308,11 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   # Prices in euros, from Jennie's 2027 wedding price list.
   defp personal_flowers do
     [
-      {~t"Bridal bouquet, medium", {:range, 110, 150}},
-      {~t"Bridal bouquet, large", {:range, 150, 190}},
-      {~t"Corsage", {:fixed, 19}},
-      {~t"Pocket square flowers", {:fixed, 25}},
+      {~t"Bridal bouquet", {:range, 110, 190}},
       {~t"Bridesmaid's bouquet", {:from, 45}},
-      {~t"Flower crown", {:from, 38}},
-      {~t"Hair clip", {:from, 32}},
-      {~t"Tiara", {:from, 38}},
-      {~t"Bracelet", {:from, 38}},
       {~t"Flower girl or toss bouquet", {:from, 35}},
+      {~t"Corsage or pocket square", {:from, 19}},
+      {~t"Hair and wrist flowers (crown, clip, tiara, bracelet)", {:from, 32}},
       {~t"Cake flowers", :on_request}
     ]
   end
