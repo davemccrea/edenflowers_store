@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       CourseRegistration
       |> Ash.Query.filter(status in [:confirmed, :cancelled])
       |> Ash.Query.sort(inserted_at: :asc)
-      |> Ash.Query.load(:pays_at_course?)
+      |> Ash.Query.load([:pays_at_course?, :seats_held])
 
     courses =
       Courses.list_upcoming_courses!(
@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       assigns
       |> assign(:cancelled, cancelled)
       |> assign(:registrations, registrations)
-      |> assign(:seats, Enum.sum_by(registrations, & &1.seats))
+      |> assign(:seats, Enum.sum_by(registrations, & &1.seats_held))
       |> assign(:still_to_pay, Enum.count(registrations, & &1.pays_at_course?))
       |> assign(:bcc, registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(","))
 
@@ -259,8 +259,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             <div class="min-w-0">
               <p class="text-base-content truncate font-medium">
                 {registration.name}
-                <span :if={registration.seats > 1} class="text-base-content/65 tabular-nums">
-                  +{registration.seats - 1}
+                <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
+                  +{registration.seats_held - 1}
                 </span>
                 <span
                   :if={registration.pays_at_course?}
@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
               </a>
               <button
-                :if={registration.seats > 1}
+                :if={registration.seats_held > 1}
                 type="button"
                 phx-click="remove_seat"
                 phx-value-id={registration.id}
@@ -321,7 +321,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           <li :for={registration <- @cancelled} class="text-base-content/50 py-2.5">
             <p class="truncate line-through">
               {registration.name}
-              <span :if={registration.seats > 1} class="tabular-nums">+{registration.seats - 1}</span>
+              <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
             </p>
             <p class="truncate text-sm">{registration.email}</p>
           </li>
