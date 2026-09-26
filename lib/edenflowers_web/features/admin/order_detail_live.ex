@@ -171,18 +171,30 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
-              <.button
-                :if={@order.payment_intent_id}
-                href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
-                target="_blank"
-                rel="noopener"
-                variant="secondary"
-                size="sm"
-                class="mt-5"
-              >
-                {~t"View payment in Stripe"}
-                <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-              </.button>
+              <div class="mt-5 flex flex-wrap gap-2">
+                <.button
+                  :if={@order.state == :placed}
+                  href={~p"/order/#{@order.id}/receipt"}
+                  target="_blank"
+                  rel="noopener"
+                  variant="secondary"
+                  size="sm"
+                >
+                  {~t"View receipt"}
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                </.button>
+                <.button
+                  :if={@order.payment_intent_id}
+                  href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
+                  target="_blank"
+                  rel="noopener"
+                  variant="secondary"
+                  size="sm"
+                >
+                  {~t"View payment in Stripe"}
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                </.button>
+              </div>
             </.detail_section>
           </div>
 
