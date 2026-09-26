@@ -352,6 +352,47 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert reloaded.state == :payment
     end
 
+    test "gives Stripe the buyer's phone number, but never a gift recipient's", %{
+      conn: conn,
+      step_3_order: step_3_order
+    } do
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
+
+      submit_delivery = fn ->
+        {:ok, view, _html} = live(conn, ~p"/checkout")
+        view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
+        render_async(view)
+
+        view
+        |> element("#checkout-form-3b")
+        |> render_submit(%{
+          "form" => %{
+            "delivery_address" => "Stadsgatan 3, 65300 Vasa",
+            "recipient_phone_number" => "045 1234567",
+            "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+          }
+        })
+
+        view
+      end
+
+      view = submit_delivery.()
+      assert has_element?(view, ~s|#checkout-form-4[data-billing-phone="+358451234567"]|)
+
+      step_3_order.id
+      |> Orders.get_order_for_checkout!(actor: nil)
+      |> Orders.return_to_delivery!(actor: nil)
+      |> Orders.set_gift!(true, actor: nil)
+
+      view = submit_delivery.()
+      assert has_element?(view, "#checkout-form-4")
+      refute has_element?(view, "#checkout-form-4[data-billing-phone]")
+    end
+
     test "formats the phone number every time the customer tabs out of it", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 

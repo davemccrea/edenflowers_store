@@ -574,6 +574,7 @@ Hooks.Stripe = {
           billingDetails: {
             name: this.el.dataset.billingName,
             email: this.el.dataset.billingEmail,
+            phone: this.el.dataset.billingPhone,
           },
         },
       });

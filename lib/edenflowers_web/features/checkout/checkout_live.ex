@@ -250,6 +250,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     data-return-url={url(~p"/checkout/complete/#{@order.id}")}
                     data-billing-name={@order.customer_name}
                     data-billing-email={@order.customer_email}
+                    data-billing-phone={buyer_phone_number(@order)}
                     data-stripe-loading={
                       JS.set_attribute({"disabled", "true"}, to: "#payment-button") |> lock_while_paying()
                     }
@@ -708,6 +709,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # formats it, so LiveView never repaints the box. Show what was typed until blur.
   defp typed_phone_number(form) do
     Map.get(form.params, "recipient_phone_number", form[:recipient_phone_number].value)
+  end
+
+  # Stripe needs the country code to hand the number to Link.
+  defp buyer_phone_number(%{gift: true, fulfillment_method: :delivery}), do: nil
+
+  defp buyer_phone_number(order) do
+    case Edenflowers.PhoneNumber.format(order.recipient_phone_number, :e164) do
+      {:ok, e164} -> e164
+      :error -> nil
+    end
   end
 
   # Autofill offers the buyer's own saved details, which are wrong for a gift's recipient.
