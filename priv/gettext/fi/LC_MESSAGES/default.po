@@ -1448,11 +1448,6 @@ msgstr "Lähetimme 6-numeroisen koodin osoitteeseen"
 msgid "At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."
 msgstr "Kukilla voit sanoa viimeiset jäähyväiset. Sidon perinteisiä suruvihkoja sekä persoonallisia sidontoja ja toimitan kirkkoihin ja kappeleihin Vaasan alueella pientä korvausta vastaan."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:47
-#, elixir-autogen, elixir-format
-msgid "Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."
-msgstr "Häissä kukat ovat tärkeä osa kokonaisuutta. Autan teitä löytämään kukat, jotka parhaiten vastaavat toiveitanne ja heijastavat teitä parina."
-
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Request a quote"
@@ -2705,3 +2700,8 @@ msgstr "(avautuu suurempana)"
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings."
 msgstr "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaaret, jotka Jennie suunnittelee Eden Flowersissa. Hinnat ja aiemmat häät."
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:47
+#, elixir-autogen, elixir-format
+msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
+msgstr "Kukat ovat mukana koko päivän, ensimmäisestä kuvasta viimeisen pöydän korjaamiseen. Autan teitä löytämään kukat, jotka vastaavat toiveitanne ja tuntuvat juuri teiltä kahdelta."

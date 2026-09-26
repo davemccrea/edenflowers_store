@@ -1448,11 +1448,6 @@ msgstr "Vi skickade en sexsiffrig kod till"
 msgid "At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."
 msgstr "Låt blommorna vara något du som anhörig kan vila ögonen på vid ett sista farväl. Jag gör traditionella såväl som personliga sorgbinderier och levererar till kyrkor och kapell i Vasa och Korsholm för en mindre avgift."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:47
-#, elixir-autogen, elixir-format
-msgid "Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."
-msgstr "Blommor spelar en viktig roll i hela bröllopet. Jag hjälper er att hitta de blommor som bäst möter era önskemål och som speglar era personligheter."
-
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Request a quote"
@@ -2705,3 +2700,8 @@ msgstr "(öppnas i större format)"
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings."
 msgstr "Bröllopsblommor i Vasa och Korsholm: brudbuketter, dekoration och blomsterbågar som Jennie på Eden Flowers formger. Priser och tidigare bröllop."
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:47
+#, elixir-autogen, elixir-format
+msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
+msgstr "Blommorna är en del av hela dagen, från den första bilden till det sista bordet som dukas av. Jag hjälper er att hitta de blommor som motsvarar era önskemål och känns som ni två."
