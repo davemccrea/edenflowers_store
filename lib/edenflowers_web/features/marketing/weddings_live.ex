@@ -19,8 +19,19 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
+     |> assign(
+       page_title: ~t"Weddings",
+       page_description:
+         ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings.",
+       og_image: image_url("local:///wedding/daniela_streng_3.jpg", 1200, 630)
+     )
      |> assign(gallery: gallery(), thumb_width: @thumb_width, enquiry_mailto: enquiry_mailto())
-     |> assign(personal_flowers: personal_flowers(), decorations: decorations(), decoration_photos: decoration_photos(), example_weddings: example_weddings())
+     |> assign(
+       personal_flowers: personal_flowers(),
+       decorations: decorations(),
+       decoration_photos: decoration_photos(),
+       example_weddings: example_weddings()
+     )
      |> assign(steps: steps(), testimonial: testimonial())}
   end
 
@@ -84,6 +95,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                   sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
                   class="w-full"
                 />
+                <span class="sr-only">{~t"(opens a larger view)"}</span>
               </a>
               <figcaption class="text-cream-content/80 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
             </figure>
@@ -129,20 +141,20 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               <h3 class="tile-title mb-3">{~t"Decoration"}</h3>
               <.price_list items={@decorations} />
             </div>
-          </div>
 
-          <div class="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
-            <figure :for={photo <- @decoration_photos}>
-              <.image
-                src={photo.src}
-                alt={photo.alt}
-                width={600}
-                height={800}
-                sizes="(min-width: 48rem) 25vw, 50vw"
-                class="aspect-[3/4] w-full object-cover"
-              />
-              <figcaption class="mt-2">{photo.caption}</figcaption>
-            </figure>
+            <div class="grid grid-cols-2 gap-3 md:gap-6">
+              <figure :for={photo <- @decoration_photos}>
+                <.image
+                  src={photo.src}
+                  alt={photo.alt}
+                  width={600}
+                  height={800}
+                  sizes="(min-width: 48rem) 25vw, 50vw"
+                  class="aspect-[3/4] w-full object-cover"
+                />
+                <figcaption class="mt-2">{photo.caption}</figcaption>
+              </figure>
+            </div>
           </div>
 
           <div class="border-base-content/12 mt-20 border-t pt-16">
@@ -150,14 +162,14 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <p class="text-base-content/80 mb-8 max-w-prose text-lg leading-relaxed">
               {~t"What a whole wedding typically costs. Your quote is built from the prices above, so add or leave out whatever you like."}
             </p>
-            <div class="grid gap-4 md:grid-cols-3 md:gap-6">
-              <article :for={wedding <- @example_weddings} class="bg-cream text-cream-content p-6 sm:p-8">
+            <div class="grid gap-10 md:grid-cols-3 md:gap-16">
+              <article :for={wedding <- @example_weddings} class="border-t pt-4">
                 <header class="flex items-baseline justify-between gap-4">
                   <h4 class="font-serif text-2xl">{wedding.name}</h4>
                   <p class="font-serif shrink-0 text-lg tabular-nums">{price_label({:from, wedding.from})}</p>
                 </header>
-                <p class="text-cream-content/70 mt-1 text-sm">{wedding.guests}</p>
-                <ul class="text-cream-content/85 mt-4 list-disc space-y-1.5 pl-5">
+                <p class="text-base-content/70 mt-1 text-sm">{wedding.guests}</p>
+                <ul class="text-base-content/80 mt-4 list-disc space-y-1.5 pl-5">
                   <li :for={item <- wedding.items}>{item}</li>
                 </ul>
               </article>
@@ -172,11 +184,14 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <section class="not-last:border-b" aria-labelledby="process-heading">
         <div class="container py-24">
           <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
-          <ol class="grid gap-10 md:grid-cols-3">
-            <li :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}>
+          <ol class="border-base-content/12 border-t">
+            <li
+              :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}
+              class="border-base-content/12 grid-cols-[3rem_1fr] grid gap-x-4 border-b py-8 md:grid-cols-[4rem_16rem_1fr] md:gap-x-8"
+            >
               <p class="text-primary font-serif text-4xl font-light leading-none">{index}</p>
-              <h3 class="card-title mt-6 mb-2">{title}</h3>
-              <p class="text-base-content/80 leading-relaxed">{body}</p>
+              <h3 class="card-title">{title}</h3>
+              <p class="text-base-content/80 col-start-2 mt-2 max-w-prose leading-relaxed md:col-start-3 md:mt-0">{body}</p>
             </li>
           </ol>
         </div>
