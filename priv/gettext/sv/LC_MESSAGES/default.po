@@ -2703,8 +2703,8 @@ msgstr "Bröllopsblommor i Vasa och Korsholm: brudbuketter, dekoration och bloms
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:47
 #, elixir-autogen, elixir-format
-msgid "Your flowers are part of the whole day, from the first photo to the last table cleared. I'll help you find the ones that match your wishes and feel like the two of you."
-msgstr "Blommorna är en del av hela dagen, från den första bilden till det sista bordet som dukas av. Jag hjälper er att hitta de blommor som motsvarar era önskemål och känns som ni två."
+msgid "Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."
+msgstr "Blommor spelar en viktig roll i hela bröllopet. Jag hjälper er att hitta de blommor som bäst möter era önskemål och som speglar era personligheter."
 
 #: lib/edenflowers_web/features/checkout/checkout_complete_controller.ex:18
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:27
