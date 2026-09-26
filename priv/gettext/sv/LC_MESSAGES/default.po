@@ -1958,7 +1958,7 @@ msgstr[0] "%{count} plats för %{name}"
 msgstr[1] "%{count} platser för %{name}"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:299
-#: lib/edenflowers_web/features/courses/courses_live.ex:97
+#: lib/edenflowers_web/features/courses/courses_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
@@ -1970,7 +1970,7 @@ msgstr[1] "%{count} platser kvar"
 msgid "Booking cancelled"
 msgstr "Bokningen avbokad"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:96
+#: lib/edenflowers_web/features/courses/courses_live.ex:103
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr "Bokningen stängd"
@@ -1990,7 +1990,7 @@ msgstr "Avboka senast 7 dagar före kursen så får du hela summan tillbaka."
 msgid "Cancel at least 7 days before the course for a full refund: reply to your confirmation email."
 msgstr "Avboka senast 7 dagar före kursen så får du hela summan tillbaka: svara på ditt bekräftelsemejl."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:45
+#: lib/edenflowers_web/features/courses/courses_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "Coming up"
 msgstr "Kommande"
@@ -2007,7 +2007,7 @@ msgid "Course not found."
 msgstr "Kursen hittades inte."
 
 #: lib/edenflowers_web/features/courses/course_live.ex:298
-#: lib/edenflowers_web/features/courses/courses_live.ex:95
+#: lib/edenflowers_web/features/courses/courses_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr "Fullbokad"
@@ -2031,7 +2031,7 @@ msgid "See you there,"
 msgstr "Vi ses,"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:100
-#: lib/edenflowers_web/features/courses/courses_live.ex:51
+#: lib/edenflowers_web/features/courses/courses_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Sign up for the newsletter"
 msgstr "Prenumerera på nyhetsbrevet"
@@ -2043,7 +2043,7 @@ msgid_plural "Thank you for booking. Your %{count} places on %{course} are confi
 msgstr[0] "Tack för din bokning. Din plats på %{course} är bekräftad."
 msgstr[1] "Tack för din bokning. Dina %{count} platser på %{course} är bekräftade."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:49
+#: lib/edenflowers_web/features/courses/courses_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr "Just nu finns inga kurser i kalendern. Nya datum meddelar jag först i nyhetsbrevet."
@@ -2711,3 +2711,8 @@ msgstr "Blommorna är en del av hela dagen, från den första bilden till det si
 #, elixir-autogen, elixir-format
 msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr "Betalningen gick inte igenom. Försök igen eller välj ett annat betalningssätt."
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:30
+#, elixir-autogen, elixir-format
+msgid "See upcoming courses"
+msgstr "Se kommande kurser"

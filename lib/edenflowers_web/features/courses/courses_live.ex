@@ -26,6 +26,9 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             <p class="text-base-content/80 text-lg leading-relaxed">
               {~t"Join me for a few hours of hands-on floristry. I bring the flowers and show you how, and you take home what you make."}
             </p>
+            <div class="mt-2">
+              <.button href="#coming-up" variant="primary">{~t"See upcoming courses"}</.button>
+            </div>
           </div>
           <%!-- Hidden on phones so the dates, which are what people came for, sit above the fold. --%>
           <div class="hidden flex-shrink-0 md:block md:w-80 lg:w-96">
@@ -40,7 +43,11 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           </div>
         </section>
 
-        <section class="border-base-content/12 mt-14 border-t pt-10 sm:mt-20 sm:pt-14" aria-labelledby="upcoming-heading">
+        <section
+          id="coming-up"
+          class="border-base-content/12 scroll-anchor-below-header mt-14 border-t pt-10 sm:mt-20 sm:pt-14"
+          aria-labelledby="upcoming-heading"
+        >
           <div class="max-w-2xl">
             <h2 id="upcoming-heading" class="section-title">{~t"Coming up"}</h2>
 
