@@ -258,10 +258,10 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         alt: ~t"Bride seen from behind, holding a meadow bouquet"
       },
       %{
-        src: "local:///wedding/eden_flowers_1.jpg",
+        src: "local:///wedding/bjorn_yrjans_2.jpg",
         width: 1335,
         height: 2000,
-        credit: "Eden Flowers",
+        credit: "Björn Yrjans",
         alt: ~t"Bride and two bridesmaids holding white bouquets"
       },
       %{
