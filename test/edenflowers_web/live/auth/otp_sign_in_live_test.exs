@@ -14,4 +14,18 @@ defmodule EdenflowersWeb.Auth.OtpSignInLiveTest do
 
     assert html =~ "a+b@example.com"
   end
+
+  test "a signed-in user bounced to sign-in by a stale page does not see 'You must sign in'", %{conn: conn} do
+    user = Generator.generate(Generator.admin_user()) |> Generator.with_token()
+
+    conn =
+      conn
+      |> Plug.Test.init_test_session(%{"phoenix_flash" => %{"error" => "You must sign in to access this page."}})
+      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> get(~p"/sign-in?return_to=/account")
+
+    assert redirected_to(conn) == ~p"/"
+
+    refute conn |> recycle() |> get(~p"/") |> html_response(200) =~ "You must sign in"
+  end
 end
