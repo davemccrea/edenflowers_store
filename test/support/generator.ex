@@ -193,6 +193,7 @@ defmodule Generator do
         name: "Ada Lovelace",
         email: "ada@example.com",
         status: :pending,
+        seats: 1,
         locale: "en-GB",
         reference: GenerateOrderReference.generate(),
         tax_rate: Decimal.new("0.255"),

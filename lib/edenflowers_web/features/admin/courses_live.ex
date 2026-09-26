@@ -75,6 +75,20 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
+  def handle_event("remove_seat", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+           {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
+        socket
+      else
+        _ -> put_flash(socket, :error, ~t"Could not remove the seat")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
   def handle_event("cancel", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
@@ -144,6 +158,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       assigns
       |> assign(:cancelled, cancelled)
       |> assign(:registrations, registrations)
+      |> assign(:seats, Enum.sum_by(registrations, & &1.seats))
       |> assign(:still_to_pay, Enum.count(registrations, & &1.pays_at_course?))
       |> assign(:bcc, registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(","))
 
@@ -170,8 +185,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           />
         </div>
         <div class="mt-3 flex items-center gap-3 text-sm tabular-nums">
-          <progress class="progress progress-primary w-full" value={length(@registrations)} max={@course.total_places} />
-          <span class="whitespace-nowrap">{~t"#{booked = length(@registrations)} / #{total = @course.total_places} places"}</span>
+          <progress class="progress progress-primary w-full" value={@seats} max={@course.total_places} />
+          <span class="whitespace-nowrap">{~t"#{@seats} / #{total = @course.total_places} seats"}</span>
         </div>
       </summary>
 
@@ -214,17 +229,25 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         >
           <.input field={@booking_form[:name]} type="text" label={~t"Name"} class="input w-full" />
           <.input field={@booking_form[:email]} type="email" label={~t"Email"} class="input w-full" />
-          <.input
-            field={@booking_form[:locale]}
-            type="select"
-            label={~t"Language"}
-            options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
-          />
+          <div class="grid grid-cols-2 gap-3">
+            <.input
+              field={@booking_form[:seats]}
+              type="number"
+              label={~t"Seats"}
+              min="1"
+              max={CourseRegistration.max_seats()}
+              class="input w-full"
+            />
+            <.input
+              field={@booking_form[:locale]}
+              type="select"
+              label={~t"Language"}
+              options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+            />
+          </div>
           <p class="text-base-content/65 text-sm">
             {~t"They'll get a confirmation email. Payment is taken at the course."}
           </p>
-          <%!-- A full course has no field of its own to show the error under. --%>
-          <.error :for={msg <- Enum.map(@booking_form[:course_id].errors, &translate_error/1)}>{msg}</.error>
           <div class="flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm">{~t"Add booking"}</button>
             <button type="button" phx-click="close_booking" class="btn btn-ghost btn-sm">{~t"Close"}</button>
@@ -236,6 +259,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             <div class="min-w-0">
               <p class="text-base-content truncate font-medium">
                 {registration.name}
+                <span :if={registration.seats > 1} class="text-base-content/65 tabular-nums">
+                  +{registration.seats - 1}
+                </span>
                 <span
                   :if={registration.pays_at_course?}
                   class="badge badge-sm admin-badge-warning ml-1 align-middle"
@@ -263,6 +289,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
               </a>
               <button
+                :if={registration.seats > 1}
+                type="button"
+                phx-click="remove_seat"
+                phx-value-id={registration.id}
+                data-confirm={remove_seat_confirmation(registration)}
+                class="btn btn-ghost btn-sm"
+              >
+                {~t"Remove a seat"}
+              </button>
+              <button
                 :if={registration.pays_at_course?}
                 type="button"
                 phx-click="mark_paid"
@@ -285,6 +321,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           <li :for={registration <- @cancelled} class="text-base-content/50 py-2.5">
             <p class="truncate line-through">
               {registration.name}
+              <span :if={registration.seats > 1} class="tabular-nums">+{registration.seats - 1}</span>
             </p>
             <p class="truncate text-sm">{registration.email}</p>
           </li>
@@ -297,11 +334,19 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   # Manual bookings never reach Stripe, so they have no payment intent.
   defp manual?(registration), do: is_nil(registration.payment_intent_id)
 
+  defp remove_seat_confirmation(registration) do
+    if manual?(registration) do
+      ~t"Remove one seat from this booking?"
+    else
+      ~t"This does not refund. Refund one seat in Stripe first. Remove one seat from this booking?"
+    end
+  end
+
   defp cancel_confirmation(registration) do
     if manual?(registration) do
-      ~t"This frees the place. Refund them yourself if they paid. Cancel this booking?"
+      ~t"This frees the seats. Refund them yourself if they paid. Cancel this booking?"
     else
-      ~t"This frees the place but does not refund. Refund in Stripe first. Cancel this booking?"
+      ~t"This frees the seats but does not refund. Refund in Stripe first. Cancel this booking?"
     end
   end
 

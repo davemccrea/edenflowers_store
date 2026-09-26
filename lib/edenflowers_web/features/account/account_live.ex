@@ -118,6 +118,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                 <th scope="col" class="eyebrow pr-4 pb-3">{~t"Course"}</th>
                 <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/4">{~t"Location"}</th>
                 <th scope="col" class="eyebrow w-1/4 pr-4 pb-3 sm:w-1/6">{~t"When"}</th>
+                <th scope="col" class="eyebrow w-1/5 pb-3 text-right sm:w-[10%] sm:pr-4">{~t"Places"}</th>
                 <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
                   <span class="sr-only">{~t"Receipt"}</span>
                 </th>
@@ -143,6 +144,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                     {Format.time(registration.course.start_time, @locale)}
                   </span>
                 </td>
+                <td class="py-4 text-right tabular-nums sm:pr-4">{registration.seats}</td>
                 <td class="hidden py-4 text-right sm:table-cell">
                   <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} />
                 </td>

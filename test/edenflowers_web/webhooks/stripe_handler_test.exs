@@ -272,7 +272,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
         generate(
           course_registration(
             course_id: course.id,
-            amount: Decimal.new("85.00"),
+            seats: 2,
+            amount: Decimal.new("170.00"),
             payment_intent_id: "pi_course_#{:rand.uniform(1_000_000)}"
           )
         )
@@ -295,8 +296,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     test "confirms the booking and emails a receipt, once", %{registration: registration} do
-      assert :ok = course_succeeded(registration, 8_500)
-      assert :ok = course_succeeded(registration, 8_500)
+      assert :ok = course_succeeded(registration, 17_000)
+      assert :ok = course_succeeded(registration, 17_000)
 
       registration = Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false)
       assert registration.status == :confirmed
@@ -311,7 +312,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     test "leaves the booking pending when the amount does not match", %{registration: registration} do
-      capture_log(fn -> assert :ok = course_succeeded(registration, 17_000) end)
+      capture_log(fn -> assert :ok = course_succeeded(registration, 8_500) end)
 
       assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
     end
