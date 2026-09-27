@@ -39,6 +39,7 @@ defmodule Edenflowers.Orders do
 
     tool :get_order, Edenflowers.Orders.Order, :admin_show do
       description "Full details of one placed order by its id."
+      get_by [:id]
 
       select @order_list_fields ++
                [
@@ -77,7 +78,7 @@ defmodule Edenflowers.Orders do
       define :create_for_checkout, action: :create_for_checkout
       define :get_order_by_id, action: :read, get_by: [:id]
       define :get_order_for_checkout, action: :for_checkout, get_by: [:id]
-      define :get_order_for_admin, action: :admin_show, args: [:id]
+      define :get_order_for_admin, action: :admin_show, get_by: [:id]
       define :list_my_orders, action: :mine
       define :list_open_orders, action: :open
       define :list_orders_to_fulfil, action: :to_fulfil
