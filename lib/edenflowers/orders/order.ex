@@ -8,6 +8,7 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  require Ash.Query
   require Ash.Resource.Change.Builtins
 
   alias __MODULE__.{Calculations, Changes, Validations}
@@ -279,6 +280,38 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:payment_status, :failed)
     end
 
+    action :sales_summary, :map do
+      description "Counts paid orders and sums their totals between two dates, inclusive, in Helsinki time."
+
+      constraints fields: [
+                    order_count: [type: :integer, allow_nil?: false],
+                    revenue: [type: :decimal, allow_nil?: false]
+                  ]
+
+      argument :from, :date, allow_nil?: false
+      argument :to, :date, allow_nil?: false
+
+      run fn input, context ->
+        from = helsinki_midnight_utc(input.arguments.from)
+        until = helsinki_midnight_utc(Date.add(input.arguments.to, 1))
+
+        __MODULE__
+        |> Ash.Query.filter(
+          state == :placed and payment_status == :paid and ordered_at >= ^from and ordered_at < ^until
+        )
+        |> Ash.Query.load(:grand_total)
+        |> Ash.read(scope: context)
+        |> case do
+          {:ok, orders} ->
+            revenue = orders |> Enum.map(& &1.grand_total) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
+            {:ok, %{order_count: length(orders), revenue: revenue}}
+
+          error ->
+            error
+        end
+      end
+    end
+
     update :mark_fulfilled do
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
@@ -369,7 +402,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     bypass actor_attribute_equals(:admin, true) do
-      authorize_if action(:mark_fulfilled)
+      authorize_if action([:mark_fulfilled, :sales_summary])
       authorize_if action_type(:read)
     end
 
@@ -523,5 +556,11 @@ defmodule Edenflowers.Orders.Order do
 
   identities do
     identity :unique_order_reference, [:order_reference]
+  end
+
+  defp helsinki_midnight_utc(date) do
+    date
+    |> DateTime.new!(~T[00:00:00], "Europe/Helsinki")
+    |> DateTime.shift_zone!("Etc/UTC")
   end
 end
