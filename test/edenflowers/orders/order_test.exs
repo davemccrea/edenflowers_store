@@ -106,7 +106,11 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      order = Orders.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
+      order =
+        Orders.add_promotion_with_code!(order, to_string(promotion.code),
+          load: [:promotion_applied?],
+          authorize?: false
+        )
 
       order = Ash.load!(order, [:items_subtotal, :items_total, :vat], authorize?: false)
 
@@ -135,7 +139,11 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      order = Orders.add_promotion_with_id!(order, promotion.id, load: [:promotion_applied?], authorize?: false)
+      order =
+        Orders.add_promotion_with_code!(order, to_string(promotion.code),
+          load: [:promotion_applied?],
+          authorize?: false
+        )
 
       assert order.promotion_applied? == true
     end
@@ -944,7 +952,7 @@ defmodule Edenflowers.Orders.OrderTest do
       )
 
       assert {:ok, order} =
-               Orders.add_promotion_with_id(order, promotion.id,
+               Orders.add_promotion_with_code(order, to_string(promotion.code),
                  authorize?: false,
                  load: [:items_subtotal, :items_total]
                )
@@ -971,7 +979,7 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      assert {:error, error} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:error, error} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
@@ -993,7 +1001,7 @@ defmodule Edenflowers.Orders.OrderTest do
       )
 
       assert {:ok, order} =
-               Orders.add_promotion_with_id(order, promotion.id,
+               Orders.add_promotion_with_code(order, to_string(promotion.code),
                  authorize?: false,
                  load: [:items_subtotal, :items_total]
                )
@@ -1008,7 +1016,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       order = Orders.create_for_checkout!(authorize?: false)
 
-      assert {:error, error} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:error, error} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
 
@@ -1029,7 +1037,7 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      assert {:ok, order} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      assert {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert order.promotion_id == promotion.id
     end
   end
@@ -1626,7 +1634,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-      {:ok, order} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert Decimal.equal?(order.discount_rate, Decimal.new("0.20"))
 
       Edenflowers.Repo.update_all(
@@ -1646,7 +1654,7 @@ defmodule Edenflowers.Orders.OrderTest do
       promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
       order = Orders.create_for_checkout!(authorize?: false)
 
-      {:ok, order} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert Decimal.equal?(order.discount_rate, Decimal.new("0.20"))
 
       {:ok, order} = Orders.clear_promotion(order, authorize?: false)
@@ -1692,7 +1700,7 @@ defmodule Edenflowers.Orders.OrderTest do
         )
 
       order = Orders.create_for_checkout!(authorize?: false)
-      {:ok, order} = Orders.add_promotion_with_id(order, promotion.id, authorize?: false)
+      {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
 
       assert order.promotion_name == "Spring Sale"
       assert order.promotion_code == "SPRING20"

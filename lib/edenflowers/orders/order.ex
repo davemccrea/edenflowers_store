@@ -356,26 +356,17 @@ defmodule Edenflowers.Orders.Order do
       change load(@admin_show_load)
     end
 
-    update :add_promotion_with_id do
-      argument :promotion_id, :uuid, allow_nil?: false
-      validate Validations.ValidateMinimumCartTotal
-      change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
-      change Changes.SnapshotPromotion
-      require_atomic? false
-    end
-
     update :add_promotion_with_code do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
-      change Changes.LookupPromotionCode
-      change Changes.SnapshotPromotion
-      validate Validations.ValidateMinimumCartTotal
+      change Changes.ApplyPromotion
       require_atomic? false
     end
 
     update :clear_promotion do
-      change atomic_update(:promotion_id, expr(nil))
-      change Changes.SnapshotPromotion
-      require_atomic? false
+      change set_attribute(:promotion_id, nil)
+      change set_attribute(:discount_rate, nil)
+      change set_attribute(:promotion_name, nil)
+      change set_attribute(:promotion_code, nil)
     end
 
     update :restart_checkout do
@@ -518,7 +509,7 @@ defmodule Edenflowers.Orders.Order do
     # changed while payment was in flight.
     attribute :amount_paid, :decimal, constraints: [min: 0, scale: 2]
 
-    # Snapshotted from Promotion by SnapshotPromotion. Frozen once the order
+    # Snapshotted from Promotion by ApplyPromotion. Frozen once the order
     # is placed.
     attribute :discount_rate, :decimal
     attribute :promotion_name, :string

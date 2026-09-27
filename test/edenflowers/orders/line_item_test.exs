@@ -102,7 +102,7 @@ defmodule Edenflowers.Orders.LineItemTest do
         })
         |> Ash.create!(authorize?: false)
 
-      _order = Orders.add_promotion_with_id!(order, promotion.id, authorize?: false)
+      _order = Orders.add_promotion_with_code!(order, to_string(promotion.code), authorize?: false)
 
       line_item = Ash.load!(line_item, :promotion_applied?)
 
