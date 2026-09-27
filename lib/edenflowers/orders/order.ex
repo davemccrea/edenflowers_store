@@ -12,6 +12,7 @@ defmodule Edenflowers.Orders.Order do
   require Ash.Resource.Change.Builtins
 
   alias __MODULE__.{Calculations, Changes, Validations}
+  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -148,6 +149,17 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    # Checkouts on the payment step whose webhook may have been missed.
+    read :awaiting_payment do
+      argument :settled_before, :utc_datetime_usec, allow_nil?: false
+      argument :abandoned_before, :utc_datetime_usec, allow_nil?: false
+
+      filter expr(
+               state == :payment and not is_nil(payment_intent_id) and
+                 updated_at < ^arg(:settled_before) and updated_at > ^arg(:abandoned_before)
+             )
+    end
+
     read :to_fulfil do
       filter expr(state == :placed and payment_status == :paid and fulfillment_status == :pending)
       prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc])
@@ -226,15 +238,33 @@ defmodule Edenflowers.Orders.Order do
 
     # Lifecycle transitions
     update :finalize_checkout do
+      argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal
-      validate present(:payment_intent_id)
+      validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}
+      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       change set_attribute(:amount_paid, arg(:amount_paid))
-      change transition_state(:placed)
+
+      # The atomic condition also keeps streamed updates from rejecting a
+      # redelivery in memory before the database can return AlreadyPaid.
+      change transition_state(:placed),
+        always_atomic?: true,
+        where: [{Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}]
+
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {Changes.GenerateOrderReference, []}
       change {Changes.SnapshotVatBreakdown, []}
       change {Changes.UpdatePromotionUsageCount, []}
+      change {Changes.ReportAmountMismatch, []}
+
+      # In the placing transaction, so a placed order always has its
+      # confirmation email queued.
+      change after_action(fn _changeset, order, _context ->
+               with {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order.id}) do
+                 {:ok, order}
+               end
+             end)
+
       require_atomic? false
     end
 
@@ -275,8 +305,9 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    # A succeeded event may have arrived first, or been reprocessed. Don't downgrade.
     update :mark_payment_failed do
-      validate attribute_does_not_equal(:payment_status, :paid)
+      validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}
       change set_attribute(:payment_status, :failed)
     end
 

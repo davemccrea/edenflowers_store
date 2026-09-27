@@ -79,7 +79,13 @@ defmodule Edenflowers.Courses.RegistrationTest do
     course = generate(course())
     {:ok, registration} = register(course, 1)
 
-    assert {:error, %Ash.Error.Forbidden{}} = Courses.confirm_registration_payment(registration, actor: nil)
+    {:ok, registration} =
+      Courses.add_registration_payment_intent_id(registration, "pi_guest", actor: Edenflowers.Actors.system_actor())
+
+    assert {:error, %Ash.Error.Forbidden{}} =
+             Courses.confirm_registration_payment(registration, "pi_guest", %{amount_paid: registration.amount},
+               actor: nil
+             )
   end
 
   describe "adding a booking manually" do

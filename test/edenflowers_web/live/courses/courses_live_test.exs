@@ -31,8 +31,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
-      expect(Edenflowers.External.StripeAPI.Mock, :create_course_payment_intent, fn registration ->
-        assert Decimal.equal?(registration.amount, "255.00")
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn 25_500, %{"course_registration_id" => _} ->
         {:ok, %{id: "pi_course", client_secret: "pi_course_secret", amount: 25_500}}
       end)
 
@@ -116,7 +115,12 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert html =~ "You&#39;re booked"
       assert has_element?(view, "[data-testid=payment-status]", "Confirming your payment")
 
-      Edenflowers.Courses.confirm_registration_payment!(registration, actor: Edenflowers.Actors.system_actor())
+      Edenflowers.Courses.confirm_registration_payment!(
+        registration,
+        registration.payment_intent_id,
+        %{amount_paid: registration.amount},
+        actor: Edenflowers.Actors.system_actor()
+      )
 
       assert has_element?(view, "[data-testid=payment-status]", "Payment received")
     end

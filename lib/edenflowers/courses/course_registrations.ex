@@ -6,6 +6,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Courses.CourseRegistration.Changes
+  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
 
   @locales Edenflowers.Locales.all()
 
@@ -30,6 +31,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # :read stays unscoped because Course.seats_taken counts through it.
     read :mine do
       filter expr(user_id == ^actor(:id) and status == :confirmed)
+    end
+
+    # Bookings on their way to Stripe whose webhook may have been missed.
+    read :awaiting_payment do
+      argument :settled_before, :utc_datetime_usec, allow_nil?: false
+      argument :abandoned_before, :utc_datetime_usec, allow_nil?: false
+
+      filter expr(
+               status == :pending and not is_nil(payment_intent_id) and
+                 updated_at < ^arg(:settled_before) and updated_at > ^arg(:abandoned_before)
+             )
     end
 
     create :register do
@@ -60,9 +72,23 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # A released hold that still got paid is confirmed anyway: the customer
     # has paid, so they have a place.
     update :confirm_payment do
-      validate attribute_does_not_equal(:status, :confirmed)
+      argument :payment_intent_id, :string, allow_nil?: false
+      argument :amount_paid, :decimal, allow_nil?: false
+      validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :status, paid: :confirmed}
+      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
+      validate Edenflowers.Courses.CourseRegistration.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+
+      # In the confirming transaction, so a confirmed booking always has its
+      # confirmation email queued.
+      change after_action(fn _changeset, registration, _context ->
+               with {:ok, _job} <-
+                      SendCourseConfirmationEmail.enqueue(%{"course_registration_id" => registration.id}) do
+                 {:ok, registration}
+               end
+             end)
+
       require_atomic? false
     end
 

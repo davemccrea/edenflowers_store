@@ -5,6 +5,8 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
   import Generator
   import Mox
 
+  alias Edenflowers.Courses
+  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
@@ -50,7 +52,12 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
   defp minutes_ago(minutes), do: DateTime.add(DateTime.utc_now(), -minutes, :minute)
 
   defp payment_intent(order, status) do
-    %{id: order.payment_intent_id, status: status, amount_received: StripeAPI.to_stripe_amount(order.grand_total)}
+    %{
+      id: order.payment_intent_id,
+      status: status,
+      metadata: %{"order_id" => order.id},
+      amount_received: StripeAPI.to_stripe_amount(order.grand_total)
+    }
   end
 
   test "places a paid order the webhook missed, enqueues its email and logs an error", %{seed_order: seed_order} do
@@ -63,6 +70,32 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
     assert log =~ "webhook did not arrive"
     assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
     assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
+  end
+
+  test "confirms a paid course booking the webhook missed and logs an error" do
+    registration =
+      generate(
+        course_registration(
+          payment_intent_id: "pi_course_#{System.unique_integer([:positive])}",
+          updated_at: minutes_ago(10)
+        )
+      )
+
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _registration ->
+      {:ok,
+       %{
+         id: registration.payment_intent_id,
+         status: "succeeded",
+         metadata: %{"course_registration_id" => registration.id},
+         amount_received: 8_500
+       }}
+    end)
+
+    log = capture_log(fn -> assert :ok = perform_job(ReconcileStripePayments, %{}) end)
+
+    assert log =~ "webhook did not arrive"
+    assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :confirmed
+    assert_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
   end
 
   test "leaves an unpaid order in checkout", %{seed_order: seed_order} do
