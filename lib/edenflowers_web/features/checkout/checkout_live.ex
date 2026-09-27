@@ -626,8 +626,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
     variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-    order = Orders.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
-    {:noreply, assign_forms(socket, order)}
+    Orders.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    {:noreply, reload_order(socket)}
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -772,7 +772,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # action just invalidated (e.g. clearing `card_message` when the card is
   # removed) — otherwise the stale typed value would shadow the now-nil
   # attribute on the rebuilt form.
-  defp assign_forms(socket, order, opts \\ []) do
+  defp assign_forms(socket, order, opts) do
     drop = Keyword.get(opts, :drop, [])
 
     form_params =

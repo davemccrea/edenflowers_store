@@ -450,7 +450,7 @@ defmodule Edenflowers.Orders.OrderTest do
     order =
       generate(order(state: :gift_options, gift: true))
 
-    Orders.add_card!(order, variant.id, authorize?: false)
+    Orders.add_card!(order, variant.id, authorize?: false, load: [:line_items])
   end
 
   describe "Card message length validation" do
@@ -1581,19 +1581,16 @@ defmodule Edenflowers.Orders.OrderTest do
       %{order: order, card_variant_a: card_variant_a, card_variant_b: card_variant_b}
     end
 
-    test "add_card adds a card line item and returns the loaded order", %{
+    test "add_card adds a card line item", %{
       order: order,
       card_variant_a: card_variant_a
     } do
-      assert {:ok, order} = Orders.add_card(order, card_variant_a.id, authorize?: false)
+      assert {:ok, order} = Orders.add_card(order, card_variant_a.id, authorize?: false, load: [:line_items])
 
       card = Enum.find(order.line_items, & &1.is_card)
       assert card
       assert card.product_variant_id == card_variant_a.id
       assert card.variant_size == card_variant_a.size
-
-      # @checkout_load calculations should be present on the returned order
-      refute match?(%Ash.NotLoaded{}, order.grand_total)
     end
 
     test "add_card replaces an existing card line item rather than appending", %{
@@ -1601,8 +1598,8 @@ defmodule Edenflowers.Orders.OrderTest do
       card_variant_a: card_variant_a,
       card_variant_b: card_variant_b
     } do
-      {:ok, _} = Orders.add_card(order, card_variant_a.id, authorize?: false)
-      assert {:ok, order} = Orders.add_card(order, card_variant_b.id, authorize?: false)
+      {:ok, _} = Orders.add_card(order, card_variant_a.id, authorize?: false, load: [:line_items])
+      assert {:ok, order} = Orders.add_card(order, card_variant_b.id, authorize?: false, load: [:line_items])
 
       cards = Enum.filter(order.line_items, & &1.is_card)
       assert length(cards) == 1
@@ -1615,7 +1612,7 @@ defmodule Edenflowers.Orders.OrderTest do
     } do
       gift_order = generate(order(state: :gift_options, gift: true))
 
-      {:ok, with_card} = Orders.add_card(gift_order, card_variant_a.id, authorize?: false)
+      {:ok, with_card} = Orders.add_card(gift_order, card_variant_a.id, authorize?: false, load: [:line_items])
 
       with_message =
         with_card
