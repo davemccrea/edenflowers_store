@@ -44,6 +44,7 @@ defmodule Edenflowers.Courses.Course do
 
     read :upcoming do
       filter expr(date >= today())
+      prepare build(default_sort: [date: :asc, start_time: :asc])
     end
   end
 

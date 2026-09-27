@@ -1,10 +1,24 @@
 defmodule Edenflowers.Courses do
   use Ash.Domain,
     otp_app: :edenflowers,
-    extensions: [AshAdmin.Domain]
+    extensions: [AshAdmin.Domain, AshAi]
 
   admin do
     show?(true)
+  end
+
+  tools do
+    tool :list_upcoming_courses, Edenflowers.Courses.Course, :upcoming do
+      description "Courses from today onwards, with seats left and everyone registered. Only confirmed registrations are real bookings."
+      select [:id, :name, :date, :start_time, :end_time, :location_name, :total_places, :price, :register_before]
+
+      load [
+        :seats_left,
+        course_registrations: [:reference, :name, :email, :seats_held, :status, :pays_at_course?]
+      ]
+
+      load_strict? true
+    end
   end
 
   resources do
