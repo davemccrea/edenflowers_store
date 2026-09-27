@@ -3,8 +3,11 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   Returns an order to its initial checkout state: blanks every checkout
   field and destroys any line items left on the order. The order row, its
   id, `order_reference`, and `state` are preserved so the existing browser
-  session keeps pointing at the same cart. `payment_intent_id` is kept too,
-  so a payment already in flight still places the order.
+  session keeps pointing at the same cart.
+
+  An order with a PaymentIntent may be paid after the reset, so it keeps the
+  PaymentIntent and who is paying: the order is still placed, and its
+  confirmation email still has somewhere to go.
   """
   use Ash.Resource.Change
 
@@ -35,8 +38,15 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
 
   @impl true
   def change(changeset, _opts, _context) do
+    reset_attrs =
+      if changeset.data.payment_intent_id do
+        Map.drop(@reset_attrs, [:customer_name, :customer_email, :user_id])
+      else
+        @reset_attrs
+      end
+
     changeset
-    |> Ash.Changeset.force_change_attributes(@reset_attrs)
+    |> Ash.Changeset.force_change_attributes(reset_attrs)
     |> Ash.Changeset.after_action(&destroy_line_items/2)
   end
 

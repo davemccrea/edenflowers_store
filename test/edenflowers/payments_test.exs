@@ -178,7 +178,9 @@ defmodule Edenflowers.PaymentsTest do
       log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(order_intent(order)) end)
 
       assert log =~ "Amount mismatch"
-      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+
+      assert %{state: :placed, payment_status: :paid, customer_email: "john.smith@example.com"} =
+               Orders.get_order_by_id!(order.id, authorize?: false)
     end
 
     test "places the order and flags an amount mismatch", %{order: order} do
