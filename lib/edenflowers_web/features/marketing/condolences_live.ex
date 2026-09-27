@@ -20,14 +20,36 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
-      <.container>
-        <h1 class="page-title mb-6">{~t"Condolences"}</h1>
-        <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-          {~t"At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."}
-        </p>
-      </.container>
+      <section class="flex items-center not-last:border-b md:min-h-dvh">
+        <div class="container pt-28 pb-20 sm:pt-(--header-clearance) md:pb-16">
+          <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+            <div>
+              <h1 class="page-title mb-6">{~t"Condolences"}</h1>
+              <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+                {~t"At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."}
+              </p>
+              <div class="mt-8 flex flex-wrap items-center gap-6">
+                <.button href="#my-work" variant="text">{~t"See my work"}</.button>
+              </div>
+            </div>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="work-heading">
+            <%!-- On desktop the photo's height is capped so the whole section fits one screen. --%>
+            <figure class="md:justify-self-end">
+              <.image
+                src="local:///condolence/condolence_5.jpg"
+                alt={~t"Solid heart of red roses and white carnations"}
+                width={750}
+                height={1000}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                priority
+                class="aspect-[3/4] w-full object-cover md:max-h-[calc(100dvh-var(--header-clearance)-6rem)] md:w-auto"
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
           <div
