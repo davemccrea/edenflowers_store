@@ -1,3 +1,7 @@
+defmodule Edenflowers.Catalog.ProductCategory.Visibility do
+  use Ash.Type.Enum, values: [:public, :draft, :hidden]
+end
+
 defmodule Edenflowers.Catalog.ProductCategory do
   use Ash.Resource,
     otp_app: :edenflowers,
@@ -63,10 +67,7 @@ defmodule Edenflowers.Catalog.ProductCategory do
     # :draft  — work-in-progress, not yet ready to publish
     # :hidden — intentionally kept out of the storefront, products are still
     #           reachable through other surfaces (e.g. card-drawer at checkout)
-    attribute :visibility, :atom,
-      allow_nil?: false,
-      default: :draft,
-      constraints: [one_of: [:public, :draft, :hidden]]
+    attribute :visibility, __MODULE__.Visibility, allow_nil?: false, default: :draft
   end
 
   relationships do
