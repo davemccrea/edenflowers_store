@@ -212,9 +212,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     read :admin_show do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id) and state == :placed)
-      get? true
+      filter expr(state == :placed)
       prepare build(load: @admin_show_load)
     end
 
