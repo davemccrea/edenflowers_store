@@ -16,7 +16,7 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   @reset_attrs Map.merge(Map.from_keys(ClearDeliveryFields.fields(), nil), %{
                  customer_name: nil,
                  customer_email: nil,
-                 newsletter_offer_hidden?: false,
+                 user_id: nil,
                  gift: false,
                  recipient_name: nil,
                  card_message: nil,

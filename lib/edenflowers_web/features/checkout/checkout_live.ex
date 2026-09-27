@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
       {:ok,
        socket
-       |> assign(:current_user, load_newsletter_promo_used(socket.assigns[:current_user]))
+       |> assign(:current_user, load_newsletter_offer_hidden(socket.assigns[:current_user]))
        |> assign(:id, "checkout")
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
@@ -722,15 +722,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp own_details_autocomplete(%{gift: true, fulfillment_method: :delivery}, _token), do: "off"
   defp own_details_autocomplete(_order, token), do: token
 
-  # The order flag is only stamped once step 1 is submitted, so signed-in
+  # The order only knows its customer once step 1 is submitted, so signed-in
   # customers need the same check up front or the offer flashes then vanishes.
-  defp hide_newsletter_offer?(%{newsletter_offer_hidden?: true}, _current_user), do: true
-  defp hide_newsletter_offer?(_order, %{newsletter_opt_in: true}), do: true
-  defp hide_newsletter_offer?(_order, %{newsletter_promo_used?: true}), do: true
-  defp hide_newsletter_offer?(_order, _current_user), do: false
+  defp hide_newsletter_offer?(order, current_user) do
+    order.newsletter_offer_hidden? or (current_user != nil and current_user.newsletter_offer_hidden?)
+  end
 
-  defp load_newsletter_promo_used(nil), do: nil
-  defp load_newsletter_promo_used(user), do: Ash.load!(user, :newsletter_promo_used?, actor: user)
+  defp load_newsletter_offer_hidden(nil), do: nil
+  defp load_newsletter_offer_hidden(user), do: Ash.load!(user, :newsletter_offer_hidden?, actor: user)
 
   defp actor(socket), do: socket.assigns[:current_user]
 

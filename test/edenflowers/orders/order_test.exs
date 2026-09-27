@@ -853,7 +853,7 @@ defmodule Edenflowers.Orders.OrderTest do
     alias Edenflowers.Accounts.User
     alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
-    test "checkbox checked subscribes the user, stamps the order, and enqueues the welcome email worker" do
+    test "checkbox checked subscribes the user, hides the offer, and enqueues the welcome email worker" do
       order = Orders.create_for_checkout!(authorize?: false)
 
       assert {:ok, updated_order} =
@@ -865,7 +865,7 @@ defmodule Edenflowers.Orders.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert updated_order.newsletter_offer_hidden? == true
+      assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == true
 
       {:ok, user} = Accounts.get_user_by_email("subscriber@example.com", authorize?: false)
       assert user.newsletter_opt_in == true
@@ -876,7 +876,7 @@ defmodule Edenflowers.Orders.OrderTest do
       )
     end
 
-    test "checkbox unchecked leaves newsletter_opt_in false, the order unstamped, and enqueues no job" do
+    test "checkbox unchecked leaves newsletter_opt_in false, the offer shown, and enqueues no job" do
       order = Orders.create_for_checkout!(authorize?: false)
 
       assert {:ok, updated_order} =
@@ -888,7 +888,7 @@ defmodule Edenflowers.Orders.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert updated_order.newsletter_offer_hidden? == false
+      assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == false
 
       {:ok, user} = Accounts.get_user_by_email("bystander@example.com", authorize?: false)
       assert user.newsletter_opt_in == false
@@ -909,14 +909,12 @@ defmodule Edenflowers.Orders.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert updated_order.newsletter_offer_hidden? == true
+      assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == true
     end
 
-    # A legacy user row can have a NULL newsletter_opt_in. The stamp computes
-    # `user.newsletter_opt_in || user.newsletter_promo_used?`; the first
-    # resolves to nil there, so this guards that `||` handles nil without
-    # crashing (unlike the Ash `not` that crashed the original template).
-    test "a user with a null newsletter_opt_in stamps the order without crashing" do
+    # A legacy user row can have a NULL newsletter_opt_in, which must still
+    # read as a strict false rather than crash or leak a nil.
+    test "a user with a null newsletter_opt_in leaves the offer shown" do
       user = Ash.Seed.seed!(User, %{name: "Legacy", email: "legacy@example.com"})
 
       {:ok, _} =
@@ -937,7 +935,7 @@ defmodule Edenflowers.Orders.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert updated_order.newsletter_offer_hidden? == false
+      assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == false
     end
 
     test "omitting the argument defaults to no opt-in" do
@@ -1353,8 +1351,7 @@ defmodule Edenflowers.Orders.OrderTest do
             position: "60.1699,24.9384",
             payment_intent_id: "pi_test123",
             promotion_id: promotion.id,
-            fulfillment_option_id: fulfillment_option.id,
-            newsletter_offer_hidden?: true
+            fulfillment_option_id: fulfillment_option.id
           )
         )
 
@@ -1378,7 +1375,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert reset_order.payment_intent_id == "pi_test123"
       assert is_nil(reset_order.promotion_id)
       assert is_nil(reset_order.fulfillment_option_id)
-      assert reset_order.newsletter_offer_hidden? == false
+      assert Ash.load!(reset_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == false
     end
 
     test "reset preserves order id and returns the order to :contact_details" do
