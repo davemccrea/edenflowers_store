@@ -69,6 +69,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
 
+  def handle_event("generate_code", _params, socket) do
+    form = socket.assigns.form
+    params = Map.put(form.params, "code", Promotion.generate_code())
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+  end
+
   def handle_event("save", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, _promotion} ->
@@ -124,13 +130,35 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           <.form_section title={~t"Promotion"}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
-              <.input
-                field={@form[:code]}
-                type="text"
-                label={~t"Code"}
-                help={~t"What customers type at checkout."}
-                class="input font-mono w-full"
-              />
+              <div class="flex items-start gap-2">
+                <div class="flex-1">
+                  <.input
+                    field={@form[:code]}
+                    type="text"
+                    label={~t"Code"}
+                    help={~t"What customers type at checkout."}
+                    class="input font-mono w-full"
+                  />
+                </div>
+                <button
+                  type="button"
+                  phx-click="generate_code"
+                  class="btn btn-ghost btn-sm btn-square mt-7"
+                  title={~t"Generate code"}
+                  aria-label={~t"Generate code"}
+                >
+                  <.icon name="hero-arrow-path" class="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  phx-click={JS.dispatch("edenflowers:copy", to: "##{@form[:code].id}")}
+                  class="btn btn-ghost btn-sm btn-square mt-7"
+                  title={~t"Copy code"}
+                  aria-label={~t"Copy code"}
+                >
+                  <.icon name="hero-clipboard" class="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </.form_section>
 

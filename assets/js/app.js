@@ -139,6 +139,11 @@ topbar.config({
   barColors: { 0: "oklch(36.84% 0.0478 156.76)" },
   shadowColor: "rgba(0, 0, 0, .3)",
 });
+window.addEventListener("edenflowers:copy", (event) => {
+  const el = event.target;
+  navigator.clipboard.writeText("value" in el ? el.value : el.textContent.trim());
+});
+
 window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 

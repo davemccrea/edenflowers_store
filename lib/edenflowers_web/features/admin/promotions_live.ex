@@ -62,7 +62,18 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
             </.link>
           </:col>
           <:col :let={promotion} field="code" search sort label={~t"Code"}>
-            <span class="font-mono">{promotion.code}</span>
+            <span class="inline-flex items-center gap-1">
+              <span id={"promotion-code-#{promotion.id}"} class="font-mono">{promotion.code}</span>
+              <button
+                type="button"
+                phx-click={JS.dispatch("edenflowers:copy", to: "#promotion-code-#{promotion.id}")}
+                class="btn btn-ghost btn-xs btn-square"
+                title={~t"Copy code"}
+                aria-label={~t"Copy code"}
+              >
+                <.icon name="hero-clipboard" class="h-4 w-4" />
+              </button>
+            </span>
           </:col>
           <:col :let={promotion} field="discount_rate" sort label={~t"Discount"}>
             <span class="tabular-nums">{Format.percentage(promotion.discount_rate, @locale)}</span>

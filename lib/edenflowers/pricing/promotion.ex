@@ -101,4 +101,6 @@ defmodule Edenflowers.Pricing.Promotion do
   identities do
     identity :unique_code, [:code]
   end
+
+  def generate_code, do: :crypto.strong_rand_bytes(3) |> Base.encode16()
 end
