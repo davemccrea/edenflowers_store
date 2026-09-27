@@ -15,20 +15,24 @@ defmodule Edenflowers.Orders.Receipt do
 
   @typst_bin "typst"
 
-  def load_for_receipt(order) do
-    Ash.load(
-      order,
-      [
-        :items_subtotal,
-        :items_total,
-        :discount,
-        :promotion_applied?,
-        :grand_total,
-        line_items: [:subtotal, :total, :unit_price_ex_tax]
-      ],
-      authorize?: false
-    )
+  @order_load [
+    :items_subtotal,
+    :items_total,
+    :discount,
+    :promotion_applied?,
+    :grand_total,
+    line_items: [:subtotal, :total, :unit_price_ex_tax]
+  ]
+
+  def order_load, do: @order_load
+
+  def load_for_receipt(order), do: Ash.load(order, @order_load, authorize?: false)
+
+  def attachment(pdf, reference) do
+    Swoosh.Attachment.new({:data, pdf}, filename: "eden-flowers-#{reference}.pdf", content_type: "application/pdf")
   end
+
+  def sha256(pdf), do: :crypto.hash(:sha256, pdf) |> Base.encode16(case: :lower)
 
   def generate(%struct{} = record) when struct in [Order, CourseRegistration] do
     json = record |> build_payload() |> Jason.encode!()
