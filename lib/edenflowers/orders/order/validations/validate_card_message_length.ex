@@ -15,10 +15,7 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateCardMessageLength do
       nil ->
         :ok
 
-      "" ->
-        :ok
-
-      message when is_binary(message) ->
+      message ->
         case card_line_item(changeset) do
           nil ->
             {:error, field: :card_message, message: ~t"Select a card before writing a message"}
