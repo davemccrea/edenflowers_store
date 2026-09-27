@@ -880,8 +880,8 @@ defmodule Edenflowers.Orders.OrderTest do
     end
 
     # A legacy user row can have a NULL newsletter_opt_in. The stamp computes
-    # `user.newsletter_subscribed? || user.newsletter_promo_used?`; the first
-    # calc resolves to nil there, so this guards that `||` handles nil without
+    # `user.newsletter_opt_in || user.newsletter_promo_used?`; the first
+    # resolves to nil there, so this guards that `||` handles nil without
     # crashing (unlike the Ash `not` that crashed the original template).
     test "a user with a null newsletter_opt_in stamps the order without crashing" do
       user = Ash.Seed.seed!(User, %{name: "Legacy", email: "legacy@example.com"})
