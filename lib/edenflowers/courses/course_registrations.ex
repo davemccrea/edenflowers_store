@@ -159,7 +159,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       accept []
       transaction? false
       require_atomic? false
-      change {Edenflowers.Payments.Changes.Reconcile, payable: "course registration"}
+      change Edenflowers.Payments.Changes.Reconcile
     end
   end
 

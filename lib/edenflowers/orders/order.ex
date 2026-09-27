@@ -313,7 +313,7 @@ defmodule Edenflowers.Orders.Order do
       accept []
       transaction? false
       require_atomic? false
-      change {Edenflowers.Payments.Changes.Reconcile, payable: "order"}
+      change Edenflowers.Payments.Changes.Reconcile
     end
 
     # A succeeded event may have arrived first, or been reprocessed. Don't downgrade.
