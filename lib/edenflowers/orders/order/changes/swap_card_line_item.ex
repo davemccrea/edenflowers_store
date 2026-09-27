@@ -7,31 +7,19 @@ defmodule Edenflowers.Orders.Order.Changes.SwapCardLineItem do
   """
   use Ash.Resource.Change
 
-  require Ash.Query
-
   alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.Order.Changes.RemoveCardLineItem
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.after_action(changeset, fn _changeset, order ->
-      product_variant_id = Ash.Changeset.get_argument(changeset, :product_variant_id)
+    product_variant_id = Ash.Changeset.get_argument(changeset, :product_variant_id)
 
-      with :ok <- destroy_existing_card(order.id),
+    Ash.Changeset.after_action(changeset, fn _changeset, order ->
+      with :ok <- RemoveCardLineItem.destroy_card(order.id),
            {:ok, _line_item} <- create_card(order.id, product_variant_id) do
         {:ok, order}
       end
     end)
-  end
-
-  defp destroy_existing_card(order_id) do
-    LineItem
-    |> Ash.Query.filter(order_id == ^order_id and is_card == true)
-    |> Ash.read_one(authorize?: false)
-    |> case do
-      {:ok, nil} -> :ok
-      {:ok, line_item} -> Ash.destroy(line_item, action: :remove_item, authorize?: false)
-      {:error, error} -> {:error, error}
-    end
   end
 
   defp create_card(order_id, product_variant_id) do
