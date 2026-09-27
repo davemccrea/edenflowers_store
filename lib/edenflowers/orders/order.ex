@@ -123,12 +123,6 @@ defmodule Edenflowers.Orders.Order do
   actions do
     defaults [:read]
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-    end
-
     read :for_checkout do
       argument :id, :uuid, allow_nil?: false
       filter expr(id == ^arg(:id))

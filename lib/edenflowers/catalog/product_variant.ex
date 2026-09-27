@@ -38,12 +38,6 @@ defmodule Edenflowers.Catalog.ProductVariant do
   actions do
     defaults [:read, :destroy]
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-    end
-
     read :for_card_drawer do
       # The Cards category is intentionally hidden from the storefront
       # (visibility: :hidden) — products are surfaced only at checkout via

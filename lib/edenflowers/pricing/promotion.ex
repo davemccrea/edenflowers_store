@@ -19,12 +19,6 @@ defmodule Edenflowers.Pricing.Promotion do
   actions do
     defaults [:read, :destroy]
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-    end
-
     read :by_code do
       argument :code, :string, allow_nil?: false
 
