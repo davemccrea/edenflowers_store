@@ -25,11 +25,10 @@ defmodule Edenflowers.Catalog do
       define :list_featured_products, action: :featured
       define :list_products_by_category, action: :by_category, args: [:category_id]
       define :list_products_by_category_slug, action: :get_by_category_slug, args: [:slug]
-      define :get_product_by_id, action: :by_id, args: [:id]
+      define :get_product_by_id, action: :read, get_by: [:id]
     end
 
     resource Edenflowers.Catalog.ProductVariant do
-      define :get_variant_by_id, action: :by_id, args: [:id]
       define :list_card_drawer_variants, action: :for_card_drawer
     end
 
