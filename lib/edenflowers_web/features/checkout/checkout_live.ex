@@ -827,11 +827,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   # Persisted (not just visual) so the dependent form-3b renders and the
-  # value flows through on submit.
+  # value flows through on submit. Re-read afterwards: the update's result
+  # still holds the unset fulfillment_option and totals from before it.
   defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
     case List.first(options) do
-      nil -> order
-      %{id: id} -> Orders.update_fulfillment_option!(order, id, actor: actor)
+      nil ->
+        order
+
+      %{id: id} ->
+        Orders.update_fulfillment_option!(order, id, actor: actor)
+        Orders.get_order_for_checkout!(order.id, actor: actor)
     end
   end
 
