@@ -79,6 +79,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
+      validate match(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change set_attribute(:status, :pending)
       change Changes.UpsertUser
       change Changes.ReserveSeats
@@ -90,6 +91,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     create :add_manually do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
+      validate match(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change Changes.UpsertUser

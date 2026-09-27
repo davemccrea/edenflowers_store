@@ -27,6 +27,16 @@ defmodule Edenflowers.Courses.RegistrationTest do
     assert registration.reference =~ ~r/^[0-9A-Z]{6}$/
   end
 
+  test "rejects an email address without a domain" do
+    assert {:error, error} =
+             Courses.register_for_course(
+               %{name: "Ada Lovelace", email: "ada@", seats: 1, course_id: generate(course()).id, locale: "sv-FI"},
+               actor: nil
+             )
+
+    assert Exception.message(error) =~ "Must be a valid email address"
+  end
+
   test "course prices are expressed in whole cents" do
     course = generate(course())
 
