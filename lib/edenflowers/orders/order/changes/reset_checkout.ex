@@ -3,7 +3,8 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   Returns an order to its initial checkout state: blanks every checkout
   field and destroys any line items left on the order. The order row, its
   id, `order_reference`, and `state` are preserved so the existing browser
-  session keeps pointing at the same cart.
+  session keeps pointing at the same cart. `payment_intent_id` is kept too,
+  so a payment already in flight still places the order.
   """
   use Ash.Resource.Change
 
@@ -27,7 +28,6 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
     here_id: nil,
     distance: nil,
     position: nil,
-    payment_intent_id: nil,
     promotion_id: nil,
     discount_rate: nil,
     promotion_name: nil,

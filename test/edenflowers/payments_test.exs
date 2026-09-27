@@ -166,6 +166,22 @@ defmodule Edenflowers.PaymentsTest do
       assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
+    test "places an order the customer stepped back from while paying", %{order: order} do
+      Orders.return_to_delivery!(order, authorize?: false)
+
+      assert {:ok, :completed} = Payments.complete(order_intent(order))
+      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+    end
+
+    test "places an order whose cart was reset while its payment was in flight", %{order: order} do
+      Orders.restart_checkout!(order, authorize?: false)
+
+      log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(order_intent(order)) end)
+
+      assert log =~ "Amount mismatch"
+      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+    end
+
     test "places the order and flags an amount mismatch", %{order: order} do
       paid_cents = StripeAPI.to_stripe_amount(order.grand_total) - 1
 
