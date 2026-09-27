@@ -258,6 +258,7 @@ defmodule Edenflowers.Orders.Order do
       ]
 
       change Changes.SnapshotFulfillmentMethod
+      validate present(:fulfillment_date)
       validate Validations.ValidateFulfillmentDate
       validate Validations.ValidateDeliveryAddress
       validate present(:recipient_phone_number)
