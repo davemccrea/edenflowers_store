@@ -12,11 +12,7 @@ defmodule Edenflowers.Pricing.TaxRate do
   end
 
   actions do
-    defaults [:read, :destroy]
-
-    create :create do
-      accept [:name, :percentage]
-    end
+    defaults [:read, :destroy, create: [:name, :percentage]]
   end
 
   policies do

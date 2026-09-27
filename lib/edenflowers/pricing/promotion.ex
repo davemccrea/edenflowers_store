@@ -17,7 +17,11 @@ defmodule Edenflowers.Pricing.Promotion do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [
+      :read,
+      :destroy,
+      create: [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+    ]
 
     read :by_code do
       argument :code, :string, allow_nil?: false
@@ -34,10 +38,6 @@ defmodule Edenflowers.Pricing.Promotion do
 
     create :create_for_newsletter do
       change Edenflowers.Pricing.Promotion.Changes.SetNewsletterDefaults
-    end
-
-    create :create do
-      accept [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     end
   end
 

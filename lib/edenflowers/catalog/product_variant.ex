@@ -36,7 +36,12 @@ defmodule Edenflowers.Catalog.ProductVariant do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [
+      :read,
+      :destroy,
+      create: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id, :draft],
+      update: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
+    ]
 
     read :for_card_drawer do
       # The Cards category is intentionally hidden from the storefront
@@ -50,14 +55,6 @@ defmodule Edenflowers.Catalog.ProductVariant do
              )
 
       prepare build(sort: [size: :asc], load: [product: [:tax_rate]])
-    end
-
-    create :create do
-      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id, :draft]
-    end
-
-    update :update do
-      accept [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
     end
   end
 
