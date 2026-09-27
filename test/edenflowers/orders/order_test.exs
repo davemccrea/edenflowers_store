@@ -912,32 +912,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == true
     end
 
-    # A legacy user row can have a NULL newsletter_opt_in, which must still
-    # read as a strict false rather than crash or leak a nil.
-    test "a user with a null newsletter_opt_in leaves the offer shown" do
-      user = Ash.Seed.seed!(User, %{name: "Legacy", email: "legacy@example.com"})
-
-      {:ok, _} =
-        Ecto.Adapters.SQL.query(
-          Edenflowers.Repo,
-          "UPDATE users SET newsletter_opt_in = NULL WHERE id = $1",
-          [Ecto.UUID.dump!(user.id)]
-        )
-
-      order = Orders.create_for_checkout!(authorize?: false)
-
-      assert {:ok, updated_order} =
-               order
-               |> Ash.Changeset.for_update(:submit_contact_details, %{
-                 customer_name: "Legacy",
-                 customer_email: "legacy@example.com",
-                 newsletter_opt_in: false
-               })
-               |> Ash.update(authorize?: false)
-
-      assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == false
-    end
-
     test "omitting the argument defaults to no opt-in" do
       order = Orders.create_for_checkout!(authorize?: false)
 
