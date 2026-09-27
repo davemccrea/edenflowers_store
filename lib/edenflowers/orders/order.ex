@@ -78,7 +78,8 @@ defmodule Edenflowers.Orders.Order do
       transition(:submit_contact_details, from: :contact_details, to: :gift_options)
       transition(:submit_gift_options, from: :gift_options, to: :delivery)
       transition(:submit_delivery, from: :delivery, to: :payment)
-      transition(:finalize_checkout, from: :payment, to: :placed)
+      # The customer has paid, so any step they have since stepped back to still places the order.
+      transition(:finalize_checkout, from: @checkout_states, to: :placed)
 
       transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
       transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
@@ -113,7 +114,7 @@ defmodule Edenflowers.Orders.Order do
         default_actor Edenflowers.Actors.system_actor()
 
         where expr(
-                state == :payment and not is_nil(payment_intent_id) and
+                state != :placed and not is_nil(payment_intent_id) and
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
@@ -570,9 +571,9 @@ defmodule Edenflowers.Orders.Order do
 
   aggregates do
     sum :total_items_in_cart, :line_items, :quantity, default: 0
-    sum :items_subtotal, :line_items, :subtotal
-    sum :items_total, :line_items, :total
-    sum :discount, :line_items, :discount
+    sum :items_subtotal, :line_items, :subtotal, default: Decimal.new("0")
+    sum :items_total, :line_items, :total, default: Decimal.new("0")
+    sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
   end
 
