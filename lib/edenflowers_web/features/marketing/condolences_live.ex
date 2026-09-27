@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
          ~t"Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels.",
        og_image: image_url("local:///condolence/condolence_5.jpg", 1200, 630)
      )
-     |> assign(gallery: gallery(), thumb_width: @thumb_width)}
+     |> assign(gallery: gallery(), thumb_width: @thumb_width, order_mailto: order_mailto())}
   end
 
   def render(assigns) do
@@ -29,6 +29,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
                 {~t"At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."}
               </p>
               <div class="mt-8 flex flex-wrap items-center gap-6">
+                <.button href="#order" variant="primary">{~t"Order funeral flowers"}</.button>
                 <.button href="#my-work" variant="text">{~t"See my work"}</.button>
               </div>
             </div>
@@ -78,6 +79,21 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
               <span class="sr-only">{~t"(opens a larger view)"}</span>
             </a>
           </div>
+        </div>
+      </section>
+
+      <section id="order" class="bg-forest scroll-anchor-below-header not-last:border-b" aria-labelledby="order-heading">
+        <div class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
+          <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
+          <h2 id="order-heading" class="section-title text-forest-content">{~t"Ordering for a funeral"}</h2>
+          <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
+            {~t"Call me and we'll choose the flowers together. Tell me the date and time of the funeral, the church or chapel, and what you'd like written on the card. If there's an arrangement here you like, mention that too."}
+          </p>
+          <.button href="tel:+358402209494" variant="inverse">{~t"Call me on 040 220 9494"}</.button>
+          <p class="text-forest-content/85">
+            {~t"Or"}
+            <a href={@order_mailto} class="link-underline-static-body">{~t"email me"}</a>
+          </p>
         </div>
       </section>
     </Layouts.app>
@@ -141,6 +157,17 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
   # Most photos are 3:4 phone shots.
   defp portrait(number, alt) do
     %{src: "local:///condolence/condolence_#{number}.jpg", width: 1500, height: 2000, alt: alt}
+  end
+
+  defp order_mailto do
+    subject = URI.encode(~t"Funeral flowers", &URI.char_unreserved?/1)
+
+    body =
+      [~t"Date and time of the funeral:", ~t"Church or chapel:", ~t"Arrangement:", ~t"Card message:"]
+      |> Enum.map_join("\n", &(&1 <> " "))
+      |> URI.encode(&URI.char_unreserved?/1)
+
+    "mailto:info@edenflowers.fi?subject=#{subject}&body=#{body}"
   end
 
   defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
