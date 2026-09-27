@@ -47,14 +47,13 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
     end)
   end
 
-  # The calcs aren't guaranteed loaded on the struct returned by upsert/update,
-  # so load them explicitly (as system, since the User read policy is
-  # own-record-only). newsletter_promo_used? resolves to nil when no promo is
-  # assigned (nil > 0 is nil), so coerce the result to a strict boolean for the
-  # non-null order column.
+  # Loaded as system, since the User read policy is own-record-only.
+  # newsletter_promo_used? is nil when no promo is assigned (nil > 0 is nil),
+  # and a legacy newsletter_opt_in can be NULL, so coerce to a strict boolean
+  # for the non-null order column.
   defp newsletter_offer_hidden?(user) do
-    user = Ash.load!(user, [:newsletter_subscribed?, :newsletter_promo_used?], actor: system_actor())
-    !!(user.newsletter_subscribed? || user.newsletter_promo_used?)
+    user = Ash.load!(user, :newsletter_promo_used?, actor: system_actor())
+    !!(user.newsletter_opt_in || user.newsletter_promo_used?)
   end
 
   defp maybe_opt_in_to_newsletter(user, false, _changeset), do: {:ok, user}

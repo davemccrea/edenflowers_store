@@ -109,10 +109,6 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:avatar_content_type, nil)
     end
 
-    update :update_newsletter_preference do
-      accept [:newsletter_opt_in]
-    end
-
     update :set_newsletter_promo do
       argument :newsletter_promo_id, :uuid, allow_nil?: false
       change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
@@ -164,10 +160,6 @@ defmodule Edenflowers.Accounts.User do
     end
   end
 
-  preparations do
-    prepare build(load: [:newsletter_subscribed?, :newsletter_promo_used?])
-  end
-
   attributes do
     uuid_primary_key :id
 
@@ -188,7 +180,6 @@ defmodule Edenflowers.Accounts.User do
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
     calculate :initials, :string, {Edenflowers.Accounts.Calculations.Initials, source: :name}
-    calculate :newsletter_subscribed?, :boolean, expr(newsletter_opt_in == true)
     calculate :newsletter_promo_used?, :boolean, expr(newsletter_promo.usage > 0)
   end
 

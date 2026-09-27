@@ -163,7 +163,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                 type="checkbox"
                 name="newsletter_opt_in"
                 value="true"
-                checked={@current_user.newsletter_subscribed?}
+                checked={@current_user.newsletter_opt_in}
                 class="checkbox checkbox-sm mt-0.5"
               />
               <span>

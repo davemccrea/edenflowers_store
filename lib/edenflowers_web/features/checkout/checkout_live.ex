@@ -44,6 +44,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
       {:ok,
        socket
+       |> assign(:current_user, load_newsletter_promo_used(socket.assigns[:current_user]))
        |> assign(:id, "checkout")
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
@@ -728,9 +729,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # The order flag is only stamped once step 1 is submitted, so signed-in
   # customers need the same check up front or the offer flashes then vanishes.
   defp hide_newsletter_offer?(%{newsletter_offer_hidden?: true}, _current_user), do: true
-  defp hide_newsletter_offer?(_order, %{newsletter_subscribed?: true}), do: true
+  defp hide_newsletter_offer?(_order, %{newsletter_opt_in: true}), do: true
   defp hide_newsletter_offer?(_order, %{newsletter_promo_used?: true}), do: true
   defp hide_newsletter_offer?(_order, _current_user), do: false
+
+  defp load_newsletter_promo_used(nil), do: nil
+  defp load_newsletter_promo_used(user), do: Ash.load!(user, :newsletter_promo_used?, actor: user)
 
   defp actor(socket), do: socket.assigns[:current_user]
 
