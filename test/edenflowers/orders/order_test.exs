@@ -1375,7 +1375,7 @@ defmodule Edenflowers.Orders.OrderTest do
       to_remove = generate(line_item(order_id: order.id, product_variant_id: variant_1.id, quantity: 1))
       _keep = generate(line_item(order_id: order.id, product_variant_id: variant_2.id, quantity: 1))
 
-      assert {:ok, updated} = Orders.remove_line_item(order, to_remove.id, authorize?: false)
+      assert {:ok, updated} = Orders.remove_line_item(order, to_remove.id, authorize?: false, load: [:line_items])
 
       assert updated.state == :delivery
       assert updated.customer_name == "Keep Me"
@@ -1400,7 +1400,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-      assert {:ok, updated} = Orders.remove_line_item(order, line_item.id, authorize?: false)
+      assert {:ok, updated} = Orders.remove_line_item(order, line_item.id, authorize?: false, load: [:line_items])
 
       assert updated.state == :contact_details
       assert is_nil(updated.customer_name)
@@ -1573,7 +1573,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       assert with_message.card_message == "Hello"
 
-      assert {:ok, order} = Orders.remove_card(with_message, authorize?: false)
+      assert {:ok, order} = Orders.remove_card(with_message, authorize?: false, load: [:line_items])
 
       refute Enum.any?(order.line_items, & &1.is_card)
       assert is_nil(order.card_message)
@@ -1583,7 +1583,7 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Orders.get_order_for_checkout!(order.id, authorize?: false)
       refute Enum.any?(order.line_items, & &1.is_card)
 
-      assert {:ok, order} = Orders.remove_card(order, authorize?: false)
+      assert {:ok, order} = Orders.remove_card(order, authorize?: false, load: [:line_items])
       refute Enum.any?(order.line_items, & &1.is_card)
     end
   end
