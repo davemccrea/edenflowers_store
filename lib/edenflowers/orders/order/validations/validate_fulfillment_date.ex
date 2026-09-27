@@ -9,17 +9,14 @@ defmodule Edenflowers.Orders.Order.Validations.ValidateFulfillmentDate do
     fulfillment_date = Ash.Changeset.get_attribute(changeset, :fulfillment_date)
     option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    if is_nil(fulfillment_date) do
-      {:error, field: :fulfillment_date, message: "is required"}
-    else
-      # All other rules (past, weekday, disabled_dates, same-day deadline) live
-      # in the Fulfillment.fulfill_on_date action so the validator and the
-      # calendar share one source of truth — including the Helsinki timezone.
-      check_availability(option_id, fulfillment_date)
-    end
+    # The rules (past, weekday, disabled_dates, same-day deadline) live in the
+    # Fulfillment.fulfill_on_date action so the validator and the calendar
+    # share one source of truth, including the Helsinki timezone.
+    check_availability(option_id, fulfillment_date)
   end
 
   defp check_availability(nil, _date), do: :ok
+  defp check_availability(_option_id, nil), do: :ok
 
   defp check_availability(option_id, date) do
     case Fulfillment.fulfill_on_date(option_id, date, authorize?: false) do
