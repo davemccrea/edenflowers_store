@@ -196,8 +196,7 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-    {:ok, %{fulfillment_fee: fulfillment_fee}} =
-      Edenflowers.Fulfillment.calculate_price(fulfillment_option.id, 0)
+    %{fulfillment_fee: fulfillment_fee} = Edenflowers.Fulfillment.Fee.calculate(fulfillment_option, 0)
 
     order =
       generate(
