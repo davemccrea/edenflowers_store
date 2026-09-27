@@ -157,29 +157,10 @@ defmodule Edenflowers.Chat.Message do
     module EdenflowersWeb.Endpoint
     prefix "chat"
 
-    publish :create, ["messages", :conversation_id] do
+    # Covers :upsert_response too, which streams the agent's reply.
+    publish_all :create, ["messages", :conversation_id] do
       transform fn %{data: message} ->
-        %{
-          text: message.text,
-          id: message.id,
-          source: message.source,
-          complete: message.complete,
-          tool_calls: message.tool_calls,
-          tool_results: message.tool_results
-        }
-      end
-    end
-
-    publish :upsert_response, ["messages", :conversation_id] do
-      transform fn %{data: message} ->
-        %{
-          text: message.text,
-          id: message.id,
-          source: message.source,
-          complete: message.complete,
-          tool_calls: message.tool_calls,
-          tool_results: message.tool_results
-        }
+        Map.take(message, [:text, :id, :source, :complete, :tool_calls, :tool_results])
       end
     end
   end
