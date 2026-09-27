@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
       {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
       {"/admin/products", ~t"Products", true, "hero-gift"},
-      {"/admin/promotions", ~t"Promotions", true, "hero-receipt-percent"},
+      {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
       {"/admin/chat", ~t"Assistant", true, "hero-chat-bubble-left-right"}
     ]
 

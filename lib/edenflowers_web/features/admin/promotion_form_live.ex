@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Pricing.Promotion
 
@@ -23,7 +24,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Promotion not found.")
-         |> push_navigate(to: ~p"/admin/promotions")}
+         |> push_navigate(to: PromotionsLive.default_path())}
     end
   end
 
@@ -74,7 +75,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         {:noreply,
          socket
          |> put_flash(:info, ~t"Promotion saved")
-         |> push_navigate(to: ~p"/admin/promotions")}
+         |> push_navigate(to: PromotionsLive.default_path())}
 
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
@@ -87,7 +88,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         {:noreply,
          socket
          |> put_flash(:info, ~t"Promotion deleted")
-         |> push_navigate(to: ~p"/admin/promotions")}
+         |> push_navigate(to: PromotionsLive.default_path())}
 
       # Orders and newsletter subscribers keep a reference to the promotion.
       {:error, _} ->
@@ -105,7 +106,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="narrow">
-        <.admin_page_header title={@page_title} back={~p"/admin/promotions"} back_label={~t"Promotions"}>
+        <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:actions :if={@form.source.type == :update}>
             <button
               type="button"
