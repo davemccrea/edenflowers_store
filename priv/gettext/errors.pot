@@ -124,3 +124,6 @@ msgstr ""
 
 msgid "course not found"
 msgstr ""
+
+msgid "Must be a valid email address"
+msgstr ""
