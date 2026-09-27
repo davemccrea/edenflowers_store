@@ -1,0 +1,108 @@
+defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
+  use EdenflowersWeb.ConnCase, async: true
+
+  import Phoenix.LiveViewTest
+  import Generator
+
+  alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Pricing.Promotion
+
+  setup %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
+  end
+
+  test "lists promotions", %{conn: conn} do
+    generate(promotion(name: "Spring sale", code: "SPRING"))
+
+    {:ok, _view, html} = live(conn, ~p"/admin/promotions")
+
+    assert html =~ "Spring sale"
+    assert html =~ "SPRING"
+  end
+
+  test "filters out newsletter codes", %{conn: conn} do
+    generate(promotion(name: "Spring sale"))
+    newsletter_promo = generate(promotion(name: "Newsletter Welcome"))
+    subscriber = generate(admin_user(admin: false))
+    Edenflowers.Accounts.set_newsletter_promo!(subscriber, newsletter_promo.id, authorize?: false)
+
+    {:ok, _view, html} = live(conn, ~p"/admin/promotions?#{%{"newsletter?" => "false"}}")
+
+    assert html =~ "Spring sale"
+    refute html =~ "Newsletter Welcome"
+
+    {:ok, _view, html} = live(conn, ~p"/admin/promotions?#{%{"newsletter?" => "true"}}")
+
+    refute html =~ "Spring sale"
+    assert html =~ "Newsletter Welcome"
+  end
+
+  test "creates a promotion with the discount entered as a percentage", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
+
+    assert {:error, {:live_redirect, %{to: "/admin/promotions"}}} =
+             view
+             |> form("#promotion-form",
+               form: %{
+                 name: "Spring sale",
+                 code: "SPRING",
+                 discount_rate: "15",
+                 minimum_cart_total: "50",
+                 start_date: "2030-03-01",
+                 expiration_date: "2030-03-31",
+                 usage_limit: "100"
+               }
+             )
+             |> render_submit()
+
+    [promotion] = Ash.read!(Promotion, authorize?: false)
+    assert to_string(promotion.code) == "SPRING"
+    assert Decimal.equal?(promotion.discount_rate, "0.15")
+    assert promotion.usage_limit == 100
+  end
+
+  test "shows the stored rate as a percentage and edits it", %{conn: conn} do
+    promotion = generate(promotion(discount_rate: "0.2"))
+
+    {:ok, view, html} = live(conn, ~p"/admin/promotions/#{promotion.id}")
+    assert html =~ ~s(value="20")
+
+    view |> form("#promotion-form", form: %{discount_rate: "25"}) |> render_submit()
+
+    assert Decimal.equal?(Ash.get!(Promotion, promotion.id, authorize?: false).discount_rate, "0.25")
+  end
+
+  test "rejects a discount over 100%", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
+
+    html =
+      view
+      |> form("#promotion-form", form: %{name: "Too much", code: "FREE", discount_rate: "150", minimum_cart_total: "0"})
+      |> render_submit()
+
+    assert html =~ ~s(value="150")
+    assert Ash.read!(Promotion, authorize?: false) == []
+  end
+
+  test "deletes an unused promotion", %{conn: conn} do
+    promotion = generate(promotion())
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{promotion.id}")
+
+    assert {:error, {:live_redirect, %{to: "/admin/promotions"}}} =
+             view |> element("button", "Delete") |> render_click()
+
+    assert Ash.read!(Promotion, authorize?: false) == []
+  end
+
+  test "refuses to delete a promotion that has been used", %{conn: conn} do
+    promotion = generate(promotion())
+    use_promotion(promotion)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{promotion.id}")
+
+    assert view |> element("button", "Delete") |> render_click() =~ "can&#39;t be deleted"
+    assert Ash.get!(Promotion, promotion.id, authorize?: false)
+  end
+end

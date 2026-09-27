@@ -20,7 +20,8 @@ defmodule Edenflowers.Pricing.Promotion do
     defaults [
       :read,
       :destroy,
-      create: [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+      create: [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit],
+      update: [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     ]
 
     read :by_code do
@@ -80,6 +81,13 @@ defmodule Edenflowers.Pricing.Promotion do
 
   relationships do
     has_many :orders, Edenflowers.Orders.Order
+
+    has_one :newsletter_subscriber, Edenflowers.Accounts.User, destination_attribute: :newsletter_promo_id
+  end
+
+  calculations do
+    # Newsletter codes are generated one per subscriber, so they're recognised by that link.
+    calculate :newsletter?, :boolean, expr(exists(newsletter_subscriber, true))
   end
 
   aggregates do
