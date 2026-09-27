@@ -401,7 +401,6 @@ defmodule Edenflowers.Orders.Order do
     update :add_card do
       argument :product_variant_id, :uuid, allow_nil?: false
       change Changes.SwapCardLineItem
-      change load(@checkout_load)
       require_atomic? false
     end
 
