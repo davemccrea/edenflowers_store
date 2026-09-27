@@ -147,6 +147,18 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Enum.any?(products, fn p -> p.id == product.id end)
     end
 
+    test "excludes products whose only size was removed", %{tax_rate: tax_rate} do
+      published_category = generate(product_category(visibility: :public))
+      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
+      variant = generate(product_variant(product_id: product.id))
+
+      Ash.destroy!(variant, authorize?: false)
+
+      products = Catalog.list_store_products!(authorize?: false)
+
+      refute Enum.any?(products, fn p -> p.id == product.id end)
+    end
+
     test "excludes draft products", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
 

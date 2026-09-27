@@ -3,11 +3,13 @@ defmodule Edenflowers.Catalog.ProductVariant do
     otp_app: :edenflowers,
     domain: Edenflowers.Catalog,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshArchival.Resource]
 
   postgres do
     table "product_variants"
     repo Edenflowers.Repo
+    base_filter_sql "(archived_at IS NULL)"
 
     # The generator would carry `scale: 2` into the migration, which Ecto
     # rejects without a precision. Ash still validates the scale; the check
@@ -19,6 +21,18 @@ defmodule Edenflowers.Catalog.ProductVariant do
         check: "price >= 0 AND price = round(price, 2)",
         message: "must be a non-negative amount in whole cents"
     end
+  end
+
+  # Removing a size archives it: past orders still reference it. The base
+  # filter (rather than a read-action filter) also hides archived sizes from
+  # relationship expressions like the store's `exists(product_variants)` and
+  # the `cheapest_price` aggregate.
+  resource do
+    base_filter expr(is_nil(archived_at))
+  end
+
+  archive do
+    base_filter? true
   end
 
   actions do
