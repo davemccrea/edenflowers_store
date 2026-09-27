@@ -30,7 +30,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :seats, :bigint, null: false, default: 1
       add :removed_seats, :bigint, null: false, default: 0
       add :locale, :text, null: false, default: "sv-FI"
-      add :status, :text, default: "pending"
+      add :status, :text, null: false, default: "pending"
       add :reference, :text, null: false
       add :tax_rate, :decimal, null: false
       add :amount, :decimal, null: false
@@ -176,11 +176,11 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :price_per_km, :decimal
       add :free_dist_km, :bigint
       add :max_dist_km, :bigint
-      add :same_day, :boolean, default: false
+      add :same_day, :boolean, null: false, default: false
       add :order_deadline, :time
-      add :available_days, {:array, :text}
-      add :enabled_dates, {:array, :date}, default: []
-      add :disabled_dates, {:array, :date}, default: []
+      add :available_days, {:array, :text}, null: false
+      add :enabled_dates, {:array, :date}, null: false, default: []
+      add :disabled_dates, {:array, :date}, null: false, default: []
       add :tax_rate_id, :uuid, null: false
     end
 
@@ -190,7 +190,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create table(:line_items, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :quantity, :bigint, default: 1
+      add :quantity, :bigint, null: false, default: 1
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
       add :product_name, :text, null: false
@@ -238,7 +238,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :response_to_id,
           references(:messages,
@@ -267,13 +268,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:orders) do
       add :order_reference, :text
-      add :state, :text, null: false, default: "contact_details"
       add :ordered_at, :utc_datetime
-      add :payment_status, :text, default: "pending"
-      add :fulfillment_status, :text, default: "pending"
+      add :payment_status, :text, null: false, default: "pending"
+      add :fulfillment_status, :text, null: false, default: "pending"
       add :customer_name, :text
       add :customer_email, :text
-      add :gift, :boolean, default: false
+      add :gift, :boolean, null: false, default: false
       add :card_message, :text
       add :recipient_name, :text
       add :recipient_phone_number, :text
@@ -294,7 +294,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :promotion_name, :text
       add :promotion_code, :text
       add :promotion_minimum_cart_total, :decimal
-      add :locale, :text, default: "sv-FI"
+      add :locale, :text, null: false, default: "sv-FI"
       add :receipt_emailed_at, :utc_datetime
       add :receipt_sha256, :text
       add :vat_breakdown, {:array, :map}
@@ -307,6 +307,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
 
+      add :state, :text, null: false, default: "contact_details"
       add :user_id, :uuid
     end
 
@@ -338,7 +339,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
            )
 
     create table(:product_fulfillment_options, primary_key: false) do
-      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :product_id, :uuid, null: false, primary_key: true
 
       add :fulfillment_option_id,
@@ -349,8 +349,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             prefix: "public"
           ), primary_key: true, null: false
     end
-
-    create index(:product_fulfillment_options, [:product_id])
 
     create index(:product_fulfillment_options, [:fulfillment_option_id])
 
@@ -372,7 +370,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :price, :decimal, null: false
       add :size, :text
       add :image_slug, :text, null: false
-      add :stock_trackable, :boolean, default: false
+      add :stock_trackable, :boolean, null: false, default: false
       add :stock_quantity, :bigint
       add :draft, :boolean, null: false, default: true
       add :archived_at, :utc_datetime_usec
@@ -444,7 +442,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -640,7 +639,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     alter table(:users) do
       add :name, :text
       add :email, :citext, null: false
-      add :newsletter_opt_in, :boolean, default: false
+      add :newsletter_opt_in, :boolean, null: false, default: false
       add :admin, :boolean, default: false
       add :avatar, :binary
       add :avatar_content_type, :text
@@ -843,8 +842,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop_if_exists index(:product_fulfillment_options, [:fulfillment_option_id])
 
-    drop_if_exists index(:product_fulfillment_options, [:product_id])
-
     drop table(:product_fulfillment_options)
 
     drop_if_exists unique_index(:product_categories, [:slug],
@@ -864,6 +861,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:orders) do
       remove :user_id
+      remove :state
       remove :updated_at
       remove :inserted_at
       remove :vat_breakdown
@@ -896,7 +894,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :fulfillment_status
       remove :payment_status
       remove :ordered_at
-      remove :state
       remove :order_reference
     end
 

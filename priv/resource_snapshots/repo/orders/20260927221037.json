@@ -25,18 +25,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": false,
-      "default": "\"contact_details\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "state",
-      "type": "text"
-    },
-    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -49,7 +37,7 @@
       "type": "utc_datetime"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "\"pending\"",
       "generated?": false,
       "precision": null,
@@ -61,7 +49,7 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "\"pending\"",
       "generated?": false,
       "precision": null,
@@ -97,7 +85,7 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "false",
       "generated?": false,
       "precision": null,
@@ -349,7 +337,7 @@
       "type": "decimal"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "\"sv-FI\"",
       "generated?": false,
       "precision": null,
@@ -422,6 +410,18 @@
       "size": null,
       "source": "updated_at",
       "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"contact_details\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "state",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -554,7 +554,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "E4346472A29C9A086027EB20C777D1FF3419552A2F610049803707B9E0AE229E",
+  "hash": "F09E364D01D79F343E96DEE9F8D4C656B630C12553AEA52782B02413A4817A55",
   "identities": [
     {
       "all_tenants?": false,
