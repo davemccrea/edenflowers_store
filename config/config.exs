@@ -7,12 +7,14 @@
 # General application configuration
 import Config
 
+config :mdex_native, syntax_highlighter: :lumis
+config :ash_oban, pro?: false
 config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext
 
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10],
+  queues: [default: 10, chat_responses: [limit: 10], conversations: [limit: 10]],
   repo: Edenflowers.Repo,
   plugins: [
     # {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(30)},
