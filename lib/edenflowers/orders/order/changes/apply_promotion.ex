@@ -3,7 +3,8 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
   Assigns the promotion named by the `code` argument and mirrors the fields
   the order keeps once placed, independent of later edits to the promotion.
 
-  Rejects the code when the cart is below the promotion's minimum total.
+  The minimum cart total is checked here so the customer hears about it when
+  applying the code. `promotion_applied?` checks it again as the cart changes.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -34,7 +35,8 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
         promotion_id: promotion.id,
         discount_rate: promotion.discount_rate,
         promotion_name: promotion.name,
-        promotion_code: to_string(promotion.code)
+        promotion_code: to_string(promotion.code),
+        promotion_minimum_cart_total: promotion.minimum_cart_total
       )
     end
   end

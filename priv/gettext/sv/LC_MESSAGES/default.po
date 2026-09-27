@@ -23,7 +23,7 @@ msgstr "Om mig"
 msgid "Address not found"
 msgstr "Adressen hittades inte"
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:54
+#: lib/edenflowers_web/components/cart/promo_code.ex:57
 #, elixir-autogen, elixir-format
 msgid "Apply"
 msgstr "Tillämpa"
@@ -336,7 +336,7 @@ msgstr "Kassan kunde inte laddas"
 msgid "Fulfillment date cannot be in the past"
 msgstr "Leveransdatumet kan inte vara i det förflutna"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:19
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:20
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr "Ogiltig kod"
@@ -606,7 +606,7 @@ msgid "Newsletter"
 msgstr "Nyhetsbrev"
 
 #: lib/edenflowers_web/components/cart/promo_code.ex:39
-#: lib/edenflowers_web/components/cart/promo_code.ex:55
+#: lib/edenflowers_web/components/cart/promo_code.ex:58
 #, elixir-autogen, elixir-format
 msgid "Promo code"
 msgstr "Kampanjkod"
@@ -684,7 +684,7 @@ msgstr "Slutförd"
 msgid "Current step"
 msgstr "Aktuellt steg"
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:70
+#: lib/edenflowers_web/components/cart/promo_code.ex:73
 #, elixir-autogen, elixir-format
 msgid "Have a promo code?"
 msgstr "Har du en kampanjkod?"
@@ -926,7 +926,7 @@ msgstr "Kalender"
 msgid "Card message"
 msgstr "Kortmeddelande"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:30
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:31
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Varukorgens summa måste vara minst %{edenflowers_format_currency} för att kampanjen ska gälla"
@@ -3306,3 +3306,8 @@ msgstr ""
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Translate"
 msgstr ""
+
+#: lib/edenflowers_web/components/cart/promo_code.ex:43
+#, elixir-autogen, elixir-format
+msgid "Spend at least %{edenflowers_format_currency} to use this code."
+msgstr "Handla för minst %{edenflowers_format_currency} för att använda koden."

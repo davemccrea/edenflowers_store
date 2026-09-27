@@ -466,6 +466,31 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     refute has_element?(view, "[data-testid='discount-section']")
   end
 
+  test "a code the cart drops below keeps its badge but stops discounting", %{conn: conn, order: order} do
+    [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+    Orders.increment_line_item!(line_item, authorize?: false)
+    minimum = Decimal.mult(line_item.unit_price, 2)
+    promotion = generate(promotion(code: "BIGSPEND", minimum_cart_total: minimum))
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    view
+    |> element("#checkout-promo [data-testid='promo-toggle']")
+    |> render_click()
+
+    view
+    |> form("#checkout-promo-form", %{"form" => %{"code" => promotion.code}})
+    |> render_submit()
+
+    assert has_element?(view, "[data-testid='discount-section']")
+
+    Orders.decrement_line_item!(line_item, authorize?: false)
+
+    refute has_element?(view, "[data-testid='discount-section']")
+    assert has_element?(view, "#checkout-promo [data-testid='promo-badge']")
+    assert has_element?(view, "[data-testid='promo-below-minimum']")
+  end
+
   test "selecting a card preserves the unsaved recipient name on step 2", %{conn: conn} do
     cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())

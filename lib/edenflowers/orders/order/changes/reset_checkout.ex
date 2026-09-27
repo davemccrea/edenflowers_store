@@ -29,6 +29,10 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
     position: nil,
     payment_intent_id: nil,
     promotion_id: nil,
+    discount_rate: nil,
+    promotion_name: nil,
+    promotion_code: nil,
+    promotion_minimum_cart_total: nil,
     fulfillment_option_id: nil
   }
 

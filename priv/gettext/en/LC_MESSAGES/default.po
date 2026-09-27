@@ -23,7 +23,7 @@ msgstr ""
 msgid "Address not found"
 msgstr ""
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:54
+#: lib/edenflowers_web/components/cart/promo_code.ex:57
 #, elixir-autogen, elixir-format
 msgid "Apply"
 msgstr ""
@@ -336,7 +336,7 @@ msgstr ""
 msgid "Fulfillment date cannot be in the past"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:19
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:20
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr ""
@@ -606,7 +606,7 @@ msgid "Newsletter"
 msgstr ""
 
 #: lib/edenflowers_web/components/cart/promo_code.ex:39
-#: lib/edenflowers_web/components/cart/promo_code.ex:55
+#: lib/edenflowers_web/components/cart/promo_code.ex:58
 #, elixir-autogen, elixir-format
 msgid "Promo code"
 msgstr ""
@@ -684,7 +684,7 @@ msgstr ""
 msgid "Current step"
 msgstr ""
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:70
+#: lib/edenflowers_web/components/cart/promo_code.ex:73
 #, elixir-autogen, elixir-format
 msgid "Have a promo code?"
 msgstr ""
@@ -926,7 +926,7 @@ msgstr "Calendar"
 msgid "Card message"
 msgstr "Card message"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:30
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:31
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr ""
@@ -3305,4 +3305,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:154
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Translate"
+msgstr ""
+
+#: lib/edenflowers_web/components/cart/promo_code.ex:43
+#, elixir-autogen, elixir-format
+msgid "Spend at least %{edenflowers_format_currency} to use this code."
 msgstr ""

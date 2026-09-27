@@ -23,7 +23,7 @@ msgstr "Tietoa minusta"
 msgid "Address not found"
 msgstr "Osoitetta ei löytynyt"
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:54
+#: lib/edenflowers_web/components/cart/promo_code.ex:57
 #, elixir-autogen, elixir-format
 msgid "Apply"
 msgstr "Käytä"
@@ -336,7 +336,7 @@ msgstr "Kassan lataaminen epäonnistui"
 msgid "Fulfillment date cannot be in the past"
 msgstr "Toimituspäivä ei voi olla menneisyydessä"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:19
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:20
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr "Virheellinen koodi"
@@ -606,7 +606,7 @@ msgid "Newsletter"
 msgstr "Uutiskirje"
 
 #: lib/edenflowers_web/components/cart/promo_code.ex:39
-#: lib/edenflowers_web/components/cart/promo_code.ex:55
+#: lib/edenflowers_web/components/cart/promo_code.ex:58
 #, elixir-autogen, elixir-format
 msgid "Promo code"
 msgstr "Tarjouskoodi"
@@ -684,7 +684,7 @@ msgstr "Valmis"
 msgid "Current step"
 msgstr "Nykyinen vaihe"
 
-#: lib/edenflowers_web/components/cart/promo_code.ex:70
+#: lib/edenflowers_web/components/cart/promo_code.ex:73
 #, elixir-autogen, elixir-format
 msgid "Have a promo code?"
 msgstr "Onko sinulla tarjouskoodi?"
@@ -926,7 +926,7 @@ msgstr "Kalenteri"
 msgid "Card message"
 msgstr "Korttiviesti"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:30
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:31
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Ostoskorin summan on oltava vähintään %{edenflowers_format_currency}, jotta kampanjaa voi käyttää"
@@ -3306,3 +3306,8 @@ msgstr ""
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Translate"
 msgstr ""
+
+#: lib/edenflowers_web/components/cart/promo_code.ex:43
+#, elixir-autogen, elixir-format
+msgid "Spend at least %{edenflowers_format_currency} to use this code."
+msgstr "Koodin käyttö edellyttää vähintään %{edenflowers_format_currency} ostoksia."
