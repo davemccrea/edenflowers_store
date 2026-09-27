@@ -74,7 +74,7 @@ Open / undecided:
 
 - **Real wedding photography** in `images/wedding/`, credited to Anna Riska, Björn Yrjans, Daniela Streng, Josefin Westin, Julia Lillqvist, Maria Sundelin, Marie Lillhannus, Sara Björkskog, and Eden Flowers itself.
 - **Real B2B clients**, already shown as a "Trusted by" row on the home page with live links: Dermosil, SFP/RKP (Swedish People's Party of Finland), the Evangelical Lutheran Church of Finland, and Bonnier News Finland.
-- **Portraits of Jennie** (`jennie_99.jpg`, `jennie_pregnant.jpg`) and shop/product photography (`image_1.jpg`, `image_4.jpg`, `image_5.jpg`).
+- **Portraits of Jennie** (`jennie_1.jpg`, `jennie_2.jpg`, `jennie_3.jpg`, `jennie_99.jpg`, `jennie_pregnant.jpg`) and shop/product photography (`image_1.jpg`, `image_4.jpg`, `image_5.jpg`).
 - **Absences future work must not fill with invention:** there are no customer testimonials, no reviews, no press quotes, no awards, no order volumes and no ratings. The condolences tile on the home page is still a placehold.co placeholder and needs a real photograph. Wedding prices on the weddings page are starting prices only.
 
 ## Product Principles
