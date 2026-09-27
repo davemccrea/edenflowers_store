@@ -1349,7 +1349,6 @@ defmodule Edenflowers.Orders.OrderTest do
             here_id: "here123",
             distance: 5000,
             position: "60.1699,24.9384",
-            payment_intent_id: "pi_test123",
             promotion_id: promotion.id,
             fulfillment_option_id: fulfillment_option.id
           )
@@ -1372,10 +1371,34 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(reset_order.here_id)
       assert is_nil(reset_order.distance)
       assert is_nil(reset_order.position)
-      assert reset_order.payment_intent_id == "pi_test123"
       assert is_nil(reset_order.promotion_id)
       assert is_nil(reset_order.fulfillment_option_id)
       assert Ash.load!(reset_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == false
+    end
+
+    test "reset keeps the PaymentIntent and who is paying, so a payment in flight still reaches them" do
+      {:ok, user} = Edenflowers.Accounts.upsert_user("paying@example.com", "Paying Customer", authorize?: false)
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            customer_name: "Paying Customer",
+            customer_email: "paying@example.com",
+            user_id: user.id,
+            recipient_name: "Recipient",
+            payment_intent_id: "pi_in_flight"
+          )
+        )
+
+      assert {:ok, reset_order} = Orders.restart_checkout(order, authorize?: false)
+
+      assert reset_order.state == :contact_details
+      assert reset_order.payment_intent_id == "pi_in_flight"
+      assert reset_order.customer_name == "Paying Customer"
+      assert reset_order.customer_email == "paying@example.com"
+      assert reset_order.user_id == user.id
+      assert is_nil(reset_order.recipient_name)
     end
 
     test "reset preserves order id and returns the order to :contact_details" do
@@ -1448,8 +1471,7 @@ defmodule Edenflowers.Orders.OrderTest do
             state: :payment,
             customer_name: "Stale Customer",
             customer_email: "stale@example.com",
-            recipient_name: "Recipient",
-            payment_intent_id: "pi_stale"
+            recipient_name: "Recipient"
           )
         )
 
@@ -1461,7 +1483,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(updated.customer_name)
       assert is_nil(updated.customer_email)
       assert is_nil(updated.recipient_name)
-      assert updated.payment_intent_id == "pi_stale"
       assert updated.line_items == []
     end
 
