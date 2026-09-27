@@ -16,10 +16,7 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  require Ash.Query
-  require Ash.Resource.Change.Builtins
-
-  alias __MODULE__.{Calculations, Changes, Validations}
+  alias __MODULE__.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -362,19 +359,7 @@ defmodule Edenflowers.Orders.Order do
       argument :from, :date, allow_nil?: false
       argument :to, :date, allow_nil?: false
 
-      run fn input, context ->
-        from = helsinki_midnight_utc(input.arguments.from)
-        until = helsinki_midnight_utc(Date.add(input.arguments.to, 1))
-
-        __MODULE__
-        |> Ash.Query.filter(
-          state == :placed and payment_status == :paid and ordered_at >= ^from and ordered_at < ^until
-        )
-        |> Ash.aggregate(
-          [{:order_count, :count}, {:revenue, :sum, field: :amount_paid, default: Decimal.new("0.00")}],
-          scope: context
-        )
-      end
+      run Actions.SalesSummary
     end
 
     update :mark_fulfilled do
@@ -586,11 +571,5 @@ defmodule Edenflowers.Orders.Order do
 
   identities do
     identity :unique_order_reference, [:order_reference]
-  end
-
-  defp helsinki_midnight_utc(date) do
-    date
-    |> DateTime.new!(~T[00:00:00], "Europe/Helsinki")
-    |> DateTime.shift_zone!("Etc/UTC")
   end
 end
