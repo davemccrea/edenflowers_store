@@ -4,9 +4,6 @@ defmodule Edenflowers.Orders.Order.Changes.GenerateOrderReference do
   @alphabet "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.force_change_attribute(changeset, :order_reference, generate())
   end

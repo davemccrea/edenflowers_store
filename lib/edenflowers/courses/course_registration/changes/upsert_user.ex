@@ -10,9 +10,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.UpsertUser do
   alias Edenflowers.Accounts
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       email = Ash.Changeset.get_attribute(changeset, :email)
