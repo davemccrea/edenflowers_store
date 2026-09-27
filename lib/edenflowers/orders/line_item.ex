@@ -101,7 +101,7 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   calculations do
-    calculate :promotion_applied?, :boolean, expr(not is_nil(order.promotion_id))
+    calculate :promotion_applied?, :boolean, expr(order.promotion_applied?)
 
     calculate :subtotal, :decimal, expr(unit_price * quantity)
 

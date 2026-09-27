@@ -1040,6 +1040,31 @@ defmodule Edenflowers.Orders.OrderTest do
       assert {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
       assert order.promotion_id == promotion.id
     end
+
+    test "stops discounting once the cart drops below the minimum" do
+      tax_rate = generate(tax_rate(percentage: "0.10"))
+      product = generate(product(tax_rate_id: tax_rate.id))
+      product_variant = generate(product_variant(product_id: product.id, price: "25.00"))
+
+      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "50.00"))
+
+      order = Orders.create_for_checkout!(authorize?: false)
+
+      line_item =
+        generate(line_item(order_id: order.id, product_variant_id: product_variant.id, quantity: 2))
+
+      order = Orders.add_promotion_with_code!(order, to_string(promotion.code), authorize?: false)
+      Orders.decrement_line_item!(line_item, authorize?: false)
+
+      order = Ash.load!(order, [:promotion_applied?, :discount, :grand_total, line_items: [:total]], authorize?: false)
+
+      assert order.promotion_id == promotion.id
+      refute order.promotion_applied?
+      assert Decimal.equal?(order.discount, "0")
+      assert Decimal.equal?(order.grand_total, "25.00")
+      assert [%{total: total}] = order.line_items
+      assert Decimal.equal?(total, "25.00")
+    end
   end
 
   describe "Order Step 3 - Fulfillment and delivery" do
