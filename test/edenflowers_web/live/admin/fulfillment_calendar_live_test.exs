@@ -72,8 +72,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      # Sundays are closed for the delivery option set up in `setup`, so any
-      # rendered Sunday in the current month carries the closed strike.
+      # Sundays are closed for both options set up in `setup`. Next month's
+      # Sundays are all still ahead, whatever today is, so they render as
+      # closed rather than past.
+      view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
+
       assert has_element?(view, "button.calendar-strike-after")
       assert has_element?(view, "span.calendar-strike-after")
     end
