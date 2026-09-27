@@ -2959,3 +2959,66 @@ msgstr "Paikat ja hinta"
 
 msgid "Online booking closes after this day."
 msgstr "Verkkovaraus sulkeutuu tämän päivän jälkeen."
+
+msgid "Add size"
+msgstr "Lisää koko"
+
+msgid "Choose a category"
+msgstr "Valitse kategoria"
+
+msgid "Draft"
+msgstr "Luonnos"
+
+msgid "Draft (hidden from the store)"
+msgstr "Luonnos (ei näy kaupassa)"
+
+msgid "Featured on the home page"
+msgstr "Näytetään etusivulla"
+
+msgid "Hidden from the store"
+msgstr "Ei näy kaupassa"
+
+msgid "In stock"
+msgstr "Varastossa"
+
+msgid "Limited stock"
+msgstr "Rajoitettu varasto"
+
+msgid "New product"
+msgstr "Uusi tuote"
+
+msgid "No sizes"
+msgstr "Ei kokoja"
+
+msgid "One size"
+msgstr "Yksi koko"
+
+msgid "Price (€)"
+msgstr "Hinta (€)"
+
+msgid "Product not found."
+msgstr "Tuotetta ei löytynyt."
+
+msgid "Product saved"
+msgstr "Tuote tallennettu"
+
+msgid "Products"
+msgstr "Tuotteet"
+
+msgid "Save product"
+msgstr "Tallenna tuote"
+
+msgid "Sizes and prices"
+msgstr "Koot ja hinnat"
+
+msgid "Published"
+msgstr "Julkaistu"
+
+msgid "Featured"
+msgstr "Nostettu"
+
+msgid "In the store"
+msgstr "Kaupassa"
+
+msgid "A size needs a price. Without its own photo, it uses the product photo."
+msgstr "Koolla on oltava hinta. Ilman omaa kuvaa käytetään tuotteen kuvaa."
