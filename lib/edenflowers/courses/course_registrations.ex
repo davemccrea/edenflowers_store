@@ -1,3 +1,7 @@
+defmodule Edenflowers.Courses.CourseRegistration.Status do
+  use Ash.Type.Enum, values: [:pending, :confirmed, :cancelled]
+end
+
 defmodule Edenflowers.Courses.CourseRegistration do
   use Ash.Resource,
     domain: Edenflowers.Courses,
@@ -208,9 +212,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :removed_seats, :integer, allow_nil?: false, default: 0, constraints: [min: 0]
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
-    attribute :status, :atom,
-      default: :pending,
-      constraints: [one_of: [:pending, :confirmed, :cancelled]]
+    attribute :status, __MODULE__.Status, default: :pending
 
     # Receipt number, from the same generator as order references.
     attribute :reference, :string, allow_nil?: false
