@@ -224,7 +224,6 @@ defmodule Edenflowers.Orders.Order do
 
     update :submit_gift_options do
       accept [:gift, :recipient_name, :card_message]
-      change {Changes.TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate {Validations.ValidateCardMessageLength, []}
       change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
