@@ -57,7 +57,6 @@ FulfillmentOption
   sort_key: 0,
   fulfillment_method: :delivery,
   rate_type: :dynamic,
-  minimum_cart_total: 0,
   base_price: "3.00",
   price_per_km: "1.50",
   free_dist_km: 5,
