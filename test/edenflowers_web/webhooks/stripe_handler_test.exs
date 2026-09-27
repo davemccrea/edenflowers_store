@@ -188,7 +188,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_failed_1",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -218,7 +218,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_late_failure",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -233,7 +233,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
                  type: "payment_intent.canceled",
-                 data: %{object: %{metadata: %{"order_id" => order.id}}}
+                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
       order = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -328,7 +328,12 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_course_failed",
                  type: "payment_intent.payment_failed",
-                 data: %{object: %{metadata: %{"course_registration_id" => registration.id}}}
+                 data: %{
+                   object: %{
+                     id: registration.payment_intent_id,
+                     metadata: %{"course_registration_id" => registration.id}
+                   }
+                 }
                })
 
       assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending

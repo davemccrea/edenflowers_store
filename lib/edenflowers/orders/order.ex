@@ -50,6 +50,21 @@ defmodule Edenflowers.Orders.Order do
   postgres do
     repo Edenflowers.Repo
     table "orders"
+    migration_types fulfillment_fee: :decimal, amount_paid: :decimal
+
+    check_constraints do
+      check_constraint :fulfillment_fee, "orders_valid_fulfillment_fee",
+        check: "fulfillment_fee >= 0 AND fulfillment_fee = round(fulfillment_fee, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :amount_paid, "orders_valid_amount_paid",
+        check: "amount_paid >= 0 AND amount_paid = round(amount_paid, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :amount_paid, "orders_paid_requires_amount",
+        check: "payment_status != 'paid' OR amount_paid IS NOT NULL",
+        message: "must be present when payment is paid"
+    end
   end
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
@@ -239,7 +254,7 @@ defmodule Edenflowers.Orders.Order do
     # Lifecycle transitions
     update :finalize_checkout do
       argument :payment_intent_id, :string, allow_nil?: false
-      argument :amount_paid, :decimal
+      argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       change set_attribute(:amount_paid, arg(:amount_paid))
@@ -290,6 +305,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
+      validate Edenflowers.Payments.Validations.PaymentIntentNotSet
     end
 
     # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
@@ -307,7 +323,9 @@ defmodule Edenflowers.Orders.Order do
 
     # A succeeded event may have arrived first, or been reprocessed. Don't downgrade.
     update :mark_payment_failed do
+      argument :payment_intent_id, :string, allow_nil?: false
       validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}
+      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       change set_attribute(:payment_status, :failed)
     end
 
@@ -316,7 +334,7 @@ defmodule Edenflowers.Orders.Order do
 
       constraints fields: [
                     order_count: [type: :integer, allow_nil?: false],
-                    revenue: [type: :decimal, allow_nil?: false]
+                    revenue: [type: :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]]
                   ]
 
       argument :from, :date, allow_nil?: false
@@ -330,11 +348,10 @@ defmodule Edenflowers.Orders.Order do
         |> Ash.Query.filter(
           state == :placed and payment_status == :paid and ordered_at >= ^from and ordered_at < ^until
         )
-        |> Ash.Query.load(:grand_total)
         |> Ash.read(scope: context)
         |> case do
           {:ok, orders} ->
-            revenue = orders |> Enum.map(& &1.grand_total) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
+            revenue = orders |> Enum.map(& &1.amount_paid) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
             {:ok, %{order_count: length(orders), revenue: revenue}}
 
           error ->
@@ -515,7 +532,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-    attribute :fulfillment_fee, :decimal
+    attribute :fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
     # Snapshotted from FulfillmentOption (+ its TaxRate) by
     # SnapshotFulfillmentMethod. Frozen once the order is placed.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
@@ -530,7 +547,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :payment_intent_id, :string
     # What Stripe actually charged. Differs from grand_total when the cart
     # changed while payment was in flight.
-    attribute :amount_paid, :decimal
+    attribute :amount_paid, :decimal, constraints: [min: 0, scale: 2]
 
     # Snapshotted from Promotion by SnapshotPromotion. Frozen once the order
     # is placed.

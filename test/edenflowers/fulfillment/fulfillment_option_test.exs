@@ -120,6 +120,12 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       assert {:error, _} = create.(price_per_km: "-0.50")
     end
 
+    test "rejects fractional-cent prices", %{create: create} do
+      for field <- [:base_price, :minimum_cart_total, :price_per_km] do
+        assert {:error, _} = create.([{field, "1.001"}])
+      end
+    end
+
     test "rejects a negative free_dist_km", %{create: create} do
       assert {:error, _} = create.(free_dist_km: -1)
     end

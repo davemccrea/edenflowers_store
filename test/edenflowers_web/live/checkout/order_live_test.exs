@@ -53,7 +53,9 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "[data-testid=order-pending]")
     refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
-    Orders.finalize_checkout!(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
+    Orders.finalize_checkout!(order, order.payment_intent_id, %{amount_paid: "88.50"},
+      actor: Edenflowers.Actors.system_actor()
+    )
 
     assert has_element?(view, "[data-testid=order-paid]")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
@@ -102,7 +104,9 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert has_element?(view, "h1", "Thank you")
       assert has_element?(view, "[data-testid=order-pending]")
 
-      Orders.finalize_checkout!(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
+      Orders.finalize_checkout!(order, order.payment_intent_id, %{amount_paid: "88.50"},
+        actor: Edenflowers.Actors.system_actor()
+      )
 
       assert has_element?(view, "[data-testid=order-paid]")
     end

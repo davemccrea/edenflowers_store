@@ -200,7 +200,12 @@ defmodule Edenflowers.Pricing.PromotionTest do
           )
         )
 
-      {:ok, _order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+      order = Ash.load!(order, :grand_total, authorize?: false)
+
+      {:ok, _order} =
+        Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: order.grand_total},
+          authorize?: false
+        )
 
       # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
       Oban.drain_queue(queue: :default)
@@ -385,6 +390,22 @@ defmodule Edenflowers.Pricing.PromotionTest do
                |> Ash.create(authorize?: false)
 
       assert Decimal.equal?(promotion.discount_rate, "0.01")
+    end
+  end
+
+  describe "Promotion minimum_cart_total validations" do
+    test "rejects negative and fractional-cent totals" do
+      for minimum <- ["-1.00", "1.001"] do
+        assert {:error, %Ash.Error.Invalid{}} =
+                 Promotion
+                 |> Ash.Changeset.for_create(:create, %{
+                   name: "Invalid minimum",
+                   code: "MIN-#{minimum}",
+                   discount_rate: "0.10",
+                   minimum_cart_total: minimum
+                 })
+                 |> Ash.create(authorize?: false)
+      end
     end
   end
 

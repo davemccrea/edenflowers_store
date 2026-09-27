@@ -10,8 +10,8 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     vendor_name: "Acme Oy",
     vendor_vat_number: "FI12345678",
     date: "2026-05-15",
-    total_amount: 121.0,
-    vat_amount: 21.0,
+    total_amount: "121.00",
+    vat_amount: "21.00",
     currency: "eur",
     category: "office_supplies",
     description: "Office chairs",
@@ -25,8 +25,8 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert expense.document_id == "doc_abc123"
       assert expense.vendor_name == "Acme Oy"
       assert expense.date == ~D[2026-05-15]
-      assert expense.total_amount == Decimal.new("121.0")
-      assert expense.vat_amount == Decimal.new("21.0")
+      assert expense.total_amount == Decimal.new("121.00")
+      assert expense.vat_amount == Decimal.new("21.00")
       assert expense.currency == :eur
       assert expense.category == :office_supplies
       assert expense.confidence == :high
@@ -82,6 +82,19 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     test "rejects an unknown currency value" do
       assert {:error, _} =
                Expenses.ingest_expense(Map.put(@valid_attrs, :currency, "usd"), actor: system_actor())
+    end
+
+    test "accepts signed whole-cent amounts for credit notes" do
+      attrs = Map.merge(@valid_attrs, %{document_id: "doc_credit", total_amount: "-12.50", vat_amount: "-2.50"})
+
+      assert {:ok, expense} = Expenses.ingest_expense(attrs, actor: system_actor())
+      assert Decimal.equal?(expense.total_amount, "-12.50")
+      assert Decimal.equal?(expense.vat_amount, "-2.50")
+    end
+
+    test "rejects fractional-cent amounts" do
+      assert {:error, _} =
+               Expenses.ingest_expense(Map.put(@valid_attrs, :total_amount, "12.345"), actor: system_actor())
     end
   end
 
