@@ -367,6 +367,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:discount_rate, nil)
       change set_attribute(:promotion_name, nil)
       change set_attribute(:promotion_code, nil)
+      change set_attribute(:promotion_minimum_cart_total, nil)
     end
 
     update :restart_checkout do
@@ -514,6 +515,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :discount_rate, :decimal
     attribute :promotion_name, :string
     attribute :promotion_code, :string
+    attribute :promotion_minimum_cart_total, :decimal
 
     attribute :locale, :string, default: "sv-FI"
 
@@ -541,7 +543,19 @@ defmodule Edenflowers.Orders.Order do
     # display, and only for deliveries.
     calculate :distance_km, :string, Calculations.DistanceKm
 
-    calculate :promotion_applied?, :boolean, expr(not is_nil(promotion_id))
+    # A code stays on the order when the cart drops below its minimum, but
+    # only discounts while the cart meets it.
+    calculate :promotion_applied?,
+              :boolean,
+              expr(
+                if(
+                  not is_nil(promotion_id) and
+                    (is_nil(promotion_minimum_cart_total) or items_subtotal >= promotion_minimum_cart_total),
+                  true,
+                  false
+                )
+              )
+
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
     calculate :amount_mismatch?, :boolean, expr(not is_nil(amount_paid) and amount_paid != grand_total)
 

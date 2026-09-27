@@ -34,11 +34,14 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     <div id={@id} class={(@order.promotion_applied? and not @show_applied) && "hidden"}>
       <%= cond do %>
         <% @order.promotion_applied? and not @show_applied -> %>
-        <% @order.promotion_applied? -> %>
+        <% @order.promotion_id -> %>
           <div class="flex items-baseline justify-between text-sm" data-testid="promo-applied">
             <span class="text-base-content/70">{~t"Promo code"}</span>
             <.badge code={@order.promotion_code} target={@myself} />
           </div>
+          <p :if={not @order.promotion_applied?} class="text-base-content/70 mt-1 text-sm" data-testid="promo-below-minimum">
+            {~t"Spend at least #{Edenflowers.Format.currency(@order.promotion_minimum_cart_total, @order.locale)} to use this code."}
+          </p>
         <% @open -> %>
           <.form
             id={"#{@id}-form"}
