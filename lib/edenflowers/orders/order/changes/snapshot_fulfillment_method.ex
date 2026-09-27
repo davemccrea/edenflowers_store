@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotFulfillmentMethod do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -30,7 +30,7 @@ defmodule Edenflowers.Orders.Order.Changes.SnapshotFulfillmentMethod do
         )
 
       id ->
-        case Ash.get(FulfillmentOption, id, load: [:tax_rate], authorize?: false) do
+        case Fulfillment.get_option_by_id(id, load: [:tax_rate], authorize?: false) do
           {:ok, %{fulfillment_method: method, name: name, tax_rate: %{percentage: percentage}}} ->
             Ash.Changeset.force_change_attributes(changeset,
               fulfillment_method: method,

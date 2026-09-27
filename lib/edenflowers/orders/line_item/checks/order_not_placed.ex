@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.LineItem.Checks.OrderNotPlaced do
   """
   use Ash.Policy.SimpleCheck
 
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
 
   @impl true
   def describe(_opts), do: "order is not in :placed state"
@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.LineItem.Checks.OrderNotPlaced do
         false
 
       order_id ->
-        case Ash.get(Order, order_id, authorize?: false) do
+        case Orders.get_order_by_id(order_id, authorize?: false) do
           {:ok, %{state: :placed}} -> false
           {:ok, _} -> true
           {:error, _} -> false

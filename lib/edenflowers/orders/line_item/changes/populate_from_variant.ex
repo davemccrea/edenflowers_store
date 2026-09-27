@@ -2,7 +2,7 @@ defmodule Edenflowers.Orders.LineItem.Changes.PopulateFromVariant do
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Catalog
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -10,7 +10,7 @@ defmodule Edenflowers.Orders.LineItem.Changes.PopulateFromVariant do
 
     with id when not is_nil(id) <- variant_id,
          {:ok, variant} <-
-           Ash.get(ProductVariant, id, load: [product: [:tax_rate]], authorize?: false) do
+           Catalog.get_variant_by_id(id, load: [product: [:tax_rate]], authorize?: false) do
       attrs = %{
         product_id: variant.product.id,
         product_name: variant.product.name,
