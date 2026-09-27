@@ -74,6 +74,10 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:lumis, "~> 0.1"},
+      {:mdex, "~> 0.7"},
+      {:ash_oban, "~> 0.4"},
+      {:ash_ai, "~> 1.0"},
       # Ash
       {:ash, "~> 3.0"},
       {:ash_admin, "~> 1.0"},
@@ -118,7 +122,7 @@ defmodule Edenflowers.MixProject do
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       # Integrations
-      {:req_llm, "~> 1.6"},
+      {:req_llm, "~> 1.18"},
       {:stripity_stripe, "~> 3.2"},
       {:swoosh, "~> 1.16"},
       {:gen_smtp, "~> 1.2"},

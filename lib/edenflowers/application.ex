@@ -17,7 +17,11 @@ defmodule Edenflowers.Application do
       EdenflowersWeb.Telemetry,
       Edenflowers.Repo,
       {DNSCluster, query: Application.get_env(:edenflowers, :dns_cluster_query) || :ignore},
-      {Oban, Application.fetch_env!(:edenflowers, Oban)},
+      {Oban,
+       AshOban.config(
+         Application.fetch_env!(:edenflowers, :ash_domains),
+         Application.fetch_env!(:edenflowers, Oban)
+       )},
       {Phoenix.PubSub, name: Edenflowers.PubSub},
       {Edenflowers.RateLimiter, clean_period: :timer.minutes(1)},
       EdenflowersWeb.Endpoint,
