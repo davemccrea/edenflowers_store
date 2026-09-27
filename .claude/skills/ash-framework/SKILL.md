@@ -26,9 +26,25 @@ metadata:
 - [relationships](references/ash/relationships.md)
 - [testing](references/ash/testing.md)
 
+### ash_ai
+
+- [ash_ai](references/ash_ai/ash_ai.md)
+
 ### ash_authentication
 
 - [ash_authentication](references/ash_authentication/ash_authentication.md)
+
+### ash_oban
+
+- [ash_oban](references/ash_oban/ash_oban.md)
+- [best_practices](references/ash_oban/best_practices.md)
+- [debugging_and_error_handling](references/ash_oban/debugging_and_error_handling.md)
+- [defining_triggers](references/ash_oban/defining_triggers.md)
+- [multi_tenancy_support](references/ash_oban/multi_tenancy_support.md)
+- [scheduled_actions](references/ash_oban/scheduled_actions.md)
+- [setting_up_ash_oban](references/ash_oban/setting_up_ash_oban.md)
+- [triggering_jobs_programmatically](references/ash_oban/triggering_jobs_programmatically.md)
+- [working_with_actors](references/ash_oban/working_with_actors.md)
 
 ### ash_phoenix
 
@@ -53,10 +69,14 @@ metadata:
 - [migrations](references/ash_postgres/migrations.md)
 - [multitenancy](references/ash_postgres/multitenancy.md)
 
+### cinder
+
+- [cinder](references/cinder/cinder.md)
+
 ## Searching Documentation
 
 ```sh
-mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation
+mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_ai -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_oban -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
 ```
 
 ## Available Mix Tasks
@@ -88,6 +108,14 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash.tear_down` - Runs all tear_down tasks for any extension on any resource/domain in your application.
 - `mix ash_admin.install` - Installs AshAdmin
 - `mix ash_admin.install.docs`
+- `mix ash_ai.gen.chat` - Generates the resources and views for a conversational UI backed by `ash_postgres` and `ash_oban`
+- `mix ash_ai.gen.chat.docs`
+- `mix ash_ai.gen.mcp` - Sets up an MCP server for your application
+- `mix ash_ai.gen.mcp.docs`
+- `mix ash_ai.gen.usage_rules`
+- `mix ash_ai.gen.usage_rules.docs`
+- `mix ash_ai.install` - Installs `AshAi`. Call with `mix igniter.install ash_ai`. Requires igniter to run.
+- `mix ash_ai.install.docs`
 - `mix ash_authentication.add_add_on` - Adds the provided add-on to your user resource
 - `mix ash_authentication.add_add_on.audit_log` - Adds an audit log add-on to your user resource
 - `mix ash_authentication.add_add_on.confirmation` - Adds email confirmation to your user resource
@@ -123,6 +151,11 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash_authentication_phoenix.install` - Installs AshAuthenticationPhoenix. Invoke with `mix igniter.install ash_authentication_phoenix`
 - `mix ash_authentication_phoenix.setup` - Ensures Phoenix authentication infrastructure (routes, controller, sign-in page) exists
 - `mix ash_authentication_phoenix.upgrade`
+- `mix ash_oban.install` - Installs AshOban and Oban
+- `mix ash_oban.install.docs`
+- `mix ash_oban.set_default_module_names` - Set module names to their default values for triggers and scheduled actions
+- `mix ash_oban.set_default_module_names.docs`
+- `mix ash_oban.upgrade`
 - `mix ash_phoenix.gen.html` - Generates a controller and HTML views for an existing Ash resource.
 - `mix ash_phoenix.gen.live` - Generates liveviews for a given domain and resource.
 - `mix ash_phoenix.install` - Installs AshPhoenix into a project. Should be called with `mix igniter.install ash_phoenix`
@@ -141,4 +174,7 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash_state_machine.generate_flow_charts` - Generates Mermaid Flow Charts for each resource using `AshStateMachine`
 - `mix ash_state_machine.install` - Installs AshStateMachine
 - `mix ash_state_machine.install.docs`
+- `mix cinder.gen.filter` - Generate and configure a custom Cinder filter
+- `mix cinder.install` - Install Cinder and configure Tailwind CSS
+- `mix cinder.upgrade`
 <!-- usage-rules-skill-end -->
