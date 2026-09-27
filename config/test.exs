@@ -1,5 +1,6 @@
 import Config
 config :edenflowers, token_signing_secret: "Ru1t3J1eZMoIIz6LEIYtCN9CK7SlGbKg"
+config :edenflowers, :uploads_dir, Path.join(System.tmp_dir!(), "edenflowers_test_uploads")
 
 # Configure your database
 #

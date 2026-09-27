@@ -2905,3 +2905,18 @@ msgstr "Radera det här samtalet? Det går inte att ångra."
 #: lib/edenflowers_web/features/admin/chat_live.ex
 msgid "Conversation deleted"
 msgstr "Samtalet raderades"
+
+msgid "The photo is too large (max 40 MB)"
+msgstr "Fotot är för stort (max 40 MB)"
+
+msgid "Use a JPG, PNG or WebP photo"
+msgstr "Använd ett foto i JPG-, PNG- eller WebP-format"
+
+msgid "The photo could not be uploaded"
+msgstr "Fotot kunde inte laddas upp"
+
+msgid "Click or drop a photo here"
+msgstr "Klicka eller dra hit ett foto"
+
+msgid "Replace photo"
+msgstr "Byt foto"

@@ -2905,3 +2905,18 @@ msgstr "Poistetaanko tämä keskustelu? Tätä ei voi perua."
 #: lib/edenflowers_web/features/admin/chat_live.ex
 msgid "Conversation deleted"
 msgstr "Keskustelu poistettu"
+
+msgid "The photo is too large (max 40 MB)"
+msgstr "Kuva on liian suuri (enintään 40 Mt)"
+
+msgid "Use a JPG, PNG or WebP photo"
+msgstr "Käytä JPG-, PNG- tai WebP-kuvaa"
+
+msgid "The photo could not be uploaded"
+msgstr "Kuvan lataaminen epäonnistui"
+
+msgid "Click or drop a photo here"
+msgstr "Napsauta tai pudota kuva tähän"
+
+msgid "Replace photo"
+msgstr "Vaihda kuva"
