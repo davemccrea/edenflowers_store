@@ -43,13 +43,6 @@ defmodule Edenflowers.Catalog.Product do
       prepare build(load: [:tax_rate])
     end
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-      prepare build(load: [:product_category])
-    end
-
     create :create do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
       argument :fulfillment_option_ids, {:array, :uuid}

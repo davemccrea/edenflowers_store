@@ -11,7 +11,7 @@ defmodule Edenflowers.Pricing do
     resource Edenflowers.Pricing.TaxRate
 
     resource Edenflowers.Pricing.Promotion do
-      define :get_promotion_by_id, action: :by_id, args: [:id], get?: true
+      define :get_promotion_by_id, action: :read, get_by: [:id]
       define :get_promotion_by_code, action: :by_code, args: [:code, {:optional, :today}], get?: true
       define :create_newsletter_promotion, action: :create_for_newsletter
     end

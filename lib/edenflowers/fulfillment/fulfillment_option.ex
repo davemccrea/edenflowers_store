@@ -81,12 +81,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       ]
     ]
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
-    end
-
     read :list_for_checkout do
       prepare build(sort: [sort_key: :asc, name: :asc])
     end
