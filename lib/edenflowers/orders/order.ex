@@ -319,9 +319,8 @@ defmodule Edenflowers.Orders.Order do
     end
 
     update :update_locale do
-      argument :locale, :string, allow_nil?: false
-      validate argument_in(:locale, @locales)
-      change atomic_update(:locale, expr(^arg(:locale)))
+      accept [:locale]
+      validate attribute_in(:locale, @locales)
     end
 
     update :add_payment_intent_id do
