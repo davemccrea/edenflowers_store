@@ -153,12 +153,16 @@ defmodule EdenflowersWeb.Cart.LineItems do
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
-    Orders.increment_line_item(socket.assigns.order, id)
+    if item = line_item(socket.assigns.order, id), do: Orders.increment_line_item(item)
     {:noreply, socket}
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
-    Orders.decrement_line_item(socket.assigns.order, id)
+    if item = line_item(socket.assigns.order, id), do: Orders.decrement_line_item(item)
     {:noreply, socket}
   end
+
+  # Looked up on the session's own order, so a client can't adjust another cart's items,
+  # and an item removed in another tab is ignored.
+  defp line_item(order, id), do: Enum.find(order.line_items, &(&1.id == id))
 end

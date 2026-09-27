@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     delivery_option = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :fixed, base_price: "5.00"))
     order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
 
-    Orders.add_line_item!(order, variant.id, 1, authorize?: false)
+    Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
 
     stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata ->
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
