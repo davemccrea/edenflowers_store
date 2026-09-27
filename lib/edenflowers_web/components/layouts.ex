@@ -174,6 +174,11 @@ defmodule EdenflowersWeb.Layouts do
   attr :flash, :map, required: true
   attr :current_path, :string, required: true
   attr :current_user, :map, required: true
+
+  attr :fill_viewport, :boolean,
+    default: false,
+    doc: "pins the page to the window height so the content manages its own scrolling"
+
   slot :inner_block, required: true
 
   def admin(assigns) do
@@ -187,7 +192,8 @@ defmodule EdenflowersWeb.Layouts do
       {EdenflowersWeb.Admin.OrdersLive.default_path(), ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
-      {"/admin/courses", ~t"Courses", true, "hero-academic-cap"}
+      {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
+      {"/admin/chat", ~t"Assistant", true, "hero-chat-bubble-left-right"}
     ]
 
     system_nav = [
@@ -205,7 +211,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.flash_group flash={@flash} />
 
-    <div class="admin-theme min-h-screen lg:flex">
+    <div class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}>
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
         id="admin-nav-drawer"
@@ -233,7 +239,7 @@ defmodule EdenflowersWeb.Layouts do
         />
       </aside>
 
-      <div class="flex min-w-0 flex-1 flex-col">
+      <div class={["flex min-w-0 flex-1 flex-col", @fill_viewport && "min-h-0"]}>
         <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
              The trailing spacer matches the button cell so the center column is
              truly centered on the bar, not on the leftover space. --%>
@@ -259,7 +265,11 @@ defmodule EdenflowersWeb.Layouts do
           <.admin_account_menu current_user={@current_user} />
         </div>
 
-        <main id="main-content" tabindex="-1" class="flex-grow pb-12 outline-hidden">
+        <main
+          id="main-content"
+          tabindex="-1"
+          class={["outline-hidden", if(@fill_viewport, do: "flex min-h-0 flex-1 flex-col", else: "flex-grow pb-12")]}
+        >
           {render_slot(@inner_block)}
         </main>
       </div>

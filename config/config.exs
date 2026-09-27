@@ -70,6 +70,7 @@ config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
+    Edenflowers.Chat,
     Edenflowers.Accounts,
     Edenflowers.Catalog,
     Edenflowers.Orders,

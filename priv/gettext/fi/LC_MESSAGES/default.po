@@ -2843,3 +2843,53 @@ msgstr "Poistetaanko varauksesta yksi paikka?"
 #, elixir-autogen, elixir-format
 msgid "This does not refund. Refund one seat in Stripe first. Remove one seat from this booking?"
 msgstr "Tämä ei palauta rahoja. Palauta yhden paikan hinta ensin Stripessä. Poistetaanko varauksesta yksi paikka?"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "All conversations"
+msgstr "Kaikki keskustelut"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Ask a question…"
+msgstr "Kysy jotain…"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Assistant"
+msgstr "Avustaja"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Checked"
+msgstr "Tarkistettu"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Conversations"
+msgstr "Keskustelut"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Message"
+msgstr "Viesti"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "New conversation"
+msgstr "Uusi keskustelu"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Send"
+msgstr "Lähetä"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "This lookup failed:"
+msgstr "Tämä haku epäonnistui:"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Thinking…"
+msgstr "Mietitään…"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Untitled conversation"
+msgstr "Nimetön keskustelu"
+
+
+
