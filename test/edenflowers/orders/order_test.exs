@@ -1350,7 +1350,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(reset_order.here_id)
       assert is_nil(reset_order.distance)
       assert is_nil(reset_order.position)
-      assert is_nil(reset_order.payment_intent_id)
+      assert reset_order.payment_intent_id == "pi_test123"
       assert is_nil(reset_order.promotion_id)
       assert is_nil(reset_order.fulfillment_option_id)
       assert reset_order.newsletter_offer_hidden? == false
@@ -1439,7 +1439,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(updated.customer_name)
       assert is_nil(updated.customer_email)
       assert is_nil(updated.recipient_name)
-      assert is_nil(updated.payment_intent_id)
+      assert updated.payment_intent_id == "pi_stale"
       assert updated.line_items == []
     end
 

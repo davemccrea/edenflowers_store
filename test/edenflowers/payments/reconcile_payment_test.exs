@@ -120,6 +120,24 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     )
   end
 
+  test "places a paid order the customer stepped back from while paying", %{seed_order: seed_order} do
+    order = seed_order.(minutes_ago(10))
+
+    Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE orders SET state = 'delivery' WHERE id = $1", [
+      Ecto.UUID.dump!(order.id)
+    ])
+
+    assert :ok = perform_job(ScheduleOrderReconciliation, %{})
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, payment_intent(order, "succeeded")} end)
+
+    capture_log(fn ->
+      assert {:ok, _record} = perform_job(ReconcileOrderPayment, %{"primary_key" => %{"id" => order.id}})
+    end)
+
+    assert_enqueued(worker: ReconcileOrderPayment, args: %{"primary_key" => %{"id" => order.id}})
+    assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+  end
+
   test "leaves an unpaid order in checkout", %{seed_order: seed_order} do
     order = seed_order.(minutes_ago(10))
 
