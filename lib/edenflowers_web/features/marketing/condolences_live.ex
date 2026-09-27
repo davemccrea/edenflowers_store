@@ -120,18 +120,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
       portrait(28, ~t"Spray of white roses and blue delphiniums"),
       portrait(4, ~t"Open heart of white roses and lilac carnations"),
       portrait(35, ~t"Spray of yellow roses and chrysanthemums"),
-      %{
-        src: "local:///condolence/condolence_2.jpg",
-        width: 2000,
-        height: 1500,
-        alt: ~t"Spray of red roses and white lilies"
-      },
       portrait(33, ~t"Spray of red roses and protea"),
-      portrait(29, ~t"Open heart of pink and white carnations"),
-      portrait(16, ~t"Spray of white lilies, pale pink roses and green carnations"),
-      portrait(10, ~t"Spray of red roses, blue irises and white lisianthus"),
-      portrait(18, ~t"Spray of orange roses and gypsophila"),
-      portrait(27, ~t"All-white spray of lilies and lisianthus"),
       portrait(6, ~t"Spray of yellow roses and white carnations"),
       portrait(23, ~t"Spray of white roses and blue irises"),
       portrait(13, ~t"Spray of red carnations, purple lisianthus and gypsophila"),
@@ -141,16 +130,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
         height: 1664,
         alt: ~t"Casket spray of meadow flowers and palm leaves on a white coffin"
       },
-      portrait(11, ~t"Spray of coral roses and white lisianthus"),
-      portrait(31, ~t"Spray of white roses and lilac lisianthus"),
-      portrait(17, ~t"Spray of red and pink roses with white anemones"),
-      portrait(21, ~t"Spray of white and lilac carnations with blue delphiniums"),
-      portrait(19, ~t"Spray of pink roses, purple lisianthus and gypsophila"),
-      portrait(22, ~t"Spray of peach roses and blue irises"),
-      portrait(12, ~t"Spray of red roses and white spray roses"),
-      portrait(25, ~t"Spray of red roses, blue gentians and gypsophila"),
-      portrait(32, ~t"Spray of white carnations and blue delphiniums"),
-      portrait(15, ~t"Spray of pale pink lisianthus and peach roses")
+      portrait(22, ~t"Spray of peach roses and blue irises")
     ]
   end
 
