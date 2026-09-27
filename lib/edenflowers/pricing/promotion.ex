@@ -62,11 +62,6 @@ defmodule Edenflowers.Pricing.Promotion do
     end
   end
 
-  validations do
-    validate compare(:discount_rate, greater_than: 0)
-    validate compare(:discount_rate, less_than_or_equal_to: 1)
-  end
-
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
@@ -76,11 +71,11 @@ defmodule Edenflowers.Pricing.Promotion do
       constraints allow_empty?: false, trim?: true
     end
 
-    attribute :discount_rate, :decimal, allow_nil?: false
+    attribute :discount_rate, :decimal, allow_nil?: false, constraints: [greater_than: 0, max: 1]
     attribute :minimum_cart_total, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :start_date, :date
     attribute :expiration_date, :date
-    attribute :usage_limit, :integer, allow_nil?: true
+    attribute :usage_limit, :integer, constraints: [min: 1]
   end
 
   relationships do

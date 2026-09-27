@@ -204,14 +204,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       where attribute_equals(:same_day, true)
     end
 
-    validate numericality(:free_dist_km, greater_than_or_equal_to: 0) do
-      where attribute_equals(:rate_type, :dynamic)
-    end
-
-    validate numericality(:max_dist_km, greater_than: 0) do
-      where attribute_equals(:rate_type, :dynamic)
-    end
-
     validate compare(:free_dist_km, less_than_or_equal_to: :max_dist_km) do
       where attribute_equals(:rate_type, :dynamic)
     end
@@ -229,8 +221,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :rate_type, Edenflowers.Fulfillment.FulfillmentOption.RateType, allow_nil?: false, public?: true
     attribute :base_price, :decimal, allow_nil?: false, public?: true, constraints: [min: 0, scale: 2]
     attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
-    attribute :free_dist_km, :integer, public?: true
-    attribute :max_dist_km, :integer, public?: true
+    attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]
+    attribute :max_dist_km, :integer, public?: true, constraints: [min: 1]
 
     attribute :same_day, :boolean, default: false, public?: true
     attribute :order_deadline, :time, public?: true
