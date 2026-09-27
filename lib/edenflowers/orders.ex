@@ -103,11 +103,12 @@ defmodule Edenflowers.Orders do
       define :add_card, action: :add_card, args: [:product_variant_id]
       define :remove_card, action: :remove_card
       define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
-      define :add_line_item, action: :add_line_item, args: [:product_variant_id, :quantity]
-      define :increment_line_item, action: :increment_line_item, args: [:line_item_id]
-      define :decrement_line_item, action: :decrement_line_item, args: [:line_item_id]
     end
 
-    resource Edenflowers.Orders.LineItem
+    resource Edenflowers.Orders.LineItem do
+      define :add_line_item, action: :add_to_cart, args: [:order_id, :product_variant_id, :quantity]
+      define :increment_line_item, action: :increment_quantity
+      define :decrement_line_item, action: :decrement_quantity
+    end
   end
 end

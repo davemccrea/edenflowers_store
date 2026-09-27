@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     order = generate(order())
 
-    Orders.add_line_item!(order, variant.id, 1, authorize?: false)
+    Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
 
     payment_intent = %{
       id: "pi_test_#{:rand.uniform(1_000_000)}",

@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    Orders.add_line_item(socket.assigns.order, socket.assigns.selected_variant.id, 1)
+    Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1)
 
     {:noreply, socket}
   end

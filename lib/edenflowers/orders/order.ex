@@ -432,27 +432,6 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
-    update :add_line_item do
-      argument :product_variant_id, :uuid, allow_nil?: false
-      argument :quantity, :integer, allow_nil?: false, constraints: [min: 1]
-      change {Changes.AddLineItem, []}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :increment_line_item do
-      argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.AdjustLineItemQuantity, direction: :increment}
-      change load(@checkout_load)
-      require_atomic? false
-    end
-
-    update :decrement_line_item do
-      argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.AdjustLineItemQuantity, direction: :decrement}
-      change load(@checkout_load)
-      require_atomic? false
-    end
   end
 
   policies do
