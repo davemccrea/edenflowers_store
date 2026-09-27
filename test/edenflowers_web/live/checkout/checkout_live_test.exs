@@ -236,6 +236,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> assert_has("h2", text: "Delivery")
     end
 
+    test "shows step 3's inputs for the defaulted fulfillment option", %{session: session} do
+      session
+      |> click_button("Next")
+      |> assert_has("#checkout-form-3b")
+    end
+
     test "does not show 'Select a card' button when gift is false", %{session: session} do
       session
       |> refute_has("[data-testid='select-card-button']")
