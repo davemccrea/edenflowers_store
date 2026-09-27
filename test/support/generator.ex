@@ -112,6 +112,7 @@ defmodule Generator do
       %Order{
         state: :contact_details,
         order_reference: GenerateOrderReference.generate(),
+        amount_paid: if(opts[:payment_status] == :paid, do: Decimal.new("0.00")),
         vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
       },
       overrides: opts,

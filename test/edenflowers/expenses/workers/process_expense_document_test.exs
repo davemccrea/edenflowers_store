@@ -17,8 +17,8 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     "vendor_name" => "Acme Oy",
     "vendor_vat_number" => "FI12345678",
     "date" => "2026-05-15",
-    "total_amount" => 121.0,
-    "vat_amount" => 21.0,
+    "total_amount" => "121.00",
+    "vat_amount" => "21.00",
     "currency" => "eur",
     "category" => "office_supplies",
     "description" => "Office chairs",
@@ -40,8 +40,8 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     assert expense.vendor_name == "Acme Oy"
     assert expense.vendor_vat_number == "FI12345678"
     assert expense.date == ~D[2026-05-15]
-    assert expense.total_amount == Decimal.new("121.0")
-    assert expense.vat_amount == Decimal.new("21.0")
+    assert expense.total_amount == Decimal.new("121.00")
+    assert expense.vat_amount == Decimal.new("21.00")
     assert expense.currency == :eur
     assert expense.category == :office_supplies
     assert expense.description == "Office chairs"

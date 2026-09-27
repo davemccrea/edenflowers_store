@@ -20,6 +20,21 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
+    migration_types minimum_cart_total: :decimal, base_price: :decimal, price_per_km: :decimal
+
+    check_constraints do
+      check_constraint :minimum_cart_total, "fulfillment_options_valid_minimum_cart_total",
+        check: "minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :base_price, "fulfillment_options_valid_base_price",
+        check: "base_price >= 0 AND base_price = round(base_price, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :price_per_km, "fulfillment_options_valid_price_per_km",
+        check: "price_per_km >= 0 AND price_per_km = round(price_per_km, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 
   translations do
@@ -216,13 +231,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       where attribute_equals(:same_day, true)
     end
 
-    validate numericality(:base_price, greater_than_or_equal_to: 0)
-    validate numericality(:minimum_cart_total, greater_than_or_equal_to: 0)
-
-    validate numericality(:price_per_km, greater_than_or_equal_to: 0) do
-      where attribute_equals(:rate_type, :dynamic)
-    end
-
     validate numericality(:free_dist_km, greater_than_or_equal_to: 0) do
       where attribute_equals(:rate_type, :dynamic)
     end
@@ -241,15 +249,18 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :name, :string, allow_nil?: false, public?: true
     attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
 
-    attribute :minimum_cart_total, :decimal, default: 0, public?: true
+    attribute :minimum_cart_total, :decimal,
+      default: 0,
+      public?: true,
+      constraints: [min: 0, scale: 2]
 
     attribute :fulfillment_method, Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod,
       allow_nil?: false,
       public?: true
 
     attribute :rate_type, Edenflowers.Fulfillment.FulfillmentOption.RateType, allow_nil?: false, public?: true
-    attribute :base_price, :decimal, allow_nil?: false, public?: true
-    attribute :price_per_km, :decimal, public?: true
+    attribute :base_price, :decimal, allow_nil?: false, public?: true, constraints: [min: 0, scale: 2]
+    attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
     attribute :free_dist_km, :integer, public?: true
     attribute :max_dist_km, :integer, public?: true
 
