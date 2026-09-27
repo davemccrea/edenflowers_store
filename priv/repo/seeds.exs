@@ -697,7 +697,8 @@ for order_attrs <- orders do
     Ash.Seed.seed!(Order, %{
       order_reference: GenerateOrderReference.generate(),
       state: :placed,
-      payment_status: :paid,
+      # Marked paid below, once the line items give it a grand_total to pay.
+      payment_status: :pending,
       fulfillment_status: order_attrs[:fulfillment_status] || :pending,
       ordered_at: order_attrs[:ordered_at] || DateTime.utc_now(),
       customer_name: order_attrs.customer_name,
@@ -769,6 +770,11 @@ for order_attrs <- orders do
   # Snapshot the VAT breakdown the same way SnapshotVatBreakdown does at checkout.
   # Clearing state makes Vat.breakdown compute from the line items rather than
   # read the snapshot this is about to write.
-  order = Ash.load!(order, Vat.load(nil, nil, nil), authorize?: false)
-  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
+  order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
+
+  Ash.Seed.update!(order, %{
+    vat_breakdown: Vat.breakdown(%{order | state: nil}),
+    payment_status: :paid,
+    amount_paid: order.grand_total
+  })
 end
