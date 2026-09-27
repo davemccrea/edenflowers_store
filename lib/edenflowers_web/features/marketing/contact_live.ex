@@ -14,12 +14,12 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
         <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
           <div>
             <.image
-              src="local:///jennie_99.jpg"
+              src="local:///jennie_1.jpg"
               alt="Jennie"
               width={112}
               height={112}
               sizes="7rem"
-              crop="831:831:fp:0.546:0.27"
+              crop="1800:1800:fp:0.35:0.3"
               class="size-28 mb-8 rounded-full object-cover"
             />
             <h1 class="page-title mb-6">{~t"Contact"}</h1>

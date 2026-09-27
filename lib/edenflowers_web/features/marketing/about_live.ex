@@ -30,12 +30,12 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
 
           <div class="w-full flex-shrink-0 md:w-80 lg:w-96">
             <.image
-              src="local:///jennie_pregnant.jpg"
+              src="local:///jennie_3.jpg"
               alt="Jennie"
               width={800}
-              height={1000}
+              height={800}
               sizes="(min-width: 1024px) 24rem, (min-width: 768px) 20rem, 100vw"
-              class="aspect-[4/5] w-full object-cover"
+              class="aspect-square w-full object-cover"
             />
           </div>
         </section>
