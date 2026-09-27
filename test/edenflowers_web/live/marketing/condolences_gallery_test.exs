@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesGalleryTest do
         html
       )
 
-    assert length(links) == 30
+    assert length(links) == 15
 
     for [_, href, declared_width, declared_height] <- links do
       assert [_, ^declared_width, ^declared_height] = Regex.run(~r/rs:fill:(\d+):(\d+)/, href)
