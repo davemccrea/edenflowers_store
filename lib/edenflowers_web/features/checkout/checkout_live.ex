@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Catalog.ProductVariantSize
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Payment
+  alias Edenflowers.Payments
 
   alias Edenflowers.Fulfillment
 
@@ -583,7 +583,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("pay", _, socket) do
-    case Payment.update_payment(socket.assigns.order) do
+    case Payments.update_amount(socket.assigns.order) do
       {:ok, _payment_intent} ->
         {:noreply, push_event(socket, "stripe:process_payment", %{})}
 
@@ -877,7 +877,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # mounts (or mounts where the LiveView reconnects on a non-payment state)
   # skip the round trip entirely.
   defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
-    case Payment.setup_payment(order, actor) do
+    case Payments.setup(order, actor) do
       {:ok, order, client_secret} ->
         socket
         |> assign(order: order)

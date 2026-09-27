@@ -15,7 +15,7 @@ defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmailTest do
   defp log_error(message) do
     ErrorTrackerLogHandler.report(%{
       msg: {:string, message},
-      meta: %{mfa: {Edenflowers.Orders.Payment, :setup_payment, 2}, file: ~c"payment.ex", line: 20}
+      meta: %{mfa: {Edenflowers.Payments, :setup, 2}, file: ~c"payment.ex", line: 20}
     })
   end
 

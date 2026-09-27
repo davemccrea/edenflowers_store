@@ -88,7 +88,8 @@ defmodule Edenflowers.Orders do
       define :return_to_contact_details, action: :return_to_contact_details
       define :return_to_gift_options, action: :return_to_gift_options
       define :return_to_delivery, action: :return_to_delivery
-      define :finalize_checkout, action: :finalize_checkout
+      define :list_orders_awaiting_payment, action: :awaiting_payment, args: [:settled_before, :abandoned_before]
+      define :finalize_checkout, action: :finalize_checkout, args: [:payment_intent_id]
       define :mark_payment_failed, action: :mark_payment_failed
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]

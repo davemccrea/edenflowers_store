@@ -46,14 +46,14 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
+    order = placed_order(user_id: user.id, state: :payment, payment_status: :pending, ordered_at: nil)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, "h1", "Thank you, Ada.")
     assert has_element?(view, "[data-testid=order-pending]")
     refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
-    Orders.finalize_checkout!(order, actor: Edenflowers.Actors.system_actor())
+    Orders.finalize_checkout!(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
 
     assert has_element?(view, "[data-testid=order-paid]")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "waits for the webhook when Stripe's redirect arrives first", %{conn: conn} do
-      order = placed_order(state: :payment, ordered_at: nil)
+      order = placed_order(state: :payment, payment_status: :pending, ordered_at: nil)
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       refute get_session(conn, :order_id) == order.id
@@ -102,13 +102,13 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert has_element?(view, "h1", "Thank you")
       assert has_element?(view, "[data-testid=order-pending]")
 
-      Orders.finalize_checkout!(order, actor: Edenflowers.Actors.system_actor())
+      Orders.finalize_checkout!(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
 
       assert has_element?(view, "[data-testid=order-paid]")
     end
 
     test "goes back to checkout, keeping their cart, when a redirect payment fails", %{conn: conn} do
-      order = placed_order(state: :payment, ordered_at: nil)
+      order = placed_order(state: :payment, payment_status: :pending, ordered_at: nil)
 
       conn =
         conn

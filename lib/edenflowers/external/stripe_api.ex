@@ -4,8 +4,7 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   This allows us to mock Stripe API calls in tests.
   """
 
-  @callback create_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
-  @callback create_course_payment_intent(registration :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_payment_intent(amount_cents :: integer(), metadata :: map()) :: {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
@@ -20,8 +19,7 @@ defmodule Edenflowers.External.StripeAPI do
 
   @doc """
   Converts a decimal monetary value into the integer minor units (cents) Stripe
-  expects. The webhook handler reuses this so the amount it verifies is computed
-  identically to the amount that was charged.
+  expects.
   """
   def to_stripe_amount(value) do
     value
@@ -31,28 +29,12 @@ defmodule Edenflowers.External.StripeAPI do
   end
 
   @impl true
-  def create_payment_intent(%{grand_total: grand_total, id: id}) do
-    amount = to_stripe_amount(grand_total)
-
+  def create_payment_intent(amount_cents, metadata) do
     Stripe.PaymentIntent.create(%{
-      amount: amount,
+      amount: amount_cents,
       currency: "EUR",
       automatic_payment_methods: %{enabled: true},
-      metadata: %{
-        "order_id" => id
-      }
-    })
-  end
-
-  @impl true
-  def create_course_payment_intent(%{amount: amount, id: id}) do
-    Stripe.PaymentIntent.create(%{
-      amount: to_stripe_amount(amount),
-      currency: "EUR",
-      automatic_payment_methods: %{enabled: true},
-      metadata: %{
-        "course_registration_id" => id
-      }
+      metadata: metadata
     })
   end
 
