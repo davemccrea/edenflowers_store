@@ -27,6 +27,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
          |> assign(:tax_rates, Ash.read!(TaxRate, actor: actor))
          |> assign(:form, form)
+         |> assign(:translating, nil)
          |> PhotoUpload.allow(photo_fields(form))}
 
       :error ->
@@ -79,6 +80,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     {:noreply, update(socket, :form, &AshPhoenix.Form.remove_form(&1, path))}
   end
 
+  def handle_event("translate", %{"from" => from}, socket),
+    do: {:noreply, TranslationFields.translate(socket, from)}
+
   def handle_event("save", %{"form" => params}, socket) do
     names = photo_fields(socket.assigns.form)
     socket = PhotoUpload.store_uploads(socket, names)
@@ -127,6 +131,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   @impl true
+  def handle_async(:translate, result, socket),
+    do: {:noreply, TranslationFields.put_translations(socket, result)}
+
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -142,7 +150,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         >
           <div class="space-y-10">
             <.form_section title={~t"Name and description"}>
-              <.language_fields form={@form} />
+              <.language_fields form={@form} translating={@translating} />
             </.form_section>
 
             <.form_section title={~t"Sizes and prices"}>

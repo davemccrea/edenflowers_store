@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
   import Phoenix.LiveViewTest
   import Generator
+  import Mox
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Courses.Course
@@ -56,6 +57,67 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     view |> form("#course-form", form: %{total_places: "12"}) |> render_submit()
 
     assert Ash.get!(Course, course.id, authorize?: false).total_places == 12
+  end
+
+  describe "translating" do
+    setup :verify_on_exit!
+
+    test "fills the other languages from Swedish", %{conn: conn} do
+      expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Höstkransar"}, "sv-FI" ->
+        {:ok,
+         %{
+           "en-GB" => %{"name" => "Autumn wreaths", "description" => "Make a wreath."},
+           "fi" => %{"name" => "Syysseppeleet", "description" => "Tee seppele."}
+         }}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
+
+      view
+      |> form("#course-form", form: %{translations: %{"sv-FI": %{name: "Höstkransar", description: "Gör en krans."}}})
+      |> render_change()
+
+      view |> element("button[phx-value-from='sv-FI']") |> render_click()
+      html = render_async(view)
+
+      assert html =~ "Autumn wreaths"
+      assert html =~ "Syysseppeleet"
+      assert html =~ "Tee seppele."
+      assert html =~ "Gör en krans."
+    end
+
+    test "translates a saved course without editing it first", %{conn: conn} do
+      course = generate(course(name: "Autumn wreaths"))
+
+      expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Autumn wreaths"}, "en-GB" ->
+        {:ok,
+         %{
+           "sv-FI" => %{"name" => "Höstkransar", "description" => ""},
+           "fi" => %{"name" => "Syysseppeleet", "description" => ""}
+         }}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+
+      view |> element("button[phx-value-from='en-GB']") |> render_click()
+      render_async(view)
+      view |> form("#course-form") |> render_submit()
+
+      saved = Ash.get!(Course, course.id, authorize?: false)
+      assert saved.name == "Autumn wreaths"
+      assert saved.translations."sv-FI".name == "Höstkransar"
+      assert saved.translations.fi.name == "Syysseppeleet"
+    end
+
+    test "shows an error when Claude fails", %{conn: conn} do
+      expect(Edenflowers.Claude.Mock, :translate, fn _, _ -> {:error, :timeout} end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
+      view |> form("#course-form", form: %{name: "Autumn wreaths"}) |> render_change()
+      view |> element("button[phx-value-from='en-GB']") |> render_click()
+
+      assert render_async(view) =~ "Translation failed"
+    end
   end
 
   defp photo(name), do: %{name: name, content: "jpeg bytes", type: "image/jpeg"}

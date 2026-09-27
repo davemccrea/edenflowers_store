@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
   import Phoenix.LiveViewTest
   import Generator
+  import Mox
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Catalog.Product
@@ -138,6 +139,25 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
     refute Ash.get(Edenflowers.Catalog.ProductVariant, removed.id, authorize?: false) |> elem(0) == :ok
     assert Ash.get!(Edenflowers.Orders.LineItem, line_item.id, authorize?: false).product_variant_id == removed.id
+  end
+
+  test "fills the other languages from Swedish", %{conn: conn} do
+    expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Röda rosor"}, "sv-FI" ->
+      {:ok,
+       %{
+         "en-GB" => %{"name" => "Red roses", "description" => ""},
+         "fi" => %{"name" => "Punaiset ruusut", "description" => ""}
+       }}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/new")
+
+    view |> form("#product-form", form: %{translations: %{"sv-FI": %{name: "Röda rosor"}}}) |> render_change()
+    view |> element("button[phx-value-from='sv-FI']") |> render_click()
+    html = render_async(view)
+
+    assert html =~ "Red roses"
+    assert html =~ "Punaiset ruusut"
   end
 
   defp photo, do: %{name: "rose.jpg", content: "jpeg bytes", type: "image/jpeg"}

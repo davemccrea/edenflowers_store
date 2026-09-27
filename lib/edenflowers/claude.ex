@@ -1,14 +1,17 @@
 defmodule Edenflowers.Claude.Behaviour do
   @callback extract_expense(file_binary :: binary(), content_type :: String.t()) ::
               {:ok, map()} | {:error, term()}
+
+  @callback translate(fields :: %{String.t() => String.t() | nil}, from :: String.t()) ::
+              {:ok, %{String.t() => %{String.t() => String.t()}}} | {:error, term()}
 end
 
 defmodule Edenflowers.Claude do
   @moduledoc """
-  Extracts structured expense data from a receipt or invoice document using
-  `ReqLLM`.
+  Calls Claude through `ReqLLM` for expense extraction and for translating
+  shop copy between the store languages.
 
-  The prompt and output schema live here. The returned map is handed straight
+  For expenses, the prompt and output schema live here. The returned map is handed straight
   to `Edenflowers.Expenses.Expense` for ingestion, which performs all type
   coercion (string → Date, float → Decimal, string → enum). This module does
   no casting of its own.
@@ -62,6 +65,55 @@ defmodule Edenflowers.Claude do
       {:error, reason} -> {:error, {:claude_extraction_failed, reason}}
     end
   end
+
+  @translation_model "anthropic:claude-opus-5-5"
+
+  @languages %{"en-GB" => "British English", "sv-FI" => "Finland Swedish", "fi" => "Finnish"}
+
+  @doc """
+  Translate a name and description from one store locale into the others.
+
+  Takes `%{"name" => .., "description" => ..}` and returns
+  `%{locale => %{"name" => .., "description" => ..}}` for every other locale.
+  """
+  @impl true
+  def translate(fields, from) do
+    targets = Edenflowers.Locales.all() -- [from]
+
+    schema =
+      for locale <- targets, field <- ["name", "description"] do
+        {String.to_atom(key(locale, field)),
+         [type: :string, required: true, doc: "The #{field} in #{@languages[locale]}."]}
+      end
+
+    prompt = """
+    You translate copy for Eden Flowers, a florist in Finland, from #{@languages[from]} into #{Enum.map_join(targets, " and ", &@languages[&1])}.
+    The copy is the name and description of a product or a flower-arranging course shown in the online shop.
+    Write naturally for local customers and keep the tone, meaning and line breaks.
+    Leave place names, street addresses and brand names untranslated.
+    If the description is empty, return empty descriptions.
+
+    Name: #{fields["name"]}
+
+    Description:
+    #{fields["description"]}
+    """
+
+    case ReqLLM.generate_object(@translation_model, prompt, schema, api_key: api_key()) do
+      {:ok, response} ->
+        object = ReqLLM.Response.object(response)
+
+        {:ok,
+         Map.new(targets, fn locale ->
+           {locale, %{"name" => object[key(locale, "name")], "description" => object[key(locale, "description")]}}
+         end)}
+
+      {:error, reason} ->
+        {:error, {:claude_translation_failed, reason}}
+    end
+  end
+
+  defp key(locale, field), do: String.replace(String.downcase(locale), "-", "_") <> "_" <> field
 
   defp api_key, do: Application.get_env(:edenflowers, :anthropic_api_key)
 end
