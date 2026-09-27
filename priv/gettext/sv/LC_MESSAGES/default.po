@@ -2843,3 +2843,53 @@ msgstr "Ta bort en plats från bokningen?"
 #, elixir-autogen, elixir-format
 msgid "This does not refund. Refund one seat in Stripe first. Remove one seat from this booking?"
 msgstr "Detta återbetalar inte. Återbetala en plats i Stripe först. Ta bort en plats från bokningen?"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "All conversations"
+msgstr "Alla samtal"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Ask a question…"
+msgstr "Ställ en fråga…"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Assistant"
+msgstr "Assistent"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Checked"
+msgstr "Kollade"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Conversations"
+msgstr "Samtal"
+
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Message"
+msgstr "Meddelande"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "New conversation"
+msgstr "Nytt samtal"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Send"
+msgstr "Skicka"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "This lookup failed:"
+msgstr "Den här sökningen misslyckades:"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Thinking…"
+msgstr "Tänker…"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Untitled conversation"
+msgstr "Namnlöst samtal"
+
+
+

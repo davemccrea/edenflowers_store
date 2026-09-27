@@ -376,6 +376,56 @@ main p {
   --color-error-content: var(--color-red-700);
 }
 
+/* Assistant replies arrive as Markdown. There is no typography plugin, so this
+   gives that HTML the admin's own rhythm: body text, hairline table rules and
+   the honey link underline. */
+.chat-prose {
+  @apply text-base-content text-[0.9375rem] leading-relaxed;
+
+  & > * + * {
+    @apply mt-3;
+  }
+  & :is(h1, h2, h3, h4) {
+    @apply mt-5 text-base font-semibold;
+  }
+  & strong {
+    @apply font-semibold;
+  }
+  & ul {
+    @apply list-disc pl-5;
+  }
+  & ol {
+    @apply list-decimal pl-5;
+  }
+  & li + li {
+    @apply mt-1;
+  }
+  & li::marker {
+    @apply text-base-content/40;
+  }
+  & a {
+    @apply underline decoration-link-underline decoration-2 underline-offset-[0.3em];
+  }
+  & code {
+    @apply bg-base-200 px-1 font-mono text-[0.875em];
+  }
+  & table {
+    @apply border-base-content/12 block w-full overflow-x-auto border-y text-sm tabular-nums;
+  }
+  & th {
+    @apply text-base-content/65 border-base-content/12 border-b px-3 py-2 text-left text-xs font-semibold whitespace-nowrap;
+  }
+  & td {
+    @apply px-3 py-2 align-top;
+  }
+  & tr + tr td {
+    @apply border-base-content/8 border-t;
+  }
+  & :is(th, td):first-child {
+    @apply pl-0;
+  }
+}
+
 /* Tailwind UI-style pills: a 50-tint fill, 700 text, inset 600/20 ring. */
 .badge.admin-badge-success {
   border-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent);
