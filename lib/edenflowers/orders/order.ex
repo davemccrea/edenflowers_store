@@ -274,6 +274,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.GenerateOrderReference
       change Changes.SnapshotVatBreakdown
       change Changes.ReportAmountMismatch
+      change Changes.ReportPromotionOverused
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
