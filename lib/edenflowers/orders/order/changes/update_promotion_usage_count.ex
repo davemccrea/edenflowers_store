@@ -1,16 +1,12 @@
 defmodule Edenflowers.Orders.Order.Changes.UpdatePromotionUsageCount do
   @moduledoc """
-  Updates promotion usage counter after an order is successfully finalized.
+  Schedules promotion usage accounting after an order is successfully finalized.
 
-  Uses after_transaction to enqueue an Oban job that increments the promotion
-  usage count. Order finalization never fails due to promotion tracking issues —
-  the order is already persisted when this runs. Oban handles retries if the
-  job fails.
+  The trigger's periodic scheduler repairs a failed enqueue, so order finalization
+  never fails due to promotion tracking issues.
   """
   use Ash.Resource.Change
   require Logger
-
-  alias Edenflowers.Pricing.Workers.IncrementPromotionUsage
 
   @impl true
   def init(opts), do: {:ok, opts}
@@ -35,13 +31,13 @@ defmodule Edenflowers.Orders.Order.Changes.UpdatePromotionUsageCount do
         :ok
 
       promotion_id ->
-        case IncrementPromotionUsage.enqueue(%{"promotion_id" => promotion_id}) do
-          {:ok, _job} ->
-            :ok
-
-          {:error, error} ->
+        try do
+          AshOban.run_trigger(order, :count_promotion_usage)
+          :ok
+        rescue
+          error ->
             Logger.error(
-              "Failed to enqueue promotion usage increment for order #{order.id}, promotion #{promotion_id}: #{inspect(error)}"
+              "Failed to schedule promotion usage increment for order #{order.id}, promotion #{promotion_id}: #{Exception.message(error)}"
             )
 
             :ok

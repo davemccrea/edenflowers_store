@@ -27,9 +27,4 @@ defmodule Edenflowers.Courses.Payable do
   # An unpaid booking needs no update: its seat hold simply lapses.
   @impl true
   def fail(_id, _payment_intent_id), do: {:ok, :unchanged}
-
-  @impl true
-  def awaiting_payment(settled_before, abandoned_before) do
-    Courses.list_registrations_awaiting_payment!(settled_before, abandoned_before, actor: system_actor())
-  end
 end
