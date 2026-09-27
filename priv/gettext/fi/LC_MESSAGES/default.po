@@ -2920,3 +2920,42 @@ msgstr "Napsauta tai pudota kuva tähän"
 
 msgid "Replace photo"
 msgstr "Vaihda kuva"
+
+msgid "Course saved"
+msgstr "Kurssi tallennettu"
+
+msgid "Edit course"
+msgstr "Muokkaa kurssia"
+
+msgid "Ends"
+msgstr "Päättyy"
+
+msgid "New course"
+msgstr "Uusi kurssi"
+
+msgid "Photo"
+msgstr "Kuva"
+
+msgid "Price per seat (€)"
+msgstr "Hinta per paikka (€)"
+
+msgid "Save course"
+msgstr "Tallenna kurssi"
+
+msgid "Starts"
+msgstr "Alkaa"
+
+msgid "VAT"
+msgstr "ALV"
+
+msgid "Venue"
+msgstr "Paikka"
+
+msgid "Name and description"
+msgstr "Nimi ja kuvaus"
+
+msgid "Seats and price"
+msgstr "Paikat ja hinta"
+
+msgid "Online booking closes after this day."
+msgstr "Verkkovaraus sulkeutuu tämän päivän jälkeen."

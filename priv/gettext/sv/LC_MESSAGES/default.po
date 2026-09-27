@@ -2920,3 +2920,42 @@ msgstr "Klicka eller dra hit ett foto"
 
 msgid "Replace photo"
 msgstr "Byt foto"
+
+msgid "Course saved"
+msgstr "Kursen sparades"
+
+msgid "Edit course"
+msgstr "Redigera kurs"
+
+msgid "Ends"
+msgstr "Slutar"
+
+msgid "New course"
+msgstr "Ny kurs"
+
+msgid "Photo"
+msgstr "Foto"
+
+msgid "Price per seat (€)"
+msgstr "Pris per plats (€)"
+
+msgid "Save course"
+msgstr "Spara kurs"
+
+msgid "Starts"
+msgstr "Börjar"
+
+msgid "VAT"
+msgstr "Moms"
+
+msgid "Venue"
+msgstr "Plats"
+
+msgid "Name and description"
+msgstr "Namn och beskrivning"
+
+msgid "Seats and price"
+msgstr "Platser och pris"
+
+msgid "Online booking closes after this day."
+msgstr "Bokningen på nätet stänger efter den här dagen."
