@@ -183,15 +183,16 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]
     attribute :max_dist_km, :integer, public?: true, constraints: [min: 1]
 
-    attribute :same_day, :boolean, default: false, public?: true
+    attribute :same_day, :boolean, allow_nil?: false, default: false, public?: true
     attribute :order_deadline, :time, public?: true
 
     attribute :available_days, {:array, Edenflowers.Fulfillment.Weekday},
+      allow_nil?: false,
       default: Edenflowers.Fulfillment.Weekday.all(),
       public?: true
 
-    attribute :enabled_dates, {:array, :date}, default: [], public?: true
-    attribute :disabled_dates, {:array, :date}, default: [], public?: true
+    attribute :enabled_dates, {:array, :date}, allow_nil?: false, default: [], public?: true
+    attribute :disabled_dates, {:array, :date}, allow_nil?: false, default: [], public?: true
   end
 
   relationships do
