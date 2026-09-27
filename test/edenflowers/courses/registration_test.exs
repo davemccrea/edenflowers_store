@@ -129,4 +129,15 @@ defmodule Edenflowers.Courses.RegistrationTest do
       assert {:error, %Ash.Error.Forbidden{}} = add_manually(generate(course()), 1, nil)
     end
   end
+
+  test "removing seats stops at the last one, which needs a cancel" do
+    admin = generate(admin_user())
+    {:ok, registration} = add_manually(generate(course()), 2, admin)
+
+    assert {:ok, registration} = Courses.remove_registration_seat(registration, actor: admin)
+    assert registration.removed_seats == 1
+
+    assert {:error, error} = Courses.remove_registration_seat(registration, actor: admin)
+    assert Exception.message(error) =~ "cancel the booking to remove its last seat"
+  end
 end
