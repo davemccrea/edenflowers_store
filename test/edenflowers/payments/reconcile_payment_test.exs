@@ -28,8 +28,7 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     product_variant = generate(product_variant(product_id: product.id))
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
-    {:ok, %{fulfillment_fee: fulfillment_fee}} =
-      Edenflowers.Fulfillment.calculate_price(fulfillment_option.id, 0)
+    %{fulfillment_fee: fulfillment_fee} = Edenflowers.Fulfillment.Fee.calculate(fulfillment_option, 0)
 
     {:ok, user} =
       Edenflowers.Accounts.upsert_user("john.smith@example.com", "John Smith", authorize?: false)

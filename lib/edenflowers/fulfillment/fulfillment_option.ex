@@ -158,22 +158,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       end
     end
 
-    action :calculate_price, :map do
-      description "Fulfillment fee for `distance`. Returns {:ok, %{error: nil, fulfillment_fee: fee}} " <>
-                    "within range and {:ok, %{error: :out_of_delivery_range, fulfillment_fee: nil}} beyond " <>
-                    "it. Out-of-range is a normal result, not an error, so it stays out of Ash.Error.Unknown " <>
-                    "and shares calculate_delivery's result shape."
-
-      argument :fulfillment_option_id, :uuid, allow_nil?: false
-      argument :distance, :integer, default: 0
-
-      run fn input, _context ->
-        with {:ok, option} <- Ash.get(__MODULE__, input.arguments.fulfillment_option_id, authorize?: false) do
-          {:ok, Fee.calculate(option, input.arguments.distance)}
-        end
-      end
-    end
-
     action :fulfill_on_date, :atom do
       description "Why the option can't be fulfilled on `date`, or nil when it can. Returns " <>
                     "{:ok, nil} when bookable and {:ok, reason} when not — a non-bookable date " <>

@@ -1,9 +1,7 @@
 defmodule Edenflowers.Fulfillment.Fee do
   @moduledoc """
-  Pure fulfillment-fee calculation. Shared by the `calculate_price` action
-  (which loads the option first) and `calculate_delivery` (which already holds
-  the loaded option after geocoding), the same split as
-  `Availability.unavailable_reason/3` vs the `fulfill_on_date` action.
+  Pure fulfillment-fee calculation, used by the `calculate_delivery` action
+  after geocoding and directly for pickup, which has no distance.
   """
 
   alias Edenflowers.Fulfillment.FulfillmentOption
