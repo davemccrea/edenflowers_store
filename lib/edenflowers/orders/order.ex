@@ -153,9 +153,6 @@ defmodule Edenflowers.Orders.Order do
     destroy :purge_abandoned_cart
 
     read :for_checkout do
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-      get? true
       prepare build(load: @checkout_load)
     end
 
