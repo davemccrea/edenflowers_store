@@ -2959,3 +2959,66 @@ msgstr "Platser och pris"
 
 msgid "Online booking closes after this day."
 msgstr "Bokningen på nätet stänger efter den här dagen."
+
+msgid "Add size"
+msgstr "Lägg till storlek"
+
+msgid "Choose a category"
+msgstr "Välj kategori"
+
+msgid "Draft"
+msgstr "Utkast"
+
+msgid "Draft (hidden from the store)"
+msgstr "Utkast (syns inte i butiken)"
+
+msgid "Featured on the home page"
+msgstr "Visas på startsidan"
+
+msgid "Hidden from the store"
+msgstr "Syns inte i butiken"
+
+msgid "In stock"
+msgstr "I lager"
+
+msgid "Limited stock"
+msgstr "Begränsat lager"
+
+msgid "New product"
+msgstr "Ny produkt"
+
+msgid "No sizes"
+msgstr "Inga storlekar"
+
+msgid "One size"
+msgstr "En storlek"
+
+msgid "Price (€)"
+msgstr "Pris (€)"
+
+msgid "Product not found."
+msgstr "Produkten hittades inte."
+
+msgid "Product saved"
+msgstr "Produkten sparades"
+
+msgid "Products"
+msgstr "Produkter"
+
+msgid "Save product"
+msgstr "Spara produkt"
+
+msgid "Sizes and prices"
+msgstr "Storlekar och priser"
+
+msgid "Published"
+msgstr "Publicerad"
+
+msgid "Featured"
+msgstr "Utvald"
+
+msgid "In the store"
+msgstr "I butiken"
+
+msgid "A size needs a price. Without its own photo, it uses the product photo."
+msgstr "En storlek behöver ett pris. Utan eget foto används produktens foto."
