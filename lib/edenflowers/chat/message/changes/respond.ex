@@ -34,6 +34,7 @@ defmodule Edenflowers.Chat.Message.Changes.Respond do
           Always reply in English or Swedish, never in Finnish.
           If the user writes in Swedish, reply in Swedish. Otherwise, including when they write in Finnish, reply in English.
 
+          Don't say what you are about to look up. Use the tools first, then write only the answer.
           Keep answers short.
           """)
         ] ++ message_chain(messages)
@@ -45,7 +46,7 @@ defmodule Edenflowers.Chat.Message.Changes.Respond do
         |> AshAi.ToolLoop.stream(
           otp_app: :edenflowers,
           tools: true,
-          model: "anthropic:claude-sonnet-5",
+          model: "anthropic:claude-haiku-4-5",
           actor: context.actor,
           tenant: context.tenant,
           context: Map.new(Ash.Context.to_opts(context))
@@ -69,8 +70,10 @@ defmodule Edenflowers.Chat.Message.Changes.Respond do
 
             %{acc | text: acc.text <> (content || "")}
 
+          # Text before a tool call is the model narrating what it is about to look up;
+          # only what it writes after the results belongs in the finished reply.
           {:tool_call, tool_call}, acc ->
-            %{acc | tool_calls: append_event(acc.tool_calls, tool_call)}
+            %{acc | text: "", tool_calls: append_event(acc.tool_calls, tool_call)}
 
           {:tool_result, %{id: id, result: result}}, acc ->
             %{
