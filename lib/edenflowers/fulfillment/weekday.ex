@@ -1,15 +1,12 @@
 defmodule Edenflowers.Fulfillment.Weekday do
   @moduledoc """
-  Maps `Date.day_of_week/1` integers to atoms used by `FulfillmentOption.available_days`.
+  The day of the week in `FulfillmentOption.available_days`, mapped to and
+  from `Date.day_of_week/1` integers.
   """
-
-  @typedoc "Day-of-week atom matching the values stored in `FulfillmentOption.available_days`."
-  @type t :: :monday | :tuesday | :wednesday | :thursday | :friday | :saturday | :sunday
-
-  @all [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
+  use Ash.Type.Enum, values: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
 
   @spec all() :: [t()]
-  def all, do: @all
+  def all, do: values()
 
   @spec from_date(Date.t()) :: t()
   def from_date(%Date{} = date), do: from_integer(Date.day_of_week(date))
