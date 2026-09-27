@@ -158,18 +158,10 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     |> Enum.map(fn value -> {fulfillment_method_label(value), value} end)
   end
 
-  # Built from the resource's own one_of constraints so the select options
-  # can't drift from the attribute definition.
-  defp payment_status_options, do: select_options(:payment_status)
-  defp fulfillment_status_options, do: select_options(:fulfillment_status)
+  defp payment_status_options, do: select_options(Order.PaymentStatus)
+  defp fulfillment_status_options, do: select_options(Order.FulfillmentStatus)
 
-  defp select_options(attribute) do
-    Order
-    |> Ash.Resource.Info.attribute(attribute)
-    |> Map.fetch!(:constraints)
-    |> Keyword.fetch!(:one_of)
-    |> Enum.map(fn value -> {status_label(value), value} end)
-  end
+  defp select_options(enum), do: Enum.map(enum.values(), &{status_label(&1), &1})
 
   defp status_label(:paid), do: ~t"Paid"
   defp status_label(:failed), do: ~t"Failed"

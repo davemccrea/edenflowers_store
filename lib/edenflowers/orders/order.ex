@@ -1,3 +1,11 @@
+defmodule Edenflowers.Orders.Order.PaymentStatus do
+  use Ash.Type.Enum, values: [:pending, :paid, :failed, :refunded]
+end
+
+defmodule Edenflowers.Orders.Order.FulfillmentStatus do
+  use Ash.Type.Enum, values: [:pending, :fulfilled]
+end
+
 defmodule Edenflowers.Orders.Order do
   use Ash.Resource,
     domain: Edenflowers.Orders,
@@ -476,25 +484,8 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :ordered_at, :utc_datetime
 
-    attribute :payment_status, :atom,
-      default: :pending,
-      constraints: [
-        one_of: [
-          :pending,
-          :paid,
-          :failed,
-          :refunded
-        ]
-      ]
-
-    attribute :fulfillment_status, :atom,
-      default: :pending,
-      constraints: [
-        one_of: [
-          :pending,
-          :fulfilled
-        ]
-      ]
+    attribute :payment_status, __MODULE__.PaymentStatus, default: :pending
+    attribute :fulfillment_status, __MODULE__.FulfillmentStatus, default: :pending
 
     # Step 1 - Your Details
     attribute :customer_name, :string
