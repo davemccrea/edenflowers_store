@@ -140,6 +140,17 @@ defmodule Edenflowers.Courses.RegistrationTest do
     end
   end
 
+  test "a manual booking is marked paid only once" do
+    admin = generate(admin_user())
+    {:ok, registration} = add_manually(generate(course()), 1, admin)
+
+    assert {:ok, paid} = Courses.mark_registration_paid(registration, actor: admin)
+    assert paid.paid_at
+
+    assert {:error, error} = Courses.mark_registration_paid(registration, actor: admin)
+    assert Exception.message(error) =~ "already marked as paid"
+  end
+
   test "removing seats stops at the last one, which needs a cancel" do
     admin = generate(admin_user())
     {:ok, registration} = add_manually(generate(course()), 2, admin)
