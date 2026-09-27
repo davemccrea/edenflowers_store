@@ -227,7 +227,9 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.TrimCardMessage, []}
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate {Validations.ValidateCardMessageLength, []}
-      change {Changes.ClearGiftFields, []}
+      change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
+      change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
+      change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
       change transition_state(:delivery)
       require_atomic? false
     end
