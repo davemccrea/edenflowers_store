@@ -6,11 +6,14 @@ defmodule Edenflowers.PaymentsTest do
   import Mox
 
   alias Edenflowers.Courses
-  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
+
+  alias Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail,
+    as: SendCourseConfirmationEmail
+
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Order.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
   alias Edenflowers.Payments
 
   setup :verify_on_exit!
@@ -160,7 +163,7 @@ defmodule Edenflowers.PaymentsTest do
       assert {:ok, :already_completed} = Payments.complete(order_intent(order))
 
       assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
+      assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
     test "places the order and flags an amount mismatch", %{order: order} do
@@ -178,7 +181,11 @@ defmodule Edenflowers.PaymentsTest do
       assert {:ok, :completed} = Payments.complete(course_intent(registration))
 
       assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :confirmed
-      assert_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+
+      assert_enqueued(
+        worker: SendCourseConfirmationEmail,
+        args: %{"primary_key" => %{"id" => registration.id}}
+      )
     end
 
     test "rejects course underpayments and overpayments without confirming or enqueueing", %{registration: registration} do
@@ -192,7 +199,7 @@ defmodule Edenflowers.PaymentsTest do
       assert %{status: :pending, confirmed_at: nil} =
                Courses.get_registration_by_id!(registration.id, authorize?: false)
 
-      refute_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+      refute_enqueued(worker: SendCourseConfirmationEmail)
     end
 
     test "course confirmation requires the received amount", %{registration: registration} do
@@ -202,7 +209,7 @@ defmodule Edenflowers.PaymentsTest do
                )
 
       assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
-      refute_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+      refute_enqueued(worker: SendCourseConfirmationEmail)
     end
 
     test "order completion rejects invalid currency amounts", %{order: order} do
@@ -230,7 +237,7 @@ defmodule Edenflowers.PaymentsTest do
       current = Orders.get_order_by_id!(order.id, authorize?: false)
       assert current.order_reference == placed.order_reference
       assert current.ordered_at == placed.ordered_at
-      assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
+      assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
     test "rolls back both kinds of completion when enqueue fails, then allows retry", %{
@@ -257,15 +264,19 @@ defmodule Edenflowers.PaymentsTest do
       assert %{status: :pending, confirmed_at: nil} =
                Courses.get_registration_by_id!(registration.id, authorize?: false)
 
-      refute_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
-      refute_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+      refute_enqueued(worker: SendOrderConfirmationEmail)
+      refute_enqueued(worker: SendCourseConfirmationEmail)
 
       Edenflowers.Repo.query!("ALTER TABLE oban_jobs DROP CONSTRAINT priority_range")
 
       assert {:ok, :completed} = Payments.complete(order_intent(order))
       assert {:ok, :completed} = Payments.complete(course_intent(registration))
-      assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
-      assert_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+      assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
+
+      assert_enqueued(
+        worker: SendCourseConfirmationEmail,
+        args: %{"primary_key" => %{"id" => registration.id}}
+      )
     end
 
     test "a stale booking cannot be confirmed twice", %{registration: registration} do
@@ -284,7 +295,10 @@ defmodule Edenflowers.PaymentsTest do
       assert Courses.get_registration_by_id!(registration.id, authorize?: false).confirmed_at == confirmed.confirmed_at
 
       assert [_job] =
-               all_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+               all_enqueued(
+                 worker: SendCourseConfirmationEmail,
+                 args: %{"primary_key" => %{"id" => registration.id}}
+               )
     end
 
     test "a stale payment intent cannot confirm either kind of payable", %{order: order, registration: registration} do
@@ -317,8 +331,8 @@ defmodule Edenflowers.PaymentsTest do
 
       assert Orders.get_order_by_id!(order.id, authorize?: false).state == :payment
       assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
-      refute_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
-      refute_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+      refute_enqueued(worker: SendOrderConfirmationEmail)
+      refute_enqueued(worker: SendCourseConfirmationEmail)
     end
 
     test "refuses a PaymentIntent that isn't the record's own", %{order: order} do

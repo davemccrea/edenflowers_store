@@ -3,10 +3,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
     domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    notifiers: [Ash.Notifier.PubSub]
+    notifiers: [Ash.Notifier.PubSub],
+    extensions: [AshOban]
 
   alias Edenflowers.Courses.CourseRegistration.Changes
-  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
 
   @locales Edenflowers.Locales.all()
 
@@ -30,6 +30,38 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
   end
 
+  oban do
+    triggers do
+      trigger :send_confirmation_email do
+        action :send_confirmation_email
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail
+        scheduler_module_name Edenflowers.Courses.CourseRegistration.Schedulers.SendConfirmationEmail
+        default_actor Edenflowers.Actors.system_actor()
+        where expr(status == :confirmed and is_nil(confirmation_emailed_at))
+      end
+
+      trigger :reconcile_payment do
+        action :reconcile_payment
+        queue :default
+        max_attempts 1
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Courses.CourseRegistration.Workers.ReconcilePayment
+        scheduler_module_name Edenflowers.Courses.CourseRegistration.Schedulers.ReconcilePayment
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(
+                status == :pending and not is_nil(payment_intent_id) and
+                  updated_at < ago(5, :minute) and updated_at > ago(7, :day)
+              )
+      end
+    end
+  end
+
   actions do
     defaults [:read, :destroy]
 
@@ -38,17 +70,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # :read stays unscoped because Course.seats_taken counts through it.
     read :mine do
       filter expr(user_id == ^actor(:id) and status == :confirmed)
-    end
-
-    # Bookings on their way to Stripe whose webhook may have been missed.
-    read :awaiting_payment do
-      argument :settled_before, :utc_datetime_usec, allow_nil?: false
-      argument :abandoned_before, :utc_datetime_usec, allow_nil?: false
-
-      filter expr(
-               status == :pending and not is_nil(payment_intent_id) and
-                 updated_at < ^arg(:settled_before) and updated_at > ^arg(:abandoned_before)
-             )
     end
 
     create :register do
@@ -69,6 +90,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change {Changes.UpsertUser, []}
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
+      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
     end
 
     update :add_payment_intent_id do
@@ -87,21 +109,14 @@ defmodule Edenflowers.Courses.CourseRegistration do
       validate Edenflowers.Courses.CourseRegistration.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
-
-      # In the confirming transaction, so a confirmed booking always has its
-      # confirmation email queued.
-      change after_action(fn _changeset, registration, _context ->
-               with {:ok, _job} <-
-                      SendCourseConfirmationEmail.enqueue(%{"course_registration_id" => registration.id}) do
-                 {:ok, registration}
-               end
-             end)
+      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
       require_atomic? false
     end
 
     # Jennie ticks off manual bookings as people pay at the course.
-    # require_atomic? false: see Order.mark_receipt_emailed.
+    # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
+    # (always false in SQL); the non-atomic path uses is_nil/1 correctly.
     update :mark_paid do
       validate attribute_equals(:paid_at, nil), message: "already marked as paid"
       change set_attribute(:paid_at, &DateTime.utc_now/0)
@@ -133,22 +148,31 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:status, :cancelled)
     end
 
-    # require_atomic? false: see Order.mark_receipt_emailed.
-    update :mark_receipt_emailed do
-      argument :receipt_sha256, :string, allow_nil?: false
-
-      validate attribute_equals(:receipt_emailed_at, nil),
-        message: "receipt already marked as emailed"
-
-      change set_attribute(:receipt_emailed_at, &DateTime.utc_now/0)
-      change set_attribute(:receipt_sha256, arg(:receipt_sha256))
+    update :send_confirmation_email do
+      accept []
+      transaction? false
       require_atomic? false
+      change {Changes.SendConfirmationEmail, []}
+    end
+
+    update :reconcile_payment do
+      accept []
+      transaction? false
+      require_atomic? false
+      change {Edenflowers.Payments.Changes.Reconcile, payable: "course registration"}
     end
   end
 
   policies do
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:add_payment_intent_id, :confirm_payment, :mark_receipt_emailed, :cancel])
+      authorize_if action([
+                     :add_payment_intent_id,
+                     :confirm_payment,
+                     :send_confirmation_email,
+                     :reconcile_payment,
+                     :cancel
+                   ])
+
       authorize_if action_type(:read)
     end
 
@@ -200,6 +224,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :confirmed_at, :utc_datetime
     # Only for manual bookings: a Stripe booking is paid when it is confirmed.
     attribute :paid_at, :utc_datetime
+    attribute :confirmation_emailed_at, :utc_datetime
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
 
