@@ -131,20 +131,19 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # seats and amount stay what was bought, because the receipt is rebuilt
     # from them; a Stripe booking is refunded for the seat in the Stripe dashboard.
     update :remove_seat do
-      require_atomic? false
-
-      change fn changeset, _context ->
-        %{seats: seats, removed_seats: removed_seats} = changeset.data
-
-        if seats - removed_seats > 1 do
-          Ash.Changeset.change_attribute(changeset, :removed_seats, removed_seats + 1)
-        else
-          Ash.Changeset.add_error(changeset,
-            field: :removed_seats,
-            message: "cancel the booking to remove its last seat"
-          )
-        end
-      end
+      change atomic_update(
+               :removed_seats,
+               expr(
+                 if seats - removed_seats > 1 do
+                   removed_seats + 1
+                 else
+                   error(Ash.Error.Changes.InvalidAttribute, %{
+                     field: :removed_seats,
+                     message: "cancel the booking to remove its last seat"
+                   })
+                 end
+               )
+             )
     end
 
     # Jennie refunds in the Stripe dashboard; cancelling here frees the seats.
