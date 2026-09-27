@@ -460,15 +460,15 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :ordered_at, :utc_datetime
 
-    attribute :payment_status, __MODULE__.PaymentStatus, default: :pending
-    attribute :fulfillment_status, __MODULE__.FulfillmentStatus, default: :pending
+    attribute :payment_status, __MODULE__.PaymentStatus, allow_nil?: false, default: :pending
+    attribute :fulfillment_status, __MODULE__.FulfillmentStatus, allow_nil?: false, default: :pending
 
     # Step 1 - Your Details
     attribute :customer_name, :string
     attribute :customer_email, :string
 
     # Step 2 - Gift Options
-    attribute :gift, :boolean, default: false
+    attribute :gift, :boolean, allow_nil?: false, default: false
     attribute :card_message, :string
 
     # Step 3 - Delivery Information
@@ -501,7 +501,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :promotion_code, :string
     attribute :promotion_minimum_cart_total, :decimal
 
-    attribute :locale, :string, default: "sv-FI"
+    attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     # The SHA proves what was sent without persisting the PDF — the renderer is deterministic
     # over the placed order's snapshot columns, so a re-render should reproduce these bytes.

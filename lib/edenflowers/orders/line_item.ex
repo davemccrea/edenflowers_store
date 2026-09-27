@@ -84,7 +84,7 @@ defmodule Edenflowers.Orders.LineItem do
 
   attributes do
     uuid_primary_key :id
-    attribute :quantity, :integer, default: 1, constraints: [min: 1]
+    attribute :quantity, :integer, allow_nil?: false, default: 1, constraints: [min: 1]
     attribute :unit_price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false

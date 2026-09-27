@@ -211,7 +211,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :removed_seats, :integer, allow_nil?: false, default: 0, constraints: [min: 0]
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
-    attribute :status, __MODULE__.Status, default: :pending
+    attribute :status, __MODULE__.Status, allow_nil?: false, default: :pending
 
     # Receipt number, from the same generator as order references.
     attribute :reference, :string, allow_nil?: false
