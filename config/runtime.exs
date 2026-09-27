@@ -56,10 +56,6 @@ if config_env() in [:prod, :dev] do
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,
-         :maintenance_bypass_secret,
-         System.get_env("MAINTENANCE_BYPASS_SECRET")
-
-  config :edenflowers,
          :papra_base_url,
          System.get_env("PAPRA_BASE_URL") || raise("environment variable PAPRA_BASE_URL is missing.")
 

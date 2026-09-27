@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Router do
       ] do
       scope "/", Marketing do
         live "/", HomeLive
-        live "/maternity", MaternityLive
+        live "/back-soon", MaintenanceLive
         live "/weddings", WeddingsLive
         live "/condolences", CondolencesLive
         live "/about", AboutLive
