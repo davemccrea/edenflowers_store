@@ -1,14 +1,15 @@
 defmodule Edenflowers.Fulfillment.ProductFulfillmentOption do
   use Ash.Resource,
     domain: Edenflowers.Fulfillment,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "product_fulfillment_options"
     repo Edenflowers.Repo
 
+    # The composite primary key already indexes product_id first.
     custom_indexes do
-      index [:product_id]
       index [:fulfillment_option_id]
     end
   end
@@ -18,16 +19,17 @@ defmodule Edenflowers.Fulfillment.ProductFulfillmentOption do
   end
 
   actions do
-    defaults [
-      :read,
-      :destroy,
-      create: [:product_id, :fulfillment_option_id],
-      update: [:product_id, :fulfillment_option_id]
-    ]
+    defaults [:read, :destroy, create: [:product_id, :fulfillment_option_id]]
   end
 
-  attributes do
-    uuid_primary_key :id
+  policies do
+    bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
   end
 
   relationships do
