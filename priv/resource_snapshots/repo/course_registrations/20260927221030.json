@@ -1,18 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -38,6 +26,30 @@
     },
     {
       "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "seats",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
       "default": "0",
       "generated?": false,
       "precision": null,
@@ -45,19 +57,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "sort_key",
+      "source": "removed_seats",
       "type": "bigint"
     },
     {
       "allow_nil?": false,
-      "default": "nil",
+      "default": "\"sv-FI\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "fulfillment_method",
+      "source": "locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"pending\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
       "type": "text"
     },
     {
@@ -69,7 +93,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "rate_type",
+      "source": "reference",
       "type": "text"
     },
     {
@@ -81,7 +105,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "base_price",
+      "source": "tax_rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "amount",
       "type": "decimal"
     },
     {
@@ -93,8 +129,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "price_per_km",
-      "type": "decimal"
+      "source": "payment_intent_id",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -105,8 +141,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "free_dist_km",
-      "type": "bigint"
+      "source": "confirmed_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": true,
@@ -117,20 +153,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "max_dist_km",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "same_day",
-      "type": "boolean"
+      "source": "paid_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": true,
@@ -141,11 +165,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "order_deadline",
-      "type": "time"
+      "source": "confirmation_emailed_at",
+      "type": "utc_datetime"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -153,41 +177,77 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "available_days",
-      "type": [
-        "array",
-        "text"
-      ]
+      "source": "receipt_emailed_at",
+      "type": "utc_datetime"
     },
     {
-      "allow_nil?": false,
-      "default": "[]",
+      "allow_nil?": true,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "enabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
+      "source": "receipt_sha256",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "[]",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "disabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "course_registrations_user_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "users"
+      },
+      "scale": null,
+      "size": null,
+      "source": "user_id",
+      "type": "uuid"
     },
     {
       "allow_nil?": false,
@@ -210,16 +270,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "fulfillment_options_tax_rate_id_fkey",
+        "name": "course_registrations_course_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "tax_rates"
+        "table": "courses"
       },
       "scale": null,
       "size": null,
-      "source": "tax_rate_id",
+      "source": "course_id",
       "type": "uuid"
     }
   ],
@@ -227,42 +287,19 @@
   "check_constraints": [
     {
       "attribute": [
-        "base_price"
+        "amount"
       ],
       "base_filter": null,
-      "check": "base_price >= 0 AND base_price = round(base_price, 2)",
-      "name": "fulfillment_options_valid_base_price"
-    },
-    {
-      "attribute": [
-        "price_per_km"
-      ],
-      "base_filter": null,
-      "check": "price_per_km >= 0 AND price_per_km = round(price_per_km, 2)",
-      "name": "fulfillment_options_valid_price_per_km"
+      "check": "amount >= 0 AND amount = round(amount, 2)",
+      "name": "course_registrations_valid_amount"
     }
   ],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "50E29D6DD9837FAF242E161FFC2BF416FD1A9985B637E5C15E9D46550775D18F",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "fulfillment_options_unique_name_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "name"
-        }
-      ],
-      "name": "unique_name",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "E5A5F6424F6F2AC28FCC1AAB4AE3628DB8EEAC1AA9E4171F193542C93696A02F",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -270,5 +307,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "fulfillment_options"
+  "table": "course_registrations"
 }
