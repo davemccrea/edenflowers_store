@@ -43,7 +43,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   describe "re-subscription with used code" do
     test "sends welcome-back email without including the code" do
       {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
-      {:ok, promo} = Pricing.increment_promotion_usage(promo, actor: system_actor())
+      Generator.use_promotion(promo)
       {:ok, user} = Accounts.subscribe_to_newsletter("returning@example.com", authorize?: false)
       {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
 

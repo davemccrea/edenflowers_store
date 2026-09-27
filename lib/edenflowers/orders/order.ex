@@ -102,18 +102,6 @@ defmodule Edenflowers.Orders.Order do
         where expr(state == :placed and payment_status == :paid and is_nil(receipt_emailed_at))
       end
 
-      trigger :count_promotion_usage do
-        action :count_promotion_usage
-        queue :default
-        max_attempts 20
-        scheduler_cron "* * * * *"
-        worker_module_name Edenflowers.Orders.Order.Workers.CountPromotionUsage
-        scheduler_module_name Edenflowers.Orders.Order.Schedulers.CountPromotionUsage
-        default_actor Edenflowers.Actors.system_actor()
-
-        where expr(state == :placed and not is_nil(promotion_id) and is_nil(promotion_usage_counted_at))
-      end
-
       trigger :reconcile_payment do
         action :reconcile_payment
         queue :default
@@ -301,7 +289,6 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change {Changes.GenerateOrderReference, []}
       change {Changes.SnapshotVatBreakdown, []}
-      change {Changes.UpdatePromotionUsageCount, []}
       change {Changes.ReportAmountMismatch, []}
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
@@ -339,12 +326,6 @@ defmodule Edenflowers.Orders.Order do
       transaction? false
       require_atomic? false
       change {Changes.SendConfirmationEmail, []}
-    end
-
-    update :count_promotion_usage do
-      accept []
-      require_atomic? false
-      change {Changes.CountPromotionUsage, []}
     end
 
     update :reconcile_payment do
@@ -482,7 +463,6 @@ defmodule Edenflowers.Orders.Order do
                      :finalize_checkout,
                      :mark_payment_failed,
                      :send_confirmation_email,
-                     :count_promotion_usage,
                      :reconcile_payment
                    ])
 
@@ -594,7 +574,6 @@ defmodule Edenflowers.Orders.Order do
     attribute :discount_rate, :decimal
     attribute :promotion_name, :string
     attribute :promotion_code, :string
-    attribute :promotion_usage_counted_at, :utc_datetime
 
     attribute :locale, :string, default: "sv-FI"
 

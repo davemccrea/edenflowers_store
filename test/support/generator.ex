@@ -120,6 +120,13 @@ defmodule Generator do
     )
   end
 
+  @doc "Counts towards a promotion's usage by placing `times` orders with it."
+  def use_promotion(promotion, times \\ 1) do
+    for _ <- 1..times do
+      generate(order(state: :placed, promotion_id: promotion.id))
+    end
+  end
+
   def line_item(opts \\ []) do
     changeset_generator(LineItem, :add_to_cart,
       defaults: %{
