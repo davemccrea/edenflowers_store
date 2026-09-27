@@ -42,7 +42,8 @@ defmodule Edenflowers.Courses.Course do
     ]
 
     read :upcoming do
-      filter expr(date >= today())
+      # Helsinki's date, like booking_open?, so a course stays listed until its day ends in Finland.
+      filter expr(date >= fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date"))
       prepare build(default_sort: [date: :asc, start_time: :asc])
     end
   end
