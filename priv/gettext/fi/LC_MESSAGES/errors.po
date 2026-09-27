@@ -117,3 +117,6 @@ msgstr "Tämän kurssin varaus on päättynyt."
 
 msgid "course not found"
 msgstr "Tätä kurssia ei ole enää olemassa."
+
+msgid "Must be a valid email address"
+msgstr "Anna kelvollinen sähköpostiosoite"

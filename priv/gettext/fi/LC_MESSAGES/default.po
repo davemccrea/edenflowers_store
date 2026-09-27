@@ -594,11 +594,6 @@ msgstr "Jos et ole paikalla, kukat jätetään turvalliseen ja varjoisaan paikka
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Vaasan kartta, johon Minimossen on merkitty"
 
-#: lib/edenflowers/orders/order/validations/validate_customer_email.ex:20
-#, elixir-autogen, elixir-format
-msgid "Must be a valid email address"
-msgstr "Anna kelvollinen sähköpostiosoite"
-
 #: lib/edenflowers_web/components/newsletter_signup.ex:12
 #: lib/edenflowers_web/features/account/account_live.ex:157
 #, elixir-autogen, elixir-format
