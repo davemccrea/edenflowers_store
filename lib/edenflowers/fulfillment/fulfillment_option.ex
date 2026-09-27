@@ -20,13 +20,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
-    migration_types minimum_cart_total: :decimal, base_price: :decimal, price_per_km: :decimal
+    migration_types base_price: :decimal, price_per_km: :decimal
 
     check_constraints do
-      check_constraint :minimum_cart_total, "fulfillment_options_valid_minimum_cart_total",
-        check: "minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)",
-        message: "must be a non-negative amount in whole cents"
-
       check_constraint :base_price, "fulfillment_options_valid_base_price",
         check: "base_price >= 0 AND base_price = round(base_price, 2)",
         message: "must be a non-negative amount in whole cents"
@@ -49,7 +45,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       create: [
         :name,
         :sort_key,
-        :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
         :base_price,
@@ -67,7 +62,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       update: [
         :name,
         :sort_key,
-        :minimum_cart_total,
         :fulfillment_method,
         :rate_type,
         :base_price,
@@ -227,11 +221,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, public?: true
     attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
-
-    attribute :minimum_cart_total, :decimal,
-      default: 0,
-      public?: true,
-      constraints: [min: 0, scale: 2]
 
     attribute :fulfillment_method, Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod,
       allow_nil?: false,
