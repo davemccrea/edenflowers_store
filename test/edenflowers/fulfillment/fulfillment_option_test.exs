@@ -20,7 +20,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                  name: "Home delivery",
                  fulfillment_method: :delivery,
                  rate_type: :dynamic,
-                 minimum_cart_total: 0,
                  base_price: "3.00",
                  price_per_km: "1.50",
                  free_dist_km: 5,
@@ -91,7 +90,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
         name: "Home delivery",
         fulfillment_method: :delivery,
         rate_type: :dynamic,
-        minimum_cart_total: 0,
         base_price: "3.00",
         price_per_km: "1.50",
         free_dist_km: 5,
@@ -112,16 +110,12 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       assert {:error, _} = create.(base_price: "-1.00")
     end
 
-    test "rejects a negative minimum_cart_total", %{create: create} do
-      assert {:error, _} = create.(minimum_cart_total: "-1.00")
-    end
-
     test "rejects a negative price_per_km", %{create: create} do
       assert {:error, _} = create.(price_per_km: "-0.50")
     end
 
     test "rejects fractional-cent prices", %{create: create} do
-      for field <- [:base_price, :minimum_cart_total, :price_per_km] do
+      for field <- [:base_price, :price_per_km] do
         assert {:error, _} = create.([{field, "1.001"}])
       end
     end

@@ -150,7 +150,6 @@ defmodule Generator do
         fulfillment_method: :pickup,
         sort_key: sort_key,
         rate_type: :fixed,
-        minimum_cart_total: 0,
         base_price: "4.50",
         price_per_km: "1.60",
         free_dist_km: 5,
