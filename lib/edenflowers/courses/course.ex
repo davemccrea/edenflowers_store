@@ -8,6 +8,13 @@ defmodule Edenflowers.Courses.Course do
   postgres do
     repo Edenflowers.Repo
     table "courses"
+    migration_types price: :decimal
+
+    check_constraints do
+      check_constraint :price, "courses_valid_price",
+        check: "price >= 0 AND price = round(price, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 
   translations do
@@ -75,7 +82,7 @@ defmodule Edenflowers.Courses.Course do
     attribute :end_time, :time, allow_nil?: false
     attribute :register_before, :date, allow_nil?: false
     attribute :total_places, :integer, allow_nil?: false
-    attribute :price, :decimal, allow_nil?: false
+    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     timestamps()
   end

@@ -244,7 +244,9 @@ defmodule Edenflowers.Orders.OrderTest do
   test "calling finalise_checkout updates state and payment_state" do
     order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
 
-    assert {:ok, order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+    assert {:ok, order} =
+             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
     assert order.state == :placed
     assert order.payment_status == :paid
     assert %DateTime{} = order.ordered_at
@@ -257,7 +259,9 @@ defmodule Edenflowers.Orders.OrderTest do
     order = generate(order(state: :payment, payment_intent_id: "pi_test"))
     generate(line_item(order_id: order.id, product_variant_id: variant.id))
 
-    assert {:ok, order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+    assert {:ok, order} =
+             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "39.90"}, authorize?: false)
+
     assert [%{rate: rate, vat: vat}] = order.vat_breakdown
     assert Decimal.equal?(rate, "0.255")
     assert Decimal.equal?(vat, "8.11")
@@ -278,7 +282,9 @@ defmodule Edenflowers.Orders.OrderTest do
     order = generate(order(state: :payment, payment_intent_id: "pi_test", order_reference: nil))
     refute order.order_reference
 
-    assert {:ok, order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+    assert {:ok, order} =
+             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
     assert order.order_reference =~ ~r/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{6}$/
   end
 
@@ -1227,21 +1233,27 @@ defmodule Edenflowers.Orders.OrderTest do
     test "finalize_checkout requires payment_intent_id" do
       order = generate(order(payment_intent_id: nil))
 
-      assert {:error, error} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+      assert {:error, error} =
+               Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
       assert %Ash.Error.Invalid{} = error
     end
 
     test "payment_status transitions from pending to paid" do
       order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
 
-      assert {:ok, order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+      assert {:ok, order} =
+               Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
       assert order.payment_status == :paid
     end
 
     test "cannot finalize order already in :order state" do
       order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
 
-      assert {:error, error} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
+      assert {:error, error} =
+               Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
       assert %Ash.Error.Invalid{} = error
     end
   end

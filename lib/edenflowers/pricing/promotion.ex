@@ -7,6 +7,13 @@ defmodule Edenflowers.Pricing.Promotion do
   postgres do
     table "promotions"
     repo Edenflowers.Repo
+    migration_types minimum_cart_total: :decimal
+
+    check_constraints do
+      check_constraint :minimum_cart_total, "promotions_valid_minimum_cart_total",
+        check: "minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 
   actions do
@@ -80,7 +87,7 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     attribute :discount_rate, :decimal, allow_nil?: false
-    attribute :minimum_cart_total, :decimal, allow_nil?: false
+    attribute :minimum_cart_total, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :start_date, :date
     attribute :expiration_date, :date
     attribute :usage, :integer, allow_nil?: false, default: 0

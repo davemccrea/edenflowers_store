@@ -21,6 +21,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
   postgres do
     repo Edenflowers.Repo
     table "course_registrations"
+    migration_types amount: :decimal
+
+    check_constraints do
+      check_constraint :amount, "course_registrations_valid_amount",
+        check: "amount >= 0 AND amount = round(amount, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
   end
 
   actions do
@@ -66,6 +73,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
+      validate Edenflowers.Payments.Validations.PaymentIntentNotSet
     end
 
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
@@ -186,7 +194,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Snapshotted by ReserveSeats, so a later edit to the course can't change
     # what was charged or what the receipt says.
     attribute :tax_rate, :decimal, allow_nil?: false
-    attribute :amount, :decimal, allow_nil?: false
+    attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string
     attribute :confirmed_at, :utc_datetime

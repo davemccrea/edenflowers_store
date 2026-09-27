@@ -31,6 +31,17 @@ defmodule Edenflowers.Expenses.Expense do
   postgres do
     table "expenses"
     repo Edenflowers.Repo
+    migration_types total_amount: :decimal, vat_amount: :decimal
+
+    check_constraints do
+      check_constraint :total_amount, "expenses_valid_total_amount",
+        check: "total_amount = round(total_amount, 2)",
+        message: "must be an amount in whole cents"
+
+      check_constraint :vat_amount, "expenses_valid_vat_amount",
+        check: "vat_amount = round(vat_amount, 2)",
+        message: "must be an amount in whole cents"
+    end
   end
 
   actions do
@@ -107,8 +118,8 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :vendor_name, :string
     attribute :vendor_vat_number, :string
     attribute :date, :date
-    attribute :total_amount, :decimal
-    attribute :vat_amount, :decimal
+    attribute :total_amount, :decimal, constraints: [scale: 2]
+    attribute :vat_amount, :decimal, constraints: [scale: 2]
     attribute :currency, Currency
     attribute :category, Category
     attribute :description, :string

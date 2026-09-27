@@ -8,6 +8,13 @@ defmodule Edenflowers.Orders.LineItem do
   postgres do
     repo Edenflowers.Repo
     table "line_items"
+    migration_types unit_price: :decimal
+
+    check_constraints do
+      check_constraint :unit_price, "line_items_valid_unit_price",
+        check: "unit_price >= 0 AND unit_price = round(unit_price, 2)",
+        message: "must be a non-negative amount in whole cents"
+    end
 
     references do
       reference :order, on_delete: :delete
@@ -78,7 +85,7 @@ defmodule Edenflowers.Orders.LineItem do
   attributes do
     uuid_primary_key :id
     attribute :quantity, :integer, default: 1, constraints: [min: 1]
-    attribute :unit_price, :decimal, allow_nil?: false
+    attribute :unit_price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false
     attribute :product_image_slug, :string, allow_nil?: false

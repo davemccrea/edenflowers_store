@@ -75,7 +75,8 @@ defmodule Edenflowers.PaymentsTest do
 
   describe "setup/2" do
     test "creates a PaymentIntent for an order's grand total and stores its id", %{order: order} do
-      order = %{order | payment_intent_id: nil}
+      Edenflowers.Repo.query!("UPDATE orders SET payment_intent_id = NULL WHERE id = $1", [Ecto.UUID.dump!(order.id)])
+      order = Ash.get!(Order, order.id, load: [:grand_total], authorize?: false)
       expected_cents = StripeAPI.to_stripe_amount(order.grand_total)
       order_id = order.id
 
@@ -88,7 +89,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "creates a PaymentIntent for a course booking's amount", %{registration: registration} do
-      registration = %{registration | payment_intent_id: nil}
+      registration = generate(course_registration(amount: registration.amount, payment_intent_id: nil))
       registration_id = registration.id
 
       expect(StripeAPI.Mock, :create_payment_intent, fn 17_000, %{"course_registration_id" => ^registration_id} ->
@@ -127,6 +128,29 @@ defmodule Edenflowers.PaymentsTest do
       capture_log(fn ->
         assert {:error, :payment_intent_persist_failed} = Payments.setup(order, nil)
       end)
+    end
+
+    test "a stale record cannot replace an existing PaymentIntent", %{order: order, registration: registration} do
+      expect(StripeAPI.Mock, :create_payment_intent, 2, fn _amount, metadata ->
+        id = if metadata["order_id"], do: "pi_stale_order", else: "pi_stale_course"
+        {:ok, %{id: id, client_secret: "secret", amount: 0}}
+      end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, 2, fn payment_intent ->
+        {:ok, payment_intent}
+      end)
+
+      capture_log(fn ->
+        assert {:error, :payment_intent_persist_failed} = Payments.setup(%{order | payment_intent_id: nil}, nil)
+
+        assert {:error, :payment_intent_persist_failed} =
+                 Payments.setup(%{registration | payment_intent_id: nil}, nil)
+      end)
+
+      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == order.payment_intent_id
+
+      assert Courses.get_registration_by_id!(registration.id, authorize?: false).payment_intent_id ==
+               registration.payment_intent_id
     end
   end
 
@@ -179,6 +203,18 @@ defmodule Edenflowers.PaymentsTest do
 
       assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
       refute_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+    end
+
+    test "order completion rejects invalid currency amounts", %{order: order} do
+      for amount <- ["-1.00", "1.001"] do
+        assert {:error, %Ash.Error.Invalid{}} =
+                 Orders.finalize_checkout(order, order.payment_intent_id, %{amount_paid: amount},
+                   actor: Edenflowers.Actors.system_actor()
+                 )
+      end
+
+      assert %{state: :payment, payment_status: :pending} =
+               Orders.get_order_by_id!(order.id, authorize?: false)
     end
 
     test "a stale order cannot complete twice or replace its reference", %{order: order} do
@@ -252,8 +288,15 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "a stale payment intent cannot confirm either kind of payable", %{order: order, registration: registration} do
-      Orders.add_payment_intent_id!(order, "pi_replacement_order", authorize?: false)
-      Courses.add_registration_payment_intent_id!(registration, "pi_replacement_course", authorize?: false)
+      Edenflowers.Repo.query!("UPDATE orders SET payment_intent_id = $1 WHERE id = $2", [
+        "pi_replacement_order",
+        Ecto.UUID.dump!(order.id)
+      ])
+
+      Edenflowers.Repo.query!("UPDATE course_registrations SET payment_intent_id = $1 WHERE id = $2", [
+        "pi_replacement_course",
+        Ecto.UUID.dump!(registration.id)
+      ])
 
       results = [
         Orders.finalize_checkout(order, order.payment_intent_id, %{amount_paid: order.grand_total},
@@ -306,9 +349,20 @@ defmodule Edenflowers.PaymentsTest do
     test "a failure handler's stale snapshot cannot downgrade a paid order", %{order: order} do
       assert {:ok, :completed} = Payments.complete(order_intent(order))
 
-      assert {:error, error} = Orders.mark_payment_failed(order, actor: Edenflowers.Actors.system_actor())
+      assert {:error, error} =
+               Orders.mark_payment_failed(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
+
       assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.AlreadyPaid))
       assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+    end
+
+    test "a stale PaymentIntent cannot fail an order", %{order: order} do
+      stale_intent = %{order_intent(order) | id: "pi_replaced"}
+
+      assert {:error, {:payment_intent_mismatch, _id, _expected, "pi_replaced"}} =
+               Payments.fail(stale_intent)
+
+      assert %{payment_status: :pending} = Orders.get_order_by_id!(order.id, authorize?: false)
     end
 
     test "leaves a course booking pending; its seat hold lapses on its own", %{registration: registration} do

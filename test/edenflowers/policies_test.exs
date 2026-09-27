@@ -314,7 +314,7 @@ defmodule Edenflowers.PoliciesTest do
       # The action's own validation also rejects a :paid order; either error
       # class is acceptable since both layers correctly block the mutation.
       assert {:error, error} =
-               Orders.mark_payment_failed(order, actor: %{admin: true})
+               Orders.mark_payment_failed(order, order.payment_intent_id, actor: %{admin: true})
 
       assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end

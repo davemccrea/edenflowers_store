@@ -82,6 +82,7 @@ defmodule Edenflowers.Orders do
       define :list_open_orders, action: :open
       define :list_orders_to_fulfil, action: :to_fulfil
       define :list_paid_orders_since, action: :paid_since, args: [:since]
+      define :sales_summary, action: :sales_summary, args: [:from, :to]
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options
       define :submit_delivery, action: :submit_delivery
@@ -90,7 +91,7 @@ defmodule Edenflowers.Orders do
       define :return_to_delivery, action: :return_to_delivery
       define :list_orders_awaiting_payment, action: :awaiting_payment, args: [:settled_before, :abandoned_before]
       define :finalize_checkout, action: :finalize_checkout, args: [:payment_intent_id]
-      define :mark_payment_failed, action: :mark_payment_failed
+      define :mark_payment_failed, action: :mark_payment_failed, args: [:payment_intent_id]
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
       define :mark_receipt_emailed, action: :mark_receipt_emailed, args: [:receipt_sha256]

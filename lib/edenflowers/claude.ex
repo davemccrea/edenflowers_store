@@ -13,7 +13,7 @@ defmodule Edenflowers.Claude do
 
   For expenses, the prompt and output schema live here. The returned map is handed straight
   to `Edenflowers.Expenses.Expense` for ingestion, which performs all type
-  coercion (string → Date, float → Decimal, string → enum). This module does
+  coercion (string → Date, decimal string → Decimal, string → enum). This module does
   no casting of its own.
   """
 
@@ -28,8 +28,8 @@ defmodule Edenflowers.Claude do
     vendor_name: [type: :string, doc: "Name of the vendor or supplier."],
     vendor_vat_number: [type: :string, doc: "The vendor's VAT/tax number, if present."],
     date: [type: :string, doc: "Invoice/receipt date in ISO 8601 format (YYYY-MM-DD)."],
-    total_amount: [type: :float, doc: "Total amount including VAT."],
-    vat_amount: [type: :float, doc: "VAT/tax amount, if shown separately."],
+    total_amount: [type: :string, doc: "Total amount including VAT as a decimal string, e.g. 121.00."],
+    vat_amount: [type: :string, doc: "VAT/tax amount as a decimal string, e.g. 25.50, if shown separately."],
     currency: [type: :string, doc: "ISO 4217 currency code, lowercase (e.g. eur, sek)."],
     category: [
       type: :string,

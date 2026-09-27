@@ -18,7 +18,8 @@ defmodule Edenflowers.Payments.Payable do
               {:ok, record} | {:error, term()}
   @callback complete(id :: String.t(), payment_intent_id :: String.t(), amount_paid :: Decimal.t()) ::
               {:ok, record} | {:error, term()}
-  @callback fail(id :: String.t()) :: {:ok, record | :unchanged} | {:error, term()}
+  @callback fail(id :: String.t(), payment_intent_id :: String.t()) ::
+              {:ok, record | :unchanged} | {:error, term()}
   @callback awaiting_payment(settled_before :: DateTime.t(), abandoned_before :: DateTime.t()) :: [record]
 end
 
@@ -120,7 +121,7 @@ defmodule Edenflowers.Payments do
   @doc "Records a failed or canceled PaymentIntent against what it was for."
   def fail(payment_intent) do
     with {:ok, adapter, id} <- find_payable(payment_intent) do
-      case adapter.fail(id) do
+      case adapter.fail(id, payment_intent.id) do
         {:ok, :unchanged} ->
           {:ok, :unchanged}
 
@@ -129,9 +130,16 @@ defmodule Edenflowers.Payments do
           {:ok, record}
 
         {:error, error} ->
-          if find_error(error, AlreadyPaid),
-            do: {:ok, :unchanged},
-            else: {:error, {:payment_update_failed, id, error}}
+          cond do
+            find_error(error, AlreadyPaid) ->
+              {:ok, :unchanged}
+
+            mismatch = find_error(error, PaymentIntentMismatch) ->
+              {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
+
+            true ->
+              {:error, {:payment_update_failed, id, error}}
+          end
       end
     end
   end
