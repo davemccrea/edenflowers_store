@@ -476,12 +476,6 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :order_reference, :string
 
-    attribute :state, :atom do
-      allow_nil? false
-      default :contact_details
-      constraints one_of: [:contact_details, :gift_options, :delivery, :payment, :placed]
-    end
-
     attribute :ordered_at, :utc_datetime
 
     attribute :payment_status, __MODULE__.PaymentStatus, default: :pending
