@@ -469,7 +469,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       card_variant: card_variant
     } do
       order = generate(order(state: :gift_options, gift: true))
-      Orders.add_card!(order, card_variant.id, authorize?: false)
+      Orders.add_card!(order, card_variant.id, authorize?: false, load: [:line_items])
 
       order
       |> Ash.Changeset.for_update(:submit_gift_options, %{gift: false})
@@ -485,7 +485,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -500,7 +500,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
       card =
-        Orders.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items]).line_items
         |> Enum.find(& &1.is_card)
 
       conn
@@ -537,7 +537,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
       card =
-        Orders.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items]).line_items
         |> Enum.find(& &1.is_card)
 
       {:ok, view, _html} =
@@ -560,7 +560,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -578,7 +578,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -594,7 +594,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       {:ok, _view, html} =
         conn
@@ -613,7 +613,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       {:ok, view, html} =
         conn
@@ -636,7 +636,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
@@ -655,7 +655,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       oversize = String.duplicate("a", 81)
 
@@ -674,7 +674,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false)
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
 
       card = Enum.find(Orders.get_order_for_checkout!(gift_order.id, actor: nil).line_items, & &1.is_card)
 
@@ -696,7 +696,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
 
       card =
-        Orders.add_card!(gift_order, card_variant.id, authorize?: false).line_items
+        Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items]).line_items
         |> Enum.find(& &1.is_card)
 
       {:ok, view, _html} =
@@ -757,7 +757,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
          %{conn: conn, order: order, card_variant: card_variant} do
       # Set up a stale checkout: customer made it to step 3 with all their
       # details filled in, then removed every product, leaving only a card.
-      Orders.add_card!(order, card_variant.id, authorize?: false)
+      Orders.add_card!(order, card_variant.id, authorize?: false, load: [:line_items])
       [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
       # Bypass Orders.remove_line_item to fabricate the stale state this guard
       # is meant to catch — a card-only cart with leftover checkout fields.
@@ -785,7 +785,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
     test "removing the last non-card line item mid-checkout resets the order and redirects",
          %{conn: conn, order: order, card_variant: card_variant} do
-      Orders.add_card!(order, card_variant.id, authorize?: false)
+      Orders.add_card!(order, card_variant.id, authorize?: false, load: [:line_items])
       [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
