@@ -128,7 +128,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="narrow">
-        <.admin_page_header title={~t"Courses"} />
+        <.admin_page_header title={~t"Courses"}>
+          <:actions>
+            <.link navigate={~p"/admin/courses/new"} class="btn btn-sm">
+              <.icon name="hero-plus" class="h-4 w-4" />
+              {~t"New course"}
+            </.link>
+          </:actions>
+        </.admin_page_header>
 
         <p :if={@courses == []} class="text-base-content/65 py-6 text-center text-sm">
           {~t"No upcoming courses"}
@@ -217,6 +224,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             <.icon name="hero-plus" class="h-4 w-4" />
             {~t"Add booking"}
           </button>
+          <.link navigate={~p"/admin/courses/#{@course.id}"} class="btn btn-sm btn-ghost">
+            <.icon name="hero-pencil-square" class="h-4 w-4" />
+            {~t"Edit course"}
+          </.link>
         </div>
 
         <.form
