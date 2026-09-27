@@ -165,7 +165,7 @@ defmodule Edenflowers.Accounts.User do
 
     attribute :name, :string, allow_nil?: true, public?: true
     attribute :email, :ci_string, allow_nil?: false, public?: true
-    attribute :newsletter_opt_in, :boolean, default: false, public?: true
+    attribute :newsletter_opt_in, :boolean, allow_nil?: false, default: false, public?: true
 
     attribute :admin, :boolean, default: false, public?: true, writable?: false
 
@@ -180,11 +180,10 @@ defmodule Edenflowers.Accounts.User do
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
     calculate :initials, :string, {Edenflowers.Accounts.Calculations.Initials, source: :name}
-    # A legacy row can hold a NULL newsletter_opt_in, and a user without a
-    # promo has no usage, so the `if` turns those NULLs into a strict false.
+    # A user without a promo has no usage, so the `if` turns that NULL into a strict false.
     calculate :newsletter_offer_hidden?,
               :boolean,
-              expr(if(newsletter_opt_in == true or newsletter_promo.usage > 0, true, false))
+              expr(if(newsletter_opt_in or newsletter_promo.usage > 0, true, false))
   end
 
   identities do
