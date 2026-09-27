@@ -11,30 +11,27 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   require Ash.Query
 
   alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.Order.Changes.ClearDeliveryFields
 
-  @reset_attrs %{
-    customer_name: nil,
-    customer_email: nil,
-    newsletter_offer_hidden?: false,
-    gift: false,
-    recipient_name: nil,
-    card_message: nil,
-    recipient_phone_number: nil,
-    delivery_address: nil,
-    delivery_instructions: nil,
-    fulfillment_date: nil,
-    fulfillment_fee: nil,
-    geocoded_address: nil,
-    here_id: nil,
-    distance: nil,
-    position: nil,
-    promotion_id: nil,
-    discount_rate: nil,
-    promotion_name: nil,
-    promotion_code: nil,
-    promotion_minimum_cart_total: nil,
-    fulfillment_option_id: nil
-  }
+  @reset_attrs Map.merge(Map.from_keys(ClearDeliveryFields.fields(), nil), %{
+                 customer_name: nil,
+                 customer_email: nil,
+                 newsletter_offer_hidden?: false,
+                 gift: false,
+                 recipient_name: nil,
+                 card_message: nil,
+                 recipient_phone_number: nil,
+                 fulfillment_date: nil,
+                 fulfillment_option_id: nil,
+                 fulfillment_method: nil,
+                 fulfillment_tax_rate: nil,
+                 fulfillment_option_name: nil,
+                 promotion_id: nil,
+                 discount_rate: nil,
+                 promotion_name: nil,
+                 promotion_code: nil,
+                 promotion_minimum_cart_total: nil
+               })
 
   @impl true
   def change(changeset, _opts, _context) do

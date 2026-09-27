@@ -10,6 +10,7 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
 
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.{DeliveryError, Fee}
+  alias Edenflowers.Orders.Order.Changes.ClearDeliveryFields
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -31,15 +32,9 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
       {:ok, option} ->
         %{fulfillment_fee: fee} = Fee.calculate(option, 0)
 
-        Ash.Changeset.force_change_attributes(changeset,
-          fulfillment_fee: fee,
-          delivery_address: nil,
-          delivery_instructions: nil,
-          geocoded_address: nil,
-          position: nil,
-          here_id: nil,
-          distance: nil
-        )
+        changeset
+        |> Ash.Changeset.force_change_attributes(Map.from_keys(ClearDeliveryFields.fields(), nil))
+        |> Ash.Changeset.force_change_attribute(:fulfillment_fee, fee)
 
       {:error, _} ->
         add_error(changeset, :fulfillment_option_id, :unknown)
