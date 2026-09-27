@@ -61,12 +61,13 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "40.00"))
 
-    placed = fn ordered_at, payment_status ->
+    placed = fn ordered_at, payment_status, amount_paid ->
       order =
         generate(
           order(
             state: :placed,
             payment_status: payment_status,
+            amount_paid: amount_paid,
             fulfillment_status: :fulfilled,
             fulfillment_fee: "5.00",
             ordered_at: ordered_at
@@ -77,15 +78,15 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     end
 
     now = DateTime.utc_now()
-    placed.(now, :paid)
-    placed.(now, :paid)
-    placed.(now, :refunded)
-    placed.(DateTime.add(now, -40, :day), :paid)
+    placed.(now, :paid, "39.50")
+    placed.(now, :paid, "40.00")
+    placed.(now, :refunded, "40.00")
+    placed.(DateTime.add(now, -40, :day), :paid, "40.00")
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     sales = view |> element("dl") |> render()
     assert sales =~ ~r/>\s*2\s*</
-    assert sales =~ "90.00"
+    assert sales =~ "79.50"
   end
 end
