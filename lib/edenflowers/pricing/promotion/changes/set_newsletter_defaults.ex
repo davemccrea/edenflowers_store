@@ -2,9 +2,6 @@ defmodule Edenflowers.Pricing.Promotion.Changes.SetNewsletterDefaults do
   use Ash.Resource.Change
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def change(changeset, _opts, _context) do
     code = :crypto.strong_rand_bytes(3) |> Base.encode16()
     today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()

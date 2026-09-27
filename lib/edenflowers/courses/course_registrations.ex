@@ -76,8 +76,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :pending)
-      change {Changes.UpsertUser, []}
-      change {Changes.ReserveSeats, []}
+      change Changes.UpsertUser
+      change Changes.ReserveSeats
     end
 
     # For people who pay Jennie at the course, so they hold a seat without
@@ -88,7 +88,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
-      change {Changes.UpsertUser, []}
+      change Changes.UpsertUser
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
     end
@@ -152,7 +152,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       accept []
       transaction? false
       require_atomic? false
-      change {Changes.SendConfirmationEmail, []}
+      change Changes.SendConfirmationEmail
     end
 
     update :reconcile_payment do

@@ -3,9 +3,6 @@ defmodule Edenflowers.Catalog.Product.Preparations.VisibleInStore do
   require Ash.Query
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def prepare(query, _opts, _context) do
     Ash.Query.filter(
       query,

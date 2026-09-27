@@ -204,8 +204,8 @@ defmodule Edenflowers.Orders.Order do
 
       argument :newsletter_opt_in, :boolean, default: false
 
-      validate {Validations.ValidateCustomerEmail, []}
-      change {Changes.UpsertUserAndAssignToOrder, []}
+      validate Validations.ValidateCustomerEmail
+      change Changes.UpsertUserAndAssignToOrder
       change transition_state(:gift_options)
       require_atomic? false
     end
@@ -213,7 +213,7 @@ defmodule Edenflowers.Orders.Order do
     update :submit_gift_options do
       accept [:gift, :recipient_name, :card_message]
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
-      validate {Validations.ValidateCardMessageLength, []}
+      validate Validations.ValidateCardMessageLength
       change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
       change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
       change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
@@ -231,12 +231,12 @@ defmodule Edenflowers.Orders.Order do
         :delivery_address
       ]
 
-      change {Changes.SnapshotFulfillmentMethod, []}
-      validate {Validations.ValidateFulfillmentDate, []}
-      validate {Validations.ValidateDeliveryAddress, []}
+      change Changes.SnapshotFulfillmentMethod
+      validate Validations.ValidateFulfillmentDate
+      validate Validations.ValidateDeliveryAddress
       validate present(:recipient_phone_number)
-      change {Changes.NormalizePhoneNumber, []}
-      change {Changes.CalculateFulfillmentCost, []}
+      change Changes.NormalizePhoneNumber
+      change Changes.CalculateFulfillmentCost
       change transition_state(:payment)
       require_atomic? false
     end
@@ -270,9 +270,9 @@ defmodule Edenflowers.Orders.Order do
 
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
-      change {Changes.GenerateOrderReference, []}
-      change {Changes.SnapshotVatBreakdown, []}
-      change {Changes.ReportAmountMismatch, []}
+      change Changes.GenerateOrderReference
+      change Changes.SnapshotVatBreakdown
+      change Changes.ReportAmountMismatch
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
@@ -281,9 +281,9 @@ defmodule Edenflowers.Orders.Order do
 
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
-      change {Changes.SnapshotFulfillmentMethod, []}
+      change Changes.SnapshotFulfillmentMethod
       change set_attribute(:fulfillment_date, nil)
-      change {Changes.ClearDeliveryFields, []}
+      change Changes.ClearDeliveryFields
       require_atomic? false
     end
 
@@ -306,7 +306,7 @@ defmodule Edenflowers.Orders.Order do
       accept []
       transaction? false
       require_atomic? false
-      change {Changes.SendConfirmationEmail, []}
+      change Changes.SendConfirmationEmail
     end
 
     update :reconcile_payment do
@@ -363,48 +363,48 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_promotion_with_id do
       argument :promotion_id, :uuid, allow_nil?: false
-      validate {Validations.ValidateMinimumCartTotal, []}
+      validate Validations.ValidateMinimumCartTotal
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
-      change {Changes.SnapshotPromotion, []}
+      change Changes.SnapshotPromotion
       require_atomic? false
     end
 
     update :add_promotion_with_code do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
-      change {Changes.LookupPromotionCode, []}
-      change {Changes.SnapshotPromotion, []}
-      validate {Validations.ValidateMinimumCartTotal, []}
+      change Changes.LookupPromotionCode
+      change Changes.SnapshotPromotion
+      validate Validations.ValidateMinimumCartTotal
       require_atomic? false
     end
 
     update :clear_promotion do
       change atomic_update(:promotion_id, expr(nil))
-      change {Changes.SnapshotPromotion, []}
+      change Changes.SnapshotPromotion
       require_atomic? false
     end
 
     update :restart_checkout do
-      change {Changes.ResetCheckout, []}
+      change Changes.ResetCheckout
       change transition_state(:contact_details)
       require_atomic? false
     end
 
     update :add_card do
       argument :product_variant_id, :uuid, allow_nil?: false
-      change {Changes.SwapCardLineItem, []}
+      change Changes.SwapCardLineItem
       change load(@checkout_load)
       require_atomic? false
     end
 
     update :remove_card do
       change set_attribute(:card_message, nil)
-      change {Changes.RemoveCardLineItem, []}
+      change Changes.RemoveCardLineItem
       require_atomic? false
     end
 
     update :remove_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
-      change {Changes.RemoveLineItem, []}
+      change Changes.RemoveLineItem
       require_atomic? false
     end
 

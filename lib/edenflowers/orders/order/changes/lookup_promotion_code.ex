@@ -12,9 +12,6 @@ defmodule Edenflowers.Orders.Order.Changes.LookupPromotionCode do
   alias Edenflowers.Pricing
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       code = Ash.Changeset.get_argument(changeset, :code)

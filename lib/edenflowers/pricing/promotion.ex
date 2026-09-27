@@ -33,7 +33,7 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     create :create_for_newsletter do
-      change {Edenflowers.Pricing.Promotion.Changes.SetNewsletterDefaults, []}
+      change Edenflowers.Pricing.Promotion.Changes.SetNewsletterDefaults
     end
 
     create :create do

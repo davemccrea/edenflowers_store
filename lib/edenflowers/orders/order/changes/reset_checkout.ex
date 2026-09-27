@@ -33,9 +33,6 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   }
 
   @impl true
-  def init(opts), do: {:ok, opts}
-
-  @impl true
   def change(changeset, _opts, _context) do
     changeset
     |> Ash.Changeset.force_change_attributes(@reset_attrs)
