@@ -127,3 +127,6 @@ msgstr "Booking for this course has closed."
 
 msgid "course not found"
 msgstr "This course no longer exists."
+
+msgid "Must be a valid email address"
+msgstr ""

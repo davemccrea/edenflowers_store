@@ -117,3 +117,6 @@ msgstr "Bokningen till den här kursen har stängt."
 
 msgid "course not found"
 msgstr "Den här kursen finns inte längre."
+
+msgid "Must be a valid email address"
+msgstr "Måste vara en giltig e-postadress"

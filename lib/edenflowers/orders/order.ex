@@ -224,7 +224,7 @@ defmodule Edenflowers.Orders.Order do
 
       argument :newsletter_opt_in, :boolean, default: false
 
-      validate Validations.ValidateCustomerEmail
+      validate match(:customer_email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change Changes.UpsertUserAndAssignToOrder
       change transition_state(:gift_options)
       require_atomic? false
