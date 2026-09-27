@@ -6,7 +6,15 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
   @thumb_width 480
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, gallery: gallery(), thumb_width: @thumb_width)}
+    {:ok,
+     socket
+     |> assign(
+       page_title: ~t"Condolences",
+       page_description:
+         ~t"Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels.",
+       og_image: image_url("local:///condolence/condolence_5.jpg", 1200, 630)
+     )
+     |> assign(gallery: gallery(), thumb_width: @thumb_width)}
   end
 
   def render(assigns) do
