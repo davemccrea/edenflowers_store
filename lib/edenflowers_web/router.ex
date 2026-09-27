@@ -112,6 +112,8 @@ defmodule EdenflowersWeb.Router do
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
       live "/account", EdenflowersWeb.Admin.AccountLive
+      live "/chat", EdenflowersWeb.Admin.ChatLive
+      live "/chat/:conversation_id", EdenflowersWeb.Admin.ChatLive
     end
 
     get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
