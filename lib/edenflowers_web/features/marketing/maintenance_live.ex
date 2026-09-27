@@ -36,8 +36,7 @@ defmodule EdenflowersWeb.Marketing.MaintenanceLive do
             <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">
               info@edenflowers.fi
             </a>
-            eller
-            <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
+            eller <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
               040 220 9494
             </a>.
           </p>
@@ -46,8 +45,7 @@ defmodule EdenflowersWeb.Marketing.MaintenanceLive do
             <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">
               info@edenflowers.fi
             </a>
-            tai
-            <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
+            tai <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
               040 220 9494
             </a>.
           </p>
