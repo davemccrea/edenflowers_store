@@ -111,6 +111,9 @@ defmodule EdenflowersWeb.Router do
       live "/courses", EdenflowersWeb.Admin.CoursesLive
       live "/courses/new", EdenflowersWeb.Admin.CourseFormLive
       live "/courses/:id", EdenflowersWeb.Admin.CourseFormLive
+      live "/products", EdenflowersWeb.Admin.ProductsLive
+      live "/products/new", EdenflowersWeb.Admin.ProductFormLive
+      live "/products/:id", EdenflowersWeb.Admin.ProductFormLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
       live "/account", EdenflowersWeb.Admin.AccountLive

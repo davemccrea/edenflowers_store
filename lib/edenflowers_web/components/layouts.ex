@@ -193,6 +193,7 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
       {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
+      {"/admin/products", ~t"Products", true, "hero-gift"},
       {"/admin/chat", ~t"Assistant", true, "hero-chat-bubble-left-right"}
     ]
 
