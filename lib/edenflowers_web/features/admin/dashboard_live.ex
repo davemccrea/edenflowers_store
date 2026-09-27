@@ -18,13 +18,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
     today = @timezone |> DateTime.now!() |> DateTime.to_date()
 
-    month_start =
-      today
-      |> Date.beginning_of_month()
-      |> DateTime.new!(~T[00:00:00], @timezone)
-      |> DateTime.shift_zone!("Etc/UTC")
-
-    sales_this_month = Orders.list_paid_orders_since!(month_start, actor: actor)
+    sales = Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor)
 
     orders_by_date =
       open_orders
@@ -37,8 +31,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:orders_by_date, orders_by_date)
      |> assign(:open_order_count, length(open_orders))
-     |> assign(:sales_count, length(sales_this_month))
-     |> assign(:revenue, sales_this_month |> Enum.map(& &1.grand_total) |> Enum.reduce(Decimal.new(0), &Decimal.add/2))
+     |> assign(:sales_count, sales.order_count)
+     |> assign(:revenue, sales.revenue)
      |> assign(:today, today)}
   end
 
