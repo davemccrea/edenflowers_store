@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
   end
 
   describe "document:tag:added with receipt tag" do
-    test "enqueues a ProcessExpenseDocument job" do
+    test "records an import and enqueues its processing trigger" do
       assert :ok =
                EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
                  "type" => "document:tag:added",
@@ -23,10 +23,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
                  }
                })
 
-      assert_enqueued(
-        worker: Edenflowers.Workers.ProcessExpenseDocument,
-        args: %{"document_id" => "doc_abc123", "organization_id" => "org_xyz456"}
-      )
+      assert_enqueued(worker: Edenflowers.Expenses.ExpenseImport.Workers.Process)
     end
 
     test "is idempotent: a duplicate event collapses to one job" do
@@ -43,7 +40,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
       assert :ok = EdenflowersWeb.Webhooks.PapraHandler.handle_event(event)
 
       assert [_single_job] =
-               all_enqueued(worker: Edenflowers.Workers.ProcessExpenseDocument)
+               all_enqueued(worker: Edenflowers.Expenses.ExpenseImport.Workers.Process)
     end
 
     test "returns :error when documentId is missing" do
@@ -83,7 +80,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
                  }
                })
 
-      assert [] = all_enqueued(worker: Edenflowers.Workers.ProcessExpenseDocument)
+      assert [] = all_enqueued(worker: Edenflowers.Expenses.ExpenseImport.Workers.Process)
     end
   end
 
@@ -98,7 +95,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
                  }
                })
 
-      assert [] = all_enqueued(worker: Edenflowers.Workers.ProcessExpenseDocument)
+      assert [] = all_enqueued(worker: Edenflowers.Expenses.ExpenseImport.Workers.Process)
     end
 
     test "returns :ok for unrecognised event types" do

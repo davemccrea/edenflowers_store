@@ -4,7 +4,7 @@ defmodule Edenflowers.Orders.Order do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub],
-    extensions: [AshStateMachine]
+    extensions: [AshStateMachine, AshOban]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -12,7 +12,6 @@ defmodule Edenflowers.Orders.Order do
   require Ash.Resource.Change.Builtins
 
   alias __MODULE__.{Calculations, Changes, Validations}
-  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -89,6 +88,50 @@ defmodule Edenflowers.Orders.Order do
     end
   end
 
+  oban do
+    triggers do
+      trigger :send_confirmation_email do
+        action :send_confirmation_email
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Orders.Order.Workers.SendConfirmationEmail
+        scheduler_module_name Edenflowers.Orders.Order.Schedulers.SendConfirmationEmail
+        default_actor Edenflowers.Actors.system_actor()
+        where expr(state == :placed and payment_status == :paid and is_nil(receipt_emailed_at))
+      end
+
+      trigger :count_promotion_usage do
+        action :count_promotion_usage
+        queue :default
+        max_attempts 20
+        scheduler_cron "* * * * *"
+        worker_module_name Edenflowers.Orders.Order.Workers.CountPromotionUsage
+        scheduler_module_name Edenflowers.Orders.Order.Schedulers.CountPromotionUsage
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(state == :placed and not is_nil(promotion_id) and is_nil(promotion_usage_counted_at))
+      end
+
+      trigger :reconcile_payment do
+        action :reconcile_payment
+        queue :default
+        max_attempts 1
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Orders.Order.Workers.ReconcilePayment
+        scheduler_module_name Edenflowers.Orders.Order.Schedulers.ReconcilePayment
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(
+                state == :payment and not is_nil(payment_intent_id) and
+                  updated_at < ago(5, :minute) and updated_at > ago(7, :day)
+              )
+      end
+    end
+  end
+
   actions do
     defaults [:read]
 
@@ -162,17 +205,6 @@ defmodule Edenflowers.Orders.Order do
                   :fulfillment_status
                 ]
               )
-    end
-
-    # Checkouts on the payment step whose webhook may have been missed.
-    read :awaiting_payment do
-      argument :settled_before, :utc_datetime_usec, allow_nil?: false
-      argument :abandoned_before, :utc_datetime_usec, allow_nil?: false
-
-      filter expr(
-               state == :payment and not is_nil(payment_intent_id) and
-                 updated_at < ^arg(:settled_before) and updated_at > ^arg(:abandoned_before)
-             )
     end
 
     read :to_fulfil do
@@ -272,13 +304,7 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.UpdatePromotionUsageCount, []}
       change {Changes.ReportAmountMismatch, []}
 
-      # In the placing transaction, so a placed order always has its
-      # confirmation email queued.
-      change after_action(fn _changeset, order, _context ->
-               with {:ok, _job} <- SendOrderConfirmationEmail.enqueue(%{"order_id" => order.id}) do
-                 {:ok, order}
-               end
-             end)
+      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
       require_atomic? false
     end
@@ -308,17 +334,24 @@ defmodule Edenflowers.Orders.Order do
       validate Edenflowers.Payments.Validations.PaymentIntentNotSet
     end
 
-    # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
-    # (always false in SQL); the non-atomic path uses is_nil/1 correctly.
-    update :mark_receipt_emailed do
-      argument :receipt_sha256, :string, allow_nil?: false
-
-      validate attribute_equals(:receipt_emailed_at, nil),
-        message: "receipt already marked as emailed"
-
-      change set_attribute(:receipt_emailed_at, &DateTime.utc_now/0)
-      change set_attribute(:receipt_sha256, arg(:receipt_sha256))
+    update :send_confirmation_email do
+      accept []
+      transaction? false
       require_atomic? false
+      change {Changes.SendConfirmationEmail, []}
+    end
+
+    update :count_promotion_usage do
+      accept []
+      require_atomic? false
+      change {Changes.CountPromotionUsage, []}
+    end
+
+    update :reconcile_payment do
+      accept []
+      transaction? false
+      require_atomic? false
+      change {Edenflowers.Payments.Changes.Reconcile, payable: "order"}
     end
 
     # A succeeded event may have arrived first, or been reprocessed. Don't downgrade.
@@ -445,7 +478,14 @@ defmodule Edenflowers.Orders.Order do
     # System bypass is scoped: anything outside this list (including updates
     # to a :placed order) falls through to the main policies.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:finalize_checkout, :mark_payment_failed, :mark_receipt_emailed])
+      authorize_if action([
+                     :finalize_checkout,
+                     :mark_payment_failed,
+                     :send_confirmation_email,
+                     :count_promotion_usage,
+                     :reconcile_payment
+                   ])
+
       authorize_if action_type(:read)
     end
 
@@ -554,6 +594,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :discount_rate, :decimal
     attribute :promotion_name, :string
     attribute :promotion_code, :string
+    attribute :promotion_usage_counted_at, :utc_datetime
 
     attribute :locale, :string, default: "sv-FI"
 

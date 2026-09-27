@@ -207,11 +207,16 @@ defmodule Edenflowers.Pricing.PromotionTest do
           authorize?: false
         )
 
-      # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
-      Oban.drain_queue(queue: :default)
+      assert {:ok, _order} =
+               perform_job(Edenflowers.Orders.Order.Workers.CountPromotionUsage, %{
+                 "primary_key" => %{"id" => order.id}
+               })
 
       {:ok, updated_promotion} = Pricing.get_promotion_by_id(promotion.id, authorize?: false)
       assert updated_promotion.usage == 1
+
+      updated_order = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert updated_order.promotion_usage_counted_at
     end
   end
 

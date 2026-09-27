@@ -20,7 +20,6 @@ defmodule Edenflowers.Payments.Payable do
               {:ok, record} | {:error, term()}
   @callback fail(id :: String.t(), payment_intent_id :: String.t()) ::
               {:ok, record | :unchanged} | {:error, term()}
-  @callback awaiting_payment(settled_before :: DateTime.t(), abandoned_before :: DateTime.t()) :: [record]
 end
 
 defmodule Edenflowers.Payments do
@@ -40,8 +39,6 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch}
 
   @adapters [Edenflowers.Orders.Payable, Edenflowers.Courses.Payable]
-
-  def adapters, do: @adapters
 
   @doc """
   Returns the PaymentIntent client secret for an order or course booking,

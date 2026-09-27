@@ -1,10 +1,10 @@
-defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
+defmodule Edenflowers.Orders.Order.SendConfirmationEmailTest do
   use Edenflowers.DataCase
   import Generator
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Order.Workers.SendConfirmationEmail
 
   @moduletag :typst
 
@@ -16,6 +16,8 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
     order =
       generate(
         order(
+          state: :placed,
+          payment_status: :paid,
           locale: "en-GB",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
@@ -29,7 +31,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-    assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
+    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
@@ -53,6 +55,8 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
     order =
       generate(
         order(
+          state: :placed,
+          payment_status: :paid,
           locale: "fi",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
@@ -66,7 +70,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-    assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
+    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.subject =~ "Eden Flowers -tilauksesi"
@@ -82,6 +86,8 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
     order =
       generate(
         order(
+          state: :placed,
+          payment_status: :paid,
           locale: "sv-FI",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
@@ -95,7 +101,7 @@ defmodule Edenflowers.Orders.Workers.SendOrderConfirmationEmailTest do
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-    assert :ok = perform_job(SendOrderConfirmationEmail, %{"order_id" => order.id})
+    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.subject =~ "Din Eden Flowers-beställning"

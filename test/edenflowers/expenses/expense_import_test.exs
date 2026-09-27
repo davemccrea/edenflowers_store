@@ -1,16 +1,17 @@
-defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
+defmodule Edenflowers.Expenses.ExpenseImportTest do
   use Edenflowers.DataCase
 
   import ExUnit.CaptureLog
   import Mox
 
   alias Edenflowers.Expenses.Expense
+  alias Edenflowers.Expenses.ExpenseImport
+  alias Edenflowers.Expenses.ExpenseImport.Workers.Process
 
   setup :verify_on_exit!
 
   @document_id "doc_abc123"
   @organization_id "org_xyz456"
-  @job_args %{"document_id" => @document_id, "organization_id" => @organization_id}
 
   @file_response %{body: "PDF_BYTES", content_type: "application/pdf"}
   @extracted_fields %{
@@ -34,7 +35,8 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
       {:ok, @extracted_fields}
     end)
 
-    assert :ok = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    import = record_import()
+    assert {:ok, _import} = process(import)
 
     expense = Ash.get!(Expense, [document_id: @document_id], authorize?: false)
     assert expense.vendor_name == "Acme Oy"
@@ -49,32 +51,38 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     assert expense.document_id == @document_id
     assert expense.processed_at != nil
     assert expense.reviewed_at == nil
+
+    import = Ash.get!(ExpenseImport, import.id, authorize?: false)
+    assert import.processed_at
+    assert import.expense_id == expense.id
   end
 
-  test "is idempotent: running the job twice does not create a duplicate expense" do
-    stub(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
-    stub(Edenflowers.Claude.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
+  test "recording the same document twice processes it once" do
+    expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
+    expect(Edenflowers.Claude.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
 
-    assert :ok = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
-    assert :ok = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+    import = record_import()
+    assert {:ok, _import} = process(import)
 
-    expenses = Ash.read!(Expense, authorize?: false)
-    assert length(expenses) == 1
+    assert record_import().id == import.id
+    assert {:cancel, :trigger_no_longer_applies} = process(import)
+
+    assert [_expense] = Ash.read!(Expense, authorize?: false)
   end
 
-  test "returns error when Papra fetch fails" do
+  test "fails the job when Papra fetch fails" do
     expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ ->
       {:error, {:papra_http_error, 404}}
     end)
 
     capture_log(fn ->
-      assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+      assert_raise Ash.Error.Invalid, fn -> process(record_import()) end
     end)
 
     assert Ash.read!(Expense, authorize?: false) == []
   end
 
-  test "returns error when Claude extraction fails" do
+  test "fails the job when Claude extraction fails" do
     expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
 
     expect(Edenflowers.Claude.Mock, :extract_expense, fn _, _ ->
@@ -82,9 +90,21 @@ defmodule Edenflowers.Workers.ProcessExpenseDocumentTest do
     end)
 
     capture_log(fn ->
-      assert {:error, _} = perform_job(Edenflowers.Workers.ProcessExpenseDocument, @job_args)
+      assert_raise Ash.Error.Invalid, fn -> process(record_import()) end
     end)
 
     assert Ash.read!(Expense, authorize?: false) == []
   end
+
+  defp record_import do
+    {:ok, import} =
+      Edenflowers.Expenses.record_expense_import(
+        %{document_id: @document_id, organization_id: @organization_id},
+        actor: Edenflowers.Actors.system_actor()
+      )
+
+    import
+  end
+
+  defp process(import), do: perform_job(Process, %{"primary_key" => %{"id" => import.id}})
 end

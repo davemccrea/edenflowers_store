@@ -1,14 +1,11 @@
-defmodule Edenflowers.Workers.ProcessExpenseDocument do
+defmodule Edenflowers.Expenses.ExpenseImport.Changes.Process do
   @moduledoc """
-  Turns a Papra `document:tag:added` (receipt tag) event into a stored expense
-  record: fetches the document bytes from Papra, extracts structured fields via
-  Claude, and ingests them into the `Edenflowers.Expenses` domain.
-
-  Unique on `document_id` so at-least-once webhook delivery collapses to a
-  single job. `Expenses.ingest_expense` additionally upserts on `document_id`, so even
-  a job that runs twice cannot create a duplicate row.
+  Turns a Papra receipt into a stored expense: fetches the document bytes from
+  Papra, extracts structured fields via Claude, and ingests them into the
+  `Edenflowers.Expenses` domain. `Expenses.ingest_expense` upserts on
+  `document_id`, so a retry after a partial failure cannot duplicate the expense.
   """
-  use Oban.Worker, unique: [keys: [:document_id], period: :infinity]
+  use Ash.Resource.Change
 
   require Logger
   import Edenflowers.Actors
@@ -18,24 +15,23 @@ defmodule Edenflowers.Workers.ProcessExpenseDocument do
   defp papra, do: Application.get_env(:edenflowers, :papra_client, Edenflowers.Papra)
   defp claude, do: Application.get_env(:edenflowers, :claude_client, Edenflowers.Claude)
 
-  def enqueue(%{"document_id" => document_id} = args) do
-    args
-    |> __MODULE__.new()
-    |> Oban.insert()
-    |> case do
-      {:ok, job} -> {:ok, job}
-      {:error, changeset} -> {:error, {:enqueue_failed, document_id, changeset}}
-    end
-  end
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      import = changeset.data
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"document_id" => document_id, "organization_id" => organization_id}}) do
-    with {:ok, document} <- fetch(document_id, organization_id),
-         {:ok, fields} <- extract(document_id, document),
-         {:ok, _expense} <- ingest(document_id, fields) do
-      Logger.info("Processed expense document #{document_id}")
-      :ok
-    end
+      with {:ok, document} <- fetch(import.document_id, import.organization_id),
+           {:ok, fields} <- extract(import.document_id, document),
+           {:ok, expense} <- ingest(import.document_id, fields) do
+        Logger.info("Processed expense document #{import.document_id}")
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:expense_id, expense.id)
+        |> Ash.Changeset.force_change_attribute(:processed_at, DateTime.utc_now())
+      else
+        {:error, error} -> Ash.Changeset.add_error(changeset, error)
+      end
+    end)
   end
 
   defp fetch(document_id, organization_id) do

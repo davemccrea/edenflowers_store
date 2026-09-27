@@ -317,10 +317,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert log =~ "amount mismatch"
       assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
 
-      refute_enqueued(
-        worker: Edenflowers.Courses.Workers.SendCourseConfirmationEmail,
-        args: %{"course_registration_id" => registration.id}
-      )
+      refute_enqueued(worker: Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail)
     end
 
     test "ignores a failed payment; the seat hold lapses on its own", %{registration: registration} do

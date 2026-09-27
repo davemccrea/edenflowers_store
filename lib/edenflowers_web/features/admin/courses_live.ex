@@ -8,7 +8,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
   alias Edenflowers.Format
   alias Edenflowers.External.StripeAPI
 
@@ -46,9 +45,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   def handle_event("save_booking", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.booking_form, params: params) do
-      {:ok, registration} ->
-        SendCourseConfirmationEmail.enqueue(%{"course_registration_id" => registration.id})
-
+      {:ok, _registration} ->
         {:noreply,
          socket
          |> put_flash(:info, ~t"Booking added")

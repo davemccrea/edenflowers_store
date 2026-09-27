@@ -20,6 +20,10 @@ defmodule Edenflowers.Expenses do
   end
 
   resources do
+    resource Edenflowers.Expenses.ExpenseImport do
+      define :record_expense_import, action: :record
+    end
+
     resource Edenflowers.Expenses.Expense do
       define :ingest_expense, action: :ingest
       define :mark_expense_reviewed, action: :mark_reviewed

@@ -9,7 +9,7 @@ defmodule Edenflowers.Papra do
   Thin client for the Papra document archiving API.
 
   Knows the base URL and API key (from config) and how to fetch a document's
-  raw bytes. Used by `Edenflowers.Workers.ProcessExpenseDocument` after a
+  raw bytes. Used by `Edenflowers.Expenses.ExpenseImport.Changes.Process` after a
   `document:created` webhook arrives carrying only the document's ID.
   """
 

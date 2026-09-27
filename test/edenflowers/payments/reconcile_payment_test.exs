@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
+defmodule Edenflowers.Payments.ReconcilePaymentTest do
   use Edenflowers.DataCase
 
   import ExUnit.CaptureLog
@@ -6,11 +6,19 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
   import Mox
 
   alias Edenflowers.Courses
-  alias Edenflowers.Courses.Workers.SendCourseConfirmationEmail
+
+  alias Edenflowers.Courses.CourseRegistration.Workers.ReconcilePayment,
+    as: ReconcileCoursePayment
+
+  alias Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail,
+    as: SendCourseConfirmationEmail
+
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Workers.{ReconcileStripePayments, SendOrderConfirmationEmail}
+  alias Edenflowers.Orders.Order.Schedulers.ReconcilePayment, as: ScheduleOrderReconciliation
+  alias Edenflowers.Orders.Order.Workers.ReconcilePayment, as: ReconcileOrderPayment
+  alias Edenflowers.Orders.Order.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
 
   setup :verify_on_exit!
 
@@ -65,11 +73,15 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
 
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, payment_intent(order, "succeeded")} end)
 
-    log = capture_log(fn -> assert :ok = perform_job(ReconcileStripePayments, %{}) end)
+    log =
+      capture_log(fn ->
+        assert {:ok, _record} =
+                 perform_job(ReconcileOrderPayment, %{"primary_key" => %{"id" => order.id}})
+      end)
 
     assert log =~ "webhook did not arrive"
     assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
-    assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"order_id" => order.id})
+    assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
   end
 
   test "confirms a paid course booking the webhook missed and logs an error" do
@@ -91,11 +103,21 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
        }}
     end)
 
-    log = capture_log(fn -> assert :ok = perform_job(ReconcileStripePayments, %{}) end)
+    log =
+      capture_log(fn ->
+        assert {:ok, _record} =
+                 perform_job(ReconcileCoursePayment, %{
+                   "primary_key" => %{"id" => registration.id}
+                 })
+      end)
 
     assert log =~ "webhook did not arrive"
     assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :confirmed
-    assert_enqueued(worker: SendCourseConfirmationEmail, args: %{"course_registration_id" => registration.id})
+
+    assert_enqueued(
+      worker: SendCourseConfirmationEmail,
+      args: %{"primary_key" => %{"id" => registration.id}}
+    )
   end
 
   test "leaves an unpaid order in checkout", %{seed_order: seed_order} do
@@ -105,9 +127,12 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
       {:ok, payment_intent(order, "requires_payment_method")}
     end)
 
-    assert :ok = perform_job(ReconcileStripePayments, %{})
+    assert {:ok, _record} =
+             perform_job(ReconcileOrderPayment, %{"primary_key" => %{"id" => order.id}})
 
-    assert %{state: :payment} = Orders.get_order_by_id!(order.id, authorize?: false)
+    # Eligibility ages out on updated_at, so reconciling must not touch it.
+    assert %{state: :payment, updated_at: updated_at} = Orders.get_order_by_id!(order.id, authorize?: false)
+    assert updated_at == order.updated_at
     refute_enqueued(worker: SendOrderConfirmationEmail)
   end
 
@@ -116,6 +141,6 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePaymentsTest do
     seed_order.(minutes_ago(8 * 24 * 60))
 
     # verify_on_exit! fails the test if Stripe is called.
-    assert :ok = perform_job(ReconcileStripePayments, %{})
+    assert :ok = perform_job(ScheduleOrderReconciliation, %{})
   end
 end

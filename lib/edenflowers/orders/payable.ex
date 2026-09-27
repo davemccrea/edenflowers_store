@@ -27,9 +27,4 @@ defmodule Edenflowers.Orders.Payable do
   def fail(id, payment_intent_id) do
     Orders.mark_payment_failed(id, payment_intent_id, actor: system_actor())
   end
-
-  @impl true
-  def awaiting_payment(settled_before, abandoned_before) do
-    Orders.list_orders_awaiting_payment!(settled_before, abandoned_before, actor: system_actor())
-  end
 end
