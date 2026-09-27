@@ -82,7 +82,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
     attribute :image_slug, :string, allow_nil?: false
-    attribute :stock_trackable, :boolean, default: false
+    attribute :stock_trackable, :boolean, allow_nil?: false, default: false
     attribute :stock_quantity, :integer, constraints: [min: 0]
     attribute :draft, :boolean, allow_nil?: false, default: true
   end
