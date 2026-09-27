@@ -22,7 +22,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
 
   def perform(%Oban.Job{args: %{"email" => email, "locale" => locale}}) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
-      case Accounts.get_user_by_email(email, authorize?: false, load: [:newsletter_promo]) do
+      case Accounts.get_user_by_email(email, authorize?: false, load: [newsletter_promo: [:usage]]) do
         {:ok, %{newsletter_promo: nil} = user} ->
           {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
           Email.newsletter_promo(email, promo.code) |> Mailer.deliver()

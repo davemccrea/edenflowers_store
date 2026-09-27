@@ -10,8 +10,6 @@ defmodule Edenflowers.PoliciesTest do
 
   alias Edenflowers.Orders
 
-  alias Edenflowers.Pricing
-
   alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Fulfillment.{FulfillmentOption}
@@ -36,22 +34,9 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "update (increment_usage) is forbidden for unauthenticated actor", %{promotion: promotion} do
-      assert {:error, error} =
-               promotion
-               |> Ash.Changeset.for_update(:increment_usage, %{}, actor: nil)
-               |> Ash.update(actor: nil)
-
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "destroy is forbidden for unauthenticated actor", %{promotion: promotion} do
       assert {:error, error} = Ash.destroy(promotion, actor: nil)
       assert %Ash.Error.Forbidden{} = error
-    end
-
-    test "system actor can increment usage", %{promotion: promotion} do
-      assert {:ok, _} = Pricing.increment_promotion_usage(promotion, actor: %{system: true})
     end
 
     test "system actor cannot create a promotion" do

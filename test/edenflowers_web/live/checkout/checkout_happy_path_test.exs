@@ -370,9 +370,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     # €35.00 line total × 20% = €7.00 discount
     assert Decimal.eq?(finalized.discount, Decimal.new("7.00"))
 
-    # Two jobs run on a promo order: the confirmation email and the
-    # promotion-usage increment.
-    assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
+    assert Ash.load!(finalized.promotion, :usage).usage == 1
+    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments

@@ -160,27 +160,22 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
     test "starts with usage of 0" do
       promotion = generate(promotion())
-      assert promotion.usage == 0
+      assert Ash.load!(promotion, :usage).usage == 0
     end
 
-    test "increments usage count" do
+    test "counts placed orders only" do
       promotion = generate(promotion())
-      assert promotion.usage == 0
+      use_promotion(promotion, 2)
+      generate(order(state: :payment, promotion_id: promotion.id))
 
-      {:ok, updated} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      assert updated.usage == 1
-
-      {:ok, updated2} = Pricing.increment_promotion_usage(updated, authorize?: false)
-      assert updated2.usage == 2
+      assert Ash.load!(promotion, :usage).usage == 2
     end
 
-    test "increments usage when order is finalized with promotion" do
+    test "counts an order once it is finalized with the promotion" do
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id))
       promotion = generate(promotion(minimum_cart_total: "0"))
-
-      assert promotion.usage == 0
 
       order =
         generate(
@@ -192,103 +187,63 @@ defmodule Edenflowers.Pricing.PromotionTest do
           )
         )
 
-      _line_item =
-        generate(
-          line_item(
-            order_id: order.id,
-            product_variant_id: product_variant.id
-          )
-        )
+      generate(line_item(order_id: order.id, product_variant_id: product_variant.id))
 
       order = Ash.load!(order, :grand_total, authorize?: false)
+      assert Ash.load!(promotion, :usage).usage == 0
 
       {:ok, _order} =
         Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: order.grand_total},
           authorize?: false
         )
 
-      assert {:ok, _order} =
-               perform_job(Edenflowers.Orders.Order.Workers.CountPromotionUsage, %{
-                 "primary_key" => %{"id" => order.id}
-               })
-
-      {:ok, updated_promotion} = Pricing.get_promotion_by_id(promotion.id, authorize?: false)
-      assert updated_promotion.usage == 1
-
-      updated_order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert updated_order.promotion_usage_counted_at
+      assert Ash.load!(promotion, :usage).usage == 1
     end
   end
 
   describe "Promotion usage limits" do
     import Generator
 
-    test "rejects promotion code when usage equals usage_limit" do
-      {:ok, promotion} =
-        Promotion
-        |> Ash.Changeset.for_create(:create, %{
-          name: "Limited Promo",
-          code: "LIMITED",
-          discount_rate: "0.10",
-          minimum_cart_total: "0",
-          usage_limit: 5
-        })
-        |> Ash.create(authorize?: false)
+    defp limited_promotion(code, usage_limit) do
+      Promotion
+      |> Ash.Changeset.for_create(:create, %{
+        name: "Limited #{code}",
+        code: code,
+        discount_rate: "0.10",
+        minimum_cart_total: "0",
+        usage_limit: usage_limit
+      })
+      |> Ash.create!(authorize?: false)
+    end
 
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
+    test "rejects promotion code when usage equals usage_limit" do
+      promotion = limited_promotion("LIMITED", 5)
+      use_promotion(promotion, 5)
 
       assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("LIMITED", Date.utc_today())
     end
 
     test "allows promotion code when usage is below usage_limit" do
-      {:ok, promotion} =
-        Promotion
-        |> Ash.Changeset.for_create(:create, %{
-          name: "Limited Promo 10",
-          code: "LIMITED10",
-          discount_rate: "0.10",
-          minimum_cart_total: "0",
-          usage_limit: 5
-        })
-        |> Ash.create(authorize?: false)
+      promotion = limited_promotion("LIMITED10", 5)
+      use_promotion(promotion, 4)
 
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      {:ok, promotion} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-
-      assert {:ok, %Promotion{id: id}} =
-               Pricing.get_promotion_by_code("LIMITED10", Date.utc_today())
-
+      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("LIMITED10", Date.utc_today())
       assert id == promotion.id
     end
 
+    test "counts usage for a guest, who can't read other people's orders" do
+      promotion = limited_promotion("GUESTLIMIT", 1)
+      use_promotion(promotion)
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               Pricing.get_promotion_by_code("GUESTLIMIT", Date.utc_today(), actor: nil)
+    end
+
     test "allows unlimited usage when usage_limit is nil" do
-      {:ok, promotion} =
-        Promotion
-        |> Ash.Changeset.for_create(:create, %{
-          name: "Unlimited Promo",
-          code: "UNLIMITED",
-          discount_rate: "0.10",
-          minimum_cart_total: "0"
-        })
-        |> Ash.create(authorize?: false)
+      promotion = limited_promotion("UNLIMITED", nil)
+      use_promotion(promotion, 20)
 
-      promotion =
-        Enum.reduce(1..100, promotion, fn _, promo ->
-          {:ok, updated} = Pricing.increment_promotion_usage(promo, authorize?: false)
-          updated
-        end)
-
-      assert promotion.usage == 100
-
-      assert {:ok, %Promotion{id: id}} =
-               Pricing.get_promotion_by_code("UNLIMITED", Date.utc_today())
-
+      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("UNLIMITED", Date.utc_today())
       assert id == promotion.id
     end
 
@@ -297,32 +252,13 @@ defmodule Edenflowers.Pricing.PromotionTest do
       product = generate(product(tax_rate_id: tax_rate.id))
       product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
 
-      {:ok, promotion} =
-        Promotion
-        |> Ash.Changeset.for_create(:create, %{
-          name: "Maxed Out Promo",
-          code: "MAXED",
-          discount_rate: "0.20",
-          minimum_cart_total: "0",
-          usage_limit: 10
-        })
-        |> Ash.create(authorize?: false)
-
-      Enum.each(1..10, fn _ ->
-        {:ok, _} = Pricing.increment_promotion_usage(promotion, authorize?: false)
-      end)
+      promotion = limited_promotion("MAXED", 10)
+      use_promotion(promotion, 10)
 
       order = Orders.create_for_checkout!(authorize?: false)
+      generate(line_item(order_id: order.id, product_variant_id: product_variant.id))
 
-      generate(
-        line_item(
-          order_id: order.id,
-          product_variant_id: product_variant.id
-        )
-      )
-
-      assert {:error, error} = Orders.add_promotion_with_code(order, "MAXED", authorize?: false)
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{}} = Orders.add_promotion_with_code(order, "MAXED", authorize?: false)
     end
   end
 

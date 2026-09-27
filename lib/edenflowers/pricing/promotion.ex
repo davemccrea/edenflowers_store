@@ -45,16 +45,12 @@ defmodule Edenflowers.Pricing.Promotion do
     create :create do
       accept [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
     end
-
-    update :increment_usage do
-      change increment(:usage)
-    end
   end
 
   policies do
     # System bypass is scoped to the actions our jobs/webhooks actually invoke.
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:increment_usage, :create_for_newsletter])
+      authorize_if action(:create_for_newsletter)
       authorize_if action_type(:read)
     end
 
@@ -90,8 +86,19 @@ defmodule Edenflowers.Pricing.Promotion do
     attribute :minimum_cart_total, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :start_date, :date
     attribute :expiration_date, :date
-    attribute :usage, :integer, allow_nil?: false, default: 0
     attribute :usage_limit, :integer, allow_nil?: true
+  end
+
+  relationships do
+    has_many :orders, Edenflowers.Orders.Order
+  end
+
+  aggregates do
+    # Unauthorized so a guest checking a code still counts everyone's orders.
+    count :usage, :orders do
+      filter expr(state == :placed)
+      authorize? false
+    end
   end
 
   identities do
