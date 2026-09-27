@@ -26,6 +26,7 @@ defmodule Edenflowers.Orders.Order do
     :grand_total,
     :vat,
     :cart_effectively_empty?,
+    :newsletter_offer_hidden?,
     :promotion,
     :fulfillment_option,
     line_items: [:total]
@@ -500,11 +501,6 @@ defmodule Edenflowers.Orders.Order do
     attribute :customer_name, :string
     attribute :customer_email, :string
 
-    # Stamped at submit time from the resolved user's subscription state so the
-    # opt-in checkbox stays hidden when the customer returns to step 1 — the
-    # checkout actor can't read another user's record to recompute it live.
-    attribute :newsletter_offer_hidden?, :boolean, default: false, public?: false
-
     # Step 2 - Gift Options
     attribute :gift, :boolean, default: false
     attribute :card_message, :string
@@ -583,6 +579,9 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :vat, :decimal, Calculations.Vat
 
+    # False until step 1 assigns the customer.
+    calculate :newsletter_offer_hidden?, :boolean, expr(if(customer_newsletter_offer_hidden?, true, false))
+
     # A cart with only a card line item is presented as empty in the UI
     # (card controls are hidden in the cart sidebar) and shouldn't keep
     # checkout alive on its own. Treat it as effectively empty so reset
@@ -596,6 +595,12 @@ defmodule Edenflowers.Orders.Order do
     sum :items_total, :line_items, :total, default: Decimal.new("0")
     sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
+
+    # Unauthorized because the checkout actor, often a guest, can't read the
+    # order's user under the User read policy.
+    first :customer_newsletter_offer_hidden?, :user, :newsletter_offer_hidden? do
+      authorize? false
+    end
   end
 
   identities do
