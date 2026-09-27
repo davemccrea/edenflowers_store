@@ -219,7 +219,6 @@ defmodule Edenflowers.Orders.Order do
       validate {Validations.ValidateCustomerEmail, []}
       change {Changes.UpsertUserAndAssignToOrder, []}
       change transition_state(:gift_options)
-      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -230,7 +229,6 @@ defmodule Edenflowers.Orders.Order do
       validate {Validations.ValidateCardMessageLength, []}
       change {Changes.ClearGiftFields, []}
       change transition_state(:delivery)
-      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -251,24 +249,20 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.NormalizePhoneNumber, []}
       change {Changes.CalculateFulfillmentCost, []}
       change transition_state(:payment)
-      change load(@checkout_load)
       require_atomic? false
     end
 
     # Backward "edit" transitions
     update :return_to_contact_details do
       change transition_state(:contact_details)
-      change load(@checkout_load)
     end
 
     update :return_to_gift_options do
       change transition_state(:gift_options)
-      change load(@checkout_load)
     end
 
     update :return_to_delivery do
       change transition_state(:delivery)
-      change load(@checkout_load)
     end
 
     # Lifecycle transitions
@@ -301,13 +295,11 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.SnapshotFulfillmentMethod, []}
       change set_attribute(:fulfillment_date, nil)
       change {Changes.ClearDeliveryFields, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
     update :set_gift do
       accept [:gift]
-      change load(@checkout_load)
     end
 
     update :update_locale do
@@ -385,7 +377,6 @@ defmodule Edenflowers.Orders.Order do
       validate {Validations.ValidateMinimumCartTotal, []}
       change atomic_update(:promotion_id, expr(^arg(:promotion_id)))
       change {Changes.SnapshotPromotion, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -394,14 +385,12 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.LookupPromotionCode, []}
       change {Changes.SnapshotPromotion, []}
       validate {Validations.ValidateMinimumCartTotal, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
     update :clear_promotion do
       change atomic_update(:promotion_id, expr(nil))
       change {Changes.SnapshotPromotion, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
@@ -421,14 +410,12 @@ defmodule Edenflowers.Orders.Order do
     update :remove_card do
       change set_attribute(:card_message, nil)
       change {Changes.RemoveCardLineItem, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
     update :remove_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
       change {Changes.RemoveLineItem, []}
-      change load(@checkout_load)
       require_atomic? false
     end
 
