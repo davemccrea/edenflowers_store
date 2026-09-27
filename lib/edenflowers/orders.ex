@@ -92,7 +92,6 @@ defmodule Edenflowers.Orders do
       define :mark_payment_failed, action: :mark_payment_failed, args: [:payment_intent_id]
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
-      define :add_promotion_with_id, action: :add_promotion_with_id, args: [:promotion_id]
       define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
       define :clear_promotion, action: :clear_promotion
       define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
