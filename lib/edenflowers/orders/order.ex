@@ -118,11 +118,30 @@ defmodule Edenflowers.Orders.Order do
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
+
+      # InitStore opens a cart for every new browser session, crawlers included.
+      trigger :purge_abandoned_cart do
+        action :purge_abandoned_cart
+        queue :default
+        max_attempts 1
+        lock_for_update? false
+        scheduler_cron "0 3 * * *"
+        worker_module_name Edenflowers.Orders.Order.Workers.PurgeAbandonedCart
+        scheduler_module_name Edenflowers.Orders.Order.Schedulers.PurgeAbandonedCart
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(
+                state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
+                  updated_at < ago(1, :day)
+              )
+      end
     end
   end
 
   actions do
     defaults [:read]
+
+    destroy :purge_abandoned_cart
 
     read :for_checkout do
       argument :id, :uuid, allow_nil?: false
@@ -406,7 +425,8 @@ defmodule Edenflowers.Orders.Order do
                      :finalize_checkout,
                      :mark_payment_failed,
                      :send_confirmation_email,
-                     :reconcile_payment
+                     :reconcile_payment,
+                     :purge_abandoned_cart
                    ])
 
       authorize_if action_type(:read)
