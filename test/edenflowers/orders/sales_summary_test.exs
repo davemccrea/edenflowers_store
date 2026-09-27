@@ -37,4 +37,13 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
     assert summary.order_count == 2
     assert Decimal.equal?(summary.revenue, "79.50")
   end
+
+  test "reports zero for a range without paid orders" do
+    admin = generate(admin_user())
+
+    summary = Edenflowers.Orders.sales_summary!(~D[2026-09-01], ~D[2026-09-30], actor: admin)
+
+    assert summary.order_count == 0
+    assert Decimal.equal?(summary.revenue, 0)
+  end
 end
