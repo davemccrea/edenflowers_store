@@ -21,7 +21,8 @@ defmodule Edenflowers.Catalog.ProductCategory do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read, :destroy, :create, :update]
+    default_accept [:slug, :visibility, :name, :description, :translations]
 
     read :get_all do
       filter expr(visibility == :public)
@@ -31,14 +32,6 @@ defmodule Edenflowers.Catalog.ProductCategory do
       argument :slug, :string, allow_nil?: false
       filter expr(slug == ^arg(:slug) and visibility == :public)
       get? true
-    end
-
-    create :create do
-      accept [:slug, :visibility, :name, :description, :translations]
-    end
-
-    update :update do
-      accept [:slug, :visibility, :name, :description, :translations]
     end
   end
 

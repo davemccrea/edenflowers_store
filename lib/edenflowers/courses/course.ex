@@ -23,9 +23,9 @@ defmodule Edenflowers.Courses.Course do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read, :destroy, :create, :update]
 
-    @accept [
+    default_accept [
       :name,
       :description,
       :location_name,
@@ -40,14 +40,6 @@ defmodule Edenflowers.Courses.Course do
       :tax_rate_id,
       :translations
     ]
-
-    create :create do
-      accept @accept
-    end
-
-    update :update do
-      accept @accept
-    end
 
     read :upcoming do
       filter expr(date >= today())
