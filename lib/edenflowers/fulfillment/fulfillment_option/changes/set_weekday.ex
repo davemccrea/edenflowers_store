@@ -17,8 +17,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeekday do
 
   alias Edenflowers.Fulfillment.{FulfillmentOption, KeyDates, Weekday}
 
-  @weekdays [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
-
   @impl true
   def change(changeset, _opts, _context) do
     weekday = Ash.Changeset.get_argument(changeset, :weekday)
@@ -45,7 +43,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeekday do
           disabled_dates: [Date.t()]
         }
   def set_weekday(%FulfillmentOption{} = option, weekday, direction)
-      when weekday in @weekdays and direction in [:on, :off] do
+      when direction in [:on, :off] do
     currently_available? = weekday in option.available_days
 
     available =
