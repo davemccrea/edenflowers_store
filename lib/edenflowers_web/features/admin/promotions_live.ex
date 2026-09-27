@@ -1,0 +1,97 @@
+defmodule EdenflowersWeb.Admin.PromotionsLive do
+  use EdenflowersWeb, :live_view
+  use Cinder.UrlSync
+
+  import EdenflowersWeb.Admin.Components
+
+  alias EdenflowersWeb.Layouts
+  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Format
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+
+  @impl true
+  def mount(_params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:page_title, ~t"Promotions")
+     |> assign(:locale, Localize.get_locale())}
+  end
+
+  @impl true
+  def handle_params(params, uri, socket) do
+    {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page width="full">
+        <.admin_page_header title={~t"Promotions"}>
+          <:actions>
+            <.link navigate={~p"/admin/promotions/new"} class="btn btn-sm">
+              <.icon name="hero-plus" class="h-4 w-4" />
+              {~t"New promotion"}
+            </.link>
+          </:actions>
+        </.admin_page_header>
+
+        <Cinder.collection
+          id="promotions-table"
+          resource={Promotion}
+          actor={@current_user}
+          query_opts={[load: [:usage, :newsletter?]]}
+          url_state={@url_state}
+          show_filters={:toggle}
+          sort_mode="exclusive"
+          page_size={[default: 25, options: [10, 25, 50, 100]]}
+          theme={EdenflowersWeb.Admin.CinderTheme}
+          click={fn promotion -> JS.navigate(~p"/admin/promotions/#{promotion.id}") end}
+        >
+          <:col :let={promotion} field="name" search sort={[cycle: [:asc, :desc]]} label={~t"Name"}>
+            <.link navigate={~p"/admin/promotions/#{promotion.id}"} class="font-medium hover:underline">
+              {promotion.name}
+            </.link>
+          </:col>
+          <:col :let={promotion} field="code" search sort label={~t"Code"}>
+            <span class="font-mono">{promotion.code}</span>
+          </:col>
+          <:col
+            :let={promotion}
+            field="newsletter?"
+            filter={[
+              type: :select,
+              label: ~t"Source",
+              prompt: ~t"All",
+              options: [{~t"Created here", false}, {~t"Newsletter", true}]
+            ]}
+            label={~t"Source"}
+          >
+            <span :if={promotion.newsletter?} class="badge badge-sm admin-badge-neutral font-medium">
+              {~t"Newsletter"}
+            </span>
+          </:col>
+          <:col :let={promotion} field="discount_rate" sort label={~t"Discount"}>
+            <span class="tabular-nums">{Format.percentage(promotion.discount_rate, @locale)}</span>
+          </:col>
+          <:col :let={promotion} field="minimum_cart_total" sort label={~t"Minimum"}>
+            <span class="whitespace-nowrap tabular-nums">{Format.currency(promotion.minimum_cart_total, @locale)}</span>
+          </:col>
+          <:col :let={promotion} field="start_date" sort label={~t"Starts"}>
+            <span class="whitespace-nowrap">{Format.date(promotion.start_date, @locale)}</span>
+          </:col>
+          <:col :let={promotion} field="expiration_date" sort label={~t"Expires"}>
+            <span class="whitespace-nowrap">{Format.date(promotion.expiration_date, @locale)}</span>
+          </:col>
+          <:col :let={promotion} field="usage" sort label={~t"Used"}>
+            <span class="tabular-nums">
+              {promotion.usage}<span :if={promotion.usage_limit}> / {promotion.usage_limit}</span>
+            </span>
+          </:col>
+        </Cinder.collection>
+      </.admin_page>
+    </Layouts.admin>
+    """
+  end
+end
