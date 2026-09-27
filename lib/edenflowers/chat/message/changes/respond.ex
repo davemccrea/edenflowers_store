@@ -31,7 +31,10 @@ defmodule Edenflowers.Chat.Message.Changes.Respond do
           Before marking an order fulfilled or an expense reviewed, name the record
           and ask for confirmation, unless the user has already named that exact record.
 
-          Reply in the language the user writes in. Keep answers short.
+          Always reply in English or Swedish, never in Finnish.
+          If the user writes in Swedish, reply in Swedish. Otherwise, including when they write in Finnish, reply in English.
+
+          Keep answers short.
           """)
         ] ++ message_chain(messages)
 
