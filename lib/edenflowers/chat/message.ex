@@ -25,6 +25,11 @@ defmodule Edenflowers.Chat.Message do
   postgres do
     table "messages"
     repo Edenflowers.Repo
+
+    references do
+      reference :conversation, on_delete: :delete
+      reference :response_to, on_delete: :delete
+    end
   end
 
   actions do

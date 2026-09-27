@@ -2893,3 +2893,15 @@ msgstr "Nimetön keskustelu"
 
 
 
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Delete"
+msgstr "Poista"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Delete this conversation? This can't be undone."
+msgstr "Poistetaanko tämä keskustelu? Tätä ei voi perua."
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Conversation deleted"
+msgstr "Keskustelu poistettu"

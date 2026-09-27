@@ -16,6 +16,7 @@ defmodule Edenflowers.Chat do
       define :create_conversation, action: :create
       define :get_conversation, action: :read, get_by: [:id]
       define :my_conversations
+      define :delete_conversation, action: :destroy
     end
 
     resource Edenflowers.Chat.Message do
