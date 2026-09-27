@@ -278,6 +278,32 @@ defmodule Edenflowers.Orders.OrderTest do
     assert reloaded.vat_breakdown == order.vat_breakdown
   end
 
+  test "finalize_checkout places an order past its promotion's usage limit and logs it" do
+    promotion = generate(promotion(usage_limit: 1))
+    use_promotion(promotion)
+    order = generate(order(state: :payment, payment_intent_id: "pi_test", promotion_id: promotion.id))
+
+    log =
+      capture_log(fn ->
+        assert {:ok, %{state: :placed}} =
+                 Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+      end)
+
+    assert log =~ "past its usage limit"
+  end
+
+  test "finalize_checkout logs nothing for a promotion within its usage limit" do
+    promotion = generate(promotion(usage_limit: 1))
+    order = generate(order(state: :payment, payment_intent_id: "pi_test", promotion_id: promotion.id))
+
+    log =
+      capture_log(fn ->
+        Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+      end)
+
+    refute log =~ "usage limit"
+  end
+
   # InitStore opens a cart per browser session, so the reference is minted at
   # placement rather than at creation. The database used to guarantee a placed
   # order had one via NOT NULL; these two tests guarantee it now.
