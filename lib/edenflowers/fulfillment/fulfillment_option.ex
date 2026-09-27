@@ -110,7 +110,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     update :set_weekday do
       description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per Changes.SetWeekday."
       require_atomic? false
-      argument :weekday, :atom, allow_nil?: false
+      argument :weekday, :atom, allow_nil?: false, constraints: [one_of: Edenflowers.Fulfillment.Weekday.all()]
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
       change Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeekday
     end
@@ -126,8 +126,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
     update :reset_calendar do
       description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
-      require_atomic? false
-      change Edenflowers.Fulfillment.FulfillmentOption.Changes.ResetCalendar
+      change set_attribute(:available_days, Edenflowers.Fulfillment.Weekday.all())
+      change set_attribute(:enabled_dates, [])
+      change set_attribute(:disabled_dates, [])
     end
 
     action :calculate_delivery, :map do
@@ -268,7 +269,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :order_deadline, :time, public?: true
 
     attribute :available_days, {:array, :atom},
-      default: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+      default: Edenflowers.Fulfillment.Weekday.all(),
       public?: true
 
     attribute :enabled_dates, {:array, :date}, default: [], public?: true
