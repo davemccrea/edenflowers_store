@@ -81,7 +81,6 @@ defmodule Edenflowers.Orders do
       define :list_my_orders, action: :mine
       define :list_open_orders, action: :open
       define :list_orders_to_fulfil, action: :to_fulfil
-      define :list_paid_orders_since, action: :paid_since, args: [:since]
       define :sales_summary, action: :sales_summary, args: [:from, :to]
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options

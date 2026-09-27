@@ -35,14 +35,6 @@ defmodule Edenflowers.Catalog.Product do
       prepare Edenflowers.Catalog.Product.Preparations.VisibleInStore
     end
 
-    read :get_by_category_slug do
-      argument :slug, :string, allow_nil?: false
-
-      filter expr(product_category.slug == ^arg(:slug))
-      prepare Edenflowers.Catalog.Product.Preparations.VisibleInStore
-      prepare build(load: [:tax_rate])
-    end
-
     create :create do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
       argument :fulfillment_option_ids, {:array, :uuid}

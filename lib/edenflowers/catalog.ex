@@ -24,7 +24,6 @@ defmodule Edenflowers.Catalog do
       define :list_store_products, action: :for_store
       define :list_featured_products, action: :featured
       define :list_products_by_category, action: :by_category, args: [:category_id]
-      define :list_products_by_category_slug, action: :get_by_category_slug, args: [:slug]
       define :get_product_by_id, action: :read, get_by: [:id]
     end
 
