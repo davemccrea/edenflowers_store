@@ -53,12 +53,30 @@ defmodule Edenflowers.Catalog.Product do
     create :create do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
       argument :fulfillment_option_ids, {:array, :uuid}
+      argument :product_variants, {:array, :map}
 
       change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
+
+      change manage_relationship(:product_variants,
+               type: :direct_control,
+               on_no_match: {:create, :create},
+               on_match: {:update, :update},
+               on_missing: :ignore
+             )
     end
 
     update :update do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
+      argument :product_variants, {:array, :map}
+      require_atomic? false
+
+      # A size left out of the form was removed; destroying archives it.
+      change manage_relationship(:product_variants,
+               type: :direct_control,
+               on_no_match: {:create, :create},
+               on_match: {:update, :update},
+               on_missing: {:destroy, :destroy}
+             )
     end
   end
 
