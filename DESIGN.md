@@ -211,7 +211,6 @@ A shadow is permitted only when it carries information: something genuinely floa
 ### Shadow Vocabulary
 - **Overflow cue** (`box-shadow: inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)`): on `.admin-table-scroll` below `lg`, telling the user a compact admin table continues horizontally. A scroll-driven animation shows it only while the table actually overflows and fades it out at the last column; browsers without `animation-timeline` get no cue. Functional — keep.
 - **Lightbox credit** (`text-shadow: 0 1px 3px rgb(0 0 0 / 0.6)`): keeps the photographer credit legible over an arbitrary photograph in PhotoSwipe. Functional — keep.
-- **Drift:** the portrait on `/maternity` carries `shadow-md`. It is decorative, it frames a photograph, and it should be removed.
 
 ### Named Rules
 

@@ -34,7 +34,7 @@ The home page currently also claims "we keep our delivery rates among the lowest
 - **Region:** Vaasa and Korsholm. Delivery is distance-priced from the shop; funeral flowers are delivered to churches and chapels in both municipalities.
 - **Languages:** Swedish, Finnish and English. Ostrobothnia is genuinely bilingual — a page that works only in English is broken for most of the actual customer base. Locale is negotiated from session then `Accept-Language`, defaulting to `en-GB`.
 - **Occasions drive demand:** Valentine's / Friend's Day (14 Feb), Women's Day (8 Mar), Mother's Day (2nd Sunday in May), Father's Day (2nd Sunday in November) are coded as key dates and spike both the storefront and the fulfillment calendar.
-- **Current state:** the shop is closed for maternity leave. A maintenance plug redirects all traffic to `/maternity`, a bilingual sv/fi holding page pointing large-event enquiries at info@edenflowers.fi. This is a temporary operating state, not the product.
+- **Maintenance mode:** when `MAINTENANCE_MODE` is set, a plug redirects all traffic to `/back-soon`, a bilingual sv/fi page saying the site is being refreshed, with Jennie's email and phone. A temporary operating state, not the product.
 - **Shop hours:** Mon–Fri 09:00–17:00, Sat 10:00–15:00.
 - **Contact:** info@edenflowers.fi, +358 40 220 9494, Myrvägen 1, 65230 Vasa.
 

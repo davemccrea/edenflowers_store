@@ -75,4 +75,4 @@ Servers are provisioned by [phoenix-ansible](https://github.com/davemccrea/phoen
 
 ## Maintenance mode
 
-`MAINTENANCE_MODE=true` redirects all visitors to `/maternity`. To preview the site anyway, set `MAINTENANCE_BYPASS_SECRET` and visit any URL with `?preview=<secret>`; a session cookie keeps the bypass for later requests.
+`MAINTENANCE_MODE=true` redirects all visitors to `/back-soon`.
