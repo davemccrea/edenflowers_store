@@ -9,13 +9,13 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   will live in a separate, customer-scoped resource.
   """
 
+  alias Edenflowers.Fulfillment.Weekday
+
   @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
   @type key_date :: %{date: Date.t(), name: String.t(), icon: String.t(), colour_class: String.t()}
 
   @typedoc "The visual decoration for a key date, returned by `lookup_for/1`."
   @type decoration :: %{icon: String.t(), colour_class: String.t()}
-
-  @weekdays %{monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7}
 
   # `colour_class` is the Tailwind text colour applied to the heart in the
   # calendar watermark. Each date gets its own colour so the four key dates
@@ -58,20 +58,20 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   Key dates falling on `weekday` for the current and following year. The
   two-year lookahead matches the calendar's visible horizon.
   """
-  @spec dates_for_weekday(Edenflowers.Fulfillment.Weekday.t()) :: [Date.t()]
+  @spec dates_for_weekday(Weekday.t()) :: [Date.t()]
   def dates_for_weekday(weekday) do
     year = Date.utc_today().year
 
     [year, year + 1]
     |> Enum.flat_map(&for_year/1)
     |> Enum.map(& &1.date)
-    |> Enum.filter(&(Edenflowers.Fulfillment.Weekday.from_date(&1) == weekday))
+    |> Enum.filter(&(Weekday.from_date(&1) == weekday))
   end
 
   defp materialise({:fixed, month, day}, year), do: Date.new!(year, month, day)
 
   defp materialise({:nth_weekday, month, weekday, n}, year) do
-    target = Map.fetch!(@weekdays, weekday)
+    target = Weekday.to_integer(weekday)
     first = Date.new!(year, month, 1)
     offset = Integer.mod(target - Date.day_of_week(first), 7)
     Date.add(first, offset + (n - 1) * 7)

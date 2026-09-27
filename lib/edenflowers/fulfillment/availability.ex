@@ -5,7 +5,8 @@ defmodule Edenflowers.Fulfillment.Availability do
   `unavailable_reason/3` is the single booking rule; the customer and admin
   cell-state functions project it onto the coarser vocabularies each calendar
   renders. The editor that *writes* these attributes lives in
-  `FulfillmentOption.Changes.{ToggleDate, SetWeekday, SetWeek, ResetCalendar}`.
+  `FulfillmentOption.Changes.{ToggleDate, SetWeekday, SetWeek}` and the
+  `:reset_calendar` action.
   """
 
   alias Edenflowers.Fulfillment.FulfillmentOption

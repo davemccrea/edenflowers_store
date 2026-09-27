@@ -6,6 +6,11 @@ defmodule Edenflowers.Fulfillment.Weekday do
   @typedoc "Day-of-week atom matching the values stored in `FulfillmentOption.available_days`."
   @type t :: :monday | :tuesday | :wednesday | :thursday | :friday | :saturday | :sunday
 
+  @all [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
+
+  @spec all() :: [t()]
+  def all, do: @all
+
   @spec from_date(Date.t()) :: t()
   def from_date(%Date{} = date), do: from_integer(Date.day_of_week(date))
 
