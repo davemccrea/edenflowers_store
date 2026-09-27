@@ -25,6 +25,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
 
+  @edit_steps %{
+    "contact_details" => {:contact_details, &Orders.return_to_contact_details!/2},
+    "gift_options" => {:gift_options, &Orders.return_to_gift_options!/2},
+    "delivery" => {:delivery, &Orders.return_to_delivery!/2}
+  }
+
   defp submit_action_for(:contact_details), do: :submit_contact_details
   defp submit_action_for(:gift_options), do: :submit_gift_options
   defp submit_action_for(:delivery), do: :submit_delivery
@@ -528,8 +534,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp size_label(:small), do: gettext("Small")
   defp size_label(:medium), do: gettext("Medium")
   defp size_label(:large), do: gettext("Large")
-  defp size_label(size) when is_atom(size), do: size |> Atom.to_string() |> String.capitalize()
-  defp size_label(_), do: ""
+  defp size_label(nil), do: ""
 
   def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
@@ -598,19 +603,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  def handle_event("edit_step", %{"state" => "contact_details"}, socket) do
-    Orders.return_to_contact_details!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), :contact_details)}
-  end
-
-  def handle_event("edit_step", %{"state" => "gift_options"}, socket) do
-    Orders.return_to_gift_options!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), :gift_options)}
-  end
-
-  def handle_event("edit_step", %{"state" => "delivery"}, socket) do
-    Orders.return_to_delivery!(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), :delivery)}
+  def handle_event("edit_step", %{"state" => state}, socket) do
+    {state, return_to} = Map.fetch!(@edit_steps, state)
+    return_to.(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), state)}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
