@@ -11,7 +11,6 @@ defmodule Edenflowers.Accounts do
     resource Edenflowers.Accounts.Token
 
     resource Edenflowers.Accounts.User do
-      define :get_user_by_subject, action: :get_by_subject, args: [:subject]
       define :get_user_by_email, action: :get_by_email, args: [:email]
       define :upsert_user, action: :upsert, args: [:email, :name]
       define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]

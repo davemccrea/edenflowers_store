@@ -23,6 +23,5 @@ defmodule Edenflowers.Fulfillment do
     end
 
     resource Edenflowers.Fulfillment.ProductFulfillmentOption
-    resource Edenflowers.Fulfillment.OpeningHours
   end
 end
