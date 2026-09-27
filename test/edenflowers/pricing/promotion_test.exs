@@ -200,7 +200,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
           )
         )
 
-      {:ok, _order} = Orders.finalize_checkout(order.id, authorize?: false)
+      {:ok, _order} = Orders.finalize_checkout(order.id, order.payment_intent_id, authorize?: false)
 
       # Drain Oban queue so the IncrementPromotionUsage job runs synchronously.
       Oban.drain_queue(queue: :default)

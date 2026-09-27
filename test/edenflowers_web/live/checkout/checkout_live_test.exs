@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       client_secret: "pi_test_secret_#{:rand.uniform(1_000_000)}"
     }
 
-    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _order ->
+    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata ->
       {:ok, mock_payment_intent}
     end)
 

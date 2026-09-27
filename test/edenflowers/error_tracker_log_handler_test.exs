@@ -27,11 +27,11 @@ defmodule Edenflowers.ErrorTrackerLogHandlerTest do
   end
 
   test "only reports errors logged by our own code" do
-    assert ErrorTrackerLogHandler.reportable?(%{mfa: {Edenflowers.Orders.Payment, :setup_payment, 2}})
+    assert ErrorTrackerLogHandler.reportable?(%{mfa: {Edenflowers.Payments, :setup, 2}})
     assert ErrorTrackerLogHandler.reportable?(%{mfa: {EdenflowersWeb.CheckoutLive, :handle_event, 3}})
 
     refute ErrorTrackerLogHandler.reportable?(%{mfa: {Ecto.Adapters.SQL, :query, 4}})
-    refute ErrorTrackerLogHandler.reportable?(%{mfa: {Edenflowers.Orders.Payment, :x, 0}, crash_reason: {:boom, []}})
+    refute ErrorTrackerLogHandler.reportable?(%{mfa: {Edenflowers.Payments, :x, 0}, crash_reason: {:boom, []}})
     refute ErrorTrackerLogHandler.reportable?(%{})
   end
 end

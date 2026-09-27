@@ -8,13 +8,9 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
 
   use Oban.Worker, max_attempts: 1
 
-  require Ash.Query
   require Logger
-  import Edenflowers.Actors
 
-  alias Edenflowers.Courses
-  alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Orders.{Order, Payment}
+  alias Edenflowers.Payments
 
   # Give the webhook time to arrive before stepping in.
   @grace_period_minutes 5
@@ -23,80 +19,32 @@ defmodule Edenflowers.Orders.Workers.ReconcileStripePayments do
 
   @impl true
   def perform(_job) do
-    Enum.each(stale_payment_orders(), &reconcile/1)
-    Enum.each(stale_course_registrations(), &reconcile_registration/1)
-  end
-
-  defp stale_payment_orders do
     now = DateTime.utc_now()
     settled_before = DateTime.add(now, -@grace_period_minutes, :minute)
     abandoned_before = DateTime.add(now, -@lookback_days, :day)
 
-    Order
-    |> Ash.Query.filter(
-      state == :payment and not is_nil(payment_intent_id) and
-        updated_at < ^settled_before and updated_at > ^abandoned_before
-    )
-    |> Ash.read!(actor: system_actor())
-  end
-
-  defp stale_course_registrations do
-    now = DateTime.utc_now()
-    settled_before = DateTime.add(now, -@grace_period_minutes, :minute)
-    abandoned_before = DateTime.add(now, -@lookback_days, :day)
-
-    CourseRegistration
-    |> Ash.Query.filter(
-      status == :pending and not is_nil(payment_intent_id) and
-        updated_at < ^settled_before and updated_at > ^abandoned_before
-    )
-    |> Ash.read!(actor: system_actor())
-  end
-
-  defp reconcile_registration(registration) do
-    with {:ok, %{status: "succeeded"} = payment_intent} <- stripe_api().retrieve_payment_intent(registration),
-         {:ok, %CourseRegistration{}} <- Courses.Payment.complete_payment(registration.id, payment_intent) do
-      Logger.error(
-        "Reconciliation confirmed course registration #{registration.id} for succeeded PaymentIntent " <>
-          "#{payment_intent.id}. The Stripe payment_intent.succeeded webhook did not arrive; check the webhook endpoint."
-      )
-    else
-      {:ok, _not_succeeded_or_already_confirmed} ->
-        :ok
-
-      {:error, reason} ->
-        Logger.error("Reconciliation failed for course registration #{registration.id}: #{inspect(reason)}")
+    for adapter <- Payments.adapters(),
+        payable <- adapter.awaiting_payment(settled_before, abandoned_before) do
+      reconcile(adapter, payable)
     end
+
+    :ok
   end
 
-  defp reconcile(order) do
-    case stripe_api().retrieve_payment_intent(order) do
-      {:ok, %{status: "succeeded"} = payment_intent} ->
-        complete_payment(order, payment_intent)
-
-      {:ok, _not_succeeded} ->
-        :ok
-
-      {:error, reason} ->
-        Logger.error("Reconciliation: failed to retrieve PaymentIntent for order #{order.id}: #{inspect(reason)}")
-    end
-  end
-
-  defp complete_payment(order, payment_intent) do
-    case Payment.complete_payment(order.id, payment_intent) do
-      {:ok, :already_placed} ->
-        :ok
-
-      {:ok, _placed} ->
+  defp reconcile(adapter, payable) do
+    case Payments.reconcile(payable) do
+      {:ok, :completed} ->
         Logger.error(
-          "Reconciliation placed order #{order.id} for succeeded PaymentIntent #{payment_intent.id}. " <>
-            "The Stripe payment_intent.succeeded webhook did not arrive; check the webhook endpoint."
+          "Reconciliation completed #{adapter.metadata_key()} #{payable.id} for its succeeded PaymentIntent " <>
+            "#{payable.payment_intent_id}. The Stripe payment_intent.succeeded webhook did not arrive; " <>
+            "check the webhook endpoint."
         )
 
+      {:ok, _already_completed_or_not_succeeded} ->
+        :ok
+
       {:error, reason} ->
-        Logger.error("Reconciliation failed to place order #{order.id}: #{inspect(reason)}")
+        Logger.error("Reconciliation failed for #{adapter.metadata_key()} #{payable.id}: #{inspect(reason)}")
     end
   end
-
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.External.StripeAPI)
 end

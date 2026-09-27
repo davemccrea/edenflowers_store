@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
+  alias Edenflowers.Payments
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -194,7 +195,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   def handle_event("book", %{"form" => params}, socket) do
     with {:ok, registration} <- AshPhoenix.Form.submit(socket.assigns.form, params: params),
-         {:ok, registration, client_secret} <- Courses.Payment.setup_payment(registration) do
+         {:ok, registration, client_secret} <- Payments.setup(registration, nil) do
       {:noreply, assign(socket, registration: registration, client_secret: client_secret)}
     else
       {:error, %Phoenix.HTML.Form{} = form} ->
