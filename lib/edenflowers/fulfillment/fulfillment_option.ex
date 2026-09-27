@@ -98,7 +98,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     update :set_weekday do
       description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per Changes.SetWeekday."
       require_atomic? false
-      argument :weekday, :atom, allow_nil?: false, constraints: [one_of: Edenflowers.Fulfillment.Weekday.all()]
+      argument :weekday, Edenflowers.Fulfillment.Weekday, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
       change Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeekday
     end
@@ -235,7 +235,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :same_day, :boolean, default: false, public?: true
     attribute :order_deadline, :time, public?: true
 
-    attribute :available_days, {:array, :atom},
+    attribute :available_days, {:array, Edenflowers.Fulfillment.Weekday},
       default: Edenflowers.Fulfillment.Weekday.all(),
       public?: true
 
