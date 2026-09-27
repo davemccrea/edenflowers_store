@@ -110,8 +110,8 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :set_newsletter_promo do
-      argument :newsletter_promo_id, :uuid, allow_nil?: false
-      change set_attribute(:newsletter_promo_id, arg(:newsletter_promo_id))
+      accept [:newsletter_promo_id]
+      require_attributes [:newsletter_promo_id]
     end
 
     create :register_with_google do
