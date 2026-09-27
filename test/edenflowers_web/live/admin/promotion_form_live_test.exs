@@ -39,6 +39,16 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
     assert html =~ "Newsletter Welcome"
   end
 
+  test "generates a code without losing other input", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
+
+    view |> form("#promotion-form", form: %{name: "Spring sale"}) |> render_change()
+    view |> element("button[phx-click=generate_code]") |> render_click()
+
+    assert view |> element("input[name='form[name]'][value='Spring sale']") |> has_element?()
+    assert view |> element("input[name='form[code]']") |> render() =~ ~r/value="[0-9A-F]{6}"/
+  end
+
   test "creates a promotion with the discount entered as a percentage", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
 

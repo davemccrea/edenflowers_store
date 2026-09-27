@@ -6,7 +6,7 @@ defmodule Edenflowers.Pricing.Promotion.Changes.SetNewsletterDefaults do
     today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
     Ash.Changeset.force_change_attributes(changeset,
-      code: :crypto.strong_rand_bytes(3) |> Base.encode16(),
+      code: Edenflowers.Pricing.Promotion.generate_code(),
       name: "Newsletter Welcome",
       discount_rate: Decimal.new("0.15"),
       minimum_cart_total: Decimal.new("0"),
