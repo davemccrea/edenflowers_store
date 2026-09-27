@@ -14,9 +14,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
-  alias Edenflowers.Fulfillment.Availability
-  alias Edenflowers.Fulfillment.Fee
-
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
@@ -122,34 +119,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     action :calculate_delivery, :map do
       argument :delivery_address, :string, allow_nil?: false
       argument :fulfillment_option_id, :uuid, allow_nil?: false
-
-      run fn input, _context ->
-        here_api = Application.get_env(:edenflowers, :here_api, Edenflowers.External.HereAPI)
-        delivery_address = input.arguments.delivery_address
-        option_id = input.arguments.fulfillment_option_id
-
-        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false),
-             {:ok, {geocoded_address, position, here_id}} <- here_api.geocode(delivery_address),
-             {:ok, distance} <- here_api.route_distance(position) do
-          case Fee.calculate(option, distance) do
-            %{error: nil, fulfillment_fee: fulfillment_fee} ->
-              {:ok,
-               %{
-                 error: nil,
-                 geocoded_address: geocoded_address,
-                 position: position,
-                 here_id: here_id,
-                 distance: distance,
-                 fulfillment_fee: fulfillment_fee
-               }}
-
-            %{error: reason} ->
-              {:ok, %{error: reason}}
-          end
-        else
-          {:error, reason} -> {:ok, %{error: reason}}
-        end
-      end
+      run Edenflowers.Fulfillment.FulfillmentOption.Actions.CalculateDelivery
     end
 
     action :fulfill_on_date, :atom do
@@ -161,18 +131,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       argument :date, :date, allow_nil?: false
       argument :now, :utc_datetime, default: &DateTime.utc_now/0
-
-      run fn input, _context ->
-        option_id = input.arguments.fulfillment_option_id
-        date = input.arguments.date
-        # `unavailable_reason/3` expects Helsinki-local time for the same-day
-        # deadline comparison, so normalise the incoming UTC `now`.
-        now = DateTime.shift_zone!(input.arguments.now, "Europe/Helsinki")
-
-        with {:ok, option} <- Ash.get(__MODULE__, option_id, authorize?: false) do
-          {:ok, Availability.unavailable_reason(option, date, now)}
-        end
-      end
+      run Edenflowers.Fulfillment.FulfillmentOption.Actions.FulfillOnDate
     end
   end
 
