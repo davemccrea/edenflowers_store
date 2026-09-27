@@ -1,10 +1,22 @@
 defmodule Edenflowers.Catalog do
   use Ash.Domain,
     otp_app: :edenflowers,
-    extensions: [AshAdmin.Domain]
+    extensions: [AshAdmin.Domain, AshAi]
 
   admin do
     show?(true)
+  end
+
+  tools do
+    tool :list_store_products, Edenflowers.Catalog.Product, :for_store do
+      description "Products visible in the web shop, with category, sizes, prices and stock."
+      select [:id, :name, :description, :featured]
+
+      load product_category: [:name],
+           product_variants: [:size, :price, :stock_trackable, :stock_quantity]
+
+      load_strict? true
+    end
   end
 
   resources do
