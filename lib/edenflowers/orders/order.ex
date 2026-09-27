@@ -343,15 +343,10 @@ defmodule Edenflowers.Orders.Order do
         |> Ash.Query.filter(
           state == :placed and payment_status == :paid and ordered_at >= ^from and ordered_at < ^until
         )
-        |> Ash.read(scope: context)
-        |> case do
-          {:ok, orders} ->
-            revenue = orders |> Enum.map(& &1.amount_paid) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
-            {:ok, %{order_count: length(orders), revenue: revenue}}
-
-          error ->
-            error
-        end
+        |> Ash.aggregate(
+          [{:order_count, :count}, {:revenue, :sum, field: :amount_paid, default: Decimal.new("0.00")}],
+          scope: context
+        )
       end
     end
 
@@ -407,7 +402,6 @@ defmodule Edenflowers.Orders.Order do
       change Changes.RemoveLineItem
       require_atomic? false
     end
-
   end
 
   policies do
