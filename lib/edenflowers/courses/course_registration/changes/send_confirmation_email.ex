@@ -37,22 +37,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
 
   defp deliver(registration) do
     with {:ok, pdf} <- Receipt.generate(registration),
-         {:ok, _result} <- registration |> build_email(pdf) |> Mailer.deliver() do
-      {:ok, %{receipt_emailed_at: DateTime.utc_now(), receipt_sha256: sha256_hex(pdf)}}
+         {:ok, _result} <-
+           registration
+           |> Email.course_confirmation()
+           |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
+           |> Mailer.deliver() do
+      {:ok, %{receipt_emailed_at: DateTime.utc_now(), receipt_sha256: Receipt.sha256(pdf)}}
     end
-  end
-
-  defp build_email(registration, pdf) do
-    attachment =
-      Swoosh.Attachment.new(
-        {:data, pdf},
-        filename: "eden-flowers-#{registration.reference}.pdf",
-        content_type: "application/pdf"
-      )
-
-    registration
-    |> Email.course_confirmation()
-    |> Swoosh.Email.attachment(attachment)
   end
 
   defp load_for_send(registration) do
@@ -66,9 +57,5 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
   defp translate_course(registration) do
     locale = String.to_existing_atom(registration.locale)
     Map.update!(registration, :course, &Translations.translate(&1, locale))
-  end
-
-  defp sha256_hex(bytes) do
-    :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
   end
 end
