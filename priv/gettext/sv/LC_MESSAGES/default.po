@@ -2893,3 +2893,15 @@ msgstr "Namnlöst samtal"
 
 
 
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Delete"
+msgstr "Radera"
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Delete this conversation? This can't be undone."
+msgstr "Radera det här samtalet? Det går inte att ångra."
+
+#: lib/edenflowers_web/features/admin/chat_live.ex
+msgid "Conversation deleted"
+msgstr "Samtalet raderades"
