@@ -121,12 +121,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     # Jennie ticks off manual bookings as people pay at the course.
-    # require_atomic? false: AttributeEquals.atomic compiles `value != nil`
-    # (always false in SQL); the non-atomic path uses is_nil/1 correctly.
     update :mark_paid do
-      validate attribute_equals(:paid_at, nil), message: "already marked as paid"
+      validate absent(:paid_at), message: "already marked as paid"
       change set_attribute(:paid_at, &DateTime.utc_now/0)
-      require_atomic? false
     end
 
     # When someone in a group drops out. Removing the last seat is a cancel.
