@@ -430,8 +430,8 @@ msgstr "%{name}s telefonnummer *"
 
 #: lib/edenflowers/fulfillment/delivery_error.ex:11
 #, elixir-autogen, elixir-format
-msgid "Delivery address required"
-msgstr "Leveransadress krävs"
+msgid "This field is required"
+msgstr "Det här fältet är obligatoriskt"
 
 #: lib/edenflowers_web/features/checkout/components/address_input.ex:198
 #, elixir-autogen, elixir-format
