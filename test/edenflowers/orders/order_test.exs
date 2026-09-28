@@ -318,7 +318,7 @@ defmodule Edenflowers.Orders.OrderTest do
     assert {:ok, order} =
              Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
 
-    assert order.order_reference =~ ~r/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{6}$/
+    assert order.order_reference =~ ~r/^\d+$/
   end
 
   describe "Gift flow validation" do

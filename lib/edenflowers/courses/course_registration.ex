@@ -83,6 +83,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:status, :pending)
       change Changes.UpsertUser
       change Changes.ReserveSeats
+      change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
     end
 
     # For people who pay Jennie at the course, so they hold a seat without
@@ -96,6 +97,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change Changes.UpsertUser
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
+      change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
     end
 
@@ -212,7 +214,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     attribute :status, __MODULE__.Status, allow_nil?: false, default: :pending
 
-    # Receipt number, from the same generator as order references.
+    # Receipt number, from the same sequence as order references.
     attribute :reference, :string, allow_nil?: false
 
     # Snapshotted by ReserveSeats, so a later edit to the course can't change
@@ -229,6 +231,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :receipt_sha256, :string
 
     timestamps()
+  end
+
+  identities do
+    identity :unique_reference, [:reference]
   end
 
   relationships do

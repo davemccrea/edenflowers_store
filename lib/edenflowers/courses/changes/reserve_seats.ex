@@ -13,7 +13,6 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
 
   alias Ash.Error.Changes.InvalidAttribute
   alias Edenflowers.Courses.Course
-  alias Edenflowers.Orders.Changes.GenerateOrderReference
 
   @impl true
   def change(changeset, opts, _context) do
@@ -58,7 +57,6 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
 
       true ->
         Ash.Changeset.force_change_attributes(changeset,
-          reference: GenerateOrderReference.generate(),
           tax_rate: course.tax_rate.percentage,
           amount: Decimal.mult(course.price, seats)
         )
