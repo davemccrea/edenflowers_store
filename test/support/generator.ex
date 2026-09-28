@@ -2,7 +2,6 @@ defmodule Generator do
   use Ash.Generator
 
   alias Edenflowers.Accounts.User
-  alias Edenflowers.Orders.Changes.GenerateOrderReference
 
   alias Edenflowers.Pricing.{TaxRate, Promotion}
   alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
@@ -111,7 +110,7 @@ defmodule Generator do
     seed_generator(
       %Order{
         state: :contact_details,
-        order_reference: GenerateOrderReference.generate(),
+        order_reference: StreamData.repeatedly(fn -> "T#{System.unique_integer([:positive])}" end),
         amount_paid: if(opts[:payment_status] == :paid, do: Decimal.new("0.00")),
         vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
       },
@@ -202,7 +201,7 @@ defmodule Generator do
         status: :pending,
         seats: 1,
         locale: "en-GB",
-        reference: GenerateOrderReference.generate(),
+        reference: StreamData.repeatedly(fn -> "T#{System.unique_integer([:positive])}" end),
         tax_rate: Decimal.new("0.255"),
         amount: Decimal.new("85.00")
       },

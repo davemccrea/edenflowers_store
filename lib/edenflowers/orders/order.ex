@@ -70,6 +70,15 @@ defmodule Edenflowers.Orders.Order do
         check: "payment_status != 'paid' OR amount_paid IS NOT NULL",
         message: "must be present when payment is paid"
     end
+
+    # Shared with course registrations so an order and a booking never have
+    # the same number.
+    custom_statements do
+      statement :reference_seq do
+        up "CREATE SEQUENCE reference_seq START 1400"
+        down "DROP SEQUENCE reference_seq"
+      end
+    end
   end
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
@@ -292,7 +301,7 @@ defmodule Edenflowers.Orders.Order do
 
       change set_attribute(:payment_status, :paid)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
-      change Changes.GenerateOrderReference
+      change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
