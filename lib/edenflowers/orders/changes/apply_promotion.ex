@@ -13,12 +13,14 @@ defmodule Edenflowers.Orders.Changes.ApplyPromotion do
 
   @impl true
   def change(changeset, _opts, _context) do
-    code = Ash.Changeset.get_argument(changeset, :code)
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      code = Ash.Changeset.get_argument(changeset, :code)
 
-    case Pricing.get_promotion_by_code(code) do
-      {:ok, promotion} -> apply_promotion(changeset, promotion)
-      {:error, _error} -> Ash.Changeset.add_error(changeset, field: :code, message: ~t"Invalid code")
-    end
+      case Pricing.get_promotion_by_code(code) do
+        {:ok, promotion} -> apply_promotion(changeset, promotion)
+        {:error, _error} -> Ash.Changeset.add_error(changeset, field: :code, message: ~t"Invalid code")
+      end
+    end)
   end
 
   defp apply_promotion(changeset, promotion) do
