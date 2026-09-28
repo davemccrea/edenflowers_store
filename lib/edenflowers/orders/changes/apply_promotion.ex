@@ -24,7 +24,7 @@ defmodule Edenflowers.Orders.Changes.ApplyPromotion do
   defp apply_promotion(changeset, promotion) do
     order = Ash.load!(changeset.data, :items_subtotal, authorize?: false)
 
-    if Decimal.compare(order.items_subtotal || 0, promotion.minimum_cart_total) == :lt do
+    if Decimal.compare(order.items_subtotal, promotion.minimum_cart_total) == :lt do
       Ash.Changeset.add_error(changeset,
         field: :code,
         message:

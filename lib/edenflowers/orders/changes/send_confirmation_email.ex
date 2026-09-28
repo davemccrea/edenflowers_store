@@ -2,7 +2,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
   use Ash.Resource.Change
 
   require Logger
-  import Edenflowers.Actors
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
@@ -31,6 +30,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
   end
 
   defp load_for_send(order) do
-    Ash.load!(order, [:customer_first_name, :vat | Receipt.order_load()], actor: system_actor(), authorize?: false)
+    Ash.load!(order, [:customer_first_name, :vat | Receipt.order_load()], authorize?: false)
   end
 end
