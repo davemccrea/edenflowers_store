@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Order.SendConfirmationEmailTest do
+defmodule Edenflowers.Orders.Order.Changes.SendConfirmationEmailTest do
   use Edenflowers.DataCase
   import Generator
   import Swoosh.TestAssertions

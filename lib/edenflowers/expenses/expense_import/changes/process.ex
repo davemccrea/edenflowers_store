@@ -12,8 +12,8 @@ defmodule Edenflowers.Expenses.ExpenseImport.Changes.Process do
 
   alias Edenflowers.Expenses
 
-  defp papra, do: Application.get_env(:edenflowers, :papra_client, Edenflowers.Papra)
-  defp claude, do: Application.get_env(:edenflowers, :claude_client, Edenflowers.Claude)
+  defp papra, do: Application.get_env(:edenflowers, :papra_api, Edenflowers.External.PapraAPI)
+  defp claude, do: Application.get_env(:edenflowers, :claude_api, Edenflowers.External.ClaudeAPI)
 
   @impl true
   def change(changeset, _opts, _context) do

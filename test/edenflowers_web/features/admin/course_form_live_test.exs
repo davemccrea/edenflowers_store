@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     setup :verify_on_exit!
 
     test "fills the other languages from Swedish", %{conn: conn} do
-      expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Höstkransar"}, "sv-FI" ->
+      expect(Edenflowers.External.ClaudeAPI.Mock, :translate, fn %{"name" => "Höstkransar"}, "sv-FI" ->
         {:ok,
          %{
            "en-GB" => %{"name" => "Autumn wreaths", "description" => "Make a wreath."},
@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     test "translates a saved course without editing it first", %{conn: conn} do
       course = generate(course(name: "Autumn wreaths"))
 
-      expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Autumn wreaths"}, "en-GB" ->
+      expect(Edenflowers.External.ClaudeAPI.Mock, :translate, fn %{"name" => "Autumn wreaths"}, "en-GB" ->
         {:ok,
          %{
            "sv-FI" => %{"name" => "Höstkransar", "description" => ""},
@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     end
 
     test "shows an error when Claude fails", %{conn: conn} do
-      expect(Edenflowers.Claude.Mock, :translate, fn _, _ -> {:error, :timeout} end)
+      expect(Edenflowers.External.ClaudeAPI.Mock, :translate, fn _, _ -> {:error, :timeout} end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
       view |> form("#course-form", form: %{name: "Autumn wreaths"}) |> render_change()

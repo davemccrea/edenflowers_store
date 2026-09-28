@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
         <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <a
-            href={Edenflowers.Papra.document_url(@expense.document_id)}
+            href={Edenflowers.External.PapraAPI.document_url(@expense.document_id)}
             target="_blank"
             rel="noopener"
             class="link link-primary -my-2 inline-flex items-center gap-1 py-2 font-medium"
