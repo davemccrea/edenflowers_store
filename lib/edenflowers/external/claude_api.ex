@@ -1,4 +1,4 @@
-defmodule Edenflowers.Claude.Behaviour do
+defmodule Edenflowers.External.ClaudeAPI.Behaviour do
   @callback extract_expense(file_binary :: binary(), content_type :: String.t()) ::
               {:ok, map()} | {:error, term()}
 
@@ -6,7 +6,7 @@ defmodule Edenflowers.Claude.Behaviour do
               {:ok, %{String.t() => %{String.t() => String.t()}}} | {:error, term()}
 end
 
-defmodule Edenflowers.Claude do
+defmodule Edenflowers.External.ClaudeAPI do
   @moduledoc """
   Calls Claude through `ReqLLM` for expense extraction and for translating
   shop copy between the store languages.
@@ -17,7 +17,7 @@ defmodule Edenflowers.Claude do
   no casting of its own.
   """
 
-  @behaviour Edenflowers.Claude.Behaviour
+  @behaviour Edenflowers.External.ClaudeAPI.Behaviour
 
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart

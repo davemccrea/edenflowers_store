@@ -1,7 +1,7 @@
 Mox.defmock(Edenflowers.External.StripeAPI.Mock, for: Edenflowers.External.StripeAPI.Behaviour)
 Mox.defmock(Edenflowers.External.HereAPI.Mock, for: Edenflowers.External.HereAPI.Behaviour)
-Mox.defmock(Edenflowers.Papra.Mock, for: Edenflowers.Papra.Behaviour)
-Mox.defmock(Edenflowers.Claude.Mock, for: Edenflowers.Claude.Behaviour)
+Mox.defmock(Edenflowers.External.PapraAPI.Mock, for: Edenflowers.External.PapraAPI.Behaviour)
+Mox.defmock(Edenflowers.External.ClaudeAPI.Mock, for: Edenflowers.External.ClaudeAPI.Behaviour)
 
 # Skip Typst-dependent smoke tests when the binary isn't on PATH (devs
 # without it locally). CI installs Typst, so the tag stays included there.
