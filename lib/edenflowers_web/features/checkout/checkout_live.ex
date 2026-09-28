@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       data-testid="recipient-name-input"
                     />
 
-                    <.gift_card_slot order={@order} form={@form} id={@id} />
+                    <.gift_card_slot order={@order} form={@form} id={@id} card_variants={@card_variants} />
 
                     <.form_button>{gettext("Next")}</.form_button>
                   </.form>
@@ -351,7 +351,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </div>
       </.container>
 
-      <.card_drawer variants={@card_variants} locale={@order.locale} />
+      <.card_drawer
+        variants={@card_variants}
+        locale={@order.locale}
+        selected_variant_id={Enum.find_value(@order.line_items, &(&1.is_card && &1.product_variant_id))}
+      />
     </Layouts.app>
     """
   end
@@ -395,6 +399,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   attr :order, :map, required: true
   attr :form, :map, required: true
   attr :id, :string, required: true
+  attr :card_variants, :list, required: true
 
   defp gift_card_slot(assigns) do
     card_line_item = Enum.find(assigns.order.line_items, & &1.is_card)
@@ -407,6 +412,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         :card_message_max,
         card_line_item && ProductVariantSize.max_message_length(card_line_item.variant_size)
       )
+      |> assign(:card_from_price, card_from_price(assigns.card_variants, assigns.order.locale))
 
     ~H"""
     <div :if={@order.gift} class="flex flex-col gap-4" data-testid="card-selection">
@@ -446,6 +452,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               id={"card-image-#{@card_line_item.product_variant_id}"}
               type="button"
               phx-click={JS.exec("phx-show", to: "#card-drawer")}
+              aria-haspopup="dialog"
               class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md transition-shadow duration-200 hover:shadow-lg"
               data-testid="card-image-button"
               title={gettext("Change card")}
@@ -468,25 +475,51 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </fieldset>
       </div>
 
-      <.button
+      <button
         :if={is_nil(@card_line_item)}
         type="button"
         phx-click={JS.exec("phx-show", to: "#card-drawer")}
-        variant="text"
-        class="w-fit"
+        aria-haspopup="dialog"
+        class="press border-base-300 flex w-full cursor-pointer items-center gap-4 border px-4 py-3 text-left hover:border-primary"
         data-testid="select-card-button"
       >
-        <.icon name="hero-envelope" class="h-4 w-4" />
-        {gettext("Select a card")}
-      </.button>
+        <.icon name="hero-gift" class="h-6 w-6 shrink-0" />
+        <span class="flex flex-col">
+          <span>{~t"Add a card"}</span>
+          <span :if={@card_from_price} class="text-base-content/70 text-sm">
+            {~t"From #{@card_from_price}, with your personal message"}
+          </span>
+        </span>
+        <.icon name="hero-chevron-right" class="ml-auto h-5 w-5 shrink-0" />
+      </button>
     </div>
     """
   end
 
+  defp card_from_price([], _locale), do: nil
+
+  defp card_from_price(card_variants, locale) do
+    card_variants
+    |> Enum.min_by(& &1.price, Decimal)
+    |> Map.fetch!(:price)
+    |> Edenflowers.Format.currency(locale)
+  end
+
   attr :variants, :list, required: true
   attr :locale, :string, required: true
+  attr :selected_variant_id, :string, default: nil
 
   defp card_drawer(assigns) do
+    # The query sorts by size, so chunking keeps Small, Medium, Large in order.
+    size_groups =
+      assigns.variants
+      |> Enum.chunk_by(& &1.size)
+      |> Enum.map(fn [first | _] = variants ->
+        {first.size, Enum.min_by(variants, & &1.price, Decimal).price, variants}
+      end)
+
+    assigns = assign(assigns, :size_groups, size_groups)
+
     ~H"""
     <.drawer
       id="card-drawer"
@@ -507,11 +540,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           </button>
         </div>
 
-        <div
-          :for={{size, variants} <- Enum.group_by(@variants, & &1.size)}
-          class="flex flex-col gap-3"
-        >
-          <h3 class="font-semibold">{size_label(size)}</h3>
+        <div :for={{size, min_price, variants} <- @size_groups} class="flex flex-col gap-3">
+          <div class="flex items-end justify-between gap-3">
+            <div class="flex flex-col gap-1">
+              <h3 class="eyebrow text-base-content/70">{size_label(size)}</h3>
+              <span :if={character_limit_label(size)} class="text-base-content/70 text-sm">
+                {character_limit_label(size)}
+              </span>
+            </div>
+            <span class="font-serif text-lg">{Edenflowers.Format.currency(min_price, @locale)}</span>
+          </div>
           <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <button
               :for={variant <- variants}
@@ -520,19 +558,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 JS.push("select_card", value: %{"variant-id" => variant.id})
                 |> JS.exec("phx-hide", to: "#card-drawer")
               }
-              class="border-base-300 flex flex-col items-center gap-1 border p-2 hover:bg-base-200"
+              aria-current={variant.id == @selected_variant_id && "true"}
+              class={["press relative flex cursor-pointer flex-col items-center gap-1 border p-2 hover:border-primary", if(variant.id == @selected_variant_id,
+    do: "border-primary bg-primary/5",
+    else: "border-base-300")]}
               data-testid={"card-option-#{variant.id}"}
             >
+              <span
+                :if={variant.id == @selected_variant_id}
+                class="bg-primary text-primary-content absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full"
+              >
+                <.icon name="hero-check-mini" class="h-3.5 w-3.5" />
+              </span>
               <.image
                 src={variant.image_slug}
-                alt={variant.product.name}
+                alt=""
                 width={240}
                 height={240}
                 sizes="(min-width: 1024px) 10rem, 40vw"
                 class="aspect-square w-full object-cover"
               />
-              <span class="text-sm">{variant.product.name}</span>
-              <span class="text-base-content text-sm">
+              <%!-- Card names run to 16 characters, wider than a two-column tile on a phone. --%>
+              <span class="font-serif text-balance hyphens-auto wrap-break-word w-full text-center text-lg leading-snug">
+                {variant.product.name}
+              </span>
+              <%!-- Cards of one size usually share a price, already shown in the heading. --%>
+              <span :if={not Decimal.equal?(variant.price, min_price)} class="font-serif text-lg">
                 {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
             </button>
@@ -547,6 +598,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp size_label(:medium), do: gettext("Medium")
   defp size_label(:large), do: gettext("Large")
   defp size_label(nil), do: ""
+
+  defp character_limit_label(nil), do: nil
+
+  defp character_limit_label(size) do
+    max_length = ProductVariantSize.max_message_length(size)
+    ~t"Up to #{max_length} characters"
+  end
 
   def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
