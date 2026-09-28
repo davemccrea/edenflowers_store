@@ -17,6 +17,7 @@ defmodule Edenflowers.Accounts.User do
       enabled? true
       token_resource Edenflowers.Accounts.Token
       signing_secret Edenflowers.Secrets
+      token_lifetime {30, :days}
       store_all_tokens? true
       require_token_presence_for_authentication? true
     end
@@ -29,14 +30,6 @@ defmodule Edenflowers.Accounts.User do
         otp_characters :digits_only
 
         sender Edenflowers.Accounts.Senders.SendOtp
-      end
-
-      google do
-        client_id Edenflowers.Secrets
-        client_secret Edenflowers.Secrets
-        redirect_uri Edenflowers.Secrets
-        identity_resource Edenflowers.Accounts.UserIdentity
-        prevent_hijacking? false
       end
     end
   end
@@ -112,24 +105,6 @@ defmodule Edenflowers.Accounts.User do
     update :set_newsletter_promo do
       accept [:newsletter_promo_id]
       require_attributes [:newsletter_promo_id]
-    end
-
-    create :register_with_google do
-      argument :user_info, :map, allow_nil?: false
-      argument :oauth_tokens, :map, allow_nil?: false, sensitive?: true
-      upsert? true
-      upsert_identity :unique_email
-
-      change AshAuthentication.GenerateTokenChange
-      change AshAuthentication.Strategy.OAuth2.IdentityChange
-
-      change fn changeset, _ctx ->
-        user_info = Ash.Changeset.get_argument(changeset, :user_info)
-
-        changeset
-        |> Ash.Changeset.change_attribute(:email, user_info["email"])
-        |> Ash.Changeset.change_attribute(:name, user_info["name"])
-      end
     end
   end
 

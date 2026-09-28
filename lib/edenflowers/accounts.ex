@@ -18,6 +18,5 @@ defmodule Edenflowers.Accounts do
       define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
     end
 
-    resource Edenflowers.Accounts.UserIdentity
   end
 end
