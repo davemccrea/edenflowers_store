@@ -420,7 +420,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card message")}</label>
           <%!-- The input is styled as the card itself, matching the thank-you page's card,
                so the customer sees their words as the recipient will. --%>
-          <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2">
+          <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm transition duration-150 focus-within:shadow-lg">
             <%!-- Hidden rather than removed: adding or removing it makes LiveView move the
                  card image below, which replays its tuck-in animation. --%>
             <p
