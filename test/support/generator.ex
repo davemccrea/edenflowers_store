@@ -2,7 +2,7 @@ defmodule Generator do
   use Ash.Generator
 
   alias Edenflowers.Accounts.User
-  alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
+  alias Edenflowers.Orders.Changes.GenerateOrderReference
 
   alias Edenflowers.Pricing.{TaxRate, Promotion}
   alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}

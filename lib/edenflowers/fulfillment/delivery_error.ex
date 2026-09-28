@@ -5,7 +5,7 @@ defmodule Edenflowers.Fulfillment.DeliveryError do
   Single source of truth for user-facing delivery-related error messages.
   Used by the address input component (blur-time errors), the
   `CalculateFulfillmentCost` change (submit-time errors), and the
-  `ValidateDeliveryAddress` validation (missing address).
+  `Validations.DeliveryAddress` validation (missing address).
   """
   @spec message(atom()) :: String.t()
   def message(:address_required), do: ~t"Delivery address required"

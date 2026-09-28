@@ -4,8 +4,8 @@ defmodule Edenflowers.Orders.PurgeAbandonedCartTest do
   import Generator
 
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Schedulers.PurgeAbandonedCart, as: SchedulePurge
-  alias Edenflowers.Orders.Order.Workers.PurgeAbandonedCart, as: Purge
+  alias Edenflowers.Orders.Schedulers.PurgeAbandonedCart, as: SchedulePurge
+  alias Edenflowers.Orders.Workers.PurgeAbandonedCart, as: Purge
 
   defp days_ago(days), do: DateTime.add(DateTime.utc_now(), -days, :day)
 

@@ -28,7 +28,7 @@ defmodule Edenflowers.Accounts.User do
         brute_force_strategy :rate_limit
         otp_characters :digits_only
 
-        sender Edenflowers.Accounts.User.Senders.SendOtp
+        sender Edenflowers.Accounts.Senders.SendOtp
       end
 
       google do

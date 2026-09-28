@@ -16,7 +16,7 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias __MODULE__.{Actions, Calculations, Changes, Validations}
+  alias Edenflowers.Orders.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
 
   @locales Edenflowers.Locales.all()
@@ -103,8 +103,8 @@ defmodule Edenflowers.Orders.Order do
         max_attempts 20
         lock_for_update? false
         scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Orders.Order.Workers.SendConfirmationEmail
-        scheduler_module_name Edenflowers.Orders.Order.Schedulers.SendConfirmationEmail
+        worker_module_name Edenflowers.Orders.Workers.SendConfirmationEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendConfirmationEmail
         default_actor Edenflowers.Actors.system_actor()
         where expr(state == :placed and payment_status == :paid and is_nil(receipt_emailed_at))
       end
@@ -115,8 +115,8 @@ defmodule Edenflowers.Orders.Order do
         max_attempts 1
         lock_for_update? false
         scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Orders.Order.Workers.ReconcilePayment
-        scheduler_module_name Edenflowers.Orders.Order.Schedulers.ReconcilePayment
+        worker_module_name Edenflowers.Orders.Workers.ReconcilePayment
+        scheduler_module_name Edenflowers.Orders.Schedulers.ReconcilePayment
         default_actor Edenflowers.Actors.system_actor()
 
         where expr(
@@ -132,8 +132,8 @@ defmodule Edenflowers.Orders.Order do
         max_attempts 1
         lock_for_update? false
         scheduler_cron "0 3 * * *"
-        worker_module_name Edenflowers.Orders.Order.Workers.PurgeAbandonedCart
-        scheduler_module_name Edenflowers.Orders.Order.Schedulers.PurgeAbandonedCart
+        worker_module_name Edenflowers.Orders.Workers.PurgeAbandonedCart
+        scheduler_module_name Edenflowers.Orders.Schedulers.PurgeAbandonedCart
         default_actor Edenflowers.Actors.system_actor()
 
         where expr(
@@ -234,7 +234,7 @@ defmodule Edenflowers.Orders.Order do
     update :submit_gift_options do
       accept [:gift, :recipient_name, :card_message]
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
-      validate Validations.ValidateCardMessageLength
+      validate Validations.CardMessageLength
       change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
       change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
       change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
@@ -254,8 +254,8 @@ defmodule Edenflowers.Orders.Order do
 
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_date)
-      validate Validations.ValidateFulfillmentDate
-      validate Validations.ValidateDeliveryAddress
+      validate Validations.FulfillmentDate
+      validate Validations.DeliveryAddress
       validate present(:recipient_phone_number)
       change Changes.NormalizePhoneNumber
       change Changes.CalculateFulfillmentCost
