@@ -12,9 +12,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
-  # The shop's address — used as the origin for delivery directions.
-  @shop_origin "Muurahaistie 1, 65230 Vaasa"
-
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
@@ -623,7 +620,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp maps_dir_url(destination) do
     "https://www.google.com/maps/dir/?api=1" <>
-      "&origin=#{URI.encode_www_form(@shop_origin)}" <>
+      "&origin=#{URI.encode_www_form(Edenflowers.Fulfillment.shop_address())}" <>
       "&destination=#{URI.encode_www_form(destination)}" <>
       "&travelmode=driving"
   end

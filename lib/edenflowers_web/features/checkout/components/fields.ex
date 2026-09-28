@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Checkout.Fields do
   use EdenflowersWeb, :html
 
+  alias Edenflowers.Format
   alias Edenflowers.Orders.Order
 
   @checkout_states Order.checkout_states()
@@ -136,17 +137,10 @@ defmodule EdenflowersWeb.Checkout.Fields do
     method_label = if method == :delivery, do: ~t"Home delivery", else: ~t"In-store pickup"
     address = if method == :delivery, do: order.delivery_address, else: nil
 
-    [method_label, format_date(date), address]
+    [method_label, Format.weekday_date(date, Format.locale()), address]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" · ")
   end
 
   defp step_summary(_, _), do: nil
-
-  defp format_date(%Date{} = date) do
-    locale = Localize.get_locale().cldr_locale_id
-    Localize.Date.to_string!(date, locale: locale, format: :medium)
-  end
-
-  defp format_date(_), do: nil
 end

@@ -225,6 +225,15 @@ summary {
   }
 }
 
+.form-button-labelled .form-button-spinner {
+  visibility: hidden;
+}
+.phx-submit-loading .form-button-labelled .form-button-processing,
+[aria-busy="true"].form-button-labelled .form-button-processing {
+  visibility: visible;
+  transition: visibility 0s 300ms;
+}
+
 /* Gate clicks while disconnected so a tap on a CTA mid-flap doesn't
    queue an ambiguous action. Keyboard focus and scrolling are unaffected;
    the flash group stays interactive so toasts can be dismissed. */
@@ -812,4 +821,38 @@ main p {
     color-mix(in oklab, var(--color-base-content) 22%, transparent) 4px,
     color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
   );
+}
+
+/* Thank-you page: the flower sways while Stripe confirms, then opens once paid. */
+@keyframes flower-waiting {
+  from {
+    transform: rotate(-6deg) scale(0.94);
+  }
+  to {
+    transform: rotate(6deg) scale(1);
+  }
+}
+
+@keyframes flower-bloom {
+  0% {
+    transform: rotate(-20deg) scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: rotate(4deg) scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flower-waiting {
+    animation: flower-waiting 1.6s ease-in-out infinite alternate;
+  }
+
+  .flower-bloom {
+    animation: flower-bloom 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
 }

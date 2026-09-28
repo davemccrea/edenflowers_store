@@ -67,7 +67,10 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <div class="max-w-xl">
-          <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
+          <.flower
+            name="flower-30"
+            class={["text-primary/70 mb-8 h-16 w-16", if(@paid?, do: "flower-bloom", else: "flower-waiting")]}
+          />
           <div id="order-status">
             <h1 :if={@first_name} class="page-title">{~t"Thank you, #{@first_name}."}</h1>
             <h1 :if={!@first_name} class="page-title">{~t"Thank you for your order"}</h1>
@@ -124,6 +127,15 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             >
               {~t"View receipt"}
               <.icon name="hero-arrow-top-right-on-square" class="size-4" />
+            </.button>
+            <.button
+              :if={@paid? && @shown_order.fulfillment_method == :pickup}
+              href={~p"/order/#{@shown_order.id}/pickup.ics"}
+              variant="text"
+              data-testid="add-to-calendar"
+            >
+              <.icon name="hero-calendar" class="size-4" />
+              {~t"Add to calendar"}
             </.button>
             <.button navigate={~p"/store"} variant="text">{~t"Back to the shop"}</.button>
           </div>

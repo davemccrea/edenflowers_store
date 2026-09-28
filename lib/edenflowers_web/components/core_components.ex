@@ -161,14 +161,17 @@ defmodule EdenflowersWeb.CoreComponents do
   cell, so the button width is stable across idle/loading (no layout shift).
   Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
   With reduced motion, a static "Processing…" label replaces the spinner.
+  A `busy_label` replaces the spinner for everyone, for waits long enough
+  to deserve words.
 
   ## Examples
 
       <.form_button>{~t"Next"}</.form_button>
-      <.form_button disabled={true} id="payment-button">{~t"Pay"}</.form_button>
+      <.form_button disabled={true} id="payment-button" busy_label={~t"Tying the ribbon…"}>{~t"Pay"}</.form_button>
   """
   attr :rest, :global
   attr :disabled, :boolean, default: false
+  attr :busy_label, :string, default: nil
   slot :inner_block
 
   def form_button(assigns) do
@@ -179,14 +182,14 @@ defmodule EdenflowersWeb.CoreComponents do
       type="submit"
       variant="primary"
       size="lg"
-      class="mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
+      class={["mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled", @busy_label && "form-button-labelled"]}
     >
       <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
       <span
         class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
         aria-hidden="true"
       ></span>
-      <span class="form-button-processing col-start-1 row-start-1">{~t"Processing…"}</span>
+      <span class="form-button-processing col-start-1 row-start-1">{@busy_label || ~t"Processing…"}</span>
     </.button>
     """
   end
