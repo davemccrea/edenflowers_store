@@ -82,6 +82,15 @@ defmodule Edenflowers.Courses.Course do
 
   relationships do
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration
+
+    # No pending bookings: an unpaid hold is either still at checkout or
+    # abandoned, and neither is someone who is coming. Cancelled ones stay so
+    # Jennie can see who dropped out.
+    has_many :bookings, Edenflowers.Courses.CourseRegistration do
+      filter expr(status in [:confirmed, :cancelled])
+      sort inserted_at: :asc
+    end
+
     belongs_to :tax_rate, Edenflowers.Pricing.TaxRate, allow_nil?: false
   end
 
