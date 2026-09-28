@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     socket =
       socket
       |> assign(strategy: Info.strategy!(User, :otp))
-      |> assign(google_strategy: Info.strategy!(User, :google))
       |> reset_state()
 
     # Set by AuthController.failure/3 after a wrong code, so the user lands
@@ -99,22 +98,8 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Sign in"}</h1>
             <p class="text-base-content/70 text-sm">
-              {~t"Continue with Google, or we'll email you a sign-in code."}
+              {~t"We'll email you a sign-in code."}
             </p>
-          </div>
-
-          <.live_component
-            module={AshAuthentication.Phoenix.Components.OAuth2}
-            id="sign-in-google"
-            strategy={@google_strategy}
-            auth_routes_prefix="/auth"
-            overrides={[AshAuthentication.Phoenix.Overrides.Default]}
-          />
-
-          <div class="text-base-content/70 flex items-center gap-3 text-xs uppercase">
-            <hr class="border-base-300 flex-1" />
-            <span>{~t"or"}</span>
-            <hr class="border-base-300 flex-1" />
           </div>
 
           <.form

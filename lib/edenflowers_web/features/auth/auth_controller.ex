@@ -31,9 +31,6 @@ defmodule EdenflowersWeb.Auth.AuthController do
          }} ->
           ~t"You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 
-        {{:google, _}, _} ->
-          ~t"We couldn't sign you in with Google. Please try again or use a sign-in code."
-
         {{:otp, :sign_in}, _} ->
           ~t"That code didn't work. Check it and try again, or send a new code."
 
