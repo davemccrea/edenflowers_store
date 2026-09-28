@@ -11,7 +11,7 @@ defmodule Edenflowers.Orders.Receipt do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Calculations.Vat
+  alias Edenflowers.Orders.Calculations.Vat
 
   @typst_bin "typst"
 

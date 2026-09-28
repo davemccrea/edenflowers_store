@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "li", "Pays at course")
     assert render(view) =~ "2 / 10 seats"
     assert render(view) =~ "1 still to pay at the course"
-    assert_enqueued(worker: Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail)
+    assert_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
   end
 
   test "marking a booking paid clears it from the still-to-pay list", %{conn: conn} do

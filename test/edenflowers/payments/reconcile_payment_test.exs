@@ -7,18 +7,18 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
 
   alias Edenflowers.Courses
 
-  alias Edenflowers.Courses.CourseRegistration.Workers.ReconcilePayment,
+  alias Edenflowers.Courses.Workers.ReconcilePayment,
     as: ReconcileCoursePayment
 
-  alias Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail,
+  alias Edenflowers.Courses.Workers.SendConfirmationEmail,
     as: SendCourseConfirmationEmail
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Schedulers.ReconcilePayment, as: ScheduleOrderReconciliation
-  alias Edenflowers.Orders.Order.Workers.ReconcilePayment, as: ReconcileOrderPayment
-  alias Edenflowers.Orders.Order.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Schedulers.ReconcilePayment, as: ScheduleOrderReconciliation
+  alias Edenflowers.Orders.Workers.ReconcilePayment, as: ReconcileOrderPayment
+  alias Edenflowers.Orders.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
 
   setup :verify_on_exit!
 

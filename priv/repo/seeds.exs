@@ -19,8 +19,8 @@ alias Edenflowers.Catalog.{Product, ProductVariant}
 alias Edenflowers.Courses.{Course, CourseRegistration}
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
 alias Edenflowers.Orders.{Order, LineItem}
-alias Edenflowers.Orders.Order.Calculations.Vat
-alias Edenflowers.Orders.Order.Changes.GenerateOrderReference
+alias Edenflowers.Orders.Calculations.Vat
+alias Edenflowers.Orders.Changes.GenerateOrderReference
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
 

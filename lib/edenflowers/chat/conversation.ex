@@ -13,8 +13,8 @@ defmodule Edenflowers.Chat.Conversation do
         action :generate_name
         queue :conversations
         lock_for_update? false
-        worker_module_name Edenflowers.Chat.Message.Workers.NameConversation
-        scheduler_module_name Edenflowers.Chat.Message.Schedulers.NameConversation
+        worker_module_name Edenflowers.Chat.Workers.NameConversation
+        scheduler_module_name Edenflowers.Chat.Schedulers.NameConversation
         where expr(needs_title)
         default_actor Edenflowers.Actors.system_actor()
       end
@@ -38,7 +38,7 @@ defmodule Edenflowers.Chat.Conversation do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Chat.Conversation.Changes.GenerateName
+      change Edenflowers.Chat.Changes.GenerateName
     end
 
     read :my_conversations do

@@ -7,13 +7,13 @@ defmodule Edenflowers.PaymentsTest do
 
   alias Edenflowers.Courses
 
-  alias Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail,
+  alias Edenflowers.Courses.Workers.SendConfirmationEmail,
     as: SendCourseConfirmationEmail
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
   alias Edenflowers.Payments
 
   setup :verify_on_exit!

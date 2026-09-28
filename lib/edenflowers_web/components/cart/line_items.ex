@@ -135,7 +135,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
   end
 
   # Removing the last non-card item restarts checkout, which blanks every
-  # field the customer has entered. See Orders.Order.Changes.RemoveLineItem.
+  # field the customer has entered. See Orders.Changes.RemoveLineItem.
   defp last_non_card_item?(order) do
     Enum.count(order.line_items, &(not &1.is_card)) == 1
   end

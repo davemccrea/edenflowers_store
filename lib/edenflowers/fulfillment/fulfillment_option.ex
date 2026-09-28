@@ -89,7 +89,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       # so it can't be expressed as a single DB expression.
       require_atomic? false
       argument :date, :date, allow_nil?: false
-      change Edenflowers.Fulfillment.FulfillmentOption.Changes.ToggleDate
+      change Edenflowers.Fulfillment.Changes.ToggleDate
     end
 
     update :set_weekday do
@@ -97,7 +97,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       require_atomic? false
       argument :weekday, Edenflowers.Fulfillment.Weekday, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
-      change Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeekday
+      change Edenflowers.Fulfillment.Changes.SetWeekday
     end
 
     update :set_week do
@@ -106,7 +106,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :week, {:array, :date}, allow_nil?: false
       argument :today, :date, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:open, :closed]]
-      change Edenflowers.Fulfillment.FulfillmentOption.Changes.SetWeek
+      change Edenflowers.Fulfillment.Changes.SetWeek
     end
 
     update :reset_calendar do
@@ -119,7 +119,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     action :calculate_delivery, :map do
       argument :delivery_address, :string, allow_nil?: false
       argument :fulfillment_option_id, :uuid, allow_nil?: false
-      run Edenflowers.Fulfillment.FulfillmentOption.Actions.CalculateDelivery
+      run Edenflowers.Fulfillment.Actions.CalculateDelivery
     end
 
     action :fulfill_on_date, :atom do
@@ -131,7 +131,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       argument :date, :date, allow_nil?: false
       argument :now, :utc_datetime, default: &DateTime.utc_now/0
-      run Edenflowers.Fulfillment.FulfillmentOption.Actions.FulfillOnDate
+      run Edenflowers.Fulfillment.Actions.FulfillOnDate
     end
   end
 

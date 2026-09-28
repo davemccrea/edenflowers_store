@@ -6,7 +6,7 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
 
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Expenses.ExpenseImport
-  alias Edenflowers.Expenses.ExpenseImport.Workers.Process
+  alias Edenflowers.Expenses.Workers.Process
 
   setup :verify_on_exit!
 

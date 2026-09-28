@@ -18,8 +18,8 @@ defmodule Edenflowers.Expenses.ExpenseImport do
         max_attempts 20
         lock_for_update? false
         scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Expenses.ExpenseImport.Workers.Process
-        scheduler_module_name Edenflowers.Expenses.ExpenseImport.Schedulers.Process
+        worker_module_name Edenflowers.Expenses.Workers.Process
+        scheduler_module_name Edenflowers.Expenses.Schedulers.Process
         default_actor Edenflowers.Actors.system_actor()
         on_error :mark_failed
         where expr(is_nil(processed_at) and is_nil(failed_at))
@@ -42,7 +42,7 @@ defmodule Edenflowers.Expenses.ExpenseImport do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Expenses.ExpenseImport.Changes.Process
+      change Edenflowers.Expenses.Changes.Process
     end
 
     # Stops the scheduler retrying a document that failed every attempt.

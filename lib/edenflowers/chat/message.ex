@@ -15,8 +15,8 @@ defmodule Edenflowers.Chat.Message do
         queue :chat_responses
         lock_for_update? false
         scheduler_cron false
-        worker_module_name Edenflowers.Chat.Message.Workers.Respond
-        scheduler_module_name Edenflowers.Chat.Message.Schedulers.Respond
+        worker_module_name Edenflowers.Chat.Workers.Respond
+        scheduler_module_name Edenflowers.Chat.Schedulers.Respond
         where expr(needs_response)
       end
     end
@@ -54,7 +54,7 @@ defmodule Edenflowers.Chat.Message do
         public? false
       end
 
-      change Edenflowers.Chat.Message.Changes.CreateConversationIfNotProvided
+      change Edenflowers.Chat.Changes.CreateConversationIfNotProvided
       change run_oban_trigger(:respond)
     end
 
@@ -62,7 +62,7 @@ defmodule Edenflowers.Chat.Message do
       accept []
       require_atomic? false
       transaction? false
-      change Edenflowers.Chat.Message.Changes.Respond
+      change Edenflowers.Chat.Changes.Respond
     end
 
     create :upsert_response do
@@ -178,7 +178,7 @@ defmodule Edenflowers.Chat.Message do
     attribute :tool_calls, {:array, :map}
     attribute :tool_results, {:array, :map}
 
-    attribute :source, Edenflowers.Chat.Message.Types.Source do
+    attribute :source, Edenflowers.Chat.Types.Source do
       allow_nil? false
       public? true
       default :user

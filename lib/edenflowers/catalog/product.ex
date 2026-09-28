@@ -20,19 +20,19 @@ defmodule Edenflowers.Catalog.Product do
     defaults [:read, :destroy]
 
     read :for_store do
-      prepare Edenflowers.Catalog.Product.Preparations.VisibleInStore
+      prepare Edenflowers.Catalog.Preparations.VisibleInStore
     end
 
     read :featured do
       filter expr(featured == true)
-      prepare Edenflowers.Catalog.Product.Preparations.VisibleInStore
+      prepare Edenflowers.Catalog.Preparations.VisibleInStore
     end
 
     read :by_category do
       argument :category_id, :uuid, allow_nil?: false
 
       filter expr(product_category_id == ^arg(:category_id))
-      prepare Edenflowers.Catalog.Product.Preparations.VisibleInStore
+      prepare Edenflowers.Catalog.Preparations.VisibleInStore
     end
 
     create :create do
