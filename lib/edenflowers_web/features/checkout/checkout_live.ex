@@ -402,7 +402,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     assigns =
       assigns
       |> assign(:card_line_item, card_line_item)
-      |> assign(:recipient_name, assigns.form[:recipient_name].value)
+      |> assign(:recipient_first_name, recipient_first_name(assigns.form[:recipient_name].value))
       |> assign(
         :card_message_max,
         card_line_item && ProductVariantSize.max_message_length(card_line_item.variant_size)
@@ -422,12 +422,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                so the customer sees their words as the recipient will. --%>
           <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2">
             <p
-              :if={present?(@recipient_name)}
+              :if={@recipient_first_name}
               class="mb-3 pr-24 text-sm"
               aria-hidden="true"
               data-testid="card-message-recipient"
             >
-              {~t"For #{@recipient_name}"}
+              {~t"For #{@recipient_first_name}"}
             </p>
             <textarea
               id={"#{@id}-card-message"}
@@ -675,8 +675,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign(socket, form: form)}
   end
 
-  defp present?(text), do: is_binary(text) and String.trim(text) != ""
-
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
 
   defp handle_mount_error(socket, log_message, flash_message) do
@@ -686,6 +684,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
      socket
      |> put_flash(:error, flash_message)
      |> push_navigate(to: ~p"/")}
+  end
+
+  defp recipient_first_name(recipient_name) do
+    {:ok, first_name} =
+      Ash.calculate(Order, :recipient_first_name, refs: %{recipient_name: recipient_name}, authorize?: false)
+
+    first_name
   end
 
   # Only a gift delivery asks for the recipient's details; otherwise the number is the buyer's.

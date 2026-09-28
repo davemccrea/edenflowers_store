@@ -3467,5 +3467,5 @@ msgstr "Skriv ditt meddelande…"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:430
 #, elixir-autogen, elixir-format
-msgid "For %{recipient_name}"
-msgstr "Till %{recipient_name}"
+msgid "For %{recipient_first_name}"
+msgstr "Till %{recipient_first_name}"

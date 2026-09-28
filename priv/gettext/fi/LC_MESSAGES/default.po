@@ -3467,5 +3467,5 @@ msgstr "Kirjoita viestisi…"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:430
 #, elixir-autogen, elixir-format
-msgid "For %{recipient_name}"
-msgstr "Vastaanottaja: %{recipient_name}"
+msgid "For %{recipient_first_name}"
+msgstr "Vastaanottaja: %{recipient_first_name}"

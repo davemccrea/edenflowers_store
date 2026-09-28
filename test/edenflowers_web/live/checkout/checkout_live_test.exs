@@ -610,7 +610,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Original")
-      |> fill_in("Recipient name *", with: "Anna")
+      |> fill_in("Recipient name *", with: "Anna Lindqvist")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Anna")
     end
 
