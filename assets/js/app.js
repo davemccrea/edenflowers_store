@@ -74,65 +74,33 @@ const liveSocket = new LiveSocket("/live", Socket, {
   },
 });
 
-const scrollLockDialogSelector = ".js-scroll-lock-dialog";
-
-const scrollLockDialogIsVisible = (dialog) => {
-  if (
-    !dialog.isConnected ||
-    dialog.hidden ||
-    dialog.getAttribute("aria-hidden") === "true"
-  ) {
-    return false;
-  }
-
-  const style = window.getComputedStyle(dialog);
-  return style.display !== "none" && style.visibility !== "hidden";
-};
-
-const syncModalDialogScrollLock = () => {
-  const anyVisibleDialog = Array.from(
-    document.querySelectorAll(scrollLockDialogSelector),
-  ).some(scrollLockDialogIsVisible);
-
-  document.documentElement.classList.toggle(
-    "overflow-hidden",
-    anyVisibleDialog,
-  );
-};
-
-// Other elements change styles every frame (e.g. carousel tweens), so only
-// re-check when a drawer itself changed or nodes were added or removed.
-// The same records keep Cinder's filter toggle in step with its panel, which
-// JS.toggle shows and hides after a transition rather than on the click.
-const modalDialogObserver = new MutationObserver((records) => {
+// Keeps Cinder's filter toggle in step with its panel, which JS.toggle shows
+// and hides after a transition rather than on the click.
+const cinderFilterObserver = new MutationObserver((records) => {
   records.forEach(({ target }) => {
     if (!target.id?.endsWith("-filter-body")) return;
 
     const toggle = document.querySelector(`[aria-controls="${target.id}"]`);
     if (toggle) syncCinderFilterToggle(toggle);
   });
-
-  if (
-    records.some(
-      (record) =>
-        record.type === "childList" ||
-        record.target.matches?.(scrollLockDialogSelector),
-    )
-  ) {
-    syncModalDialogScrollLock();
-  }
 });
 
-modalDialogObserver.observe(document.body, {
+cinderFilterObserver.observe(document.body, {
   subtree: true,
-  childList: true,
   attributes: true,
-  attributeFilter: ["class", "style", "hidden", "aria-hidden"],
+  attributeFilter: ["class", "style"],
 });
 
-window.addEventListener("phx:page-loading-stop", syncModalDialogScrollLock);
-window.addEventListener("pageshow", syncModalDialogScrollLock);
-syncModalDialogScrollLock();
+// The drawer component's phx-show/phx-hide dispatch these to its <dialog>.
+window.addEventListener("drawer:open", (event) => event.target.showModal());
+window.addEventListener("drawer:close", (event) => event.target.close());
+
+// A tap on a drawer's ::backdrop reports the <dialog> itself as the target,
+// since its content fills the rest of the box. closedby="any" would replace
+// this once Safari supports it.
+document.addEventListener("click", (event) => {
+  if (event.target.matches?.("dialog.slide-drawer")) event.target.close();
+});
 
 // Show progress bar on live navigation and form submits
 topbar.config({
