@@ -35,6 +35,7 @@ defmodule Edenflowers.Orders.LineItem do
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
+    # The destroy notification publishes to the removed item's order_id topic.
     destroy :remove_item do
       require_atomic? false
     end
