@@ -267,7 +267,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     <div phx-update="ignore" id="payment-element"></div>
                     <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
 
-                    <.form_button disabled={true} id="payment-button">
+                    <.form_button disabled={true} id="payment-button" busy_label={~t"Tying the ribbon…"}>
                       {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                     </.form_button>
                   </form>

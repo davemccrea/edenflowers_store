@@ -43,6 +43,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
     assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
     assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
+    assert conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(404)
   end
 
   test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
@@ -76,6 +77,26 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
     assert "%PDF" <> _ = response(conn, 200)
     assert get_resp_header(conn, "content-disposition") == [~s|inline; filename="eden-flowers-CONFIRM.pdf"|]
+  end
+
+  test "offers a calendar event for a pickup", %{conn: conn, user: user} do
+    order = placed_order(user_id: user.id)
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    assert has_element?(view, ~s|a[href="/order/#{order.id}/pickup.ics"]|)
+
+    ics = conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(200)
+    assert ics =~ "DTSTART;VALUE=DATE:20260610\r\n"
+    assert ics =~ "DTEND;VALUE=DATE:20260611\r\n"
+    assert ics =~ "LOCATION:Muurahaistie 1\\, 65230 Vaasa"
+  end
+
+  test "offers no calendar event for a delivery", %{conn: conn, user: user} do
+    order = placed_order(user_id: user.id, fulfillment_method: :delivery)
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    refute has_element?(view, "[data-testid=add-to-calendar]")
+    assert conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(404)
   end
 
   describe "guest" do

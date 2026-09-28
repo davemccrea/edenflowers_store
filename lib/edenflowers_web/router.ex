@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.Router do
 
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
     get "/order/:id/receipt", Checkout.ReceiptController, :show
+    get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
     get "/courses/bookings/:id/receipt", Courses.CourseReceiptController, :show
     get "/locale/:locale", LocaleController, :index
 
