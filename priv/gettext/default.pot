@@ -430,7 +430,7 @@ msgstr ""
 
 #: lib/edenflowers/fulfillment/delivery_error.ex:11
 #, elixir-autogen, elixir-format
-msgid "Delivery address required"
+msgid "This field is required"
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/components/address_input.ex:198

@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       type_address(view, "Stadsgatan")
 
-      refute render(view) =~ "Delivery address required"
+      refute render(view) =~ "This field is required"
     end
 
     test "clearing a confirmed address shows a required error", %{conn: conn, delivery_option: delivery_option} do
@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       type_address(view, "")
 
-      assert render(view) =~ "Delivery address required"
+      assert render(view) =~ "This field is required"
     end
 
     test "submitting step 3 without a confirmed address shows a required error", %{
@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       |> element("#checkout-form-3b")
       |> render_submit(%{"form" => %{"delivery_address" => ""}})
 
-      assert render(view) =~ "Delivery address required"
+      assert render(view) =~ "This field is required"
     end
   end
 
@@ -293,7 +293,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     # Regression: Checkout.AddressInput renders <input name="delivery_address">
     # (no form[...] prefix), so the browser submits the address at the top
     # level of the params, not under "form". save_form_3 must bridge it back
-    # in or save_step_3 fails with "Delivery address required".
+    # in or save_step_3 fails with "This field is required".
     test "submit succeeds when delivery_address arrives at the top level of params", %{
       conn: conn,
       order: order,
