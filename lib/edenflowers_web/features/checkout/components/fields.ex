@@ -66,14 +66,15 @@ defmodule EdenflowersWeb.Checkout.Fields do
             />
           </h2>
         </div>
-        <.link
+        <button
           :if={@past?}
+          type="button"
           phx-click={JS.push("edit_step", value: %{state: @state})}
-          class="link-underline-hover shrink-0 text-sm"
+          class="link-underline-hover shrink-0 cursor-pointer text-sm"
           data-locked-while-paying
         >
           {~t"Edit"}<span class="sr-only">: {@title}</span>
-        </.link>
+        </button>
       </div>
 
       <p :if={@past? and @summary} class="text-base-content/70 mt-3">
