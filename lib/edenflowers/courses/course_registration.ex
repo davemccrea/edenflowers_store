@@ -10,7 +10,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     notifiers: [Ash.Notifier.PubSub],
     extensions: [AshOban]
 
-  alias Edenflowers.Courses.CourseRegistration.Changes
+  alias Edenflowers.Courses.Changes
 
   @locales Edenflowers.Locales.all()
 
@@ -42,8 +42,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
         max_attempts 20
         lock_for_update? false
         scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Courses.CourseRegistration.Workers.SendConfirmationEmail
-        scheduler_module_name Edenflowers.Courses.CourseRegistration.Schedulers.SendConfirmationEmail
+        worker_module_name Edenflowers.Courses.Workers.SendConfirmationEmail
+        scheduler_module_name Edenflowers.Courses.Schedulers.SendConfirmationEmail
         default_actor Edenflowers.Actors.system_actor()
         where expr(status == :confirmed and is_nil(confirmation_emailed_at))
       end
@@ -54,8 +54,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
         max_attempts 1
         lock_for_update? false
         scheduler_cron "*/10 * * * *"
-        worker_module_name Edenflowers.Courses.CourseRegistration.Workers.ReconcilePayment
-        scheduler_module_name Edenflowers.Courses.CourseRegistration.Schedulers.ReconcilePayment
+        worker_module_name Edenflowers.Courses.Workers.ReconcilePayment
+        scheduler_module_name Edenflowers.Courses.Schedulers.ReconcilePayment
         default_actor Edenflowers.Actors.system_actor()
 
         where expr(
@@ -112,7 +112,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :amount_paid, :decimal, allow_nil?: false
       validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :status, paid: :confirmed}
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
-      validate Edenflowers.Courses.CourseRegistration.Validations.MatchesPaymentAmount
+      validate Edenflowers.Courses.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail

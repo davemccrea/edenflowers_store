@@ -31,7 +31,7 @@ defmodule Edenflowers.Orders.LineItem do
       upsert_identity :unique_product_variant
       upsert_fields [:quantity]
 
-      change Edenflowers.Orders.LineItem.Changes.PopulateFromVariant
+      change Edenflowers.Orders.Changes.PopulateFromVariant
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
@@ -61,7 +61,7 @@ defmodule Edenflowers.Orders.LineItem do
     # Filter expressions can't authorize creates (no row to filter yet), so a
     # custom check resolves the parent order's state at evaluation time.
     policy action_type(:create) do
-      authorize_if Edenflowers.Orders.LineItem.Checks.OrderNotPlaced
+      authorize_if Edenflowers.Orders.Checks.OrderNotPlaced
     end
 
     policy action_type([:update, :destroy]) do
