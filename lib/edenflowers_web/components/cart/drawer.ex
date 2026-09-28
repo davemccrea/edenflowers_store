@@ -36,7 +36,6 @@ defmodule EdenflowersWeb.Cart.Drawer do
             id="cart-line-items"
             module={EdenflowersWeb.Cart.LineItems}
             order={@order}
-            link_product={true}
           />
 
           <.button

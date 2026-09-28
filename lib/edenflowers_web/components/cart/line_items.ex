@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
   attr :id, :string, required: true
   attr :order, :any, required: true
-  attr :link_product, :boolean, default: false
 
   def render(assigns) do
     ~H"""
@@ -13,7 +12,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
       <%= if Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
           <li :for={line_item <- @order.line_items} class="flex flex-row gap-3 text-base sm:gap-4">
-            <%= if @link_product and not line_item.is_card do %>
+            <%= if not line_item.is_card do %>
               <.link
                 navigate={~p"/product/#{line_item.product_id}"}
                 class="shrink-0 transition-opacity hover:opacity-70"
@@ -41,7 +40,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
             <div class="flex min-w-0 flex-1 flex-col gap-2">
               <div class="flex flex-row justify-between gap-3">
                 <div class="flex min-w-0 flex-col gap-0.5 break-words">
-                  <%= if @link_product and not line_item.is_card do %>
+                  <%= if not line_item.is_card do %>
                     <.link
                       navigate={~p"/product/#{line_item.product_id}"}
                       class="link-underline-hover"
