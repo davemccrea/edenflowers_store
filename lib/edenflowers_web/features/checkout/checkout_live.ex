@@ -421,13 +421,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           <%!-- The input is styled as the card itself, matching the thank-you page's card,
                so the customer sees their words as the recipient will. --%>
           <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2">
+            <%!-- Hidden rather than removed: adding or removing it makes LiveView move the
+                 card image below, which replays its tuck-in animation. --%>
             <p
-              :if={@recipient_first_name}
+              hidden={is_nil(@recipient_first_name)}
               class="mb-3 pr-24 text-sm"
               aria-hidden="true"
               data-testid="card-message-recipient"
             >
-              {~t"For #{@recipient_first_name}"}
+              {@recipient_first_name && ~t"For #{@recipient_first_name}"}
             </p>
             <textarea
               id={"#{@id}-card-message"}
