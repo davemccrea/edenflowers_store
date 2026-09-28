@@ -1,8 +1,6 @@
 defmodule Edenflowers.Orders.Validations.CardMessageLength do
   @moduledoc """
   Enforces the per-card-size length limit for card_message.
-
-  Requires `line_items` to be loaded on the changeset's data; raises otherwise.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -33,12 +31,9 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
   end
 
   defp card_line_item(changeset) do
-    case changeset.data.line_items do
-      %Ash.NotLoaded{} ->
-        raise "CardMessageLength requires line_items to be loaded on the order"
-
-      items when is_list(items) ->
-        Enum.find(items, & &1.is_card)
-    end
+    changeset.data
+    |> Ash.load!(:line_items, lazy?: true, authorize?: false)
+    |> Map.fetch!(:line_items)
+    |> Enum.find(& &1.is_card)
   end
 end

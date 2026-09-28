@@ -638,19 +638,18 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.update(authorize?: false)
     end
 
-    test "raises when line_items is not loaded on the order", %{card_product: card_product} do
+    test "loads line_items itself when the caller didn't", %{card_product: card_product} do
       order = gift_order_with_card(card_product, :small)
       stripped = %{order | line_items: %Ash.NotLoaded{}}
 
-      assert_raise Ash.Error.Unknown, ~r/line_items to be loaded/, fn ->
-        stripped
-        |> Ash.Changeset.for_update(:submit_gift_options, %{
-          gift: true,
-          recipient_name: "Jane",
-          card_message: "Hello"
-        })
-        |> Ash.update(authorize?: false)
-      end
+      assert {:ok, %{card_message: "Hello"}} =
+               stripped
+               |> Ash.Changeset.for_update(:submit_gift_options, %{
+                 gift: true,
+                 recipient_name: "Jane",
+                 card_message: "Hello"
+               })
+               |> Ash.update(authorize?: false)
     end
   end
 
