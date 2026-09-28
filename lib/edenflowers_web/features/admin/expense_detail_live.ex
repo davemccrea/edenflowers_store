@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             <p class="eyebrow text-base-content/65 mb-1">{~t"Total amount"}</p>
             <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
               <span :if={@expense.total_amount && @expense.currency}>
-                {Format.amount(@expense.total_amount, @expense.currency, @locale)}
+                {Format.currency_in(@expense.total_amount, @expense.currency, @locale)}
               </span>
               <.blank :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} />
               <span :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} class="sr-only">

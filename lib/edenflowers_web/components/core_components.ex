@@ -807,7 +807,7 @@ defmodule EdenflowersWeb.CoreComponents do
           >
             {~t"From"}
           </span>
-          {Edenflowers.Format.price(@product.cheapest_price, @locale)}
+          {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
         </p>
       </div>
     </.link>
