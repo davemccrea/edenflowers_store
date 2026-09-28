@@ -7,33 +7,6 @@ defmodule EdenflowersWeb.Layouts do
 
   embed_templates "layouts/*"
 
-  @doc """
-  Renders the locale switcher as a single source of truth for header,
-  drawer, and footer. Uses `aria-current="true"` on the active locale so
-  AT users hear which language they're on.
-  """
-  attr :locales, :list, required: true, doc: "list of {code, name} tuples"
-  attr :current_locale_code, :string, required: true
-  attr :current_path, :string, required: true
-  attr :class, :any, default: nil
-  attr :item_class, :any, default: nil
-
-  def locale_list(assigns) do
-    ~H"""
-    <ul class={@class}>
-      <li :for={{code, name} <- @locales}>
-        <.link
-          href={~p"/locale/#{code}?redirect_to=#{@current_path}"}
-          class={[@item_class, code == @current_locale_code && "text-base-content font-semibold"]}
-          aria-current={code == @current_locale_code && "true"}
-        >
-          {name}
-        </.link>
-      </li>
-    </ul>
-    """
-  end
-
   attr :id, :string, required: true
   attr :current_path, :string, required: true
   attr :placement, :string, default: "top", values: ~w(top bottom)
@@ -481,15 +454,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    current_locale_code = Edenflowers.Format.locale()
     current_locale = Localize.Language.display_name!(Localize.get_locale().language, fallback: true)
-
-    locales =
-      for code <- Edenflowers.Locales.all() do
-        language_code = code |> String.split("-") |> hd()
-        name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
-        {code, String.capitalize(name)}
-      end
 
     assigns =
       assigns
@@ -504,8 +469,7 @@ defmodule EdenflowersWeb.Layouts do
         ]
       )
       |> assign(current_locale: String.capitalize(current_locale))
-      |> assign(current_locale_code: current_locale_code)
-      |> assign(locales: locales)
+      |> assign(current_language_code: Localize.get_locale().language |> to_string() |> String.upcase())
 
     ~H"""
     <.drawer
@@ -545,21 +509,17 @@ defmodule EdenflowersWeb.Layouts do
 
       <footer class="bg-base-300 flex flex-col gap-6 px-8 py-8">
         <.link
-          class="text-base-content link-underline-hover w-fit text-sm tracking-wide"
+          class="text-base-content group flex w-fit items-center gap-2 text-base tracking-wide"
           phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
           navigate={if @current_user, do: ~p"/account"}
           href={unless @current_user, do: sign_in_href(@current_path)}
         >
-          {if @current_user, do: ~t"Account", else: ~t"Sign In"}
+          <.icon name="hero-user-circle" class="h-5 w-5" />
+          <span class="link-underline-hover">
+            {if @current_user, do: ~t"Account", else: ~t"Sign In"}
+          </span>
         </.link>
 
-        <.locale_list
-          locales={@locales}
-          current_locale_code={@current_locale_code}
-          current_path={@current_path}
-          class="flex flex-wrap gap-x-5 gap-y-2"
-          item_class="text-base-content/80 link-underline-hover text-sm tracking-wide"
-        />
         <.social_media_links />
       </footer>
     </.drawer>
@@ -614,7 +574,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
-                class="text-primary logo-wordmark whitespace-nowrap text-2xl max-sm:tracking-[0.14em] lg:text-3xl"
+                class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
               >
                 Eden Flowers
               </.link>
@@ -636,17 +596,21 @@ defmodule EdenflowersWeb.Layouts do
                 </span>
               </.link>
 
-              <%!-- Locale picker (desktop only — mobile lives in nav drawer) --%>
-              <div class="hidden xl:block">
-                <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
-                  <span class="group flex h-10 cursor-pointer items-center gap-2">
-                    <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-                    <span class="text-base-content text-sm group-hover:text-base-content/60">
-                      {@current_locale}
-                    </span>
+              <%!-- Below xl the full language name crowds the logo, so show the short code instead --%>
+              <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
+                <span class="group flex h-10 cursor-pointer items-center gap-1 px-1 xl:gap-2 xl:px-0">
+                  <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+                  <span
+                    class="text-base-content hidden text-sm group-hover:text-base-content/60 sm:inline xl:hidden"
+                    aria-hidden="true"
+                  >
+                    {@current_language_code}
                   </span>
-                </.locale_picker>
-              </div>
+                  <span class="text-base-content sr-only text-sm group-hover:text-base-content/60 xl:not-sr-only">
+                    {@current_locale}
+                  </span>
+                </span>
+              </.locale_picker>
 
               <%!-- Cart button --%>
               <.cart_count_badge
