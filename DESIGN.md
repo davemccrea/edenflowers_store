@@ -178,7 +178,7 @@ A single warm family — paper at hue ~75, forest at hue ~150 — with one amber
 
 **The Serif-Sans Split Rule.** Serif is for what the shop says — headings, product names, prices, quotes, addresses, opening hours. Sans is for what the interface says about itself — eyebrows, buttons, nav, form labels, the wordmark. A serif button or a sans product name is a defect.
 
-**The Open Price Rule.** A price is never smaller or fainter than the thing it prices: serif, upright, full `base-content`, `text-lg` or larger beside a title. No italic, no muted opacity, no `text-xs`. A price that whispers reads as one being hidden. Storefront prices go through `Format.price/2`, which drops the cents on whole euros.
+**The Open Price Rule.** A price is never smaller or fainter than the thing it prices: serif, upright, full `base-content`, `text-lg` or larger beside a title. No italic, no muted opacity, no `text-xs`. A price that whispers reads as one being hidden. Storefront prices go through `Format.storefront_price/2`, which drops the cents on whole euros.
 
 **The Eyebrow Rule.** A section that needs a category label above its heading uses the eyebrow (0.75rem, 700, uppercase, 0.18em) at `base-content/70`. Never a smaller heading, never a coloured chip, never a pill.
 

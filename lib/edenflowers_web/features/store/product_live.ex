@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               {@product.name}
             </h1>
             <p class="font-serif text-base-content text-2xl">
-              {Edenflowers.Format.price(@selected_variant.price, Edenflowers.Format.locale())}
+              {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
             </p>
           </header>
 
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 {@product.name}
               </h1>
               <p data-testid="product-price" class="font-serif text-base-content text-2xl">
-                {Edenflowers.Format.price(@selected_variant.price, Edenflowers.Format.locale())}
+                {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
               </p>
             </header>
 
@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       {String.capitalize(to_string(variant.size))}
                     </span>
                     <span class="size-option__price text-base-content font-serif ml-2 text-lg">
-                      {Edenflowers.Format.price(variant.price, Edenflowers.Format.locale())}
+                      {Edenflowers.Format.storefront_price(variant.price, Edenflowers.Format.locale())}
                     </span>
                   </label>
                 </div>
