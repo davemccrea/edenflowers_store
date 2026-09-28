@@ -3,8 +3,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   import EdenflowersWeb.Admin.Components
 
-  require Ash.Query
-
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
@@ -100,21 +98,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
-  # No pending bookings: an unpaid hold is either still at checkout or
-  # abandoned, and neither is someone who is coming. Cancelled ones stay so
-  # Jennie can see who dropped out.
   defp load_courses(socket) do
-    bookings =
-      CourseRegistration
-      |> Ash.Query.filter(status in [:confirmed, :cancelled])
-      |> Ash.Query.sort(inserted_at: :asc)
-      |> Ash.Query.load([:pays_at_course?, :seats_held])
-
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        query: [sort: [date: :asc, start_time: :asc]],
-        load: [course_registrations: bookings]
+        load: [bookings: [:pays_at_course?, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -156,7 +144,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :booking_form, :any, required: true
 
   defp course(assigns) do
-    {registrations, cancelled} = Enum.split_with(assigns.course.course_registrations, &(&1.status == :confirmed))
+    {registrations, cancelled} = Enum.split_with(assigns.course.bookings, &(&1.status == :confirmed))
 
     assigns =
       assigns
