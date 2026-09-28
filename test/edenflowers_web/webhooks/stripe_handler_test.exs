@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
 
   import ExUnit.CaptureLog
   import Generator

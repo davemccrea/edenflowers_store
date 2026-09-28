@@ -3,7 +3,7 @@ defmodule Edenflowers.PoliciesTest do
   Verifies that create/update/destroy on resources without an authenticated
   admin (or system actor, where applicable) are explicitly forbidden.
   """
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Generator
 
   alias Edenflowers.Courses.Course

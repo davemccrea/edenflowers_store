@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.OrderTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
 
   import Ecto.Query
   import ExUnit.CaptureLog

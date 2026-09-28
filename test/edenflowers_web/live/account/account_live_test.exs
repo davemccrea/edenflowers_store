@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Account.AccountLiveTest do
-  use EdenflowersWeb.ConnCase, async: false
+  use EdenflowersWeb.ConnCase, async: true
 
   import Generator
   import Phoenix.LiveViewTest
