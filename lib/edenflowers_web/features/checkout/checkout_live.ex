@@ -444,7 +444,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               id={"card-image-#{@card_line_item.product_variant_id}"}
               type="button"
               phx-click={JS.exec("phx-show", to: "#card-drawer")}
-              class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md hover:-translate-y-0.5 hover:shadow-lg"
+              class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md transition-shadow duration-200 hover:shadow-lg"
               data-testid="card-image-button"
               title={gettext("Change card")}
             >
