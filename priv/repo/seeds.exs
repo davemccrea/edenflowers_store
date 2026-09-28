@@ -508,7 +508,12 @@ today = Date.utc_today()
     tax_rate: tax_rate.percentage,
     amount: Decimal.mult(course.price, seats),
     confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
-    payment_intent_id: if(paid_via == :stripe, do: "pi_seed_#{System.unique_integer([:positive])}")
+    # A pending registration with a fake PaymentIntent makes the ReconcilePayment
+    # cron fail against Stripe, so it stays an abandoned checkout instead.
+    payment_intent_id:
+      if(paid_via == :stripe and status != :pending,
+        do: "pi_seed_#{System.unique_integer([:positive])}"
+      )
   })
 end)
 
