@@ -247,8 +247,103 @@ html {
   scrollbar-gutter: stable;
 }
 
+html:has(dialog.slide-drawer:modal) {
+  overflow: hidden;
+}
+
+/* The drawer component's modal <dialog>. Undo the UA's centred-box styles so
+   it runs full height against one edge, and let the content div inside own
+   the width and background. */
+.slide-drawer {
+  inset-block: 0;
+  height: auto;
+  max-height: none;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  translate: var(--slide-drawer-offscreen);
+  opacity: 0.3;
+}
+
+.slide-drawer--left {
+  --slide-drawer-offscreen: -100% 0;
+}
+
+.slide-drawer > div {
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+}
+
+.slide-drawer--left > div {
+  padding-left: env(safe-area-inset-left);
+}
+
+.slide-drawer--right > div {
+  padding-right: env(safe-area-inset-right);
+}
+
+.slide-drawer--right {
+  --slide-drawer-offscreen: 100% 0;
+  margin-inline-start: auto;
+}
+
+.slide-drawer[open] {
+  translate: 0 0;
+  opacity: 1;
+}
+
+.slide-drawer::backdrop {
+  background: rgb(0 0 0 / 0.3);
+  opacity: 0;
+}
+
+.slide-drawer[open]::backdrop {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Unlock after the exit; opening (including reopening mid-exit) locks immediately. */
+  html {
+    transition: overflow 0s 250ms allow-discrete;
+  }
+
+  html:has(dialog.slide-drawer:modal) {
+    transition: none;
+  }
+
+  .slide-drawer {
+    transition:
+      translate 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      display 250ms allow-discrete,
+      overlay 250ms allow-discrete;
+  }
+
+  .slide-drawer::backdrop {
+    transition:
+      opacity 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      display 250ms allow-discrete,
+      overlay 250ms allow-discrete;
+  }
+
+  @starting-style {
+    .slide-drawer[open] {
+      translate: var(--slide-drawer-offscreen);
+      opacity: 0.3;
+    }
+
+    .slide-drawer[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+/* Fixed headers and top-layer dialogs handle their own safe-area insets. */
 body {
   text-rendering: optimizeLegibility;
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -326,7 +421,7 @@ body {
 /* Scroll anchor coordinates with scroll-into-view in hooks.js — offsets the
    landing position so the heading clears the fixed page header. */
 .scroll-anchor-below-header {
-  scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4);
+  scroll-margin-top: calc(var(--header-height) + var(--spacing) * 4 + env(safe-area-inset-top));
 }
 
 @utility container {
@@ -548,8 +643,12 @@ main p {
   display: flex;
   position: fixed;
   top: 0;
+  inset-inline: 0;
   z-index: 50;
   width: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  background: var(--color-base-100);
   visibility: visible;
   transition:
     transform 0.2s ease-out,

@@ -134,7 +134,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 type="submit"
                 variant="primary"
                 size="lg"
-                phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
+                phx-click={JS.exec("phx-show", to: "#cart-drawer")}
                 data-testid="add-to-cart-button"
                 class="w-full"
               >

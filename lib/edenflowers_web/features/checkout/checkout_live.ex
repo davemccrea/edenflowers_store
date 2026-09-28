@@ -443,7 +443,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
             <button
               id={"card-image-#{@card_line_item.product_variant_id}"}
               type="button"
-              phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+              phx-click={JS.exec("phx-show", to: "#card-drawer")}
               class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md hover:-translate-y-0.5 hover:shadow-lg"
               data-testid="card-image-button"
               title={gettext("Change card")}
@@ -469,7 +469,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       <.button
         :if={is_nil(@card_line_item)}
         type="button"
-        phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+        phx-click={JS.exec("phx-show", to: "#card-drawer")}
         variant="text"
         class="w-fit"
         data-testid="select-card-button"
@@ -490,9 +490,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       id="card-drawer"
       placement="right"
       label={gettext("Select a card")}
-      class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto p-6 sm:w-[25rem] lg:w-[34rem]"
+      class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto overscroll-contain sm:w-[25rem] lg:w-[34rem]"
     >
-      <div class="flex flex-col gap-6" data-testid="card-drawer">
+      <div class="flex flex-col gap-6 p-6" data-testid="card-drawer">
         <div class="flex flex-row items-center justify-between">
           <h2 class="section-title">{gettext("Select a card")}</h2>
           <button
