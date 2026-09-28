@@ -7,6 +7,8 @@ defmodule Edenflowers.Fulfillment do
     show?(true)
   end
 
+  def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
+
   resources do
     resource Edenflowers.Fulfillment.FulfillmentOption do
       define :list_options, action: :read
