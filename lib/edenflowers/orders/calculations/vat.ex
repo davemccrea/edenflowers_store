@@ -29,11 +29,17 @@ defmodule Edenflowers.Orders.Calculations.Vat do
     |> Enum.sort_by(&elem(&1, 0), {:desc, Decimal})
     |> Enum.map(fn {rate, amounts} ->
       gross = Enum.reduce(amounts, Decimal.new(0), &Decimal.add/2)
-      base = gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
+      base = net_of_vat(gross, rate)
 
       %{rate: rate, base: base, vat: Decimal.sub(gross, base), gross: gross}
     end)
   end
+
+  @doc """
+  The taxable base in a tax-inclusive amount, rounded to cents. VAT is taken as
+  the remainder so base + VAT always equals the gross.
+  """
+  def net_of_vat(gross, rate), do: gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
 
   defp fulfillment_fee_entry(%{fulfillment_fee: fee, fulfillment_tax_rate: rate})
        when not is_nil(fee) and not is_nil(rate) do

@@ -337,7 +337,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 {variant_size_label(line_item.variant_size)}
               </p>
             </div>
-            <p class="text-base-content/65 text-sm tabular-nums">{money(line_item.subtotal, @locale)}</p>
+            <p class="text-base-content/65 text-sm tabular-nums">{Format.currency(line_item.subtotal, @locale)}</p>
           </div>
         </div>
       </li>
@@ -483,7 +483,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {@label}
       </dt>
       <dd class={["tabular-nums", money_row_tone(@strong, @muted, "text-base-content/90")]}>
-        {money(@amount, @locale)}
+        {Format.currency(@amount, @locale)}
       </dd>
     </div>
     """
@@ -516,8 +516,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp arrow_symbol("ArrowLeft"), do: "←"
   defp arrow_symbol("ArrowRight"), do: "→"
-
-  defp money(amount, locale), do: Format.currency(amount || 0, locale)
 
   # The phone number is the recipient's only on gift deliveries; the buyer collects pickups.
   defp customer_phone?(order), do: !order.gift or order.fulfillment_method == :pickup

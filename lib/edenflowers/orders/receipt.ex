@@ -78,7 +78,7 @@ defmodule Edenflowers.Orders.Receipt do
   def build_payload(%CourseRegistration{} = registration) do
     locale = registration.locale
     course = registration.course
-    base = net_of_vat(registration.amount, registration.tax_rate)
+    base = Vat.net_of_vat(registration.amount, registration.tax_rate)
     amount = Format.currency(registration.amount, locale)
 
     %{
@@ -105,7 +105,7 @@ defmodule Edenflowers.Orders.Receipt do
           quantity: registration.seats,
           unit_price_ex_tax:
             Format.currency(
-              net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate),
+              Vat.net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate),
               locale
             ),
           tax_rate: Format.percentage(registration.tax_rate, locale),
@@ -126,9 +126,6 @@ defmodule Edenflowers.Orders.Receipt do
       grand_total: amount
     }
   end
-
-  # Same split as `Vat.breakdown/1`: round the base, VAT is the remainder.
-  defp net_of_vat(gross, rate), do: gross |> Decimal.div(Decimal.add(1, rate)) |> Decimal.round(2)
 
   # `total` is net of any promotion; the receipt states the discount once as
   # its own row, so the line column has to show the undiscounted subtotal or
