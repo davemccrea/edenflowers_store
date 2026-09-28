@@ -402,6 +402,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     assigns =
       assigns
       |> assign(:card_line_item, card_line_item)
+      |> assign(:recipient_name, assigns.form[:recipient_name].value)
       |> assign(
         :card_message_max,
         card_line_item && ProductVariantSize.max_message_length(card_line_item.variant_size)
@@ -417,38 +418,47 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           class="flex flex-col"
         >
           <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card message")}</label>
-          <div class="textarea textarea-lg relative w-full">
-            <div class="relative w-full">
-              <textarea
-                id={"#{@id}-card-message"}
-                name={@form[:card_message].name}
-                class="h-full w-full resize-none bg-transparent pr-20 focus:outline-none"
-                maxlength={@card_message_max}
-                aria-describedby={"#{@id}-card-message-count"}
-                rows={5}
-                data-testid="card-message-textarea"
-              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
-              <div class="absolute top-2 right-2">
-                <button
-                  type="button"
-                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
-                  class="block shrink-0 cursor-pointer"
-                  data-testid="card-image-button"
-                  title={gettext("Change card")}
-                >
-                  <.image
-                    src={@card_line_item.product_image_slug}
-                    alt=""
-                    width={80}
-                    height={80}
-                    sizes="80px"
-                    class="h-20 w-20 object-cover transition-opacity hover:opacity-70"
-                  />
-                  <span class="sr-only">{gettext("Change card")}</span>
-                </button>
-              </div>
-            </div>
-            <div id={"#{@id}-card-message-count"} class="text-base-content/70 flex justify-end text-xs">
+          <%!-- The input is styled as the card itself, matching the thank-you page's card,
+               so the customer sees their words as the recipient will. --%>
+          <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2">
+            <p
+              :if={present?(@recipient_name)}
+              class="mb-3 pr-24 text-sm"
+              aria-hidden="true"
+              data-testid="card-message-recipient"
+            >
+              {~t"For #{@recipient_name}"}
+            </p>
+            <textarea
+              id={"#{@id}-card-message"}
+              name={@form[:card_message].name}
+              class="font-serif w-full resize-none bg-transparent pr-24 text-xl italic leading-snug placeholder:text-cream-content/50 focus:outline-none"
+              maxlength={@card_message_max}
+              aria-describedby={"#{@id}-card-message-count"}
+              placeholder={~t"Write your message…"}
+              rows={5}
+              data-testid="card-message-textarea"
+            >{Phoenix.HTML.Form.normalize_value("textarea", @form[:card_message].value)}</textarea>
+            <%!-- Keyed on the chosen card so a new pick replaces the element and replays the tuck-in. --%>
+            <button
+              id={"card-image-#{@card_line_item.product_variant_id}"}
+              type="button"
+              phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#card-drawer")}
+              class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md hover:-translate-y-0.5 hover:shadow-lg"
+              data-testid="card-image-button"
+              title={gettext("Change card")}
+            >
+              <.image
+                src={@card_line_item.product_image_slug}
+                alt=""
+                width={80}
+                height={80}
+                sizes="80px"
+                class="h-20 w-20 object-cover"
+              />
+              <span class="sr-only">{gettext("Change card")}</span>
+            </button>
+            <div id={"#{@id}-card-message-count"} class="text-cream-content/60 flex justify-end text-xs">
               <span id="char-count" phx-update="ignore">0</span>/{@card_message_max}
             </div>
           </div>
@@ -664,6 +674,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
+
+  defp present?(text), do: is_binary(text) and String.trim(text) != ""
 
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
 

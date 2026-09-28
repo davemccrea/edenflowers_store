@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
   import Phoenix.LiveViewTest,
     only: [
+      element: 3,
       live: 2,
       render: 1,
       render_click: 1,
@@ -154,7 +155,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
-      |> click_link("Edit")
+      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
+      |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -172,7 +174,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> fill_in("Email *", with: "undecided@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
-      |> click_link("Edit")
+      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
+      |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
       |> assert_has("[data-testid='checkout-step-1']")
       |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -189,7 +192,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> fill_in("Email *", with: "subscribed@example.com")
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
-      |> click_link("Edit")
+      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
+      |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -592,6 +596,22 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> fill_in("Card message", with: "Happy birthday!")
       |> fill_in("Recipient name *", with: "Updated Recipient")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
+    end
+
+    test "addresses the card to the recipient as their name is typed",
+         %{conn: conn, variant: variant, card_variant: card_variant} do
+      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
+
+      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
+
+      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='card-message-recipient']", text: "For Original")
+      |> fill_in("Recipient name *", with: "Anna")
+      |> assert_has("[data-testid='card-message-recipient']", text: "For Anna")
     end
 
     test "renders maxlength matching the selected card's size limit",
