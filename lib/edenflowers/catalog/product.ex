@@ -37,10 +37,7 @@ defmodule Edenflowers.Catalog.Product do
 
     create :create do
       accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
-      argument :fulfillment_option_ids, {:array, :uuid}
       argument :product_variants, {:array, :map}
-
-      change manage_relationship(:fulfillment_option_ids, :fulfillment_options, type: :append_and_remove)
 
       change manage_relationship(:product_variants,
                type: :direct_control,
@@ -94,10 +91,6 @@ defmodule Edenflowers.Catalog.Product do
     belongs_to :product_category, Edenflowers.Catalog.ProductCategory, allow_nil?: false
 
     has_many :product_variants, Edenflowers.Catalog.ProductVariant
-
-    many_to_many :fulfillment_options, Edenflowers.Fulfillment.FulfillmentOption do
-      through Edenflowers.Fulfillment.ProductFulfillmentOption
-    end
   end
 
   aggregates do

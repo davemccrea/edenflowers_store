@@ -22,7 +22,5 @@ defmodule Edenflowers.Fulfillment do
       define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
       define :fulfill_on_date, action: :fulfill_on_date, args: [:fulfillment_option_id, :date]
     end
-
-    resource Edenflowers.Fulfillment.ProductFulfillmentOption
   end
 end

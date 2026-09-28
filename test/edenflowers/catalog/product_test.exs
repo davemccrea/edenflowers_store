@@ -65,38 +65,6 @@ defmodule Edenflowers.Catalog.ProductTest do
              } = error
     end
 
-    test "assigns fulfillment option to product", %{tax_rate: tax_rate, product_category: product_category} do
-      fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-      fulfillment_option_id = fulfillment_option.id
-
-      assert {:ok, %{fulfillment_options: [%{id: ^fulfillment_option_id}]} = _} =
-               Product
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "Product 1",
-                 description: "Product 1 description",
-                 image_slug: "image.jpg",
-                 tax_rate_id: tax_rate.id,
-                 product_category_id: product_category.id,
-                 fulfillment_option_ids: [fulfillment_option_id]
-               })
-               |> Ash.create(authorize?: false)
-    end
-
-    test "fails to assign fulfillment option to product if fulfillment option does not exist", %{tax_rate: tax_rate} do
-      id = Ecto.UUID.generate()
-
-      assert {:error, _} =
-               Product
-               |> Ash.Changeset.for_create(:create, %{
-                 tax_rate_id: tax_rate.id,
-                 name: "Product 1",
-                 description: "Product 1 description",
-                 image_slug: "image.jpg",
-                 fulfillment_option_ids: [id]
-               })
-               |> Ash.create(authorize?: false)
-    end
-
     test "returns nil cheapest_price when product has no variants", %{tax_rate: tax_rate} do
       product = generate(product(tax_rate_id: tax_rate.id))
 
