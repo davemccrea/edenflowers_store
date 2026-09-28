@@ -98,7 +98,6 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             data-testid={if @paid?, do: "order-paid", else: "order-pending"}
           >
             <%= if @paid? do %>
-              <.icon name="hero-check-circle" class="text-primary size-4 align-[-0.2em]" />
               {~t"Payment received. A confirmation email is on its way."}
             <% else %>
               {~t"Confirming your payment… You'll get a confirmation email once it's done."}

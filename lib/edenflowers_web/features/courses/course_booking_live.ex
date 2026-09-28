@@ -63,7 +63,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
           region, so the swap from confirming to received is announced. --%>
             <p role="status" class="text-base-content/70 mt-6 text-sm" data-testid="payment-status">
               <%= if @registration.status == :confirmed do %>
-                <.icon name="hero-check-circle" class="text-primary size-4 align-[-0.2em]" />
                 {~t"Payment received. A confirmation email is on its way."}
               <% else %>
                 {~t"Confirming your payment… You'll get a confirmation email once it's done."}
