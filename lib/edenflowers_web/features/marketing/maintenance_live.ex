@@ -33,21 +33,13 @@ defmodule EdenflowersWeb.Marketing.MaintenanceLive do
         <div class="text-base-content flex max-w-xl flex-col gap-5 text-center text-lg">
           <p>
             Vi håller på att förnya webbplatsen. Kontakta Jennie på
-            <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">
-              info@edenflowers.fi
-            </a>
-            eller <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
-              040 220 9494
-            </a>.
+            <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">info@edenflowers.fi</a>
+            eller <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>.
           </p>
           <p>
             Uudistamme verkkosivujamme. Ota yhteyttä Jennieen:
-            <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">
-              info@edenflowers.fi
-            </a>
-            tai <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">
-              040 220 9494
-            </a>.
+            <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">info@edenflowers.fi</a>
+            tai <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>.
           </p>
         </div>
       </main>
