@@ -973,77 +973,36 @@ defmodule EdenflowersWeb.CoreComponents do
 
   defp cart_aria_label(_), do: ~t"Cart, empty"
 
-  @placement %{
-    "left" => %{
-      class: "justify-start",
-      transition_in: "translate-x-0 opacity-100",
-      transition_out: "-translate-x-full opacity-0"
-    },
-    "right" => %{
-      class: "justify-end",
-      transition_in: "translate-x-0 opacity-100",
-      transition_out: "translate-x-full opacity-0"
-    }
-  }
-
+  @doc """
+  Slide-in drawer built on a native modal `<dialog>`, so the browser provides
+  the backdrop, focus trapping, Escape and focus return. Open and close it with
+  `JS.exec("phx-show" | "phx-hide", to: "#id")`; `app.js` turns those into
+  `showModal()` and `close()`, and `app.css` animates the slide.
+  """
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right"]
   attr :class, :string, default: "bg-base-100 min-w-96"
   attr :label, :string, default: nil
   slot :inner_block, required: true
 
-  def drawer(%{placement: placement} = assigns) do
-    assigns =
-      assigns
-      |> assign(:transition, "transition-all duration-250 ease-in-out")
-      |> assign(:placement_class, @placement[placement].class)
-      |> assign(:transition_in, @placement[placement].transition_in)
-      |> assign(:transition_out, @placement[placement].transition_out)
-      |> assign(:time, 250)
-
+  def drawer(assigns) do
     ~H"""
     <div
       id={@id}
-      phx-window-keydown={JS.exec("phx-hide", to: "##{@id}")}
-      phx-key="Escape"
-      phx-show={
-        %JS{}
-        |> JS.show(to: "##{@id}-backdrop", transition: {@transition, "opacity-0", "opacity-100"}, time: @time)
-        |> JS.show(
-          to: "##{@id}-dialog",
-          display: "flex",
-          transition: {@transition, @transition_out, @transition_in},
-          time: @time
-        )
-        |> JS.focus(to: "##{@id}-top")
-      }
-      phx-hide={
-        %JS{}
-        |> JS.hide(to: "##{@id}-backdrop", transition: {@transition, "opacity-100", "opacity-0"}, time: @time)
-        |> JS.hide(
-          to: "##{@id}-dialog",
-          transition: {@transition, @transition_in, @transition_out},
-          time: @time
-        )
-        |> JS.pop_focus()
-      }
-      class="z-100 relative"
+      phx-show={JS.dispatch("drawer:open", to: "##{@id}-dialog")}
+      phx-hide={JS.dispatch("drawer:close", to: "##{@id}-dialog")}
     >
-      <div id={"#{@id}-backdrop"} class="bg-black/30 fixed inset-0 hidden"></div>
-      <div
+      <%!-- The browser toggles `open`; ignoring it stops a LiveView patch from closing the drawer. --%>
+      <dialog
         id={"#{@id}-dialog"}
-        role="dialog"
-        aria-modal="true"
         aria-label={@label}
-        class={"#{@placement_class} js-scroll-lock-dialog fixed inset-0 hidden outline-hidden"}
+        class={"slide-drawer--#{@placement} slide-drawer"}
+        phx-mounted={JS.ignore_attributes(["open"])}
       >
-        <.focus_wrap id={"#{@id}-body"}>
-          <div tabindex="0" id={"#{@id}-top"}></div>
-          <div phx-click-away={JS.exec("phx-hide", to: "##{@id}")} id={"#{@id}-content"} class={@class}>
-            {render_slot(@inner_block)}
-          </div>
-        </.focus_wrap>
-      </div>
+        <div id={"#{@id}-content"} class={@class}>
+          {render_slot(@inner_block)}
+        </div>
+      </dialog>
     </div>
     """
   end

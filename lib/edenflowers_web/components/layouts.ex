@@ -248,7 +248,7 @@ defmodule EdenflowersWeb.Layouts do
         <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-content/12 grid items-center border-b px-2 py-2.5 lg:hidden">
           <button
             type="button"
-            phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#admin-nav-drawer")}
+            phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label={~t"Open navigation menu"}
             class="text-base-content/60 -m-px cursor-pointer p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
@@ -512,7 +512,7 @@ defmodule EdenflowersWeb.Layouts do
       id="nav-drawer"
       placement="left"
       label={~t"Navigation menu"}
-      class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col sm:w-[25rem]"
+      class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col overflow-y-auto overscroll-contain sm:w-[25rem]"
     >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
@@ -588,7 +588,7 @@ defmodule EdenflowersWeb.Layouts do
                 <.disclosure_trigger
                   aria_label={~t"Open navigation menu"}
                   controls="nav-drawer"
-                  phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#nav-drawer")}
+                  phx-click={JS.exec("phx-show", to: "#nav-drawer")}
                 >
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
                 </.disclosure_trigger>
@@ -651,7 +651,7 @@ defmodule EdenflowersWeb.Layouts do
               <%!-- Cart button --%>
               <.cart_count_badge
                 count={@order.total_items_in_cart}
-                phx-click={JS.push_focus() |> JS.exec("phx-show", to: "#cart-drawer")}
+                phx-click={JS.exec("phx-show", to: "#cart-drawer")}
               >
                 <.icon
                   class="text-base-content h-5 w-5 group-hover:text-base-content/60"
@@ -691,7 +691,7 @@ defmodule EdenflowersWeb.Layouts do
       :if={@current_user && @current_user.admin}
       id="admin-shortcut"
       navigate={~p"/admin"}
-      class="bg-base-content text-base-100 fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90"
+      class="bg-base-content text-base-100 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] fixed left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90"
     >
       <.icon name="hero-document-text" class="h-5 w-5" />
       {~t"Admin"}
