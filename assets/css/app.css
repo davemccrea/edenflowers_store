@@ -833,17 +833,11 @@ main p {
   }
 }
 
+/* The easing curve supplies the overshoot; an extra keyframe would bounce twice. */
 @keyframes flower-bloom {
-  0% {
+  from {
     transform: rotate(-20deg) scale(0.6);
     opacity: 0;
-  }
-  70% {
-    transform: rotate(4deg) scale(1.06);
-    opacity: 1;
-  }
-  100% {
-    transform: none;
   }
 }
 
