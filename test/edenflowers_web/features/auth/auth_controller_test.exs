@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.AuthControllerTest do
+defmodule EdenflowersWeb.Auth.AuthControllerTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest

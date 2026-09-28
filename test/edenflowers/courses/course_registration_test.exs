@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.RegistrationTest do
+defmodule Edenflowers.Courses.CourseRegistrationTest do
   use Edenflowers.DataCase, async: true
 
   import Generator

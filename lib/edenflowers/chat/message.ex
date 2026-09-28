@@ -10,7 +10,7 @@ defmodule Edenflowers.Chat.Message do
   oban do
     triggers do
       trigger :respond do
-        actor_persister Edenflowers.AiAgentActorPersister
+        actor_persister Edenflowers.Chat.ActorPersister
         action :respond
         queue :chat_responses
         lock_for_update? false

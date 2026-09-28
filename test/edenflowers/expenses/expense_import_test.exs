@@ -27,11 +27,11 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
   }
 
   test "fetches the document, extracts fields, and ingests the expense" do
-    expect(Edenflowers.Papra.Mock, :fetch_document, fn @organization_id, @document_id ->
+    expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn @organization_id, @document_id ->
       {:ok, @file_response}
     end)
 
-    expect(Edenflowers.Claude.Mock, :extract_expense, fn "PDF_BYTES", "application/pdf" ->
+    expect(Edenflowers.External.ClaudeAPI.Mock, :extract_expense, fn "PDF_BYTES", "application/pdf" ->
       {:ok, @extracted_fields}
     end)
 
@@ -58,8 +58,8 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
   end
 
   test "recording the same document twice processes it once" do
-    expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
-    expect(Edenflowers.Claude.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
+    expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
+    expect(Edenflowers.External.ClaudeAPI.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
 
     import = record_import()
     assert {:ok, _import} = process(import)
@@ -71,7 +71,7 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
   end
 
   test "fails the job when Papra fetch fails" do
-    expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ ->
+    expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ ->
       {:error, {:papra_http_error, 404}}
     end)
 
@@ -83,9 +83,9 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
   end
 
   test "fails the job when Claude extraction fails" do
-    expect(Edenflowers.Papra.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
+    expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
 
-    expect(Edenflowers.Claude.Mock, :extract_expense, fn _, _ ->
+    expect(Edenflowers.External.ClaudeAPI.Mock, :extract_expense, fn _, _ ->
       {:error, {:claude_extraction_failed, :timeout}}
     end)
 

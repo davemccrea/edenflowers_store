@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
   end
 
   test "fills the other languages from Swedish", %{conn: conn} do
-    expect(Edenflowers.Claude.Mock, :translate, fn %{"name" => "Röda rosor"}, "sv-FI" ->
+    expect(Edenflowers.External.ClaudeAPI.Mock, :translate, fn %{"name" => "Röda rosor"}, "sv-FI" ->
       {:ok,
        %{
          "en-GB" => %{"name" => "Red roses", "description" => ""},

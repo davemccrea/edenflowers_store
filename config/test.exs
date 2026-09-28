@@ -66,6 +66,6 @@ config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 config :edenflowers, :here_api, Edenflowers.External.HereAPI.Mock
 
 # Use mocks for expense capture in tests
-config :edenflowers, :papra_client, Edenflowers.Papra.Mock
-config :edenflowers, :claude_client, Edenflowers.Claude.Mock
+config :edenflowers, :papra_api, Edenflowers.External.PapraAPI.Mock
+config :edenflowers, :claude_api, Edenflowers.External.ClaudeAPI.Mock
 config :edenflowers, :papra_webhook_secret, "test-webhook-secret"

@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
 
   defp blank?(value), do: String.trim(value || "") == ""
 
-  defp claude, do: Application.get_env(:edenflowers, :claude_client, Edenflowers.Claude)
+  defp claude, do: Application.get_env(:edenflowers, :claude_api, Edenflowers.External.ClaudeAPI)
 
   attr :form, Phoenix.HTML.Form, required: true
   attr :translating, :string, default: nil, doc: "the locale being translated from, while Claude works"
