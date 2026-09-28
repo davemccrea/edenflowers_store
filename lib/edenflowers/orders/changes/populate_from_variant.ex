@@ -6,6 +6,10 @@ defmodule Edenflowers.Orders.Changes.PopulateFromVariant do
 
   @impl true
   def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, &populate/1)
+  end
+
+  defp populate(changeset) do
     variant_id = Ash.Changeset.get_attribute(changeset, :product_variant_id)
 
     with id when not is_nil(id) <- variant_id,
