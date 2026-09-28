@@ -24,7 +24,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     assert registration.status == :pending
     assert Decimal.equal?(registration.tax_rate, "0.255")
     assert Decimal.equal?(registration.amount, "255.00")
-    assert registration.reference =~ ~r/^[0-9A-Z]{6}$/
+    assert registration.reference =~ ~r/^\d+$/
   end
 
   test "rejects an email address without a domain" do

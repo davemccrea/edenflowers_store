@@ -20,9 +20,14 @@ alias Edenflowers.Courses.{Course, CourseRegistration}
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
 alias Edenflowers.Orders.{Order, LineItem}
 alias Edenflowers.Orders.Calculations.Vat
-alias Edenflowers.Orders.Changes.GenerateOrderReference
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
+
+# Ash.Seed skips the actions, so draw from the same sequence they use.
+next_reference = fn ->
+  %{rows: [[reference]]} = Repo.query!("SELECT nextval('reference_seq')::text")
+  reference
+end
 
 require Ash.Query
 
@@ -504,7 +509,7 @@ today = Date.utc_today()
     seats: seats,
     status: status,
     locale: locale,
-    reference: GenerateOrderReference.generate(),
+    reference: next_reference.(),
     tax_rate: tax_rate.percentage,
     amount: Decimal.mult(course.price, seats),
     confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
@@ -699,7 +704,7 @@ for order_attrs <- orders do
 
   order =
     Ash.Seed.seed!(Order, %{
-      order_reference: GenerateOrderReference.generate(),
+      order_reference: next_reference.(),
       state: :placed,
       # Marked paid below, once the line items give it a grand_total to pay.
       payment_status: :pending,
