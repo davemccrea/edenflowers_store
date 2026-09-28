@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.Router do
     plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug EdenflowersWeb.Plugs.InitStore
     plug EdenflowersWeb.Plugs.Maintenance
 
     plug Localize.Plug.PutLocale,
@@ -26,8 +25,12 @@ defmodule EdenflowersWeb.Router do
     plug :load_from_session
   end
 
+  pipeline :store do
+    plug EdenflowersWeb.Plugs.InitStore
+  end
+
   scope "/", EdenflowersWeb do
-    pipe_through :browser
+    pipe_through [:browser, :store]
 
     ash_authentication_live_session :public,
       on_mount: [
@@ -38,7 +41,6 @@ defmodule EdenflowersWeb.Router do
       ] do
       scope "/", Marketing do
         live "/", HomeLive
-        live "/back-soon", MaintenanceLive
         live "/weddings", WeddingsLive
         live "/condolences", CondolencesLive
         live "/about", AboutLive
@@ -71,6 +73,15 @@ defmodule EdenflowersWeb.Router do
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
     get "/order/:id/receipt", Checkout.ReceiptController, :show
     get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
+  end
+
+  scope "/", EdenflowersWeb do
+    pipe_through :browser
+
+    live_session :maintenance do
+      live "/back-soon", Marketing.MaintenanceLive
+    end
+
     get "/courses/bookings/:id/receipt", Courses.CourseReceiptController, :show
     get "/locale/:locale", LocaleController, :index
 
