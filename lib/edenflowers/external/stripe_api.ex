@@ -28,6 +28,14 @@ defmodule Edenflowers.External.StripeAPI do
     |> Decimal.to_integer()
   end
 
+  @doc "Converts Stripe's integer minor units (cents) back into a decimal amount."
+  def from_stripe_amount(cents) do
+    cents
+    |> Decimal.new()
+    |> Decimal.div(100)
+    |> Decimal.round(2)
+  end
+
   @impl true
   def create_payment_intent(amount_cents, metadata) do
     Stripe.PaymentIntent.create(%{

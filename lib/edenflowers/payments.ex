@@ -66,7 +66,7 @@ defmodule Edenflowers.Payments do
   """
   def complete(payment_intent) do
     with {:ok, {_key, id} = ref} <- find_payable(payment_intent) do
-      amount_paid = Decimal.div(payment_intent.amount_received, 100)
+      amount_paid = StripeAPI.from_stripe_amount(payment_intent.amount_received)
 
       case complete_payable(ref, payment_intent.id, amount_paid) do
         {:ok, _record} ->
