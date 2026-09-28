@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Changes.SwapCardLineItem do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.Changes.RemoveCardLineItem
 
   @impl true
@@ -23,13 +23,6 @@ defmodule Edenflowers.Orders.Changes.SwapCardLineItem do
   end
 
   defp create_card(order_id, product_variant_id) do
-    LineItem
-    |> Ash.Changeset.for_create(:add_to_cart, %{
-      order_id: order_id,
-      product_variant_id: product_variant_id,
-      quantity: 1,
-      is_card: true
-    })
-    |> Ash.create(authorize?: false)
+    Orders.add_line_item(order_id, product_variant_id, 1, %{is_card: true}, authorize?: false)
   end
 end
