@@ -612,6 +612,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> assert_has("[data-testid='card-message-recipient']", text: "For Original")
       |> fill_in("Recipient name *", with: "Anna Lindqvist")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Anna")
+      |> fill_in("Recipient name *", with: "")
+      |> assert_has("[data-testid='card-message-recipient'][hidden]")
+      |> fill_in("Recipient name *", with: "Bo")
+      |> assert_has("[data-testid='card-message-recipient']:not([hidden])", text: "For Bo")
     end
 
     test "renders maxlength matching the selected card's size limit",
