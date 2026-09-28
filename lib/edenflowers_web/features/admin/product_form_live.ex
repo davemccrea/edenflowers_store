@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductVariantSize
-  alias Edenflowers.Pricing.TaxRate
+  alias Edenflowers.Pricing
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          socket
          |> assign(:page_title, title)
          |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
-         |> assign(:tax_rates, Ash.read!(TaxRate, actor: actor))
+         |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:form, form)
          |> assign(:translating, nil)
          |> PhotoUpload.allow(photo_fields(form))}

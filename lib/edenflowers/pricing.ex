@@ -8,7 +8,10 @@ defmodule Edenflowers.Pricing do
   end
 
   resources do
-    resource Edenflowers.Pricing.TaxRate
+    resource Edenflowers.Pricing.TaxRate do
+      define :list_selectable_tax_rates, action: :selectable
+      define :retire_tax_rate, action: :retire
+    end
 
     resource Edenflowers.Pricing.Promotion do
       define :get_promotion_by_id, action: :read, get_by: [:id]
