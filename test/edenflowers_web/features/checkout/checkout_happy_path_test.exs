@@ -605,7 +605,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   # the order, so the handler's verification passes.
   defp payment_intent_succeeded_event(order_id) do
     order = Orders.get_order_by_id!(order_id, authorize?: false, load: [:grand_total])
-    amount_received = Decimal.mult(order.grand_total, 100) |> Decimal.to_integer()
+    amount_received = Edenflowers.External.StripeAPI.to_stripe_amount(order.grand_total)
 
     %Stripe.Event{
       type: "payment_intent.succeeded",

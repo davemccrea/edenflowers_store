@@ -126,7 +126,7 @@ defmodule Edenflowers.Orders.LineItem do
               )
 
     # `unit_price` is stored tax-inclusive.
-    calculate :unit_price_ex_tax, :decimal, expr(unit_price / (1 + tax_rate))
+    calculate :unit_price_ex_tax, :decimal, expr(round(unit_price / (1 + tax_rate), 2))
   end
 
   identities do
