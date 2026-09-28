@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Courses.Course
-  alias Edenflowers.Pricing.TaxRate
+  alias Edenflowers.Pricing
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
         {:ok,
          socket
          |> assign(:page_title, title)
-         |> assign(:tax_rates, Ash.read!(TaxRate, actor: actor))
+         |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:form, form)
          |> assign(:translating, nil)
          |> PhotoUpload.allow(@photo_fields)}
