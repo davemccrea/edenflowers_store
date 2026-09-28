@@ -16,10 +16,10 @@ defmodule Edenflowers.Format do
   them ("45,50 €"). Checkout, receipts and admin use `currency/2` instead, so
   their columns of totals line up.
   """
-  @spec price(Decimal.t() | integer | nil, Localize.Locale.locale_id()) :: String.t()
-  def price(nil, locale), do: price(0, locale)
+  @spec storefront_price(Decimal.t() | integer | nil, Localize.Locale.locale_id()) :: String.t()
+  def storefront_price(nil, locale), do: storefront_price(0, locale)
 
-  def price(amount, locale) do
+  def storefront_price(amount, locale) do
     if amount |> Decimal.new() |> Decimal.integer?() do
       Localize.Number.to_string!(amount, locale: locale, currency: :EUR, fractional_digits: 0)
     else
@@ -34,10 +34,10 @@ defmodule Edenflowers.Format do
   Returns `nil` if either the value or the currency is missing, since
   LLM-extracted expenses can leave either unset.
   """
-  @spec amount(number | nil, atom | nil, Localize.Locale.locale_id()) :: String.t() | nil
-  def amount(value, currency, _locale) when is_nil(value) or is_nil(currency), do: nil
+  @spec currency_in(number | nil, atom | nil, Localize.Locale.locale_id()) :: String.t() | nil
+  def currency_in(value, currency, _locale) when is_nil(value) or is_nil(currency), do: nil
 
-  def amount(value, currency, locale) do
+  def currency_in(value, currency, locale) do
     iso = currency |> to_string() |> String.upcase() |> String.to_existing_atom()
     Localize.Number.to_string!(value, locale: locale, currency: iso)
   end

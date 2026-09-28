@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col :let={expense} field="total_amount" sort label={~t"Amount"} class="text-right">
             <span :if={expense.total_amount && expense.currency} class="whitespace-nowrap tabular-nums">
-              {Format.amount(expense.total_amount, expense.currency, @locale)}
+              {Format.currency_in(expense.total_amount, expense.currency, @locale)}
             </span>
             <.blank :if={is_nil(expense.total_amount) or is_nil(expense.currency)} />
           </:col>

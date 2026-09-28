@@ -489,7 +489,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ~t"from #{amount}"
   end
 
-  defp euros(amount), do: Edenflowers.Format.price(amount, Edenflowers.Format.locale())
+  defp euros(amount), do: Edenflowers.Format.storefront_price(amount, Edenflowers.Format.locale())
 
   # Returns %{quote: ..., couple: ...} once there's a testimonial to show.
   defp testimonial, do: nil
