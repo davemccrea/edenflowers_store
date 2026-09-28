@@ -162,7 +162,7 @@ defmodule Edenflowers.Orders.Order do
       prepare build(load: @checkout_load)
     end
 
-    # Scoped to the actor by filter, not by policy: the admin bypass above grants
+    # Scoped to the actor by filter, not by policy: the admin bypass in policies grants
     # admins an unrestricted read, so an action named for the customer's own
     # order history has to narrow itself or it hands Jennie everyone's orders.
     read :mine do
@@ -539,12 +539,8 @@ defmodule Edenflowers.Orders.Order do
     calculate :promotion_applied?,
               :boolean,
               expr(
-                if(
-                  not is_nil(promotion_id) and
-                    (is_nil(promotion_minimum_cart_total) or items_subtotal >= promotion_minimum_cart_total),
-                  true,
-                  false
-                )
+                not is_nil(promotion_id) and
+                  (is_nil(promotion_minimum_cart_total) or items_subtotal >= promotion_minimum_cart_total)
               )
 
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
@@ -552,7 +548,8 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :vat, :decimal, Calculations.Vat
 
-    # False until step 1 assigns the customer.
+    # False until step 1 assigns the customer. An aggregate `default` doesn't
+    # cover a nil `user_id`, hence the `if`.
     calculate :newsletter_offer_hidden?, :boolean, expr(if(customer_newsletter_offer_hidden?, true, false))
 
     # A cart with only a card line item is presented as empty in the UI
