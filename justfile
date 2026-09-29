@@ -1,5 +1,8 @@
 set shell := ["bash", "-c"]
 
+# Override with `PORT=4001 just dev` or `just port=4001 dev`
+port := env("PORT", "4000")
+
 [private]
 default:
     @just --list --unsorted
@@ -7,7 +10,7 @@ default:
 # Start the dev server with .env loaded
 [group('local')]
 dev: check-typst
-    source .env && iex -S mix phx.server
+    source .env && PORT={{port}} iex -S mix phx.server
 
 # Run the test suite with .env loaded (extra args go to mix test)
 [group('local')]
@@ -17,7 +20,7 @@ test *args: check-typst
 # Forward Stripe webhooks to the local dev server
 [group('local')]
 stripe-listen:
-    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:4000/webhook/stripe
+    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:{{port}}/webhook/stripe
 
 # Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
 [group('local')]
