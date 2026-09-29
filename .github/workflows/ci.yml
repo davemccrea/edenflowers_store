@@ -35,7 +35,7 @@ jobs:
           version-file: .tool-versions
           version-type: strict
 
-      # Must match TYPST_VERSION in Dockerfile — bump both together.
+      # Must match TYPST_VERSION in Dockerfile and scripts/install-typst.sh. Bump all three together.
       - name: Install Typst
         env:
           TYPST_VERSION: 0.14.2

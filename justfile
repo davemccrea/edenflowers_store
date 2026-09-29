@@ -6,18 +6,27 @@ default:
 
 # Start the dev server with .env loaded
 [group('local')]
-dev:
+dev: check-typst
     source .env && iex -S mix phx.server
 
 # Run the test suite with .env loaded (extra args go to mix test)
 [group('local')]
-test *args:
+test *args: check-typst
     source .env && mix test {{args}}
 
 # Forward Stripe webhooks to the local dev server
 [group('local')]
 stripe-listen:
     stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:4000/webhook/stripe
+
+# Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
+[group('local')]
+install-typst:
+    ./scripts/install-typst.sh
+
+[private]
+check-typst:
+    @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just install-typst'." >&2; exit 1; }
 
 # Drop and set up the dev and test databases (run `just seed local` afterwards for data)
 [group('local')]

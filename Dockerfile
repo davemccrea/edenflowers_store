@@ -78,8 +78,9 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Pinned for deterministic layout/fonts vs local dev. `typst --version`
-# smoke-tests install — `tar` can exit 0 with nothing extracted if the
+# Pinned for deterministic layout/fonts vs local dev (scripts/install-typst.sh,
+# ci.yml; bump all three together). `typst --version`
+# smoke-tests install: `tar` can exit 0 with nothing extracted if the
 # filter arg drifts past a release rename. curl/xz purged same layer.
 ARG TYPST_VERSION=0.14.2
 RUN apt-get update \
