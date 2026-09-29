@@ -32,6 +32,7 @@ Run `just` to list everything. Each recipe wraps a script in `scripts/`, which y
 
 ```bash
 just dev                        # dev server at localhost:4000, with .env loaded
+PORT=4001 just dev              # same, on another port (also honoured by stripe-listen)
 just reset-local-db             # drop, set up and seed dev + test databases
 just deploy staging             # push current branch to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
@@ -60,7 +61,7 @@ Upload a document to [Papra](https://papra.app) and tag it `receipt`. That fires
 
 ### Stripe webhooks in dev
 
-Order finalization and the confirmation email depend on `payment_intent.succeeded`. Run `stripe listen --forward-to localhost:4000/webhook/stripe` and set the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.
+Order finalization and the confirmation email depend on `payment_intent.succeeded`. Run `just stripe-listen` (or `PORT=4001 just stripe-listen` if the server is on another port) and set the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.
 
 ### Worktrees
 
