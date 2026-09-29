@@ -1,0 +1,62 @@
+/* Open Sans is variable; Crimson Text ships static weights.
+   Both are SIL OFL 1.1, see assets/fonts/OFL.txt. */
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-Variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: italic;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-400italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Crimson Text";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CrimsonText-600.woff2") format("woff2");
+}
+
+@theme {
+  --font-sans: "Open Sans", sans-serif;
+  --font-serif: "Crimson Text", serif;
+  --header-height: 8rem;
+  /* Space under the fixed header for a page's first block. */
+  --header-clearance: calc(var(--header-height) + var(--spacing) * 12);
+  --drawer-duration: 250ms;
+  /* Honey underline geometry. Its colour is --color-link-underline. */
+  --link-underline-thickness: 2px;
+  --link-underline-offset: 0.3em;
+}
+
+/* Brand surfaces beyond daisyUI's semantic colours. Cream is the warm light
+   surface (footer, callouts, banners); forest is for dark reverse-out sections.
+   Each -content shares its surface's hue and chroma. */
+@theme {
+  --color-cream: oklch(95% 0.025 75);
+  --color-cream-content: oklch(30% 0.05 60);
+
+  --color-forest: oklch(26% 0.05 152);
+  --color-forest-content: oklch(94% 0.02 80);
+
+  --color-link-underline: oklch(81% 0.15 93);
+}

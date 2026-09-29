@@ -1,0 +1,180 @@
+#hotfx-shy-header {
+  display: flex;
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: 50;
+  width: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  background: var(--color-base-100);
+  visibility: visible;
+  transition:
+    transform 0.2s ease-out,
+    visibility 0s linear;
+}
+
+#hotfx-shy-header.shy-header--hidden {
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition-delay: 0s, 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #hotfx-shy-header {
+    transition: none;
+  }
+}
+
+/* Stops the page shifting sideways when an open drawer locks scrolling. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html:has(dialog.slide-drawer:modal) {
+  overflow: hidden;
+}
+
+/* Undo the UA's centred dialog box so the drawer runs full height against
+   one edge. The inner div owns the width and background. */
+.slide-drawer {
+  inset-block: 0;
+  height: auto;
+  max-height: none;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  translate: var(--slide-drawer-offscreen);
+  opacity: 0.3;
+}
+
+.slide-drawer--left {
+  --slide-drawer-offscreen: -100% 0;
+}
+
+.slide-drawer > div {
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+}
+
+.slide-drawer--left > div {
+  padding-left: env(safe-area-inset-left);
+}
+
+.slide-drawer--right > div {
+  padding-right: env(safe-area-inset-right);
+}
+
+.slide-drawer--right {
+  --slide-drawer-offscreen: 100% 0;
+  margin-inline-start: auto;
+}
+
+.slide-drawer[open] {
+  translate: 0 0;
+  opacity: 1;
+}
+
+.slide-drawer::backdrop {
+  background: rgb(0 0 0 / 0.3);
+  opacity: 0;
+}
+
+.slide-drawer[open]::backdrop {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Unlock after the exit animation; opening locks immediately. */
+  html {
+    transition: overflow 0s var(--drawer-duration) allow-discrete;
+  }
+
+  html:has(dialog.slide-drawer:modal) {
+    transition: none;
+  }
+
+  .slide-drawer {
+    transition:
+      translate var(--drawer-duration) var(--ease-in-out),
+      opacity var(--drawer-duration) var(--ease-in-out),
+      display var(--drawer-duration) allow-discrete,
+      overlay var(--drawer-duration) allow-discrete;
+  }
+
+  .slide-drawer::backdrop {
+    transition:
+      opacity var(--drawer-duration) var(--ease-in-out),
+      display var(--drawer-duration) allow-discrete,
+      overlay var(--drawer-duration) allow-discrete;
+  }
+
+  @starting-style {
+    .slide-drawer[open] {
+      translate: var(--slide-drawer-offscreen);
+      opacity: 0.3;
+    }
+
+    .slide-drawer[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+.footer-grid {
+  display: grid;
+  gap: 3rem;
+  grid-template-areas:
+    "newsletter"
+    "location"
+    "hours"
+    "help"
+    "socials";
+}
+
+.footer-grid__newsletter {
+  grid-area: newsletter;
+}
+.footer-grid__location {
+  grid-area: location;
+}
+.footer-grid__hours {
+  grid-area: hours;
+}
+.footer-grid__help {
+  grid-area: help;
+}
+.footer-grid__socials {
+  grid-area: socials;
+}
+
+@media (width >= theme(--breakpoint-sm)) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location"
+      "newsletter  hours"
+      "help        socials";
+  }
+}
+
+@media (width >= theme(--breakpoint-lg)) {
+  .footer-grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-areas:
+      "newsletter  location  help  socials"
+      "newsletter  hours     help  socials";
+  }
+}
+
+@utility container {
+  @apply mx-auto px-4 sm:px-8;
+}
+
+/* Used with the FocusElement hook so the heading lands below the fixed header. */
+.scroll-anchor-below-header {
+  scroll-margin-top: calc(
+    var(--header-height) + var(--spacing) * 4 + env(safe-area-inset-top)
+  );
+}

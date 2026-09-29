@@ -656,7 +656,7 @@ Hooks.Stripe = {
    *   - rest: border-color = color-mix(base-content 20%, transparent)
    *   - focus / focus-within: border-color flips to full base-content;
    *                           outline 2px solid with 2px offset, in primary --
-   *                           daisyUI draws that outline in base-content, app.css
+   *                           daisyUI draws that outline in base-content, base.css
    *                           overrides every focus ring to the brand green
    *   - invalid: border-color and focus outline flip to --color-error
    *   - input-lg: 48px tall, 18px font, 12px horizontal padding
@@ -671,7 +671,9 @@ Hooks.Stripe = {
 
     // Stripe's colour variables only accept hex, rgb() or hsl() and silently
     // drop our oklch() tokens, so paint each one to a canvas pixel to get sRGB.
-    const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    const ctx = document
+      .createElement("canvas")
+      .getContext("2d", { willReadFrequently: true });
     const rgb = (name) => {
       ctx.fillStyle = v(name);
       ctx.fillRect(0, 0, 1, 1);
@@ -686,7 +688,7 @@ Hooks.Stripe = {
     const base300 = rgb("--color-base-300");
 
     const subtleBorder = `color-mix(in oklab, ${baseContent} 20%, transparent)`;
-    // Checkboxes carry a heavier hairline than inputs -- see `.checkbox` in app.css.
+    // Checkboxes carry a heavier hairline than inputs -- see `.checkbox` in forms.css.
     const checkboxBorder = `color-mix(in oklab, ${baseContent} 55%, transparent)`;
 
     return {
@@ -930,7 +932,11 @@ Hooks.ArrowKeyNav = {
   mounted() {
     this.onKeydown = (e) => {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]")) return;
+      if (
+        e.target instanceof HTMLElement &&
+        e.target.closest("input, textarea, select, [contenteditable]")
+      )
+        return;
 
       const link = this.el.querySelector(`a[data-arrow-key="${e.key}"]`);
       if (!(link instanceof HTMLElement)) return;

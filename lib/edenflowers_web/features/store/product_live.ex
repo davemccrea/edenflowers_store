@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                   <label
                     :for={variant <- @product_variants}
-                    class="size-option group cursor-pointer"
+                    class="size-option"
                     data-active={(@selected_variant.id == variant.id && "true") || nil}
                   >
                     <input

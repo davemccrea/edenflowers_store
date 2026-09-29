@@ -1,0 +1,78 @@
+/* Square, unlike radios, which share --radius-selector. The frame is darker
+   than daisyUI's faint default so an empty box still reads as a box. */
+.checkbox {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+}
+
+.checkbox:checked,
+.checkbox[aria-checked="true"] {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.phx-submit-loading [type="submit"],
+.phx-submit-loading button[phx-click],
+[type="submit"][aria-busy="true"] {
+  cursor: progress;
+}
+
+/* The spinner replaces the label only after 300ms, so fast submits never
+   flash it. The base rule's 0s transitions make the swap snap back when
+   loading ends. .form-button-processing uses visibility so its text stays
+   out of the accessible name until shown. */
+.form-button-label,
+.form-button-spinner,
+.form-button-processing {
+  transition:
+    opacity 0s,
+    visibility 0s;
+}
+.form-button-spinner {
+  opacity: 0;
+}
+.form-button-processing {
+  visibility: hidden;
+}
+.phx-submit-loading .form-button-label,
+[aria-busy="true"] .form-button-label {
+  opacity: 0;
+  transition: opacity 0s 300ms;
+}
+.phx-submit-loading .form-button-spinner,
+[aria-busy="true"] .form-button-spinner {
+  opacity: 1;
+  transition: opacity 0s 300ms;
+}
+
+/* Reduced motion shows a static "Processing…" label instead of the spinner. */
+@media (prefers-reduced-motion: reduce) {
+  .form-button-spinner {
+    visibility: hidden;
+  }
+
+  .phx-submit-loading .form-button-processing,
+  [aria-busy="true"] .form-button-processing {
+    visibility: visible;
+    transition: visibility 0s 300ms;
+  }
+}
+
+.form-button-labelled .form-button-spinner {
+  visibility: hidden;
+}
+.phx-submit-loading .form-button-labelled .form-button-processing,
+[aria-busy="true"].form-button-labelled .form-button-processing {
+  visibility: visible;
+  transition: visibility 0s 300ms;
+}
+
+/* daisyUI would use --color-error-content, which here is a dark red text
+   shade and disappears into the red hover fill. */
+.btn-error.btn-outline:is(:hover, :focus-visible, :active):not(
+    :disabled,
+    [aria-disabled="true"]
+  ) {
+  color: var(--color-base-100);
+}

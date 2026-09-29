@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     <div class={@size == "sm" && "w-16 shrink-0"}>
       <label
         phx-drop-target={@upload.ref}
-        class="group outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+        class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
       >
         <span class="sr-only">{@label}</span>
         <span class={["bg-cream aspect-[4/5] relative block w-full overflow-hidden", (@errors != [] or @upload_errors != []) && "outline-error outline-1"]}>

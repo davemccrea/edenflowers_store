@@ -157,7 +157,6 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="current-month"
           type="button"
-          class="cursor-pointer"
         >
           {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
           <span class="sr-only">, {~t"go to current month"}</span>
@@ -167,7 +166,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="text-base-content flex flex-none cursor-pointer items-center justify-center p-1.5 hover:text-base-content/60"
+          class="text-base-content flex flex-none items-center justify-center p-1.5 hover:text-base-content/60"
         >
           <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />

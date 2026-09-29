@@ -453,7 +453,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               type="button"
               phx-click={JS.exec("phx-show", to: "#card-drawer")}
               aria-haspopup="dialog"
-              class="card-tuck absolute top-4 right-4 cursor-pointer shadow-md transition-shadow duration-200 hover:shadow-lg"
+              class="card-tuck absolute top-4 right-4 shadow-md transition-shadow duration-200 hover:shadow-lg"
               data-testid="card-image-button"
               title={gettext("Change card")}
             >
@@ -480,7 +480,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         type="button"
         phx-click={JS.exec("phx-show", to: "#card-drawer")}
         aria-haspopup="dialog"
-        class="press border-base-300 flex w-full cursor-pointer items-center gap-4 border px-4 py-3 text-left hover:border-primary"
+        class="press border-base-300 flex w-full items-center gap-4 border px-4 py-3 text-left hover:border-primary"
         data-testid="select-card-button"
       >
         <.icon name="hero-gift" class="h-6 w-6 shrink-0" />
@@ -533,7 +533,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           <button
             type="button"
             phx-click={JS.exec("phx-hide", to: "#card-drawer")}
-            class="-mr-2.5 flex h-11 w-11 cursor-pointer items-center justify-center"
+            class="-mr-2.5 flex h-11 w-11 items-center justify-center"
             aria-label={~t"close"}
           >
             <.icon name="hero-x-mark" class="h-6 w-6" />
@@ -559,7 +559,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 |> JS.exec("phx-hide", to: "#card-drawer")
               }
               aria-current={variant.id == @selected_variant_id && "true"}
-              class={["press relative flex cursor-pointer flex-col items-center gap-1 border p-2 hover:border-primary", if(variant.id == @selected_variant_id,
+              class={["press relative flex flex-col items-center gap-1 border p-2 hover:border-primary", if(variant.id == @selected_variant_id,
     do: "border-primary bg-primary/5",
     else: "border-base-300")]}
               data-testid={"card-option-#{variant.id}"}

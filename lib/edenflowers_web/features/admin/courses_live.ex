@@ -160,7 +160,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       phx-mounted={JS.ignore_attributes(["open"])}
       class="bg-base-100 border-base-content/12 group border"
     >
-      <summary class="cursor-pointer list-none p-4 sm:p-5">
+      <summary class="list-none p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <h2 class="text-base-content font-semibold">{@course.name}</h2>

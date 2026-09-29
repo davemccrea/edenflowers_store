@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
           :if={@past?}
           type="button"
           phx-click={JS.push("edit_step", value: %{state: @state})}
-          class="link-underline-hover shrink-0 cursor-pointer text-sm"
+          class="link-underline-hover shrink-0 text-sm"
           data-locked-while-paying
         >
           {~t"Edit"}<span class="sr-only">: {@title}</span>

@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Layouts do
       type="button"
       popovertarget={@id}
       style={"anchor-name: #{@anchor_name}"}
-      class={["cursor-pointer bg-transparent p-0", @class]}
+      class={["bg-transparent p-0", @class]}
     >
       {render_slot(@inner_block)}
     </button>
@@ -223,7 +223,7 @@ defmodule EdenflowersWeb.Layouts do
             type="button"
             phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label={~t"Open navigation menu"}
-            class="text-base-content/60 -m-px cursor-pointer p-2 transition-colors hover:text-base-content active:bg-base-300/50"
+            class="text-base-content/60 -m-px p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
             <.icon name="hero-bars-3" class="h-5 w-5" />
           </button>
@@ -277,7 +277,6 @@ defmodule EdenflowersWeb.Layouts do
           type="button"
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
           aria-label={~t"Close navigation menu"}
-          class="cursor-pointer"
         >
           <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
         </button>
@@ -367,7 +366,7 @@ defmodule EdenflowersWeb.Layouts do
         type="button"
         tabindex="0"
         aria-label={~t"Admin account menu"}
-        class={["inline-flex cursor-pointer items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+        class={["inline-flex items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
         <img
           :if={@current_user.avatar_content_type}
@@ -586,7 +585,7 @@ defmodule EdenflowersWeb.Layouts do
               <.link
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
-                class="group hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
+                class="group hidden h-10 w-10 shrink-0 items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
                 <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 lg:inline-flex">

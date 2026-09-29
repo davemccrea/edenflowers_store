@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.CoreComponents do
         </div>
         <button
           type="button"
-          class="text-base-content/50 size-8 -my-1 grid shrink-0 cursor-pointer place-items-center hover:text-base-content"
+          class="text-base-content/50 size-8 -my-1 grid shrink-0 place-items-center hover:text-base-content"
           aria-label={~t"close"}
         >
           <.icon name="hero-x-mark" class="size-4" />
@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.CoreComponents do
     classes =
       if assigns.variant == "text" do
         [
-          "link-underline-static-body inline-flex cursor-pointer items-center gap-2 hover:decoration-current",
+          "link-underline-static-body inline-flex items-center gap-2 hover:decoration-current",
           assigns[:class]
         ]
       else
@@ -159,7 +159,7 @@ defmodule EdenflowersWeb.CoreComponents do
   class on the form — no `loading` prop, because a static prop would not
   reflect the in-flight submit state. The label and spinner share one grid
   cell, so the button width is stable across idle/loading (no layout shift).
-  Under 300ms the spinner never reveals; see the swap CSS in `app.css`.
+  Under 300ms the spinner never reveals; see the swap CSS in `forms.css`.
   With reduced motion, a static "Processing…" label replaces the spinner.
   A `busy_label` replaces the spinner for everyone, for waits long enough
   to deserve words.
@@ -399,7 +399,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <%= for option <- @options do %>
           <label
             for={"#{@id_prefix}_#{option[:value]}"}
-            class={["border-base-300 flex flex-1 cursor-pointer items-center gap-3 border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 has-[input:checked]:border-primary hover:border-primary"]}
+            class={["border-base-300 flex flex-1 items-center gap-3 border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 hover:border-primary"]}
           >
             <input
               type="radio"
@@ -920,7 +920,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :aria_label, :string, required: true
   attr :controls, :string, required: true, doc: "id of the controlled element"
   attr :expanded, :boolean, default: false
-  attr :class, :any, default: "h-12 w-12 cursor-pointer"
+  attr :class, :any, default: "h-12 w-12"
   attr :rest, :global, include: ~w(phx-click phx-target type)
   slot :inner_block, required: true
 
@@ -952,7 +952,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <button
       type="button"
-      class="group relative flex h-10 w-10 cursor-pointer items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+      class="group relative flex h-10 w-10 items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
       aria-label={cart_aria_label(@count)}
       aria-controls="cart-drawer"
       {@rest}
@@ -977,7 +977,7 @@ defmodule EdenflowersWeb.CoreComponents do
   Slide-in drawer built on a native modal `<dialog>`, so the browser provides
   the backdrop, focus trapping, Escape and focus return. Open and close it with
   `JS.exec("phx-show" | "phx-hide", to: "#id")`; `app.js` turns those into
-  `showModal()` and `close()`, and `app.css` animates the slide.
+  `showModal()` and `close()`, and `layout.css` animates the slide.
   """
   attr :id, :string, required: true
   attr :placement, :string, default: "left", values: ["left", "right"]

@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   Extends the stock `daisy_ui` theme but remaps the filter-panel header away
   from DaisyUI's `card-title` class. The storefront redefines `card-title` as a
-  large serif heading (see `assets/css/app.css`), which the admin's sans-serif,
+  large serif heading (see `assets/css/typography.css`), which the admin's sans-serif,
   operational register should not inherit.
 
   The filter inputs are also pulled into the admin register: the selects and

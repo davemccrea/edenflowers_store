@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   alias EdenflowersWeb.Admin.CalendarViewModel
 
   # Shared "options disagree" tile — diagonal stripes via the calendar-mixed
-  # @utility in app.css. Used by cells, the weekday header, and the legend.
+  # @utility in admin.css. Used by cells, the weekday header, and the legend.
   @mixed_tile_class "calendar-mixed"
 
   # Base box for the legend swatch — sized and positioned so the strike and
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   # Uses the same calendar-strike-* / calendar-corner-* utilities as the
-  # cells (defined in app.css), so the legend can't drift from the real cells.
+  # cells (defined in admin.css), so the legend can't drift from the real cells.
   defp legend_swatch(:closed), do: "#{@swatch_base} bg-base-content/10 calendar-strike-after"
   defp legend_swatch(:override), do: "#{@swatch_base} ring-1 ring-inset ring-base-content/15 calendar-corner-before"
   defp legend_swatch(:mixed), do: "#{@swatch_base} #{@mixed_tile_class}"
