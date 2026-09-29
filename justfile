@@ -1,4 +1,5 @@
 set shell := ["bash", "-c"]
+set dotenv-load
 
 # Override with `PORT=4001 just dev` or `just port=4001 dev`
 port := env("PORT", "4000")
@@ -7,15 +8,15 @@ port := env("PORT", "4000")
 default:
     @just --list --unsorted
 
-# Start the dev server with .env loaded
+# Start the dev server
 [group('local')]
 dev: check-typst
-    source .env && PORT={{port}} iex -S mix phx.server
+    PORT={{port}} iex -S mix phx.server
 
-# Run the test suite with .env loaded (extra args go to mix test)
+# Run the test suite (extra args go to mix test)
 [group('local')]
 test *args: check-typst
-    source .env && mix test {{args}}
+    mix test {{args}}
 
 # Forward Stripe webhooks to the local dev server
 [group('local')]
@@ -44,7 +45,7 @@ seed target:
     set -euo pipefail
     case "{{target}}" in
       local)
-        source .env && mix run priv/repo/seeds.exs ;;
+        mix run priv/repo/seeds.exs ;;
       staging)
         ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
       *)
