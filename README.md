@@ -7,7 +7,10 @@
 ```bash
 git config core.hooksPath .githooks
 brew install just
+just install-typst
 ```
+
+`just install-typst` puts the pinned [Typst](https://typst.app) CLI in `~/.local/bin`. Receipt PDFs are rendered with it, so the confirmation-email tests fail without it. `just dev` and `just test` stop early if it's missing.
 
 `.githooks/pre-commit` formats staged Elixir (`mix format`) and JS/CSS (Prettier via `npx`). `pre-push` runs `mix precommit`.
 
