@@ -1,0 +1,88 @@
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}
+
+/* daisyUI's outline geometry, at base priority so compound fields keep their own. */
+@layer base {
+  :where(:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+/* One brand focus colour instead of daisyUI's per-component ones, including
+   fields that draw focus on a wrapper. */
+:where(
+    :focus-visible:not(.outline-hidden, .focus-visible\:outline-hidden),
+    .input:focus-within,
+    .textarea:focus-within,
+    .select:focus-within
+  ) {
+  outline-color: var(--focus-color, var(--color-primary));
+}
+
+/* Invalid fields stay red when focused. */
+[aria-invalid="true"],
+.input:has([aria-invalid="true"]) {
+  --focus-color: var(--color-error);
+}
+
+/* Tailwind v4 gives buttons the default cursor. Unlayered, so this also
+   outranks cursor utilities. */
+button:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:not([aria-disabled="true"]),
+label,
+summary {
+  cursor: pointer;
+}
+
+/* WCAG 2.4.1: off-screen until focused. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0.5rem;
+  z-index: 200;
+  padding: 0.75rem 1rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 2px solid var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* Block clicks while disconnected so they don't queue ambiguous actions.
+   The flash group stays clickable so toasts can be dismissed. */
+[data-phx-main].phx-error > :not(#flash-group) {
+  pointer-events: none;
+}
+
+/* Fixed headers and top-layer dialogs pad their own safe areas. */
+body {
+  text-rendering: optimizeLegibility;
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button,
+  .btn,
+  [role="button"] {
+    transition-property: color, background-color, border-color,
+      text-decoration-color, opacity, box-shadow, transform, translate;
+    transition-duration: var(--default-transition-duration);
+    transition-timing-function: var(--ease-in-out);
+  }
+}
+
+/* After Nord Design System: the press lands instantly and fades back on
+   release. .press gives the same feel to elements that aren't a .btn. */
+:is(.btn, .press):active:not(:disabled, [aria-disabled="true"], .btn-link) {
+  opacity: 0.9;
+  translate: 0 1px;
+  transition: none;
+}

@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
           <h2 id="newsletter-heading" class="section-title">{~t"Newsletter"}</h2>
 
           <.form for={%{}} id={@newsletter_form_id} phx-change="toggle_newsletter" class="mt-6">
-            <label class="flex max-w-prose cursor-pointer items-start gap-3">
+            <label class="flex max-w-prose items-start gap-3">
               <input type="hidden" name="newsletter_opt_in" value="false" />
               <input
                 type="checkbox"

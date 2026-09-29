@@ -1,0 +1,68 @@
+main p {
+  text-wrap: pretty;
+}
+
+@utility hero-display {
+  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight text-balance sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
+}
+
+@utility page-title {
+  @apply font-serif text-[2.5rem] leading-[1.15] tracking-tight text-balance sm:text-5xl sm:leading-[1.1];
+}
+
+@utility section-title {
+  @apply font-serif text-3xl leading-tight tracking-tight text-balance md:text-4xl;
+}
+
+@utility tile-title {
+  @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
+}
+
+@utility card-title {
+  @apply block font-serif text-2xl font-normal leading-snug tracking-normal sm:text-xl sm:tracking-wide;
+}
+
+@utility pull-quote {
+  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight text-balance md:text-4xl md:leading-[1.2];
+}
+
+@utility footer-line {
+  @apply font-serif text-lg leading-snug;
+}
+
+@utility eyebrow {
+  @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
+}
+
+@utility logo-wordmark {
+  @apply font-sans font-bold uppercase tracking-[0.18em];
+}
+
+/* Hover underlines are always present and fade only their colour, so the
+   stroke never pops in. -static-body is the dimmed, always-visible underline
+   for links that nothing else marks as clickable. */
+@utility link-underline-hover {
+  @apply underline decoration-transparent underline-offset-(--link-underline-offset) hover:decoration-(--color-link-underline);
+  text-decoration-thickness: var(--link-underline-thickness);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: text-decoration-color var(--default-transition-duration)
+      var(--ease-in-out);
+  }
+}
+
+@utility link-underline-group-hover {
+  @apply underline decoration-transparent underline-offset-(--link-underline-offset) group-hover:decoration-(--color-link-underline);
+  text-decoration-thickness: var(--link-underline-thickness);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: text-decoration-color var(--default-transition-duration)
+      var(--ease-in-out);
+  }
+}
+
+@utility link-underline-static-body {
+  @apply underline underline-offset-[0.2em];
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-decoration-thickness: from-font;
+}

@@ -1,0 +1,196 @@
+/* Admin status colours come straight from the Tailwind palette so order states
+   read at a glance. The -content tokens are the text shade for tinted surfaces. */
+.admin-theme,
+[data-phx-main]:has(> .admin-theme) > #flash-group {
+  --color-success: var(--color-emerald-500);
+  --color-success-content: var(--color-emerald-700);
+  --color-warning: var(--color-amber-400);
+  --color-warning-content: var(--color-amber-800);
+  --color-error: var(--color-red-600);
+  --color-error-content: var(--color-red-700);
+}
+
+/* Rendered Markdown from the assistant. There is no typography plugin. */
+.chat-prose {
+  @apply text-base-content text-[0.9375rem] leading-relaxed;
+
+  & > * + * {
+    @apply mt-3;
+  }
+  & :is(h1, h2, h3, h4) {
+    @apply mt-5 text-base font-semibold;
+  }
+  & strong {
+    @apply font-semibold;
+  }
+  & ul {
+    @apply list-disc pl-5;
+  }
+  & ol {
+    @apply list-decimal pl-5;
+  }
+  & li + li {
+    @apply mt-1;
+  }
+  & li::marker {
+    @apply text-base-content/40;
+  }
+  & a {
+    @apply underline decoration-link-underline;
+    text-decoration-thickness: var(--link-underline-thickness);
+    text-underline-offset: var(--link-underline-offset);
+  }
+  & code {
+    @apply bg-base-200 px-1 font-mono text-[0.875em];
+  }
+  & table {
+    @apply border-base-content/12 block w-full overflow-x-auto border-y text-sm tabular-nums;
+  }
+  & th {
+    @apply text-base-content/65 border-base-content/12 border-b px-3 py-2 text-left text-xs font-semibold whitespace-nowrap;
+  }
+  & td {
+    @apply px-3 py-2 align-top;
+  }
+  & tr + tr td {
+    @apply border-base-content/8 border-t;
+  }
+  & :is(th, td):first-child {
+    @apply pl-0;
+  }
+}
+
+/* Tailwind UI-style pills: a 50-tint fill, 700 text, inset 600/20 ring. */
+.badge.admin-badge-success {
+  border-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent);
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
+}
+
+.badge.admin-badge-warning {
+  border-color: color-mix(in oklab, var(--color-amber-600) 25%, transparent);
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-800);
+}
+
+.badge.admin-badge-attention {
+  border-color: color-mix(in oklab, var(--color-orange-600) 20%, transparent);
+  background-color: var(--color-orange-50);
+  color: var(--color-orange-700);
+}
+
+.badge.admin-badge-error {
+  border-color: color-mix(in oklab, var(--color-red-600) 20%, transparent);
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+}
+
+.badge.admin-badge-neutral {
+  border-color: color-mix(in oklab, var(--color-base-content) 14%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--color-base-content) 9%,
+    transparent
+  );
+  color: color-mix(in oklab, var(--color-base-content) 78%, transparent);
+}
+
+/* Keep horizontal overflow discoverable on compact admin tables. */
+.admin-table-scroll {
+  position: relative;
+  scrollbar-color: color-mix(
+      in oklab,
+      var(--color-base-content) 38%,
+      transparent
+    )
+    var(--color-base-200);
+  scrollbar-width: thin;
+}
+
+/* Driven by the table's own scroll, so the cue never shows when the table
+   fits and fades as the last column arrives. Without scroll timelines there
+   is no cue. */
+@media (width < theme(--breakpoint-lg)) {
+  .admin-table-scroll {
+    animation: admin-table-overflow-cue linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+@keyframes admin-table-overflow-cue {
+  from,
+  90% {
+    border-right-color: color-mix(
+      in oklab,
+      var(--color-primary) 55%,
+      transparent
+    );
+    box-shadow: inset -0.75rem 0 0.75rem -0.75rem
+      color-mix(in oklab, var(--color-base-content) 38%, transparent);
+  }
+}
+
+.admin-table-scroll::-webkit-scrollbar {
+  height: 0.5rem;
+}
+
+.admin-table-scroll::-webkit-scrollbar-track {
+  background: var(--color-base-200);
+}
+
+.admin-table-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid var(--color-base-200);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-base-content) 38%, transparent);
+}
+
+/* Calendar cells and legend swatches. The strike marks a closed day; the
+   corner marks an override of the weekday rule. They use ::after and ::before
+   so both can apply. */
+@utility calendar-strike-after {
+  &::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    height: 2px;
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(45deg);
+    @apply bg-error/75;
+  }
+}
+
+/* Shorter strike for the three-letter weekday headers. */
+@utility calendar-strike-after-tight {
+  @apply calendar-strike-after;
+
+  &::after {
+    left: 32%;
+    right: 32%;
+  }
+}
+
+@utility calendar-corner-before {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    @apply bg-primary/75;
+  }
+}
+
+/* Options disagree at the current scope. Background only, so the digit stays readable. */
+@utility calendar-mixed {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 4px,
+    color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
+  );
+}

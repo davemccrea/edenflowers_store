@@ -1,0 +1,227 @@
+/* Each element sets --reveal-delay inline. */
+@keyframes hero-reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-reveal {
+    animation: hero-reveal-fade 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+}
+
+/* Transform-only, so LCP is unaffected. The parent needs overflow-hidden. */
+@keyframes hero-zoom-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-zoom {
+    animation: hero-zoom-settle 7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* Unlike link-underline-hover, the category and size-option underlines snap in. */
+.category-index__item[data-active="true"] .category-index__name,
+.category-index__item:not([data-active="true"])
+  .category-index__link:hover
+  .category-index__name,
+.category-index__item:not([data-active="true"])
+  .category-index__link:focus-visible
+  .category-index__name {
+  text-decoration: underline;
+  text-decoration-color: var(--color-link-underline);
+  text-decoration-thickness: var(--link-underline-thickness);
+  text-underline-offset: var(--link-underline-offset);
+}
+
+#store-products {
+  transition: opacity 150ms ease;
+}
+
+.phx-page-loading #store-products {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.size-option__label {
+  display: inline-block;
+  padding-bottom: 0.15em;
+}
+.size-option[data-active="true"] .size-option__label,
+.size-option:not([data-active="true"]):hover .size-option__label,
+.size-option:has(input:focus-visible) .size-option__label {
+  text-decoration: underline;
+  text-decoration-color: var(--color-link-underline);
+  text-decoration-thickness: var(--link-underline-thickness);
+  text-underline-offset: var(--link-underline-offset);
+}
+.size-option:has(input:focus-visible) {
+  outline: 2px solid var(--focus-color, var(--color-primary));
+  outline-offset: 2px;
+}
+
+/* Translucent so the label sits on the photo rather than burned into it. */
+.product-mark {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  padding: 0.4rem 0.75rem;
+  background: color-mix(in oklab, var(--color-base-100) 85%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--color-base-content) 55%, transparent);
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+/* Featured carousel, driven by the FeaturedCarousel hook. */
+.embla__viewport {
+  overflow: hidden;
+  /* Bleed to the viewport edges on mobile. */
+  margin-inline: calc(50% - 50vw);
+}
+@media (width >= theme(--breakpoint-sm)) {
+  .embla__viewport {
+    margin-inline: 0;
+  }
+}
+.embla__container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  /* Let vertical page scroll coexist with Embla's horizontal drag. */
+  touch-action: pan-y pinch-zoom;
+}
+.embla__slide {
+  /* The hook sets --embla-progress each scroll frame: 0 when focused, 1 at a
+     neighbour's snap point. */
+  flex: 0 0 85%;
+  min-width: 0;
+  --embla-progress: 0;
+  transform: scale(calc(1 - var(--embla-progress) * 0.08));
+  opacity: calc(1 - var(--embla-progress) * 0.45);
+  transform-origin: center;
+}
+@media (width < theme(--breakpoint-sm)) and (prefers-reduced-motion: no-preference) {
+  .embla__slide {
+    will-change: transform, opacity;
+  }
+}
+@media (width >= 480px) {
+  .embla__slide {
+    flex-basis: 50%;
+  }
+}
+@media (width >= theme(--breakpoint-sm)) {
+  /* Multi-card row: no focal-point effect. */
+  .embla__slide {
+    flex-basis: 18rem;
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .embla__slide {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.embla__dot {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  border: 0;
+  padding: 0;
+}
+.embla__dot--selected {
+  background: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  width: 0.875rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .embla__dot {
+    transition:
+      background-color 200ms ease,
+      width 200ms ease;
+  }
+}
+
+/* `:where` keeps daisyUI .btn rules from out-specifying us. */
+:where(.embla__prev, .embla__next):disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Hook toggles .embla--no-scroll when all slides fit in view. */
+.embla--no-scroll :where(.embla__prev, .embla__next, .embla__dots) {
+  display: none;
+}
+
+/* Registered by the PhotoGallery hook. Raised to clear the image on portrait phones. */
+.pswp__credit {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding-inline: 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(255 255 255 / 0.75);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}
+
+.pswp__credit a {
+  pointer-events: auto;
+}
+
+/* Thank-you page: the flower sways while Stripe confirms, then opens once paid. */
+@keyframes flower-waiting {
+  from {
+    transform: rotate(-6deg) scale(0.94);
+  }
+  to {
+    transform: rotate(6deg) scale(1);
+  }
+}
+
+/* The easing curve supplies the overshoot; an extra keyframe would bounce twice. */
+@keyframes flower-bloom {
+  from {
+    transform: rotate(-20deg) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flower-waiting {
+    animation: flower-waiting 1.6s ease-in-out infinite alternate;
+  }
+
+  .flower-bloom {
+    animation: flower-bloom 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
+
+/* Checkout: the chosen card tucks into the message paper. The easing curve
+   supplies the overshoot. */
+@keyframes card-tuck {
+  from {
+    transform: translate(0.5rem, -0.375rem) rotate(5deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-tuck {
+    animation: card-tuck 400ms cubic-bezier(0.34, 1.25, 0.64, 1) both;
+  }
+}
