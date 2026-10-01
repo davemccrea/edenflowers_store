@@ -53,10 +53,14 @@ metadata:
 - [migrations](references/ash_postgres/migrations.md)
 - [multitenancy](references/ash_postgres/multitenancy.md)
 
+### cinder
+
+- [cinder](references/cinder/cinder.md)
+
 ## Searching Documentation
 
 ```sh
-mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation
+mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
 ```
 
 ## Available Mix Tasks
@@ -141,4 +145,7 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p
 - `mix ash_state_machine.generate_flow_charts` - Generates Mermaid Flow Charts for each resource using `AshStateMachine`
 - `mix ash_state_machine.install` - Installs AshStateMachine
 - `mix ash_state_machine.install.docs`
+- `mix cinder.gen.filter` - Generate and configure a custom Cinder filter
+- `mix cinder.install` - Install Cinder and configure Tailwind CSS
+- `mix cinder.upgrade`
 <!-- usage-rules-skill-end -->
