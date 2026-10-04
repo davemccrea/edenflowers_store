@@ -5,8 +5,7 @@
   border-color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
 }
 
-.checkbox:checked,
-.checkbox[aria-checked="true"] {
+.checkbox:checked {
   border-color: var(--color-primary);
   background-color: var(--color-primary);
   color: var(--color-primary-content);
@@ -19,16 +18,8 @@
 }
 
 /* The spinner replaces the label only after 300ms, so fast submits never
-   flash it. The base rule's 0s transitions make the swap snap back when
-   loading ends. .form-button-processing uses visibility so its text stays
-   out of the accessible name until shown. */
-.form-button-label,
-.form-button-spinner,
-.form-button-processing {
-  transition:
-    opacity 0s,
-    visibility 0s;
-}
+   flash it. .form-button-processing uses visibility so its text stays out of
+   the accessible name until shown. */
 .form-button-spinner {
   opacity: 0;
 }
