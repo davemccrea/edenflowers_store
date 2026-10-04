@@ -2,12 +2,9 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   @moduledoc """
   Cinder table theme for the admin.
 
-  Extends the stock `daisy_ui` theme but remaps the filter-panel header away
-  from DaisyUI's `card-title` class. The storefront redefines `card-title` as a
-  large serif heading (see `assets/css/typography.css`), which the admin's sans-serif,
-  operational register should not inherit.
+  Extends the stock `daisy_ui` theme.
 
-  The filter inputs are also pulled into the admin register: the selects and
+  The filter inputs are pulled into the admin register: the selects and
   search box drop to `sm` density to sit on the same scale as the compact data
   table beneath them. Each filter shows a visible caption above its control so
   the panel reads as a labelled form; the select prompts are then a bare "All",
@@ -29,11 +26,9 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :table_class, "table table-zebra w-full min-w-max"
   set :td_class, "align-top"
 
-  # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.
-  set :filter_header_class, "flex items-center justify-between"
-  set :filter_title_class, "flex items-center gap-2 text-base font-semibold text-base-content"
   set :filter_count_class, "badge badge-primary badge-sm tabular-nums"
   set :filter_container_class, "card-body p-4 sm:p-5"
+  # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.
   set :filter_inputs_class, "fieldset mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap"
   set :filter_input_wrapper_class, "form-control min-w-0"
 
