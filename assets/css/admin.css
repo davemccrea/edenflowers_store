@@ -97,7 +97,6 @@
 
 /* Keep horizontal overflow discoverable on compact admin tables. */
 .admin-table-scroll {
-  position: relative;
   scrollbar-color: color-mix(
       in oklab,
       var(--color-base-content) 38%,

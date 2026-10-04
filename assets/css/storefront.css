@@ -17,9 +17,6 @@
   from {
     transform: scale(1.06);
   }
-  to {
-    transform: scale(1);
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero-zoom {
@@ -106,7 +103,6 @@
   --embla-progress: 0;
   transform: scale(calc(1 - var(--embla-progress) * 0.08));
   opacity: calc(1 - var(--embla-progress) * 0.45);
-  transform-origin: center;
 }
 @media (width < theme(--breakpoint-sm)) and (prefers-reduced-motion: no-preference) {
   .embla__slide {
@@ -153,8 +149,8 @@
   }
 }
 
-/* `:where` keeps daisyUI .btn rules from out-specifying us. */
-:where(.embla__prev, .embla__next):disabled {
+.embla__prev:disabled,
+.embla__next:disabled {
   opacity: 0.3;
   pointer-events: none;
 }
