@@ -18,8 +18,8 @@ main p {
   @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
 }
 
-@utility card-title {
-  @apply block font-serif text-2xl font-normal leading-snug tracking-normal sm:text-xl sm:tracking-wide;
+@utility card-heading {
+  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {

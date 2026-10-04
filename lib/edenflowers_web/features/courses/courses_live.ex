@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       <p class="text-base-content/70 tabular-nums">{Format.day_month(@course.date, @locale)}</p>
 
       <div>
-        <h3 class="card-title text-balance">
+        <h3 class="card-heading text-balance">
           <.link :if={@course.booking_open?} navigate={~p"/courses/#{@course.id}"} class="link-underline-hover">
             {@course.name}
           </.link>

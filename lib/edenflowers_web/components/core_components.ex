@@ -797,7 +797,7 @@ defmodule EdenflowersWeb.CoreComponents do
       </figure>
 
       <div class="text-base-content flex flex-col gap-1.5">
-        <h3 class="card-title link-underline-group-hover">
+        <h3 class="card-heading link-underline-group-hover">
           {@product.name}
         </h3>
         <p class="font-serif text-base-content text-lg leading-none">
