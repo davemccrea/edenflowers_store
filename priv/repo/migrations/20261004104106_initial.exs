@@ -50,6 +50,13 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         default: fragment("(now() AT TIME ZONE 'utc')")
 
       add :user_id, :uuid
+    end
+
+    create unique_index(:course_registrations, [:reference],
+             name: "course_registrations_unique_reference_index"
+           )
+
+    alter table(:course_registrations) do
       add :course_id, :uuid, null: false
     end
 
@@ -338,20 +345,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              name: "product_categories_unique_slug_index"
            )
 
-    create table(:product_fulfillment_options, primary_key: false) do
-      add :product_id, :uuid, null: false, primary_key: true
-
-      add :fulfillment_option_id,
-          references(:fulfillment_options,
-            column: :id,
-            name: "product_fulfillment_options_fulfillment_option_id_fkey",
-            type: :uuid,
-            prefix: "public"
-          ), primary_key: true, null: false
-    end
-
-    create index(:product_fulfillment_options, [:fulfillment_option_id])
-
     create table(:product_variants, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
     end
@@ -397,16 +390,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
                unit_price >= 0 AND unit_price = round(unit_price, 2)
              """
            )
-
-    alter table(:product_fulfillment_options) do
-      modify :product_id,
-             references(:products,
-               column: :id,
-               name: "product_fulfillment_options_product_id_fkey",
-               type: :uuid,
-               prefix: "public"
-             )
-    end
 
     alter table(:product_variants) do
       modify :product_id,
@@ -533,7 +516,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     alter table(:tax_rates) do
       add :name, :text, null: false
       add :percentage, :decimal, null: false
-      add :archived_at, :utc_datetime_usec
+      add :retired_at, :utc_datetime_usec
     end
 
     create unique_index(:tax_rates, [:name], name: "tax_rates_unique_name_index")
@@ -553,20 +536,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
     end
-
-    create table(:user_identities, primary_key: false) do
-      add :refresh_token, :text
-      add :access_token_expires_at, :utc_datetime_usec
-      add :access_token, :text
-      add :uid, :text, null: false
-      add :strategy, :text, null: false
-      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
-      add :user_id, :uuid
-    end
-
-    create unique_index(:user_identities, [:strategy, :uid],
-             name: "user_identities_unique_on_strategy_and_uid_index"
-           )
 
     create table(:users, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -626,15 +595,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              """
            )
 
-    alter table(:user_identities) do
-      modify :user_id,
-             references(:users,
-               column: :id,
-               name: "user_identities_user_id_fkey",
-               type: :uuid,
-               prefix: "public"
-             )
-    end
+    execute("""
+    CREATE SEQUENCE reference_seq START 1400
+    """)
 
     alter table(:users) do
       add :name, :text
@@ -671,11 +634,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :name
     end
 
-    drop constraint(:user_identities, "user_identities_user_id_fkey")
-
-    alter table(:user_identities) do
-      modify :user_id, :uuid
-    end
+    execute("""
+    DROP SEQUENCE reference_seq
+    """)
 
     drop_if_exists constraint(:orders, :orders_paid_requires_amount)
 
@@ -711,18 +672,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:users)
 
-    drop_if_exists unique_index(:user_identities, [:strategy, :uid],
-                     name: "user_identities_unique_on_strategy_and_uid_index"
-                   )
-
-    drop table(:user_identities)
-
     drop table(:tokens)
 
     drop_if_exists unique_index(:tax_rates, [:name], name: "tax_rates_unique_name_index")
 
     alter table(:tax_rates) do
-      remove :archived_at
+      remove :retired_at
       remove :percentage
       remove :name
     end
@@ -798,17 +753,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       modify :product_id, :uuid
     end
 
-    drop constraint(
-           :product_fulfillment_options,
-           "product_fulfillment_options_fulfillment_option_id_fkey"
-         )
-
-    drop constraint(:product_fulfillment_options, "product_fulfillment_options_product_id_fkey")
-
-    alter table(:product_fulfillment_options) do
-      modify :product_id, :uuid
-    end
-
     drop_if_exists constraint(:line_items, :line_items_valid_unit_price)
 
     drop constraint(:line_items, "line_items_product_variant_id_fkey")
@@ -839,10 +783,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     drop table(:product_variants)
-
-    drop_if_exists index(:product_fulfillment_options, [:fulfillment_option_id])
-
-    drop table(:product_fulfillment_options)
 
     drop_if_exists unique_index(:product_categories, [:slug],
                      name: "product_categories_unique_slug_index"
@@ -982,6 +922,14 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     drop table(:courses)
+
+    alter table(:course_registrations) do
+      remove :course_id
+    end
+
+    drop_if_exists unique_index(:course_registrations, [:reference],
+                     name: "course_registrations_unique_reference_index"
+                   )
 
     drop table(:course_registrations)
 
