@@ -17,6 +17,5 @@ defmodule Edenflowers.Accounts do
       define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in]
       define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
     end
-
   end
 end

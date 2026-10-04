@@ -233,10 +233,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     timestamps()
   end
 
-  identities do
-    identity :unique_reference, [:reference]
-  end
-
   relationships do
     belongs_to :user, Edenflowers.Accounts.User do
       allow_nil? true
@@ -255,5 +251,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :holds_seats?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
+  end
+
+  identities do
+    identity :unique_reference, [:reference]
   end
 end
