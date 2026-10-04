@@ -1,20 +1,8 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
-      "default": "fragment(\"gen_random_uuid()\")",
+      "default": "fragment(\"uuid_generate_v7()\")",
       "generated?": false,
       "precision": null,
       "primary_key?": true,
@@ -25,18 +13,6 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "name",
-      "type": "text"
-    },
-    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -45,8 +21,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "description",
+      "source": "title",
       "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
@@ -54,23 +54,32 @@
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": null,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "conversations_user_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "users"
+      },
       "scale": null,
       "size": null,
-      "source": "slug",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"draft\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "visibility",
-      "type": "text"
+      "source": "user_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -79,23 +88,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "B6622CB7F95FA9E867E3D698DE07C838053B43D4C554E43CC112EDAC95F727D5",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "product_categories_unique_slug_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "slug"
-        }
-      ],
-      "name": "unique_slug",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "CB7AD8B0E0410E228C381C5C76DE0669F0118243CE2B854E90938EFAD45BE843",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -103,5 +97,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "product_categories"
+  "table": "conversations"
 }

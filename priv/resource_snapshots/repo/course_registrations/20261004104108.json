@@ -299,7 +299,22 @@
   "custom_statements": [],
   "has_create_action": true,
   "hash": "E5A5F6424F6F2AC28FCC1AAB4AE3628DB8EEAC1AA9E4171F193542C93696A02F",
-  "identities": [],
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "course_registrations_unique_reference_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "reference"
+        }
+      ],
+      "name": "unique_reference",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,

@@ -45,7 +45,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "archived_at",
+      "source": "retired_at",
       "type": "utc_datetime_usec"
     }
   ],
@@ -55,7 +55,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1E7CC5CE451C852BD727983C04312CC5F38EBC874AB5A94821EC7914667677A1",
+  "hash": "88E4F1D064E931E79F6C98719936151606553A5BA4B99F4084964FC28564F99D",
   "identities": [
     {
       "all_tenants?": false,
