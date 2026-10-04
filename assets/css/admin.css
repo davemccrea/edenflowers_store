@@ -129,20 +129,6 @@
   }
 }
 
-.admin-table-scroll::-webkit-scrollbar {
-  height: 0.5rem;
-}
-
-.admin-table-scroll::-webkit-scrollbar-track {
-  background: var(--color-base-200);
-}
-
-.admin-table-scroll::-webkit-scrollbar-thumb {
-  border: 2px solid var(--color-base-200);
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--color-base-content) 38%, transparent);
-}
-
 /* Calendar cells and legend swatches. The strike marks a closed day; the
    corner marks an override of the weekday rule. They use ::after and ::before
    so both can apply. */
