@@ -71,12 +71,25 @@ defmodule EdenflowersWeb.Layouts do
   @doc """
   Renders the page's flash notices plus the connection-lost toasts, which
   LiveView reveals on disconnect and hides again on reconnect.
+
+  Toasts sit at the bottom so they never cover the header's cart and account
+  controls, and stack in one container instead of overlapping.
   """
   attr :flash, :map, required: true
 
+  attr :clear_admin_shortcut, :boolean,
+    default: false,
+    doc: "lifts the toasts above the floating admin shortcut pill"
+
   def flash_group(assigns) do
     ~H"""
-    <div id="flash-group" aria-live="polite">
+    <div
+      id="flash-group"
+      aria-live="polite"
+      class={["toast z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6", if(@clear_admin_shortcut,
+    do: "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+    else: "bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")]}
+    >
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
       <.flash
@@ -644,7 +657,7 @@ defmodule EdenflowersWeb.Layouts do
       </header>
     </div>
 
-    <.flash_group flash={@flash} />
+    <.flash_group flash={@flash} clear_admin_shortcut={@current_user && @current_user.admin} />
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
       {render_slot(@inner_block)}

@@ -67,10 +67,9 @@ defmodule EdenflowersWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       phx-hook={@kind == :info && "AutoDismissFlash"}
       role="alert"
-      class="toast toast-top toast-end z-50"
       {@rest}
     >
-      <div class="bg-base-100 text-base-content border-base-300 shadow-base-content/10 flex w-80 items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96">
+      <div class="bg-base-100 text-base-content border-base-300 shadow-base-content/10 flex w-full items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96">
         <.icon :if={@kind == :info} name="hero-information-circle" class="text-primary size-5 mt-0.5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="text-error-content size-5 mt-0.5 shrink-0" />
         <div class="text-pretty min-w-0 flex-1 text-sm leading-relaxed">
