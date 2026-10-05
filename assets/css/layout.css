@@ -176,3 +176,35 @@ html:has(dialog.slide-drawer:modal) {
     var(--header-height) + var(--spacing) * 4 + env(safe-area-inset-top)
   );
 }
+
+/* Replaces daisyUI's centred zoom-in. From sm up the toasts sit in the
+   bottom-right corner and slide in from the right edge; on phones they span
+   the width, so they rise from the bottom instead. Runs whenever a toast is
+   inserted or un-hidden, so server flashes and the connection toasts share it. */
+#flash-group > * {
+  animation: toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+@media (width >= 40rem) {
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
