@@ -68,12 +68,6 @@ defmodule EdenflowersWeb.Router do
       scope "/", Account do
         live "/account", AccountLive
       end
-
-      if Application.compile_env(:edenflowers, :dev_routes) do
-        scope "/dev", Dev do
-          live "/toasts", ToastPreviewLive
-        end
-      end
     end
 
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
