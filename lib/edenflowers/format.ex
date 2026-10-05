@@ -42,8 +42,15 @@ defmodule Edenflowers.Format do
     Localize.Number.to_string!(value, locale: locale, currency: iso)
   end
 
-  @spec date(Date.t() | String.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
+  @spec date(Date.t() | DateTime.t() | String.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
   def date(nil, _locale), do: nil
+
+  def date(%DateTime{} = datetime, locale) do
+    datetime
+    |> DateTime.shift_zone!("Europe/Helsinki")
+    |> DateTime.to_date()
+    |> date(locale)
+  end
 
   def date(date, "en-GB" = locale) do
     Localize.Date.to_string!(date, locale: locale, format: "dd/MM/yyyy")

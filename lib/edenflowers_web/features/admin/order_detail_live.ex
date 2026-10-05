@@ -216,6 +216,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={@pickup_message_urls}>
                   <.ready_for_pickup_links urls={@pickup_message_urls} />
                 </:contact>
+                <:contact :if={@order.user_id}>
+                  <.link
+                    id="order-customer-link"
+                    navigate={~p"/admin/customers/#{@order.user_id}"}
+                    class="link link-primary inline-flex items-center gap-1.5"
+                  >
+                    <.icon name="hero-user" class="h-3.5 w-3.5 shrink-0" />
+                    {~t"View customer's orders"}
+                  </.link>
+                </:contact>
               </.person_block>
             </.detail_section>
 
