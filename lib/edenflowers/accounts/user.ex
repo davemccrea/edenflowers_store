@@ -102,6 +102,25 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:avatar_content_type, nil)
     end
 
+    # Table feed for /admin/customers. A customer is anyone with a placed order;
+    # users who only signed in or subscribed to the newsletter are left out.
+    read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+
+      filter expr(exists(placed_orders, true))
+
+      prepare build(
+                sort: [last_ordered_at: :desc],
+                load: [:placed_order_count, :last_ordered_at, :total_spent]
+              )
+    end
+
+    read :admin_show do
+      filter expr(exists(placed_orders, true))
+
+      prepare build(load: [:placed_order_count, :last_ordered_at, :total_spent])
+    end
+
     update :set_newsletter_promo do
       accept [:newsletter_promo_id]
       require_attributes [:newsletter_promo_id]
@@ -150,6 +169,11 @@ defmodule Edenflowers.Accounts.User do
 
   relationships do
     belongs_to :newsletter_promo, Edenflowers.Pricing.Promotion
+
+    has_many :placed_orders, Edenflowers.Orders.Order do
+      filter expr(state == :placed)
+      sort ordered_at: :desc
+    end
   end
 
   calculations do
@@ -159,6 +183,18 @@ defmodule Edenflowers.Accounts.User do
     calculate :newsletter_offer_hidden?,
               :boolean,
               expr(if(newsletter_opt_in or newsletter_promo.usage > 0, true, false))
+  end
+
+  aggregates do
+    count :placed_order_count, :placed_orders
+    max :last_ordered_at, :placed_orders, :ordered_at
+
+    # Money received, so only paid orders count (see ADR 0001). `amount_paid` is
+    # what Stripe actually charged, which can differ from the order's total.
+    sum :total_spent, :placed_orders, :amount_paid do
+      filter expr(payment_status == :paid)
+      default Decimal.new("0")
+    end
   end
 
   identities do
