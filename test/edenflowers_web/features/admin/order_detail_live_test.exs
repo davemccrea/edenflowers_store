@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-payments a[aria-label="View €46.50 payment in Stripe"]|)
     assert has_element?(view, "#order-payment-summary dt", "2 ×")
     refute has_element?(view, "#order-items", "€42.00")
-    assert has_element?(view, ~s|#order-payment-summary a[href="/order/#{order.id}/receipt"]|)
+    assert has_element?(view, ~s|header a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
   end
