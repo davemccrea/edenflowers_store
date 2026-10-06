@@ -49,6 +49,14 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
     assert view |> element("input[name='form[code]']") |> render() =~ ~r/value="[0-9A-F]{6}"/
   end
 
+  test "generating a code on a fresh form doesn't flag the discount as missing", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
+
+    view |> element("button[phx-click=generate_code]") |> render_click()
+
+    refute view |> element("#form_discount_rate[aria-invalid]") |> has_element?()
+  end
+
   test "creates a promotion with the discount entered as a percentage", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
 
