@@ -513,6 +513,9 @@ today = Date.utc_today()
     tax_rate: tax_rate.percentage,
     amount: Decimal.mult(course.price, seats),
     confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
+    # Already emailed, otherwise the SendConfirmationEmail trigger emails every
+    # seeded booking — for real on staging.
+    confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
     # A pending registration with a fake PaymentIntent makes the ReconcilePayment
     # cron fail against Stripe, so it stays an abandoned checkout instead.
     payment_intent_id:
@@ -709,6 +712,10 @@ for order_attrs <- orders do
       # Marked paid below, once the line items give it a grand_total to pay.
       payment_status: :pending,
       fulfillment_status: order_attrs[:fulfillment_status] || :pending,
+      # Already emailed, otherwise the SendConfirmationEmail and SendDeliveredEmail
+      # triggers email every seeded customer — for real on staging.
+      receipt_emailed_at: DateTime.utc_now(),
+      delivered_emailed_at: if(order_attrs[:fulfillment_status] == :fulfilled, do: DateTime.utc_now()),
       ordered_at: order_attrs[:ordered_at] || DateTime.utc_now(),
       customer_name: order_attrs.customer_name,
       customer_email: order_attrs.customer_email,
