@@ -324,17 +324,17 @@
   v(1fr)
 
   // ── Closing band ────────────────────────────────────────────────────
-  // Forest outline, centred — a lighter echo of the site's pull-quote
+  // Brand-green outline, centred — a lighter echo of the site's pull-quote
   // section. Thank-you in serif italic carries the editorial moment;
   // closing-line is supporting prose.
   block(
     width: 100%,
-    stroke: 1pt + colors.forest,
+    stroke: 0.5pt + colors.primary,
     inset: (x: 24pt, y: 14pt),
     breakable: false,
     [
       #set align(center)
-      #set text(fill: colors.forest)
+      #set text(fill: colors.primary)
       #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light")[
         #t("thank-you")
       ]#h(4pt)#text(size: 12pt)[💛]
