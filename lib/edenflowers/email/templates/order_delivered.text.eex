@@ -1,0 +1,10 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= if @order.recipient_first_name do %><%= gettext("Your flowers for %{recipient} have been delivered.", recipient: @order.recipient_first_name) %><% else %><%= gettext("Your flowers have been delivered.") %><% end %>
+
+<%= gettext("Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it.") %>
+
+<%= gettext("Warm wishes,") %>
+
+Jennie
+Eden Flowers

@@ -28,6 +28,16 @@ defmodule Edenflowers.Email do
     })
   end
 
+  def order_delivered(order) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
+      |> text_body(Templates.order_delivered(%{order: order}))
+    end)
+  end
+
   def course_confirmation(registration) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
