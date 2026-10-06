@@ -107,11 +107,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </span>
             </span>
           </:subtitle>
-          <:actions :if={@order.fulfillment_status == :pending}>
-            <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="ghost" size="sm">
+          <:actions>
+            <.button
+              :if={@order.fulfillment_status == :pending}
+              navigate={~p"/admin/orders/#{@order.id}/edit"}
+              variant="ghost"
+              size="sm"
+            >
               <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
             </.button>
             <.button
+              :if={@order.fulfillment_status == :pending}
               type="button"
               phx-click="cancel_order"
               data-confirm={cancel_confirmation(@order)}
@@ -121,6 +127,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             >
               {~t"Cancel order"}
             </.button>
+            <.order_menu order={@order} />
           </:actions>
         </.admin_page_header>
 
@@ -227,6 +234,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   locale={@locale}
                 />
                 <.money_row
+                  :if={positive?(@order.discount)}
                   ruled
                   label={~t"Items subtotal"}
                   amount={@order.items_subtotal}
@@ -238,9 +246,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   amount={negate(@order.discount)}
                   locale={@locale}
                 />
-                <.money_row label={~t"Fulfillment fee"} amount={@order.fulfillment_fee} locale={@locale} />
+                <.money_row
+                  label={~t"Fulfillment fee"}
+                  amount={@order.fulfillment_fee}
+                  locale={@locale}
+                />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
-                <.money_row :if={@order.amount_paid} label={~t"Paid"} amount={@order.amount_paid} locale={@locale} />
+                <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
+                <div :if={@payments != []} id="order-payments" class="border-base-content/12 mt-1.5 border-t pt-2">
+                  <.payment_row :for={payment <- @payments} payment={payment} locale={@locale} />
+                </div>
                 <.money_row
                   :if={@order.amount_paid && owes_money?(@order)}
                   strong
@@ -248,34 +263,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   amount={Decimal.abs(@order.balance)}
                   locale={@locale}
                 />
-                <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
-              <div :if={@payments != []} class="border-base-content/12 mt-5 border-t pt-4">
-                <h3 class="text-base-content/65 mb-1 text-xs font-semibold">{~t"Payments"}</h3>
-                <ul id="order-payments" class="divide-base-content/8 divide-y text-sm">
-                  <li :for={payment <- @payments} class="flex items-center justify-between gap-4 py-2">
-                    <span>
-                      <span class="text-base-content">{payment_label(payment)}</span>
-                      <time datetime={DateTime.to_iso8601(payment.paid_at)} class="text-base-content/65 block text-xs">
-                        {Format.datetime(payment.paid_at, @locale)}
-                      </time>
-                    </span>
-                    <span class="flex items-center gap-1 tabular-nums">
-                      {Format.currency(payment.amount, @locale)}
-                      <a
-                        :if={payment.payment_intent_id}
-                        href={StripeAPI.dashboard_payment_url(payment.payment_intent_id)}
-                        target="_blank"
-                        rel="noopener"
-                        class="text-base-content/60 -my-3 -mr-3 inline-flex p-3 hover:text-base-content"
-                        aria-label={~t"View #{amount = Format.currency(payment.amount, @locale)} payment in Stripe"}
-                      >
-                        <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                      </a>
-                    </span>
-                  </li>
-                </ul>
-              </div>
 
               <%!-- Everything for settling the balance, in the order Jennie reaches
                    for it: send the link, or record what she took herself. --%>
@@ -321,76 +309,53 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   {~t"Create payment link"}
                 </.button>
 
-                <.form for={@in_person_form} id="in-person-payment-form" phx-submit="record_in_person_payment">
-                  <fieldset aria-describedby="in-person-payment-help">
-                    <legend class="text-base-content/65 mb-1.5 text-xs font-semibold">
-                      {if Decimal.positive?(@order.balance),
-                        do: ~t"Paid in person",
-                        else: ~t"Refunded in person"}
-                    </legend>
-                    <div class="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
-                      <.input
-                        field={@in_person_form[:payment_method]}
-                        type="select"
-                        label={~t"How"}
-                        class="select select-sm w-full"
-                        options={in_person_method_options()}
-                      />
-                      <.input
-                        field={@in_person_form[:amount]}
-                        type="text"
-                        inputmode="decimal"
-                        label={~t"Amount (€)"}
-                        class="input input-sm w-full tabular-nums"
-                      />
-                      <.button
-                        type="submit"
-                        variant="primary"
-                        size="sm"
-                        class="col-span-2 sm:col-span-1"
-                        data-confirm={
-                          ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
-                        }
-                      >
-                        {~t"Record payment"}
-                      </.button>
-                    </div>
-                    <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
-                      {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
-                    </p>
-                  </fieldset>
-                </.form>
-              </div>
-
-              <div class="border-base-content/12 mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t pt-4 text-sm">
-                <.button
-                  :if={@order.customer_email && @order.fulfillment_status != :cancelled}
-                  type="button"
-                  phx-click="send_order_details"
-                  data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
-                  variant="text"
-                >
-                  {~t"Email order details"}
-                </.button>
-                <.button
-                  :if={@order.payment_status == :paid && @order.customer_email}
-                  type="button"
-                  phx-click="email_receipt"
-                  data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
-                  variant="text"
-                >
-                  {~t"Email receipt"}
-                </.button>
-                <.button
-                  :if={@order.payment_status == :paid}
-                  href={~p"/order/#{@order.id}/receipt"}
-                  target="_blank"
-                  rel="noopener"
-                  variant="text"
-                >
-                  {~t"View receipt"}
-                  <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
-                </.button>
+                <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
+                  <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
+                    <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
+                    {if Decimal.positive?(@order.balance),
+                      do: ~t"Record payment taken in person",
+                      else: ~t"Record refund given in person"}
+                  </summary>
+                  <.form
+                    for={@in_person_form}
+                    id="in-person-payment-form"
+                    phx-submit="record_in_person_payment"
+                    class="mt-3"
+                  >
+                    <fieldset aria-describedby="in-person-payment-help">
+                      <div class="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
+                        <.input
+                          field={@in_person_form[:payment_method]}
+                          type="select"
+                          label={~t"How"}
+                          class="select select-sm w-full"
+                          options={in_person_method_options()}
+                        />
+                        <.input
+                          field={@in_person_form[:amount]}
+                          type="text"
+                          inputmode="decimal"
+                          label={~t"Amount (€)"}
+                          class="input input-sm w-full tabular-nums"
+                        />
+                        <.button
+                          type="submit"
+                          variant="primary"
+                          size="sm"
+                          class="col-span-2 sm:col-span-1"
+                          data-confirm={
+                            ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
+                          }
+                        >
+                          {~t"Record payment"}
+                        </.button>
+                      </div>
+                      <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
+                        {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+                      </p>
+                    </fieldset>
+                  </.form>
+                </details>
               </div>
             </.detail_section>
           </div>
@@ -821,7 +786,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold", @muted && "text-base-content/65"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>
@@ -854,6 +819,79 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       >
         {log_time(@entry.at, @locale)}
       </time>
+    </div>
+    """
+  end
+
+  attr :payment, :map, required: true
+  attr :locale, :string, required: true
+
+  # Shown as subtracted from the total, so the balance below reads as the sum.
+  defp payment_row(assigns) do
+    ~H"""
+    <div class="flex items-center justify-between gap-4 py-0.5">
+      <dt class="text-base-content/75">
+        {payment_label(@payment)} ·
+        <time datetime={DateTime.to_iso8601(@payment.paid_at)} title={Format.datetime(@payment.paid_at, @locale)}>
+          {@payment.paid_at |> DateTime.shift_zone!("Europe/Helsinki") |> DateTime.to_date() |> Format.day_month(@locale)}
+        </time>
+        <a
+          :if={@payment.payment_intent_id}
+          href={StripeAPI.dashboard_payment_url(@payment.payment_intent_id)}
+          target="_blank"
+          rel="noopener"
+          class="text-base-content/60 -my-3 -ml-1 inline-flex p-2 align-middle hover:text-base-content"
+          aria-label={~t"View #{amount = Format.currency(@payment.amount, @locale)} payment in Stripe"}
+        >
+          <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+        </a>
+      </dt>
+      <dd class="text-base-content/90 tabular-nums">
+        {Format.currency(negate(@payment.amount), @locale)}
+      </dd>
+    </div>
+    """
+  end
+
+  attr :order, :map, required: true
+
+  defp order_menu(assigns) do
+    assigns =
+      assigns
+      |> assign(:can_email_details?, assigns.order.customer_email && assigns.order.fulfillment_status != :cancelled)
+      |> assign(:has_receipt?, assigns.order.payment_status == :paid)
+
+    ~H"""
+    <div :if={@can_email_details? || @has_receipt?} class="dropdown dropdown-end">
+      <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
+        <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+      </button>
+      <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-56 border p-1 shadow">
+        <li :if={@can_email_details?}>
+          <button
+            type="button"
+            phx-click="send_order_details"
+            data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
+          >
+            {~t"Email order details"}
+          </button>
+        </li>
+        <li :if={@has_receipt? && @order.customer_email}>
+          <button
+            type="button"
+            phx-click="email_receipt"
+            data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
+          >
+            {~t"Email receipt"}
+          </button>
+        </li>
+        <li :if={@has_receipt?}>
+          <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
+            {~t"View receipt"}
+            <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+          </.link>
+        </li>
+      </ul>
     </div>
     """
   end
