@@ -9,4 +9,8 @@ defmodule Edenflowers.Locales do
   def default, do: @default
   def translatable_atoms, do: @translatable_atoms
   def supported?(locale), do: locale in @all
+
+  def name("sv-FI"), do: "Svenska"
+  def name("fi"), do: "Suomi"
+  def name("en-GB"), do: "English"
 end

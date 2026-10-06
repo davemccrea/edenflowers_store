@@ -61,6 +61,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> OrderLog.entries(locale)
   end
 
+  defp log_time(at, locale) do
+    local = DateTime.shift_zone!(at, "Europe/Helsinki")
+    "#{Format.day_month(DateTime.to_date(local), locale)} #{Format.time(DateTime.to_time(local), locale)}"
+  end
+
   defp line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
 
   defp line_label(line_item),
@@ -446,20 +451,30 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.detail_section>
 
             <.detail_section id="order-log" title={~t"Log"}>
-              <ol class="timeline timeline-vertical timeline-compact timeline-snap-icon text-sm">
-                <li :for={{entry, index} <- Enum.with_index(@log)}>
-                  <hr :if={index > 0} />
-                  <div class="timeline-middle">
-                    <span class="bg-base-content/40 size-2 mt-1.5 block rounded-full"></span>
-                  </div>
-                  <div class="timeline-end mb-4 min-w-0">
-                    <p class="text-base-content font-medium">{entry.title}</p>
-                    <time datetime={DateTime.to_iso8601(entry.at)} class="text-base-content/65 block text-xs">
-                      {Format.datetime(entry.at, @locale)}
-                    </time>
-                    <p :for={detail <- entry.details} class="text-base-content/85 mt-0.5 break-words">{detail}</p>
-                  </div>
-                  <hr :if={index < length(@log) - 1} />
+              <ol class="divide-base-content/8 divide-y text-sm">
+                <li :for={{entry, index} <- Enum.with_index(@log)} class="py-2 first:pt-0 last:pb-0">
+                  <.log_heading :if={entry.details == []} entry={entry} locale={@locale} />
+                  <details
+                    :if={entry.details != []}
+                    id={"order-log-entry-#{index}"}
+                    phx-mounted={JS.ignore_attributes(["open"])}
+                    class="group"
+                  >
+                    <summary class="cursor-pointer list-none">
+                      <.log_heading entry={entry} locale={@locale} expandable />
+                    </summary>
+                    <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+                      <div :for={{label, value} <- entry.details}>
+                        <dt :if={label} class="text-base-content/65 text-xs">{label}</dt>
+                        <dd class="text-base-content/85 break-words">
+                          <ul :if={is_list(value)}>
+                            <li :for={item <- value}>{item}</li>
+                          </ul>
+                          <span :if={!is_list(value)} class="whitespace-pre-line">{value}</span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </details>
                 </li>
               </ol>
             </.detail_section>
@@ -813,6 +828,32 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <dd class={["tabular-nums", money_row_tone(@strong, @muted, "text-base-content/90")]}>
         {Format.currency(@amount, @locale)}
       </dd>
+    </div>
+    """
+  end
+
+  attr :entry, :map, required: true
+  attr :locale, :string, required: true
+  attr :expandable, :boolean, default: false
+
+  defp log_heading(assigns) do
+    ~H"""
+    <div class="flex items-baseline justify-between gap-4">
+      <p class="text-base-content flex items-center gap-1 font-medium">
+        {@entry.title}
+        <.icon
+          :if={@expandable}
+          name="hero-chevron-right"
+          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+        />
+      </p>
+      <time
+        datetime={DateTime.to_iso8601(@entry.at)}
+        title={Format.datetime(@entry.at, @locale)}
+        class="text-base-content/65 shrink-0 text-xs tabular-nums"
+      >
+        {log_time(@entry.at, @locale)}
+      </time>
     </div>
     """
   end
