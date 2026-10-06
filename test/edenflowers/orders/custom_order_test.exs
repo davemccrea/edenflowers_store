@@ -334,13 +334,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         )
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")
 
       assert edit.title == "Edited"
       assert {"Delivery address", "Kyrkvägen 5"} in edit.details
       assert {"Fulfillment fee", "€17.00"} in edit.details
       refute List.keymember?(edit.details, "Items", 0)
-      assert length(EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")) == 2
+      assert length(EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")) == 2
     end
 
     test "the log lists the items when they change", ctx do
@@ -352,7 +352,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         Orders.edit_order(order, params(ctx, %{line_items: [kept, custom_line(ctx.tax_rate)]}), actor: ctx.admin)
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      [edit, placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      [edit, placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")
 
       assert {"Items", ["2 × Spring Bouquet", "1 × Funeral spray"]} in edit.details
       assert {"Items", ["1 × Spring Bouquet"]} in placed.details
@@ -366,7 +366,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.edit_order(order, params(ctx, %{locale: "fi", line_items: [kept]}), actor: ctx.admin)
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")
 
       assert {"Language", "Suomi"} in edit.details
     end
@@ -379,7 +379,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.edit_order(order, params(ctx, %{line_items: [kept]}), actor: ctx.admin)
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      assert [%{title: "Placed by Jennie"}] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      assert [%{title: "Placed by Jennie"}] = EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")
     end
 
     test "a line the order already has keeps the price it was sold at", ctx do
@@ -439,7 +439,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.florist_note == "White only, no lilies"
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      [change | _] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      [change | _] = EdenflowersWeb.Admin.OrderLog.entries(versions, [], "en-GB")
       assert change.title == "Florist note changed"
       assert change.details == [{nil, "White only, no lilies"}]
     end

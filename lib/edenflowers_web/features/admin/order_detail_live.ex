@@ -35,13 +35,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp assign_order(socket, order) do
+    payments = payments(order)
+
     socket
     |> assign(:order, order)
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
     |> assign(:in_person_form, in_person_form(order))
-    |> assign(:log, order_log(order, socket.assigns.locale))
-    |> assign(:payments, payments(order))
+    |> assign(:payments, payments)
+    |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
 
   defp in_person_form(order) do
@@ -54,11 +56,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> Map.fetch!(:payments)
   end
 
-  defp order_log(order, locale) do
+  defp order_log(order, payments, locale) do
     order
     |> Ash.load!(:paper_trail_versions, authorize?: false)
     |> Map.fetch!(:paper_trail_versions)
-    |> OrderLog.entries(locale)
+    |> OrderLog.entries(payments, locale)
   end
 
   defp log_time(at, locale) do
@@ -130,6 +132,119 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.order_menu order={@order} />
           </:actions>
         </.admin_page_header>
+
+        <%!-- Above everything else while money is owed, in the order Jennie
+             reaches for it: send the link, or record what she took herself. --%>
+        <section
+          :if={owes_money?(@order)}
+          id="order-collect"
+          class="bg-warning/10 border-warning/40 mb-6 space-y-4 border p-4 sm:p-5"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-base-content text-base font-semibold">
+              {if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
+              <span class="tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
+            </h2>
+            <.button
+              :if={Decimal.positive?(@order.balance) && @order.customer_email}
+              type="button"
+              phx-click="email_payment_link"
+              data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
+              variant="primary"
+              size="sm"
+            >
+              <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+            </.button>
+          </div>
+          <div :if={@order.payment_link_open?} id="order-payment-link">
+            <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
+              {~t"Payment link"}
+            </label>
+            <div class="flex gap-2">
+              <input
+                id="payment-link-url"
+                type="text"
+                readonly
+                value={EdenflowersWeb.PaymentLink.url_for(@order)}
+                class="input input-sm font-mono min-w-0 flex-1 text-xs"
+              />
+              <button
+                id="copy-payment-link"
+                type="button"
+                phx-click={
+                  JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})
+                }
+                class="btn btn-ghost btn-sm btn-square group"
+                title={~t"Copy payment link"}
+                aria-label={~t"Copy payment link"}
+              >
+                <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
+                <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
+                <span class="sr-only" aria-live="polite">
+                  <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <.button
+            :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
+            type="button"
+            phx-click="open_payment_link"
+            variant="ghost"
+            size="sm"
+          >
+            {~t"Create payment link"}
+          </.button>
+
+          <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
+            <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
+              <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
+              {if Decimal.positive?(@order.balance),
+                do: ~t"Record payment taken in person",
+                else: ~t"Record refund given in person"}
+            </summary>
+            <.form
+              for={@in_person_form}
+              id="in-person-payment-form"
+              phx-submit="record_in_person_payment"
+              class="mt-3"
+            >
+              <fieldset aria-describedby="in-person-payment-help">
+                <div class="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
+                  <.input
+                    field={@in_person_form[:payment_method]}
+                    type="select"
+                    label={~t"How"}
+                    class="select select-sm w-full"
+                    options={in_person_method_options()}
+                  />
+                  <.input
+                    field={@in_person_form[:amount]}
+                    type="text"
+                    inputmode="decimal"
+                    label={~t"Amount (€)"}
+                    class="input input-sm w-full tabular-nums"
+                  />
+                  <.button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    class="col-span-2 sm:col-span-1"
+                    data-confirm={
+                      ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
+                    }
+                  >
+                    {~t"Record payment"}
+                  </.button>
+                </div>
+                <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
+                  {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+                </p>
+              </fieldset>
+            </.form>
+          </details>
+        </section>
 
         <section
           id="order-fulfillment-summary"
@@ -264,99 +379,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   locale={@locale}
                 />
               </dl>
-
-              <%!-- Everything for settling the balance, in the order Jennie reaches
-                   for it: send the link, or record what she took herself. --%>
-              <div :if={owes_money?(@order)} id="order-collect" class="border-base-content/12 mt-5 space-y-5 border-t pt-4">
-                <div :if={@order.payment_link_open?} id="order-payment-link">
-                  <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
-                    {~t"Payment link"}
-                  </label>
-                  <div class="flex gap-2">
-                    <input
-                      id="payment-link-url"
-                      type="text"
-                      readonly
-                      value={EdenflowersWeb.PaymentLink.url_for(@order)}
-                      class="input input-sm font-mono min-w-0 flex-1 text-xs"
-                    />
-                    <button
-                      id="copy-payment-link"
-                      type="button"
-                      phx-click={
-                        JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})
-                      }
-                      class="btn btn-ghost btn-sm btn-square group"
-                      title={~t"Copy payment link"}
-                      aria-label={~t"Copy payment link"}
-                    >
-                      <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
-                      <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
-                      <span class="sr-only" aria-live="polite">
-                        <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <.button
-                  :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
-                  type="button"
-                  phx-click="open_payment_link"
-                  variant="ghost"
-                  size="sm"
-                >
-                  {~t"Create payment link"}
-                </.button>
-
-                <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
-                  <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
-                    <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
-                    {if Decimal.positive?(@order.balance),
-                      do: ~t"Record payment taken in person",
-                      else: ~t"Record refund given in person"}
-                  </summary>
-                  <.form
-                    for={@in_person_form}
-                    id="in-person-payment-form"
-                    phx-submit="record_in_person_payment"
-                    class="mt-3"
-                  >
-                    <fieldset aria-describedby="in-person-payment-help">
-                      <div class="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
-                        <.input
-                          field={@in_person_form[:payment_method]}
-                          type="select"
-                          label={~t"How"}
-                          class="select select-sm w-full"
-                          options={in_person_method_options()}
-                        />
-                        <.input
-                          field={@in_person_form[:amount]}
-                          type="text"
-                          inputmode="decimal"
-                          label={~t"Amount (€)"}
-                          class="input input-sm w-full tabular-nums"
-                        />
-                        <.button
-                          type="submit"
-                          variant="primary"
-                          size="sm"
-                          class="col-span-2 sm:col-span-1"
-                          data-confirm={
-                            ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
-                          }
-                        >
-                          {~t"Record payment"}
-                        </.button>
-                      </div>
-                      <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
-                        {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
-                      </p>
-                    </fieldset>
-                  </.form>
-                </details>
-              </div>
             </.detail_section>
           </div>
 
@@ -508,6 +530,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  # The order details email carries the link, so sending it is opening one.
+  def handle_event("email_payment_link", _params, socket) do
+    actor = socket.assigns.current_user
+
+    with {:ok, order} <- Orders.open_payment_link(socket.assigns.order, actor: actor),
+         {:ok, order} <- Orders.send_order_details_email(order, actor: actor) do
+      {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment link emailed.")}
+    else
+      {:error, _} -> {:noreply, put_flash(socket, :error, ~t"Could not email the payment link.")}
+    end
+  end
+
   def handle_event("send_order_details", _params, socket) do
     case Orders.send_order_details_email(socket.assigns.order, actor: socket.assigns.current_user) do
       {:ok, order} ->
@@ -536,19 +570,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
 
   defp in_person_method_options do
-    Enum.map(PaymentMethod.in_person(), &{payment_method_label(&1), &1})
+    Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
   end
-
-  defp payment_method_label(:stripe), do: ~t"Online (Stripe)"
-  defp payment_method_label(:zettle), do: ~t"Card (Zettle)"
-  defp payment_method_label(:mobilepay), do: ~t"MobilePay"
-  defp payment_method_label(:cash), do: ~t"Cash"
-  defp payment_method_label(_method), do: ~t"Unknown"
 
   defp payment_label(%{amount: amount, method: method}) do
     if Decimal.negative?(amount),
-      do: ~t"Refund · #{how = payment_method_label(method)}",
-      else: payment_method_label(method)
+      do: ~t"Refund · #{how = OrderLog.payment_method_label(method)}",
+      else: OrderLog.payment_method_label(method)
   end
 
   attr :queue, :map, required: true

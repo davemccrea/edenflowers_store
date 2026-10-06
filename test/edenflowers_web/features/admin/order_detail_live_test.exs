@@ -140,6 +140,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "header", "Refunded")
   end
 
+  test "logs payments and refunds with their amounts", %{conn: conn} do
+    order = placed_order()
+    generate(payment(order_id: order.id, amount: Decimal.new("46.50")))
+    generate(payment(order_id: order.id, amount: Decimal.new("-10.00"), method: :cash))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-log", "Paid €46.50 · Online (Stripe)")
+    assert has_element?(view, "#order-log", "Refunded €10.00 · Cash")
+  end
+
   test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
     order = placed_order(recipient_phone_number: "040 123 4567")
 
