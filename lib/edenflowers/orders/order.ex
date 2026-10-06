@@ -284,6 +284,8 @@ defmodule Edenflowers.Orders.Order do
                   :fulfillment_option_name,
                   :fulfillment_method,
                   :grand_total,
+                  :amount_paid,
+                  :balance,
                   :non_card_line_item_count,
                   :distance_km,
                   :gift,

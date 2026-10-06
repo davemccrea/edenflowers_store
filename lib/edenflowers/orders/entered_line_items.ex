@@ -22,9 +22,13 @@ defmodule Edenflowers.Orders.EnteredLineItems do
           | {:custom, description :: String.t(), unit_price :: Decimal.t(), tax_rate_id :: String.t(),
              quantity :: pos_integer()}
 
-  @spec parse(list(map()) | nil) :: {:ok, [line()]} | {:error, String.t()}
-  def parse(nil), do: {:error, ~t"Add at least one item"}
-  def parse([]), do: {:error, ~t"Add at least one item"}
+  @doc """
+  The lines, or the first problem: with the 1-based number of the line it is
+  on, or nil when there are no lines at all.
+  """
+  @spec parse(list(map()) | nil) :: {:ok, [line()]} | {:error, pos_integer() | nil, String.t()}
+  def parse(nil), do: {:error, nil, ~t"Add at least one item"}
+  def parse([]), do: {:error, nil, ~t"Add at least one item"}
 
   def parse(items) when is_list(items) do
     items
@@ -32,7 +36,7 @@ defmodule Edenflowers.Orders.EnteredLineItems do
     |> Enum.reduce_while({:ok, []}, fn {item, number}, {:ok, lines} ->
       case parse_line(item) do
         {:ok, line} -> {:cont, {:ok, [line | lines]}}
-        {:error, message} -> {:halt, {:error, ~t"Item #{number}: #{message}"}}
+        {:error, message} -> {:halt, {:error, number, message}}
       end
     end)
     |> case do

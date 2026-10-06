@@ -27,12 +27,17 @@ const syncCinderFilterToggle = (toggle) => {
   if (!body) return;
 
   toggle.setAttribute("aria-controls", body.id);
-  toggle.setAttribute("aria-expanded", getComputedStyle(body).display !== "none");
+  toggle.setAttribute(
+    "aria-expanded",
+    getComputedStyle(body).display !== "none",
+  );
 };
 
 const syncCinderSortHeader = (th) => {
-  if (th.querySelector(".hero-chevron-up")) th.setAttribute("aria-sort", "ascending");
-  else if (th.querySelector(".hero-chevron-down")) th.setAttribute("aria-sort", "descending");
+  if (th.querySelector(".hero-chevron-up"))
+    th.setAttribute("aria-sort", "ascending");
+  else if (th.querySelector(".hero-chevron-down"))
+    th.setAttribute("aria-sort", "descending");
   else th.removeAttribute("aria-sort");
 };
 
@@ -66,7 +71,9 @@ const liveSocket = new LiveSocket("/live", Socket, {
   dom: {
     onNodeAdded(node) {
       makeCinderControlOperable(node);
-      node.querySelectorAll?.(`th, ${cinderControlSelector}`).forEach(makeCinderControlOperable);
+      node
+        .querySelectorAll?.(`th, ${cinderControlSelector}`)
+        .forEach(makeCinderControlOperable);
     },
     onBeforeElUpdated(_from, to) {
       makeCinderControlOperable(to);
@@ -107,9 +114,21 @@ topbar.config({
   barColors: { 0: "oklch(36.84% 0.0478 156.76)" },
   shadowColor: "rgba(0, 0, 0, .3)",
 });
-window.addEventListener("edenflowers:copy", (event) => {
+// detail.trigger names the button to mark data-copied for a moment, so it can
+// show (and, inside an aria-live region, announce) that the copy worked.
+window.addEventListener("edenflowers:copy", async (event) => {
   const el = event.target;
-  navigator.clipboard.writeText("value" in el ? el.value : el.textContent.trim());
+  await navigator.clipboard.writeText(
+    "value" in el ? el.value : el.textContent.trim(),
+  );
+
+  const trigger =
+    event.detail?.trigger && document.querySelector(event.detail.trigger);
+  if (!trigger) return;
+
+  trigger.dataset.copied = "";
+  clearTimeout(trigger.copiedTimer);
+  trigger.copiedTimer = setTimeout(() => delete trigger.dataset.copied, 2000);
 });
 
 window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));

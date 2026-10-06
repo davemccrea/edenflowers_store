@@ -77,8 +77,8 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
-    assert has_element?(view, ~s([data-item-id="#{mismatched.id}"] .admin-badge-error), "To collect")
-    refute has_element?(view, ~s([data-item-id="#{matching.id}"] .admin-badge-error))
+    assert has_element?(view, ~s([data-item-id="#{mismatched.id}"] .admin-badge-warning), "To collect")
+    refute has_element?(view, ~s([data-item-id="#{matching.id}"] .admin-badge-warning), "To collect")
   end
 
   defp placed_order(attrs) do

@@ -88,13 +88,19 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  attr :status, :atom, required: true
+  attr :status, :atom, required: true, doc: "nil shows a dash, for a payment status with nothing to say"
 
   @doc """
   Payment-status pill for an order: paid reads as success, refunded as attention,
   failed as error. Pending reads as "Unpaid": admin only sees placed orders, and
   a placed order still pending is a custom order waiting for its money.
   """
+  def payment_status_badge(%{status: nil} = assigns) do
+    ~H"""
+    <span class="text-base-content/65 text-sm">—</span>
+    """
+  end
+
   def payment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
@@ -102,6 +108,10 @@ defmodule EdenflowersWeb.Admin.Components do
     </span>
     """
   end
+
+  @doc "The payment status worth showing: a cancelled order nobody paid for owes nothing, so it isn't \"Unpaid\"."
+  def shown_payment_status(%{fulfillment_status: :cancelled, payment_status: :pending}), do: nil
+  def shown_payment_status(order), do: order.payment_status
 
   attr :status, :atom, required: true
 
