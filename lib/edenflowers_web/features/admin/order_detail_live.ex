@@ -914,7 +914,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </summary>
         <.form for={@in_person_form} id="in-person-payment-form" phx-submit="record_in_person_payment" class="mt-3">
           <fieldset aria-describedby="in-person-payment-help">
-            <div class="grid grid-cols-2 items-end gap-2">
+            <div class="grid grid-cols-2 items-end gap-2 text-sm">
               <.input
                 field={@in_person_form[:payment_method]}
                 type="select"
