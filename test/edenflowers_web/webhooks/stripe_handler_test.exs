@@ -73,6 +73,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :placed
       assert order.payment_status == :paid
+      assert order.payment_intent_id == nil
 
       assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 

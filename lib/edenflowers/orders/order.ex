@@ -451,6 +451,8 @@ defmodule Edenflowers.Orders.Order do
         where: [{Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :payment_status, paid: :paid}]
 
       change set_attribute(:payment_status, :paid)
+      # The PaymentIntent is spent; a later payment link must open a fresh one.
+      change set_attribute(:payment_intent_id, nil)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown

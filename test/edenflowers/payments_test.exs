@@ -250,7 +250,8 @@ defmodule Edenflowers.PaymentsTest do
                  actor: Edenflowers.Actors.system_actor()
                )
 
-      assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.AlreadyPaid))
+      # Placing the order cleared its PaymentIntent, so the stale one no longer matches.
+      assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.PaymentIntentMismatch))
       current = Orders.get_order_by_id!(order.id, authorize?: false)
       assert current.order_reference == placed.order_reference
       assert current.ordered_at == placed.ordered_at
@@ -383,7 +384,7 @@ defmodule Edenflowers.PaymentsTest do
       assert {:error, error} =
                Orders.mark_payment_failed(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
 
-      assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.AlreadyPaid))
+      assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.PaymentIntentMismatch))
       assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
     end
 

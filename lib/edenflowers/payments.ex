@@ -89,6 +89,11 @@ defmodule Edenflowers.Payments do
             find_error(error, AlreadyPaid) ->
               {:ok, :already_completed}
 
+            # Completing clears the order's PaymentIntent, so a concurrent
+            # completion that lost the race sees a mismatch, not AlreadyPaid.
+            find_error(error, PaymentIntentMismatch) && recorded?(payment_intent.id) ->
+              {:ok, :already_completed}
+
             mismatch = find_error(error, PaymentIntentMismatch) ->
               {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
 
