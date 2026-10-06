@@ -3781,11 +3781,6 @@ msgstr "Artikel med eget pris"
 msgid "Items"
 msgstr "Artiklar"
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:424
-#, elixir-autogen, elixir-format
-msgid "Language for emails and the payment page"
-msgstr "Språk för e-post och betalningssidan"
-
 #: lib/edenflowers_web/features/admin/order_form_live.ex:494
 #, elixir-autogen, elixir-format
 msgid "Leave blank to calculate it as checkout would. 0 for free."
@@ -4291,3 +4286,8 @@ msgstr "Ett telefonnummer eller en e-postadress behövs. Med e-postadress syns b
 #, elixir-autogen, elixir-format
 msgid "Copy payment link"
 msgstr "Kopiera betalningslänken"
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:425
+#, elixir-autogen, elixir-format
+msgid "Used for their emails and the payment page."
+msgstr "Används för kundens e-post och betalningssidan."
