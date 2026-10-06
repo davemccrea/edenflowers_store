@@ -40,10 +40,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="full">
+      <.admin_page width="wide">
         <.admin_page_header title={~t"Dashboard"} />
 
-        <div class="grid max-w-6xl grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
           <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
           <.orders_widget
             orders_by_date={@orders_by_date}
