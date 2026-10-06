@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Order.PaymentMethod
   alias Edenflowers.PhoneNumber
   alias Edenflowers.External.StripeAPI
   alias EdenflowersWeb.Layouts
@@ -21,8 +22,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:page_title, ~t"Order #{order.order_reference}")
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
-         |> assign(:order, order)
-         |> assign(:pickup_message_urls, pickup_message_urls(order))
+         |> assign_order(order)
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
       _ ->
@@ -31,6 +31,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> put_flash(:error, ~t"Order not found.")
          |> push_navigate(to: EdenflowersWeb.Admin.OrdersLive.default_path())}
     end
+  end
+
+  defp assign_order(socket, order) do
+    socket
+    |> assign(:order, order)
+    |> assign(:pickup_message_urls, pickup_message_urls(order))
+    |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
+    |> assign(:in_person_form, in_person_form(order))
+  end
+
+  defp in_person_form(order) do
+    to_form(%{"payment_method" => "zettle", "amount_paid" => Decimal.to_string(order.grand_total, :normal)},
+      as: :in_person
+    )
   end
 
   @impl true
@@ -48,6 +62,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </:nav>
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span :if={@order.origin == :custom} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
+                {~t"Custom order"}
+              </span>
               <.gift_badge :if={@order.gift} order={@order} />
               <span class="tabular-nums">{@order.order_reference}</span>
               <span :if={@order.ordered_at} aria-hidden="true">·</span>
@@ -55,6 +72,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </span>
           </:subtitle>
           <:actions>
+            <div :if={@order.fulfillment_status == :pending} class="flex items-center gap-2">
+              <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="secondary" size="sm">
+                <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
+              </.button>
+              <.button
+                type="button"
+                phx-click="cancel_order"
+                data-confirm={cancel_confirmation(@order)}
+                variant="ghost"
+                size="sm"
+                class="text-error"
+              >
+                {~t"Cancel order"}
+              </.button>
+            </div>
             <div class="flex items-center gap-4">
               <div class="flex flex-col items-start gap-1">
                 <span class="eyebrow text-base-content/65">{~t"Payment"}</span>
@@ -78,7 +110,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               :if={@order.fulfillment_status == :pending}
               type="button"
               phx-click="mark_fulfilled"
-              data-confirm={~t"Mark this order as fulfilled?"}
+              data-confirm={
+                if @order.unpaid?,
+                  do: ~t"This order is still unpaid. Mark it as fulfilled anyway?",
+                  else: ~t"Mark this order as fulfilled?"
+              }
               variant="primary"
               size="sm"
               class="shrink-0"
@@ -135,6 +171,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div class="space-y-6">
+            <.detail_section id="order-florist-note" title={~t"Florist note"}>
+              <.form for={@note_form} id="florist-note-form" phx-submit="save_florist_note" class="space-y-3">
+                <.input
+                  field={@note_form[:florist_note]}
+                  type="textarea"
+                  rows="3"
+                  placeholder={~t"Only you see this: what was agreed, timings, anything to remember."}
+                />
+                <.button type="submit" variant="secondary" size="sm">{~t"Save note"}</.button>
+              </.form>
+            </.detail_section>
+
             <.detail_section id="order-items" title={~t"To make"}>
               <.readonly_line_items line_items={@order.line_items} locale={@locale} />
             </.detail_section>
@@ -162,15 +210,98 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
                 <.money_row
                   :if={@order.amount_mismatch?}
-                  label={~t"Charged by Stripe (mismatch)"}
+                  label={amount_paid_label(@order)}
                   amount={@order.amount_paid}
                   locale={@locale}
                 />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
+              <p :if={@order.payment_status == :paid} id="order-paid-how" class="text-base-content/75 mt-4 text-sm">
+                {paid_how(@order, @locale)}
+              </p>
+
+              <div :if={@order.payment_link_open?} id="order-payment-link" class="mt-5">
+                <p class="eyebrow text-base-content/65 mb-1.5">{~t"Payment link"}</p>
+                <div class="flex gap-2">
+                  <input
+                    id="payment-link-url"
+                    type="text"
+                    readonly
+                    value={EdenflowersWeb.PaymentLink.url_for(@order)}
+                    class="input input-sm font-mono min-w-0 flex-1"
+                  />
+                  <.button
+                    type="button"
+                    phx-click={JS.dispatch("edenflowers:copy", to: "#payment-link-url")}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    {~t"Copy"}
+                  </.button>
+                </div>
+              </div>
+
+              <.form
+                :if={@order.unpaid?}
+                for={@in_person_form}
+                id="in-person-payment-form"
+                phx-submit="record_in_person_payment"
+                class="border-base-content/12 mt-5 space-y-3 border-t pt-5"
+              >
+                <p class="text-base-content text-sm font-semibold">{~t"Paid in person"}</p>
+                <div class="grid grid-cols-2 gap-3">
+                  <.input
+                    field={@in_person_form[:payment_method]}
+                    type="select"
+                    label={~t"How"}
+                    options={in_person_method_options()}
+                  />
+                  <.input
+                    field={@in_person_form[:amount_paid]}
+                    type="text"
+                    inputmode="decimal"
+                    label={~t"Amount (€)"}
+                    class="input w-full tabular-nums"
+                  />
+                </div>
+                <.button type="submit" variant="primary" size="sm">{~t"Mark as paid"}</.button>
+              </.form>
+
               <div class="mt-5 flex flex-wrap gap-2">
                 <.button
-                  :if={@order.state == :placed}
+                  :if={@order.origin == :custom && @order.unpaid? && !@order.payment_link_open?}
+                  type="button"
+                  phx-click="open_payment_link"
+                  variant="secondary"
+                  size="sm"
+                >
+                  {~t"Create payment link"}
+                </.button>
+                <.button
+                  :if={@order.origin == :custom && @order.customer_email && @order.fulfillment_status != :cancelled}
+                  type="button"
+                  phx-click="send_order_details"
+                  data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
+                  variant="secondary"
+                  size="sm"
+                >
+                  {~t"Email order details"}
+                </.button>
+                <.button
+                  :if={
+                    @order.payment_status == :paid && @order.payment_method in PaymentMethod.in_person() &&
+                      @order.customer_email
+                  }
+                  type="button"
+                  phx-click="email_receipt"
+                  data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
+                  variant="secondary"
+                  size="sm"
+                >
+                  {~t"Email receipt"}
+                </.button>
+                <.button
+                  :if={@order.payment_status == :paid}
                   href={~p"/order/#{@order.id}/receipt"}
                   target="_blank"
                   rel="noopener"
@@ -210,7 +341,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     <span class="break-all">{@order.customer_email}</span>
                   </a>
                 </:contact>
-                <:contact :if={customer_phone?(@order) && present?(@order.recipient_phone_number)}>
+                <:contact :if={present?(@order.customer_phone_number)}>
+                  <.phone_link phone_number={@order.customer_phone_number} />
+                </:contact>
+                <:contact :if={
+                  !present?(@order.customer_phone_number) && customer_phone?(@order) &&
+                    present?(@order.recipient_phone_number)
+                }>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
                 <:contact :if={@pickup_message_urls}>
@@ -235,7 +372,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               title={~t"Recipient"}
             >
               <.person_block name={@order.recipient_name}>
-                <:contact :if={!customer_phone?(@order) && present?(@order.recipient_phone_number)}>
+                <:contact :if={
+                  (present?(@order.customer_phone_number) || !customer_phone?(@order)) &&
+                    present?(@order.recipient_phone_number)
+                }>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
@@ -253,14 +393,100 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply,
          socket
-         |> assign(:order, order)
-         |> assign(:pickup_message_urls, pickup_message_urls(order))
+         |> assign_order(reload(order, socket))
          |> put_flash(:info, ~t"Order marked as fulfilled.")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
     end
   end
+
+  def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
+    case Orders.update_florist_note(socket.assigns.order, %{florist_note: note}, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Note saved.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not save the note.")}
+    end
+  end
+
+  def handle_event("cancel_order", _params, socket) do
+    case Orders.cancel_order(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order cancelled.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not cancel the order.")}
+    end
+  end
+
+  def handle_event("record_in_person_payment", %{"in_person" => params}, socket) do
+    attrs = %{payment_method: params["payment_method"], amount_paid: String.replace(params["amount_paid"], ",", ".")}
+
+    case Orders.record_in_person_payment(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment recorded.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not record the payment. Check the amount.")}
+    end
+  end
+
+  def handle_event("open_payment_link", _params, socket) do
+    case Orders.open_payment_link(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment link created.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not create a payment link.")}
+    end
+  end
+
+  def handle_event("send_order_details", _params, socket) do
+    case Orders.send_order_details_email(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order details sent.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not send the email. Try again in a moment.")}
+    end
+  end
+
+  def handle_event("email_receipt", _params, socket) do
+    case Orders.email_receipt(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Receipt sent.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not send the receipt. Try again in a moment.")}
+    end
+  end
+
+  defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
+
+  defp cancel_confirmation(%{payment_status: :paid}),
+    do: ~t"Cancel this order? It is paid, so refund the customer in Stripe or by hand. This can't be undone."
+
+  defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
+
+  defp in_person_method_options do
+    Enum.map(PaymentMethod.in_person(), &{payment_method_label(&1), &1})
+  end
+
+  defp payment_method_label(:stripe), do: ~t"Online (Stripe)"
+  defp payment_method_label(:zettle), do: ~t"Card (Zettle)"
+  defp payment_method_label(:mobilepay), do: ~t"MobilePay"
+  defp payment_method_label(:cash), do: ~t"Cash"
+  defp payment_method_label(_method), do: ~t"Unknown"
+
+  defp paid_how(%{payment_method: method, paid_at: %DateTime{} = paid_at}, locale),
+    do: ~t"Paid #{time = Format.datetime(paid_at, locale)} · #{how = payment_method_label(method)}"
+
+  defp paid_how(%{payment_method: method}, _locale), do: ~t"Paid · #{how = payment_method_label(method)}"
+
+  defp amount_paid_label(%{payment_method: :stripe}), do: ~t"Charged by Stripe (mismatch)"
+  defp amount_paid_label(_order), do: ~t"Taken in person (differs)"
 
   attr :queue, :map, required: true
   attr :fulfilled, :boolean, required: true
@@ -334,7 +560,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     ~H"""
     <ul class="divide-base-content/8 divide-y">
       <li :for={line_item <- @line_items} class="flex gap-4 py-4 first:pt-0 last:pb-0">
+        <div
+          :if={is_nil(line_item.product_image_slug)}
+          class="bg-base-200 text-base-content/40 flex h-16 w-16 shrink-0 items-center justify-center"
+          aria-hidden="true"
+        >
+          <.icon name="hero-sparkles" class="h-6 w-6" />
+        </div>
         <.image
+          :if={line_item.product_image_slug}
           src={line_item.product_image_slug}
           alt={~t"Image of #{line_item.product_name}"}
           width={64}

@@ -90,7 +90,11 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :status, :atom, required: true
 
-  @doc "Payment-status pill for an order: paid reads as success, refunded as attention, failed as error, pending stays neutral."
+  @doc """
+  Payment-status pill for an order: paid reads as success, refunded as attention,
+  failed as error. Pending reads as "Unpaid": admin only sees placed orders, and
+  a placed order still pending is a custom order waiting for its money.
+  """
   def payment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
@@ -101,7 +105,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :status, :atom, required: true
 
-  @doc "Fulfillment-status pill for an order: fulfilled reads as success, pending stays neutral."
+  @doc "Fulfillment-status pill for an order: fulfilled reads as success, cancelled as error, pending stays neutral."
   def fulfillment_status_badge(assigns) do
     ~H"""
     <span class={["badge badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
@@ -226,19 +230,22 @@ defmodule EdenflowersWeb.Admin.Components do
   defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"
   defp payment_status_badge_class(:failed), do: "badge-error admin-badge-error"
   defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-attention"
+  defp payment_status_badge_class(:pending), do: "badge-warning admin-badge-warning"
   defp payment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp payment_status_label(:paid), do: ~t"Paid"
   defp payment_status_label(:failed), do: ~t"Failed"
   defp payment_status_label(:refunded), do: ~t"Refunded"
-  defp payment_status_label(:pending), do: ~t"Pending"
+  defp payment_status_label(:pending), do: ~t"Unpaid"
   defp payment_status_label(value), do: to_string(value)
 
   defp fulfillment_status_badge_class(:fulfilled), do: "badge-success admin-badge-success"
+  defp fulfillment_status_badge_class(:cancelled), do: "badge-error admin-badge-error"
   defp fulfillment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp fulfillment_status_label(:fulfilled), do: ~t"Fulfilled"
   defp fulfillment_status_label(:pending), do: ~t"Pending"
+  defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
 
   defp admin_page_width_class("wide"), do: "max-w-4xl"

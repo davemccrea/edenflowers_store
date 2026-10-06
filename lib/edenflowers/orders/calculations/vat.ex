@@ -21,7 +21,14 @@ defmodule Edenflowers.Orders.Calculations.Vat do
     raise "placed order is missing its VAT breakdown snapshot"
   end
 
-  def breakdown(order) do
+  def breakdown(order), do: compute_breakdown(order)
+
+  @doc """
+  The breakdown worked out from the order's lines and fee, ignoring any
+  snapshot. What a snapshot is taken from, including when an unpaid custom
+  order is edited after it was placed.
+  """
+  def compute_breakdown(order) do
     order.line_items
     |> Enum.map(&{&1.tax_rate, &1.total})
     |> Enum.concat(fulfillment_fee_entry(order))

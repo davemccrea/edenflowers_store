@@ -32,17 +32,29 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
-  test "the default path lists only paid orders still to fulfil", %{conn: conn} do
+  test "the default path lists every order still to fulfil, paid or not", %{conn: conn} do
     placed_order(customer_name: "To Make", payment_status: :paid, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", payment_status: :paid, fulfillment_status: :fulfilled)
-    placed_order(customer_name: "Unpaid", payment_status: :pending, fulfillment_status: :pending)
+    placed_order(customer_name: "Pays Later", payment_status: :pending, fulfillment_status: :pending)
+    placed_order(customer_name: "Called Off", payment_status: :pending, fulfillment_status: :cancelled)
 
     {:ok, view, _html} = live(conn, EdenflowersWeb.Admin.OrdersLive.default_path())
 
     assert has_element?(view, "[data-item-id]", "To Make")
+    assert has_element?(view, "[data-item-id]", "Pays Later")
     refute has_element?(view, "[data-item-id]", "Already Done")
-    refute has_element?(view, "[data-item-id]", "Unpaid")
+    refute has_element?(view, "[data-item-id]", "Called Off")
     assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
+  end
+
+  test "filtering by unpaid lists orders still owed for, fulfilled or not", %{conn: conn} do
+    placed_order(customer_name: "Paid Up", payment_status: :paid, fulfillment_status: :pending)
+    placed_order(customer_name: "Delivered Unpaid", payment_status: :pending, fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders?payment_status=pending")
+
+    assert has_element?(view, "[data-item-id]", "Delivered Unpaid")
+    refute has_element?(view, "[data-item-id]", "Paid Up")
   end
 
   test "flags orders still to fulfil whose fulfillment date has passed", %{conn: conn} do

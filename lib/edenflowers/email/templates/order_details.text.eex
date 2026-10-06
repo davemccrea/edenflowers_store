@@ -1,0 +1,20 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Thank you for your order. Here is what we agreed:") %>
+
+<%= for line_item <- @order.line_items do %><%= line_item.quantity %> × <%= line_item.product_name %>  <%= @format_currency.(line_item.subtotal) %>
+<% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
+<% end %><%= gettext("Total") %>  <%= @format_currency.(@order.grand_total) %>
+
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @format_date.(@order.fulfillment_date), address: @order.delivery_address) %><% else %><%= gettext("Ready to collect at the shop on %{date}", date: @format_date.(@order.fulfillment_date)) %><% end %>
+<%= if @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
+<% end %>
+<%= if @payment_link_url do %><%= gettext("You can pay online here, by card or MobilePay:") %>
+<%= @payment_link_url %><% else %><%= if @order.fulfillment_method == :delivery do %><%= gettext("You can pay when the flowers are delivered.") %><% else %><%= gettext("You can pay when you collect the flowers.") %><% end %><% end %>
+
+<%= gettext("If anything needs changing, just reply and I'll take care of it.") %>
+
+<%= gettext("Warm wishes,") %>
+
+Jennie
+Eden Flowers

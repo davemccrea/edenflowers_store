@@ -154,7 +154,21 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               <.icon name="hero-pencil-square" class="h-3.5 w-3.5" />
               {~t"Card to write"}
             </span>
+            <span
+              :if={@order.payment_status != :paid}
+              class="badge badge-sm badge-warning admin-badge-warning shrink-0 whitespace-nowrap"
+            >
+              {~t"Unpaid"}
+            </span>
           </div>
+
+          <p
+            :if={present?(@order.florist_note)}
+            class="text-base-content/85 line-clamp-2 mt-1 text-sm italic"
+            data-testid="florist-note"
+          >
+            <.icon name="hero-chat-bubble-bottom-center-text" class="text-base-content/50 align-[-2px] mr-1 h-3.5 w-3.5" />{@order.florist_note}
+          </p>
 
           <ul class="text-base-content/85 mt-1 space-y-0.5 text-sm">
             <li :for={item <- @items} class="truncate" phx-no-format>
