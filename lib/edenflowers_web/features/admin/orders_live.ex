@@ -19,9 +19,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
   end
 
-  @doc "The orders list filtered to the work still to do, paid or not (ADR 0001)."
-  def default_path, do: ~p"/admin/orders?fulfillment_status=pending"
-
   @impl true
   def handle_params(params, uri, socket) do
     {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
