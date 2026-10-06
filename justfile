@@ -21,7 +21,7 @@ test *args: check-typst
 # Forward Stripe webhooks to the local dev server
 [group('local')]
 stripe-listen:
-    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled --forward-to localhost:{{port}}/webhook/stripe
+    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,refund.created,refund.updated --forward-to localhost:{{port}}/webhook/stripe
 
 # Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
 [group('local')]

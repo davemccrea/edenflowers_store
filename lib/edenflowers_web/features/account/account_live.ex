@@ -239,8 +239,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
 
-  # Only a custom order can be placed before it is paid.
-  defp unpaid?(order), do: order.payment_status != :paid and order.fulfillment_status != :cancelled
+  # A custom order placed before it is paid, or any order owing a balance after an edit.
+  defp unpaid?(order),
+    do: order.payment_link_open? or (order.payment_status != :paid and order.fulfillment_status != :cancelled)
 
   attr :order, :map, required: true
 
@@ -248,7 +249,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <span class="text-base-content/70 block text-sm" data-testid="order-unpaid">
       <%= cond do %>
-        <% @order.payment_link_token -> %>
+        <% @order.payment_link_open? -> %>
           {~t"Unpaid"} ·
           <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}

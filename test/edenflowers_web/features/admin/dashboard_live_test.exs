@@ -67,7 +67,6 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
           order(
             state: :placed,
             payment_status: payment_status,
-            amount_paid: amount_paid,
             fulfillment_status: :fulfilled,
             fulfillment_fee: "5.00",
             ordered_at: ordered_at
@@ -75,6 +74,10 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
         )
 
       generate(line_item(order_id: order.id, product_variant_id: variant.id))
+      generate(payment(order_id: order.id, amount: Decimal.new(amount_paid), paid_at: ordered_at))
+
+      if payment_status == :refunded,
+        do: generate(payment(order_id: order.id, amount: Decimal.negate(Decimal.new(amount_paid)), paid_at: ordered_at))
     end
 
     now = DateTime.utc_now()

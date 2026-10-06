@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This order has been cancelled, so there is nothing to pay. Get in touch if that's a surprise."}
               </p>
-            <% @shown_order.payment_status == :paid -> %>
+            <% not payable?(@shown_order) -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">
                 {~t"This order is paid. Thank you!"}
@@ -129,6 +129,17 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 <dt>{~t"Total"}</dt>
                 <dd class="tabular-nums" data-testid="pay-total">{Format.currency(@shown_order.grand_total, @locale)}</dd>
               </div>
+              <div :if={@shown_order.amount_paid} class="flex justify-between gap-4 py-3">
+                <dt>{~t"Paid so far"}</dt>
+                <dd class="tabular-nums">{Format.currency(@shown_order.amount_paid, @locale)}</dd>
+              </div>
+              <div
+                :if={@shown_order.amount_paid && payable?(@shown_order)}
+                class="flex justify-between gap-4 py-3 font-semibold"
+              >
+                <dt>{~t"Left to pay"}</dt>
+                <dd class="tabular-nums" data-testid="pay-balance">{Format.currency(@shown_order.balance, @locale)}</dd>
+              </div>
             </dl>
           </section>
 
@@ -152,7 +163,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
 
               <.form_button disabled={true} id="payment-button">
-                {~t"Pay"} {Format.currency(@shown_order.grand_total, @locale)}
+                {~t"Pay"} {Format.currency(@shown_order.balance, @locale)}
               </.form_button>
             </form>
 
@@ -166,7 +177,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
     """
   end
 
-  defp payable?(order), do: order.payment_status != :paid and order.fulfillment_status != :cancelled
+  defp payable?(order), do: Decimal.positive?(order.balance) and order.fulfillment_status != :cancelled
 
   # Stripe is only touched once the page is live, so a crawler or a link
   # preview never creates a PaymentIntent. Back from Stripe, the payment is
@@ -187,7 +198,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   # Jennie may have changed the order since the PaymentIntent was made, and the
-  # link always charges the current total.
+  # link always charges what is still owed.
   defp client_secret(order) do
     with :ok <- sync_amount(order),
          {:ok, _order, client_secret} <- Payments.setup(order, system_actor()) do

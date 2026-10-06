@@ -57,6 +57,10 @@ defmodule Edenflowers.Orders.LineItem do
     update :decrement_quantity do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
     end
+
+    update :set_quantity do
+      accept [:quantity]
+    end
   end
 
   policies do

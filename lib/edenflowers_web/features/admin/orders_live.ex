@@ -111,10 +111,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               {Format.currency(order.grand_total, @locale)}
             </span>
             <span
-              :if={order.amount_mismatch?}
+              :if={order.amount_mismatch? && order.fulfillment_status != :cancelled}
               class="badge badge-sm admin-badge-error ml-1.5 whitespace-nowrap align-middle font-medium"
             >
-              {~t"Amount mismatch"}
+              <%= if Decimal.positive?(order.balance) do %>
+                {~t"To collect #{amount = Format.currency(order.balance, @locale)}"}
+              <% else %>
+                {~t"To refund #{amount = Format.currency(Decimal.abs(order.balance), @locale)}"}
+              <% end %>
             </span>
           </:col>
           <:col

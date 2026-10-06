@@ -29,12 +29,20 @@ _Avoid_: Comment, internal note, order notes (and distinct from the Card Message
 ### Payment
 
 **Payment Link**:
-A private link Jennie gives a customer so they can pay a placed, unpaid order online. It never expires, and stops working once the order is paid or cancelled.
+A private link Jennie gives a customer so they can pay what an order still owes online: a custom order not yet paid, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
 _Avoid_: Invoice, payment request, Stripe link
 
 **In-person Payment**:
 A payment Jennie takes outside the website — on the Zettle card reader, by MobilePay, or in cash — and then records against the order.
 _Avoid_: Offline payment, manual payment, till payment
+
+**Payment**:
+Money that moved for an order: through Stripe, or taken in person. A refund is a negative Payment. An order can have several.
+_Avoid_: Transaction, charge
+
+**Balance**:
+What is still owed on a placed order: its total minus what has been paid. Positive is to collect, negative is to refund; editing a paid order is what usually leaves one.
+_Avoid_: Amount mismatch, outstanding, difference
 
 ### People
 

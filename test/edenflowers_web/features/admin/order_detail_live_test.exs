@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   test "renders a placed order detail page", %{conn: conn} do
     order = placed_order()
+    generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_test_order_detail"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -38,7 +39,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-customer", "ada@example.com")
     assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
-    assert has_element?(view, "#order-payment-summary", "View payment in Stripe")
+    assert has_element?(view, ~s|#order-payments a[aria-label="View payment in Stripe"]|)
     assert has_element?(view, ~s|#order-payment-summary a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)

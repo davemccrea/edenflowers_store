@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       {:ok, mock_payment_intent}
     end)
 
-    stub(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn _order ->
+    stub(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn _payment_intent_id, _amount_cents ->
       {:ok, mock_payment_intent}
     end)
 

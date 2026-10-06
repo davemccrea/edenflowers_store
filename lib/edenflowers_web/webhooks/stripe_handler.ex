@@ -29,6 +29,19 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   end
 
   @impl true
+  def handle_event(%Stripe.Event{type: type} = event) when type in ["refund.created", "refund.updated"] do
+    case Payments.record_refund(event.data.object) do
+      {:ok, _outcome} ->
+        :ok
+
+      # Returning :error makes Stripe retry.
+      {:error, reason} ->
+        Logger.error("Failed to record Stripe #{type} event #{event.id}: #{inspect(reason)}")
+        :error
+    end
+  end
+
+  @impl true
   def handle_event(%Stripe.Event{type: type}) do
     Logger.warning("Unhandled Stripe event: #{type}")
     :ok
@@ -50,17 +63,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   defp handle_error({:error, {:amount_mismatch, id, expected, actual}}, event) do
     Logger.error(
       "Stripe #{event.type} event #{event.id}: amount mismatch for #{id} (expected: #{expected} EUR, got: #{actual} EUR)"
-    )
-
-    :ok
-  end
-
-  # The customer paid twice, or paid for a cancelled order: retrying won't
-  # help, but Jennie needs to know so she can refund in Stripe.
-  defp handle_error({:error, {:unexpected_payment, id, reason}}, event) do
-    Logger.error(
-      "Stripe #{event.type} event #{event.id}: order #{id} received an online payment it no longer expected " <>
-        "(#{reason}). Refund it in Stripe."
     )
 
     :ok

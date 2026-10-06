@@ -10,7 +10,11 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order =
-        Ash.load!(changeset.data, [:customer_first_name, :grand_total, line_items: [:subtotal]], authorize?: false)
+        Ash.load!(
+          changeset.data,
+          [:customer_first_name, :grand_total, :amount_paid, :balance, :payment_link_open?, line_items: [:subtotal]],
+          authorize?: false
+        )
 
       case order |> Email.order_details(payment_link_url(order)) |> Mailer.deliver() do
         {:ok, _result} ->
@@ -23,7 +27,6 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
     end)
   end
 
-  defp payment_link_url(%{payment_link_token: nil}), do: nil
-  defp payment_link_url(%{payment_status: :paid}), do: nil
-  defp payment_link_url(order), do: EdenflowersWeb.PaymentLink.url_for(order)
+  defp payment_link_url(%{payment_link_open?: true} = order), do: EdenflowersWeb.PaymentLink.url_for(order)
+  defp payment_link_url(_order), do: nil
 end

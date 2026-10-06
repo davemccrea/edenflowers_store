@@ -1,12 +1,12 @@
-defmodule Edenflowers.Orders.Changes.CustomOrderFulfillmentFee do
+defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   @moduledoc """
-  Prices a custom order's fulfillment as checkout would, unless Jennie has set
-  her own fee in `fulfillment_fee_override`. With her own fee she can deliver
-  outside the delivery range, so an address that can't be priced only blocks
-  the order when there is no override.
+  Prices fulfillment on an order Jennie places or edits, as checkout would,
+  unless she has set her own fee in `fulfillment_fee_override`. With her own
+  fee she can deliver outside the delivery range, so an address that can't be
+  priced only blocks the order when there is no override.
 
-  An unchanged delivery address isn't geocoded again: the stored distance is
-  enough to price it.
+  An edit that leaves the method, address and override alone keeps the fee the
+  order already has, even if the option's prices have changed since.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -17,9 +17,15 @@ defmodule Edenflowers.Orders.Changes.CustomOrderFulfillmentFee do
 
   @geocoded_fields [:geocoded_address, :position, :here_id, :distance]
 
+  @priced_by [:fulfillment_option_id, :delivery_address, :fulfillment_fee_override]
+
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_action(changeset, &apply_fee/1)
+    if changeset.action_type == :create or Enum.any?(@priced_by, &Ash.Changeset.changing_attribute?(changeset, &1)) do
+      Ash.Changeset.before_action(changeset, &apply_fee/1)
+    else
+      changeset
+    end
   end
 
   defp apply_fee(changeset) do
@@ -39,6 +45,7 @@ defmodule Edenflowers.Orders.Changes.CustomOrderFulfillmentFee do
     |> set_fee(calculated)
   end
 
+  # Only a new override reuses the stored distance; a new address or option is geocoded.
   defp apply_fee(changeset, option) do
     if needs_geocoding?(changeset) do
       geocode(changeset, option)

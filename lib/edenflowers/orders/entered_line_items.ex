@@ -1,12 +1,16 @@
-defmodule Edenflowers.Orders.CustomLineItems do
+defmodule Edenflowers.Orders.EnteredLineItems do
   @moduledoc """
-  Parses the lines Jennie enters on a custom order. Each line is either a
-  catalogue variant, priced from the catalogue, or one she describes and
-  prices herself:
+  Parses the lines Jennie enters when she places or edits an order. Each line
+  is either a catalogue variant, priced from the catalogue, or one she
+  describes and prices herself:
 
       %{"kind" => "catalogue", "product_variant_id" => id, "quantity" => "1"}
+      %{"kind" => "catalogue", "id" => line_item_id, "quantity" => "2"}
       %{"kind" => "custom", "description" => "Funeral spray", "unit_price" => "85.00",
         "tax_rate_id" => id, "quantity" => "1"}
+
+  A catalogue line with an `id` is one the order already has. It keeps the
+  price it was sold at, which the catalogue may since have changed.
 
   Keys may be strings or atoms, since the form sends strings and tests write atoms.
   """
@@ -14,7 +18,7 @@ defmodule Edenflowers.Orders.CustomLineItems do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @type line ::
-          {:catalogue, variant_id :: String.t(), quantity :: pos_integer()}
+          {:catalogue, variant_id :: String.t() | nil, quantity :: pos_integer(), line_item_id :: String.t() | nil}
           | {:custom, description :: String.t(), unit_price :: Decimal.t(), tax_rate_id :: String.t(),
              quantity :: pos_integer()}
 
@@ -46,9 +50,17 @@ defmodule Edenflowers.Orders.CustomLineItems do
   end
 
   defp parse_catalogue(item) do
-    with {:ok, variant_id} <- required(item, :product_variant_id, ~t"choose a product"),
-         {:ok, quantity} <- quantity(item) do
-      {:ok, {:catalogue, variant_id, quantity}}
+    with {:ok, quantity} <- quantity(item) do
+      case required(item, :id, nil) do
+        {:ok, line_item_id} -> {:ok, {:catalogue, nil, quantity, line_item_id}}
+        {:error, _} -> parse_new_catalogue(item, quantity)
+      end
+    end
+  end
+
+  defp parse_new_catalogue(item, quantity) do
+    with {:ok, variant_id} <- required(item, :product_variant_id, ~t"choose a product") do
+      {:ok, {:catalogue, variant_id, quantity, nil}}
     end
   end
 

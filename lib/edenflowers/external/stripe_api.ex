@@ -6,7 +6,8 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
 
   @callback create_payment_intent(amount_cents :: integer(), metadata :: map()) :: {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
-  @callback update_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
+              {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
 end
 
@@ -52,12 +53,8 @@ defmodule Edenflowers.External.StripeAPI do
   end
 
   @impl true
-  def update_payment_intent(%{payment_intent_id: payment_intent_id, grand_total: grand_total}) do
-    amount = to_stripe_amount(grand_total)
-
-    Stripe.PaymentIntent.update(payment_intent_id, %{
-      amount: amount
-    })
+  def update_payment_intent(payment_intent_id, amount_cents) do
+    Stripe.PaymentIntent.update(payment_intent_id, %{amount: amount_cents})
   end
 
   @impl true

@@ -94,18 +94,29 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
     Ash.Seed.seed!(Edenflowers.Accounts.User, %{name: name, email: email})
   end
 
+  # `amount_paid:` records that payment; a refunded order also gets it back.
   defp placed_order(user, attrs \\ []) do
-    generate(
-      order(
-        [
-          user_id: user.id,
-          customer_name: user.name,
-          customer_email: to_string(user.email),
-          state: :placed,
-          ordered_at: DateTime.utc_now(),
-          locale: "en-GB"
-        ] ++ attrs
+    {amount_paid, attrs} = Keyword.pop(attrs, :amount_paid)
+
+    order =
+      generate(
+        order(
+          [
+            user_id: user.id,
+            customer_name: user.name,
+            customer_email: to_string(user.email),
+            state: :placed,
+            ordered_at: DateTime.utc_now(),
+            locale: "en-GB"
+          ] ++ attrs
+        )
       )
-    )
+
+    if amount_paid, do: generate(payment(order_id: order.id, amount: amount_paid))
+
+    if amount_paid && attrs[:payment_status] == :refunded,
+      do: generate(payment(order_id: order.id, amount: Decimal.negate(amount_paid)))
+
+    order
   end
 end

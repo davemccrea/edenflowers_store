@@ -63,10 +63,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   } do
     order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
 
-    expect(StripeAPI.Mock, :update_payment_intent, fn %{payment_intent_id: "pi_link", grand_total: total} ->
-      assert Decimal.equal?(total, "85.00")
-      {:ok, %{id: "pi_link"}}
-    end)
+    expect(StripeAPI.Mock, :update_payment_intent, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
 
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
@@ -77,7 +74,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
   test "says so once the order is paid", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} =
-      Orders.record_in_person_payment(order, %{payment_method: :cash, amount_paid: "85.00"}, actor: admin)
+      Orders.record_in_person_payment(order, "85.00", :cash, actor: admin)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 

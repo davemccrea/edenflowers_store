@@ -12,11 +12,12 @@ defmodule Edenflowers.Orders.Changes.ReportAmountMismatch do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
-      checked = Ash.load!(order, [:amount_mismatch?, :grand_total], authorize?: false)
+      checked =
+        Ash.load!(order, [:amount_mismatch?, :grand_total, :amount_paid], authorize?: false, reuse_values?: false)
 
       if checked.amount_mismatch? do
         Logger.error(
-          "Amount mismatch for order #{order.id} (expected: #{checked.grand_total}, got: #{order.amount_paid}). " <>
+          "Amount mismatch for order #{order.id} (expected: #{checked.grand_total}, got: #{checked.amount_paid}). " <>
             "Placed it anyway; the cart likely changed while payment was in flight."
         )
       end

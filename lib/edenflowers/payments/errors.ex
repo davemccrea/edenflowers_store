@@ -22,17 +22,3 @@ defmodule Edenflowers.Payments.Errors.PaymentIntentMismatch do
 
   def message(error), do: "PaymentIntent #{error.actual} does not match #{error.expected}"
 end
-
-defmodule Edenflowers.Payments.Errors.UnexpectedPayment do
-  @moduledoc """
-  Returned when a payment link payment arrives for an order that no longer
-  expects one: it was paid in person, or cancelled. Jennie has to refund it.
-  """
-  use Splode.Error, fields: [:field, :reason], class: :invalid
-
-  # The reason arrives as a string when the check runs in the database.
-  def message(%{reason: reason}) when reason in [:paid_in_person, "paid_in_person"],
-    do: "order was already paid in person"
-
-  def message(%{reason: reason}) when reason in [:cancelled, "cancelled"], do: "order was cancelled"
-end
