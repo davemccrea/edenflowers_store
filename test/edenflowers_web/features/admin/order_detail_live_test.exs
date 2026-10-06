@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(
              view,
-             "#order-fulfillment-summary a[href*='maps/dir'][href*='travelmode=driving']",
+             "#order-directions a[href*='maps/dir'][href*='travelmode=driving']",
              "Get directions"
            )
   end
@@ -317,7 +317,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(
              view,
-             "#order-fulfillment-summary a[href*='destination=63.0951%2C21.6165'][href*='travelmode=driving']"
+             "#order-directions a[href*='destination=63.0951%2C21.6165'][href*='travelmode=driving']"
            )
   end
 
