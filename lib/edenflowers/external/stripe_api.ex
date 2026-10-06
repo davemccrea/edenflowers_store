@@ -66,8 +66,16 @@ defmodule Edenflowers.External.StripeAPI do
   end
 
   @impl true
+  # stripity_stripe's generated Stripe.Refund.list/3 only covers the charge-scoped
+  # /v1/charges/{charge}/refunds, so we call /v1/refunds ourselves.
   def list_refunds(payment_intent_id) do
-    with {:ok, %Stripe.List{data: refunds}} <- Stripe.Refund.list(%{payment_intent: payment_intent_id, limit: 100}) do
+    request =
+      Stripe.Request.new_request()
+      |> Stripe.Request.put_endpoint("/v1/refunds")
+      |> Stripe.Request.put_params(%{payment_intent: payment_intent_id, limit: 100})
+      |> Stripe.Request.put_method(:get)
+
+    with {:ok, %Stripe.List{data: refunds}} <- Stripe.Request.make_request(request) do
       {:ok, refunds}
     end
   end

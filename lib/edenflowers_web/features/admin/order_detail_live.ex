@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.OrderDetailLive do
   use EdenflowersWeb, :live_view
 
+  require Logger
+
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Format
@@ -144,33 +146,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           class="bg-warning/10 border-warning/40 mb-6 space-y-4 border p-4 sm:p-5"
         >
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base-content text-base font-semibold">
+            <h2 class="text-base-content flex items-baseline gap-2 text-base font-semibold">
               {if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
-              <span class="tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
+              <span class="text-xl tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
             </h2>
-            <.button
-              :if={Decimal.positive?(@order.balance) && @order.customer_email}
-              type="button"
-              phx-click="email_payment_link"
-              data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
-              variant="primary"
-              size="sm"
-            >
-              <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
-            </.button>
-            <.button
-              :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
-              type="button"
-              phx-click="refund_with_stripe"
-              phx-disable-with={~t"Refunding…"}
-              data-confirm={
-                ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
-              }
-              variant="primary"
-              size="sm"
-            >
-              {~t"Refund with Stripe"}
-            </.button>
+            <div class="flex flex-wrap items-center gap-2">
+              <.button
+                :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
+                type="button"
+                phx-click="open_payment_link"
+                variant="ghost"
+                size="sm"
+              >
+                {~t"Create payment link"}
+              </.button>
+              <.button
+                :if={Decimal.positive?(@order.balance) && @order.customer_email}
+                type="button"
+                phx-click="email_payment_link"
+                data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
+                variant="primary"
+                size="sm"
+              >
+                <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+              </.button>
+              <.button
+                :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
+                type="button"
+                phx-click="refund_with_stripe"
+                phx-disable-with={~t"Refunding…"}
+                data-confirm={
+                  ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
+                }
+                variant="primary"
+                size="sm"
+              >
+                {~t"Refund with Stripe"}
+              </.button>
+            </div>
           </div>
           <div :if={@order.payment_link_open?} id="order-payment-link">
             <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
@@ -210,18 +223,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </div>
           </div>
 
-          <.button
-            :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
-            type="button"
-            phx-click="open_payment_link"
-            variant="ghost"
-            size="sm"
+          <details
+            id="in-person-payment"
+            phx-mounted={JS.ignore_attributes(["open"])}
+            class="border-warning/40 group border-t pt-4"
           >
-            {~t"Create payment link"}
-          </.button>
-
-          <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
-            <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
+            <summary class="text-warning-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
               <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
               {if Decimal.positive?(@order.balance),
                 do: ~t"Record payment taken in person",
@@ -600,7 +607,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign_order(reload(socket.assigns.order, socket))
          |> put_flash(:info, ~t"Refunds from Stripe recorded.")}
 
-      {:error, _} ->
+      {:error, reason} ->
+        Logger.error("Fetching Stripe refunds for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
         {:noreply, put_flash(socket, :error, ~t"Could not fetch refunds from Stripe. Try again in a moment.")}
     end
   end
@@ -609,13 +617,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     case Edenflowers.Payments.refund_balance(socket.assigns.order) do
       {:ok, refunds} ->
         message =
-          if Enum.all?(refunds, &(&1.status == "succeeded")),
-            do: ~t"Refunded through Stripe.",
-            else: ~t"Refund sent to Stripe. It shows here once it goes through."
+          cond do
+            refunds == [] -> ~t"Nothing left to refund. Stripe already has refunds covering it."
+            Enum.all?(refunds, &(&1.status == "succeeded")) -> ~t"Refunded through Stripe."
+            true -> ~t"Refund sent to Stripe. It shows here once it goes through."
+          end
 
         {:noreply, socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:info, message)}
 
-      {:error, _} ->
+      {:error, reason} ->
+        Logger.error("Stripe refund for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
         {:noreply, put_flash(socket, :error, ~t"Could not refund through Stripe. Check the payment in Stripe.")}
     end
   end

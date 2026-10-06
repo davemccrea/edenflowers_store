@@ -147,26 +147,40 @@ defmodule Edenflowers.Payments do
     else
       :not_found -> {:ok, :ignored}
       true -> {:ok, :already_recorded}
-      {:error, error} -> {:error, {:refund_record_failed, refund.id, error}}
+      {:error, error} -> recorded_meanwhile_or_error(refund.id, error)
     end
   end
 
   def record_refund(_refund), do: {:ok, :ignored}
+
+  # The webhook and the order page can record the same refund at once; the
+  # unique stripe_refund_id turns the loser's insert into an error.
+  defp recorded_meanwhile_or_error(refund_id, error) do
+    if refund_recorded?(refund_id),
+      do: {:ok, :already_recorded},
+      else: {:error, {:refund_record_failed, refund_id, error}}
+  end
 
   @doc """
   Asks Stripe for the refunds on an order's Stripe payments and records any
   whose webhook never arrived. Returns how many were newly recorded.
   """
   def sync_refunds(%Order{id: order_id}) do
+    with {:ok, refunds_by_payment} <- stripe_refunds(order_id) do
+      refunds_by_payment
+      |> Enum.flat_map(fn {_payment, refunds} -> refunds end)
+      |> record_refunds()
+    end
+  end
+
+  defp stripe_refunds(order_id) do
     Payment
-    |> Ash.Query.filter(order_id == ^order_id and not is_nil(payment_intent_id))
+    |> Ash.Query.filter(order_id == ^order_id and not is_nil(payment_intent_id) and amount > 0)
     |> Ash.read!(authorize?: false)
-    |> Enum.reduce_while({:ok, 0}, fn payment, {:ok, recorded} ->
-      with {:ok, refunds} <- stripe_api().list_refunds(payment.payment_intent_id),
-           {:ok, newly_recorded} <- record_refunds(refunds) do
-        {:cont, {:ok, recorded + newly_recorded}}
-      else
-        {:error, reason} -> {:halt, {:error, reason}}
+    |> Enum.reduce_while({:ok, []}, fn payment, {:ok, acc} ->
+      case stripe_api().list_refunds(payment.payment_intent_id) do
+        {:ok, refunds} -> {:cont, {:ok, [{payment, refunds} | acc]}}
+        error -> {:halt, error}
       end
     end)
   end
@@ -186,60 +200,69 @@ defmodule Edenflowers.Payments do
   first, as far as its Stripe payments cover it. Refunds that succeed at once
   are recorded here; pending ones arrive through the refund webhook.
 
-  The idempotency key changes only once a refund is recorded, so a second
-  click while one is still pending gets the same refund back from Stripe
-  rather than refunding twice.
+  Stripe is the source of truth for what's already been refunded: succeeded
+  refunds missing from our records are recorded first, and pending ones are
+  taken off what's owed, so a second click never refunds the same money twice.
+  The idempotency key covers two clicks racing each other.
   """
-  def refund_balance(%Order{id: order_id, balance: balance}) do
-    if Decimal.negative?(balance) do
-      payments =
+  def refund_balance(%Order{id: order_id}) do
+    with {:ok, refunds_by_payment} <- stripe_refunds(order_id),
+         {:ok, _recorded} <- refunds_by_payment |> Enum.flat_map(&elem(&1, 1)) |> record_refunds(),
+         {:ok, order} <- Ash.get(Order, order_id, load: [:balance], authorize?: false) do
+      owed_cents =
+        StripeAPI.to_stripe_amount(Decimal.max(Decimal.negate(order.balance), 0)) -
+          pending_cents(refunds_by_payment)
+
+      payment_count =
         Payment
         |> Ash.Query.filter(order_id == ^order_id)
-        |> Ash.read!(authorize?: false)
+        |> Ash.count!(authorize?: false)
 
-      payments
-      |> Enum.filter(&(&1.payment_intent_id && Decimal.positive?(&1.amount)))
-      |> Enum.sort_by(& &1.paid_at, {:desc, DateTime})
-      |> refund_from(StripeAPI.to_stripe_amount(Decimal.abs(balance)), "#{order_id}-#{length(payments)}", [])
-    else
-      {:ok, []}
+      refunds_by_payment
+      |> Enum.sort_by(fn {payment, _refunds} -> payment.paid_at end, {:desc, DateTime})
+      |> refund_from(owed_cents, "#{order_id}-#{payment_count}", [])
     end
   end
 
-  defp refund_from(_payments, 0, _key, refunds), do: {:ok, Enum.reverse(refunds)}
-  defp refund_from([], _left, _key, refunds), do: {:ok, Enum.reverse(refunds)}
+  defp pending_cents(refunds_by_payment) do
+    refunds_by_payment
+    |> Enum.flat_map(&elem(&1, 1))
+    |> Enum.reject(&(&1.status in ["succeeded", "failed", "canceled"]))
+    |> Enum.map(& &1.amount)
+    |> Enum.sum()
+  end
 
-  defp refund_from([payment | rest], left_cents, key, refunds) do
-    with {:ok, refundable} <- refundable_cents(payment) do
-      case min(left_cents, refundable) do
-        0 ->
-          refund_from(rest, left_cents, key, refunds)
+  defp refund_from(_refunds_by_payment, left_cents, _key, refunds) when left_cents <= 0,
+    do: {:ok, Enum.reverse(refunds)}
 
-        cents ->
-          with {:ok, refund} <-
-                 stripe_api().create_refund(
-                   payment.payment_intent_id,
-                   cents,
-                   "refund-#{key}-#{payment.payment_intent_id}"
-                 ),
-               {:ok, _outcome} <- record_refund(refund) do
-            refund_from(rest, left_cents - cents, key, [refund | refunds])
-          end
-      end
+  defp refund_from([], _left_cents, _key, refunds), do: {:ok, Enum.reverse(refunds)}
+
+  defp refund_from([{payment, existing_refunds} | rest], left_cents, key, refunds) do
+    case min(left_cents, refundable_cents(payment, existing_refunds)) do
+      0 ->
+        refund_from(rest, left_cents, key, refunds)
+
+      cents ->
+        with {:ok, refund} <-
+               stripe_api().create_refund(
+                 payment.payment_intent_id,
+                 cents,
+                 "refund-#{key}-#{payment.payment_intent_id}"
+               ),
+             {:ok, _outcome} <- record_refund(refund) do
+          refund_from(rest, left_cents - cents, key, [refund | refunds])
+        end
     end
   end
 
-  # Asks Stripe rather than our records, which miss refunds still pending.
-  defp refundable_cents(payment) do
-    with {:ok, refunds} <- stripe_api().list_refunds(payment.payment_intent_id) do
-      refunded =
-        refunds
-        |> Enum.reject(&(&1.status in ["failed", "canceled"]))
-        |> Enum.map(& &1.amount)
-        |> Enum.sum()
+  defp refundable_cents(payment, refunds) do
+    refunded =
+      refunds
+      |> Enum.reject(&(&1.status in ["failed", "canceled"]))
+      |> Enum.map(& &1.amount)
+      |> Enum.sum()
 
-      {:ok, max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)}
-    end
+    max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)
   end
 
   defp find_payment(payment_intent_id) do
