@@ -28,6 +28,29 @@ defmodule Edenflowers.Email do
     })
   end
 
+  @doc """
+  What a custom order's customer is sent when Jennie places it: the order as
+  agreed and how to pay. No receipt, because nothing has been paid yet.
+  Expects `line_items: [:subtotal]` and `:grand_total` loaded.
+  """
+  def order_details(order, payment_link_url) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(from_address())
+      |> subject(~t"Your Eden Flowers order #{order.order_reference}")
+      |> text_body(
+        Templates.order_details(%{
+          order: order,
+          payment_link_url: payment_link_url,
+          format_date: &Format.weekday_date(&1, order.locale),
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
   def order_delivered(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()

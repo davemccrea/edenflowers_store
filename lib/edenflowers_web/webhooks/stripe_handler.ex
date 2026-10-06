@@ -55,6 +55,17 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
     :ok
   end
 
+  # The customer paid twice, or paid for a cancelled order: retrying won't
+  # help, but Jennie needs to know so she can refund in Stripe.
+  defp handle_error({:error, {:unexpected_payment, id, reason}}, event) do
+    Logger.error(
+      "Stripe #{event.type} event #{event.id}: order #{id} received an online payment it no longer expected " <>
+        "(#{reason}). Refund it in Stripe."
+    )
+
+    :ok
+  end
+
   # Returning :error makes Stripe retry, and the action rolled back, so nothing is half-done.
   defp handle_error({:error, {:payment_update_failed, id, reason}}, event) do
     Logger.error("Failed to update payment for #{id} on Stripe #{event.type} event #{event.id}: #{inspect(reason)}")

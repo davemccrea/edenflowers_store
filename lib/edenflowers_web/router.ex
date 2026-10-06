@@ -63,6 +63,7 @@ defmodule EdenflowersWeb.Router do
       scope "/", Checkout do
         live "/checkout", CheckoutLive
         live "/order/:id", OrderLive
+        live "/pay/:token", PayLive
       end
 
       scope "/", Account do
@@ -118,7 +119,9 @@ defmodule EdenflowersWeb.Router do
       ] do
       live "/", EdenflowersWeb.Admin.DashboardLive
       live "/orders", EdenflowersWeb.Admin.OrdersLive
+      live "/orders/new", EdenflowersWeb.Admin.OrderFormLive
       live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
+      live "/orders/:id/edit", EdenflowersWeb.Admin.OrderFormLive
       live "/customers", EdenflowersWeb.Admin.CustomersLive
       live "/customers/:id", EdenflowersWeb.Admin.CustomerDetailLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive

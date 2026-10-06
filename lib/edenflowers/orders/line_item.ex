@@ -14,6 +14,10 @@ defmodule Edenflowers.Orders.LineItem do
       check_constraint :unit_price, "line_items_valid_unit_price",
         check: "unit_price >= 0 AND unit_price = round(unit_price, 2)",
         message: "must be a non-negative amount in whole cents"
+
+      check_constraint :product_variant_id, "line_items_catalogue_lines_have_a_product",
+        check: "(product_variant_id IS NULL) = (product_id IS NULL)",
+        message: "must name both the product and its variant, or neither"
     end
 
     references do
@@ -33,6 +37,12 @@ defmodule Edenflowers.Orders.LineItem do
 
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
+    end
+
+    # A line on a custom order that Jennie describes and prices herself, with
+    # no product behind it.
+    create :add_custom_item do
+      accept [:order_id, :product_name, :unit_price, :tax_rate, :quantity]
     end
 
     # The destroy notification publishes to the removed item's order_id topic.
@@ -89,7 +99,8 @@ defmodule Edenflowers.Orders.LineItem do
     attribute :unit_price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false
-    attribute :product_image_slug, :string, allow_nil?: false
+    # Nil for a custom item, which has no product photo.
+    attribute :product_image_slug, :string
     attribute :is_card, :boolean, default: false, allow_nil?: false
     attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
     timestamps()
@@ -97,8 +108,9 @@ defmodule Edenflowers.Orders.LineItem do
 
   relationships do
     belongs_to :order, Edenflowers.Orders.Order, allow_nil?: false
-    belongs_to :product, Edenflowers.Catalog.Product, allow_nil?: false
-    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant, allow_nil?: false
+    # Both nil for a custom item.
+    belongs_to :product, Edenflowers.Catalog.Product
+    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant
   end
 
   calculations do

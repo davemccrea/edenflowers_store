@@ -112,6 +112,7 @@ defmodule Generator do
         state: :contact_details,
         order_reference: StreamData.repeatedly(fn -> "T#{System.unique_integer([:positive])}" end),
         amount_paid: if(opts[:payment_status] == :paid, do: Decimal.new("0.00")),
+        payment_method: if(opts[:payment_status] == :paid, do: :stripe),
         vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
       },
       overrides: opts,

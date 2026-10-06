@@ -10,6 +10,7 @@ defmodule Edenflowers.Email.Templates do
 
   @templates [
     {:order_confirmation, [:assigns]},
+    {:order_details, [:assigns]},
     {:order_delivered, [:assigns]},
     {:course_confirmation, [:assigns]},
     {:newsletter_promo, [:assigns]},

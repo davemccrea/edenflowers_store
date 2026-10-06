@@ -19,8 +19,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
   end
 
-  @doc "The orders list filtered to the work still to do: paid and not yet fulfilled."
-  def default_path, do: ~p"/admin/orders?fulfillment_status=pending&payment_status=paid"
+  @doc "The orders list filtered to the work still to do, paid or not (ADR 0001)."
+  def default_path, do: ~p"/admin/orders?fulfillment_status=pending"
 
   @impl true
   def handle_params(params, uri, socket) do
@@ -32,7 +32,13 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="full">
-        <.admin_page_header title={~t"Orders"} />
+        <.admin_page_header title={~t"Orders"}>
+          <:actions>
+            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
+              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
+            </.button>
+          </:actions>
+        </.admin_page_header>
 
         <Cinder.collection
           id="orders-table"
@@ -146,7 +152,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       query,
       expr(
         contains(customer_name, ^case_insensitive_term) or
-          contains(order_reference, ^case_insensitive_term)
+          contains(order_reference, ^case_insensitive_term) or
+          contains(customer_phone_number, ^case_insensitive_term)
       )
     )
   end
@@ -158,7 +165,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     |> Enum.map(fn value -> {fulfillment_method_label(value), value} end)
   end
 
-  defp payment_status_options, do: select_options(Order.PaymentStatus)
+  # A placed order whose payment is still pending is unpaid, so the filter says so.
+  defp payment_status_options do
+    Enum.map(Order.PaymentStatus.values(), fn
+      :pending -> {~t"Unpaid", :pending}
+      value -> {status_label(value), value}
+    end)
+  end
+
   defp fulfillment_status_options, do: select_options(Order.FulfillmentStatus)
 
   defp select_options(enum), do: Enum.map(enum.values(), &{status_label(&1), &1})
@@ -167,6 +181,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   defp status_label(:failed), do: ~t"Failed"
   defp status_label(:refunded), do: ~t"Refunded"
   defp status_label(:pending), do: ~t"Pending"
+  defp status_label(:cancelled), do: ~t"Cancelled"
   defp status_label(:fulfilled), do: ~t"Fulfilled"
   defp status_label(value), do: to_string(value)
 end

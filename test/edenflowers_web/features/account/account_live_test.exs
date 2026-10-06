@@ -39,6 +39,32 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
+    test "offers to pay an unpaid custom order through its payment link", %{conn: conn, user: user} do
+      order = placed_order(user_id: user.id, origin: :custom, payment_status: :pending, payment_link_token: "tok123")
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, ~s|[data-testid=order-unpaid] a[href="/pay/tok123"]|, "Pay now")
+      refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
+    end
+
+    test "tells a customer paying in person when to pay", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, origin: :custom, payment_status: :pending)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=order-unpaid]", "Pay at collection")
+    end
+
+    test "shows a cancelled order as cancelled", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, origin: :custom, payment_status: :pending, fulfillment_status: :cancelled)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=orders-table]", "Cancelled")
+      refute has_element?(view, "[data-testid=order-unpaid]")
+    end
+
     test "does not list another customer's orders", %{conn: conn} do
       other = generate(admin_user(admin: false))
       order = placed_order(user_id: other.id)

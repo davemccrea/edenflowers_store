@@ -47,6 +47,15 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       assert_no_email_sent()
     end
 
+    test "sends nothing to a phone-only customer" do
+      order = fulfillable_order(customer_email: nil, customer_phone_number: "+358401234567")
+
+      {:ok, _order} = Orders.mark_order_fulfilled(order, actor: admin())
+
+      assert %{failure: 0} = Oban.drain_queue(queue: :default)
+      assert_no_email_sent()
+    end
+
     test "queues nothing when the order is already fulfilled" do
       order = fulfillable_order(fulfillment_status: :fulfilled)
 

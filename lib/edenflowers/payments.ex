@@ -20,7 +20,7 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch}
+  alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch, UnexpectedPayment}
 
   @metadata_keys ["order_id", "course_registration_id"]
 
@@ -87,6 +87,9 @@ defmodule Edenflowers.Payments do
 
             mismatch = find_error(error, AmountMismatch) ->
               {:error, {:amount_mismatch, id, mismatch.expected, mismatch.actual}}
+
+            unexpected = find_error(error, UnexpectedPayment) ->
+              {:error, {:unexpected_payment, id, unexpected.reason}}
 
             true ->
               {:error, {:payment_update_failed, id, error}}
@@ -164,8 +167,18 @@ defmodule Edenflowers.Payments do
     Courses.add_registration_payment_intent_id(registration, payment_intent_id, actor: system_actor())
   end
 
+  # A custom order was placed when Jennie entered it, so its payment link only
+  # records the payment; a checkout payment is what places an online order.
   defp complete_payable({"order_id", id}, payment_intent_id, amount_paid) do
-    Orders.finalize_checkout(id, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+    with {:ok, order} <- Orders.get_order_by_id(id, actor: system_actor()) do
+      case order.origin do
+        :custom ->
+          Orders.record_link_payment(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+
+        :online ->
+          Orders.finalize_checkout(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+      end
+    end
   end
 
   defp complete_payable({"course_registration_id", id}, payment_intent_id, amount_paid) do

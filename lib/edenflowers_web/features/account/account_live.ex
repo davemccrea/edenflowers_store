@@ -86,7 +86,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   />
                 </th>
                 <td class="hidden py-4 pr-4 tabular-nums sm:table-cell">{order.order_reference}</td>
-                <td class="py-4 pr-4">{status_label(order, @locale)}</td>
+                <td class="py-4 pr-4">
+                  {status_label(order, @locale)}
+                  <.unpaid_note :if={unpaid?(order)} order={order} />
+                </td>
                 <%!-- Sans, not serif: Crimson Text ships no `tnum`, so a serif total
                       cannot line up its decimal points down a ledger column. --%>
                 <td class="py-4 text-right tabular-nums sm:pr-4">
@@ -236,6 +239,29 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
 
+  # Only a custom order can be placed before it is paid.
+  defp unpaid?(order), do: order.payment_status != :paid and order.fulfillment_status != :cancelled
+
+  attr :order, :map, required: true
+
+  defp unpaid_note(assigns) do
+    ~H"""
+    <span class="text-base-content/70 block text-sm" data-testid="order-unpaid">
+      <%= cond do %>
+        <% @order.payment_link_token -> %>
+          {~t"Unpaid"} ·
+          <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
+            {~t"Pay now"}
+          </.link>
+        <% @order.fulfillment_method == :delivery -> %>
+          {~t"Pay on delivery"}
+        <% true -> %>
+          {~t"Pay at collection"}
+      <% end %>
+    </span>
+    """
+  end
+
   @doc """
   Plain-language order status for the customer.
 
@@ -246,6 +272,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   def status_label(order, locale)
 
   def status_label(%{payment_status: :refunded}, _locale), do: ~t"Refunded"
+
+  def status_label(%{fulfillment_status: :cancelled}, _locale), do: ~t"Cancelled"
 
   def status_label(%{fulfillment_date: nil}, _locale), do: ~t"Confirmed"
 

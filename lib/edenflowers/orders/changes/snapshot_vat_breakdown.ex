@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Changes.SnapshotVatBreakdown do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order = Ash.load!(changeset.data, Vat.load(nil, nil, nil), authorize?: false)
-      Ash.Changeset.force_change_attribute(changeset, :vat_breakdown, Vat.breakdown(order))
+      Ash.Changeset.force_change_attribute(changeset, :vat_breakdown, Vat.compute_breakdown(order))
     end)
   end
 end

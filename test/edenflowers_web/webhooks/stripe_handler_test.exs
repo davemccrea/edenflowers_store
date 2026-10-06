@@ -263,6 +263,43 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
   end
 
+  describe "a custom order's payment link" do
+    setup %{order: order} do
+      %{order: Ash.Seed.update!(order, %{state: :placed, origin: :custom, order_reference: "LINK1"})}
+    end
+
+    defp link_succeeded(order, amount_received) do
+      EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+        id: "evt_link_succeeded",
+        type: "payment_intent.succeeded",
+        data: %{
+          object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}, amount_received: amount_received}
+        }
+      })
+    end
+
+    test "records the payment on the order already placed", %{order: order, expected_amount: expected_amount} do
+      assert :ok = link_succeeded(order, expected_amount)
+
+      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert order.payment_status == :paid
+      assert order.payment_method == :stripe
+      assert order.order_reference == "LINK1"
+    end
+
+    test "alerts Jennie to refund a payment for an order already paid in person", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
+      Ash.Seed.update!(order, %{payment_status: :paid, payment_method: :zettle, amount_paid: Decimal.new("1.00")})
+
+      log = capture_log(fn -> assert :ok = link_succeeded(order, expected_amount) end)
+
+      assert log =~ "no longer expected"
+      assert log =~ "Refund it in Stripe"
+    end
+  end
+
   describe "course registrations" do
     setup do
       course = generate(course(name: "Autumn Wreaths", price: "85.00"))

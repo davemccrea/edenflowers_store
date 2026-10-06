@@ -20,7 +20,9 @@ defmodule Edenflowers.Orders do
     :fulfillment_date,
     :fulfillment_method,
     :fulfillment_option_name,
-    :delivery_address
+    :delivery_address,
+    :origin,
+    :florist_note
   ]
 
   tools do
@@ -102,6 +104,18 @@ defmodule Edenflowers.Orders do
       define :add_card, action: :add_card, args: [:product_variant_id]
       define :remove_card, action: :remove_card
       define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
+      define :place_custom_order, action: :place_custom
+      define :update_custom_order, action: :update_custom
+      define :update_order_details, action: :update_details
+      define :update_florist_note, action: :update_florist_note
+      define :cancel_order, action: :cancel
+      define :record_in_person_payment, action: :record_in_person_payment
+      define :record_link_payment, action: :record_link_payment, args: [:payment_intent_id]
+      define :open_payment_link, action: :open_payment_link
+      define :get_order_by_payment_link_token, action: :by_payment_link_token, args: [:token]
+      define :send_order_details_email, action: :send_order_details_email
+      define :email_receipt, action: :email_receipt
+      define :refresh_vat_breakdown, action: :refresh_vat_breakdown
     end
 
     resource Edenflowers.Orders.LineItem do
