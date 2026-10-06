@@ -239,6 +239,9 @@ defmodule Edenflowers.Orders.Order do
     # since changes_only can't see into another resource.
     metadata :items, :string
 
+    # on_actions only filters updates; every create is versioned unless ignored.
+    ignore_actions [:create_for_checkout]
+
     on_actions [
       :finalize_checkout,
       :place_custom,
