@@ -290,21 +290,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                       value={EdenflowersWeb.PaymentLink.url_for(@order)}
                       class="input input-sm font-mono min-w-0 flex-1 text-xs"
                     />
-                    <.button
+                    <button
                       id="copy-payment-link"
                       type="button"
                       phx-click={
                         JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})
                       }
-                      variant="secondary"
-                      size="sm"
-                      class="group min-w-20"
+                      class="btn btn-primary btn-outline btn-sm btn-square group"
+                      title={~t"Copy payment link"}
+                      aria-label={~t"Copy payment link"}
                     >
-                      <span aria-live="polite">
-                        <span class="group-data-copied:hidden">{~t"Copy"}</span>
+                      <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
+                      <.icon name="hero-check" class="hidden h-4 w-4 group-data-copied:inline-block" />
+                      <span class="sr-only" aria-live="polite">
                         <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
                       </span>
-                    </.button>
+                    </button>
                   </div>
                 </div>
 

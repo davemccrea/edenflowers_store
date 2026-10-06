@@ -118,13 +118,16 @@ topbar.config({
 // show (and, inside an aria-live region, announce) that the copy worked.
 window.addEventListener("edenflowers:copy", async (event) => {
   const el = event.target;
-  await navigator.clipboard.writeText(
-    "value" in el ? el.value : el.textContent.trim(),
-  );
+  const text = "value" in el ? el.value : el.textContent.trim();
+  // Needs a secure page (HTTPS or localhost); plain http has no Clipboard API.
+  const copied = await navigator.clipboard
+    ?.writeText(text)
+    .then(() => true)
+    .catch(() => false);
 
   const trigger =
     event.detail?.trigger && document.querySelector(event.detail.trigger);
-  if (!trigger) return;
+  if (!copied || !trigger) return;
 
   trigger.dataset.copied = "";
   clearTimeout(trigger.copiedTimer);

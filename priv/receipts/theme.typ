@@ -2,8 +2,7 @@
 // are perceptual, not bit-identical.
 
 #let colors = (
-  forest: rgb("#1f3a2c"),          // --color-forest
-  forest-content: rgb("#f1ece0"),  // --color-forest-content
+  primary: rgb("#294735"),         // --color-primary
   cream: rgb("#f4ebd9"),           // --color-cream
   cream-content: rgb("#4d3c2c"),   // --color-cream-content
   rule: rgb("#e3dccb"),            // --color-base-300

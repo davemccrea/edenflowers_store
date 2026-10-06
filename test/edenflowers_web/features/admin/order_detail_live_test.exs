@@ -26,8 +26,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "h1", "Ada Lovelace")
     assert has_element?(view, "header", order.order_reference)
+    assert has_element?(view, "header", "Payment")
     refute has_element?(view, "header", "Fulfillment")
-    assert has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
 
     assert has_element?(
