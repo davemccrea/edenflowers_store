@@ -153,6 +153,95 @@ defmodule Edenflowers.Payments do
 
   def record_refund(_refund), do: {:ok, :ignored}
 
+  @doc """
+  Asks Stripe for the refunds on an order's Stripe payments and records any
+  whose webhook never arrived. Returns how many were newly recorded.
+  """
+  def sync_refunds(%Order{id: order_id}) do
+    Payment
+    |> Ash.Query.filter(order_id == ^order_id and not is_nil(payment_intent_id))
+    |> Ash.read!(authorize?: false)
+    |> Enum.reduce_while({:ok, 0}, fn payment, {:ok, recorded} ->
+      with {:ok, refunds} <- stripe_api().list_refunds(payment.payment_intent_id),
+           {:ok, newly_recorded} <- record_refunds(refunds) do
+        {:cont, {:ok, recorded + newly_recorded}}
+      else
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  defp record_refunds(refunds) do
+    Enum.reduce_while(refunds, {:ok, 0}, fn refund, {:ok, recorded} ->
+      case record_refund(refund) do
+        {:ok, :recorded} -> {:cont, {:ok, recorded + 1}}
+        {:ok, _ignored_or_already_recorded} -> {:cont, {:ok, recorded}}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  @doc """
+  Refunds an order's negative balance through Stripe, newest Stripe payment
+  first, as far as its Stripe payments cover it. Refunds that succeed at once
+  are recorded here; pending ones arrive through the refund webhook.
+
+  The idempotency key changes only once a refund is recorded, so a second
+  click while one is still pending gets the same refund back from Stripe
+  rather than refunding twice.
+  """
+  def refund_balance(%Order{id: order_id, balance: balance}) do
+    if Decimal.negative?(balance) do
+      payments =
+        Payment
+        |> Ash.Query.filter(order_id == ^order_id)
+        |> Ash.read!(authorize?: false)
+
+      payments
+      |> Enum.filter(&(&1.payment_intent_id && Decimal.positive?(&1.amount)))
+      |> Enum.sort_by(& &1.paid_at, {:desc, DateTime})
+      |> refund_from(StripeAPI.to_stripe_amount(Decimal.abs(balance)), "#{order_id}-#{length(payments)}", [])
+    else
+      {:ok, []}
+    end
+  end
+
+  defp refund_from(_payments, 0, _key, refunds), do: {:ok, Enum.reverse(refunds)}
+  defp refund_from([], _left, _key, refunds), do: {:ok, Enum.reverse(refunds)}
+
+  defp refund_from([payment | rest], left_cents, key, refunds) do
+    with {:ok, refundable} <- refundable_cents(payment) do
+      case min(left_cents, refundable) do
+        0 ->
+          refund_from(rest, left_cents, key, refunds)
+
+        cents ->
+          with {:ok, refund} <-
+                 stripe_api().create_refund(
+                   payment.payment_intent_id,
+                   cents,
+                   "refund-#{key}-#{payment.payment_intent_id}"
+                 ),
+               {:ok, _outcome} <- record_refund(refund) do
+            refund_from(rest, left_cents - cents, key, [refund | refunds])
+          end
+      end
+    end
+  end
+
+  # Asks Stripe rather than our records, which miss refunds still pending.
+  defp refundable_cents(payment) do
+    with {:ok, refunds} <- stripe_api().list_refunds(payment.payment_intent_id) do
+      refunded =
+        refunds
+        |> Enum.reject(&(&1.status in ["failed", "canceled"]))
+        |> Enum.map(& &1.amount)
+        |> Enum.sum()
+
+      {:ok, max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)}
+    end
+  end
+
   defp find_payment(payment_intent_id) do
     Payment
     |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)

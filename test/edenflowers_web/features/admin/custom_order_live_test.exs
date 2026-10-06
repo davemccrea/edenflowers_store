@@ -272,6 +272,22 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "header", "Unpaid")
     end
 
+    test "offers to text or WhatsApp the payment link in the customer's language", ctx do
+      order = place_custom_order(ctx)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      body =
+        URI.encode(
+          "Hi Mrs, you can pay €85.00 for your Eden Flowers order #{order.order_reference} here: " <>
+            EdenflowersWeb.PaymentLink.url_for(order),
+          &URI.char_unreserved?/1
+        )
+
+      assert has_element?(view, ~s|#order-payment-link a[href="sms:+358401234567?&body=#{body}"]|)
+      assert has_element?(view, ~s|#order-payment-link a[href="https://wa.me/358401234567?text=#{body}"]|)
+    end
+
     test "emails the payment link to the customer", ctx do
       order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_link?: false})
 

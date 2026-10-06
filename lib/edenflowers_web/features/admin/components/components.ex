@@ -164,6 +164,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :title, :string, required: true
   attr :count, :integer, default: nil, doc: "shown as a count badge beside the title"
+  attr :class, :any, default: nil
   slot :inner_block, required: true
 
   @doc """
@@ -173,7 +174,7 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
+    <section class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
       <div class="mb-4 flex items-start justify-between gap-3">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />

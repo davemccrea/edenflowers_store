@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     socket
     |> assign(:order, order)
     |> assign(:pickup_message_urls, pickup_message_urls(order))
+    |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
     |> assign(:in_person_form, in_person_form(order))
     |> assign(:payments, payments)
@@ -72,6 +73,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp line_label(line_item),
     do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
+
+  defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
 
   defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
 
@@ -129,7 +132,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             >
               {~t"Cancel order"}
             </.button>
-            <.order_menu order={@order} />
+            <.order_menu order={@order} payments={@payments} />
           </:actions>
         </.admin_page_header>
 
@@ -154,6 +157,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               size="sm"
             >
               <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+            </.button>
+            <.button
+              :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
+              type="button"
+              phx-click="refund_with_stripe"
+              phx-disable-with={~t"Refunding…"}
+              data-confirm={
+                ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
+              }
+              variant="primary"
+              size="sm"
+            >
+              {~t"Refund with Stripe"}
             </.button>
           </div>
           <div :if={@order.payment_link_open?} id="order-payment-link">
@@ -184,6 +200,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
                 </span>
               </button>
+            </div>
+            <div :if={@payment_message_urls} class="mt-2.5 text-sm">
+              <.message_links
+                urls={@payment_message_urls}
+                sms_label={~t"Text payment link"}
+                whatsapp_label={~t"WhatsApp payment link"}
+              />
             </div>
           </div>
 
@@ -407,7 +430,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
                 <:contact :if={@pickup_message_urls}>
-                  <.ready_for_pickup_links urls={@pickup_message_urls} />
+                  <.message_links
+                    urls={@pickup_message_urls}
+                    sms_label={~t"Text ready for pickup"}
+                    whatsapp_label={~t"WhatsApp ready for pickup"}
+                  />
                 </:contact>
                 <:contact :if={@order.user_id}>
                   <.link
@@ -559,6 +586,37 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, ~t"Could not send the receipt. Try again in a moment.")}
+    end
+  end
+
+  def handle_event("fetch_stripe_refunds", _params, socket) do
+    case Edenflowers.Payments.sync_refunds(socket.assigns.order) do
+      {:ok, 0} ->
+        {:noreply, put_flash(socket, :info, ~t"No new refunds in Stripe.")}
+
+      {:ok, _recorded} ->
+        {:noreply,
+         socket
+         |> assign_order(reload(socket.assigns.order, socket))
+         |> put_flash(:info, ~t"Refunds from Stripe recorded.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not fetch refunds from Stripe. Try again in a moment.")}
+    end
+  end
+
+  def handle_event("refund_with_stripe", _params, socket) do
+    case Edenflowers.Payments.refund_balance(socket.assigns.order) do
+      {:ok, refunds} ->
+        message =
+          if Enum.all?(refunds, &(&1.status == "succeeded")),
+            do: ~t"Refunded through Stripe.",
+            else: ~t"Refund sent to Stripe. It shows here once it goes through."
+
+        {:noreply, socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:info, message)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not refund through Stripe. Check the payment in Stripe.")}
     end
   end
 
@@ -719,13 +777,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :urls, :map, required: true
+  attr :sms_label, :string, required: true
+  attr :whatsapp_label, :string, required: true
 
-  defp ready_for_pickup_links(assigns) do
+  defp message_links(assigns) do
     ~H"""
     <div class="flex flex-wrap gap-x-4 gap-y-1.5">
       <a href={@urls.sms} class="link link-primary inline-flex items-center gap-1.5">
         <.icon name="hero-chat-bubble-left-ellipsis" class="h-3.5 w-3.5 shrink-0" />
-        {~t"Text ready for pickup"}
+        {@sms_label}
       </a>
       <a
         href={@urls.whatsapp}
@@ -734,7 +794,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         class="link link-primary inline-flex items-center gap-1.5"
       >
         <.icon name="hero-chat-bubble-oval-left" class="h-3.5 w-3.5 shrink-0" />
-        {~t"WhatsApp ready for pickup"}
+        {@whatsapp_label}
       </a>
     </div>
     """
@@ -882,15 +942,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :order, :map, required: true
+  attr :payments, :list, required: true
 
   defp order_menu(assigns) do
     assigns =
       assigns
       |> assign(:can_email_details?, assigns.order.customer_email && assigns.order.fulfillment_status != :cancelled)
       |> assign(:has_receipt?, assigns.order.payment_status == :paid)
+      |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
 
     ~H"""
-    <div :if={@can_email_details? || @has_receipt?} class="dropdown dropdown-end">
+    <div :if={@can_email_details? || @has_receipt? || @paid_through_stripe?} class="dropdown dropdown-end">
       <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
         <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
       </button>
@@ -918,6 +980,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             {~t"View receipt"}
             <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
           </.link>
+        </li>
+        <%!-- Refunds arrive by webhook; this catches one that never did. --%>
+        <li :if={@paid_through_stripe?}>
+          <button type="button" phx-click="fetch_stripe_refunds">
+            {~t"Fetch refunds from Stripe"}
+          </button>
         </li>
       </ul>
     </div>
@@ -959,9 +1027,30 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp customer_phone?(order), do: !order.gift or order.fulfillment_method == :pickup
 
   defp pickup_message_urls(%{fulfillment_method: :pickup, fulfillment_status: :pending} = order) do
-    case PhoneNumber.format(order.recipient_phone_number, :e164) do
+    message_urls(order.recipient_phone_number, pickup_message(order))
+  end
+
+  defp pickup_message_urls(_order), do: nil
+
+  defp payment_message_urls(order) do
+    if order.payment_link_open? and owes_money?(order) and Decimal.positive?(order.balance),
+      do: message_urls(customer_phone_number(order), payment_message(order)),
+      else: nil
+  end
+
+  defp customer_phone_number(order) do
+    cond do
+      present?(order.customer_phone_number) -> order.customer_phone_number
+      customer_phone?(order) -> order.recipient_phone_number
+      true -> nil
+    end
+  end
+
+  # Links that open Jennie's own messaging app with the message written; she sends it.
+  defp message_urls(phone_number, message) do
+    case PhoneNumber.format(phone_number, :e164) do
       {:ok, e164} ->
-        body = URI.encode(pickup_message(order), &URI.char_unreserved?/1)
+        body = URI.encode(message, &URI.char_unreserved?/1)
 
         # iOS reads `&body=`, Android reads `?body=`; `?&body=` satisfies both.
         %{
@@ -974,12 +1063,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp pickup_message_urls(_order), do: nil
-
   # Written in the customer's language, not the admin's.
   defp pickup_message(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       ~t"Hi #{order.customer_first_name}, your Eden Flowers order #{order.order_reference} is ready for pick up."
+    end)
+  end
+
+  defp payment_message(order) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      amount = Format.currency(order.balance, order.locale)
+      url = EdenflowersWeb.PaymentLink.url_for(order)
+
+      ~t"Hi #{order.customer_first_name}, you can pay #{amount} for your Eden Flowers order #{order.order_reference} here: #{url}"
     end)
   end
 
