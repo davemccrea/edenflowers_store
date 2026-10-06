@@ -1,9 +1,10 @@
 defmodule EdenflowersWeb.Admin.OrderLog do
   @moduledoc """
-  Turns an order's paper trail versions into the log on its admin page,
-  newest first.
+  Turns an order's paper trail versions and payments into the log on its
+  admin page, newest first.
 
-  Payments aren't in the log: the order page lists them from their own records.
+  Payments come from their own records rather than versions: a Stripe refund
+  changes nothing on the order row, and only the record holds the amount.
   Lines live on another resource, so a version shows them only through its
   `items`, which `ReplaceLineItems` sets when they change.
   """
@@ -28,10 +29,27 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :florist_note
   ]
 
-  def entries(versions, locale) do
-    versions
-    |> Enum.sort_by(& &1.version_inserted_at, {:desc, DateTime})
-    |> Enum.map(&entry(&1, locale))
+  def entries(versions, payments, locale) do
+    (Enum.map(versions, &entry(&1, locale)) ++ Enum.map(payments, &payment_entry(&1, locale)))
+    |> Enum.sort_by(& &1.at, {:desc, DateTime})
+  end
+
+  def payment_method_label(:stripe), do: ~t"Online (Stripe)"
+  def payment_method_label(:zettle), do: ~t"Card (Zettle)"
+  def payment_method_label(:mobilepay), do: ~t"MobilePay"
+  def payment_method_label(:cash), do: ~t"Cash"
+  def payment_method_label(_method), do: ~t"Unknown"
+
+  defp payment_entry(payment, locale) do
+    amount = Format.currency(Decimal.abs(payment.amount), locale)
+    how = payment_method_label(payment.method)
+
+    title =
+      if Decimal.negative?(payment.amount),
+        do: ~t"Refunded #{amount} · #{how}",
+        else: ~t"Paid #{amount} · #{how}"
+
+    %{at: payment.paid_at, title: title, details: []}
   end
 
   defp entry(version, locale) do

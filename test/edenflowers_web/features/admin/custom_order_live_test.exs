@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   import Generator
   import Mox
   import Phoenix.LiveViewTest
+  import Swoosh.TestAssertions
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
@@ -256,7 +257,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, "#order-payment-summary", "To collect")
+      assert has_element?(view, "#order-collect", "To collect €10.00")
       assert has_element?(view, ~s|#in-person-payment-form input[value="10.00"]|)
     end
   end
@@ -269,6 +270,24 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/#{order.payment_link_token}"]|)
       assert has_element?(view, "header", "Unpaid")
+    end
+
+    test "emails the payment link to the customer", ctx do
+      order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_link?: false})
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#order-collect", "To collect €85.00")
+      render_click(view, "email_payment_link")
+
+      order = Ash.reload!(order, authorize?: false)
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "son@example.com"}]
+        assert email.text_body =~ "/pay/#{order.payment_link_token}"
+      end)
+
+      assert has_element?(view, ~s|#payment-link-url[value$="/pay/#{order.payment_link_token}"]|)
     end
 
     test "records an in-person payment", ctx do
