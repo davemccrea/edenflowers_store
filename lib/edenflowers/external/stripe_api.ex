@@ -9,6 +9,9 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
               {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
+  @callback list_refunds(payment_intent_id :: String.t()) :: {:ok, [map()]} | {:error, term()}
+  @callback create_refund(payment_intent_id :: String.t(), amount_cents :: integer(), idempotency_key :: String.t()) ::
+              {:ok, map()} | {:error, term()}
 end
 
 defmodule Edenflowers.External.StripeAPI do
@@ -60,6 +63,20 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def cancel_payment_intent(%{id: payment_intent_id}) do
     Stripe.PaymentIntent.cancel(payment_intent_id)
+  end
+
+  @impl true
+  def list_refunds(payment_intent_id) do
+    with {:ok, %Stripe.List{data: refunds}} <- Stripe.Refund.list(%{payment_intent: payment_intent_id, limit: 100}) do
+      {:ok, refunds}
+    end
+  end
+
+  @impl true
+  def create_refund(payment_intent_id, amount_cents, idempotency_key) do
+    Stripe.Refund.create(%{payment_intent: payment_intent_id, amount: amount_cents},
+      headers: %{"Idempotency-Key" => idempotency_key}
+    )
   end
 
   def dashboard_payment_url(nil), do: nil

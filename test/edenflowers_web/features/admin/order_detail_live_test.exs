@@ -151,6 +151,77 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log", "Refunded €10.00 · Cash")
   end
 
+  test "fetches a refund from Stripe whose webhook never arrived", %{conn: conn} do
+    order = placed_order()
+    generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_missed_refund"))
+
+    Mox.expect(Edenflowers.External.StripeAPI.Mock, :list_refunds, 2, fn "pi_missed_refund" ->
+      {:ok, [%{id: "re_missed", payment_intent: "pi_missed_refund", amount: 1000, status: "succeeded"}]}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
+    assert has_element?(view, "#order-log", "Refunded €10.00 · Online (Stripe)")
+
+    assert view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click() =~
+             "No new refunds in Stripe."
+  end
+
+  test "refunds the balance through Stripe, newest payment first, as far as each still covers", %{conn: conn} do
+    order = placed_order()
+
+    generate(
+      payment(
+        order_id: order.id,
+        amount: Decimal.new("200.00"),
+        payment_intent_id: "pi_old",
+        paid_at: ~U[2026-06-01 10:00:00Z]
+      )
+    )
+
+    generate(
+      payment(
+        order_id: order.id,
+        amount: Decimal.new("30.00"),
+        payment_intent_id: "pi_new",
+        paid_at: ~U[2026-06-02 10:00:00Z]
+      )
+    )
+
+    balance = Orders.get_order_for_admin!(order.id, authorize?: false).balance
+    to_refund = Edenflowers.External.StripeAPI.to_stripe_amount(Decimal.abs(balance))
+    test_pid = self()
+
+    Edenflowers.External.StripeAPI.Mock
+    |> Mox.stub(:list_refunds, fn
+      "pi_new" -> {:ok, [%{id: "re_pending", amount: 1000, status: "pending"}]}
+      "pi_old" -> {:ok, []}
+    end)
+    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, _key ->
+      send(test_pid, {:refunded, payment_intent_id, cents})
+      {:ok, %{id: "re_#{payment_intent_id}", payment_intent: payment_intent_id, amount: cents, status: "succeeded"}}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click()
+
+    assert_received {:refunded, "pi_new", 2000}
+    assert_received {:refunded, "pi_old", rest} when rest == to_refund - 2000
+    refute has_element?(view, "#order-collect")
+  end
+
+  test "offers no Stripe refund when the order wasn't paid through Stripe", %{conn: conn} do
+    order = placed_order(payment_intent_id: nil)
+    generate(payment(order_id: order.id, amount: Decimal.new("200.00"), method: :cash))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-collect", "To refund")
+    refute has_element?(view, ~s|button[phx-click="refund_with_stripe"]|)
+  end
+
   test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
     order = placed_order(recipient_phone_number: "040 123 4567")
 
