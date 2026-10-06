@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
 
   defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
-  defp back_path(_params), do: EdenflowersWeb.Admin.OrdersLive.default_path()
+  defp back_path(_params), do: ~p"/admin/orders"
 
   defp build_form(:new, _order, actor) do
     Order
@@ -386,7 +386,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       <.admin_page width="narrow">
         <.admin_page_header
           title={@page_title}
-          back={if @order, do: ~p"/admin/orders/#{@order.id}", else: EdenflowersWeb.Admin.OrdersLive.default_path()}
+          back={if @order, do: ~p"/admin/orders/#{@order.id}", else: ~p"/admin/orders"}
           back_label={if @order, do: ~t"Order", else: ~t"Orders"}
         >
           <:subtitle :if={@order && @order.payment_status == :paid}>

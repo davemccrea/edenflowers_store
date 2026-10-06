@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     missing_id = Ash.UUID.generate()
 
     assert {:error, {:live_redirect, %{to: to}}} = live(conn, ~p"/admin/orders/#{missing_id}")
-    assert to == EdenflowersWeb.Admin.OrdersLive.default_path()
+    assert to == ~p"/admin/orders"
   end
 
   defp placed_order(overrides \\ []) do
