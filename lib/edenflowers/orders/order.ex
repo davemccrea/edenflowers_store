@@ -118,6 +118,22 @@ defmodule Edenflowers.Orders.Order do
         where expr(state == :placed and payment_status == :paid and is_nil(receipt_emailed_at))
       end
 
+      trigger :send_delivered_email do
+        action :send_delivered_email
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "*/10 * * * *"
+        worker_module_name Edenflowers.Orders.Workers.SendDeliveredEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendDeliveredEmail
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(
+                state == :placed and fulfillment_method == :delivery and fulfillment_status == :fulfilled and
+                  is_nil(delivered_emailed_at)
+              )
+      end
+
       trigger :reconcile_payment do
         action :reconcile_payment
         queue :default
@@ -340,6 +356,13 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SendConfirmationEmail
     end
 
+    update :send_delivered_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.SendDeliveredEmail
+    end
+
     update :reconcile_payment do
       accept []
       transaction? false
@@ -372,6 +395,7 @@ defmodule Edenflowers.Orders.Order do
     update :mark_fulfilled do
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
+      change run_oban_trigger(:send_delivered_email)
       change load(@admin_show_load)
     end
 
@@ -422,6 +446,7 @@ defmodule Edenflowers.Orders.Order do
                      :finalize_checkout,
                      :mark_payment_failed,
                      :send_confirmation_email,
+                     :send_delivered_email,
                      :reconcile_payment,
                      :purge_abandoned_cart
                    ])
@@ -515,6 +540,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
+    attribute :delivered_emailed_at, :utc_datetime
 
     timestamps()
   end
