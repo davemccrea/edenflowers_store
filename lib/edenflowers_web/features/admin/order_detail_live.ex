@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           back_label={~t"Orders"}
         >
           <:nav :if={@queue}>
-            <.queue_nav queue={@queue} />
+            <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} />
           </:nav>
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -263,6 +263,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :queue, :map, required: true
+  attr :fulfilled, :boolean, required: true
 
   defp queue_nav(assigns) do
     ~H"""
@@ -274,7 +275,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     >
       <.queue_link to={@queue.previous} icon="hero-chevron-left" label={~t"Previous order"} arrow_key="ArrowLeft" />
       <span class="text-base-content/80 flex items-center px-3 tabular-nums">
-        {~t"#{@queue.position} of #{@queue.total} to fulfil"}
+        <%= if @fulfilled do %>
+          {~t"Fulfilled · #{remaining_to_fulfil(@queue)} left"}
+        <% else %>
+          {~t"#{@queue.position} of #{@queue.total} to fulfil"}
+        <% end %>
       </span>
       <.queue_link to={@queue.next} icon="hero-chevron-right" label={~t"Next order"} arrow_key="ArrowRight" />
     </nav>
@@ -523,6 +528,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         }
     end
   end
+
+  # The queue was counted at mount with this order still in it.
+  defp remaining_to_fulfil(queue), do: queue.total - 1
 
   defp arrow_symbol("ArrowLeft"), do: "←"
   defp arrow_symbol("ArrowRight"), do: "→"

@@ -224,6 +224,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|header nav a[href="/admin/orders/#{later.id}"]|)
   end
 
+  test "keeps stepping after marking an order fulfilled and counts what is left", %{conn: conn} do
+    current = placed_order(order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
+    later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])
+    placed_order(order_reference: "LATEST", fulfillment_date: ~D[2026-06-13])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
+
+    view
+    |> element(~s|button[phx-click="mark_fulfilled"]|)
+    |> render_click()
+
+    assert has_element?(view, "header nav", "Fulfilled · 2 left")
+    refute has_element?(view, "header nav", "1 of 3 to fulfil")
+    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{later.id}"]|)
+  end
+
   test "omits queue stepping for an order already fulfilled", %{conn: conn} do
     order = placed_order(fulfillment_status: :fulfilled)
 
