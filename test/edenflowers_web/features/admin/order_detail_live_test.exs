@@ -207,9 +207,34 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click()
 
+    # The pending €10 on pi_new is already on its way, so it comes off what's owed.
     assert_received {:refunded, "pi_new", 2000}
-    assert_received {:refunded, "pi_old", rest} when rest == to_refund - 2000
-    refute has_element?(view, "#order-collect")
+    assert_received {:refunded, "pi_old", rest} when rest == to_refund - 1000 - 2000
+  end
+
+  test "doesn't refund again what Stripe already has refunds for", %{conn: conn} do
+    order = placed_order()
+    generate(payment(order_id: order.id, amount: Decimal.new("500.00"), payment_intent_id: "pi_paid"))
+
+    balance = Orders.get_order_for_admin!(order.id, authorize?: false).balance
+    pending = Edenflowers.External.StripeAPI.to_stripe_amount(Decimal.abs(balance)) - 1000
+
+    Edenflowers.External.StripeAPI.Mock
+    |> Mox.stub(:list_refunds, fn "pi_paid" ->
+      {:ok,
+       [
+         %{id: "re_missed", payment_intent: "pi_paid", amount: 1000, status: "succeeded"},
+         %{id: "re_pending", payment_intent: "pi_paid", amount: pending, status: "pending"}
+       ]}
+    end)
+    |> Mox.expect(:create_refund, 0, fn _, _, _ -> flunk("refunded twice") end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click() =~
+             "Nothing left to refund."
+
+    assert has_element?(view, "#order-log", "Refunded €10.00 · Online (Stripe)")
   end
 
   test "offers no Stripe refund when the order wasn't paid through Stripe", %{conn: conn} do
