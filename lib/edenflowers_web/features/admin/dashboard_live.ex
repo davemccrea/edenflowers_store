@@ -155,10 +155,14 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               {~t"Card to write"}
             </span>
             <span
-              :if={@order.payment_status != :paid}
+              :if={Decimal.positive?(@order.balance)}
               class="badge badge-sm badge-warning admin-badge-warning shrink-0 whitespace-nowrap"
             >
-              {~t"Unpaid"}
+              <%= if @order.amount_paid do %>
+                {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
+              <% else %>
+                {~t"Unpaid"}
+              <% end %>
             </span>
           </div>
 

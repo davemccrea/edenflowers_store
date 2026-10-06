@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.{Availability, DeliveryError, Fee}
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.{EnteredLineItems, Order}
   alias Edenflowers.Pricing
   alias EdenflowersWeb.Layouts
 
@@ -207,6 +207,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   def handle_event("save", %{"form" => params}, socket) do
+    socket = assign(socket, :lines, lines_from_params(params["line_items"]))
+
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
         {:noreply,
@@ -380,6 +382,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       assigns
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
       |> assign(:quote, current_quote(assigns.delivery_quote, assigns.form, current_option_id(assigns)))
+      |> assign(:line_error, line_error(assigns.form, assigns.lines))
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -411,7 +414,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 field={@form[:customer_email]}
                 type="email"
                 label={~t"Email"}
-                help={~t"Optional. With an email, the order shows in their account."}
+                help={~t"A phone number or an email is needed. With an email, the order shows in their account."}
                 class="input w-full"
                 autocomplete="off"
               />
@@ -430,19 +433,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 :for={{line, index} <- Enum.with_index(@lines)}
                 line={line}
                 index={index}
+                error={row_error(@line_error, index)}
                 variant_options={@variant_options}
                 tax_rate_options={tax_rate_options(@tax_rates)}
               />
               <p :if={@lines == []} class="text-base-content/65 text-sm">{~t"No items yet."}</p>
             </div>
-            <%!-- The lines have no single input for used_input? to track, so their
-                 error waits for the first save instead. --%>
-            <.error
-              :for={msg <- Enum.map(@form[:line_items].errors, &translate_error/1)}
-              :if={@form.source.submitted_once?}
-            >
-              {msg}
-            </.error>
+            <.error :if={match?({nil, _message}, @line_error)}>{elem(@line_error, 1)}</.error>
             <div class="mt-4 flex flex-wrap gap-2">
               <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="secondary" size="sm">
                 <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
@@ -464,9 +461,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               />
               <div>
                 <.input field={@form[:fulfillment_date]} type="date" label={~t"Date"} class="input w-full" />
-                <p :if={@date_warning} id="date-warning" class="text-warning-content bg-warning/15 mt-2 px-3 py-2 text-sm">
-                  {@date_warning}
-                </p>
+                <div role="status">
+                  <p :if={@date_warning} id="date-warning" class="text-warning-content bg-warning/15 mt-2 px-3 py-2 text-sm">
+                    {@date_warning}
+                  </p>
+                </div>
               </div>
               <div :if={@method == :delivery} class="sm:col-span-2">
                 <.input
@@ -508,15 +507,24 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
                 class="input w-full"
               />
-              <div class="sm:col-span-2">
-                <.input field={@form[:card_message]} type="textarea" label={~t"Card message"} rows="3" />
+              <div id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
+                <.input
+                  field={@form[:card_message]}
+                  type="textarea"
+                  label={~t"Card message"}
+                  rows="3"
+                  maxlength="200"
+                />
+                <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
+                  <span id="char-count">0</span>/200
+                </p>
               </div>
             </div>
           </.form_section>
 
           <.form_section title={~t"Florist note"}>
             <:description>{~t"Only you see this: what was agreed, timings, anything to remember."}</:description>
-            <.input field={@form[:florist_note]} type="textarea" rows="4" />
+            <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
           </.form_section>
 
           <.form_section :if={@mode == :new} title={~t"Payment"}>
@@ -565,45 +573,67 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp present?(value), do: is_binary(value) and String.trim(value) != ""
 
+  # Errors only after the first save: the lines have no single input for
+  # used_input? to track. A nil number is about the lines as a whole.
+  defp line_error(form, lines) do
+    if form.source.submitted_once? do
+      case EnteredLineItems.parse(lines) do
+        {:error, number, message} -> {number, message}
+        {:ok, _lines} -> nil
+      end
+    end
+  end
+
+  defp row_error({number, message}, index) when number == index + 1, do: message
+  defp row_error(_line_error, _index), do: nil
+
   attr :line, :map, required: true
   attr :index, :integer, required: true
+  attr :error, :string, default: nil
   attr :variant_options, :list, required: true
   attr :tax_rate_options, :list, required: true
 
   # A line the order already has: its product is fixed, only how many changes.
   defp order_line(%{line: %{"kind" => "catalogue", "id" => _}} = assigns) do
     ~H"""
-    <div class="border-base-content/12 flex flex-wrap items-end gap-3 border p-3" data-testid="order-line">
+    <.line_row index={@index} error={@error}>
       <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="catalogue" />
       <input type="hidden" name={"form[line_items][#{@index}][id]"} value={@line["id"]} />
       <input type="hidden" name={"form[line_items][#{@index}][name]"} value={@line["name"]} />
-      <p class="min-w-0 flex-1 basis-64 self-center font-medium">{@line["name"]}</p>
-      <.quantity_input index={@index} value={@line["quantity"]} />
+      <div class="flex min-w-0 flex-1 basis-64 flex-col text-sm">
+        <span class="mb-1">{~t"Product"}</span>
+        <p class="flex h-10 items-center text-base font-medium">{@line["name"]}</p>
+      </div>
+      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
       <.remove_line_button index={@index} />
-    </div>
+    </.line_row>
     """
   end
 
   defp order_line(%{line: %{"kind" => "catalogue"}} = assigns) do
     ~H"""
-    <div class="border-base-content/12 flex flex-wrap items-end gap-3 border p-3" data-testid="order-line">
+    <.line_row index={@index} error={@error}>
       <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="catalogue" />
       <label class="flex min-w-0 flex-1 basis-64 flex-col text-sm">
         <span class="mb-1">{~t"Product"}</span>
-        <select name={"form[line_items][#{@index}][product_variant_id]"} class="select w-full">
+        <select
+          name={"form[line_items][#{@index}][product_variant_id]"}
+          class={["select w-full", @error && "select-error"]}
+          {error_attrs(@index, @error)}
+        >
           <option value="">{~t"Choose…"}</option>
           {Phoenix.HTML.Form.options_for_select(@variant_options, @line["product_variant_id"])}
         </select>
       </label>
-      <.quantity_input index={@index} value={@line["quantity"]} />
+      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
       <.remove_line_button index={@index} />
-    </div>
+    </.line_row>
     """
   end
 
   defp order_line(assigns) do
     ~H"""
-    <div class="border-base-content/12 flex flex-wrap items-end gap-3 border p-3" data-testid="order-line">
+    <.line_row index={@index} error={@error}>
       <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="custom" />
       <label class="flex min-w-0 flex-1 basis-full flex-col text-sm">
         <span class="mb-1">{~t"Description"}</span>
@@ -612,7 +642,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           name={"form[line_items][#{@index}][description]"}
           value={@line["description"]}
           placeholder={~t"e.g. Funeral spray, white roses"}
-          class="input w-full"
+          class={["input w-full", @error && "input-error"]}
+          {error_attrs(@index, @error)}
         />
       </label>
       <label class="flex w-32 flex-col text-sm">
@@ -622,7 +653,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           inputmode="decimal"
           name={"form[line_items][#{@index}][unit_price]"}
           value={@line["unit_price"]}
-          class="input w-full tabular-nums"
+          class={["input w-full tabular-nums", @error && "input-error"]}
+          {error_attrs(@index, @error)}
         />
       </label>
       <label class="flex min-w-0 flex-1 basis-40 flex-col text-sm">
@@ -631,14 +663,38 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           {Phoenix.HTML.Form.options_for_select(@tax_rate_options, @line["tax_rate_id"])}
         </select>
       </label>
-      <.quantity_input index={@index} value={@line["quantity"]} />
+      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
       <.remove_line_button index={@index} />
-    </div>
+    </.line_row>
     """
   end
 
   attr :index, :integer, required: true
+  attr :error, :string, default: nil
+  slot :inner_block, required: true
+
+  # Numbered, so "Item 2: enter a price" points at a row Jennie can see.
+  defp line_row(assigns) do
+    ~H"""
+    <fieldset
+      class={["border p-3", if(@error, do: "border-error", else: "border-base-content/12")]}
+      data-testid="order-line"
+    >
+      <legend class="text-base-content/65 px-1 text-xs">{~t"Item #{number = @index + 1}"}</legend>
+      <div class="flex flex-wrap items-end gap-3">
+        {render_slot(@inner_block)}
+      </div>
+      <p :if={@error} id={"line-#{@index}-error"} class="text-error mt-2 text-sm">{@error}</p>
+    </fieldset>
+    """
+  end
+
+  defp error_attrs(_index, nil), do: []
+  defp error_attrs(index, _error), do: ["aria-invalid": "true", "aria-describedby": "line-#{index}-error"]
+
+  attr :index, :integer, required: true
   attr :value, :any, required: true
+  attr :error, :string, default: nil
 
   defp quantity_input(assigns) do
     ~H"""
@@ -649,7 +705,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         min="1"
         name={"form[line_items][#{@index}][quantity]"}
         value={@value}
-        class="input w-full tabular-nums"
+        class={["input w-full tabular-nums", @error && "input-error"]}
+        {error_attrs(@index, @error)}
       />
     </label>
     """
@@ -663,8 +720,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       type="button"
       phx-click="remove_line"
       phx-value-index={@index}
-      class="btn btn-ghost btn-sm text-error"
-      aria-label={~t"Remove item"}
+      class="btn btn-ghost btn-square text-error size-10"
+      aria-label={~t"Remove item #{number = @index + 1}"}
     >
       <.icon name="hero-trash" class="h-4 w-4" />
     </button>

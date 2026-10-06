@@ -61,6 +61,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> OrderLog.entries(locale)
   end
 
+  defp line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
+
+  defp line_label(line_item),
+    do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
+
   defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
 
   @impl true
@@ -77,42 +82,43 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} />
           </:nav>
           <:subtitle>
-            <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span :if={@order.origin == :custom} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
-                {~t"Custom order"}
+            <span class="flex flex-col gap-2.5">
+              <span class="inline-flex flex-wrap items-center gap-x-2">
+                <span class="tabular-nums">{@order.order_reference}</span>
+                <span :if={@order.ordered_at} aria-hidden="true">·</span>
+                <span :if={@order.ordered_at}>{Format.datetime(@order.ordered_at, @locale)}</span>
               </span>
-              <.gift_badge :if={@order.gift} order={@order} />
-              <span class="tabular-nums">{@order.order_reference}</span>
-              <span :if={@order.ordered_at} aria-hidden="true">·</span>
-              <span :if={@order.ordered_at}>{Format.datetime(@order.ordered_at, @locale)}</span>
+              <%!-- Worded to stand alone, so the badges need no captions. --%>
+              <span id="order-status" class="inline-flex flex-wrap items-center gap-1.5">
+                <span :if={shown_payment_status(@order)}>
+                  <span class="sr-only">{~t"Payment:"}</span>
+                  <.payment_status_badge status={shown_payment_status(@order)} />
+                </span>
+                <span :if={@order.fulfillment_status != :pending}>
+                  <span class="sr-only">{~t"Fulfillment:"}</span>
+                  <.fulfillment_status_badge status={@order.fulfillment_status} />
+                </span>
+                <span :if={@order.origin == :custom} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
+                  {~t"Custom order"}
+                </span>
+                <.gift_badge :if={@order.gift} order={@order} />
+              </span>
             </span>
           </:subtitle>
-          <:actions>
-            <div :if={@order.fulfillment_status == :pending} class="flex items-center gap-2">
-              <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="secondary" size="sm">
-                <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
-              </.button>
-              <.button
-                type="button"
-                phx-click="cancel_order"
-                data-confirm={cancel_confirmation(@order)}
-                variant="ghost"
-                size="sm"
-                class="text-error"
-              >
-                {~t"Cancel order"}
-              </.button>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="flex flex-col items-start gap-1">
-                <span class="eyebrow text-base-content/65">{~t"Payment"}</span>
-                <.payment_status_badge status={@order.payment_status} />
-              </div>
-              <div class="flex flex-col items-start gap-1">
-                <span class="eyebrow text-base-content/65">{~t"Fulfillment"}</span>
-                <.fulfillment_status_badge status={@order.fulfillment_status} />
-              </div>
-            </div>
+          <:actions :if={@order.fulfillment_status == :pending}>
+            <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="secondary" size="sm">
+              <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
+            </.button>
+            <.button
+              type="button"
+              phx-click="cancel_order"
+              data-confirm={cancel_confirmation(@order)}
+              variant="ghost"
+              size="sm"
+              class="text-error"
+            >
+              {~t"Cancel order"}
+            </.button>
           </:actions>
         </.admin_page_header>
 
@@ -193,6 +199,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   field={@note_form[:florist_note]}
                   type="textarea"
                   rows="3"
+                  aria-label={~t"Florist note"}
                   placeholder={~t"Only you see this: what was agreed, timings, anything to remember."}
                 />
                 <.button type="submit" variant="secondary" size="sm">{~t"Save note"}</.button>
@@ -200,7 +207,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.detail_section>
 
             <.detail_section id="order-items" title={~t"To make"}>
-              <.readonly_line_items line_items={@order.line_items} locale={@locale} />
+              <.readonly_line_items line_items={@order.line_items} />
             </.detail_section>
             <.detail_section :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
               <blockquote
@@ -212,6 +219,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.detail_section id="order-payment-summary" title={~t"Payment"}>
               <dl class="text-sm">
                 <.money_row
+                  :for={line_item <- @order.line_items}
+                  label={line_label(line_item)}
+                  amount={line_item.subtotal}
+                  locale={@locale}
+                />
+                <.money_row
+                  ruled
                   label={~t"Items subtotal"}
                   amount={@order.items_subtotal}
                   locale={@locale}
@@ -234,79 +248,68 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
-              <ul :if={@payments != []} id="order-payments" class="divide-base-content/8 mt-4 divide-y text-sm">
-                <li :for={payment <- @payments} class="flex items-center justify-between gap-4 py-2">
-                  <span>
-                    <span class="text-base-content">{payment_label(payment)}</span>
-                    <span class="text-base-content/65 block text-xs">{Format.datetime(payment.paid_at, @locale)}</span>
-                  </span>
-                  <span class="flex items-center gap-2 tabular-nums">
-                    {Format.currency(payment.amount, @locale)}
-                    <a
-                      :if={payment.payment_intent_id}
-                      href={StripeAPI.dashboard_payment_url(payment.payment_intent_id)}
-                      target="_blank"
-                      rel="noopener"
-                      class="text-base-content/60 hover:text-base-content"
-                      aria-label={~t"View payment in Stripe"}
-                    >
-                      <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                    </a>
-                  </span>
-                </li>
-              </ul>
-
-              <div :if={@order.payment_link_open?} id="order-payment-link" class="mt-5">
-                <p class="eyebrow text-base-content/65 mb-1.5">{~t"Payment link"}</p>
-                <div class="flex gap-2">
-                  <input
-                    id="payment-link-url"
-                    type="text"
-                    readonly
-                    value={EdenflowersWeb.PaymentLink.url_for(@order)}
-                    class="input input-sm font-mono min-w-0 flex-1"
-                  />
-                  <.button
-                    type="button"
-                    phx-click={JS.dispatch("edenflowers:copy", to: "#payment-link-url")}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    {~t"Copy"}
-                  </.button>
-                </div>
+              <div :if={@payments != []} class="border-base-content/12 mt-5 border-t pt-4">
+                <h3 class="text-base-content/65 mb-1 text-xs font-semibold">{~t"Payments"}</h3>
+                <ul id="order-payments" class="divide-base-content/8 divide-y text-sm">
+                  <li :for={payment <- @payments} class="flex items-center justify-between gap-4 py-2">
+                    <span>
+                      <span class="text-base-content">{payment_label(payment)}</span>
+                      <time datetime={DateTime.to_iso8601(payment.paid_at)} class="text-base-content/65 block text-xs">
+                        {Format.datetime(payment.paid_at, @locale)}
+                      </time>
+                    </span>
+                    <span class="flex items-center gap-1 tabular-nums">
+                      {Format.currency(payment.amount, @locale)}
+                      <a
+                        :if={payment.payment_intent_id}
+                        href={StripeAPI.dashboard_payment_url(payment.payment_intent_id)}
+                        target="_blank"
+                        rel="noopener"
+                        class="text-base-content/60 -my-3 -mr-3 inline-flex p-3 hover:text-base-content"
+                        aria-label={~t"View #{amount = Format.currency(payment.amount, @locale)} payment in Stripe"}
+                      >
+                        <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                      </a>
+                    </span>
+                  </li>
+                </ul>
               </div>
 
-              <.form
-                :if={owes_money?(@order)}
-                for={@in_person_form}
-                id="in-person-payment-form"
-                phx-submit="record_in_person_payment"
-                class="border-base-content/12 mt-5 space-y-3 border-t pt-5"
-              >
-                <p class="text-base-content text-sm font-semibold">{~t"Record a payment in person"}</p>
-                <div class="grid grid-cols-2 gap-3">
-                  <.input
-                    field={@in_person_form[:payment_method]}
-                    type="select"
-                    label={~t"How"}
-                    options={in_person_method_options()}
-                  />
-                  <.input
-                    field={@in_person_form[:amount]}
-                    type="text"
-                    inputmode="decimal"
-                    label={~t"Amount (€)"}
-                    help={~t"A minus amount records a refund."}
-                    class="input w-full tabular-nums"
-                  />
+              <%!-- Everything for settling the balance, in the order Jennie reaches
+                   for it: send the link, or record what she took herself. --%>
+              <div :if={owes_money?(@order)} id="order-collect" class="border-base-content/12 mt-5 space-y-5 border-t pt-4">
+                <div :if={@order.payment_link_open?} id="order-payment-link">
+                  <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
+                    {~t"Payment link"}
+                  </label>
+                  <div class="flex gap-2">
+                    <input
+                      id="payment-link-url"
+                      type="text"
+                      readonly
+                      value={EdenflowersWeb.PaymentLink.url_for(@order)}
+                      class="input input-sm font-mono min-w-0 flex-1 text-xs"
+                    />
+                    <.button
+                      id="copy-payment-link"
+                      type="button"
+                      phx-click={
+                        JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})
+                      }
+                      variant="secondary"
+                      size="sm"
+                      class="group min-w-20"
+                    >
+                      <span aria-live="polite">
+                        <span class="group-data-copied:hidden">{~t"Copy"}</span>
+                        <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+                      </span>
+                    </.button>
+                  </div>
                 </div>
-                <.button type="submit" variant="primary" size="sm">{~t"Record payment"}</.button>
-              </.form>
 
-              <div class="mt-5 flex flex-wrap gap-2">
                 <.button
-                  :if={owes_money?(@order) && Decimal.positive?(@order.balance) && !@order.payment_link_open?}
+                  :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
                   type="button"
                   phx-click="open_payment_link"
                   variant="secondary"
@@ -314,13 +317,55 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 >
                   {~t"Create payment link"}
                 </.button>
+
+                <.form for={@in_person_form} id="in-person-payment-form" phx-submit="record_in_person_payment">
+                  <fieldset aria-describedby="in-person-payment-help">
+                    <legend class="text-base-content/65 mb-1.5 text-xs font-semibold">
+                      {if Decimal.positive?(@order.balance),
+                        do: ~t"Paid in person",
+                        else: ~t"Refunded in person"}
+                    </legend>
+                    <div class="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
+                      <.input
+                        field={@in_person_form[:payment_method]}
+                        type="select"
+                        label={~t"How"}
+                        class="select select-sm w-full"
+                        options={in_person_method_options()}
+                      />
+                      <.input
+                        field={@in_person_form[:amount]}
+                        type="text"
+                        inputmode="decimal"
+                        label={~t"Amount (€)"}
+                        class="input input-sm w-full tabular-nums"
+                      />
+                      <.button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        class="col-span-2 sm:col-span-1"
+                        data-confirm={
+                          ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
+                        }
+                      >
+                        {~t"Record payment"}
+                      </.button>
+                    </div>
+                    <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
+                      {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+                    </p>
+                  </fieldset>
+                </.form>
+              </div>
+
+              <div class="border-base-content/12 mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t pt-4 text-sm">
                 <.button
                   :if={@order.customer_email && @order.fulfillment_status != :cancelled}
                   type="button"
                   phx-click="send_order_details"
                   data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
-                  variant="secondary"
-                  size="sm"
+                  variant="text"
                 >
                   {~t"Email order details"}
                 </.button>
@@ -329,8 +374,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   type="button"
                   phx-click="email_receipt"
                   data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
-                  variant="secondary"
-                  size="sm"
+                  variant="text"
                 >
                   {~t"Email receipt"}
                 </.button>
@@ -339,11 +383,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   href={~p"/order/#{@order.id}/receipt"}
                   target="_blank"
                   rel="noopener"
-                  variant="secondary"
-                  size="sm"
+                  variant="text"
                 >
                   {~t"View receipt"}
-                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                  <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
                 </.button>
               </div>
             </.detail_section>
@@ -405,11 +448,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.detail_section>
 
             <.detail_section id="order-log" title={~t"Log"}>
-              <ol class="space-y-4 text-sm">
-                <li :for={entry <- @log}>
-                  <p class="text-base-content font-medium">{entry.title}</p>
-                  <p class="text-base-content/65 text-xs">{Format.datetime(entry.at, @locale)}</p>
-                  <p :for={detail <- entry.details} class="text-base-content/85 mt-0.5 break-words">{detail}</p>
+              <ol class="timeline timeline-vertical timeline-compact timeline-snap-icon text-sm">
+                <li :for={{entry, index} <- Enum.with_index(@log)}>
+                  <hr :if={index > 0} />
+                  <div class="timeline-middle">
+                    <span class="bg-base-content/40 size-2 mt-1.5 block rounded-full"></span>
+                  </div>
+                  <div class="timeline-end mb-4 min-w-0">
+                    <p class="text-base-content font-medium">{entry.title}</p>
+                    <time datetime={DateTime.to_iso8601(entry.at)} class="text-base-content/65 block text-xs">
+                      {Format.datetime(entry.at, @locale)}
+                    </time>
+                    <p :for={detail <- entry.details} class="text-base-content/85 mt-0.5 break-words">{detail}</p>
+                  </div>
+                  <hr :if={index < length(@log) - 1} />
                 </li>
               </ol>
             </.detail_section>
@@ -587,8 +639,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :line_items, :list, required: true
-  attr :locale, :string, required: true
 
+  # What to make, not what it costs: the prices are in the Payment section.
   defp readonly_line_items(assigns) do
     ~H"""
     <ul class="divide-base-content/8 divide-y">
@@ -610,17 +662,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           class="h-16 w-16 shrink-0 object-cover"
         />
         <div class="min-w-0 flex-1">
-          <div class="flex gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-base-content text-base font-medium">
-                <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
-              </p>
-              <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">
-                {variant_size_label(line_item.variant_size)}
-              </p>
-            </div>
-            <p class="text-base-content/65 text-sm tabular-nums">{Format.currency(line_item.subtotal, @locale)}</p>
-          </div>
+          <p class="text-base-content text-base font-medium">
+            <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
+          </p>
+          <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">
+            {variant_size_label(line_item.variant_size)}
+          </p>
         </div>
       </li>
     </ul>
@@ -757,10 +804,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :locale, :string, required: true
   attr :strong, :boolean, default: false
   attr :muted, :boolean, default: false, doc: "for figures already counted in the total, like included VAT"
+  attr :ruled, :boolean, default: false, doc: "starts a new group under the rows above"
 
   defp money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 text-base font-semibold", @muted && "text-base-content/65"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>

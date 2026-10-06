@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             ]}
             label={~t"Payment"}
           >
-            <.payment_status_badge status={order.payment_status} />
+            <.payment_status_badge status={shown_payment_status(order)} />
           </:col>
           <:col :let={order} field="grand_total" label={~t"Total"}>
             <span class="whitespace-nowrap tabular-nums">
@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             </span>
             <span
               :if={order.amount_mismatch? && order.fulfillment_status != :cancelled}
-              class="badge badge-sm admin-badge-error ml-1.5 whitespace-nowrap align-middle font-medium"
+              class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium", if(Decimal.positive?(order.balance), do: "admin-badge-warning", else: "admin-badge-error")]}
             >
               <%= if Decimal.positive?(order.balance) do %>
                 {~t"To collect #{amount = Format.currency(order.balance, @locale)}"}

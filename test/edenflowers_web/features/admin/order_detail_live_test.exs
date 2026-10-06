@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "h1", "Ada Lovelace")
     assert has_element?(view, "header", order.order_reference)
-    assert has_element?(view, "header", "Payment")
+    refute has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "header", "Fulfillment")
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
 
@@ -39,7 +39,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-customer", "Ada Lovelace")
     assert has_element?(view, "#order-customer", "ada@example.com")
     assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
-    assert has_element?(view, ~s|#order-payments a[aria-label="View payment in Stripe"]|)
+    assert has_element?(view, ~s|#order-payments a[aria-label="View €46.50 payment in Stripe"]|)
+    assert has_element?(view, "#order-payment-summary dt", "2 ×")
+    refute has_element?(view, "#order-items", "€42.00")
     assert has_element?(view, ~s|#order-payment-summary a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)

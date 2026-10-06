@@ -166,6 +166,24 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#delivery-quote", "You can still set your own fee")
     end
 
+    test "shows a line's problem inside that line, after saving", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      render_click(view, "add_line", %{"kind" => "custom"})
+
+      view
+      |> form("#order-form",
+        form: %{
+          customer_name: "Mrs Holm",
+          line_items: %{"0" => %{"description" => "Spray", "unit_price" => "lots", "quantity" => "1"}}
+        }
+      )
+      |> render_submit()
+
+      assert has_element?(view, "#line-0-error", "enter a price")
+      assert has_element?(view, ~s|input[name="form[line_items][0][unit_price]"][aria-invalid="true"]|)
+      assert has_element?(view, ~s|button[aria-label="Remove item 1"]|)
+    end
+
     test "keeps quiet about missing items until Jennie tries to save", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
@@ -301,6 +319,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       render_click(view, "cancel_order")
 
       assert has_element?(view, "header", "Cancelled")
+      refute has_element?(view, "header", "Unpaid")
       refute has_element?(view, "#payment-link-url")
       refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
     end

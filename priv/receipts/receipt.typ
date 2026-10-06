@@ -324,23 +324,23 @@
   v(1fr)
 
   // ── Closing band ────────────────────────────────────────────────────
-  // Forest reverse-out, centred — mirrors the site's pull-quote section
-  // (home_live.ex, .pull-quote on bg-forest). Thank-you in serif italic
-  // carries the editorial moment; closing-line is supporting prose.
+  // Forest outline, centred — a lighter echo of the site's pull-quote
+  // section. Thank-you in serif italic carries the editorial moment;
+  // closing-line is supporting prose.
   block(
     width: 100%,
-    fill: colors.forest,
+    stroke: 1pt + colors.forest,
     inset: (x: 24pt, y: 14pt),
     breakable: false,
     [
       #set align(center)
-      #set text(fill: colors.forest-content)
+      #set text(fill: colors.forest)
       #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light")[
         #t("thank-you")
       ]#h(4pt)#text(size: 12pt)[💛]
       #v(4pt)
       #set text(font: fonts.sans, size: type-scale.small,
-                fill: colors.forest-content.transparentize(25%))
+                fill: colors.ink-muted)
       #block(width: 80%)[#t("closing-line")]
     ],
   )

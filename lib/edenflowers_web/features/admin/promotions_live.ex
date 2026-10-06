@@ -65,13 +65,21 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
             <span class="inline-flex items-center gap-1">
               <span id={"promotion-code-#{promotion.id}"} class="font-mono">{promotion.code}</span>
               <button
+                id={"copy-promotion-code-#{promotion.id}"}
                 type="button"
-                phx-click={JS.dispatch("edenflowers:copy", to: "#promotion-code-#{promotion.id}")}
-                class="btn btn-ghost btn-xs btn-square"
+                phx-click={
+                  JS.dispatch("edenflowers:copy",
+                    to: "#promotion-code-#{promotion.id}",
+                    detail: %{trigger: "#copy-promotion-code-#{promotion.id}"}
+                  )
+                }
+                class="btn btn-ghost btn-xs btn-square group"
                 title={~t"Copy code"}
                 aria-label={~t"Copy code"}
               >
-                <.icon name="hero-clipboard" class="h-4 w-4" />
+                <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
+                <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
+                <span class="sr-only" aria-live="polite"><span class="hidden group-data-copied:inline">{~t"Copied"}</span></span>
               </button>
             </span>
           </:col>
