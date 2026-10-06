@@ -251,9 +251,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx)
 
       {:ok, order} =
-        Orders.update_custom_order(order, params(ctx, %{line_items: [catalogue_line(ctx.variant, "2")]}),
-          actor: ctx.admin
-        )
+        Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(ctx.variant, "2")]}), actor: ctx.admin)
 
       order = Ash.load!(order, [:grand_total, :line_items], authorize?: false)
 
@@ -263,38 +261,161 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Decimal.equal?(gross, "98.00")
     end
 
-    test "a paid order can't change its items", ctx do
+    test "a paid order can still change, leaving a balance to collect or refund", ctx do
       {:ok, order} = place(ctx)
+      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
 
       {:ok, order} =
-        Orders.record_in_person_payment(order, %{payment_method: :zettle, amount_paid: "134.00"}, actor: ctx.admin)
+        Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(ctx.variant)]}), actor: ctx.admin)
 
-      assert {:error, error} = Orders.update_custom_order(order, params(ctx), actor: ctx.admin)
-      assert Exception.message(error) =~ "a paid order can't change its items or price"
+      order = Ash.load!(order, [:balance], authorize?: false)
+      assert Decimal.equal?(order.balance, "-85.00")
+
+      {:ok, _order} = Orders.record_in_person_payment(order, "-85.00", :cash, actor: ctx.admin)
+      assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "0.00")
     end
 
-    test "a paid order can move to a new address and keep its fee", ctx do
+    test "a new delivery address is priced again", ctx do
       stub_geocoding(8_000)
+
+      delivery = %{
+        fulfillment_option_id: ctx.delivery.id,
+        delivery_address: "Kyrkvägen 3",
+        recipient_phone_number: "040 765 4321"
+      }
+
+      {:ok, order} = place(ctx, delivery)
+      assert Decimal.equal?(order.fulfillment_fee, "13.00")
+
+      stub_geocoding(12_000)
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, Map.put(delivery, :delivery_address, "Kyrkvägen 5")), actor: ctx.admin)
+
+      assert Decimal.equal?(order.fulfillment_fee, "17.00")
+    end
+
+    test "an edit that leaves the address alone keeps the fee", ctx do
+      stub_geocoding(8_000)
+
+      delivery = %{
+        fulfillment_option_id: ctx.delivery.id,
+        delivery_address: "Kyrkvägen 3",
+        recipient_phone_number: "040 765 4321"
+      }
+
+      {:ok, order} = place(ctx, delivery)
+      Ash.Seed.update!(ctx.delivery, %{base_price: Decimal.new("9.00")})
+
+      {:ok, order} = Orders.edit_order(order, params(ctx, Map.put(delivery, :card_message, "Hi")), actor: ctx.admin)
+
+      assert Decimal.equal?(order.fulfillment_fee, "13.00")
+    end
+
+    test "the log shows a new address, not item changes, when only the address moves", ctx do
+      stub_geocoding(8_000)
+
+      delivery = %{
+        fulfillment_option_id: ctx.delivery.id,
+        delivery_address: "Kyrkvägen 3",
+        recipient_phone_number: "040 765 4321",
+        line_items: [catalogue_line(ctx.variant)]
+      }
+
+      {:ok, order} = place(ctx, delivery)
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      kept = [%{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}]
+
+      stub_geocoding(12_000)
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{delivery | delivery_address: "Kyrkvägen 5", line_items: kept}),
+          actor: ctx.admin
+        )
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+
+      assert edit.title == "Edited"
+      assert "Delivery address: Kyrkvägen 5" in edit.details
+      assert "Fulfillment fee: €17.00" in edit.details
+      refute Enum.any?(edit.details, &String.starts_with?(&1, "Items:"))
+      assert length(EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")) == 2
+    end
+
+    test "the log lists the items when they change", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{line_items: [kept, custom_line(ctx.tax_rate)]}), actor: ctx.admin)
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      [edit, placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+
+      assert "Items: 2 × Spring Bouquet, 1 × Funeral spray" in edit.details
+      assert "Items: 1 × Spring Bouquet" in placed.details
+    end
+
+    test "an edit that changes nothing leaves no entry in the log", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}
+
+      {:ok, order} = Orders.edit_order(order, params(ctx, %{line_items: [kept]}), actor: ctx.admin)
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      assert [%{title: "Placed by Jennie"}] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+    end
+
+    test "a line the order already has keeps the price it was sold at", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      Ash.Seed.update!(ctx.variant, %{price: Decimal.new("60.00")})
+
+      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+      {:ok, order} = Orders.edit_order(order, params(ctx, %{line_items: [kept]}), actor: ctx.admin)
+
+      assert [%{id: id, quantity: 2, unit_price: price}] = Ash.load!(order, :line_items, authorize?: false).line_items
+      assert id == line_item.id
+      assert Decimal.equal?(price, "49.00")
+    end
+
+    test "an online order with a card keeps it as a card", ctx do
+      card = generate(product_variant(product_id: generate(product(tax_rate_id: ctx.tax_rate.id)).id, price: "4.00"))
 
       order =
         generate(
           order(
             state: :placed,
             payment_status: :paid,
-            fulfillment_method: :delivery,
-            fulfillment_option_id: ctx.delivery.id,
+            customer_name: "Ada",
+            customer_email: "ada@example.com",
+            fulfillment_option_id: ctx.pickup.id,
+            fulfillment_method: :pickup,
             fulfillment_date: tomorrow(),
-            delivery_address: "Kyrkvägen 3",
-            recipient_phone_number: "+358401234567",
-            fulfillment_fee: Decimal.new("7.00")
+            card_message: "Happy birthday",
+            locale: "en-GB"
           )
         )
 
-      {:ok, order} = Orders.update_order_details(order, %{delivery_address: "Kyrkvägen 5"}, actor: ctx.admin)
+      card_line = generate(line_item(order_id: order.id, product_variant_id: card.id, is_card: true))
+      kept = %{"kind" => "catalogue", "id" => card_line.id, "quantity" => "1"}
 
-      assert order.delivery_address == "Kyrkvägen 5"
-      assert order.position == "63.09,21.61"
-      assert Decimal.equal?(order.fulfillment_fee, "7.00")
+      {:ok, order} =
+        Orders.edit_order(
+          order,
+          %{
+            customer_name: "Ada",
+            fulfillment_option_id: ctx.pickup.id,
+            fulfillment_date: tomorrow(),
+            line_items: [kept, catalogue_line(ctx.variant)]
+          },
+          actor: ctx.admin
+        )
+
+      assert [%{is_card: true}, %{is_card: false}] = Ash.load!(order, :line_items, authorize?: false).line_items
     end
 
     test "the florist note can change on any order, even a fulfilled one", ctx do
@@ -344,13 +465,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       {:ok, order} =
-        Orders.record_in_person_payment(order, %{payment_method: :mobilepay, amount_paid: "130.00"}, actor: ctx.admin)
+        Orders.record_in_person_payment(order, "130.00", :mobilepay, actor: ctx.admin)
 
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin, load: [:payments])
       assert order.payment_status == :paid
-      assert order.payment_method == :mobilepay
-      assert order.paid_at
-      assert order.amount_mismatch?
-      refute order.payment_link_open?
+      assert [%{method: :mobilepay, payment_intent_id: nil}] = order.payments
+      assert Decimal.equal?(order.balance, "4.00")
+      assert order.payment_link_open?
 
       Oban.drain_queue(queue: :default)
       refute_enqueued(worker: SendConfirmationEmail)
@@ -361,9 +482,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx)
 
       assert {:error, _} =
-               Orders.record_in_person_payment(order, %{payment_method: :stripe, amount_paid: "134.00"},
-                 actor: ctx.admin
-               )
+               Orders.record_in_person_payment(order, "134.00", :stripe, actor: ctx.admin)
     end
 
     test "through the payment link records the payment and emails the receipt", ctx do
@@ -377,27 +496,60 @@ defmodule Edenflowers.Orders.CustomOrderTest do
                  amount_received: 13_400
                })
 
-      paid = Orders.get_order_by_id!(order.id, authorize?: false)
+      paid = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments])
 
       assert paid.payment_status == :paid
-      assert paid.payment_method == :stripe
+      assert [%{method: :stripe, payment_intent_id: "pi_link"}] = paid.payments
+      assert paid.payment_intent_id == nil
       assert paid.state == :placed
       assert paid.order_reference == order.order_reference
       assert_enqueued(worker: SendConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
-    test "through the payment link after paying in person is reported as a double payment", ctx do
+    test "through the payment link after paying in person is still recorded, and reported to refund", ctx do
       {:ok, order} = place(ctx)
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
       stub(StripeAPI.Mock, :cancel_payment_intent, fn _intent -> {:error, :already_succeeded} end)
 
       capture_log(fn ->
         {:ok, _order} =
-          Orders.record_in_person_payment(order, %{payment_method: :zettle, amount_paid: "134.00"}, actor: ctx.admin)
+          Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
       end)
 
-      assert {:error, {:unexpected_payment, _id, "paid_in_person"}} =
-               Payments.complete(%{id: "pi_link", metadata: %{"order_id" => order.id}, amount_received: 13_400})
+      log =
+        capture_log(fn ->
+          assert {:ok, :completed} =
+                   Payments.complete(%{id: "pi_link", metadata: %{"order_id" => order.id}, amount_received: 13_400})
+        end)
+
+      assert log =~ "overpaid by 134.00"
+      assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "-134.00")
+    end
+
+    test "a balance left by an edit can be paid through a new link payment", ctx do
+      {:ok, order} = place(ctx, %{email_customer?: false})
+      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_first"})
+
+      {:ok, :completed} =
+        Payments.complete(%{id: "pi_first", metadata: %{"order_id" => order.id}, amount_received: 13_400})
+
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(ctx.variant, "3")]}), actor: ctx.admin)
+
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+      assert Decimal.equal?(order.balance, "13.00")
+      assert order.payment_link_open?
+
+      Ash.Seed.update!(order, %{payment_intent_id: "pi_top_up"})
+
+      {:ok, :completed} =
+        Payments.complete(%{id: "pi_top_up", metadata: %{"order_id" => order.id}, amount_received: 1300})
+
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+      assert Decimal.equal?(order.balance, "0.00")
+      refute order.payment_link_open?
     end
   end
 
@@ -407,7 +559,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       {:ok, order} =
-        Orders.record_in_person_payment(order, %{payment_method: :cash, amount_paid: "134.00"}, actor: ctx.admin)
+        Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
 
       {:ok, order} = Orders.email_receipt(order, actor: ctx.admin)
 

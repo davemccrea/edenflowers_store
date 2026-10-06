@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Order.PaymentMethod
+  alias EdenflowersWeb.Admin.OrderLog
   alias Edenflowers.PhoneNumber
   alias Edenflowers.External.StripeAPI
   alias EdenflowersWeb.Layouts
@@ -39,13 +40,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
     |> assign(:in_person_form, in_person_form(order))
+    |> assign(:log, order_log(order, socket.assigns.locale))
+    |> assign(:payments, payments(order))
   end
 
   defp in_person_form(order) do
-    to_form(%{"payment_method" => "zettle", "amount_paid" => Decimal.to_string(order.grand_total, :normal)},
-      as: :in_person
-    )
+    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(order.balance, :normal)}, as: :in_person)
   end
+
+  defp payments(order) do
+    order
+    |> Ash.load!([payments: Ash.Query.sort(Edenflowers.Orders.Payment, paid_at: :asc)], authorize?: false)
+    |> Map.fetch!(:payments)
+  end
+
+  defp order_log(order, locale) do
+    order
+    |> Ash.load!(:paper_trail_versions, authorize?: false)
+    |> Map.fetch!(:paper_trail_versions)
+    |> OrderLog.entries(locale)
+  end
+
+  defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
 
   @impl true
   def render(assigns) do
@@ -208,17 +224,37 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.money_row label={~t"Fulfillment fee"} amount={@order.fulfillment_fee} locale={@locale} />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
+                <.money_row :if={@order.amount_paid} label={~t"Paid"} amount={@order.amount_paid} locale={@locale} />
                 <.money_row
-                  :if={@order.amount_mismatch?}
-                  label={amount_paid_label(@order)}
-                  amount={@order.amount_paid}
+                  :if={@order.amount_paid && owes_money?(@order)}
+                  strong
+                  label={if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
+                  amount={Decimal.abs(@order.balance)}
                   locale={@locale}
                 />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
               </dl>
-              <p :if={@order.payment_status == :paid} id="order-paid-how" class="text-base-content/75 mt-4 text-sm">
-                {paid_how(@order, @locale)}
-              </p>
+              <ul :if={@payments != []} id="order-payments" class="divide-base-content/8 mt-4 divide-y text-sm">
+                <li :for={payment <- @payments} class="flex items-center justify-between gap-4 py-2">
+                  <span>
+                    <span class="text-base-content">{payment_label(payment)}</span>
+                    <span class="text-base-content/65 block text-xs">{Format.datetime(payment.paid_at, @locale)}</span>
+                  </span>
+                  <span class="flex items-center gap-2 tabular-nums">
+                    {Format.currency(payment.amount, @locale)}
+                    <a
+                      :if={payment.payment_intent_id}
+                      href={StripeAPI.dashboard_payment_url(payment.payment_intent_id)}
+                      target="_blank"
+                      rel="noopener"
+                      class="text-base-content/60 hover:text-base-content"
+                      aria-label={~t"View payment in Stripe"}
+                    >
+                      <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                    </a>
+                  </span>
+                </li>
+              </ul>
 
               <div :if={@order.payment_link_open?} id="order-payment-link" class="mt-5">
                 <p class="eyebrow text-base-content/65 mb-1.5">{~t"Payment link"}</p>
@@ -242,13 +278,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <.form
-                :if={@order.unpaid?}
+                :if={owes_money?(@order)}
                 for={@in_person_form}
                 id="in-person-payment-form"
                 phx-submit="record_in_person_payment"
                 class="border-base-content/12 mt-5 space-y-3 border-t pt-5"
               >
-                <p class="text-base-content text-sm font-semibold">{~t"Paid in person"}</p>
+                <p class="text-base-content text-sm font-semibold">{~t"Record a payment in person"}</p>
                 <div class="grid grid-cols-2 gap-3">
                   <.input
                     field={@in_person_form[:payment_method]}
@@ -257,19 +293,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     options={in_person_method_options()}
                   />
                   <.input
-                    field={@in_person_form[:amount_paid]}
+                    field={@in_person_form[:amount]}
                     type="text"
                     inputmode="decimal"
                     label={~t"Amount (€)"}
+                    help={~t"A minus amount records a refund."}
                     class="input w-full tabular-nums"
                   />
                 </div>
-                <.button type="submit" variant="primary" size="sm">{~t"Mark as paid"}</.button>
+                <.button type="submit" variant="primary" size="sm">{~t"Record payment"}</.button>
               </.form>
 
               <div class="mt-5 flex flex-wrap gap-2">
                 <.button
-                  :if={@order.origin == :custom && @order.unpaid? && !@order.payment_link_open?}
+                  :if={owes_money?(@order) && Decimal.positive?(@order.balance) && !@order.payment_link_open?}
                   type="button"
                   phx-click="open_payment_link"
                   variant="secondary"
@@ -278,7 +315,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   {~t"Create payment link"}
                 </.button>
                 <.button
-                  :if={@order.origin == :custom && @order.customer_email && @order.fulfillment_status != :cancelled}
+                  :if={@order.customer_email && @order.fulfillment_status != :cancelled}
                   type="button"
                   phx-click="send_order_details"
                   data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
@@ -288,10 +325,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   {~t"Email order details"}
                 </.button>
                 <.button
-                  :if={
-                    @order.payment_status == :paid && @order.payment_method in PaymentMethod.in_person() &&
-                      @order.customer_email
-                  }
+                  :if={@order.payment_status == :paid && @order.customer_email}
                   type="button"
                   phx-click="email_receipt"
                   data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
@@ -309,17 +343,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   size="sm"
                 >
                   {~t"View receipt"}
-                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                </.button>
-                <.button
-                  :if={@order.payment_intent_id}
-                  href={StripeAPI.dashboard_payment_url(@order.payment_intent_id)}
-                  target="_blank"
-                  rel="noopener"
-                  variant="secondary"
-                  size="sm"
-                >
-                  {~t"View payment in Stripe"}
                   <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
                 </.button>
               </div>
@@ -380,6 +403,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </:contact>
               </.person_block>
             </.detail_section>
+
+            <.detail_section id="order-log" title={~t"Log"}>
+              <ol class="space-y-4 text-sm">
+                <li :for={entry <- @log}>
+                  <p class="text-base-content font-medium">{entry.title}</p>
+                  <p class="text-base-content/65 text-xs">{Format.datetime(entry.at, @locale)}</p>
+                  <p :for={detail <- entry.details} class="text-base-content/85 mt-0.5 break-words">{detail}</p>
+                </li>
+              </ol>
+            </.detail_section>
           </aside>
         </div>
       </.admin_page>
@@ -422,9 +455,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("record_in_person_payment", %{"in_person" => params}, socket) do
-    attrs = %{payment_method: params["payment_method"], amount_paid: String.replace(params["amount_paid"], ",", ".")}
+    amount = String.replace(params["amount"], ",", ".")
 
-    case Orders.record_in_person_payment(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
+    case Orders.record_in_person_payment(socket.assigns.order, amount, params["payment_method"],
+           actor: socket.assigns.current_user
+         ) do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment recorded.")}
 
@@ -480,13 +515,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp payment_method_label(:cash), do: ~t"Cash"
   defp payment_method_label(_method), do: ~t"Unknown"
 
-  defp paid_how(%{payment_method: method, paid_at: %DateTime{} = paid_at}, locale),
-    do: ~t"Paid #{time = Format.datetime(paid_at, locale)} · #{how = payment_method_label(method)}"
-
-  defp paid_how(%{payment_method: method}, _locale), do: ~t"Paid · #{how = payment_method_label(method)}"
-
-  defp amount_paid_label(%{payment_method: :stripe}), do: ~t"Charged by Stripe (mismatch)"
-  defp amount_paid_label(_order), do: ~t"Taken in person (differs)"
+  defp payment_label(%{amount: amount, method: method}) do
+    if Decimal.negative?(amount),
+      do: ~t"Refund · #{how = payment_method_label(method)}",
+      else: payment_method_label(method)
+  end
 
   attr :queue, :map, required: true
   attr :fulfilled, :boolean, required: true

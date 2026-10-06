@@ -189,10 +189,9 @@ defmodule Edenflowers.Accounts.User do
     count :placed_order_count, :placed_orders
     max :last_ordered_at, :placed_orders, :ordered_at
 
-    # Money received, so only paid orders count (see ADR 0001). `amount_paid` is
-    # what Stripe actually charged, which can differ from the order's total.
-    sum :total_spent, :placed_orders, :amount_paid do
-      filter expr(payment_status == :paid)
+    # Money received, refunds taken off (see ADR 0001), which can differ from
+    # the orders' totals.
+    sum :total_spent, [:placed_orders, :payments], :amount do
       default Decimal.new("0")
     end
   end

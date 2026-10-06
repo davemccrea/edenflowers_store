@@ -111,10 +111,17 @@ defmodule Generator do
       %Order{
         state: :contact_details,
         order_reference: StreamData.repeatedly(fn -> "T#{System.unique_integer([:positive])}" end),
-        amount_paid: if(opts[:payment_status] == :paid, do: Decimal.new("0.00")),
-        payment_method: if(opts[:payment_status] == :paid, do: :stripe),
         vat_breakdown: if(opts[:state] == :placed, do: [], else: nil)
       },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  @doc "Records money received for an order, as a Stripe payment unless `method:` says otherwise."
+  def payment(opts \\ []) do
+    seed_generator(
+      %Edenflowers.Orders.Payment{amount: Decimal.new("10.00"), method: :stripe},
       overrides: opts,
       authorize?: false
     )

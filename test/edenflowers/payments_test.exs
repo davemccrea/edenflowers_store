@@ -189,7 +189,7 @@ defmodule Edenflowers.PaymentsTest do
       log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(order_intent(order, paid_cents)) end)
 
       assert log =~ "Amount mismatch"
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?])
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid])
       assert order.amount_mismatch?
       assert Decimal.equal?(order.amount_paid, Decimal.div(paid_cents, 100))
     end
@@ -270,7 +270,7 @@ defmodule Edenflowers.PaymentsTest do
         assert inspect(error) =~ "enqueue_failed"
       end
 
-      unchanged_order = Orders.get_order_by_id!(order.id, authorize?: false)
+      unchanged_order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_paid])
       assert unchanged_order.state == :payment
       assert unchanged_order.payment_status == :pending
       assert unchanged_order.order_reference == order.order_reference
@@ -390,8 +390,7 @@ defmodule Edenflowers.PaymentsTest do
     test "a stale PaymentIntent cannot fail an order", %{order: order} do
       stale_intent = %{order_intent(order) | id: "pi_replaced"}
 
-      assert {:error, {:payment_intent_mismatch, _id, _expected, "pi_replaced"}} =
-               Payments.fail(stale_intent)
+      assert {:ok, :unchanged} = Payments.fail(stale_intent)
 
       assert %{payment_status: :pending} = Orders.get_order_by_id!(order.id, authorize?: false)
     end

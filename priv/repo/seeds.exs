@@ -18,7 +18,7 @@ alias Edenflowers.Catalog.ProductCategory
 alias Edenflowers.Catalog.{Product, ProductVariant}
 alias Edenflowers.Courses.{Course, CourseRegistration}
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
-alias Edenflowers.Orders.{Order, LineItem}
+alias Edenflowers.Orders.{Order, LineItem, Payment}
 alias Edenflowers.Orders.Calculations.Vat
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
@@ -791,6 +791,187 @@ for order_attrs <- orders do
   Ash.Seed.update!(order, %{
     vat_breakdown: Vat.breakdown(%{order | state: nil}),
     payment_status: :paid,
-    amount_paid: order.grand_total
+    payment_intent_id: nil
+  })
+
+  Ash.Seed.seed!(Payment, %{
+    order_id: order.id,
+    amount: order.grand_total,
+    method: :stripe,
+    payment_intent_id: order.payment_intent_id,
+    paid_at: order.ordered_at
   })
 end
+
+# Custom orders, payments and edits. Unlike the orders above, these go through
+# the real actions as Jennie, so the order log, the payment rows, balances and
+# payment links come out exactly as the app makes them. All pickups, so no
+# address is geocoded, and nothing calls Stripe. Every customer email is marked
+# as already sent, for the same reason as above.
+alias Edenflowers.Orders
+alias Edenflowers.Payments
+
+jennie =
+  User
+  |> Ash.Query.filter(email == "info@edenflowers.fi")
+  |> Ash.read_one!(authorize?: false)
+
+custom_line = fn description, unit_price ->
+  %{
+    "kind" => "custom",
+    "description" => description,
+    "unit_price" => unit_price,
+    "tax_rate_id" => tax_rate.id,
+    "quantity" => "1"
+  }
+end
+
+catalogue_line = fn product_name, size, quantity ->
+  %{
+    "kind" => "catalogue",
+    "product_variant_id" => variant_for.(product_name, size).id,
+    "quantity" => to_string(quantity)
+  }
+end
+
+place_custom = fn attrs ->
+  Map.merge(
+    %{
+      locale: "sv-FI",
+      fulfillment_option_id: store_pickup.id,
+      fulfillment_date: fulfillment_date_for.(store_pickup, attrs[:days_out] || 2),
+      email_customer?: false
+    },
+    Map.delete(attrs, :days_out)
+  )
+  |> Orders.place_custom_order!(actor: jennie)
+end
+
+mark_emailed = fn order -> Ash.Seed.update!(order, %{receipt_emailed_at: DateTime.utc_now()}) end
+
+# A Stripe payment arriving through the payment link, as the webhook would record it.
+pay_by_link = fn order, payment_intent_id ->
+  order = Orders.get_order_for_admin!(order.id, actor: jennie)
+  Ash.Seed.update!(order, %{payment_intent_id: payment_intent_id})
+
+  {:ok, :completed} =
+    Payments.complete(%{
+      id: payment_intent_id,
+      metadata: %{"order_id" => order.id},
+      amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(order.balance)
+    })
+
+  mark_emailed.(Orders.get_order_for_admin!(order.id, actor: jennie))
+end
+
+# Phoned in for a funeral: no email, so Jennie copies the payment link into a text message.
+place_custom.(%{
+  customer_name: "Margareta Holm",
+  customer_phone_number: "040 765 4321",
+  recipient_name: "Funeral of Gunnar Holm",
+  card_message: "Tack för allt, vila i frid.",
+  florist_note: "White roses and lilies only. The funeral home collects at 10:00, service at 11:00.",
+  line_items: [custom_line.("Funeral spray, white roses and lilies", "120.00"), catalogue_line.("Card 3", :large, 1)]
+})
+
+# A walk-in who paid with MobilePay at the counter.
+walk_in =
+  place_custom.(%{
+    customer_name: "Kalle Nieminen",
+    customer_phone_number: "050 123 9876",
+    locale: "fi",
+    days_out: 1,
+    payment_link?: false,
+    line_items: [catalogue_line.("Bouquet 2", :medium, 1), custom_line.("Extra eucalyptus", "8.00")]
+  })
+
+walk_in = Orders.get_order_for_admin!(walk_in.id, actor: jennie)
+Orders.record_in_person_payment!(walk_in, walk_in.balance, :mobilepay, actor: jennie)
+
+# Paid through the link, then made smaller, then refunded in the Stripe dashboard.
+smaller =
+  place_custom.(%{
+    customer_name: "Sara Björk",
+    customer_email: "sara.bjork@example.fi",
+    days_out: 3,
+    line_items: [catalogue_line.("Bouquet 5", :large, 2), custom_line.("Hand-tied ribbon", "6.00")]
+  })
+
+pay_by_link.(smaller, "pi_seed_smaller")
+smaller = Orders.get_order_for_admin!(smaller.id, actor: jennie, load: [:line_items])
+[bouquets | _] = Enum.filter(smaller.line_items, &(&1.product_variant_id != nil))
+
+Orders.edit_order!(
+  smaller,
+  %{
+    line_items: [
+      %{"kind" => "catalogue", "id" => bouquets.id, "quantity" => "1"},
+      custom_line.("Hand-tied ribbon", "6.00")
+    ]
+  },
+  actor: jennie
+)
+
+{:ok, :recorded} =
+  Payments.record_refund(%{id: "re_seed_smaller", payment_intent: "pi_seed_smaller", amount: 6000, status: "succeeded"})
+
+# Delivered to a phone-only customer who promised to pay next week.
+fulfilled_unpaid =
+  place_custom.(%{
+    customer_name: "Bertil Ek",
+    customer_phone_number: "044 222 3344",
+    days_out: 0,
+    line_items: [catalogue_line.("Bouquet 1", :small, 1)]
+  })
+
+Orders.mark_order_fulfilled!(fulfilled_unpaid, actor: jennie)
+
+# Called off before it was paid.
+cancelled =
+  place_custom.(%{
+    customer_name: "Ulla Granqvist",
+    customer_phone_number: "045 678 1122",
+    days_out: 4,
+    florist_note: "Cancelled: the family ordered elsewhere.",
+    line_items: [custom_line.("Table arrangement for 8", "75.00")]
+  })
+
+Orders.cancel_order!(cancelled, actor: jennie)
+
+# An online order the customer asked to add to by email after paying: it now
+# has a balance to collect and a payment link for just that.
+erik =
+  Order
+  |> Ash.Query.filter(customer_name == "Erik Sundström")
+  |> Ash.Query.load(:line_items)
+  |> Ash.read_one!(authorize?: false)
+
+kept_lines = Enum.map(erik.line_items, &%{"kind" => "catalogue", "id" => &1.id, "quantity" => to_string(&1.quantity)})
+
+Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant 2", :small, 1)]}, actor: jennie)
+Orders.open_payment_link!(erik, actor: jennie)
+
+# A custom order paid in part by link, the rest still owed.
+part_paid =
+  place_custom.(%{
+    customer_name: "Johanna Lind",
+    customer_email: "johanna.lind@example.fi",
+    locale: "en-GB",
+    days_out: 6,
+    line_items: [catalogue_line.("Bouquet 3", :medium, 1)]
+  })
+
+pay_by_link.(part_paid, "pi_seed_part_paid")
+part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie, load: [:line_items])
+[bouquet] = part_paid.line_items
+
+Orders.edit_order!(
+  part_paid,
+  %{
+    line_items: [
+      %{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"},
+      custom_line.("Vase, hand-thrown", "35.00")
+    ]
+  },
+  actor: jennie
+)

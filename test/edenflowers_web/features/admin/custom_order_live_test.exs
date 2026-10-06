@@ -214,23 +214,32 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).grand_total, "120.00")
     end
 
-    test "a paid order only offers the details that don't change its price", ctx do
+    test "a paid order can change too, and its page shows what is left to collect", ctx do
       order = place_custom_order(ctx)
-
-      {:ok, order} =
-        Orders.record_in_person_payment(order, %{payment_method: :zettle, amount_paid: "85.00"}, actor: ctx.admin)
+      {:ok, order} = Orders.record_in_person_payment(order, "85.00", :zettle, actor: ctx.admin)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
 
-      refute has_element?(view, "[data-testid=order-line]")
-      refute has_element?(view, "#order-form_customer_name")
-
       assert {:error, {:live_redirect, _}} =
                view
-               |> form("#order-form", form: %{card_message: "With deepest sympathy"})
+               |> form("#order-form",
+                 form: %{
+                   line_items: %{
+                     "0" => %{
+                       "description" => "Funeral spray",
+                       "unit_price" => "95.00",
+                       "tax_rate_id" => ctx.tax_rate.id,
+                       "quantity" => "1"
+                     }
+                   }
+                 }
+               )
                |> render_submit()
 
-      assert Orders.get_order_for_admin!(order.id, actor: ctx.admin).card_message == "With deepest sympathy"
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#order-payment-summary", "To collect")
+      assert has_element?(view, ~s|#in-person-payment-form input[value="10.00"]|)
     end
   end
 
@@ -251,12 +260,23 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       view
-      |> form("#in-person-payment-form", in_person: %{payment_method: "mobilepay", amount_paid: "85,00"})
+      |> form("#in-person-payment-form", in_person: %{payment_method: "mobilepay", amount: "85,00"})
       |> render_submit()
 
-      assert has_element?(view, "#order-paid-how", "MobilePay")
+      assert has_element?(view, "#order-payments", "MobilePay")
       refute has_element?(view, "#payment-link-url")
       refute has_element?(view, "#in-person-payment-form")
+    end
+
+    test "logs what happened to the order", ctx do
+      order = place_custom_order(ctx)
+      {:ok, _order} = Orders.record_in_person_payment(order, "85.00", :mobilepay, actor: ctx.admin)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#order-log", "Placed by Jennie")
+      assert has_element?(view, "#order-log", "1 × Funeral spray")
+      assert has_element?(view, "#order-payments", "MobilePay")
     end
 
     test "saves the florist note", ctx do

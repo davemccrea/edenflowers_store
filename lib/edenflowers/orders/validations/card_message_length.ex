@@ -2,9 +2,9 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
   @moduledoc """
   Enforces the per-card-size length limit for card_message.
 
-  A custom order needs no card in its lines: Jennie writes the card or ribbon
-  herself and adds a card product only when she charges for one. It is held to
-  the longest card's limit instead.
+  An order Jennie enters or edits needs no card in its lines: she writes the
+  card or ribbon herself and adds a card product only when she charges for
+  one. It is held to the longest card's limit instead.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -18,7 +18,7 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
         :ok
 
       message ->
-        if Ash.Changeset.get_attribute(changeset, :origin) == :custom do
+        if Ash.Changeset.get_attribute(changeset, :origin) == :custom or changeset.action.name == :edit do
           check_length(message, ProductVariantSize.max_message_length(:large))
         else
           validate_against_card(changeset, message)

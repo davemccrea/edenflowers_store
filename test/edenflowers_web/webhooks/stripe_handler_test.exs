@@ -131,7 +131,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       assert log =~ "Amount mismatch"
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?])
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid])
       assert order.state == :placed
       assert order.payment_status == :paid
       assert Decimal.equal?(order.amount_paid, Decimal.div(expected_amount - 1, 100))
@@ -281,22 +281,81 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "records the payment on the order already placed", %{order: order, expected_amount: expected_amount} do
       assert :ok = link_succeeded(order, expected_amount)
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments])
       assert order.payment_status == :paid
-      assert order.payment_method == :stripe
+      assert [%{method: :stripe, payment_intent_id: payment_intent_id}] = order.payments
+      assert payment_intent_id != nil
+      assert order.payment_intent_id == nil
       assert order.order_reference == "LINK1"
     end
 
-    test "alerts Jennie to refund a payment for an order already paid in person", %{
+    test "records a redelivered payment only once", %{order: order, expected_amount: expected_amount} do
+      assert :ok = link_succeeded(order, expected_amount)
+      assert :ok = link_succeeded(order, expected_amount)
+
+      assert [_payment] = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+    end
+
+    test "records a payment for an order already paid in person, and alerts Jennie to refund it", %{
       order: order,
       expected_amount: expected_amount
     } do
-      Ash.Seed.update!(order, %{payment_status: :paid, payment_method: :zettle, amount_paid: Decimal.new("1.00")})
+      generate(payment(order_id: order.id, method: :zettle, amount: Decimal.div(expected_amount, 100)))
+      Ash.Seed.update!(order, %{payment_status: :paid})
 
       log = capture_log(fn -> assert :ok = link_succeeded(order, expected_amount) end)
 
-      assert log =~ "no longer expected"
-      assert log =~ "Refund it in Stripe"
+      assert log =~ "overpaid"
+      assert log =~ "Refund the difference in Stripe"
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance])
+      assert Decimal.equal?(order.balance, Decimal.negate(Decimal.div(expected_amount, 100)))
+    end
+  end
+
+  describe "a refund made in the Stripe dashboard" do
+    setup %{order: order, expected_amount: expected_amount} do
+      payment_intent_id = order.payment_intent_id
+
+      assert :ok =
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_paid",
+                 type: "payment_intent.succeeded",
+                 data: %{
+                   object: %{
+                     id: payment_intent_id,
+                     metadata: %{"order_id" => order.id},
+                     amount_received: expected_amount
+                   }
+                 }
+               })
+
+      %{payment_intent_id: payment_intent_id}
+    end
+
+    defp refund_event(type, payment_intent_id, status) do
+      %Stripe.Event{
+        id: "evt_refund",
+        type: type,
+        data: %{object: %{id: "re_1", payment_intent: payment_intent_id, amount: 500, status: status}}
+      }
+    end
+
+    test "is recorded against the order once it succeeds, only once", %{order: order, payment_intent_id: pi} do
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
+
+      payments = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+      assert [refund] = Enum.filter(payments, &Decimal.negative?(&1.amount))
+      assert Decimal.equal?(refund.amount, "-5.00")
+      assert refund.stripe_refund_id == "re_1"
+    end
+
+    test "of a payment the shop doesn't know is ignored" do
+      assert :ok =
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(
+                 refund_event("refund.created", "pi_course", "succeeded")
+               )
     end
   end
 

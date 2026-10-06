@@ -13,6 +13,7 @@ defmodule Edenflowers.Payments do
   """
 
   require Logger
+  require Ash.Query
   import Edenflowers.Actors
 
   alias Edenflowers.Courses
@@ -20,14 +21,15 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch, UnexpectedPayment}
+  alias Edenflowers.Orders.Payment
+  alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch}
 
   @metadata_keys ["order_id", "course_registration_id"]
 
   @doc """
   Returns the PaymentIntent client secret for an order or course booking,
-  creating the PaymentIntent on first call. An order needs `grand_total`
-  loaded.
+  creating the PaymentIntent on first call. An order needs `balance` loaded,
+  or `grand_total` at checkout, before anything has been paid.
   """
   def setup(%{payment_intent_id: nil} = payable, actor) do
     amount_cents = StripeAPI.to_stripe_amount(expected_amount(payable))
@@ -53,8 +55,10 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  @doc "Brings the order's PaymentIntent amount in line with its `grand_total`."
-  def update_amount(%Order{} = order), do: stripe_api().update_payment_intent(order)
+  @doc "Brings the order's PaymentIntent amount in line with what it still owes."
+  def update_amount(%Order{} = order) do
+    stripe_api().update_payment_intent(order.payment_intent_id, StripeAPI.to_stripe_amount(expected_amount(order)))
+  end
 
   @doc """
   Completes whatever a succeeded PaymentIntent paid for. Orders keep the
@@ -69,6 +73,9 @@ defmodule Edenflowers.Payments do
       amount_paid = StripeAPI.from_stripe_amount(payment_intent.amount_received)
 
       case complete_payable(ref, payment_intent.id, amount_paid) do
+        :already_recorded ->
+          {:ok, :already_completed}
+
         {:ok, _record} ->
           Logger.info(
             "Completed #{describe(ref)} for PaymentIntent #{payment_intent.id} " <>
@@ -87,9 +94,6 @@ defmodule Edenflowers.Payments do
 
             mismatch = find_error(error, AmountMismatch) ->
               {:error, {:amount_mismatch, id, mismatch.expected, mismatch.actual}}
-
-            unexpected = find_error(error, UnexpectedPayment) ->
-              {:error, {:unexpected_payment, id, unexpected.reason}}
 
             true ->
               {:error, {:payment_update_failed, id, error}}
@@ -114,14 +118,55 @@ defmodule Edenflowers.Payments do
             find_error(error, AlreadyPaid) ->
               {:ok, :unchanged}
 
-            mismatch = find_error(error, PaymentIntentMismatch) ->
-              {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
+            # A PaymentIntent the order has moved on from, such as the one a
+            # payment link drops when Jennie records an in-person payment.
+            find_error(error, PaymentIntentMismatch) ->
+              {:ok, :unchanged}
 
             true ->
               {:error, {:payment_update_failed, id, error}}
           end
       end
     end
+  end
+
+  @doc """
+  Records a refund made in the Stripe dashboard against the order it paid
+  for. Refunds of course bookings, and refunds not yet succeeded, are left
+  alone; Stripe sends `refund.updated` once a pending refund goes through.
+  """
+  def record_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
+      when is_binary(payment_intent_id) do
+    with {:ok, %Payment{order_id: order_id}} <- find_payment(payment_intent_id),
+         false <- refund_recorded?(refund.id),
+         {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()),
+         amount = Decimal.negate(StripeAPI.from_stripe_amount(refund.amount)),
+         {:ok, _order} <- Orders.record_stripe_refund(order, refund.id, amount, actor: system_actor()) do
+      Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for order #{order_id}")
+      {:ok, :recorded}
+    else
+      :not_found -> {:ok, :ignored}
+      true -> {:ok, :already_recorded}
+      {:error, error} -> {:error, {:refund_record_failed, refund.id, error}}
+    end
+  end
+
+  def record_refund(_refund), do: {:ok, :ignored}
+
+  defp find_payment(payment_intent_id) do
+    Payment
+    |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+    |> Ash.read_one(authorize?: false)
+    |> case do
+      {:ok, nil} -> :not_found
+      result -> result
+    end
+  end
+
+  defp refund_recorded?(refund_id) do
+    Payment
+    |> Ash.Query.filter(stripe_refund_id == ^refund_id)
+    |> Ash.exists?(authorize?: false)
   end
 
   @doc """
@@ -155,6 +200,8 @@ defmodule Edenflowers.Payments do
   defp metadata_key(%Order{}), do: "order_id"
   defp metadata_key(%CourseRegistration{}), do: "course_registration_id"
 
+  # Checkout loads only the grand total; nothing is paid yet, so it is the balance.
+  defp expected_amount(%Order{balance: %Decimal{} = balance}), do: balance
   defp expected_amount(%Order{grand_total: grand_total}), do: grand_total
   defp expected_amount(%CourseRegistration{amount: amount}), do: amount
 
@@ -167,15 +214,19 @@ defmodule Edenflowers.Payments do
     Courses.add_registration_payment_intent_id(registration, payment_intent_id, actor: system_actor())
   end
 
-  # A custom order was placed when Jennie entered it, so its payment link only
-  # records the payment; a checkout payment is what places an online order.
+  # A recorded PaymentIntent is a redelivery. Otherwise a checkout payment
+  # places the order, and a payment link payment, on an order already placed,
+  # only records the money.
   defp complete_payable({"order_id", id}, payment_intent_id, amount_paid) do
     with {:ok, order} <- Orders.get_order_by_id(id, actor: system_actor()) do
-      case order.origin do
-        :custom ->
+      cond do
+        recorded?(payment_intent_id) ->
+          :already_recorded
+
+        order.state == :placed ->
           Orders.record_link_payment(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
 
-        :online ->
+        true ->
           Orders.finalize_checkout(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
       end
     end
@@ -183,6 +234,12 @@ defmodule Edenflowers.Payments do
 
   defp complete_payable({"course_registration_id", id}, payment_intent_id, amount_paid) do
     Courses.confirm_registration_payment(id, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+  end
+
+  defp recorded?(payment_intent_id) do
+    Payment
+    |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+    |> Ash.exists?(authorize?: false)
   end
 
   defp fail_payable({"order_id", id}, payment_intent_id) do

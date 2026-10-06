@@ -9,33 +9,36 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "40.00"))
 
-    placed = fn ordered_at, payment_status, amount_paid ->
+    placed = fn ordered_at, payment_status, payments ->
       order =
-        generate(
-          order(
-            state: :placed,
-            payment_status: payment_status,
-            amount_paid: amount_paid,
-            fulfillment_fee: "5.00",
-            ordered_at: ordered_at
-          )
-        )
+        generate(order(state: :placed, payment_status: payment_status, fulfillment_fee: "5.00", ordered_at: ordered_at))
 
       generate(line_item(order_id: order.id, product_variant_id: variant.id))
+
+      for {paid_at, amount} <- payments do
+        generate(payment(order_id: order.id, amount: Decimal.new(amount), paid_at: paid_at))
+      end
     end
 
     # 00:30 on 1 September in Helsinki (UTC+3): inside the range
-    placed.(~U[2026-08-31 21:30:00Z], :paid, "39.50")
-    placed.(~U[2026-09-15 12:00:00Z], :paid, "40.00")
-    placed.(~U[2026-09-15 12:00:00Z], :refunded, "40.00")
+    placed.(~U[2026-08-31 21:30:00Z], :paid, [{~U[2026-08-31 21:30:00Z], "39.50"}])
+    placed.(~U[2026-09-15 12:00:00Z], :paid, [{~U[2026-09-15 12:00:00Z], "40.00"}])
+    # Paid and refunded in the range: counts nothing.
+    placed.(~U[2026-09-15 12:00:00Z], :refunded, [
+      {~U[2026-09-15 12:00:00Z], "40.00"},
+      {~U[2026-09-16 12:00:00Z], "-40.00"}
+    ])
+
     # 00:30 on 1 October in Helsinki: outside the range
-    placed.(~U[2026-09-30 21:30:00Z], :paid, "40.00")
+    placed.(~U[2026-09-30 21:30:00Z], :paid, [{~U[2026-09-30 21:30:00Z], "40.00"}])
+    # Placed in August, its balance paid in September: the money counts in September.
+    placed.(~U[2026-08-20 12:00:00Z], :paid, [{~U[2026-08-20 12:00:00Z], "40.00"}, {~U[2026-09-10 12:00:00Z], "4.00"}])
 
     summary =
       Edenflowers.Orders.sales_summary!(~D[2026-09-01], ~D[2026-09-30], actor: admin)
 
     assert summary.order_count == 2
-    assert Decimal.equal?(summary.revenue, "79.50")
+    assert Decimal.equal?(summary.revenue, "83.50")
   end
 
   test "reports zero for a range without paid orders" do

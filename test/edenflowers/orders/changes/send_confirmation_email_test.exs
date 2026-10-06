@@ -30,6 +30,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       )
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
     assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
@@ -69,6 +70,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       )
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
     assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
@@ -100,6 +102,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       )
 
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
     assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 

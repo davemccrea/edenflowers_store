@@ -1,13 +1,7 @@
 defmodule EdenflowersWeb.Admin.OrderFormLive do
   @moduledoc """
-  Where Jennie enters a custom order, and edits an order after it is placed.
-
-  Three modes, picked from what the order still allows:
-
-    * `:new` places a custom order.
-    * `:edit_custom` changes everything on an unpaid custom order.
-    * `:edit_details` changes only what doesn't alter the price, on any open
-      order: date, recipient, address, card message.
+  Where Jennie enters a custom order (`:new`), and edits any open order
+  after it is placed (`:edit`), online or custom, paid or not.
   """
   use EdenflowersWeb, :live_view
 
@@ -70,10 +64,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp edit_mode(%{fulfillment_status: status}) when status != :pending,
     do: {:error, ~t"This order is no longer open, so it can't be changed."}
 
-  defp edit_mode(%{origin: :custom, payment_status: status} = order) when status != :paid,
-    do: {:ok, :edit_custom, order}
-
-  defp edit_mode(order), do: {:ok, :edit_details, order}
+  defp edit_mode(order), do: {:ok, :edit, order}
 
   defp page_title(:new, _order), do: ~t"New custom order"
   defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
@@ -91,15 +82,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     |> to_form()
   end
 
-  defp build_form(:edit_custom, order, actor) do
+  defp build_form(:edit, order, actor) do
     order
-    |> AshPhoenix.Form.for_update(:update_custom, actor: actor, transform_params: &transform_params/3)
-    |> to_form()
-  end
-
-  defp build_form(:edit_details, order, actor) do
-    order
-    |> AshPhoenix.Form.for_update(:update_details, actor: actor)
+    |> AshPhoenix.Form.for_update(:edit, actor: actor, transform_params: &transform_params/3)
     |> to_form()
   end
 
@@ -126,9 +111,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp decimal_comma(value), do: value
 
   defp initial_lines(:new, _order, _tax_rates), do: []
-  defp initial_lines(:edit_details, _order, _tax_rates), do: []
 
-  defp initial_lines(:edit_custom, order, tax_rates) do
+  defp initial_lines(:edit, order, tax_rates) do
     Enum.map(order.line_items, fn
       %{product_variant_id: nil} = line_item ->
         %{
@@ -139,14 +123,21 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           "quantity" => to_string(line_item.quantity)
         }
 
+      # Kept by id, so it keeps the price it was sold at.
       line_item ->
         %{
           "kind" => "catalogue",
-          "product_variant_id" => line_item.product_variant_id,
+          "id" => line_item.id,
+          "name" => existing_line_name(line_item),
           "quantity" => to_string(line_item.quantity)
         }
     end)
   end
+
+  defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
+
+  defp existing_line_name(line_item),
+    do: "#{line_item.product_name} · #{variant_size_label(line_item.variant_size)}"
 
   # A line stores the percentage it was charged, not the rate it came from.
   defp tax_rate_id_for(tax_rates, percentage) do
@@ -296,7 +287,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   # An order already priced by distance can be quoted again without geocoding.
-  defp stored_quote(:edit_custom, %{fulfillment_method: :delivery, distance: distance} = order)
+  defp stored_quote(:edit, %{fulfillment_method: :delivery, distance: distance} = order)
        when is_integer(distance) do
     case Fulfillment.get_option_by_id(order.fulfillment_option_id, authorize?: false) do
       {:ok, option} ->
@@ -398,13 +389,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           back={if @order, do: ~p"/admin/orders/#{@order.id}", else: EdenflowersWeb.Admin.OrdersLive.default_path()}
           back_label={if @order, do: ~t"Order", else: ~t"Orders"}
         >
-          <:subtitle :if={@mode == :edit_details}>
-            {~t"The price is settled, so only details that don't change it can be edited."}
+          <:subtitle :if={@order && @order.payment_status == :paid}>
+            {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
         </.admin_page_header>
 
         <.form for={@form} id="order-form" phx-change="validate" phx-submit="save" class="space-y-10">
-          <.form_section :if={@mode != :edit_details} title={~t"Customer"}>
+          <.form_section title={~t"Customer"}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <.input field={@form[:customer_name]} type="text" label={~t"Name"} class="input w-full" />
@@ -433,7 +424,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
           </.form_section>
 
-          <.form_section :if={@mode != :edit_details} title={~t"Items"}>
+          <.form_section title={~t"Items"}>
             <div id="order-lines" class="space-y-3">
               <.order_line
                 :for={{line, index} <- Enum.with_index(@lines)}
@@ -465,7 +456,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           <.form_section title={~t"Delivery or pickup"}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input
-                :if={@mode != :edit_details}
                 field={@form[:fulfillment_option_id]}
                 type="select"
                 label={~t"Method"}
@@ -498,7 +488,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 />
               </div>
               <.input
-                :if={@mode != :edit_details}
                 field={@form[:fulfillment_fee_override]}
                 type="text"
                 inputmode="decimal"
@@ -525,7 +514,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
           </.form_section>
 
-          <.form_section :if={@mode != :edit_details} title={~t"Florist note"}>
+          <.form_section title={~t"Florist note"}>
             <:description>{~t"Only you see this: what was agreed, timings, anything to remember."}</:description>
             <.input field={@form[:florist_note]} type="textarea" rows="4" />
           </.form_section>
@@ -580,6 +569,20 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   attr :index, :integer, required: true
   attr :variant_options, :list, required: true
   attr :tax_rate_options, :list, required: true
+
+  # A line the order already has: its product is fixed, only how many changes.
+  defp order_line(%{line: %{"kind" => "catalogue", "id" => _}} = assigns) do
+    ~H"""
+    <div class="border-base-content/12 flex flex-wrap items-end gap-3 border p-3" data-testid="order-line">
+      <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="catalogue" />
+      <input type="hidden" name={"form[line_items][#{@index}][id]"} value={@line["id"]} />
+      <input type="hidden" name={"form[line_items][#{@index}][name]"} value={@line["name"]} />
+      <p class="min-w-0 flex-1 basis-64 self-center font-medium">{@line["name"]}</p>
+      <.quantity_input index={@index} value={@line["quantity"]} />
+      <.remove_line_button index={@index} />
+    </div>
+    """
+  end
 
   defp order_line(%{line: %{"kind" => "catalogue"}} = assigns) do
     ~H"""

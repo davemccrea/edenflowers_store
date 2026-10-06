@@ -48,7 +48,6 @@ defmodule Edenflowers.Orders do
                  :customer_email,
                  :recipient_phone_number,
                  :delivery_instructions,
-                 :amount_paid,
                  :promotion_name,
                  :promotion_code,
                  :fulfillment_fee
@@ -61,6 +60,8 @@ defmodule Edenflowers.Orders do
         :discount,
         :distance_km,
         :amount_mismatch?,
+        :amount_paid,
+        :balance,
         line_items: [:product_name, :variant_size, :quantity, :unit_price, :is_card, :total]
       ]
 
@@ -105,18 +106,21 @@ defmodule Edenflowers.Orders do
       define :remove_card, action: :remove_card
       define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
       define :place_custom_order, action: :place_custom
-      define :update_custom_order, action: :update_custom
-      define :update_order_details, action: :update_details
+      define :edit_order, action: :edit
       define :update_florist_note, action: :update_florist_note
       define :cancel_order, action: :cancel
-      define :record_in_person_payment, action: :record_in_person_payment
+      define :record_in_person_payment, action: :record_in_person_payment, args: [:amount, :payment_method]
       define :record_link_payment, action: :record_link_payment, args: [:payment_intent_id]
+      define :record_stripe_refund, action: :record_stripe_refund, args: [:stripe_refund_id, :amount]
       define :open_payment_link, action: :open_payment_link
       define :get_order_by_payment_link_token, action: :by_payment_link_token, args: [:token]
       define :send_order_details_email, action: :send_order_details_email
       define :email_receipt, action: :email_receipt
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
     end
+
+    resource Edenflowers.Orders.Order.Version
+    resource Edenflowers.Orders.Payment
 
     resource Edenflowers.Orders.LineItem do
       define :add_line_item, action: :add_to_cart, args: [:order_id, :product_variant_id, :quantity]
