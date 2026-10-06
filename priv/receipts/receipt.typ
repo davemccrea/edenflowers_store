@@ -323,25 +323,21 @@
   v(20pt)
   v(1fr)
 
-  // ── Closing band ────────────────────────────────────────────────────
-  // Brand-green outline, centred — a lighter echo of the site's pull-quote
-  // section. Thank-you in serif italic carries the editorial moment;
-  // closing-line is supporting prose.
+  // ── Closing ─────────────────────────────────────────────────────────
+  // Centred, unboxed. The honey rule echoes the one under the header so
+  // the page opens and closes on the same accent.
   block(
     width: 100%,
-    stroke: 0.5pt + colors.primary,
-    inset: (x: 24pt, y: 14pt),
     breakable: false,
     [
       #set align(center)
-      #set text(fill: colors.primary)
-      #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light")[
+      #box(honey-rule(length: 40pt))
+      #v(10pt)
+      #text(font: fonts.serif, size: 15pt, style: "italic", weight: "light", fill: colors.primary)[
         #t("thank-you")
       ]#h(4pt)#text(size: 12pt)[💛]
       #v(4pt)
-      #set text(font: fonts.sans, size: type-scale.small,
-                fill: colors.ink-muted)
-      #block(width: 80%)[#t("closing-line")]
+      #text(font: fonts.sans, size: type-scale.small, fill: colors.ink-muted)[#t("closing-line")]
     ],
   )
 }
