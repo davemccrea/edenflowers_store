@@ -337,9 +337,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
 
       assert edit.title == "Edited"
-      assert "Delivery address: Kyrkvägen 5" in edit.details
-      assert "Fulfillment fee: €17.00" in edit.details
-      refute Enum.any?(edit.details, &String.starts_with?(&1, "Items:"))
+      assert {"Delivery address", "Kyrkvägen 5"} in edit.details
+      assert {"Fulfillment fee", "€17.00"} in edit.details
+      refute List.keymember?(edit.details, "Items", 0)
       assert length(EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")) == 2
     end
 
@@ -354,8 +354,21 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
       [edit, placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
 
-      assert "Items: 2 × Spring Bouquet, 1 × Funeral spray" in edit.details
-      assert "Items: 1 × Spring Bouquet" in placed.details
+      assert {"Items", ["2 × Spring Bouquet", "1 × Funeral spray"]} in edit.details
+      assert {"Items", ["1 × Spring Bouquet"]} in placed.details
+    end
+
+    test "the log names the language an edit switched to", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}
+
+      {:ok, order} = Orders.edit_order(order, params(ctx, %{locale: "fi", line_items: [kept]}), actor: ctx.admin)
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      [edit | _placed] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+
+      assert {"Language", "Suomi"} in edit.details
     end
 
     test "an edit that changes nothing leaves no entry in the log", ctx do
@@ -424,6 +437,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.update_florist_note(order, %{florist_note: "White only, no lilies"}, actor: ctx.admin)
 
       assert order.florist_note == "White only, no lilies"
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      [change | _] = EdenflowersWeb.Admin.OrderLog.entries(versions, "en-GB")
+      assert change.title == "Florist note changed"
+      assert change.details == [{nil, "White only, no lilies"}]
     end
   end
 
