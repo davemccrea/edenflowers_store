@@ -18,5 +18,7 @@ defmodule Edenflowers.Pricing do
       define :get_promotion_by_code, action: :by_code, args: [:code, {:optional, :today}], get?: true
       define :create_newsletter_promotion, action: :create_for_newsletter
     end
+
+    resource Edenflowers.Pricing.Promotion.Version
   end
 end

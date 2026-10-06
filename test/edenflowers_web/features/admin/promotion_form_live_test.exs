@@ -92,6 +92,20 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
     assert Decimal.equal?(Ash.get!(Promotion, promotion.id, authorize?: false).discount_rate, "0.25")
   end
 
+  test "shows a regenerated code's old value in the history", %{conn: conn} do
+    promotion = generate(promotion(code: "SPRING"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{promotion.id}")
+    view |> element("button[phx-click=generate_code]") |> render_click()
+    view |> form("#promotion-form") |> render_submit()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{promotion.id}")
+    history = view |> element("#promotion-history") |> render()
+
+    assert history =~ ~r/SPRING → [0-9A-F]{6}/
+    refute history =~ "Discount"
+  end
+
   test "rejects a discount over 100%", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
 

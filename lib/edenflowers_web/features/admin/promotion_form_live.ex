@@ -5,9 +5,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
+  alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+
+  @history_fields [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
 
   @impl true
   def mount(params, _session, socket) do
@@ -18,7 +21,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         {:ok,
          socket
          |> assign(:page_title, title)
-         |> assign(:form, form)}
+         |> assign(:form, form)
+         |> assign(:locale, Localize.get_locale())
+         |> assign_history()}
 
       :error ->
         {:ok,
@@ -59,6 +64,55 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     do: rate |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)
 
   defp rate_to_percent(value), do: value
+
+  defp assign_history(socket) do
+    history =
+      case socket.assigns.form.source do
+        %{type: :update, data: promotion} -> history(promotion, socket.assigns.locale)
+        _ -> []
+      end
+
+    assign(socket, :history, history)
+  end
+
+  defp history(promotion, locale) do
+    promotion
+    |> Ash.load!(:paper_trail_versions, authorize?: false)
+    |> Map.fetch!(:paper_trail_versions)
+    |> Enum.map(&history_entry(&1, locale))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.sort_by(& &1.at, {:desc, DateTime})
+  end
+
+  defp history_entry(%{version_action_type: :create} = version, _locale),
+    do: %{at: version.version_inserted_at, title: ~t"Created", changes: []}
+
+  defp history_entry(version, locale) do
+    changes =
+      for field <- @history_fields, %{"from" => from, "to" => to} <- [version.changes[to_string(field)]] do
+        {history_label(field), show(from, field, locale), show(to, field, locale)}
+      end
+
+    # A save that changed nothing still leaves a version.
+    if changes != [], do: %{at: version.version_inserted_at, title: ~t"Edited", changes: changes}
+  end
+
+  defp history_label(:name), do: ~t"Name"
+  defp history_label(:code), do: ~t"Code"
+  defp history_label(:discount_rate), do: ~t"Discount"
+  defp history_label(:minimum_cart_total), do: ~t"Minimum cart total"
+  defp history_label(:start_date), do: ~t"Starts"
+  defp history_label(:expiration_date), do: ~t"Expires"
+  defp history_label(:usage_limit), do: ~t"Uses"
+
+  defp show(nil, _field, _locale), do: "—"
+  defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)
+  defp show(value, :minimum_cart_total, locale), do: Format.currency(Decimal.new(value), locale)
+
+  defp show(value, field, locale) when field in [:start_date, :expiration_date],
+    do: Format.date(Date.from_iso8601!(value), locale)
+
+  defp show(value, _field, _locale), do: to_string(value)
 
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
@@ -195,6 +249,25 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
           <.button type="submit" variant="primary">{~t"Save promotion"}</.button>
         </.form>
+
+        <.form_section :if={@history != []} title={~t"History"} class="mt-10">
+          <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
+            <li :for={entry <- @history} class="py-2 first:pt-0 last:pb-0">
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="text-base-content font-medium">{entry.title}</p>
+                <time datetime={DateTime.to_iso8601(entry.at)} class="text-base-content/65 shrink-0 text-xs tabular-nums">
+                  {Format.datetime(entry.at, @locale)}
+                </time>
+              </div>
+              <dl :if={entry.changes != []} class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+                <div :for={{label, from, to} <- entry.changes}>
+                  <dt class="text-base-content/65 text-xs">{label}</dt>
+                  <dd class="text-base-content/85 break-words">{from} → {to}</dd>
+                </div>
+              </dl>
+            </li>
+          </ol>
+        </.form_section>
       </.admin_page>
     </Layouts.admin>
     """
