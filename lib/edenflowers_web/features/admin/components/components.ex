@@ -152,7 +152,7 @@ defmodule EdenflowersWeb.Admin.Components do
   `width` is a semantic choice, not a measurement:
     * `wide`   — dashboards, calendars, anything multi-column
     * `narrow` — focused single-record views (detail/edit)
-    * `full`   — data tables that should use the whole canvas
+    * `full`   — data tables, capped so rows stay scannable on very wide screens
   """
   def admin_page(assigns) do
     ~H"""
@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Admin.Components do
   defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
 
-  defp admin_page_width_class("wide"), do: "max-w-4xl"
+  defp admin_page_width_class("wide"), do: "max-w-6xl"
   defp admin_page_width_class("narrow"), do: "max-w-2xl"
-  defp admin_page_width_class("full"), do: nil
+  defp admin_page_width_class("full"), do: "max-w-7xl"
 end

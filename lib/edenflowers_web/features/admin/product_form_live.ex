@@ -146,7 +146,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           id="product-form"
           phx-change="validate"
           phx-submit="save"
-          class="grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_16rem]"
+          class="grid grid-cols-1 gap-x-10 gap-y-10 xl:grid-cols-[minmax(0,1fr)_16rem]"
         >
           <div class="space-y-10">
             <.form_section title={~t"Name and description"}>
@@ -222,7 +222,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             </.form_section>
           </div>
 
-          <aside class="space-y-10 lg:sticky lg:top-6 lg:self-start">
+          <aside class="space-y-10 xl:sticky xl:top-6 xl:self-start">
             <.form_section title={~t"Photo"}>
               <.photo_input
                 field={@form[:image_slug]}
