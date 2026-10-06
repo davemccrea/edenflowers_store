@@ -146,44 +146,33 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           class="bg-warning/10 border-warning/40 mb-6 space-y-4 border p-4 sm:p-5"
         >
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base-content flex items-baseline gap-2 text-base font-semibold">
+            <h2 class="text-base-content text-base font-semibold">
               {if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
-              <span class="text-xl tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
+              <span class="tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
             </h2>
-            <div class="flex flex-wrap items-center gap-2">
-              <.button
-                :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
-                type="button"
-                phx-click="open_payment_link"
-                variant="ghost"
-                size="sm"
-              >
-                {~t"Create payment link"}
-              </.button>
-              <.button
-                :if={Decimal.positive?(@order.balance) && @order.customer_email}
-                type="button"
-                phx-click="email_payment_link"
-                data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
-                variant="primary"
-                size="sm"
-              >
-                <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
-              </.button>
-              <.button
-                :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
-                type="button"
-                phx-click="refund_with_stripe"
-                phx-disable-with={~t"Refunding…"}
-                data-confirm={
-                  ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
-                }
-                variant="primary"
-                size="sm"
-              >
-                {~t"Refund with Stripe"}
-              </.button>
-            </div>
+            <.button
+              :if={Decimal.positive?(@order.balance) && @order.customer_email}
+              type="button"
+              phx-click="email_payment_link"
+              data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
+              variant="primary"
+              size="sm"
+            >
+              <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+            </.button>
+            <.button
+              :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
+              type="button"
+              phx-click="refund_with_stripe"
+              phx-disable-with={~t"Refunding…"}
+              data-confirm={
+                ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
+              }
+              variant="primary"
+              size="sm"
+            >
+              {~t"Refund with Stripe"}
+            </.button>
           </div>
           <div :if={@order.payment_link_open?} id="order-payment-link">
             <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
@@ -223,12 +212,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </div>
           </div>
 
-          <details
-            id="in-person-payment"
-            phx-mounted={JS.ignore_attributes(["open"])}
-            class="border-warning/40 group border-t pt-4"
+          <.button
+            :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
+            type="button"
+            phx-click="open_payment_link"
+            variant="ghost"
+            size="sm"
           >
-            <summary class="text-warning-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
+            {~t"Create payment link"}
+          </.button>
+
+          <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
+            <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
               <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
               {if Decimal.positive?(@order.balance),
                 do: ~t"Record payment taken in person",
@@ -299,54 +294,70 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.button>
           </div>
 
-          <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
-            <.summary_fact label={~t"Date"}>
-              {Format.weekday_day_month(@order.fulfillment_date, @locale)}
-              <.relative_date_badge
-                :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
-                label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
-                tone={date_tone(@order.fulfillment_date)}
-              />
-            </.summary_fact>
-            <.summary_fact label={~t"Method"}>
-              <.fulfillment_method
-                method={@order.fulfillment_method}
-                label={present?(@order.fulfillment_option_name) && @order.fulfillment_option_name}
-                class="whitespace-normal"
-              />
-            </.summary_fact>
-            <.summary_fact
-              :if={@order.fulfillment_method == :delivery && present?(@order.delivery_address)}
-              label={~t"Deliver to"}
-            >
-              {@order.delivery_address}
-              <span :if={@order.distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
-                {@order.distance_km} km
-              </span>
-            </.summary_fact>
-          </div>
-
-          <div
-            :if={present?(@order.delivery_instructions)}
-            class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
-          >
-            <.icon name="hero-information-circle" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+          <%!-- On wide screens the map sits beside the facts rather than under them,
+               so what to make starts higher up the page. --%>
+          <div class={["grid grid-cols-1", delivery_map?(@order) && "xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start xl:gap-8"]}>
             <div>
-              <p class="text-warning-content text-sm font-semibold">{~t"Delivery instructions"}</p>
-              <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">{@order.delivery_instructions}</p>
-            </div>
-          </div>
+              <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
+                <.summary_fact label={~t"Date"}>
+                  {Format.weekday_day_month(@order.fulfillment_date, @locale)}
+                  <.relative_date_badge
+                    :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
+                    label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
+                    tone={date_tone(@order.fulfillment_date)}
+                  />
+                </.summary_fact>
+                <.summary_fact label={~t"Method"}>
+                  <.fulfillment_method
+                    method={@order.fulfillment_method}
+                    label={present?(@order.fulfillment_option_name) && @order.fulfillment_option_name}
+                    class="whitespace-normal"
+                  />
+                </.summary_fact>
+                <.summary_fact
+                  :if={@order.fulfillment_method == :delivery && present?(@order.delivery_address)}
+                  label={~t"Deliver to"}
+                >
+                  {@order.delivery_address}
+                  <span :if={@order.distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
+                    {@order.distance_km} km
+                  </span>
+                </.summary_fact>
+              </div>
 
-          <.delivery_map
-            :if={@order.fulfillment_method == :delivery}
-            position={parse_position(@order.position)}
-            token={@mapbox_token}
-            address={@order.delivery_address}
-          />
+              <div
+                :if={present?(@order.delivery_instructions)}
+                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
+              >
+                <.icon name="hero-information-circle" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p class="text-warning-content text-sm font-semibold">{~t"Delivery instructions"}</p>
+                  <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">{@order.delivery_instructions}</p>
+                </div>
+              </div>
+            </div>
+
+            <.delivery_map
+              :if={@order.fulfillment_method == :delivery}
+              position={parse_position(@order.position)}
+              token={@mapbox_token}
+              address={@order.delivery_address}
+            />
+          </div>
         </section>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
           <div class="space-y-6">
+            <.detail_section id="order-items" title={~t"To make"}>
+              <.readonly_line_items line_items={@order.line_items} />
+            </.detail_section>
+            <.detail_section :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
+              <blockquote
+                phx-no-format
+                class="text-base-content font-serif whitespace-pre-wrap break-words text-xl italic leading-relaxed"
+              >{@order.card_message}</blockquote>
+            </.detail_section>
+
             <.detail_section id="order-florist-note" title={~t"Florist note"}>
               <.form for={@note_form} id="florist-note-form" phx-submit="save_florist_note" class="space-y-3">
                 <.input
@@ -358,16 +369,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.button type="submit" variant="neutral" size="sm">{~t"Save note"}</.button>
               </.form>
-            </.detail_section>
-
-            <.detail_section id="order-items" title={~t"To make"}>
-              <.readonly_line_items line_items={@order.line_items} />
-            </.detail_section>
-            <.detail_section :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
-              <blockquote
-                phx-no-format
-                class="text-base-content font-serif whitespace-pre-wrap break-words text-xl italic leading-relaxed"
-              >{@order.card_message}</blockquote>
             </.detail_section>
 
             <.detail_section id="order-payment-summary" title={~t"Payment"}>
@@ -851,7 +852,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
 
     ~H"""
-    <div :if={@directions} class="border-base-content/12 mt-6 overflow-hidden border">
+    <div :if={@directions} class="border-base-content/12 mt-6 overflow-hidden border xl:mt-0">
       <a
         href={@directions}
         target="_blank"
@@ -1134,6 +1135,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
   # `position` is stored as a `"lat,lng"` string by HERE geocoding.
+  defp delivery_map?(order) do
+    order.fulfillment_method == :delivery &&
+      directions_url(parse_position(order.position), order.delivery_address) != nil
+  end
+
   defp parse_position(nil), do: nil
 
   defp parse_position(position) do
