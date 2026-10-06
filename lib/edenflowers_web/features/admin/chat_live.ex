@@ -25,15 +25,17 @@ defmodule EdenflowersWeb.Admin.ChatLive do
             <h1 class="text-base-content min-w-0 flex-1 truncate text-base font-semibold">
               {conversation_title(@conversation)}
             </h1>
-            <.link
+            <.button
               :if={@conversation}
               navigate={~p"/admin/chat"}
               aria-label={~t"New conversation"}
-              class="btn btn-sm btn-primary btn-outline shrink-0"
+              variant="neutral"
+              size="sm"
+              class="shrink-0"
             >
               <.icon name="hero-plus" class="h-4 w-4" />
               <span class="hidden sm:inline">{~t"New conversation"}</span>
-            </.link>
+            </.button>
             <button
               :if={@conversation}
               type="button"

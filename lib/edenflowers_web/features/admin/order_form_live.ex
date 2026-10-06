@@ -442,10 +442,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
             <.error :if={match?({nil, _message}, @line_error)}>{elem(@line_error, 1)}</.error>
             <div class="mt-4 flex flex-wrap gap-2">
-              <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="secondary" size="sm">
+              <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="neutral" size="sm">
                 <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
               </.button>
-              <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="secondary" size="sm">
+              <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="neutral" size="sm">
                 <.icon name="hero-plus" class="h-4 w-4" /> {~t"Item with your own price"}
               </.button>
             </div>

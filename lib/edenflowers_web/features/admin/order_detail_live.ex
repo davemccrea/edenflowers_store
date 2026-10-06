@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </span>
           </:subtitle>
           <:actions :if={@order.fulfillment_status == :pending}>
-            <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="secondary" size="sm">
+            <.button navigate={~p"/admin/orders/#{@order.id}/edit"} variant="ghost" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
             </.button>
             <.button
@@ -199,7 +199,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   aria-label={~t"Florist note"}
                   placeholder={~t"Only you see this: what was agreed, timings, anything to remember."}
                 />
-                <.button type="submit" variant="secondary" size="sm">{~t"Save note"}</.button>
+                <.button type="submit" variant="neutral" size="sm">{~t"Save note"}</.button>
               </.form>
             </.detail_section>
 
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
                   type="button"
                   phx-click="open_payment_link"
-                  variant="secondary"
+                  variant="ghost"
                   size="sm"
                 >
                   {~t"Create payment link"}

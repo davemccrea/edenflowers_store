@@ -115,10 +115,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.admin_page width="narrow">
         <.admin_page_header title={~t"Courses"}>
           <:actions>
-            <.link navigate={~p"/admin/courses/new"} class="btn btn-sm">
+            <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" />
               {~t"New course"}
-            </.link>
+            </.button>
           </:actions>
         </.admin_page_header>
 
@@ -189,26 +189,28 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         </p>
 
         <div class="mb-4 flex flex-wrap gap-2">
-          <a
+          <.button
             :if={@registrations != []}
             href={fastmail_compose(bcc: @bcc)}
             target="_blank"
             rel="noopener"
-            class="btn btn-sm"
+            variant="neutral"
+            size="sm"
           >
             <.icon name="hero-envelope" class="h-4 w-4" />
             {~t"Email everyone"}
-          </a>
-          <button
+          </.button>
+          <.button
             :if={is_nil(@booking_form)}
             type="button"
             phx-click="new_booking"
             phx-value-course-id={@course.id}
-            class="btn btn-sm"
+            variant="neutral"
+            size="sm"
           >
             <.icon name="hero-plus" class="h-4 w-4" />
             {~t"Add booking"}
-          </button>
+          </.button>
           <.link navigate={~p"/admin/courses/#{@course.id}"} class="btn btn-sm btn-ghost">
             <.icon name="hero-pencil-square" class="h-4 w-4" />
             {~t"Edit course"}
@@ -294,15 +296,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               >
                 {~t"Remove a seat"}
               </button>
-              <button
+              <.button
                 :if={registration.pays_at_course?}
                 type="button"
                 phx-click="mark_paid"
                 phx-value-id={registration.id}
-                class="btn btn-sm"
+                variant="neutral"
+                size="sm"
               >
                 {~t"Mark paid"}
-              </button>
+              </.button>
               <button
                 type="button"
                 phx-click="cancel"

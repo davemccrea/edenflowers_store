@@ -99,13 +99,14 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :rest, :global, include: ~w(href navigate patch method download target rel name value disabled type form)
   attr :class, :any, default: nil
-  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost text inverse destructive)
+  attr :variant, :string, default: "secondary", values: ~w(primary secondary neutral ghost text inverse destructive)
   attr :size, :string, default: "md", values: ~w(sm md lg)
   slot :inner_block, required: true
 
   @button_variants %{
     "primary" => "btn-primary",
     "secondary" => "btn-primary btn-outline",
+    "neutral" => "",
     "ghost" => "btn-ghost",
     "inverse" =>
       "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
