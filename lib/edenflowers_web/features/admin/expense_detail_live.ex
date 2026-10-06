@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <%!-- First in source order so Enter in a field saves without marking the expense reviewed. --%>
               <.button
                 type="submit"
-                variant={if is_nil(@expense.reviewed_at), do: "secondary", else: "primary"}
+                variant={if is_nil(@expense.reviewed_at), do: "neutral", else: "primary"}
                 class="w-full sm:w-auto"
               >
                 {~t"Save corrections"}

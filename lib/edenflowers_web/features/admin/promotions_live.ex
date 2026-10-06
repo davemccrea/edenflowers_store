@@ -32,10 +32,10 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
       <.admin_page width="full">
         <.admin_page_header title={~t"Promotions"}>
           <:actions>
-            <.link navigate={~p"/admin/promotions/new"} class="btn btn-sm">
+            <.button navigate={~p"/admin/promotions/new"} variant="neutral" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" />
               {~t"New promotion"}
-            </.link>
+            </.button>
           </:actions>
         </.admin_page_header>
 

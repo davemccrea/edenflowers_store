@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                       :if={@current_user.avatar_content_type}
                       type="button"
                       phx-click="remove_avatar"
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       class="max-sm:h-11"
                     >
@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           </dl>
 
           <div class="border-base-content/12 mt-5 border-t pt-5">
-            <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="max-sm:h-11">
+            <.button href={~p"/sign-out"} method="delete" variant="neutral" size="sm" class="max-sm:h-11">
               <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
               {~t"Sign out"}
             </.button>
