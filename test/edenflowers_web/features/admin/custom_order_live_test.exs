@@ -269,7 +269,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/#{order.payment_link_token}"]|)
       assert has_element?(view, "header", "Unpaid")
-      assert has_element?(view, "header", "Custom order")
     end
 
     test "records an in-person payment", ctx do

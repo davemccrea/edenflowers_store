@@ -98,9 +98,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <span class="sr-only">{~t"Fulfillment:"}</span>
                   <.fulfillment_status_badge status={@order.fulfillment_status} />
                 </span>
-                <span :if={@order.origin == :custom} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
-                  {~t"Custom order"}
-                </span>
                 <.gift_badge :if={@order.gift} order={@order} />
               </span>
             </span>
