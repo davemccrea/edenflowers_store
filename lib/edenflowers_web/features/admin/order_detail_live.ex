@@ -296,12 +296,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                       phx-click={
                         JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})
                       }
-                      class="btn btn-primary btn-outline btn-sm btn-square group"
+                      class="btn btn-ghost btn-sm btn-square group"
                       title={~t"Copy payment link"}
                       aria-label={~t"Copy payment link"}
                     >
                       <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
-                      <.icon name="hero-check" class="hidden h-4 w-4 group-data-copied:inline-block" />
+                      <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
                       <span class="sr-only" aria-live="polite">
                         <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
                       </span>
