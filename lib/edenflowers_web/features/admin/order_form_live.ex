@@ -421,7 +421,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               <.input
                 field={@form[:locale]}
                 type="select"
-                label={~t"Language for emails and the payment page"}
+                label={~t"Language"}
+                help={~t"Used for their emails and the payment page."}
                 options={locale_options()}
               />
             </div>

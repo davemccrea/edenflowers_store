@@ -3781,11 +3781,6 @@ msgstr "Tuote omalla hinnalla"
 msgid "Items"
 msgstr "Tuotteet"
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:424
-#, elixir-autogen, elixir-format
-msgid "Language for emails and the payment page"
-msgstr "Sähköpostien ja maksusivun kieli"
-
 #: lib/edenflowers_web/features/admin/order_form_live.ex:494
 #, elixir-autogen, elixir-format
 msgid "Leave blank to calculate it as checkout would. 0 for free."
@@ -4291,3 +4286,8 @@ msgstr "Puhelinnumero tai sähköposti tarvitaan. Sähköpostin kanssa tilaus n�
 #, elixir-autogen, elixir-format
 msgid "Copy payment link"
 msgstr "Kopioi maksulinkki"
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:425
+#, elixir-autogen, elixir-format
+msgid "Used for their emails and the payment page."
+msgstr "Käytetään asiakkaan sähköposteissa ja maksusivulla."

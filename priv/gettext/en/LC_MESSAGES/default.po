@@ -3781,11 +3781,6 @@ msgstr ""
 msgid "Items"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:424
-#, elixir-autogen, elixir-format
-msgid "Language for emails and the payment page"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_form_live.ex:494
 #, elixir-autogen, elixir-format
 msgid "Leave blank to calculate it as checkout would. 0 for free."
@@ -4290,4 +4285,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:301
 #, elixir-autogen, elixir-format
 msgid "Copy payment link"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:425
+#, elixir-autogen, elixir-format
+msgid "Used for their emails and the payment page."
 msgstr ""
