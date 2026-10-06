@@ -143,39 +143,50 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <section
           :if={owes_money?(@order)}
           id="order-collect"
-          class="bg-warning/10 border-warning/40 mb-6 space-y-4 border p-4 sm:p-5"
+          class="bg-warning/10 border-warning/40 mb-6 border p-4 sm:p-5"
         >
-          <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
             <h2 class="text-base-content text-base font-semibold">
               {if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
               <span class="tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
             </h2>
-            <.button
-              :if={Decimal.positive?(@order.balance) && @order.customer_email}
-              type="button"
-              phx-click="email_payment_link"
-              data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
-              variant="primary"
-              size="sm"
-            >
-              <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
-            </.button>
-            <.button
-              :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
-              type="button"
-              phx-click="refund_with_stripe"
-              phx-disable-with={~t"Refunding…"}
-              data-confirm={
-                ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
-              }
-              variant="primary"
-              size="sm"
-            >
-              {~t"Refund with Stripe"}
-            </.button>
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+              <.button
+                :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
+                type="button"
+                phx-click="open_payment_link"
+                variant="ghost"
+                size="sm"
+              >
+                {~t"Create payment link"}
+              </.button>
+              <.button
+                :if={Decimal.positive?(@order.balance) && @order.customer_email}
+                type="button"
+                phx-click="email_payment_link"
+                data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
+                variant="primary"
+                size="sm"
+              >
+                <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+              </.button>
+              <.button
+                :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
+                type="button"
+                phx-click="refund_with_stripe"
+                phx-disable-with={~t"Refunding…"}
+                data-confirm={
+                  ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
+                }
+                variant="primary"
+                size="sm"
+              >
+                {~t"Refund with Stripe"}
+              </.button>
+            </div>
           </div>
-          <div :if={@order.payment_link_open?} id="order-payment-link">
-            <label for="payment-link-url" class="text-base-content/65 mb-1.5 block text-xs font-semibold">
+          <div :if={@order.payment_link_open?} id="order-payment-link" class="mb-5">
+            <label for="payment-link-url" class="eyebrow text-base-content/65 mb-1.5 block">
               {~t"Payment link"}
             </label>
             <div class="flex gap-2">
@@ -212,22 +223,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </div>
           </div>
 
-          <.button
-            :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
-            type="button"
-            phx-click="open_payment_link"
-            variant="ghost"
-            size="sm"
-          >
-            {~t"Create payment link"}
-          </.button>
-
           <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group">
-            <summary class="text-base-content/75 flex cursor-pointer list-none items-center gap-1 text-sm font-medium hover:text-base-content">
-              <.icon name="hero-chevron-right" class="h-4 w-4 transition-transform group-open:rotate-90" />
+            <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
               {if Decimal.positive?(@order.balance),
                 do: ~t"Record payment taken in person",
                 else: ~t"Record refund given in person"}
+              <.icon
+                name="hero-chevron-right"
+                class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+              />
             </summary>
             <.form
               for={@in_person_form}
@@ -472,7 +476,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </.person_block>
             </.detail_section>
 
-            <.detail_section id="order-log" title={~t"Log"}>
+            <.detail_section id="order-log" title={~t"History"}>
               <ol class="divide-base-content/8 divide-y text-sm">
                 <li :for={{entry, index} <- Enum.with_index(@log)} class="py-2 first:pt-0 last:pb-0">
                   <.log_heading :if={entry.details == []} entry={entry} locale={@locale} />
