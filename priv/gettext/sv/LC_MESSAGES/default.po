@@ -899,8 +899,8 @@ msgstr "Administratörens kontomeny"
 msgid "Admin navigation"
 msgstr "Adminnavigation"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:80
-#: lib/edenflowers_web/features/admin/expenses_live.ex:110
+#: lib/edenflowers_web/features/admin/expenses_live.ex:93
+#: lib/edenflowers_web/features/admin/expenses_live.ex:123
 #: lib/edenflowers_web/features/admin/orders_live.ex:85
 #: lib/edenflowers_web/features/admin/orders_live.ex:99
 #: lib/edenflowers_web/features/admin/orders_live.ex:129
@@ -915,7 +915,7 @@ msgstr "Alla"
 msgid "All options"
 msgstr "Alla alternativ"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:71
+#: lib/edenflowers_web/features/admin/expenses_live.ex:84
 #, elixir-autogen, elixir-format
 msgid "Amount"
 msgstr "Belopp"
@@ -943,8 +943,8 @@ msgid "Cart total must be at least %{edenflowers_format_currency} to use this pr
 msgstr "Varukorgens summa måste vara minst %{edenflowers_format_currency} för att kampanjen ska gälla"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:118
-#: lib/edenflowers_web/features/admin/expenses_live.ex:110
-#: lib/edenflowers_web/features/admin/expenses_live.ex:111
+#: lib/edenflowers_web/features/admin/expenses_live.ex:123
+#: lib/edenflowers_web/features/admin/expenses_live.ex:124
 #: lib/edenflowers_web/features/admin/product_form_live.ex:240
 #: lib/edenflowers_web/features/admin/products_live.ex:65
 #: lib/edenflowers_web/features/admin/products_live.ex:66
@@ -953,8 +953,8 @@ msgid "Category"
 msgstr "Kategori"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:63
-#: lib/edenflowers_web/features/admin/expenses_live.ex:80
-#: lib/edenflowers_web/features/admin/expenses_live.ex:81
+#: lib/edenflowers_web/features/admin/expenses_live.ex:93
+#: lib/edenflowers_web/features/admin/expenses_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Confidence"
 msgstr "Tillförlitlighet"
@@ -994,7 +994,7 @@ msgstr "Översikt"
 #: lib/edenflowers_web/features/account/account_live.ex:64
 #: lib/edenflowers_web/features/admin/course_form_live.ex:106
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:93
-#: lib/edenflowers_web/features/admin/expenses_live.ex:50
+#: lib/edenflowers_web/features/admin/expenses_live.ex:63
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:155
 #: lib/edenflowers_web/features/admin/order_form_live.ex:482
 #: lib/edenflowers_web/features/admin/order_log.ex:94
@@ -1030,7 +1030,7 @@ msgstr "Rabatt (%{code})"
 msgid "Discount (%{name})"
 msgstr "Rabatt (%{name})"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:39
+#: lib/edenflowers_web/features/admin/expenses_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "Expense"
 msgstr "Utgift"
@@ -1274,10 +1274,10 @@ msgstr "Återbetald"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:44
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:84
-#: lib/edenflowers_web/features/admin/expenses_live.ex:67
-#: lib/edenflowers_web/features/admin/expenses_live.ex:93
-#: lib/edenflowers_web/features/admin/expenses_live.ex:95
-#: lib/edenflowers_web/features/admin/expenses_live.ex:100
+#: lib/edenflowers_web/features/admin/expenses_live.ex:80
+#: lib/edenflowers_web/features/admin/expenses_live.ex:106
+#: lib/edenflowers_web/features/admin/expenses_live.ex:108
+#: lib/edenflowers_web/features/admin/expenses_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Reviewed"
 msgstr "Granskad"
@@ -1293,7 +1293,7 @@ msgstr "Spara korrigeringar"
 msgid "Search Fastmail for this address"
 msgstr "Sök efter adressen i Fastmail"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:40
+#: lib/edenflowers_web/features/admin/expenses_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "Search vendor or description…"
 msgstr "Sök leverantör eller beskrivning…"
@@ -1345,7 +1345,7 @@ msgid "Unavailable to customers"
 msgstr "Inte tillgänglig för kunder"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:38
-#: lib/edenflowers_web/features/admin/expenses_live.ex:58
+#: lib/edenflowers_web/features/admin/expenses_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "Unknown vendor"
 msgstr "Okänd leverantör"
@@ -1365,7 +1365,7 @@ msgstr "Momsbelopp"
 msgid "VAT number"
 msgstr "Momsnummer"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:56
+#: lib/edenflowers_web/features/admin/expenses_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Vendor"
 msgstr "Leverantör"
@@ -2179,13 +2179,13 @@ msgstr "Öppna kvittot i Papra"
 msgid "No amount"
 msgstr "Inget belopp"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:93
-#: lib/edenflowers_web/features/admin/expenses_live.ex:103
+#: lib/edenflowers_web/features/admin/expenses_live.ex:106
+#: lib/edenflowers_web/features/admin/expenses_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Not reviewed"
 msgstr "Inte granskad"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:92
+#: lib/edenflowers_web/features/admin/expenses_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Review"
 msgstr "Granskning"
@@ -4468,3 +4468,8 @@ msgstr "Mejla betalningslänken igen"
 #, elixir-autogen, elixir-format
 msgid "Last sent %{time}."
 msgstr "Senast skickat %{time}."
+
+#: lib/edenflowers_web/features/admin/expenses_live.ex:40
+#, elixir-autogen, elixir-format
+msgid "Open Papra"
+msgstr "Öppna Papra"

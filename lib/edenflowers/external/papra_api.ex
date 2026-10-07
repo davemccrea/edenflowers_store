@@ -32,9 +32,13 @@ defmodule Edenflowers.External.PapraAPI do
     end
   end
 
-  def document_url(document_id) do
+  def documents_url do
     org_id = Application.get_env(:edenflowers, :papra_organization_id)
-    "#{base_url()}/organizations/#{org_id}/documents/#{document_id}/pdf-viewer"
+    "#{base_url()}/organizations/#{org_id}/documents"
+  end
+
+  def document_url(document_id) do
+    "#{documents_url()}/#{document_id}/pdf-viewer"
   end
 
   defp base_url, do: Application.get_env(:edenflowers, :papra_base_url)
