@@ -20,15 +20,15 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
       changeset
     else
       order_id = Ash.Changeset.get_attribute(changeset, :order_id)
-      subscribable? = Ash.Changeset.get_attribute(changeset, :subscribable)
+      subscription? = not is_nil(Ash.Changeset.get_attribute(changeset, :interval_weeks))
 
       others =
         LineItem
         |> Ash.Query.filter(order_id == ^order_id and is_card == false)
-        |> Ash.Query.select([:subscribable])
+        |> Ash.Query.select([:interval_weeks])
         |> Ash.read!(authorize?: false)
 
-      if others != [] and (subscribable? or Enum.any?(others, & &1.subscribable)) do
+      if others != [] and (subscription? or Enum.any?(others, & &1.interval_weeks)) do
         Ash.Changeset.add_error(changeset,
           field: :product_variant_id,
           message: ~t"A subscription is checked out on its own"

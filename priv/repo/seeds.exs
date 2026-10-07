@@ -324,9 +324,10 @@ subscription_product =
   Ash.Changeset.for_create(Product, :create, %{
     product_category_id: subscriptions_category.id,
     tax_rate_id: tax_rate.id,
-    name: "Seasonal bouquet subscription",
+    name: "Weekly bouquet",
     image_slug: "https://placehold.co/400x400",
-    description: "A florist's-choice bouquet of whatever is best that week, delivered on your schedule.",
+    description:
+      "A florist's-choice bouquet of whatever is best that week. Buy one, or subscribe to have it delivered every one, two or four weeks.",
     draft: false,
     free_delivery: true,
     subscribable: true

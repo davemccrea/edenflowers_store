@@ -51,20 +51,33 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     %{conn: conn, step_3_order: step_3_order, delivery_option: delivery_option}
   end
 
-  describe "Step 3 for a subscription" do
-    test "asks how often and offers delivery only", %{conn: conn} do
-      subscription_variant =
-        generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
+  describe "Step 3 for a subscribable product" do
+    setup do
+      %{
+        variant: generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
+      }
+    end
 
+    test "subscribed to, shows how often and offers delivery only", %{conn: conn, variant: variant} do
       order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
-      Orders.add_line_item!(order.id, subscription_variant.id, 1, authorize?: false)
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
-      assert has_element?(view, "[data-testid=subscription-interval-selector]")
-      assert has_element?(view, "label", "Every 2 weeks")
+      assert has_element?(view, "#checkout-line-items", "Subscription · Every 2 weeks")
       refute has_element?(view, "label", "Fulfillment Option")
+    end
+
+    test "bought once, can be picked up", %{conn: conn, variant: variant} do
+      order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      refute has_element?(view, "#checkout-line-items", "Subscription")
+      assert has_element?(view, "label", "Fulfillment Option")
     end
   end
 

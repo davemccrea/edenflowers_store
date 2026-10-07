@@ -54,10 +54,11 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   describe "a subscription cart" do
     test "holds the subscription alone, with a card if wanted", ctx do
       order = generate(order())
-      generate(line_item(order_id: order.id, product_variant_id: ctx.subscription_variant.id))
+      subscribe(order, ctx.subscription_variant, 2)
 
       assert {:error, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, authorize?: false)
       assert {:error, _} = Orders.add_line_item(order.id, ctx.subscription_variant.id, 1, authorize?: false)
+      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
       assert {:ok, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, %{is_card: true}, authorize?: false)
     end
 
@@ -65,32 +66,71 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       order = generate(order())
       generate(line_item(order_id: order.id, product_variant_id: ctx.bouquet_variant.id))
 
-      assert {:error, _} = Orders.add_line_item(order.id, ctx.subscription_variant.id, 1, authorize?: false)
+      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
+    end
+
+    test "isn't merged into a one-off of the same size", ctx do
+      order = generate(order())
+      Orders.add_line_item!(order.id, ctx.subscription_variant.id, 1, authorize?: false)
+
+      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
+
+      assert [%LineItem{quantity: 1, interval_weeks: nil}] = Ash.read!(LineItem, authorize?: false)
+      refute Ash.load!(order, :subscription?, authorize?: false).subscription?
     end
 
     test "is for one bouquet", ctx do
       order = generate(order())
-      line_item = generate(line_item(order_id: order.id, product_variant_id: ctx.subscription_variant.id))
+      {:ok, line_item} = subscribe(order, ctx.subscription_variant, 2)
 
       assert %LineItem{quantity: 1} = Orders.increment_line_item!(line_item, authorize?: false)
+    end
+
+    test "is refused for a product that can't be subscribed to", ctx do
+      order = generate(order())
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :interval_weeks}]}} =
+               subscribe(order, ctx.bouquet_variant, 2)
+    end
+
+    test "is refused for an interval other than 1, 2 or 4 weeks", ctx do
+      order = generate(order())
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :interval_weeks}]}} =
+               subscribe(order, ctx.subscription_variant, 3)
     end
 
     test "rejects pickup", ctx do
       order = subscription_cart(ctx, state: :delivery)
 
       assert {:error, %Ash.Error.Invalid{errors: errors}} =
-               submit_delivery(order, %{fulfillment_option_id: ctx.pickup.id, subscription_interval_weeks: 2})
+               submit_delivery(order, %{fulfillment_option_id: ctx.pickup.id})
 
       assert Enum.any?(errors, &(&1.field == :fulfillment_option_id))
     end
+  end
 
-    test "must say how often", ctx do
-      order = subscription_cart(ctx, state: :delivery)
+  describe "a subscribable product bought once" do
+    test "shares the cart and adds up like any product", ctx do
+      order = generate(order())
 
-      assert {:error, %Ash.Error.Invalid{errors: errors}} =
-               submit_delivery(order, %{fulfillment_option_id: ctx.delivery.id, subscription_interval_weeks: 3})
+      Orders.add_line_item!(order.id, ctx.bouquet_variant.id, 1, authorize?: false)
+      Orders.add_line_item!(order.id, ctx.subscription_variant.id, 1, authorize?: false)
+      line_item = Orders.add_line_item!(order.id, ctx.subscription_variant.id, 1, authorize?: false)
 
-      assert Enum.any?(errors, &(&1.field == :subscription_interval_weeks))
+      assert %LineItem{quantity: 3, interval_weeks: nil} = Orders.increment_line_item!(line_item, authorize?: false)
+      refute Ash.load!(order, :subscription?, authorize?: false).subscription?
+    end
+
+    test "can be picked up and starts no subscription", ctx do
+      order = subscription_cart(ctx, state: :delivery, interval_weeks: nil)
+
+      assert {:ok, %Order{fulfillment_method: :pickup} = order} =
+               submit_delivery(order, %{fulfillment_option_id: ctx.pickup.id})
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+
+      assert Ash.read!(Subscription, authorize?: false) == []
     end
   end
 
@@ -176,7 +216,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
     end
 
     test "an ordinary order starts none", ctx do
-      order = subscription_cart(ctx, state: :payment, variant: ctx.bouquet_variant)
+      order = subscription_cart(ctx, state: :payment, variant: ctx.bouquet_variant, interval_weeks: nil)
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
 
@@ -186,6 +226,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
   defp subscription_cart(ctx, opts) do
     {variant, opts} = Keyword.pop(opts, :variant, ctx.subscription_variant)
+    {interval_weeks, opts} = Keyword.pop(opts, :interval_weeks, 2)
     {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
 
     order =
@@ -205,15 +246,18 @@ defmodule Edenflowers.Orders.SubscriptionTest do
             fulfillment_option_id: ctx.delivery.id,
             fulfillment_method: :delivery,
             fulfillment_date: Date.add(Date.utc_today(), 3),
-            subscription_interval_weeks: 2,
             quoted_fulfillment_fee: Decimal.new("0"),
             payment_intent_id: "pi_#{System.unique_integer([:positive])}"
           ] ++ opts
         )
       )
 
-    generate(line_item(order_id: order.id, product_variant_id: variant.id))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, interval_weeks: interval_weeks))
     order
+  end
+
+  defp subscribe(order, variant, interval_weeks) do
+    Orders.add_line_item(order.id, variant.id, 1, %{interval_weeks: interval_weeks}, authorize?: false)
   end
 
   defp submit_delivery(order, params) do

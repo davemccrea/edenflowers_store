@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
   use EdenflowersWeb, :live_component
 
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Checkout.Fields
 
   attr :id, :string, required: true
   attr :order, :any, required: true
@@ -53,6 +54,9 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   <span :if={line_item.variant_size} class="font-serif text-base-content/65 text-sm italic leading-none">
                     {String.capitalize(to_string(line_item.variant_size))}
                   </span>
+                  <span :if={line_item.interval_weeks} class="text-base-content/65 text-sm">
+                    {~t"Subscription"} · {Fields.interval_label(line_item.interval_weeks)}
+                  </span>
                 </div>
                 <span class="shrink-0 tabular-nums">{Edenflowers.Format.currency(line_item.subtotal, @order.locale)}</span>
               </div>
@@ -60,7 +64,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <%!-- gap-2 and the 4rem mobile thumbnail are load-bearing: three 3rem
               buttons only fit on one line down to 320px with this budget. --%>
               <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-2">
-                <div :if={not line_item.subscribable} class="flex flex-row items-center gap-2">
+                <div :if={is_nil(line_item.interval_weeks)} class="flex flex-row items-center gap-2">
                   <.icon_button
                     size="lg"
                     id={"#{@id}-decrement-#{line_item.id}"}

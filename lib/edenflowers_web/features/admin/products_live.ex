@@ -96,6 +96,12 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           <:col :let={product} field="featured" sort label={~t"Featured"} class="max-sm:hidden">
             <.icon :if={product.featured} name="hero-star-solid" class="text-primary h-4 w-4" />
           </:col>
+          <:col :let={product} field="subscribable" sort label={~t"Subscription"} class="max-sm:hidden">
+            <span :if={product.subscribable}>
+              <.icon name="hero-arrow-path" class="text-primary h-4 w-4" />
+              <span class="sr-only">{~t"Can be bought as a subscription"}</span>
+            </span>
+          </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>

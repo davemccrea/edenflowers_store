@@ -122,7 +122,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert order.delivery_instructions == "Door code 1234"
     assert order.locale == "fi"
     assert order.order_reference
-    assert [%{product_variant_id: variant_id, free_delivery: true}] = order.line_items
+    assert [%{product_variant_id: variant_id, free_delivery: true, interval_weeks: nil}] = order.line_items
     assert variant_id == ctx.variant.id
     assert Decimal.equal?(order.fulfillment_fee, 0)
     assert Decimal.equal?(order.grand_total, "60.00")
