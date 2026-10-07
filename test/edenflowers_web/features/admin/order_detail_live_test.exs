@@ -69,6 +69,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     assert has_element?(view, ~s|button[phx-click="email_receipt"]|, "Resend receipt")
+    assert has_element?(view, ~s|button[phx-click="email_receipt"][data-confirm^="Last sent "]|)
+  end
+
+  test "the payment link button says Resend once the link has been emailed", %{conn: conn} do
+    order = placed_order()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Email payment link")
+    assert has_element?(view, ~s|button[phx-click="email_payment_link"][data-confirm^="Email a payment link"]|)
+
+    Ash.Seed.update!(order, %{payment_link_token: "tok_resend_label", details_emailed_at: DateTime.utc_now()})
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Resend payment link")
   end
 
   test "the actions menu says why each action is unavailable", %{conn: conn} do
