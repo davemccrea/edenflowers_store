@@ -45,6 +45,7 @@ defmodule Edenflowers.Catalog.Product do
         :draft,
         :featured,
         :free_delivery,
+        :subscribable,
         :translations
       ]
 
@@ -68,6 +69,7 @@ defmodule Edenflowers.Catalog.Product do
         :draft,
         :featured,
         :free_delivery,
+        :subscribable,
         :translations
       ]
 
@@ -99,6 +101,14 @@ defmodule Edenflowers.Catalog.Product do
     end
   end
 
+  # Subscribers always get free delivery inside the free zone; unticking it
+  # would silently start charging every occurrence.
+  validations do
+    validate attribute_equals(:free_delivery, true),
+      where: [attribute_equals(:subscribable, true)],
+      message: "must be on for a subscription product"
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
@@ -107,6 +117,9 @@ defmodule Edenflowers.Catalog.Product do
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
     attribute :free_delivery, :boolean, allow_nil?: false, default: false
+    # A florist's-choice bouquet bought as a Subscription: checked out on its
+    # own, delivered every few weeks.
+    attribute :subscribable, :boolean, allow_nil?: false, default: false
   end
 
   relationships do

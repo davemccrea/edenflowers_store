@@ -138,10 +138,16 @@ defmodule EdenflowersWeb.Checkout.Fields do
     method_label = if method == :delivery, do: ~t"Home delivery", else: ~t"In-store pickup"
     address = if method == :delivery, do: order.delivery_address, else: nil
 
-    [method_label, Format.weekday_date(date, Format.locale()), address]
+    interval = if order.subscription?, do: interval_label(order.subscription_interval_weeks)
+
+    [method_label, interval, Format.weekday_date(date, Format.locale()), address]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" · ")
   end
 
   defp step_summary(_, _), do: nil
+
+  def interval_label(1), do: ~t"Every week"
+  def interval_label(2), do: ~t"Every 2 weeks"
+  def interval_label(4), do: ~t"Every 4 weeks"
 end

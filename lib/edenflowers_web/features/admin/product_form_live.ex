@@ -259,6 +259,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     type="checkbox"
                     label={~t"Free delivery within #{km = @free_dist_km} km"}
                   />
+                  <.input
+                    field={@form[:subscribable]}
+                    type="checkbox"
+                    label={~t"Subscription (florist's choice every few weeks)"}
+                  />
                 </div>
               </div>
             </.form_section>

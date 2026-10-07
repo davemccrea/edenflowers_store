@@ -177,6 +177,7 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
       {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/customers", ~t"Customers", true, "hero-users"},
+      {"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
       {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
       {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},

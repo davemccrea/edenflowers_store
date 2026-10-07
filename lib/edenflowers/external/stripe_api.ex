@@ -5,6 +5,9 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   """
 
   @callback create_payment_intent(amount_cents :: integer(), metadata :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_payment_intent_saving_card(amount_cents :: integer(), metadata :: map(), customer_id :: String.t()) ::
+              {:ok, map()} | {:error, term()}
+  @callback create_customer(params :: map()) :: {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
               {:ok, map()} | {:error, term()}
@@ -48,6 +51,25 @@ defmodule Edenflowers.External.StripeAPI do
       automatic_payment_methods: %{enabled: true},
       metadata: metadata
     })
+  end
+
+  # Stripe offers only the payment methods that can be charged again
+  # off-session once `setup_future_usage` is set.
+  @impl true
+  def create_payment_intent_saving_card(amount_cents, metadata, customer_id) do
+    Stripe.PaymentIntent.create(%{
+      amount: amount_cents,
+      currency: "EUR",
+      automatic_payment_methods: %{enabled: true},
+      customer: customer_id,
+      setup_future_usage: "off_session",
+      metadata: metadata
+    })
+  end
+
+  @impl true
+  def create_customer(params) do
+    Stripe.Customer.create(params)
   end
 
   @impl true

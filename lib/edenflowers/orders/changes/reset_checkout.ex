@@ -25,6 +25,7 @@ defmodule Edenflowers.Orders.Changes.ResetCheckout do
                  card_message: nil,
                  recipient_phone_number: nil,
                  fulfillment_date: nil,
+                 subscription_interval_weeks: nil,
                  fulfillment_option_id: nil,
                  fulfillment_method: nil,
                  fulfillment_tax_rate: nil,
