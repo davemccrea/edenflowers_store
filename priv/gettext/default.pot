@@ -1456,7 +1456,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:51
 #, elixir-autogen, elixir-format
-msgid "We sent a 6-digit code to"
+msgid "A 6-digit code was sent to"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:29
