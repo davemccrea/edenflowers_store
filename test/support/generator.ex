@@ -82,7 +82,8 @@ defmodule Generator do
         name: StreamData.repeatedly(fn -> "Product #{System.unique_integer([:positive])}" end),
         description: "Product description",
         image_slug: "image.png",
-        free_delivery: false
+        free_delivery: false,
+        subscribable: false
       },
       overrides: opts,
       authorize?: false

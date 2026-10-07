@@ -36,6 +36,7 @@ defmodule Edenflowers.Orders.LineItem do
       upsert_fields [:quantity]
 
       change Edenflowers.Orders.Changes.PopulateFromVariant
+      change Edenflowers.Orders.Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
@@ -50,8 +51,9 @@ defmodule Edenflowers.Orders.LineItem do
       require_atomic? false
     end
 
+    # A subscription is for one bouquet each time.
     update :increment_quantity do
-      change atomic_update(:quantity, expr(quantity + 1))
+      change atomic_update(:quantity, expr(if(subscribable, quantity, quantity + 1)))
     end
 
     update :decrement_quantity do
@@ -108,6 +110,7 @@ defmodule Edenflowers.Orders.LineItem do
     attribute :is_card, :boolean, default: false, allow_nil?: false
     # Snapshotted from the product, so unflagging it later leaves existing orders' fees alone.
     attribute :free_delivery, :boolean, default: false, allow_nil?: false
+    attribute :subscribable, :boolean, default: false, allow_nil?: false
     attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
     timestamps()
   end

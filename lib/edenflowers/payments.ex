@@ -32,9 +32,7 @@ defmodule Edenflowers.Payments do
   or `grand_total` at checkout, before anything has been paid.
   """
   def setup(%{payment_intent_id: nil} = payable, actor) do
-    amount_cents = StripeAPI.to_stripe_amount(expected_amount(payable))
-
-    case stripe_api().create_payment_intent(amount_cents, %{metadata_key(payable) => payable.id}) do
+    case create_payment_intent(payable) do
       {:ok, payment_intent} ->
         persist_payment_intent(payable, payment_intent, actor)
 
@@ -55,6 +53,24 @@ defmodule Edenflowers.Payments do
     end
   end
 
+  # A subscription cart saves its card to a Stripe Customer, so later
+  # deliveries can be charged without the customer present.
+  defp create_payment_intent(payable) do
+    amount_cents = StripeAPI.to_stripe_amount(expected_amount(payable))
+    metadata = %{metadata_key(payable) => payable.id}
+
+    case payable do
+      %Order{subscription?: true} ->
+        with {:ok, customer} <-
+               stripe_api().create_customer(%{email: payable.customer_email, name: payable.customer_name}) do
+          stripe_api().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
+        end
+
+      _ ->
+        stripe_api().create_payment_intent(amount_cents, metadata)
+    end
+  end
+
   @doc "Brings the order's PaymentIntent amount in line with what it still owes."
   def update_amount(%Order{} = order) do
     stripe_api().update_payment_intent(order.payment_intent_id, StripeAPI.to_stripe_amount(expected_amount(order)))
@@ -72,7 +88,7 @@ defmodule Edenflowers.Payments do
     with {:ok, {_key, id} = ref} <- find_payable(payment_intent) do
       amount_paid = StripeAPI.from_stripe_amount(payment_intent.amount_received)
 
-      case complete_payable(ref, payment_intent.id, amount_paid) do
+      case complete_payable(ref, payment_intent, amount_paid) do
         :already_recorded ->
           {:ok, :already_completed}
 
@@ -327,24 +343,37 @@ defmodule Edenflowers.Payments do
   # A recorded PaymentIntent is a redelivery. Otherwise a checkout payment
   # places the order, and a payment link payment, on an order already placed,
   # only records the money.
-  defp complete_payable({"order_id", id}, payment_intent_id, amount_paid) do
+  defp complete_payable({"order_id", id}, payment_intent, amount_paid) do
     with {:ok, order} <- Orders.get_order_by_id(id, actor: system_actor()) do
       cond do
-        recorded?(payment_intent_id) ->
+        recorded?(payment_intent.id) ->
           :already_recorded
 
         order.state == :placed ->
-          Orders.record_link_payment(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+          Orders.record_link_payment(order, payment_intent.id, %{amount_paid: amount_paid}, actor: system_actor())
 
         true ->
-          Orders.finalize_checkout(order, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+          Orders.finalize_checkout(
+            order,
+            payment_intent.id,
+            %{
+              amount_paid: amount_paid,
+              stripe_customer_id: stripe_id(Map.get(payment_intent, :customer)),
+              stripe_payment_method_id: stripe_id(Map.get(payment_intent, :payment_method))
+            },
+            actor: system_actor()
+          )
       end
     end
   end
 
-  defp complete_payable({"course_registration_id", id}, payment_intent_id, amount_paid) do
-    Courses.confirm_registration_payment(id, payment_intent_id, %{amount_paid: amount_paid}, actor: system_actor())
+  defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid) do
+    Courses.confirm_registration_payment(id, payment_intent.id, %{amount_paid: amount_paid}, actor: system_actor())
   end
+
+  # Stripe sends an id, or the object itself when it was expanded.
+  defp stripe_id(%{id: id}), do: id
+  defp stripe_id(id), do: id
 
   defp recorded?(payment_intent_id) do
     Payment

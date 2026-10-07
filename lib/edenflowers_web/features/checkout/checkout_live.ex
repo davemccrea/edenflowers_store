@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   require Logger
 
   import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
+  alias EdenflowersWeb.Checkout.Fields
   import EdenflowersWeb.KeyDateIcon
 
   alias Edenflowers.Catalog.ProductVariantSize
@@ -14,7 +15,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Fulfillment
 
   alias Edenflowers.Catalog
-  alias Edenflowers.Orders.{Order}
+  alias Edenflowers.Orders.{Order, Subscription}
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
@@ -172,7 +173,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       :let={option}
                       type="radio-card"
                       field={@form[:fulfillment_option_id]}
-                      options={Enum.map(@fulfillment_options, fn %{id: id, name: name} -> %{name: name, value: id} end)}
+                      options={
+                        Enum.map(available_options(@fulfillment_options, @order), fn %{id: id, name: name} ->
+                          %{name: name, value: id}
+                        end)
+                      }
                       label={~t"Delivery method *"}
                     >
                       {option.name}
@@ -187,6 +192,22 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       phx-submit="save_form"
                       class="flex flex-col space-y-6"
                     >
+                      <div :if={@order.subscription?} class="flex flex-col">
+                        <.input
+                          :let={option}
+                          type="radio-card"
+                          label={~t"How often *"}
+                          field={@form[:subscription_interval_weeks]}
+                          options={
+                            Enum.map(Subscription.intervals(), &%{name: Fields.interval_label(&1), value: to_string(&1)})
+                          }
+                          data-testid="subscription-interval-selector"
+                        >
+                          {option.name}
+                        </.input>
+                        <.field_errors field={@form[:subscription_interval_weeks]} />
+                      </div>
+
                       <.live_component
                         :if={@order.fulfillment_method == :delivery}
                         id="address-input"
@@ -970,7 +991,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # value flows through on submit. Re-read afterwards: the update's result
   # still holds the unset fulfillment_option and totals from before it.
   defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
-    case List.first(options) do
+    case List.first(available_options(options, order)) do
       nil ->
         order
 
@@ -981,6 +1002,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp ensure_fulfillment_default(order, _options, _actor), do: order
+
+  defp available_options(options, %{subscription?: true}),
+    do: Enum.filter(options, &(&1.fulfillment_method == :delivery))
+
+  defp available_options(options, _order), do: options
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok

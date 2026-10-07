@@ -300,6 +300,52 @@ for n <- 1..3 do
   end
 end
 
+subscriptions_category =
+  ProductCategory
+  |> Ash.Changeset.for_create(:create, %{
+    name: "Subscriptions",
+    slug: "subscriptions",
+    visibility: :public,
+    description: "Seasonal flowers chosen by the florist, delivered every one, two or four weeks.",
+    translations: %{
+      "sv-FI": %{
+        name: "Prenumerationer",
+        description: "Säsongens blommor valda av floristen, levererade varje, varannan eller var fjärde vecka."
+      },
+      fi: %{
+        name: "Tilaukset",
+        description: "Floristin valitsemia sesongin kukkia, toimitettuna viikon, kahden tai neljän viikon välein."
+      }
+    }
+  })
+  |> Ash.create!(authorize?: false)
+
+subscription_product =
+  Ash.Changeset.for_create(Product, :create, %{
+    product_category_id: subscriptions_category.id,
+    tax_rate_id: tax_rate.id,
+    name: "Seasonal bouquet subscription",
+    image_slug: "https://placehold.co/400x400",
+    description: "A florist's-choice bouquet of whatever is best that week, delivered on your schedule.",
+    draft: false,
+    free_delivery: true,
+    subscribable: true
+  })
+  |> Ash.create!(authorize?: false)
+
+for {size, price} <- [small: "45", medium: "60", large: "75"] do
+  Ash.Changeset.for_create(ProductVariant, :create, %{
+    product_id: subscription_product.id,
+    price: price,
+    size: size,
+    image_slug: "https://placehold.co/400x400",
+    stock_trackable: false,
+    stock_quantity: 0,
+    draft: false
+  })
+  |> Ash.create!(authorize?: false)
+end
+
 Promotion
 |> Ash.Changeset.for_create(
   :create,

@@ -126,6 +126,8 @@ defmodule Edenflowers.Orders do
 
     resource Edenflowers.Orders.Order.Version
     resource Edenflowers.Orders.Payment
+    resource Edenflowers.Orders.Subscription
+    resource Edenflowers.Orders.Subscription.Version
 
     resource Edenflowers.Orders.LineItem do
       define :add_line_item, action: :add_to_cart, args: [:order_id, :product_variant_id, :quantity]

@@ -67,6 +67,7 @@ defmodule Edenflowers.Orders.Order do
     :vat,
     :cart_effectively_empty?,
     :free_delivery?,
+    :subscription?,
     :newsletter_offer_hidden?,
     :promotion,
     :fulfillment_option,
@@ -436,10 +437,12 @@ defmodule Edenflowers.Orders.Order do
         :recipient_phone_number,
         :delivery_instructions,
         :fulfillment_date,
-        :delivery_address
+        :delivery_address,
+        :subscription_interval_weeks
       ]
 
       change Changes.SnapshotFulfillmentMethod
+      validate Validations.SubscriptionDelivery
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDate
       validate Validations.DeliveryAddress
@@ -467,6 +470,9 @@ defmodule Edenflowers.Orders.Order do
     update :finalize_checkout do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+      # Set by Stripe when a subscription cart saves its card.
+      argument :stripe_customer_id, :string
+      argument :stripe_payment_method_id, :string
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
 
       change transition_state(:placed), always_atomic?: true
@@ -478,6 +484,7 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
+      change Changes.ActivateSubscription
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
@@ -831,6 +838,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
+    # How often a subscription cart is to be delivered, chosen at checkout.
+    attribute :subscription_interval_weeks, :integer
     # The fee for the address and option, before a free-delivery cart waives it;
     # see the `fulfillment_fee` calculation for what is charged.
     attribute :quoted_fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
@@ -884,6 +893,8 @@ defmodule Edenflowers.Orders.Order do
     belongs_to :user, Edenflowers.Accounts.User
     belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption
     belongs_to :promotion, Edenflowers.Pricing.Promotion
+    # The Subscription this order started or was created by.
+    belongs_to :subscription, Edenflowers.Orders.Subscription
     has_many :line_items, Edenflowers.Orders.LineItem
     has_many :payments, Edenflowers.Orders.Payment
   end
@@ -978,6 +989,7 @@ defmodule Edenflowers.Orders.Order do
     sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
     exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
+    exists :subscription?, :line_items, filter: expr(subscribable == true)
 
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount

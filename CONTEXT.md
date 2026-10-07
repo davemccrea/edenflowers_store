@@ -26,6 +26,16 @@ _Avoid_: Phone order, manual order, bespoke order
 Jennie's private working note on any order — what was agreed, constraints like "deliver by 10:30, service at 11:00". Never shown to the Customer or Recipient.
 _Avoid_: Comment, internal note, order notes (and distinct from the Card Message and Delivery Instructions, which come from the Customer)
 
+### Subscriptions
+
+**Subscription**:
+A customer's standing request for a florist's-choice bouquet every one, two or four weeks, delivered to the same Recipient. It is not an order: it creates orders, and holds only the schedule, the delivery details and the saved card. Set up by paying for the first order at checkout.
+_Avoid_: Plan, membership, recurring order
+
+**Occurrence**:
+One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other.
+_Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its Recipient)
+
 ### Payment
 
 **Payment Link**:

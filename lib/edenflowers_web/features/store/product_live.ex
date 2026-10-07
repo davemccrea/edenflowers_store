@@ -168,8 +168,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   def handle_event("submit", _params, socket) do
-    Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1)
+    case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1) do
+      {:ok, _line_item} ->
+        {:noreply, socket}
 
-    {:noreply, socket}
+      {:error, _error} ->
+        {:noreply,
+         put_flash(socket, :error, ~t"A subscription is checked out on its own. Empty your cart to add this.")}
+    end
   end
 end
