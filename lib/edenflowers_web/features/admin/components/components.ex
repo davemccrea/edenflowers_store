@@ -120,6 +120,16 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  @doc "Marks an Occurrence: an order a Subscription created, not one the customer placed at checkout."
+  def subscription_badge(assigns) do
+    ~H"""
+    <span class="badge badge-soft badge-sm badge-neutral inline-flex items-center gap-1 whitespace-nowrap">
+      <.icon name="hero-arrow-path" class="h-3.5 w-3.5" />
+      {~t"Subscription"}
+    </span>
+    """
+  end
+
   attr :title, :string, required: true
   attr :class, :any, default: nil
   slot :description

@@ -106,6 +106,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.fulfillment_status_badge status={@order.fulfillment_status} />
                 </span>
                 <.gift_badge :if={@order.gift} order={@order} />
+                <.subscription_badge :if={@order.origin == :subscription} />
                 <%!-- The payment card sits below the job on narrow screens; this says money is waiting there. --%>
                 <a
                   :if={owes_money?(@order)}

@@ -8,6 +8,8 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback create_payment_intent_saving_card(amount_cents :: integer(), metadata :: map(), customer_id :: String.t()) ::
               {:ok, map()} | {:error, term()}
   @callback create_customer(params :: map()) :: {:ok, map()} | {:error, term()}
+  @callback charge_off_session(amount_cents :: integer(), params :: map(), idempotency_key :: String.t()) ::
+              {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
               {:ok, map()} | {:error, term()}
@@ -70,6 +72,16 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def create_customer(params) do
     Stripe.Customer.create(params)
+  end
+
+  # `params` names the saved card (`customer`, `payment_method`) and the
+  # `metadata`. A card that is declined or needs the customer to authenticate
+  # returns a `Stripe.Error` with `code: :card_error`.
+  @impl true
+  def charge_off_session(amount_cents, params, idempotency_key) do
+    params
+    |> Map.merge(%{amount: amount_cents, currency: "EUR", off_session: true, confirm: true})
+    |> Stripe.PaymentIntent.create(headers: %{"Idempotency-Key" => idempotency_key})
   end
 
   @impl true
