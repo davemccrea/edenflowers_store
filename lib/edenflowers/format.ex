@@ -84,6 +84,13 @@ defmodule Edenflowers.Format do
   def time(nil, _locale), do: nil
   def time(time, locale), do: Localize.Time.to_string!(time, locale: locale, format: :short)
 
+  @doc "Localized delivery distance from metres, e.g. \"850 m\" / \"3,4 km\"."
+  @spec distance(non_neg_integer(), Localize.Locale.locale_id()) :: String.t()
+  def distance(meters, _locale) when meters < 1000, do: "#{meters} m"
+
+  def distance(meters, locale),
+    do: "#{Localize.Number.to_string!(meters / 1000, locale: locale, fractional_digits: 1)} km"
+
   @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\". For agenda labels."
   @spec day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def day_month(date, locale) do

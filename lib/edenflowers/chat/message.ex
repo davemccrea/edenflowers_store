@@ -178,7 +178,8 @@ defmodule Edenflowers.Chat.Message do
     attribute :tool_calls, {:array, :map}
     attribute :tool_results, {:array, :map}
 
-    attribute :source, Edenflowers.Chat.Types.Source do
+    attribute :source, :atom do
+      constraints one_of: [:agent, :user]
       allow_nil? false
       public? true
       default :user

@@ -336,12 +336,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     if quoted?(quote, address, option_id), do: quote
   end
 
-  defp format_distance(meters) when meters < 1000, do: "#{meters} m"
-
-  defp format_distance(meters) do
-    "#{Localize.Number.to_string!(meters / 1000, locale: Format.locale(), fractional_digits: 1)} km"
-  end
-
   defp saved_message(:new), do: ~t"Order placed."
   defp saved_message(_mode), do: ~t"Order updated."
 
@@ -582,7 +576,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     <div aria-live="polite">
       <p :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="mt-1.5 text-sm">
         <span class="font-medium">{~t"Delivery #{fee = Format.currency(@quote.fee, Format.locale())}"}</span>
-        <span class="text-base-content/65">({format_distance(@quote.distance)})</span>
+        <span class="text-base-content/65">({Format.distance(@quote.distance, Format.locale())})</span>
         <span :if={present?(@override)} class="text-base-content/65">
           · {~t"your own fee replaces this"}
         </span>

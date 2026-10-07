@@ -74,7 +74,6 @@ defmodule Edenflowers.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:lumis, "~> 0.1"},
       {:mdex, "~> 0.7"},
       {:ash_oban, "~> 0.4"},
       {:ash_ai, "~> 1.0"},
