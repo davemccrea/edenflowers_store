@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Check your email"}</h1>
             <p class="text-base-content/70 text-sm">
-              {~t"We sent a 6-digit code to"} <span class="text-base-content break-all font-medium">{@email}</span>. {~t"It expires in 10 minutes."}
+              {~t"A 6-digit code was sent to"} <span class="text-base-content break-all font-medium">{@email}</span>. {~t"It expires in 10 minutes."}
             </p>
           </div>
 
