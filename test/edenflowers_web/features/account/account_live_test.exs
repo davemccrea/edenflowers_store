@@ -1,10 +1,13 @@
 defmodule EdenflowersWeb.Account.AccountLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  use Oban.Testing, repo: Edenflowers.Repo
+
   import Generator
   import Phoenix.LiveViewTest
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias EdenflowersWeb.Account.AccountLive
 
   @locale "en-GB"
@@ -18,6 +21,60 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       |> Helpers.store_in_session(user)
 
     %{conn: conn, user: user}
+  end
+
+  describe "details" do
+    test "greets the customer by first name", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "h1", "Hi, Ada")
+    end
+
+    test "changes the customer's name", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view
+      |> form("#details-form", %{"details" => %{"name" => "Grace Hopper", "email" => to_string(user.email)}})
+      |> render_submit()
+
+      assert has_element?(view, "h1", "Hi, Grace")
+      assert Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).name == "Grace Hopper"
+    end
+
+    test "changes the email only once the code sent to it is entered", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view
+      |> form("#details-form", %{"details" => %{"name" => "Ada Lovelace", "email" => "new@example.com"}})
+      |> render_submit()
+
+      [job] = all_enqueued(worker: SendEmailChangeCode)
+      assert %{"email" => "new@example.com", "code" => code} = job.args
+      refute to_string(Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).email) == "new@example.com"
+
+      view |> form("#email-code-form", %{"confirm" => %{"code" => "000000"}}) |> render_submit()
+      assert has_element?(view, "#email-code-form", "That code isn't right.")
+
+      view |> form("#email-code-form", %{"confirm" => %{"code" => code}}) |> render_submit()
+
+      assert to_string(Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).email) == "new@example.com"
+      assert has_element?(view, "#details-form")
+    end
+
+    test "gives up on the email change after too many wrong codes", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view
+      |> form("#details-form", %{"details" => %{"name" => "Ada Lovelace", "email" => "new@example.com"}})
+      |> render_submit()
+
+      for _ <- 1..5 do
+        view |> form("#email-code-form", %{"confirm" => %{"code" => "wrong"}}) |> render_submit()
+      end
+
+      assert has_element?(view, "#details-form", "Too many wrong codes.")
+      refute to_string(Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).email) == "new@example.com"
+    end
   end
 
   describe "orders" do

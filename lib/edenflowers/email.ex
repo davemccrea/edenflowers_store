@@ -129,5 +129,13 @@ defmodule Edenflowers.Email do
     |> text_body(Templates.otp_sign_in(%{otp_code: otp_code}))
   end
 
+  def email_change_code(email_address, code) do
+    new()
+    |> from(from_address())
+    |> to(email_address)
+    |> subject(~t"Confirm your new Eden Flowers email")
+    |> text_body(Templates.email_change_code(%{code: code}))
+  end
+
   defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)
 end

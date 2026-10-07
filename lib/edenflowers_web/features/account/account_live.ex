@@ -4,9 +4,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
   require Logger
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.RateLimiter
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
@@ -14,13 +16,22 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @timezone "Europe/Helsinki"
   @saved_visible_ms 2500
   @newsletter_form_id "newsletter-preference"
+  @email_code_ttl_ms :timer.minutes(10)
+  @email_code_attempts 5
+  @email_codes_per_window 5
+  @email_code_window_ms :timer.minutes(15)
 
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    user = Ash.load!(socket.assigns.current_user, :first_name, actor: socket.assigns.current_user)
 
     {:ok,
      socket
      |> assign(page_title: ~t"Account")
+     |> assign(current_user: user)
+     |> assign(details_form: details_form(user))
+     |> assign(details_saved?: false)
+     |> assign(pending_email: nil)
+     |> assign(code_form: to_form(%{"code" => ""}, as: :confirm))
      |> assign(locale: Format.locale())
      |> assign(orders: Orders.list_my_orders!(actor: user))
      |> assign(registrations: registrations(user))
@@ -33,17 +44,57 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container class="max-w-3xl">
-        <h1 class="page-title">{~t"Account"}</h1>
-
-        <div class="border-base-content/12 mt-8 flex flex-col gap-4 pb-10 not-last:border-b sm:flex-row sm:items-baseline sm:justify-between sm:pb-12">
-          <div>
-            <p :if={@current_user.name} class="font-serif text-2xl leading-snug">{@current_user.name}</p>
-            <p class="text-base-content/70 text-sm">{@current_user.email}</p>
-          </div>
+        <div class="border-base-content/12 flex flex-col gap-4 pb-10 not-last:border-b sm:flex-row sm:items-baseline sm:justify-between sm:pb-12">
+          <h1 class="page-title">
+            {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}", else: ~t"Account"}
+          </h1>
           <.link href={~p"/sign-out"} method="delete" class="link-underline-hover -my-1.5 w-fit py-1.5 text-sm">
             {~t"Sign out"}
           </.link>
         </div>
+
+        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="details-heading">
+          <h2 id="details-heading" class="section-title">{~t"Your details"}</h2>
+
+          <.form
+            :if={!@pending_email}
+            for={@details_form}
+            id="details-form"
+            phx-submit="save_details"
+            class="mt-6 flex max-w-md flex-col gap-4"
+          >
+            <.input field={@details_form[:name]} type="text" label={~t"Name"} autocomplete="name" />
+            <.input field={@details_form[:email]} type="email" label={~t"Email"} autocomplete="email" required />
+            <div class="flex items-center gap-4">
+              <.button type="submit" phx-disable-with={~t"Saving…"}>{~t"Save"}</.button>
+              <p role="status" class="text-base-content/70 text-sm">
+                <span :if={@details_saved?}>{~t"Saved"}</span>
+              </p>
+            </div>
+          </.form>
+
+          <.form
+            :if={@pending_email}
+            for={@code_form}
+            id="email-code-form"
+            phx-submit="confirm_email"
+            class="mt-6 flex max-w-md flex-col gap-4"
+          >
+            <p>{~t"We've sent a code to #{@pending_email.email}. Enter it to confirm your new email."}</p>
+            <.input
+              field={@code_form[:code]}
+              type="text"
+              label={~t"Code"}
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+            />
+            <div class="flex items-center gap-4">
+              <.button type="submit" phx-disable-with={~t"Confirming…"}>{~t"Confirm"}</.button>
+              <.button type="button" variant="text" phx-click="cancel_email_change">{~t"Cancel"}</.button>
+            </div>
+          </.form>
+        </section>
 
         <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="orders-heading">
           <h2 id="orders-heading" class="section-title">{~t"Orders"}</h2>
@@ -205,6 +256,65 @@ defmodule EdenflowersWeb.Account.AccountLive do
     """
   end
 
+  def handle_event("save_details", %{"details" => params}, socket) do
+    user = socket.assigns.current_user
+    name = blank_to_nil(params["name"])
+    email = String.trim(params["email"] || "")
+
+    case update_name(user, name) do
+      {:ok, user} ->
+        {_, socket} = maybe_start_email_change(assign(socket, current_user: user), email)
+        {:noreply, socket}
+
+      {:error, error} ->
+        Logger.error(inspect(error))
+        {:noreply, put_flash(socket, :error, ~t"Your details couldn't be saved.")}
+    end
+  end
+
+  def handle_event("confirm_email", %{"confirm" => %{"code" => code}}, socket) do
+    pending = socket.assigns.pending_email
+    user = socket.assigns.current_user
+
+    cond do
+      pending == nil ->
+        {:noreply, socket}
+
+      System.monotonic_time(:millisecond) > pending.expires_at ->
+        {:noreply, abandon_email_change(socket, ~t"That code has expired. Please try again.")}
+
+      not Plug.Crypto.secure_compare(String.trim(code), pending.code) ->
+        attempts = pending.attempts + 1
+
+        if attempts >= @email_code_attempts do
+          {:noreply, abandon_email_change(socket, ~t"Too many wrong codes. Please try again.")}
+        else
+          {:noreply,
+           socket
+           |> assign(pending_email: %{pending | attempts: attempts})
+           |> assign(
+             code_form: to_form(%{"code" => ""}, as: :confirm, errors: [code: {~t"That code isn't right.", []}])
+           )}
+        end
+
+      true ->
+        case Accounts.change_email(user, pending.email, actor: user, load: [:first_name]) do
+          {:ok, user} ->
+            {:noreply, socket |> assign(current_user: user) |> reset_details(user) |> assign(details_saved?: true)}
+
+          {:error, error} ->
+            Logger.info("Email change failed: #{inspect(error)}")
+
+            {:noreply,
+             abandon_email_change(socket, ~t"That email can't be used. It may already belong to another account.")}
+        end
+    end
+  end
+
+  def handle_event("cancel_email_change", _params, socket) do
+    {:noreply, reset_details(socket, socket.assigns.current_user)}
+  end
+
   def handle_event("toggle_newsletter", params, socket) do
     user = socket.assigns.current_user
     opt_in = params["newsletter_opt_in"] == "true"
@@ -238,6 +348,84 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
+
+  defp update_name(user, name) when name == user.name, do: {:ok, user}
+
+  defp update_name(user, name), do: Accounts.update_name(user, name, actor: user, load: [:first_name])
+
+  defp maybe_start_email_change(socket, email) do
+    user = socket.assigns.current_user
+
+    cond do
+      String.downcase(email) == String.downcase(to_string(user.email)) ->
+        {:ok, socket |> reset_details(user) |> assign(details_saved?: true)}
+
+      not String.match?(email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ->
+        {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
+
+      # Each code goes to an address the customer only claims to own, so cap how
+      # many they can fire off.
+      match?({:deny, _}, RateLimiter.hit("email_change:#{user.id}", @email_code_window_ms, @email_codes_per_window)) ->
+        {:error,
+         assign(socket, details_form: details_form(user, email, email: ~t"Too many attempts. Please try again later."))}
+
+      true ->
+        code = generate_code()
+
+        {:ok, _job} =
+          SendEmailChangeCode.enqueue(%{
+            "email" => email,
+            "code" => code,
+            "locale" => Gettext.get_locale(EdenflowersWeb.Gettext)
+          })
+
+        pending = %{
+          email: email,
+          code: code,
+          attempts: 0,
+          expires_at: System.monotonic_time(:millisecond) + @email_code_ttl_ms
+        }
+
+        {:ok, assign(socket, pending_email: pending, code_form: to_form(%{"code" => ""}, as: :confirm))}
+    end
+  end
+
+  defp generate_code do
+    :crypto.strong_rand_bytes(4)
+    |> :binary.decode_unsigned()
+    |> rem(1_000_000)
+    |> Integer.to_string()
+    |> String.pad_leading(6, "0")
+  end
+
+  defp abandon_email_change(socket, message) do
+    user = socket.assigns.current_user
+    email = socket.assigns.pending_email.email
+
+    socket
+    |> reset_details(user)
+    |> assign(details_form: details_form(user, email, email: message))
+  end
+
+  defp reset_details(socket, user) do
+    assign(socket, details_form: details_form(user), pending_email: nil, details_saved?: false)
+  end
+
+  defp details_form(user, email \\ nil, errors \\ []) do
+    to_form(
+      %{"name" => user.name || "", "email" => email || to_string(user.email)},
+      as: :details,
+      errors: Enum.map(errors, fn {field, message} -> {field, {message, []}} end),
+      action: if(errors != [], do: :validate)
+    )
+  end
+
+  defp blank_to_nil(value) do
+    case String.trim(value || "") do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
 
   attr :order, :map, required: true
 
