@@ -4263,12 +4263,12 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:858
 #, elixir-autogen, elixir-format
-msgid "Record payment taken in person"
+msgid "Record a payment"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:859
 #, elixir-autogen, elixir-format
-msgid "Record refund given in person"
+msgid "Record a refund"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_log.ex:51
