@@ -196,6 +196,19 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
+    test "sent again, shows the order as it now stands rather than thanking for it anew", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
+      Oban.drain_queue(queue: :default)
+      assert_email_sent(fn email -> assert email.text_body =~ "Here is what we agreed" end)
+
+      {:ok, _order} = Orders.send_order_details_email(order, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "Here is what we agreed"
+        assert email.text_body =~ "Here is your order as it stands now"
+      end)
+    end
+
     test "sends nothing when Jennie chooses not to", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
@@ -626,6 +639,20 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert order.receipt_emailed_at
       assert_email_sent(fn email -> assert [_receipt] = email.attachments end)
+    end
+
+    @tag :typst
+    test "after collection, doesn't promise to have the order ready", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
+      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.mark_order_fulfilled(order, actor: ctx.admin)
+
+      {:ok, _order} = Orders.email_receipt(order, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "ready on"
+        assert email.text_body =~ "Thank you for your order."
+      end)
     end
 
     test "refuses an unpaid order", ctx do

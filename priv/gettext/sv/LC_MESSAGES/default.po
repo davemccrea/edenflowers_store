@@ -388,12 +388,12 @@ msgstr "Ett fel uppstod vid betalningen. Försök igen."
 msgid "Small"
 msgstr "Liten"
 
-#: lib/edenflowers/email.ex:103
+#: lib/edenflowers/email.ex:104
 #, elixir-autogen, elixir-format
 msgid "Welcome back to the Eden Flowers newsletter"
 msgstr "Välkommen tillbaka till Eden Flowers nyhetsbrev"
 
-#: lib/edenflowers/email.ex:87
+#: lib/edenflowers/email.ex:88
 #, elixir-autogen, elixir-format
 msgid "Welcome to Eden Flowers: your 15% off code inside"
 msgstr "Välkommen till Eden Flowers: här är din kod på 15 % rabatt"
@@ -413,7 +413,7 @@ msgstr "Du är nu utloggad"
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr "Du har redan loggat in på ett annat sätt, men har inte bekräftat ditt konto. Du kan bekräfta kontot via länken vi skickade till dig, eller genom att återställa lösenordet."
 
-#: lib/edenflowers/email.ex:95
+#: lib/edenflowers/email.ex:96
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers promo code"
 msgstr "Din kampanjkod till Eden Flowers"
@@ -768,7 +768,7 @@ msgstr "Vi kunde inte skicka din inloggningskod. Försök igen om en stund."
 msgid "We've sent you a new code."
 msgstr "Vi har skickat en ny kod till dig."
 
-#: lib/edenflowers/email.ex:127
+#: lib/edenflowers/email.ex:128
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers sign-in code"
 msgstr "Din inloggningskod till Eden Flowers"
@@ -1959,7 +1959,7 @@ msgid "Your 15% welcome code is still valid:"
 msgstr "Din välkomstkod på 15 % gäller fortfarande:"
 
 #: lib/edenflowers/email.ex:19
-#: lib/edenflowers/email.ex:42
+#: lib/edenflowers/email.ex:43
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference}"
 msgstr "Din Eden Flowers-beställning %{order_order_reference}"
@@ -2126,7 +2126,7 @@ msgstr "Boka en plats"
 msgid "Change booking"
 msgstr "Ändra bokningen"
 
-#: lib/edenflowers/email.ex:70
+#: lib/edenflowers/email.ex:71
 #, elixir-autogen, elixir-format
 msgid "You're booked: %{course}"
 msgstr "Din plats är bokad: %{course}"
@@ -3555,7 +3555,7 @@ msgstr "Visa kundens beställningar"
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr "Tack för din beställning. Om något inte är som det ska, svara bara på det här mejlet så ordnar jag det."
 
-#: lib/edenflowers/email.ex:59
+#: lib/edenflowers/email.ex:60
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference} has been delivered"
 msgstr "Din Eden Flowers-beställning %{order_order_reference} har levererats"
@@ -4438,3 +4438,13 @@ msgstr "Beställningen är avbruten"
 #, elixir-autogen, elixir-format
 msgid "The order was refunded"
 msgstr "Beställningen har återbetalats"
+
+#: lib/edenflowers/email/templates/order_details.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here is your order as it stands now:"
+msgstr "Här är din beställning som den ser ut nu:"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order."
+msgstr "Tack för din beställning."

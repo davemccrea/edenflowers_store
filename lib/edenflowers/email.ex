@@ -31,7 +31,8 @@ defmodule Edenflowers.Email do
   @doc """
   What a custom order's customer is sent when Jennie places it: the order as
   agreed and how to pay. No receipt, because nothing has been paid yet.
-  Expects `line_items: [:subtotal]` and `:grand_total` loaded.
+  Sent again after an edit, it shows the order as it now stands rather than
+  what changed, since the customer pays against the whole. Expects `line_items: [:subtotal]` and `:grand_total` loaded.
   """
   def order_details(order, payment_link_url) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->

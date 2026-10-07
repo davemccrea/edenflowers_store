@@ -388,12 +388,12 @@ msgstr "Maksun käsittelyssä tapahtui virhe. Yritä uudelleen."
 msgid "Small"
 msgstr "Pieni"
 
-#: lib/edenflowers/email.ex:103
+#: lib/edenflowers/email.ex:104
 #, elixir-autogen, elixir-format
 msgid "Welcome back to the Eden Flowers newsletter"
 msgstr "Tervetuloa takaisin Eden Flowersin uutiskirjeen tilaajaksi"
 
-#: lib/edenflowers/email.ex:87
+#: lib/edenflowers/email.ex:88
 #, elixir-autogen, elixir-format
 msgid "Welcome to Eden Flowers: your 15% off code inside"
 msgstr "Tervetuloa Eden Flowersiin: 15 %:n alennuskoodisi on tässä"
@@ -413,7 +413,7 @@ msgstr "Olet nyt kirjautunut ulos"
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr "Olet jo kirjautunut sisään toisella tavalla, mutta et ole vahvistanut tiliäsi. Voit vahvistaa tilisi lähettämällämme linkillä tai palauttamalla salasanasi."
 
-#: lib/edenflowers/email.ex:95
+#: lib/edenflowers/email.ex:96
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers promo code"
 msgstr "Eden Flowers -tarjouskoodisi"
@@ -768,7 +768,7 @@ msgstr "Kirjautumiskoodin lähettäminen ei onnistunut. Yritä hetken kuluttua u
 msgid "We've sent you a new code."
 msgstr "Lähetimme sinulle uuden koodin."
 
-#: lib/edenflowers/email.ex:127
+#: lib/edenflowers/email.ex:128
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers sign-in code"
 msgstr "Eden Flowers -kirjautumiskoodisi"
@@ -1959,7 +1959,7 @@ msgid "Your 15% welcome code is still valid:"
 msgstr "15 %:n tervetuliaiskoodisi on yhä voimassa:"
 
 #: lib/edenflowers/email.ex:19
-#: lib/edenflowers/email.ex:42
+#: lib/edenflowers/email.ex:43
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference}"
 msgstr "Eden Flowers -tilauksesi %{order_order_reference}"
@@ -2126,7 +2126,7 @@ msgstr "Varaa paikka"
 msgid "Change booking"
 msgstr "Muuta varausta"
 
-#: lib/edenflowers/email.ex:70
+#: lib/edenflowers/email.ex:71
 #, elixir-autogen, elixir-format
 msgid "You're booked: %{course}"
 msgstr "Paikkasi on varattu: %{course}"
@@ -3555,7 +3555,7 @@ msgstr "Näytä asiakkaan tilaukset"
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr "Kiitos tilauksestasi. Jos jokin ei ole niin kuin pitäisi, vastaa vain tähän viestiin, niin hoidan asian."
 
-#: lib/edenflowers/email.ex:59
+#: lib/edenflowers/email.ex:60
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference} has been delivered"
 msgstr "Eden Flowers -tilauksesi %{order_order_reference} on toimitettu"
@@ -4438,3 +4438,13 @@ msgstr "Tilaus on peruttu"
 #, elixir-autogen, elixir-format
 msgid "The order was refunded"
 msgstr "Tilaus on hyvitetty"
+
+#: lib/edenflowers/email/templates/order_details.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here is your order as it stands now:"
+msgstr "Tässä on tilauksesi sellaisena kuin se nyt on:"
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order."
+msgstr "Kiitos tilauksestasi."

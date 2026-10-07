@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Thank you for your order. Here is what we agreed:") %>
+<%= if @order.details_emailed_at do %><%= gettext("Here is your order as it stands now:") %><% else %><%= gettext("Thank you for your order. Here is what we agreed:") %><% end %>
 
 <%= for line_item <- @order.line_items do %><%= line_item.quantity %> × <%= line_item.product_name %>  <%= @format_currency.(line_item.subtotal) %>
 <% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>

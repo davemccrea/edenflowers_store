@@ -29,12 +29,13 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
           {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
           :ok
 
-        {:ok, %{newsletter_promo: %{usage: 0, code: code}}} ->
-          Email.newsletter_already_subscribed(email, code) |> Mailer.deliver()
-          :ok
+        {:ok, %{newsletter_promo: promo}} ->
+          if still_usable?(promo) do
+            Email.newsletter_already_subscribed(email, promo.code) |> Mailer.deliver()
+          else
+            Email.newsletter_resubscribed(email) |> Mailer.deliver()
+          end
 
-        {:ok, %{newsletter_promo: _used}} ->
-          Email.newsletter_resubscribed(email) |> Mailer.deliver()
           :ok
 
         {:error, reason} ->
@@ -42,4 +43,13 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
       end
     end)
   end
+
+  # Mirrors the expiry in Promotion's :by_code read, so the email never offers
+  # a code checkout would turn down.
+  defp still_usable?(%{usage: 0, expiration_date: expiration_date}) do
+    today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+    Date.compare(today, expiration_date) != :gt
+  end
+
+  defp still_usable?(_used), do: false
 end

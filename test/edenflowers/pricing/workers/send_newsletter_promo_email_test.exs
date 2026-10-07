@@ -40,6 +40,22 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
     end
   end
 
+  describe "re-subscription with an expired, unused code" do
+    test "sends welcome-back email without offering the expired code" do
+      {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
+      {:ok, promo} = Ash.update(promo, %{expiration_date: Date.add(Date.utc_today(), -2)}, authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter("lapsed@example.com", authorize?: false)
+      {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
+
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "lapsed@example.com", "locale" => "en"})
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ to_string(promo.code)
+        assert email.subject =~ "Welcome back to the Eden Flowers newsletter"
+      end)
+    end
+  end
+
   describe "re-subscription with used code" do
     test "sends welcome-back email without including the code" do
       {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())

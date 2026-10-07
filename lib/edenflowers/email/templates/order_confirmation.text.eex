@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Thank you for your order. I'll have everything ready on %{date}.", date: @format_date.(@order.fulfillment_date)) %>
+<%= if @order.fulfillment_status == :fulfilled do %><%= gettext("Thank you for your order.") %><% else %><%= gettext("Thank you for your order. I'll have everything ready on %{date}.", date: @format_date.(@order.fulfillment_date)) %><% end %>
 
 <%= gettext("Your receipt is attached. If you need to change anything, just reply and I'll take care of it.") %>
 

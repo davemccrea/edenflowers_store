@@ -9,10 +9,20 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
+      # Read fresh: the admin page's copy can predate the first details email,
+      # which goes out in the background, and the wording depends on it.
       order =
-        Ash.load!(
-          changeset.data,
-          [:customer_first_name, :grand_total, :amount_paid, :balance, :payment_link_open?, line_items: [:subtotal]],
+        Ash.get!(
+          Edenflowers.Orders.Order,
+          changeset.data.id,
+          load: [
+            :customer_first_name,
+            :grand_total,
+            :amount_paid,
+            :balance,
+            :payment_link_open?,
+            line_items: [:subtotal]
+          ],
           authorize?: false
         )
 
