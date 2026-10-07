@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.Layouts do
 
   attr :clear_admin_shortcut, :boolean,
     default: false,
-    doc: "lifts the toasts above the floating admin shortcut pill"
+    doc: "lifts the toasts above the admin shortcut on mobile, where both span the bottom edge"
 
   def flash_group(assigns) do
     ~H"""
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Layouts do
       id="flash-group"
       aria-live="polite"
       class={["toast z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6", if(@clear_admin_shortcut,
-    do: "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+    do: "max-sm:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
     else: "bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")]}
     >
       <.flash kind={:info} flash={@flash} />
@@ -668,10 +668,9 @@ defmodule EdenflowersWeb.Layouts do
       :if={@current_user && @current_user.admin}
       id="admin-shortcut"
       navigate={~p"/admin"}
-      class="bg-base-content text-base-100 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] fixed left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90"
+      class="bg-base-content text-base-100 bottom-[calc(1rem+env(safe-area-inset-bottom))] start-4 fixed z-40 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90 sm:start-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
     >
-      <.icon name="hero-document-text" class="h-5 w-5" />
-      {~t"Admin"}
+      <.icon name="hero-document-text" class="h-5 w-5" /> Admin
     </.link>
 
     <footer>
