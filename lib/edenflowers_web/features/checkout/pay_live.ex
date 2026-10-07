@@ -52,7 +52,21 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   def handle_event("pay", _params, socket) do
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    with {:ok, order} <- Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false),
+         true <- payable?(order),
+         true <- order.payment_intent_id == socket.assigns.shown_order.payment_intent_id,
+         :ok <- sync_amount(order) do
+      {:noreply,
+       socket
+       |> assign(:shown_order, order)
+       |> push_event("stripe:process_payment", %{})}
+    else
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"The order changed. Please try again.")
+         |> push_navigate(to: ~p"/pay/#{socket.assigns.token}")}
+    end
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -177,7 +191,10 @@ defmodule EdenflowersWeb.Checkout.PayLive do
     """
   end
 
-  defp payable?(order), do: Decimal.positive?(order.balance) and order.fulfillment_status != :cancelled
+  defp payable?(order),
+    do:
+      Decimal.positive?(order.balance) and order.payment_status != :refunded and
+        order.fulfillment_status != :cancelled
 
   # Stripe is only touched once the page is live, so a crawler or a link
   # preview never creates a PaymentIntent. Back from Stripe, the payment is

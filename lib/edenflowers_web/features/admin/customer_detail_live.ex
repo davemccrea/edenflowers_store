@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             <.fulfillment_status_badge status={order.fulfillment_status} />
           </:col>
           <:col :let={order} field="payment_status" label={~t"Payment"}>
-            <.payment_status_badge status={order.payment_status} />
+            <.payment_status_badge status={shown_payment_status(order)} />
           </:col>
           <:col :let={order} field="grand_total" label={~t"Total"}>
             <span class="whitespace-nowrap tabular-nums">
@@ -117,18 +117,6 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
-    """
-  end
-
-  attr :label, :string, required: true
-  slot :inner_block, required: true
-
-  defp summary_fact(assigns) do
-    ~H"""
-    <div>
-      <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
-      <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
-    </div>
     """
   end
 

@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#address-input-field")
     |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
 
-    render_async(view)
+    render_async(view, 500)
 
     fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
 

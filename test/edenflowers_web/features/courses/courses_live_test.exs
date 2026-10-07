@@ -127,6 +127,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
     test "releases the hold and goes back to the course when a redirect payment fails", %{conn: conn} do
       registration = generate(course_registration(payment_intent_id: "pi_x"))
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_x"} -> {:ok, %{id: "pi_x"}} end)
 
       assert {:error, {:live_redirect, %{to: to, flash: flash}}} =
                live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
@@ -138,6 +139,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
         Edenflowers.Courses.get_registration_by_id(registration.id, actor: Edenflowers.Actors.system_actor())
 
       assert registration.status == :cancelled
+      assert registration.payment_intent_id == nil
     end
   end
 end

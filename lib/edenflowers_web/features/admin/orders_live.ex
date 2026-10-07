@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       <.admin_page width="full">
         <.admin_page_header title={~t"Orders"}>
           <:actions>
-            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
+            <.button navigate={~p"/admin/orders/new"} variant="neutral" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
             </.button>
           </:actions>
@@ -100,6 +100,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               options: payment_status_options()
             ]}
             label={~t"Payment"}
+            class="max-sm:hidden"
           >
             <.payment_status_badge status={shown_payment_status(order)} />
           </:col>
@@ -129,6 +130,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               options: fulfillment_method_options()
             ]}
             label={~t"Method"}
+            class="max-sm:hidden"
           >
             <.fulfillment_method method={order.fulfillment_method} />
           </:col>

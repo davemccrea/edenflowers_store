@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
 
-      html = render_async(view)
+      html = render_async(view, 500)
       assert html =~ ~s(data-testid="input-confirmed")
       assert html =~ ~s(data-testid="address-distance")
       assert html =~ "3.0 km"
@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Nonsense 999")
 
-      html = render_async(view)
+      html = render_async(view, 500)
       assert html =~ "Address not found"
       refute html =~ ~s(data-testid="input-confirmed")
     end
@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Somewhere Far Away 1, 99999 Nowhere")
 
-      html = render_async(view)
+      html = render_async(view, 500)
       assert html =~ "Outside delivery range"
       refute html =~ ~s(data-testid="input-confirmed")
     end
@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       type_address(view, "")
 
@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
 
-      assert render_async(view) =~ ~s(data-testid="input-confirmed")
+      assert render_async(view, 500) =~ ~s(data-testid="input-confirmed")
 
       type_address(view, "Stadsgatan 3, 65300 Vas")
 
@@ -169,10 +169,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
     end
 
     test "switching from delivery to pickup clears confirmed state and hides the address field", %{
@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
 
-      assert render_async(view) =~ ~s(data-testid="input-confirmed")
+      assert render_async(view, 500) =~ ~s(data-testid="input-confirmed")
 
       select_delivery_option(view, pickup_option.id)
 
@@ -207,7 +207,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       select_delivery_option(view, pickup_option.id)
       select_delivery_option(view, delivery_option.id)
@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
       assert is_nil(reloaded.delivery_address)
@@ -264,7 +264,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       view
       |> element("#checkout-form-3b")
@@ -305,7 +305,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view)
+      render_async(view, 500)
 
       view
       |> element("#checkout-form-3b")

@@ -17,7 +17,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       generate(
         order(
           state: :placed,
-          payment_status: :paid,
           locale: "en-GB",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
@@ -57,7 +56,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       generate(
         order(
           state: :placed,
-          payment_status: :paid,
           locale: "fi",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",
@@ -89,7 +87,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
       generate(
         order(
           state: :placed,
-          payment_status: :paid,
           locale: "sv-FI",
           customer_name: "Anna Lindqvist",
           customer_email: "anna@example.com",

@@ -107,6 +107,23 @@ defmodule Generator do
     # including internal ones that wouldn't normally be accepted in actions
     # (like fulfillment_fee, payment_intent_id, promotion_id, etc.)
     # We provide a base struct to avoid generating random foreign keys that don't exist
+    {payment_status, opts} = Keyword.pop(opts, :payment_status)
+
+    opts =
+      case payment_status do
+        nil ->
+          opts
+
+        :pending ->
+          opts
+
+        :failed ->
+          Keyword.put(opts, :payment_attempt_status, :failed)
+
+        status ->
+          raise ArgumentError, "seed payments instead of setting calculated payment_status to #{inspect(status)}"
+      end
+
     seed_generator(
       %Order{
         state: :contact_details,

@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     generate(product(name: "Tulip bouquet", product_category_id: category.id))
 
     {:ok, view, _html} = live(conn, ~p"/admin/products")
-    html = render_async(view)
+    html = render_async(view, 500)
 
     assert html =~ "Rose bouquet"
     assert html =~ "Bouquets"
@@ -37,16 +37,16 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     generate(product_variant(product_id: dear.id, price: "90.00"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/products?sort=product_category.name")
-    assert render_async(view) =~ ~r/Dear one.*Cheap one/s
+    assert render_async(view, 500) =~ ~r/Dear one.*Cheap one/s
 
     {:ok, view, _html} = live(conn, ~p"/admin/products?sort=-cheapest_price")
-    assert render_async(view) =~ ~r/Dear one.*Cheap one/s
+    assert render_async(view, 500) =~ ~r/Dear one.*Cheap one/s
 
     {:ok, view, _html} = live(conn, ~p"/admin/products?sort=cheapest_price")
-    assert render_async(view) =~ ~r/Cheap one.*Dear one/s
+    assert render_async(view, 500) =~ ~r/Cheap one.*Dear one/s
 
     {:ok, view, _html} = live(conn, ~p"/admin/products?#{%{"product_category.name" => "Anemones"}}")
-    html = render_async(view)
+    html = render_async(view, 500)
     assert html =~ "Dear one"
     refute html =~ "Cheap one"
   end

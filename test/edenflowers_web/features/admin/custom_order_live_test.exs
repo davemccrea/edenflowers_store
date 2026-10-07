@@ -147,7 +147,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       view |> element("#form_delivery_address") |> render_blur(%{"value" => "Kyrkvägen 5"})
 
-      assert render_async(view) =~ "8.0 km"
+      assert render_async(view, 500) =~ "8.0 km"
       assert has_element?(view, "#delivery-quote", "13.00")
     end
 
@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       view |> form("#order-form", form: %{delivery_address: "Far away 1"}) |> render_change()
 
       view |> element("#form_delivery_address") |> render_blur(%{"value" => "Far away 1"})
-      render_async(view)
+      render_async(view, 500)
 
       assert has_element?(view, "#delivery-quote", "Outside delivery range")
       assert has_element?(view, "#delivery-quote", "You can still set your own fee")
@@ -259,6 +259,22 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, "#order-collect", "To collect €10.00")
       assert has_element?(view, ~s|#in-person-payment-form input[value="10.00"]|)
+    end
+
+    test "keeps a retired VAT rate when editing another field", ctx do
+      order = place_custom_order(ctx)
+      generate(tax_rate(name: "Current rate", percentage: "0.14"))
+      {:ok, _rate} = Edenflowers.Pricing.retire_tax_rate(ctx.tax_rate, actor: ctx.admin)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      assert {:error, {:live_redirect, _}} =
+               view
+               |> form("#order-form", form: %{customer_name: "Mrs Holm-Smith"})
+               |> render_submit()
+
+      [line] = Ash.load!(order, :line_items, authorize?: false, reuse_values?: false).line_items
+      assert Decimal.equal?(line.tax_rate, ctx.tax_rate.percentage)
     end
   end
 

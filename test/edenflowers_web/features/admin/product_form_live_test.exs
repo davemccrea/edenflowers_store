@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
     view |> form("#product-form", form: %{translations: %{"sv-FI": %{name: "Röda rosor"}}}) |> render_change()
     view |> element("button[phx-value-from='sv-FI']") |> render_click()
-    html = render_async(view)
+    html = render_async(view, 500)
 
     assert html =~ "Red roses"
     assert html =~ "Punaiset ruusut"

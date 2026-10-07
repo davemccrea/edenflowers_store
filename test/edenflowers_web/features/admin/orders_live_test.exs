@@ -82,6 +82,15 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   end
 
   defp placed_order(attrs) do
-    generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
+    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
+    order = generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
+
+    if payment_status in [:paid, :refunded],
+      do: generate(payment(order_id: order.id, amount: Decimal.new("0.01")))
+
+    if payment_status == :refunded,
+      do: generate(payment(order_id: order.id, amount: Decimal.new("-0.01")))
+
+    order
   end
 end

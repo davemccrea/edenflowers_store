@@ -73,6 +73,15 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       refute has_element?(view, "#customer-summary", "139.00")
     end
 
+    test "does not show cancelled unpaid orders as unpaid", %{conn: conn} do
+      ada = customer("Ada Lovelace", "ada@example.com")
+      order = placed_order(ada, payment_status: :pending, fulfillment_status: :cancelled)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
+
+      refute has_element?(view, ~s([data-item-id="#{order.id}"]), "Unpaid")
+    end
+
     test "redirects when the user has never placed an order", %{conn: conn} do
       lurker = customer("Newsletter Only", "news@example.com")
 
@@ -97,6 +106,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   # `amount_paid:` records that payment; a refunded order also gets it back.
   defp placed_order(user, attrs \\ []) do
     {amount_paid, attrs} = Keyword.pop(attrs, :amount_paid)
+    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
 
     order =
       generate(
@@ -114,7 +124,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
     if amount_paid, do: generate(payment(order_id: order.id, amount: amount_paid))
 
-    if amount_paid && attrs[:payment_status] == :refunded,
+    if amount_paid && payment_status == :refunded,
       do: generate(payment(order_id: order.id, amount: Decimal.negate(amount_paid)))
 
     order

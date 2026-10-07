@@ -42,14 +42,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-payments a[aria-label="View €46.50 payment in Stripe"]|)
     assert has_element?(view, "#order-payment-summary dt", "2 ×")
     refute has_element?(view, "#order-items", "€42.00")
-    assert has_element?(view, ~s|header a[href="/order/#{order.id}/receipt"]|)
+    refute has_element?(view, ~s|header a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
     assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+    assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
   @tag :typst
   test "opens the receipt of another customer's order", %{conn: conn} do
-    order = placed_order()
+    order = placed_order(payment_status: :paid)
 
     assert "%PDF" <> _ = conn |> get(~p"/order/#{order.id}/receipt") |> response(200)
   end
@@ -371,6 +372,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     variant = generate(product_variant(product_id: product.id, price: "42.00"))
     fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
+    {payment_status, overrides} = Keyword.pop(overrides, :payment_status, :pending)
+
     attrs =
       Keyword.merge(
         [
@@ -384,7 +387,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
           fulfillment_date: ~D[2026-06-10],
           fulfillment_fee: "4.50",
           fulfillment_tax_rate: tax_rate.percentage,
-          payment_status: :paid,
           fulfillment_status: :pending,
           payment_intent_id: "pi_test_order_detail",
           ordered_at: DateTime.utc_now(),
@@ -396,6 +398,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     order = generate(order(attrs))
 
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
-    order
+    order = Ash.load!(order, :grand_total, authorize?: false)
+
+    if payment_status in [:paid, :refunded],
+      do: generate(payment(order_id: order.id, amount: order.grand_total))
+
+    if payment_status == :refunded,
+      do: generate(payment(order_id: order.id, amount: Decimal.negate(order.grand_total)))
+
+    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
   end
 end

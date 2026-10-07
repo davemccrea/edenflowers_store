@@ -303,8 +303,17 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         overrides
       )
 
+    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
     order = generate(order(attrs))
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
-    order
+    order = Ash.load!(order, :grand_total, authorize?: false)
+
+    if payment_status in [:paid, :refunded],
+      do: generate(payment(order_id: order.id, amount: order.grand_total))
+
+    if payment_status == :refunded,
+      do: generate(payment(order_id: order.id, amount: Decimal.negate(order.grand_total)))
+
+    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
   end
 end

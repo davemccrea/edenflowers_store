@@ -201,7 +201,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :unit_price, :decimal, null: false
       add :tax_rate, :decimal, null: false
       add :product_name, :text, null: false
-      add :product_image_slug, :text, null: false
+      add :product_image_slug, :text
       add :is_card, :boolean, null: false, default: false
       add :variant_size, :text
 
@@ -214,8 +214,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         default: fragment("(now() AT TIME ZONE 'utc')")
 
       add :order_id, :uuid, null: false
-      add :product_id, :uuid, null: false
-      add :product_variant_id, :uuid, null: false
+      add :product_id, :uuid
+      add :product_variant_id, :uuid
     end
 
     create unique_index(:line_items, [:order_id, :product_variant_id],
@@ -245,8 +245,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
 
       add :response_to_id,
           references(:messages,
@@ -276,10 +275,13 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     alter table(:orders) do
       add :order_reference, :text
       add :ordered_at, :utc_datetime
-      add :payment_status, :text, null: false, default: "pending"
+      add :payment_attempt_status, :text, null: false, default: "pending"
       add :fulfillment_status, :text, null: false, default: "pending"
+      add :cancelled_at, :utc_datetime
+      add :origin, :text, null: false, default: "online"
       add :customer_name, :text
       add :customer_email, :text
+      add :customer_phone_number, :text
       add :gift, :boolean, null: false, default: false
       add :card_message, :text
       add :recipient_name, :text
@@ -288,6 +290,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :delivery_instructions, :text
       add :fulfillment_date, :date
       add :fulfillment_fee, :decimal
+      add :fulfillment_fee_override, :decimal
       add :fulfillment_method, :text
       add :fulfillment_tax_rate, :decimal
       add :fulfillment_option_name, :text
@@ -296,7 +299,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :distance, :bigint
       add :position, :text
       add :payment_intent_id, :text
-      add :amount_paid, :decimal
+      add :payment_link_token, :text
       add :discount_rate, :decimal
       add :promotion_name, :text
       add :promotion_code, :text
@@ -305,6 +308,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :receipt_emailed_at, :utc_datetime
       add :receipt_sha256, :text
       add :vat_breakdown, {:array, :map}
+      add :delivered_emailed_at, :utc_datetime
+      add :details_emailed_at, :utc_datetime
+      add :florist_note, :text
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -320,6 +326,10 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     create unique_index(:orders, [:order_reference], name: "orders_unique_order_reference_index")
 
+    create unique_index(:orders, [:payment_link_token],
+             name: "orders_unique_payment_link_token_index"
+           )
+
     alter table(:orders) do
       add :fulfillment_option_id,
           references(:fulfillment_options,
@@ -331,6 +341,71 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
       add :promotion_id, :uuid
     end
+
+    create table(:orders_versions, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :version_action_type, :text, null: false
+      add :version_action_name, :text, null: false
+      add :items, :text
+
+      add :version_source_id,
+          references(:orders,
+            column: :id,
+            name: "orders_versions_version_source_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ), null: false
+
+      add :changes, :map
+
+      add :version_inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :version_updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+    end
+
+    create table(:payments, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :amount, :decimal, null: false
+      add :method, :text, null: false
+      add :payment_intent_id, :text
+      add :stripe_refund_id, :text
+      add :paid_at, :utc_datetime, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :order_id,
+          references(:orders,
+            column: :id,
+            name: "payments_order_id_fkey",
+            type: :uuid,
+            prefix: "public",
+            on_delete: :delete_all
+          ), null: false
+    end
+
+    create unique_index(:payments, [:payment_intent_id],
+             name: "payments_unique_payment_intent_index"
+           )
+
+    create unique_index(:payments, [:stripe_refund_id],
+             name: "payments_unique_stripe_refund_index"
+           )
+
+    create constraint(:payments, :payments_valid_amount,
+             check: """
+               amount = round(amount, 2)
+             """
+           )
 
     create table(:product_categories, primary_key: false) do
       add :translations, :map
@@ -391,6 +466,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              """
            )
 
+    create constraint(:line_items, :line_items_catalogue_lines_have_a_product,
+             check: """
+               (product_variant_id IS NULL) = (product_id IS NULL)
+             """
+           )
+
     alter table(:product_variants) do
       modify :product_id,
              references(:products,
@@ -425,8 +506,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -460,6 +540,22 @@ defmodule Edenflowers.Repo.Migrations.Initial do
                minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)
              """
            )
+
+    create table(:promotions_versions, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :version_action_type, :text, null: false
+      add :version_action_name, :text, null: false
+      add :version_source_id, :uuid, null: false
+      add :changes, :map
+
+      add :version_inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :version_updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+    end
 
     create table(:tax_rates, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -583,15 +679,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              """
            )
 
-    create constraint(:orders, :orders_valid_amount_paid,
+    create constraint(:orders, :orders_valid_fulfillment_fee_override,
              check: """
-               amount_paid >= 0 AND amount_paid = round(amount_paid, 2)
-             """
-           )
-
-    create constraint(:orders, :orders_paid_requires_amount,
-             check: """
-               payment_status != 'paid' OR amount_paid IS NOT NULL
+               fulfillment_fee_override IS NULL OR (fulfillment_fee_override >= 0 AND fulfillment_fee_override = round(fulfillment_fee_override, 2))
              """
            )
 
@@ -638,9 +728,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     DROP SEQUENCE reference_seq
     """)
 
-    drop_if_exists constraint(:orders, :orders_paid_requires_amount)
-
-    drop_if_exists constraint(:orders, :orders_valid_amount_paid)
+    drop_if_exists constraint(:orders, :orders_valid_fulfillment_fee_override)
 
     drop_if_exists constraint(:orders, :orders_valid_fulfillment_fee)
 
@@ -710,6 +798,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:tax_rates)
 
+    drop table(:promotions_versions)
+
     drop_if_exists constraint(:promotions, :promotions_valid_minimum_cart_total)
 
     drop_if_exists unique_index(:promotions, [:code], name: "promotions_unique_code_index")
@@ -753,6 +843,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       modify :product_id, :uuid
     end
 
+    drop_if_exists constraint(:line_items, :line_items_catalogue_lines_have_a_product)
+
     drop_if_exists constraint(:line_items, :line_items_valid_unit_price)
 
     drop constraint(:line_items, "line_items_product_variant_id_fkey")
@@ -790,10 +882,32 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:product_categories)
 
+    drop_if_exists constraint(:payments, :payments_valid_amount)
+
+    drop constraint(:payments, "payments_order_id_fkey")
+
+    drop_if_exists unique_index(:payments, [:stripe_refund_id],
+                     name: "payments_unique_stripe_refund_index"
+                   )
+
+    drop_if_exists unique_index(:payments, [:payment_intent_id],
+                     name: "payments_unique_payment_intent_index"
+                   )
+
+    drop table(:payments)
+
+    drop constraint(:orders_versions, "orders_versions_version_source_id_fkey")
+
+    drop table(:orders_versions)
+
     alter table(:orders) do
       remove :promotion_id
       remove :fulfillment_option_id
     end
+
+    drop_if_exists unique_index(:orders, [:payment_link_token],
+                     name: "orders_unique_payment_link_token_index"
+                   )
 
     drop_if_exists unique_index(:orders, [:order_reference],
                      name: "orders_unique_order_reference_index"
@@ -804,6 +918,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :state
       remove :updated_at
       remove :inserted_at
+      remove :florist_note
+      remove :details_emailed_at
+      remove :delivered_emailed_at
       remove :vat_breakdown
       remove :receipt_sha256
       remove :receipt_emailed_at
@@ -812,7 +929,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :promotion_code
       remove :promotion_name
       remove :discount_rate
-      remove :amount_paid
+      remove :payment_link_token
       remove :payment_intent_id
       remove :position
       remove :distance
@@ -821,6 +938,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :fulfillment_option_name
       remove :fulfillment_tax_rate
       remove :fulfillment_method
+      remove :fulfillment_fee_override
       remove :fulfillment_fee
       remove :fulfillment_date
       remove :delivery_instructions
@@ -829,10 +947,13 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :recipient_name
       remove :card_message
       remove :gift
+      remove :customer_phone_number
       remove :customer_email
       remove :customer_name
+      remove :origin
+      remove :cancelled_at
       remove :fulfillment_status
-      remove :payment_status
+      remove :payment_attempt_status
       remove :ordered_at
       remove :order_reference
     end

@@ -134,7 +134,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid])
       assert order.state == :placed
-      assert order.payment_status == :paid
+      assert order.payment_status == :pending
       assert Decimal.equal?(order.amount_paid, Decimal.div(expected_amount - 1, 100))
       assert order.amount_mismatch?
     end
@@ -228,7 +228,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   end
 
   describe "payment_intent.canceled" do
-    test "marks the order's payment_status as :failed", %{order: order} do
+    test "marks the order failed and clears the canceled intent", %{order: order} do
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
@@ -239,6 +239,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       order = Orders.get_order_by_id!(order.id, authorize?: false)
       assert order.state == :payment
       assert order.payment_status == :failed
+      assert order.payment_intent_id == nil
     end
   end
 
@@ -302,7 +303,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       expected_amount: expected_amount
     } do
       generate(payment(order_id: order.id, method: :zettle, amount: Decimal.div(expected_amount, 100)))
-      Ash.Seed.update!(order, %{payment_status: :paid})
 
       log = capture_log(fn -> assert :ok = link_succeeded(order, expected_amount) end)
 

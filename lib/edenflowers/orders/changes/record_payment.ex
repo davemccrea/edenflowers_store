@@ -28,7 +28,7 @@ defmodule Edenflowers.Orders.Changes.RecordPayment do
       })
       |> Ash.create(authorize?: false)
       |> case do
-        {:ok, _payment} -> {:ok, order}
+        {:ok, _payment} -> Ash.load(order, :payment_status, authorize?: false, reuse_values?: false)
         error -> error
       end
     end)

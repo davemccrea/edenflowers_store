@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       |> element("#address-input-field")
       |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
 
-      render_async(view)
+      render_async(view, 500)
 
       view
       |> element("#checkout-form-3b")
@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       submit_delivery = fn ->
         {:ok, view, _html} = live(conn, ~p"/checkout")
         view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
-        render_async(view)
+        render_async(view, 500)
 
         view
         |> element("#checkout-form-3b")

@@ -164,15 +164,23 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       <.admin_page width="narrow">
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:actions :if={@form.source.type == :update}>
-            <button
-              type="button"
-              phx-click="delete"
-              data-confirm={~t"Delete this promotion? This can't be undone."}
-              class="btn btn-ghost btn-sm text-error"
-            >
-              <.icon name="hero-trash" class="h-4 w-4" />
-              {~t"Delete"}
-            </button>
+            <div class="dropdown dropdown-end">
+              <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
+                <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+              </button>
+              <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-44 border p-1 shadow">
+                <li>
+                  <button
+                    type="button"
+                    phx-click="delete"
+                    data-confirm={~t"Delete this promotion? This can't be undone."}
+                    class="text-error"
+                  >
+                    {~t"Delete"}
+                  </button>
+                </li>
+              </ul>
+            </div>
           </:actions>
         </.admin_page_header>
 
@@ -200,13 +208,23 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                   <.icon name="hero-arrow-path" class="h-4 w-4" />
                 </button>
                 <button
+                  id="copy-promotion-code"
                   type="button"
-                  phx-click={JS.dispatch("edenflowers:copy", to: "##{@form[:code].id}")}
-                  class="btn btn-ghost btn-sm btn-square mt-7"
+                  phx-click={
+                    JS.dispatch("edenflowers:copy",
+                      to: "##{@form[:code].id}",
+                      detail: %{trigger: "#copy-promotion-code"}
+                    )
+                  }
+                  class="btn btn-ghost btn-sm btn-square group mt-7"
                   title={~t"Copy code"}
                   aria-label={~t"Copy code"}
                 >
-                  <.icon name="hero-clipboard" class="h-4 w-4" />
+                  <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
+                  <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
+                  <span class="sr-only" aria-live="polite">
+                    <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+                  </span>
                 </button>
               </div>
             </div>
@@ -252,20 +270,22 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
         <.form_section :if={@history != []} title={~t"History"} class="mt-10">
           <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
-            <li :for={entry <- @history} class="py-2 first:pt-0 last:pb-0">
-              <div class="flex items-baseline justify-between gap-4">
-                <p class="text-base-content font-medium">{entry.title}</p>
-                <time datetime={DateTime.to_iso8601(entry.at)} class="text-base-content/65 shrink-0 text-xs tabular-nums">
-                  {Format.datetime(entry.at, @locale)}
-                </time>
-              </div>
-              <dl :if={entry.changes != []} class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
-                <div :for={{label, from, to} <- entry.changes}>
-                  <dt class="text-base-content/65 text-xs">{label}</dt>
-                  <dd class="text-base-content/85 break-words">{from} → {to}</dd>
-                </div>
-              </dl>
-            </li>
+            <.history_entry
+              :for={{entry, index} <- Enum.with_index(@history)}
+              id={"promotion-history-entry-#{index}"}
+              title={entry.title}
+              at={entry.at}
+              locale={@locale}
+            >
+              <:details :if={entry.changes != []}>
+                <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+                  <div :for={{label, from, to} <- entry.changes}>
+                    <dt class="text-base-content/65 text-xs">{label}</dt>
+                    <dd class="text-base-content/85 break-words">{from} → {to}</dd>
+                  </div>
+                </dl>
+              </:details>
+            </.history_entry>
           </ol>
         </.form_section>
       </.admin_page>

@@ -109,13 +109,22 @@ defmodule Edenflowers.Payments do
 
   @doc "Records a failed or canceled PaymentIntent against what it was for."
   def fail(payment_intent) do
+    update_failed_payment(payment_intent, &fail_payable/2, "Marked payment as failed")
+  end
+
+  @doc "Clears a canceled PaymentIntent so its order can open a fresh one."
+  def cancel(payment_intent) do
+    update_failed_payment(payment_intent, &cancel_payable/2, "Cleared canceled payment")
+  end
+
+  defp update_failed_payment(payment_intent, update, message) do
     with {:ok, {_key, id} = ref} <- find_payable(payment_intent) do
-      case fail_payable(ref, payment_intent.id) do
+      case update.(ref, payment_intent.id) do
         {:ok, :unchanged} ->
           {:ok, :unchanged}
 
         {:ok, record} ->
-          Logger.info("Marked payment as failed for #{describe(ref)} (PaymentIntent #{payment_intent.id})")
+          Logger.info("#{message} for #{describe(ref)} (PaymentIntent #{payment_intent.id})")
           {:ok, record}
 
         {:error, error} ->
@@ -365,6 +374,14 @@ defmodule Edenflowers.Payments do
 
   # An unpaid booking needs no update: its seat hold simply lapses.
   defp fail_payable({"course_registration_id", _id}, _payment_intent_id), do: {:ok, :unchanged}
+
+  defp cancel_payable({"order_id", id}, payment_intent_id) do
+    Orders.mark_payment_cancelled(id, payment_intent_id, actor: system_actor())
+  end
+
+  defp cancel_payable({"course_registration_id", id}, payment_intent_id) do
+    Courses.mark_registration_payment_cancelled(id, payment_intent_id, actor: system_actor())
+  end
 
   defp find_payable(%{metadata: metadata}) when is_map(metadata) do
     Enum.find_value(@metadata_keys, {:error, :unknown_payable}, fn key ->
