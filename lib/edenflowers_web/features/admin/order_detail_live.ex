@@ -899,8 +899,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp order_menu(assigns) do
     assigns =
       assigns
+      |> assign(:paid?, assigns.order.payment_status == :paid)
       |> assign(:email_details_unavailable, email_details_unavailable(assigns.order))
-      |> assign(:email_receipt_unavailable, receipt_unavailable(assigns.order) || no_email(assigns.order))
+      |> assign(:no_email, no_email(assigns.order))
       |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
       |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
@@ -911,31 +912,34 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
       </button>
       <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-56 border p-1 shadow">
-        <li :if={!@email_details_unavailable}>
-          <button
-            type="button"
-            phx-click="send_order_details"
-            data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
-          >
-            {~t"Email order details"}
-          </button>
-        </li>
-        <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
-          {~t"Email order details"}
-        </.unavailable_menu_item>
-
-        <li :if={!@email_receipt_unavailable}>
-          <button
-            type="button"
-            phx-click="email_receipt"
-            data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
-          >
+        <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
+        <%= if @paid? do %>
+          <li :if={!@no_email}>
+            <button
+              type="button"
+              phx-click="email_receipt"
+              data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
+            >
+              {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
+            </button>
+          </li>
+          <.unavailable_menu_item :if={@no_email} reason={@no_email}>
             {~t"Email receipt"}
-          </button>
-        </li>
-        <.unavailable_menu_item :if={@email_receipt_unavailable} reason={@email_receipt_unavailable}>
-          {~t"Email receipt"}
-        </.unavailable_menu_item>
+          </.unavailable_menu_item>
+        <% else %>
+          <li :if={!@email_details_unavailable}>
+            <button
+              type="button"
+              phx-click="send_order_details"
+              data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
+            >
+              {if @order.details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
+            </button>
+          </li>
+          <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
+            {~t"Email order details"}
+          </.unavailable_menu_item>
+        <% end %>
 
         <li :if={!@receipt_unavailable}>
           <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
