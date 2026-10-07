@@ -555,6 +555,8 @@ Hooks.Stripe = {
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
         appearance: this.buildAppearance(),
+        // Stripe has no "sv-FI", so pass the bare language ("en", "sv", "fi").
+        locale: document.documentElement.lang.split(/[-_]/)[0],
         // Stripe runs in a cross-origin iframe and can't see the host's
         // @font-face rules, so Open Sans must be loaded inside the iframe.
         // Self-hosted rather than Google Fonts, which would send customers' IPs to Google.
@@ -570,6 +572,7 @@ Hooks.Stripe = {
       // Prefilling the email lets Link recognise a returning customer
       // without them typing it again.
       const paymentElement = elements.create("payment", {
+        paymentMethodOrder: ["mobilepay", "card"],
         defaultValues: {
           billingDetails: {
             name: this.el.dataset.billingName,
