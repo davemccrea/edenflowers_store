@@ -109,10 +109,6 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  @doc "The payment status worth showing: a cancelled order nobody paid for owes nothing, so it isn't \"Unpaid\"."
-  def shown_payment_status(%{fulfillment_status: :cancelled, payment_status: :pending}), do: nil
-  def shown_payment_status(order), do: order.payment_status
-
   attr :status, :atom, required: true
 
   @doc "Fulfillment-status pill for an order: fulfilled reads as success, cancelled as error, pending stays neutral."

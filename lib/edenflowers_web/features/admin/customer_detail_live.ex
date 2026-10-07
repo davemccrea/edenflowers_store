@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             <.fulfillment_status_badge status={order.fulfillment_status} />
           </:col>
           <:col :let={order} field="payment_status" label={~t"Payment"}>
-            <.payment_status_badge status={shown_payment_status(order)} />
+            <.payment_status_badge status={order.payment_status} />
           </:col>
           <:col :let={order} field="grand_total" label={~t"Total"}>
             <span class="whitespace-nowrap tabular-nums">

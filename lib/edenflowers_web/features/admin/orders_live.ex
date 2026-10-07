@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             label={~t"Payment"}
             class="max-sm:hidden"
           >
-            <.payment_status_badge status={shown_payment_status(order)} />
+            <.payment_status_badge status={order.payment_status} />
           </:col>
           <:col :let={order} field="grand_total" label={~t"Total"}>
             <span class="whitespace-nowrap tabular-nums">

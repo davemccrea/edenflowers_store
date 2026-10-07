@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                 <td class="hidden py-4 pr-4 tabular-nums sm:table-cell">{order.order_reference}</td>
                 <td class="py-4 pr-4">
                   {status_label(order, @locale)}
-                  <.unpaid_note :if={unpaid?(order)} order={order} />
+                  <.unpaid_note :if={order.unpaid?} order={order} />
                 </td>
                 <%!-- Sans, not serif: Crimson Text ships no `tnum`, so a serif total
                       cannot line up its decimal points down a ledger column. --%>
@@ -238,10 +238,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
-
-  # A custom order placed before it is paid, or any order owing a balance after an edit.
-  defp unpaid?(order),
-    do: order.payment_link_open? or (order.payment_status != :paid and order.fulfillment_status != :cancelled)
 
   attr :order, :map, required: true
 

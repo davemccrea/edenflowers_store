@@ -480,7 +480,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       refute order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
     end
 
-    test "Stripe cancelling the PaymentIntent doesn't mark the payment failed", ctx do
+    test "Stripe cancelling the PaymentIntent leaves a cancelled order alone", ctx do
       {:ok, order} = place(ctx)
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
       stub(StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
@@ -488,7 +488,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       {:ok, :unchanged} = Payments.cancel(%{id: "pi_link", metadata: %{"order_id" => order.id}})
 
-      assert Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status]).payment_status == :pending
+      assert Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status]).payment_status == nil
     end
   end
 
@@ -527,6 +527,15 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       {:ok, refunded} = Orders.record_in_person_payment(paid, "-134.00", :cash, actor: ctx.admin)
       assert refunded.payment_status == :refunded
+    end
+
+    test "a free order owes nothing", ctx do
+      {:ok, order} = place(ctx, %{line_items: [custom_line(ctx.tax_rate, %{"unit_price" => "0,00"})]})
+
+      order = Ash.load!(order, [:unpaid?, :payable?], authorize?: false)
+      assert order.payment_status == :paid
+      refute order.unpaid?
+      refute order.payable?
     end
 
     test "in person can't be recorded as a Stripe payment", ctx do
