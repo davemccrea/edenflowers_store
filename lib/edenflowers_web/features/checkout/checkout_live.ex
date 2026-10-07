@@ -193,7 +193,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         module={EdenflowersWeb.Checkout.AddressInput}
                         order={@order}
                         quote={@delivery_quote}
-                        fee={delivery_fee(@order, @delivery_quote)}
                         label={recipient_label(@order, :address)}
                         autocomplete={own_details_autocomplete(@order, "street-address")}
                       />
@@ -303,7 +302,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 />
 
                 <div class="flex flex-col gap-2 text-base">
-                  <.delivery_cost fee={delivery_fee(@order, @delivery_quote)} locale={@order.locale} />
+                  <.delivery_cost
+                    fee={delivery_fee(@order, @delivery_quote)}
+                    distance={delivery_distance(@order, @delivery_quote)}
+                    locale={@order.locale}
+                  />
 
                   <div
                     :if={@order.promotion_applied?}
@@ -744,12 +747,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
 
   attr :fee, :any, required: true
+  attr :distance, :integer, default: nil
   attr :locale, :string, required: true
 
   defp delivery_cost(assigns) do
     ~H"""
     <div class="flex items-baseline justify-between" data-testid="delivery-cost">
-      <span>{~t"Delivery"}</span>
+      <span>
+        {~t"Delivery"}
+        <span :if={@distance} class="text-base-content/65 ml-1 text-sm tabular-nums">
+          {Edenflowers.Format.distance(@distance, @locale)}
+        </span>
+      </span>
       <%= cond do %>
         <% is_nil(@fee) -> %>
           <span class="text-base-content/70">—</span>
@@ -764,10 +773,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   # A geocode saved by an earlier submit stands as the quote when the
   # customer comes back to the delivery step.
-  defp quote_from_order(%{delivery_address: address, distance: distance}) when is_integer(distance),
-    do: %{address: address, distance: distance}
+  defp quote_from_order(%{delivery_address: address, geocoded_address: geocoded_address, distance: distance})
+       when is_integer(distance),
+       do: %{address: address, geocoded_address: geocoded_address, distance: distance}
 
   defp quote_from_order(_order), do: nil
+
+  defp delivery_distance(%{fulfillment_method: :delivery}, %{distance: distance}), do: distance
+  defp delivery_distance(_order, _quote), do: nil
 
   # Until the delivery step is submitted the order has no fee, so the summary
   # prices the quote, against the cart as it is now. After that the order's
