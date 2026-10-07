@@ -119,6 +119,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     action :calculate_delivery, :map do
       argument :delivery_address, :string, allow_nil?: false
       argument :fulfillment_option_id, :uuid, allow_nil?: false
+      argument :free_delivery?, :boolean, allow_nil?: false, default: false
       run Edenflowers.Fulfillment.Actions.CalculateDelivery
     end
 

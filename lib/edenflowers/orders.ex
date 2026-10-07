@@ -117,6 +117,7 @@ defmodule Edenflowers.Orders do
       define :send_order_details_email, action: :send_order_details_email
       define :email_receipt, action: :email_receipt
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
+      define :reprice_fulfillment, action: :reprice_fulfillment
     end
 
     resource Edenflowers.Orders.Order.Version

@@ -66,6 +66,7 @@ defmodule Edenflowers.Orders.Order do
     :grand_total,
     :vat,
     :cart_effectively_empty?,
+    :free_delivery?,
     :newsletter_offer_hidden?,
     :promotion,
     :fulfillment_option,
@@ -718,6 +719,13 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    # A cart that gains or loses a free-delivery product is repriced at the
+    # distance it was already quoted for.
+    update :reprice_fulfillment do
+      change Changes.RepriceFulfillment
+      require_atomic? false
+    end
+
     update :remove_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
       change Changes.RemoveLineItem
@@ -944,6 +952,7 @@ defmodule Edenflowers.Orders.Order do
     sum :items_total, :line_items, :total, default: Decimal.new("0")
     sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
+    exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
 
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount

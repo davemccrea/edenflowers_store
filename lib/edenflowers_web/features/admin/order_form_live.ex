@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp load(%{"id" => id}, actor) do
-    case Orders.get_order_for_admin(id, actor: actor, load: [line_items: [:subtotal]]) do
+    case Orders.get_order_for_admin(id, actor: actor, load: [:free_delivery?, line_items: [:subtotal]]) do
       {:ok, %Order{} = order} -> edit_mode(order)
       _ -> {:error, ~t"Order not found."}
     end
@@ -255,11 +255,15 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         socket
 
       true ->
+        # ponytail: quotes on the lines the order was saved with, not the lines in the
+        # form; saving prices the new lines. Track the form's lines if Jennie misreads it.
+        free_delivery? = !!(socket.assigns.order && socket.assigns.order.free_delivery?)
+
         # A newer lookup with the same name cancels one still in flight.
         socket
         |> assign(:delivery_quote, %{status: :loading, address: address, option_id: option_id})
         |> start_async(:delivery_quote, fn ->
-          {address, option_id, Fulfillment.calculate_delivery(address, option_id, authorize?: false)}
+          {address, option_id, Fulfillment.calculate_delivery(address, option_id, free_delivery?, authorize?: false)}
         end)
     end
   end
@@ -311,7 +315,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
        when is_integer(distance) do
     case Fulfillment.get_option_by_id(order.fulfillment_option_id, authorize?: false) do
       {:ok, option} ->
-        case Fee.calculate(option, distance) do
+        case Fee.calculate(option, distance, order.free_delivery?) do
           %{error: nil, fulfillment_fee: fee} ->
             %{status: :ok, address: order.delivery_address, option_id: option.id, fee: fee, distance: distance}
 

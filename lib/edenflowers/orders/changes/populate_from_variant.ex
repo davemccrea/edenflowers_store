@@ -21,7 +21,8 @@ defmodule Edenflowers.Orders.Changes.PopulateFromVariant do
         product_image_slug: variant.image_slug,
         unit_price: variant.price,
         tax_rate: variant.product.tax_rate.percentage,
-        variant_size: variant.size
+        variant_size: variant.size,
+        free_delivery: variant.product.free_delivery
       }
 
       Ash.Changeset.force_change_attributes(changeset, attrs)

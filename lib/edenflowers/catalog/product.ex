@@ -36,7 +36,18 @@ defmodule Edenflowers.Catalog.Product do
     end
 
     create :create do
-      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
+      accept [
+        :name,
+        :image_slug,
+        :description,
+        :tax_rate_id,
+        :product_category_id,
+        :draft,
+        :featured,
+        :free_delivery,
+        :translations
+      ]
+
       argument :product_variants, {:array, :map}
 
       change manage_relationship(:product_variants,
@@ -48,7 +59,18 @@ defmodule Edenflowers.Catalog.Product do
     end
 
     update :update do
-      accept [:name, :image_slug, :description, :tax_rate_id, :product_category_id, :draft, :featured, :translations]
+      accept [
+        :name,
+        :image_slug,
+        :description,
+        :tax_rate_id,
+        :product_category_id,
+        :draft,
+        :featured,
+        :free_delivery,
+        :translations
+      ]
+
       argument :product_variants, {:array, :map}
       require_atomic? false
 
@@ -84,6 +106,7 @@ defmodule Edenflowers.Catalog.Product do
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
+    attribute :free_delivery, :boolean, allow_nil?: false, default: false
   end
 
   relationships do

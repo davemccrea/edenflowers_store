@@ -177,7 +177,8 @@ for n <- 1..6 do
       description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       draft: false,
-      featured: n <= 3
+      featured: n <= 3,
+      free_delivery: n <= 2
     })
     |> Ash.create!(authorize?: false)
 

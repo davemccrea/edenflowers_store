@@ -37,6 +37,7 @@ defmodule Edenflowers.Orders.LineItem do
 
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
+      change Edenflowers.Orders.Changes.RepriceOrderFulfillment
     end
 
     # A line on a custom order that Jennie describes and prices herself, with
@@ -106,6 +107,8 @@ defmodule Edenflowers.Orders.LineItem do
     # Nil for a custom item, which has no product photo.
     attribute :product_image_slug, :string
     attribute :is_card, :boolean, default: false, allow_nil?: false
+    # Snapshotted from the product, so unflagging it later leaves existing orders' fees alone.
+    attribute :free_delivery, :boolean, default: false, allow_nil?: false
     attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
     timestamps()
   end
