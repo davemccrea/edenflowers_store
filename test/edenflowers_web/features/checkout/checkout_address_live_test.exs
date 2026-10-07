@@ -324,6 +324,61 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     end
   end
 
+  test "removing the only free-delivery product reprices the quoted address", %{conn: conn, order: order} do
+    stub_successful_geocode()
+
+    nearby =
+      generate(
+        fulfillment_option(
+          fulfillment_method: :delivery,
+          rate_type: :dynamic,
+          base_price: "4.50",
+          price_per_km: "1.60",
+          free_dist_km: 5,
+          max_dist_km: 20
+        )
+      )
+
+    free = generate(product_variant(product_id: generate(product(free_delivery: true)).id))
+    free_item = Orders.add_line_item!(order.id, free.id, 1, authorize?: false)
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    select_delivery_option(view, nearby.id)
+    blur_address(view, "Stadsgatan 3, 65300 Vasa")
+    assert render_async(view, 500) =~ "Free delivery!"
+
+    Orders.remove_line_item!(order, free_item.id, authorize?: false)
+
+    html = render(view)
+    refute html =~ "Free delivery!"
+    assert html =~ "4.50"
+  end
+
+  test "the order summary prices a looked-up address before the step is submitted", %{
+    conn: conn,
+    delivery_option: delivery_option
+  } do
+    stub_successful_geocode()
+
+    {:ok, view, _html} = live(conn, ~p"/checkout")
+
+    select_delivery_option(view, delivery_option.id)
+    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
+
+    blur_address(view, "Stadsgatan 3, 65300 Vasa")
+    render_async(view, 500)
+
+    assert view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
+    assert view |> element("[data-testid='total-amount']") |> render() =~ "40.00"
+
+    # 25.5% included in 35.00 of goods (7.11) and 5.00 of delivery (1.02).
+    assert view |> element("[data-testid='vat-line']") |> render() =~ "8.13"
+
+    type_address(view, "Stadsgatan 4")
+    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
+  end
+
   defp stub_successful_geocode do
     stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
       {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
