@@ -33,7 +33,7 @@ A private link Jennie gives a customer so they can pay what an order still owes 
 _Avoid_: Invoice, payment request, Stripe link
 
 **In-person Payment**:
-A payment Jennie takes outside the website — on the Zettle card reader, by MobilePay, or in cash — and then records against the order.
+A payment Jennie takes outside the website — on the Zettle card reader, by MobilePay, in cash, or by a Zervant invoice paid to her bank — and then records against the order.
 _Avoid_: Offline payment, manual payment, till payment
 
 **Payment**:

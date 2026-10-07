@@ -336,6 +336,18 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       refute has_element?(view, "#in-person-payment-form")
     end
 
+    test "records a paid Zervant invoice", ctx do
+      order = place_custom_order(ctx)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      view
+      |> form("#in-person-payment-form", in_person: %{payment_method: "zervant", amount: "85,00"})
+      |> render_submit()
+
+      assert has_element?(view, "#order-payments", "Invoice (Zervant)")
+    end
+
     test "logs what happened to the order", ctx do
       order = place_custom_order(ctx)
       {:ok, _order} = Orders.record_in_person_payment(order, "85.00", :mobilepay, actor: ctx.admin)

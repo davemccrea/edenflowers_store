@@ -38,6 +38,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   def payment_method_label(:zettle), do: ~t"Card (Zettle)"
   def payment_method_label(:mobilepay), do: ~t"MobilePay"
   def payment_method_label(:cash), do: ~t"Cash"
+  def payment_method_label(:zervant), do: ~t"Invoice (Zervant)"
   def payment_method_label(_method), do: ~t"Unknown"
 
   defp payment_entry(payment, locale) do
