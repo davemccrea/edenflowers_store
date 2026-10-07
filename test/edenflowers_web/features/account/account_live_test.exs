@@ -270,6 +270,106 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
   end
 
+  describe "subscriptions" do
+    defp subscription(user, attrs) do
+      Ash.Seed.seed!(
+        Edenflowers.Orders.Subscription,
+        Map.merge(
+          %{
+            user_id: user.id,
+            product_variant_id: generate(product_variant(product_id: generate(product()).id, size: :medium)).id,
+            fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
+            interval_weeks: 2,
+            next_fulfillment_date: days_from_today(14),
+            locale: "en",
+            stripe_customer_id: "cus_ada",
+            stripe_payment_method_id: "pm_card"
+          },
+          attrs
+        )
+      )
+    end
+
+    defp days_from_today(days), do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(days)
+
+    defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)
+
+    test "lists the customer's subscriptions, not anyone else's", %{conn: conn, user: user} do
+      mine = subscription(user, %{})
+      theirs = subscription(generate(admin_user(admin: false)), %{})
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#subscription-#{mine.id}", "Medium · Every 2 weeks")
+
+      assert has_element?(
+               view,
+               "#subscription-#{mine.id}",
+               "Next delivery #{Edenflowers.Format.date(mine.next_fulfillment_date, @locale)}"
+             )
+
+      refute has_element?(view, "#subscription-#{theirs.id}")
+    end
+
+    test "hides the section without a subscription", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      refute has_element?(view, "#subscriptions-heading")
+    end
+
+    test "skips the next delivery", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> element("#subscription-#{subscription.id} button", "Skip next delivery") |> render_click()
+
+      assert reload(subscription).skipped_dates == [subscription.next_fulfillment_date]
+      assert has_element?(view, "#subscription-#{subscription.id} [data-testid=subscription-status]", "Skipping")
+      refute has_element?(view, "#subscription-#{subscription.id} button", "Skip next delivery")
+    end
+
+    test "pauses and resumes", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> element("#subscription-#{subscription.id} button", "Pause") |> render_click()
+      assert reload(subscription).state == :paused
+      assert has_element?(view, "#subscription-#{subscription.id}", "Paused")
+
+      view |> element("#subscription-#{subscription.id} button", "Resume") |> render_click()
+      assert reload(subscription).state == :active
+    end
+
+    test "cancels", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> element("#subscription-#{subscription.id} button", "Cancel subscription") |> render_click()
+
+      assert reload(subscription).state == :cancelled
+      refute has_element?(view, "#subscription-#{subscription.id} button")
+    end
+
+    test "offers no changes inside the cutoff", %{conn: conn, user: user} do
+      subscription = subscription(user, %{next_fulfillment_date: days_from_today(4)})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#subscription-#{subscription.id}", "It's too late to change your next delivery.")
+      refute has_element?(view, "#subscription-#{subscription.id} button")
+    end
+
+    test "says why a change is refused once the cutoff passes with the page open", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(4)})
+      view |> element("#subscription-#{subscription.id} button", "Pause") |> render_click()
+
+      assert reload(subscription).state == :active
+      assert render(view) =~ "It&#39;s too late to change your next delivery."
+    end
+  end
+
   describe "newsletter" do
     test "saves the preference as soon as the box is ticked", %{conn: conn, user: user} do
       refute user.newsletter_opt_in
