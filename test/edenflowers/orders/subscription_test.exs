@@ -4,10 +4,12 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   import ExUnit.CaptureLog
   import Generator
   import Mox
+  import Swoosh.TestAssertions
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.{LineItem, Order, Subscription}
+  alias Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
   alias Edenflowers.Payments
 
   setup :verify_on_exit!
@@ -131,6 +133,23 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert subscription.locale == "fi"
       assert subscription.stripe_customer_id == "cus_ada"
       assert subscription.stripe_payment_method_id == "pm_card"
+    end
+
+    test "the customer is emailed once that it is set up", ctx do
+      order = subscription_cart(ctx, state: :payment)
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+
+      assert [job] = all_enqueued(worker: SendSubscriptionSetupEmail)
+      assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.text_body =~ "Hovrättsesplanaden 1, Vasa"
+      end)
+
+      assert {:cancel, _} = perform_job(SendSubscriptionSetupEmail, job.args)
+      refute_email_sent()
     end
 
     test "a redelivered webhook doesn't start a second one", ctx do

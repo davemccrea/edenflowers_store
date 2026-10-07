@@ -1,0 +1,24 @@
+defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
+  use Ash.Resource.Change
+
+  require Logger
+
+  alias Edenflowers.Email
+  alias Edenflowers.Mailer
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      subscription = Ash.load!(changeset.data, [:product_variant, user: [:first_name]], authorize?: false)
+
+      case subscription |> Email.subscription_set_up() |> Mailer.deliver() do
+        {:ok, _result} ->
+          Logger.info("Sent set-up email for subscription #{subscription.id}")
+          Ash.Changeset.force_change_attribute(changeset, :setup_emailed_at, DateTime.utc_now())
+
+        {:error, error} ->
+          Ash.Changeset.add_error(changeset, "Failed to send subscription set-up email: #{inspect(error)}")
+      end
+    end)
+  end
+end

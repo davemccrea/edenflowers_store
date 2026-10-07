@@ -1,0 +1,20 @@
+<%= if @subscription.user.first_name do %><%= gettext("Hi %{name},", name: @subscription.user.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Thank you for subscribing! Your subscription is set up, and I'll choose the flowers for each bouquet myself.") %>
+
+<%= gettext("Size") %>: <%= @size %>
+<%= gettext("How often") %>: <%= @interval %>
+<%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
+<%= gettext("Next delivery") %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
+
+<%= gettext("Your first delivery comes as ordered, and its receipt is in a separate email. I charge your saved card a few days before each delivery.") %>
+
+<%= gettext("You can skip a delivery, pause, change the size or how often, update your card or cancel from your account:") %>
+<%= @account_url %>
+
+<%= gettext("If anything needs changing, just reply and I'll take care of it.") %>
+
+<%= gettext("Warm wishes,") %>
+
+Jennie
+Eden Flowers

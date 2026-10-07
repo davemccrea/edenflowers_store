@@ -75,6 +75,30 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  What a customer is sent once their Subscription is started: what comes and
+  how often, the next date, and where to change it. The first delivery's
+  receipt goes separately. Expects `:product_variant` and `user: [:first_name]` loaded.
+  """
+  def subscription_set_up(subscription) do
+    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(to_string(subscription.user.email))
+      |> bcc(from_address())
+      |> subject(~t"Your Eden Flowers subscription is set up")
+      |> text_body(
+        Templates.subscription_set_up(%{
+          subscription: subscription,
+          size: EdenflowersWeb.Admin.Components.variant_size_label(subscription.product_variant.size),
+          interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
+          account_url: EdenflowersWeb.Endpoint.url() <> "/account",
+          format_date: &Format.weekday_date(&1, subscription.locale)
+        })
+      )
+    end)
+  end
+
   def order_delivered(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()

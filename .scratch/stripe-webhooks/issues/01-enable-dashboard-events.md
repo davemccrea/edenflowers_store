@@ -7,6 +7,7 @@ In the Stripe dashboard, add an endpoint at `https://<domain>/webhook/stripe` su
 - `payment_intent.succeeded`
 - `payment_intent.payment_failed`
 - `payment_intent.canceled`
+- `setup_intent.succeeded` (saves a subscription's replacement card if the customer never returns from Stripe)
 - `refund.created`
 - `refund.updated`
 

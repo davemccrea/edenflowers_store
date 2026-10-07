@@ -136,6 +136,8 @@ defmodule Edenflowers.Orders do
       define :pause_subscription, action: :pause
       define :resume_subscription, action: :resume
       define :cancel_subscription, action: :cancel
+      define :change_subscription, action: :change
+      define :replace_subscription_card, action: :replace_card, args: [:stripe_payment_method_id]
     end
 
     resource Edenflowers.Orders.Subscription.Version
