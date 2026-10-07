@@ -28,7 +28,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="full">
-        <.admin_page_header title={~t"Expenses"} />
+        <.admin_page_header title={~t"Expenses"}>
+          <:actions>
+            <.button
+              href={Edenflowers.External.PapraAPI.documents_url()}
+              target="_blank"
+              rel="noopener"
+              variant="neutral"
+              size="sm"
+            >
+              {~t"Open Papra"}
+              <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+            </.button>
+          </:actions>
+        </.admin_page_header>
 
         <Cinder.collection
           id="expenses-table"
