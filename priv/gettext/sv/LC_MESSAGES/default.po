@@ -2209,7 +2209,7 @@ msgstr "%{label} (%{arrow_symbol})"
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:523
 #, elixir-autogen, elixir-format
 msgid "%{queue_position} of %{queue_total} to fulfil"
-msgstr "%{queue_position} av %{queue_total} att hantera"
+msgstr "%{queue_position} av %{queue_total}"
 
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:155
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:194
