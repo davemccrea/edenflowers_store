@@ -39,19 +39,18 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
     {:ok, lines} = EnteredLineItems.parse(Ash.Changeset.get_argument(changeset, :line_items))
     existing = existing_lines(changeset)
 
-    case map_ok(lines, &describe(&1, existing)) do
-      {:ok, entered} ->
-        before = Map.values(existing)
+    entered = Enum.map(lines, &describe(&1, existing))
 
-        if Enum.sort(entered) == Enum.sort(before) do
-          Ash.Changeset.set_context(changeset, %{skip_version_when_unchanged?: true})
-        else
-          items = Enum.map_join(entered, ", ", fn {name, quantity, _price} -> "#{quantity} × #{name}" end)
-          Ash.Changeset.set_context(changeset, %{paper_trail_metadata: %{items: items}})
-        end
-
-      :error ->
+    cond do
+      nil in entered ->
         Ash.Changeset.add_error(changeset, field: :line_items, message: "contains an item that is no longer available")
+
+      Enum.sort(entered) == Enum.sort(Map.values(existing)) ->
+        Ash.Changeset.set_context(changeset, %{skip_version_when_unchanged?: true})
+
+      true ->
+        items = Enum.map_join(entered, ", ", fn {name, quantity, _price} -> "#{quantity} × #{name}" end)
+        Ash.Changeset.set_context(changeset, %{paper_trail_metadata: %{items: items}})
     end
   end
 
@@ -66,20 +65,20 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
 
   defp describe({:catalogue, nil, quantity, id}, existing) do
     case Map.fetch(existing, id) do
-      {:ok, {name, _quantity, price}} -> {:ok, {name, quantity, price}}
-      :error -> :error
+      {:ok, {name, _quantity, price}} -> {name, quantity, price}
+      :error -> nil
     end
   end
 
   defp describe({:catalogue, variant_id, quantity, nil}, _existing) do
     case Catalog.get_variant_by_id(variant_id, load: [:product], authorize?: false) do
-      {:ok, variant} -> {:ok, {variant.product.name, quantity, variant.price}}
-      _ -> :error
+      {:ok, variant} -> {variant.product.name, quantity, variant.price}
+      _ -> nil
     end
   end
 
   defp describe({:custom, description, unit_price, _tax_rate_id, quantity}, _existing),
-    do: {:ok, {description, quantity, unit_price}}
+    do: {description, quantity, unit_price}
 
   defp kept?({:catalogue, nil, _quantity, _id}), do: true
   defp kept?(_line), do: false
@@ -123,18 +122,5 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
         error -> {:halt, error}
       end
     end)
-  end
-
-  defp map_ok(items, fun) do
-    Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->
-      case fun.(item) do
-        {:ok, value} -> {:cont, {:ok, [value | acc]}}
-        :error -> {:halt, :error}
-      end
-    end)
-    |> case do
-      {:ok, values} -> {:ok, Enum.reverse(values)}
-      :error -> :error
-    end
   end
 end

@@ -486,9 +486,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       stub(StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
       {:ok, _order} = Orders.cancel_order(order, actor: ctx.admin)
 
-      {:ok, _} = Payments.fail(%{id: "pi_link", metadata: %{"order_id" => order.id}})
+      {:ok, :unchanged} = Payments.cancel(%{id: "pi_link", metadata: %{"order_id" => order.id}})
 
-      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_status == :pending
+      assert Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status]).payment_status == :pending
     end
   end
 
@@ -497,16 +497,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx)
 
       assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
-    end
-
-    test "paying from a stale order cancels the current PaymentIntent", ctx do
-      {:ok, stale_order} = place(ctx)
-      Ash.Seed.update!(stale_order, %{payment_intent_id: "pi_current"})
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_current"} -> {:ok, %{id: "pi_current"}} end)
-
-      {:ok, order} = Orders.record_in_person_payment(stale_order, "134.00", :cash, actor: ctx.admin)
-
-      assert order.payment_intent_id == nil
     end
 
     test "in person records how it was paid and sends no receipt by itself", ctx do
@@ -557,7 +547,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
                  amount_received: 13_400
                })
 
-      paid = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments])
+      paid = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments, :payment_status])
 
       assert paid.payment_status == :paid
       assert [%{method: :stripe, payment_intent_id: "pi_link"}] = paid.payments

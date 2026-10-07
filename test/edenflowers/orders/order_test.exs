@@ -1664,6 +1664,15 @@ defmodule Edenflowers.Orders.OrderTest do
       assert {:error, error} = Orders.add_payment_intent_id(order, "pi_new", actor: nil)
       assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end
+
+    test "cannot attach payment intent to a cancelled order" do
+      order = generate(order(state: :placed, fulfillment_fee: "1.00", fulfillment_status: :cancelled))
+
+      assert {:error, %Ash.Error.Invalid{} = error} =
+               Orders.add_payment_intent_id(order, "pi_new", actor: %{system: true})
+
+      assert Exception.message(error) =~ "order is not payable"
+    end
   end
 
   describe "Config snapshots are frozen on placed orders" do

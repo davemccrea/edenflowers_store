@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  }
                })
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :placed
       assert order.payment_status == :paid
       assert order.payment_intent_id == nil
@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       # guard in the worker prevents a duplicate send.
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :placed
       assert order.payment_status == :paid
 
@@ -132,7 +132,9 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       assert log =~ "Amount mismatch"
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid])
+      order =
+        Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid, :payment_status])
+
       assert order.state == :placed
       assert order.payment_status == :pending
       assert Decimal.equal?(order.amount_paid, Decimal.div(expected_amount - 1, 100))
@@ -161,7 +163,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       assert log =~ "payment_intent mismatch"
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :payment
       assert order.payment_status != :paid
       refute_email_sent()
@@ -183,7 +185,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   end
 
   describe "payment_intent.payment_failed" do
-    test "marks the order's payment_status as :failed without finalizing", %{order: order} do
+    test "leaves the order in checkout for the customer to retry", %{order: order} do
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_failed_1",
@@ -191,9 +193,9 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :payment
-      assert order.payment_status == :failed
+      assert order.payment_status == :pending
 
       refute_email_sent()
     end
@@ -221,14 +223,14 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :placed
       assert order.payment_status == :paid
     end
   end
 
   describe "payment_intent.canceled" do
-    test "marks the order failed and clears the canceled intent", %{order: order} do
+    test "clears the canceled intent so the order can open a fresh one", %{order: order} do
       assert :ok =
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
@@ -236,9 +238,9 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
                })
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :payment
-      assert order.payment_status == :failed
+      assert order.payment_status == :pending
       assert order.payment_intent_id == nil
     end
   end
@@ -283,7 +285,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "records the payment on the order already placed", %{order: order, expected_amount: expected_amount} do
       assert :ok = link_succeeded(order, expected_amount)
 
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments])
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments, :payment_status])
       assert order.payment_status == :paid
       assert [%{method: :stripe, payment_intent_id: payment_intent_id}] = order.payments
       assert payment_intent_id != nil

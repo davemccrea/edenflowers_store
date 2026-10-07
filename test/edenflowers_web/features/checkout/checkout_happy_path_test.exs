@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
-    finalized = Orders.get_order_by_id!(order.id, authorize?: false)
+    finalized = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
 
@@ -199,7 +199,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     finalized =
       Orders.get_order_by_id!(order.id, authorize?: false)
-      |> Ash.load!([:line_items], authorize?: false)
+      |> Ash.load!([:line_items, :payment_status], authorize?: false)
 
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
@@ -283,7 +283,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert :ok =
              EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
-    finalized = Orders.get_order_by_id!(order.id, authorize?: false)
+    finalized = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
 
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
@@ -595,7 +595,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert html =~ "Payment processing error"
     assert_push_event(view, "stripe:ready", %{})
 
-    stalled = Orders.get_order_by_id!(order.id, authorize?: false)
+    stalled = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     assert stalled.state == :payment
     assert stalled.payment_status != :paid
 

@@ -304,13 +304,11 @@ defmodule EdenflowersWeb.Admin.Components do
   defp confidence_label(value), do: to_string(value)
 
   defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"
-  defp payment_status_badge_class(:failed), do: "badge-error admin-badge-error"
   defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-attention"
   defp payment_status_badge_class(:pending), do: "badge-warning admin-badge-warning"
   defp payment_status_badge_class(_), do: "admin-badge-neutral"
 
   defp payment_status_label(:paid), do: ~t"Paid"
-  defp payment_status_label(:failed), do: ~t"Failed"
   defp payment_status_label(:refunded), do: ~t"Refunded"
   defp payment_status_label(:pending), do: ~t"Unpaid"
   defp payment_status_label(value), do: to_string(value)

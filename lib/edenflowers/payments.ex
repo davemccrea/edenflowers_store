@@ -7,9 +7,9 @@ defmodule Edenflowers.Payments do
   complete twice, and queue the confirmation email in the same transaction.
 
   A PaymentIntent names what it pays for in its metadata, as `order_id` or
-  `course_registration_id`. The completing actions return `AlreadyPaid` for
-  something already paid and `PaymentIntentMismatch` for someone else's
-  PaymentIntent. See `Edenflowers.Payments.Errors`.
+  `course_registration_id`. Completing returns `AlreadyPaid` for a booking
+  already confirmed and `PaymentIntentMismatch` for a PaymentIntent the
+  record no longer holds. See `Edenflowers.Payments.Errors`.
   """
 
   require Logger
@@ -89,9 +89,10 @@ defmodule Edenflowers.Payments do
             find_error(error, AlreadyPaid) ->
               {:ok, :already_completed}
 
-            # Completing clears the order's PaymentIntent, so a concurrent
-            # completion that lost the race sees a mismatch, not AlreadyPaid.
-            find_error(error, PaymentIntentMismatch) && recorded?(payment_intent.id) ->
+            # A concurrent completion got there first. The loser sees a
+            # mismatch at checkout, which clears the PaymentIntent, or the
+            # unique payment_intent_id on a payment link.
+            recorded?(payment_intent.id) ->
               {:ok, :already_completed}
 
             mismatch = find_error(error, PaymentIntentMismatch) ->
@@ -107,39 +108,20 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  @doc "Records a failed or canceled PaymentIntent against what it was for."
-  def fail(payment_intent) do
-    update_failed_payment(payment_intent, &fail_payable/2, "Marked payment as failed")
-  end
-
-  @doc "Clears a canceled PaymentIntent so its order can open a fresh one."
+  @doc "Clears a canceled PaymentIntent so its order or booking can open a fresh one."
   def cancel(payment_intent) do
-    update_failed_payment(payment_intent, &cancel_payable/2, "Cleared canceled payment")
-  end
-
-  defp update_failed_payment(payment_intent, update, message) do
     with {:ok, {_key, id} = ref} <- find_payable(payment_intent) do
-      case update.(ref, payment_intent.id) do
-        {:ok, :unchanged} ->
-          {:ok, :unchanged}
-
+      case cancel_payable(ref, payment_intent.id) do
         {:ok, record} ->
-          Logger.info("#{message} for #{describe(ref)} (PaymentIntent #{payment_intent.id})")
+          Logger.info("Cleared canceled payment for #{describe(ref)} (PaymentIntent #{payment_intent.id})")
           {:ok, record}
 
         {:error, error} ->
-          cond do
-            find_error(error, AlreadyPaid) ->
-              {:ok, :unchanged}
-
-            # A PaymentIntent the order has moved on from, such as the one a
-            # payment link drops when Jennie records an in-person payment.
-            find_error(error, PaymentIntentMismatch) ->
-              {:ok, :unchanged}
-
-            true ->
-              {:error, {:payment_update_failed, id, error}}
-          end
+          # A PaymentIntent the order has moved on from, such as the one a
+          # payment link drops when Jennie records an in-person payment.
+          if find_error(error, PaymentIntentMismatch),
+            do: {:ok, :unchanged},
+            else: {:error, {:payment_update_failed, id, error}}
       end
     end
   end
@@ -181,9 +163,7 @@ defmodule Edenflowers.Payments do
   """
   def sync_refunds(%Order{id: order_id}) do
     with {:ok, refunds_by_payment} <- stripe_refunds(order_id) do
-      refunds_by_payment
-      |> Enum.flat_map(fn {_payment, refunds} -> refunds end)
-      |> record_refunds()
+      record_refunds(refunds_by_payment)
     end
   end
 
@@ -199,8 +179,10 @@ defmodule Edenflowers.Payments do
     end)
   end
 
-  defp record_refunds(refunds) do
-    Enum.reduce_while(refunds, {:ok, 0}, fn refund, {:ok, recorded} ->
+  defp record_refunds(refunds_by_payment) do
+    refunds_by_payment
+    |> all_refunds()
+    |> Enum.reduce_while({:ok, 0}, fn refund, {:ok, recorded} ->
       case record_refund(refund) do
         {:ok, :recorded} -> {:cont, {:ok, recorded + 1}}
         {:ok, _ignored_or_already_recorded} -> {:cont, {:ok, recorded}}
@@ -221,7 +203,7 @@ defmodule Edenflowers.Payments do
   """
   def refund_balance(%Order{id: order_id}) do
     with {:ok, refunds_by_payment} <- stripe_refunds(order_id),
-         {:ok, _recorded} <- refunds_by_payment |> Enum.flat_map(&elem(&1, 1)) |> record_refunds(),
+         {:ok, _recorded} <- record_refunds(refunds_by_payment),
          {:ok, order} <- Ash.get(Order, order_id, load: [:balance], authorize?: false) do
       owed_cents =
         StripeAPI.to_stripe_amount(Decimal.max(Decimal.negate(order.balance), 0)) -
@@ -240,11 +222,13 @@ defmodule Edenflowers.Payments do
 
   defp pending_cents(refunds_by_payment) do
     refunds_by_payment
-    |> Enum.flat_map(&elem(&1, 1))
+    |> all_refunds()
     |> Enum.reject(&(&1.status in ["succeeded", "failed", "canceled"]))
     |> Enum.map(& &1.amount)
     |> Enum.sum()
   end
+
+  defp all_refunds(refunds_by_payment), do: Enum.flat_map(refunds_by_payment, fn {_payment, refunds} -> refunds end)
 
   defp refund_from(_refunds_by_payment, left_cents, _key, refunds) when left_cents <= 0,
     do: {:ok, Enum.reverse(refunds)}
@@ -367,13 +351,6 @@ defmodule Edenflowers.Payments do
     |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
     |> Ash.exists?(authorize?: false)
   end
-
-  defp fail_payable({"order_id", id}, payment_intent_id) do
-    Orders.mark_payment_failed(id, payment_intent_id, actor: system_actor())
-  end
-
-  # An unpaid booking needs no update: its seat hold simply lapses.
-  defp fail_payable({"course_registration_id", _id}, _payment_intent_id), do: {:ok, :unchanged}
 
   defp cancel_payable({"order_id", id}, payment_intent_id) do
     Orders.mark_payment_cancelled(id, payment_intent_id, actor: system_actor())

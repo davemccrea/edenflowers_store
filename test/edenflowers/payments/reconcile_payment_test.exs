@@ -79,7 +79,10 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
       end)
 
     assert log =~ "webhook did not arrive"
-    assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+
+    assert %{state: :placed, payment_status: :paid} =
+             Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
+
     assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
   end
 
@@ -134,7 +137,9 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     end)
 
     assert_enqueued(worker: ReconcileOrderPayment, args: %{"primary_key" => %{"id" => order.id}})
-    assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+
+    assert %{state: :placed, payment_status: :paid} =
+             Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
   end
 
   test "leaves an unpaid order in checkout", %{seed_order: seed_order} do

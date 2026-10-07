@@ -117,9 +117,6 @@ defmodule Generator do
         :pending ->
           opts
 
-        :failed ->
-          Keyword.put(opts, :payment_attempt_status, :failed)
-
         status ->
           raise ArgumentError, "seed payments instead of setting calculated payment_status to #{inspect(status)}"
       end
