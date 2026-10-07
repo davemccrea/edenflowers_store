@@ -45,7 +45,9 @@ defmodule Edenflowers.Orders.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    case Fulfillment.calculate_delivery(delivery_address, id, authorize?: false) do
+    %{free_delivery?: free_delivery?} = Ash.load!(changeset.data, :free_delivery?, authorize?: false)
+
+    case Fulfillment.calculate_delivery(delivery_address, id, free_delivery?, authorize?: false) do
       {:ok, %{error: nil} = result} ->
         Ash.Changeset.force_change_attributes(
           changeset,

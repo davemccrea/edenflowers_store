@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Fulfillment
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -37,7 +38,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product: product)
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
-     |> assign(selected_variant: selected_variant)}
+     |> assign(selected_variant: selected_variant)
+     |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
   def render(assigns) do
@@ -94,6 +96,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
             <p data-testid="product-description" class="text-base-content text-lg leading-relaxed">
               {@product.description}
+            </p>
+
+            <p :if={@free_dist_km} data-testid="product-free-delivery" class="text-base-content/80 flex items-center gap-2">
+              <.icon name="hero-truck" class="h-5 w-5" />
+              {~t"Free delivery within #{km = @free_dist_km} km"}
             </p>
 
             <.form

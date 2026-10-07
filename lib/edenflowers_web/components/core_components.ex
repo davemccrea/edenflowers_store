@@ -772,7 +772,7 @@ defmodule EdenflowersWeb.CoreComponents do
   `from_price?: true` prefixes the price with the "From" preposition,
   appropriate when the value comes from `cheapest_price` across variants.
   """
-  attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price"
+  attr :product, :map, required: true, doc: "must respond to :name, :image_slug, :cheapest_price, :free_delivery"
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
   attr :from_price?, :boolean, default: true
@@ -794,6 +794,12 @@ defmodule EdenflowersWeb.CoreComponents do
           sizes="(min-width: 640px) 25vw, 50vw"
           class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
         />
+        <span
+          :if={@product.free_delivery}
+          class="bg-cream/90 text-base-content tracking-[0.18em] absolute top-3 left-3 px-2.5 py-1 text-xs uppercase"
+        >
+          {~t"Free delivery"}
+        </span>
       </figure>
 
       <div class="text-base-content flex flex-col gap-1.5">

@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         {:noreply, socket}
 
       true ->
-        fulfillment_option = socket.assigns.order.fulfillment_option
+        order = socket.assigns.order
 
         # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
@@ -119,7 +119,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           Fulfillment.calculate_delivery(address, fulfillment_option.id)
+           Fulfillment.calculate_delivery(address, order.fulfillment_option.id, order.free_delivery?)
          end)}
     end
   end

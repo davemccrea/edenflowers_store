@@ -26,6 +26,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:page_title, title)
          |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
+         |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
          |> assign(:form, form)
          |> assign(:translating, nil)
          |> PhotoUpload.allow(photo_fields(form))}
@@ -252,6 +253,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 <div>
                   <.input field={@form[:draft]} type="checkbox" label={~t"Draft (hidden from the store)"} />
                   <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
+                  <.input
+                    :if={@free_dist_km}
+                    field={@form[:free_delivery]}
+                    type="checkbox"
+                    label={~t"Free delivery within #{km = @free_dist_km} km"}
+                  />
                 </div>
               </div>
             </.form_section>

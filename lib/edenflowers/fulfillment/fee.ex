@@ -15,12 +15,18 @@ defmodule Edenflowers.Fulfillment.Fee do
           %{error: nil, fulfillment_fee: Decimal.t()}
           | %{error: :out_of_delivery_range, fulfillment_fee: nil}
 
-  @spec calculate(FulfillmentOption.t(), non_neg_integer()) :: result()
-  def calculate(%FulfillmentOption{rate_type: :fixed} = option, distance) when is_integer(distance) do
+  @doc """
+  Within `free_dist_km`, delivery is free only when the cart holds a
+  free-delivery product; otherwise it costs `base_price`.
+  """
+  @spec calculate(FulfillmentOption.t(), non_neg_integer(), boolean()) :: result()
+  def calculate(option, distance, free_delivery? \\ false)
+
+  def calculate(%FulfillmentOption{rate_type: :fixed} = option, distance, _free_delivery?) when is_integer(distance) do
     %{error: nil, fulfillment_fee: option.base_price}
   end
 
-  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, distance) when is_integer(distance) do
+  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, distance, free_delivery?) when is_integer(distance) do
     %{
       price_per_km: price_per_km,
       base_price: base_price,
@@ -35,7 +41,7 @@ defmodule Edenflowers.Fulfillment.Fee do
 
     cond do
       Decimal.lte?(distance, free_dist_m) ->
-        %{error: nil, fulfillment_fee: Decimal.new("0")}
+        %{error: nil, fulfillment_fee: if(free_delivery?, do: Decimal.new("0"), else: base_price)}
 
       Decimal.gt?(distance, free_dist_m) and Decimal.lt?(distance, max_dist_m) ->
         fee =

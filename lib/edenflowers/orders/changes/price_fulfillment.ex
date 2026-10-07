@@ -64,7 +64,7 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   defp geocode(changeset, option) do
     address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    case Fulfillment.calculate_delivery(address, option.id, authorize?: false) do
+    case Fulfillment.calculate_delivery(address, option.id, free_delivery?(changeset), authorize?: false) do
       {:ok, %{error: nil} = result} ->
         changeset
         |> Ash.Changeset.force_change_attributes(Map.take(result, @geocoded_fields))
@@ -79,11 +79,15 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   end
 
   defp price_stored_distance(changeset, option) do
-    case Fee.calculate(option, Ash.Changeset.get_attribute(changeset, :distance)) do
+    case Fee.calculate(option, Ash.Changeset.get_attribute(changeset, :distance), free_delivery?(changeset)) do
       %{error: nil, fulfillment_fee: calculated} -> set_fee(changeset, calculated)
       %{error: reason} -> unpriced(changeset, reason)
     end
   end
+
+  # Priced on the lines the order has now; `ReplaceLineItems` reprices if the edit changes them.
+  defp free_delivery?(%{action_type: :create}), do: false
+  defp free_delivery?(changeset), do: Ash.load!(changeset.data, :free_delivery?, authorize?: false).free_delivery?
 
   defp unpriced(changeset, reason) do
     if override(changeset) do
