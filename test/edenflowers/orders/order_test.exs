@@ -1278,10 +1278,17 @@ defmodule Edenflowers.Orders.OrderTest do
     test "a zero payment leaves payment_status pending" do
       order = generate(order(state: :payment, payment_intent_id: "pi_test", fulfillment_fee: Decimal.new("10.00")))
 
-      assert {:ok, order} =
-               Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+      log =
+        capture_log(fn ->
+          assert {:ok, order} =
+                   Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"},
+                     authorize?: false
+                   )
 
-      assert order.payment_status == :pending
+          assert order.payment_status == :pending
+        end)
+
+      assert log =~ "Amount mismatch"
     end
 
     test "cannot finalize order already in :order state" do
