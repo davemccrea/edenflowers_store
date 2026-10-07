@@ -636,7 +636,7 @@ orders = [
     fulfillment_option: home_delivery,
     fulfillment_date: today,
     recipient_name: "Aino Virtanen",
-    recipient_phone_number: "+358 40 123 4567",
+    recipient_phone_number: "040 1234567",
     delivery_address: "Gerbyntie 16, 65230 Vaasa",
     geocoded_address: "Gerbyvägen 16, 65230 Vasa",
     position: "63.1157,21.61864",
@@ -652,7 +652,7 @@ orders = [
     fulfillment_option: home_delivery,
     fulfillment_date: today,
     recipient_name: "Sofia Lindholm",
-    recipient_phone_number: "+358 50 987 6543",
+    recipient_phone_number: "050 9876543",
     delivery_address: "Sundomintie 130, 65410 Sundom",
     geocoded_address: "Sundomvägen 130, 65410 Vasa",
     position: "63.03232,21.54662",
@@ -680,7 +680,7 @@ orders = [
     fulfillment_option: home_delivery,
     days_out: 3,
     recipient_name: "Johan Nyström",
-    recipient_phone_number: "+358 44 222 1188",
+    recipient_phone_number: "044 2221188",
     delivery_address: "Västervikintie 17, 65280 Vaasa",
     geocoded_address: "Västerviksvägen 17, 65280 Vasa",
     position: "63.13433,21.59774",
@@ -695,7 +695,7 @@ orders = [
     fulfillment_option: home_delivery,
     days_out: 4,
     recipient_name: "Liisa Mäkinen",
-    recipient_phone_number: "+358 41 555 0099",
+    recipient_phone_number: "041 5550099",
     delivery_address: "Vanhan Vaasan katu 20, 65370 Vaasa",
     geocoded_address: "Gamla Vasa gatan 20, 65370 Vasa",
     position: "63.08621,21.72555",
@@ -731,7 +731,7 @@ orders = [
     ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
     days_out: -2,
     recipient_name: "Hanna Järvinen",
-    recipient_phone_number: "+358 45 321 7654",
+    recipient_phone_number: "045 3217654",
     delivery_address: "Rantamaantie 31, 65350 Vaasa",
     geocoded_address: "Strandvägen 31, 65350 Vasa",
     position: "63.07736,21.67323",
@@ -948,7 +948,7 @@ end
 # Phoned in for a funeral: no email, so Jennie copies the payment link into a text message.
 place_custom.(%{
   customer_name: "Margareta Holm",
-  customer_phone_number: "040 765 4321",
+  customer_phone_number: "040 7654321",
   recipient_name: "Funeral of Gunnar Holm",
   card_message: "Tack för allt, vila i frid.",
   florist_note: "White roses and lilies only. The funeral home collects at 10:00, service at 11:00.",
@@ -959,7 +959,7 @@ place_custom.(%{
 walk_in =
   place_custom.(%{
     customer_name: "Kalle Nieminen",
-    customer_phone_number: "050 123 9876",
+    customer_phone_number: "050 1239876",
     locale: "fi",
     days_out: 1,
     payment_link?: false,
@@ -1000,7 +1000,7 @@ Orders.edit_order!(
 fulfilled_unpaid =
   place_custom.(%{
     customer_name: "Bertil Ek",
-    customer_phone_number: "044 222 3344",
+    customer_phone_number: "044 2223344",
     days_out: 0,
     line_items: [catalogue_line.("Bouquet 1", :small, 1)]
   })
@@ -1011,7 +1011,7 @@ Orders.mark_order_fulfilled!(fulfilled_unpaid, actor: jennie)
 cancelled =
   place_custom.(%{
     customer_name: "Ulla Granqvist",
-    customer_phone_number: "045 678 1122",
+    customer_phone_number: "045 6781122",
     days_out: 4,
     florist_note: "Cancelled: the family ordered elsewhere.",
     line_items: [custom_line.("Table arrangement for 8", "75.00")]
@@ -1096,7 +1096,7 @@ Orders.edit_order!(nora, %{line_items: [%{"kind" => "catalogue", "id" => bouquet
 cash =
   place_custom.(%{
     customer_name: "Greta Lund",
-    customer_phone_number: "040 555 7788",
+    customer_phone_number: "040 5557788",
     days_out: 2,
     payment_link?: false,
     line_items: [catalogue_line.("Bouquet 4", :medium, 1), custom_line.("Gift wrapping", "5.00")]
@@ -1114,7 +1114,7 @@ Orders.edit_order!(cash, %{line_items: [%{"kind" => "catalogue", "id" => bouquet
 collected =
   place_custom.(%{
     customer_name: "Henrik Ström",
-    customer_phone_number: "050 444 3322",
+    customer_phone_number: "050 4443322",
     locale: "fi",
     days_out: 0,
     payment_link?: false,
