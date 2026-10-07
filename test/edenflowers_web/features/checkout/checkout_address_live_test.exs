@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "geocode lifecycle" do
-    test "confirmed address shows check icon with distance and delivery cost", %{
+    test "confirmed address shows check icon", %{
       conn: conn,
       delivery_option: delivery_option
     } do
@@ -44,9 +44,48 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       html = render_async(view, 500)
       assert html =~ ~s(data-testid="input-confirmed")
-      assert html =~ ~s(data-testid="address-distance")
-      assert html =~ "3.0 km"
-      assert html =~ "5.00"
+    end
+
+    test "shows the address HERE resolved without rewriting the field", %{
+      conn: conn,
+      delivery_option: delivery_option
+    } do
+      stub_successful_geocode()
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3")
+      render_async(view, 500)
+
+      confirmation = view |> element("[data-testid='address-confirmation']") |> render()
+      assert confirmation =~ "Stadsgatan 3, 65300 Vasa"
+      refute confirmation =~ "km"
+      assert view |> element("[data-testid='delivery-cost']") |> render() =~ "3.0 km"
+      assert view |> element("#address-input-field") |> render() =~ ~s(value="Stadsgatan 3")
+
+      type_address(view, "Stadsgatan 4")
+      refute has_element?(view, "[data-testid='address-confirmation']")
+    end
+
+    test "looks the address up in the customer's language", %{conn: conn, delivery_option: delivery_option} do
+      test_pid = self()
+
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
+        send(test_pid, {:geocode_locale, Gettext.get_locale(EdenflowersWeb.Gettext)})
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
+
+      conn = Plug.Test.init_test_session(conn, %{Localize.Plug.PutLocale.session_key() => "sv-FI"})
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "Stadsgatan 3")
+      render_async(view, 500)
+
+      assert_received {:geocode_locale, "sv"}
     end
 
     test "address not found shows field error", %{conn: conn, delivery_option: delivery_option} do
@@ -230,6 +269,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
       assert html =~ ~s(data-testid="input-confirmed")
+      assert html =~ ~s(data-testid="address-confirmation")
     end
   end
 
@@ -346,13 +386,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
     select_delivery_option(view, nearby.id)
     blur_address(view, "Stadsgatan 3, 65300 Vasa")
-    assert render_async(view, 500) =~ "Free delivery!"
+    render_async(view, 500)
+    assert view |> element("[data-testid='delivery-cost']") |> render() =~ "Free"
 
     Orders.remove_line_item!(order, free_item.id, authorize?: false)
 
-    html = render(view)
-    refute html =~ "Free delivery!"
-    assert html =~ "4.50"
+    delivery_cost = view |> element("[data-testid='delivery-cost']") |> render()
+    refute delivery_cost =~ "Free"
+    assert delivery_cost =~ "4.50"
   end
 
   test "the order summary prices a looked-up address before the step is submitted", %{
