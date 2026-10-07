@@ -4262,14 +4262,14 @@ msgid "More actions"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:858
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Record payment taken in person"
+#, elixir-autogen, elixir-format
+msgid "Record a payment"
 msgstr "Kirjaa maksu"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:859
 #, elixir-autogen, elixir-format
-msgid "Record refund given in person"
-msgstr ""
+msgid "Record a refund"
+msgstr "Kirjaa hyvitys"
 
 #: lib/edenflowers_web/features/admin/order_log.ex:51
 #, elixir-autogen, elixir-format

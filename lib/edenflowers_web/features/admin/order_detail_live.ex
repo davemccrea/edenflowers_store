@@ -855,8 +855,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
         <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
           {if Decimal.positive?(@order.balance),
-            do: ~t"Record payment taken in person",
-            else: ~t"Record refund given in person"}
+            do: ~t"Record a payment",
+            else: ~t"Record a refund"}
           <.icon
             name="hero-chevron-right"
             class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
