@@ -93,6 +93,7 @@ defmodule Edenflowers.Orders do
       define :return_to_gift_options, action: :return_to_gift_options
       define :return_to_delivery, action: :return_to_delivery
       define :finalize_checkout, action: :finalize_checkout, args: [:payment_intent_id]
+      define :place_unpaid_occurrence, action: :place_unpaid_occurrence
       define :mark_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
@@ -126,7 +127,11 @@ defmodule Edenflowers.Orders do
 
     resource Edenflowers.Orders.Order.Version
     resource Edenflowers.Orders.Payment
-    resource Edenflowers.Orders.Subscription
+
+    resource Edenflowers.Orders.Subscription do
+      define :reactivate_subscription, action: :reactivate
+    end
+
     resource Edenflowers.Orders.Subscription.Version
 
     resource Edenflowers.Orders.LineItem do

@@ -22,12 +22,19 @@ defmodule Edenflowers.Orders.Subscription do
     table "subscriptions"
   end
 
-  # Created only once the first order is paid, so it starts active. Pausing,
-  # cancelling and failed charges arrive with occurrences and the account page.
+  # Created only once the first order is paid, so it starts active. Pausing
+  # and cancelling arrive with the account page.
   state_machine do
     initial_states([:active])
     default_initial_state(:active)
-    extra_states([:paused, :payment_failed, :cancelled])
+    extra_states([:paused, :cancelled])
+
+    # A refused card holds the subscription until its Occurrence is paid
+    # through the payment link.
+    transitions do
+      transition(:create_occurrence, from: :active, to: :payment_failed)
+      transition(:reactivate, from: :payment_failed, to: :active)
+    end
   end
 
   oban do
@@ -86,11 +93,30 @@ defmodule Edenflowers.Orders.Subscription do
       require_atomic? false
       change Edenflowers.Orders.Changes.CreateOccurrence
     end
+
+    # Dates that passed while it was held are not owed, so it picks up at the
+    # first one not yet past.
+    update :reactivate do
+      change transition_state(:active)
+
+      change fn changeset, _context ->
+        %{next_fulfillment_date: date, interval_weeks: weeks} = changeset.data
+
+        next_date =
+          date
+          |> Stream.iterate(&Date.add(&1, weeks * 7))
+          |> Enum.find(&(not Date.before?(&1, Date.utc_today())))
+
+        Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
+      end
+
+      require_atomic? false
+    end
   end
 
   policies do
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:create_occurrence])
+      authorize_if action([:create_occurrence, :reactivate])
       authorize_if action_type(:read)
     end
 
