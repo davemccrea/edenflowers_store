@@ -46,11 +46,13 @@ defmodule Edenflowers.Orders.Changes.ActivateSubscription do
   end
 
   defp attributes(order, changeset) do
+    line_item = Enum.find(order.line_items, & &1.interval_weeks)
+
     %{
       user_id: order.user_id,
-      product_variant_id: Enum.find(order.line_items, & &1.subscribable).product_variant_id,
-      interval_weeks: order.subscription_interval_weeks,
-      next_fulfillment_date: Date.add(order.fulfillment_date, order.subscription_interval_weeks * 7),
+      product_variant_id: line_item.product_variant_id,
+      interval_weeks: line_item.interval_weeks,
+      next_fulfillment_date: Date.add(order.fulfillment_date, line_item.interval_weeks * 7),
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,
       delivery_address: order.delivery_address,

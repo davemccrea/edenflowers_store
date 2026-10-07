@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   require Logger
 
   import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
-  alias EdenflowersWeb.Checkout.Fields
   import EdenflowersWeb.KeyDateIcon
 
   alias Edenflowers.Catalog.ProductVariantSize
@@ -15,7 +14,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Fulfillment
 
   alias Edenflowers.Catalog
-  alias Edenflowers.Orders.{Order, Subscription}
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
@@ -192,22 +191,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       phx-submit="save_form"
                       class="flex flex-col space-y-6"
                     >
-                      <div :if={@order.subscription?} class="flex flex-col">
-                        <.input
-                          :let={option}
-                          type="radio-card"
-                          label={~t"How often *"}
-                          field={@form[:subscription_interval_weeks]}
-                          options={
-                            Enum.map(Subscription.intervals(), &%{name: Fields.interval_label(&1), value: to_string(&1)})
-                          }
-                          data-testid="subscription-interval-selector"
-                        >
-                          {option.name}
-                        </.input>
-                        <.field_errors field={@form[:subscription_interval_weeks]} />
-                      </div>
-
                       <.live_component
                         :if={@order.fulfillment_method == :delivery}
                         id="address-input"

@@ -29,12 +29,16 @@ defmodule Edenflowers.Orders.LineItem do
     defaults [:read]
 
     create :add_to_cart do
-      accept [:order_id, :product_variant_id, :quantity, :is_card]
+      accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks]
 
+      # KeepSubscriptionAlone refuses an add to a cart holding a subscription
+      # line, or a subscription to a cart holding anything, before the upsert
+      # can merge a one-off and a subscription of the same variant.
       upsert? true
       upsert_identity :unique_product_variant
       upsert_fields [:quantity]
 
+      validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change Edenflowers.Orders.Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
@@ -53,7 +57,7 @@ defmodule Edenflowers.Orders.LineItem do
 
     # A subscription is for one bouquet each time.
     update :increment_quantity do
-      change atomic_update(:quantity, expr(if(subscribable, quantity, quantity + 1)))
+      change atomic_update(:quantity, expr(if(is_nil(interval_weeks), quantity + 1, quantity)))
     end
 
     update :decrement_quantity do
@@ -110,7 +114,9 @@ defmodule Edenflowers.Orders.LineItem do
     attribute :is_card, :boolean, default: false, allow_nil?: false
     # Snapshotted from the product, so unflagging it later leaves existing orders' fees alone.
     attribute :free_delivery, :boolean, default: false, allow_nil?: false
-    attribute :subscribable, :boolean, default: false, allow_nil?: false
+    # How often a subscription line is to be delivered, chosen on the product
+    # page. Nil for a one-off.
+    attribute :interval_weeks, :integer
     attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
     timestamps()
   end

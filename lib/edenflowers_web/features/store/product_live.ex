@@ -2,6 +2,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
+  alias EdenflowersWeb.Checkout.Fields
 
   alias Edenflowers.Catalog
   alias Edenflowers.Fulfillment
@@ -39,6 +41,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
+     |> assign(subscribe?: false, interval_weeks: "1")
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
@@ -103,7 +106,17 @@ defmodule EdenflowersWeb.Store.ProductLive do
               {~t"Free delivery within #{km = @free_dist_km} km"}
             </p>
 
+            <p
+              :if={@product.subscribable}
+              data-testid="product-subscribable"
+              class="text-base-content/80 flex items-center gap-2"
+            >
+              <.icon name="hero-arrow-path" class="h-5 w-5" />
+              {~t"Also as a subscription"}
+            </p>
+
             <.form
+              id="product-form"
               for={%{}}
               phx-submit="submit"
               phx-change="change"
@@ -137,6 +150,60 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 </div>
               </fieldset>
 
+              <fieldset :if={@product.subscribable} class="flex flex-col gap-3">
+                <legend class="eyebrow text-base-content/70 mb-1">{~t"How to buy"}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                  <label class="size-option" data-active={(not @subscribe? && "true") || nil}>
+                    <input
+                      type="radio"
+                      name="subscribe"
+                      value="false"
+                      checked={not @subscribe?}
+                      class="sr-only"
+                      data-testid="buy-once-option"
+                    />
+                    <span class="size-option__label font-serif text-xl">{~t"Buy once"}</span>
+                  </label>
+                  <label class="size-option" data-active={(@subscribe? && "true") || nil}>
+                    <input
+                      type="radio"
+                      name="subscribe"
+                      value="true"
+                      checked={@subscribe?}
+                      class="sr-only"
+                      data-testid="subscribe-option"
+                    />
+                    <span class="size-option__label font-serif text-xl">{~t"Subscription"}</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset
+                :if={@product.subscribable and @subscribe?}
+                class="flex flex-col gap-3"
+                data-testid="interval-options"
+              >
+                <legend class="eyebrow text-base-content/70 mb-1">{~t"How often"}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                  <label
+                    :for={weeks <- Subscription.intervals()}
+                    class="size-option"
+                    data-active={(to_string(weeks) == @interval_weeks && "true") || nil}
+                  >
+                    <input
+                      type="radio"
+                      name="interval_weeks"
+                      value={weeks}
+                      checked={to_string(weeks) == @interval_weeks}
+                      class="sr-only"
+                      data-testid={"interval-option-#{weeks}"}
+                    />
+                    <span class="size-option__label font-serif text-xl">{Fields.interval_label(weeks)}</span>
+                  </label>
+                </div>
+                <p class="text-base-content/75 text-base">{~t"Delivered regularly, skip or cancel any time"}</p>
+              </fieldset>
+
               <.button
                 type="submit"
                 variant="primary"
@@ -162,13 +229,21 @@ defmodule EdenflowersWeb.Store.ProductLive do
     """
   end
 
-  def handle_event("change", %{"product_variant_id" => id}, socket) do
+  def handle_event("change", %{"product_variant_id" => id} = params, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
-    {:noreply, assign(socket, selected_variant: variant)}
+
+    {:noreply,
+     assign(socket,
+       selected_variant: variant,
+       subscribe?: params["subscribe"] == "true",
+       interval_weeks: params["interval_weeks"] || socket.assigns.interval_weeks
+     )}
   end
 
   def handle_event("submit", _params, socket) do
-    case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1) do
+    subscription = if socket.assigns.subscribe?, do: %{interval_weeks: socket.assigns.interval_weeks}, else: %{}
+
+    case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, subscription) do
       {:ok, _line_item} ->
         {:noreply, socket}
 

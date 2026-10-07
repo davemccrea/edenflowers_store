@@ -29,7 +29,7 @@ _Avoid_: Comment, internal note, order notes (and distinct from the Card Message
 ### Subscriptions
 
 **Subscription**:
-A customer's standing request for a florist's-choice bouquet every one, two or four weeks, delivered to the same Recipient. It is not an order: it creates orders, and holds only the schedule, the delivery details and the saved card. Set up by paying for the first order at checkout.
+A customer's standing request for a florist's-choice bouquet every one, two or four weeks, delivered to the same Recipient. It is not an order: it creates orders, and holds only the schedule, the delivery details and the saved card. The customer opts in on a subscribable product's page, choosing how often for that cart line, and sets it up by paying for the first order at checkout. The same product bought once is an ordinary order.
 _Avoid_: Plan, membership, recurring order
 
 **Occurrence**:

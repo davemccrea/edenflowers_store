@@ -101,8 +101,9 @@ defmodule Edenflowers.Catalog.Product do
     end
   end
 
-  # Subscribers always get free delivery inside the free zone; unticking it
-  # would silently start charging every occurrence.
+  # A subscribable product is always delivered free inside the free zone,
+  # bought once or not; unticking it would silently start charging every
+  # occurrence.
   validations do
     validate attribute_equals(:free_delivery, true),
       where: [attribute_equals(:subscribable, true)],
@@ -117,8 +118,8 @@ defmodule Edenflowers.Catalog.Product do
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
     attribute :free_delivery, :boolean, allow_nil?: false, default: false
-    # A florist's-choice bouquet bought as a Subscription: checked out on its
-    # own, delivered every few weeks.
+    # Can also be bought as a Subscription, which the customer opts into on
+    # the product page. Bought once, it is like any other product.
     attribute :subscribable, :boolean, allow_nil?: false, default: false
   end
 

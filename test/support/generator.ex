@@ -154,7 +154,8 @@ defmodule Generator do
     changeset_generator(LineItem, :add_to_cart,
       defaults: %{
         quantity: 1,
-        is_card: false
+        is_card: false,
+        interval_weeks: nil
       },
       overrides: opts,
       authorize?: false

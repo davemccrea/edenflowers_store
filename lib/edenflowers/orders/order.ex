@@ -499,8 +499,7 @@ defmodule Edenflowers.Orders.Order do
         :recipient_phone_number,
         :delivery_instructions,
         :fulfillment_date,
-        :delivery_address,
-        :subscription_interval_weeks
+        :delivery_address
       ]
 
       change Changes.SnapshotFulfillmentMethod
@@ -923,8 +922,6 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-    # How often a subscription cart is to be delivered, chosen at checkout.
-    attribute :subscription_interval_weeks, :integer
     # The Subscription's date an Occurrence was made for. Its fulfillment_date
     # is later when that day was closed.
     attribute :subscription_date, :date
@@ -1077,7 +1074,7 @@ defmodule Edenflowers.Orders.Order do
     sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
     exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
-    exists :subscription?, :line_items, filter: expr(subscribable == true)
+    exists :subscription?, :line_items, filter: expr(not is_nil(interval_weeks))
 
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount

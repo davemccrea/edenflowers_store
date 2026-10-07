@@ -28,6 +28,18 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     assert html =~ "No sizes"
   end
 
+  test "marks the products that can be bought as a subscription", %{conn: conn} do
+    generate(product(name: "Rose bouquet"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products")
+    refute render_async(view, 500) =~ "Can be bought as a subscription"
+
+    generate(product(name: "Weekly bouquet", subscribable: true, free_delivery: true))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products")
+    assert render_async(view, 500) =~ "Can be bought as a subscription"
+  end
+
   test "sorts by category and price", %{conn: conn} do
     anemones = generate(product_category(name: "Anemones"))
     zinnias = generate(product_category(name: "Zinnias"))
