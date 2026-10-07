@@ -313,6 +313,38 @@ Promotion
 )
 |> Ash.create!(authorize?: false)
 
+# One promotion per state the admin list tells apart: ended, not started yet,
+# and used up (its one use is the overdue order below).
+for attrs <- [
+      %{
+        name: "Valentine's, 20% off",
+        code: "LOVE20",
+        discount_rate: "0.20",
+        minimum_cart_total: "40.00",
+        start_date: Date.add(Date.utc_today(), -240),
+        expiration_date: Date.add(Date.utc_today(), -225)
+      },
+      %{
+        name: "Christmas, 10% off",
+        code: "JUL10",
+        discount_rate: "0.10",
+        minimum_cart_total: "0.00",
+        start_date: Date.add(Date.utc_today(), 50),
+        expiration_date: Date.add(Date.utc_today(), 80)
+      },
+      %{
+        name: "Mother's Day, one customer",
+        code: "MOR10",
+        discount_rate: "0.10",
+        minimum_cart_total: "0.00",
+        usage_limit: 1
+      }
+    ] do
+  Promotion
+  |> Ash.Changeset.for_create(:create, attrs)
+  |> Ash.create!(authorize?: false)
+end
+
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
       {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies,
        "Printer paper and pens", :high},
@@ -365,7 +397,7 @@ end
 # booking, plus one that has already happened.
 today = Date.utc_today()
 
-[autumn_wreath, christmas_wreath | _] =
+[autumn_wreath, christmas_wreath, _table_arrangement, midsummer_crown] =
   [
     %{
       name: "Autumn Wreath Workshop",
@@ -489,17 +521,21 @@ today = Date.utc_today()
 
 # Course bookings. Ash.Seed for the same reason as orders below: a booking is
 # confirmed by a Stripe payment or by Jennie. The pending and cancelled ones should not
-# show on the admin courses page. Emma was added by Jennie and pays at the
-# course, so she has no payment intent. The third course is left empty on purpose.
+# show on the admin courses page. Emma and Kristina were added by Jennie and
+# pay at the course, so they have no payment intent; Kristina already has.
+# The third course is left empty on purpose, and the past one has its history.
 [
   {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI", :stripe},
   {autumn_wreath, "Mikael Berg", "mikael.berg@example.com", 1, :confirmed, "sv-FI", :stripe},
   {autumn_wreath, "Laura Virtanen", "laura.virtanen@example.com", 2, :confirmed, "fi", :stripe},
   {autumn_wreath, "Emma Nyström", "emma.nystrom@example.com", 1, :confirmed, "sv-FI", :direct},
+  {autumn_wreath, "Kristina Ahlroos", "kristina.ahlroos@example.com", 2, :confirmed, "sv-FI", :direct_paid},
   {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "sv-FI", :stripe},
   {christmas_wreath, "Sofia Korhonen", "sofia.korhonen@example.com", 2, :confirmed, "fi", :stripe},
   {christmas_wreath, "Sarah Mitchell", "sarah.mitchell@example.com", 1, :confirmed, "en-GB", :stripe},
-  {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe}
+  {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe},
+  {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI", :stripe},
+  {midsummer_crown, "Matti Laine", "matti.laine@example.com", 1, :confirmed, "fi", :direct_paid}
 ]
 |> Enum.each(fn {course, name, email, seats, status, locale, paid_via} ->
   Ash.Seed.seed!(CourseRegistration, %{
@@ -516,6 +552,7 @@ today = Date.utc_today()
     # Already emailed, otherwise the SendConfirmationEmail trigger emails every
     # seeded booking — for real on staging.
     confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
+    paid_at: if(paid_via == :direct_paid, do: DateTime.utc_now()),
     # A pending registration with a fake PaymentIntent makes the ReconcilePayment
     # cron fail against Stripe, so it stays an abandoned checkout instead.
     payment_intent_id:
@@ -524,6 +561,12 @@ today = Date.utc_today()
       )
   })
 end)
+
+# One of Anna's group of three dropped out.
+CourseRegistration
+|> Ash.Query.filter(email == "anna.svensson@example.com")
+|> Ash.read_one!(authorize?: false)
+|> Edenflowers.Courses.remove_registration_seat!(authorize?: false)
 
 # Placed orders. Checkout drives orders through a state machine and seals them
 # once placed, so normal Ash actions can't construct a finished order. Ash.Seed
@@ -543,10 +586,13 @@ store_pickup =
   |> Ash.Query.filter(fulfillment_method == :pickup)
   |> Ash.read_first!(authorize?: false)
 
-summer_promo =
+promotion_by_code = fn code ->
   Promotion
-  |> Ash.Query.filter(code == "SUMMER15")
+  |> Ash.Query.filter(code == ^code)
   |> Ash.read_first!(authorize?: false)
+end
+
+summer_promo = promotion_by_code.("SUMMER15")
 
 # Pick a handful of variants to build carts from, loading the tax rate so we can
 # snapshot it onto the line items.
@@ -694,6 +740,44 @@ orders = [
     gift: false,
     fulfillment_status: :fulfilled,
     items: [{"Bouquet 2", :medium, 1}]
+  },
+  %{
+    # Paid, but its pickup day has passed without Jennie marking it collected.
+    customer_name: "Tuula Rantanen",
+    customer_email: "tuula.rantanen@example.fi",
+    fulfillment_option: store_pickup,
+    ordered_at: DateTime.add(DateTime.utc_now(), -4, :day),
+    days_out: -1,
+    gift: false,
+    locale: "fi",
+    promotion: promotion_by_code.("MOR10"),
+    items: [{"Bouquet 6", :medium, 1}]
+  },
+  # The three below are changed after placing, further down.
+  %{
+    customer_name: "Petra Holm",
+    customer_email: "petra.holm@example.fi",
+    fulfillment_option: store_pickup,
+    days_out: 2,
+    gift: false,
+    items: [{"Bouquet 3", :small, 1}]
+  },
+  %{
+    customer_name: "Oskar Wikström",
+    customer_email: "oskar.wikstrom@example.fi",
+    fulfillment_option: store_pickup,
+    days_out: 3,
+    gift: false,
+    locale: "en-GB",
+    items: [{"Plant 4", :large, 1}]
+  },
+  %{
+    customer_name: "Nora Back",
+    customer_email: "nora.back@example.fi",
+    fulfillment_option: store_pickup,
+    days_out: 4,
+    gift: false,
+    items: [{"Bouquet 5", :small, 1}, {"Plant 2", :medium, 1}]
   }
 ]
 
@@ -972,3 +1056,82 @@ Orders.edit_order!(
   },
   actor: jennie
 )
+
+online_order = fn customer_name ->
+  Order
+  |> Ash.Query.filter(customer_name == ^customer_name)
+  |> Ash.Query.load([:grand_total, :line_items, :payments])
+  |> Ash.read_one!(authorize?: false)
+end
+
+refund_in_full = fn order ->
+  [payment] = order.payments
+
+  {:ok, :recorded} =
+    Payments.record_refund(%{
+      id: "re_seed_#{order.order_reference}",
+      payment_intent: payment.payment_intent_id,
+      amount: Edenflowers.External.StripeAPI.to_stripe_amount(payment.amount),
+      status: "succeeded"
+    })
+end
+
+# Called off and refunded in full in the Stripe dashboard.
+petra = online_order.("Petra Holm")
+Orders.cancel_order!(petra, actor: jennie)
+refund_in_full.(petra)
+
+# Called off, but Jennie hasn't refunded it yet.
+Orders.cancel_order!(online_order.("Oskar Wikström"), actor: jennie)
+
+# Paid, then the plant was out of stock: money to hand back through Stripe.
+nora = online_order.("Nora Back")
+[bouquet | _] = Enum.filter(nora.line_items, &(&1.product_name == "Bouquet 5"))
+
+Orders.edit_order!(nora, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
+  actor: jennie
+)
+
+# Paid in cash, then the gift wrap was left off: money to hand back in person.
+cash =
+  place_custom.(%{
+    customer_name: "Greta Lund",
+    customer_phone_number: "040 555 7788",
+    days_out: 2,
+    payment_link?: false,
+    line_items: [catalogue_line.("Bouquet 4", :medium, 1), custom_line.("Gift wrapping", "5.00")]
+  })
+
+cash = Orders.get_order_for_admin!(cash.id, actor: jennie, load: [:line_items])
+[bouquet | _] = Enum.filter(cash.line_items, &(&1.product_variant_id != nil))
+cash = Orders.record_in_person_payment!(cash, cash.balance, :cash, actor: jennie)
+
+Orders.edit_order!(cash, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
+  actor: jennie
+)
+
+# Collected and paid by card at the counter.
+collected =
+  place_custom.(%{
+    customer_name: "Henrik Ström",
+    customer_phone_number: "050 444 3322",
+    locale: "fi",
+    days_out: 0,
+    payment_link?: false,
+    line_items: [catalogue_line.("Plant 3", :large, 1)]
+  })
+
+collected = Orders.get_order_for_admin!(collected.id, actor: jennie)
+collected = Orders.record_in_person_payment!(collected, collected.balance, :zettle, actor: jennie)
+Orders.mark_order_fulfilled!(collected, actor: jennie)
+
+# A free replacement for a returning customer whose first bouquet wilted.
+place_custom.(%{
+  customer_name: "Aino Virtanen",
+  customer_email: "aino.virtanen@example.fi",
+  locale: "fi",
+  days_out: 1,
+  payment_link?: false,
+  florist_note: "Replaces her earlier delivery, which wilted the next day.",
+  line_items: [custom_line.("Replacement bouquet", "0.00")]
+})
