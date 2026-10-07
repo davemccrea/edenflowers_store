@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             >
               <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
             </.button>
-            <.order_menu order={@order} payments={@payments} />
+            <.order_menu order={@order} payments={@payments} locale={@locale} />
           </:actions>
         </.admin_page_header>
 
@@ -777,11 +777,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           :if={Decimal.positive?(@order.balance) && @order.customer_email}
           type="button"
           phx-click="email_payment_link"
-          data-confirm={~t"Email a payment link to #{email = @order.customer_email}?"}
+          data-confirm={
+            confirm_send(
+              ~t"Email a payment link to #{email = @order.customer_email}?",
+              @order.payment_link_open? && @order.details_emailed_at,
+              @locale
+            )
+          }
           variant="primary"
           size="sm"
         >
-          <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Email payment link"}
+          <.icon name="hero-envelope" class="h-4 w-4" />
+          {if @order.payment_link_open? && @order.details_emailed_at,
+            do: ~t"Resend payment link",
+            else: ~t"Email payment link"}
         </.button>
         <.button
           :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
@@ -892,6 +901,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   attr :order, :map, required: true
   attr :payments, :list, required: true
+  attr :locale, :string, required: true
 
   # Always there, so Jennie finds it in the same place on every order. An item
   # that doesn't apply yet says why; one that never could, like fetching Stripe
@@ -918,7 +928,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <button
               type="button"
               phx-click="email_receipt"
-              data-confirm={~t"Email the receipt to #{email = @order.customer_email}?"}
+              data-confirm={
+                confirm_send(
+                  ~t"Email the receipt to #{email = @order.customer_email}?",
+                  @order.receipt_emailed_at,
+                  @locale
+                )
+              }
             >
               {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
             </button>
@@ -931,7 +947,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <button
               type="button"
               phx-click="send_order_details"
-              data-confirm={~t"Email the order details to #{email = @order.customer_email}?"}
+              data-confirm={
+                confirm_send(
+                  ~t"Email the order details to #{email = @order.customer_email}?",
+                  @order.details_emailed_at,
+                  @locale
+                )
+              }
             >
               {if @order.details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
             </button>
@@ -996,6 +1018,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp receipt_unavailable(%{payment_status: :paid}), do: nil
   defp receipt_unavailable(%{payment_status: :refunded}), do: ~t"The order was refunded"
   defp receipt_unavailable(_order), do: ~t"Not paid"
+
+  # Says when it last went out, so a resend nobody needed is caught before it's sent.
+  defp confirm_send(question, last_sent_at, _locale) when last_sent_at in [nil, false], do: question
+
+  defp confirm_send(question, last_sent_at, locale) do
+    ~t"Last sent #{time = Format.datetime(last_sent_at, locale)}." <> " " <> question
+  end
 
   defp no_email(%{customer_email: nil}), do: ~t"No email address"
   defp no_email(_order), do: nil
