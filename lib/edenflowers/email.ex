@@ -16,7 +16,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference}")
+      |> subject(~t"Your receipt for Eden Flowers order #{order.order_reference}")
       |> text_body(render_order_confirmation(order))
     end)
   end

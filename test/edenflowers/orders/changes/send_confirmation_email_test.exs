@@ -73,8 +73,8 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
     assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Eden Flowers -tilauksesi"
-      assert not (email.subject =~ "Your Eden Flowers order")
+      assert email.subject =~ "Kuitti Eden Flowers -tilauksestasi"
+      assert not (email.subject =~ "Your receipt")
     end)
   end
 
@@ -104,8 +104,8 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
     assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Din Eden Flowers-beställning"
-      assert not (email.subject =~ "Your Eden Flowers order")
+      assert email.subject =~ "Kvitto för din Eden Flowers-beställning"
+      assert not (email.subject =~ "Your receipt")
     end)
   end
 end

@@ -112,7 +112,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Your Eden Flowers order"
+      assert email.subject =~ "Your receipt for Eden Flowers order"
       assert email.subject =~ finalized.order_reference
     end)
   end
@@ -212,7 +212,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Your Eden Flowers order"
+      assert email.subject =~ "Your receipt for Eden Flowers order"
       assert email.subject =~ finalized.order_reference
     end)
   end
@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
-      assert email.subject =~ "Your Eden Flowers order"
+      assert email.subject =~ "Your receipt for Eden Flowers order"
       assert email.subject =~ finalized.order_reference
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)

@@ -1958,7 +1958,6 @@ msgstr "Du finns redan med på Eden Flowers nyhetsbrevslista, så du behöver in
 msgid "Your 15% welcome code is still valid:"
 msgstr "Din välkomstkod på 15 % gäller fortfarande:"
 
-#: lib/edenflowers/email.ex:19
 #: lib/edenflowers/email.ex:43
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference}"
@@ -4473,3 +4472,8 @@ msgstr "Senast skickat %{time}."
 #, elixir-autogen, elixir-format
 msgid "Open Papra"
 msgstr "Öppna Papra"
+
+#: lib/edenflowers/email.ex:19
+#, elixir-autogen, elixir-format
+msgid "Your receipt for Eden Flowers order %{order_order_reference}"
+msgstr "Kvitto för din Eden Flowers-beställning %{order_order_reference}"
