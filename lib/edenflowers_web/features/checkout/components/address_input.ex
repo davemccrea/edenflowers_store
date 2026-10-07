@@ -73,7 +73,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
             {format_delivery_amount(@confirmed.result.fulfillment_fee, @order)}
           </span>
           <span :if={@confirmed.result.distance} class="text-base-content/65">
-            ({format_distance(@confirmed.result.distance, @order)})
+            ({Edenflowers.Format.distance(@confirmed.result.distance, @order.locale)})
           </span>
         </p>
       </div>
@@ -183,13 +183,6 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   defp errors({:required, _}, false), do: []
   defp errors({_kind, message}, _touched), do: [message]
   defp errors(nil, _touched), do: []
-
-  defp format_distance(meters, _order) when meters < 1000, do: "#{meters} m"
-
-  defp format_distance(meters, order) do
-    km = Localize.Number.to_string!(meters / 1000, locale: order.locale, fractional_digits: 1)
-    "#{km} km"
-  end
 
   defp format_delivery_amount(nil, _order), do: ""
 

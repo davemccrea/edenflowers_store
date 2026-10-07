@@ -7,7 +7,6 @@
 # General application configuration
 import Config
 
-config :mdex_native, syntax_highlighter: :lumis
 config :ash_oban, pro?: false
 config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext
 
