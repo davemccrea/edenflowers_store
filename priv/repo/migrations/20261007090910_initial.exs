@@ -275,7 +275,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     alter table(:orders) do
       add :order_reference, :text
       add :ordered_at, :utc_datetime
-      add :payment_attempt_status, :text, null: false, default: "pending"
       add :fulfillment_status, :text, null: false, default: "pending"
       add :cancelled_at, :utc_datetime
       add :origin, :text, null: false, default: "online"
@@ -953,7 +952,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :origin
       remove :cancelled_at
       remove :fulfillment_status
-      remove :payment_attempt_status
       remove :ordered_at
       remove :order_reference
     end
