@@ -79,8 +79,14 @@ defmodule Edenflowers.Orders.EnteredLineItems do
 
   defp required(item, key, message) do
     case fetch(item, key) do
-      value when is_binary(value) and value != "" -> {:ok, String.trim(value)}
-      _ -> {:error, message}
+      value when is_binary(value) ->
+        case String.trim(value) do
+          "" -> {:error, message}
+          value -> {:ok, value}
+        end
+
+      _ ->
+        {:error, message}
     end
   end
 

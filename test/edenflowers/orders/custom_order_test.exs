@@ -169,6 +169,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert {:error, error} = place(ctx, %{line_items: [custom_line(ctx.tax_rate, %{"unit_price" => "lots"})]})
       assert Exception.message(error) =~ "Item 1: enter a price"
+
+      assert {:error, error} = place(ctx, %{line_items: [custom_line(ctx.tax_rate, %{"description" => "   "})]})
+      assert Exception.message(error) =~ "Item 1: describe the item"
     end
 
     test "only Jennie can place one", ctx do
@@ -247,6 +250,24 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   describe "editing" do
+    test "clearing the email removes the old customer's access", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "old@example.com"})
+      old_user = Edenflowers.Accounts.get_user_by_email!("old@example.com", authorize?: false)
+
+      {:ok, order} = Orders.edit_order(order, params(ctx, %{customer_email: nil}), actor: ctx.admin)
+
+      assert order.user_id == nil
+      assert Orders.list_my_orders!(actor: old_user) == []
+    end
+
+    test "a stale line id is a validation error", ctx do
+      {:ok, order} = place(ctx)
+      stale = %{"kind" => "catalogue", "id" => Ash.UUID.generate(), "quantity" => "1"}
+
+      assert {:error, error} = Orders.edit_order(order, params(ctx, %{line_items: [stale]}), actor: ctx.admin)
+      assert Exception.message(error) =~ "no longer available"
+    end
+
     test "an unpaid custom order can change its items and price", ctx do
       {:ok, order} = place(ctx)
 
@@ -402,7 +423,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         generate(
           order(
             state: :placed,
-            payment_status: :paid,
             customer_name: "Ada",
             customer_email: "ada@example.com",
             fulfillment_option_id: ctx.pickup.id,
@@ -432,7 +452,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "the florist note can change on any order, even a fulfilled one", ctx do
-      order = generate(order(state: :placed, payment_status: :paid, fulfillment_status: :fulfilled))
+      order = generate(order(state: :placed, fulfillment_status: :fulfilled))
 
       {:ok, order} = Orders.update_florist_note(order, %{florist_note: "White only, no lilies"}, actor: ctx.admin)
 
@@ -479,6 +499,16 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
     end
 
+    test "paying from a stale order cancels the current PaymentIntent", ctx do
+      {:ok, stale_order} = place(ctx)
+      Ash.Seed.update!(stale_order, %{payment_intent_id: "pi_current"})
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_current"} -> {:ok, %{id: "pi_current"}} end)
+
+      {:ok, order} = Orders.record_in_person_payment(stale_order, "134.00", :cash, actor: ctx.admin)
+
+      assert order.payment_intent_id == nil
+    end
+
     test "in person records how it was paid and sends no receipt by itself", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
@@ -486,7 +516,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         Orders.record_in_person_payment(order, "130.00", :mobilepay, actor: ctx.admin)
 
       order = Orders.get_order_for_admin!(order.id, actor: ctx.admin, load: [:payments])
-      assert order.payment_status == :paid
+      assert order.payment_status == :pending
       assert [%{method: :mobilepay, payment_intent_id: nil}] = order.payments
       assert Decimal.equal?(order.balance, "4.00")
       assert order.payment_link_open?
@@ -494,6 +524,19 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       Oban.drain_queue(queue: :default)
       refute_enqueued(worker: SendConfirmationEmail)
       assert_no_email_sent()
+    end
+
+    test "payment status follows the balance", ctx do
+      {:ok, order} = place(ctx)
+
+      {:ok, partial} = Orders.record_in_person_payment(order, "10.00", :cash, actor: ctx.admin)
+      assert partial.payment_status == :pending
+
+      {:ok, paid} = Orders.record_in_person_payment(partial, "124.00", :cash, actor: ctx.admin)
+      assert paid.payment_status == :paid
+
+      {:ok, refunded} = Orders.record_in_person_payment(paid, "-134.00", :cash, actor: ctx.admin)
+      assert refunded.payment_status == :refunded
     end
 
     test "in person can't be recorded as a Stripe payment", ctx do
@@ -558,6 +601,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
       assert Decimal.equal?(order.balance, "13.00")
+      assert order.payment_status == :pending
       assert order.payment_link_open?
 
       Ash.Seed.update!(order, %{payment_intent_id: "pi_top_up"})

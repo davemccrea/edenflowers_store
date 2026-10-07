@@ -78,7 +78,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
       |> render_change()
 
       view |> element("button[phx-value-from='sv-FI']") |> render_click()
-      html = render_async(view)
+      html = render_async(view, 500)
 
       assert html =~ "Autumn wreaths"
       assert html =~ "Syysseppeleet"
@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
       view |> element("button[phx-value-from='en-GB']") |> render_click()
-      render_async(view)
+      render_async(view, 500)
       view |> form("#course-form") |> render_submit()
 
       saved = Ash.get!(Course, course.id, authorize?: false)
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
       view |> form("#course-form", form: %{name: "Autumn wreaths"}) |> render_change()
       view |> element("button[phx-value-from='en-GB']") |> render_click()
 
-      assert render_async(view) =~ "Translation failed"
+      assert render_async(view, 500) =~ "Translation failed"
     end
   end
 

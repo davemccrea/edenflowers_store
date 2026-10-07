@@ -66,11 +66,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> OrderLog.entries(payments, locale)
   end
 
-  defp log_time(at, locale) do
-    local = DateTime.shift_zone!(at, "Europe/Helsinki")
-    "#{Format.day_month(DateTime.to_date(local), locale)} #{Format.time(DateTime.to_time(local), locale)}"
-  end
-
   defp line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
 
   defp line_label(line_item),
@@ -118,8 +113,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   class="badge badge-sm admin-badge-warning inline-flex items-center gap-1 whitespace-nowrap tabular-nums xl:hidden"
                 >
                   {if Decimal.positive?(@order.balance),
-                    do: ~t"#{amount = Format.currency(@order.balance, @locale)} to collect",
-                    else: ~t"#{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to refund"}
+                    do: ~t"To collect #{amount = Format.currency(@order.balance, @locale)}",
+                    else: ~t"To refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)}"}
                   <.icon name="hero-arrow-down" class="h-3 w-3" />
                 </a>
               </span>
@@ -155,7 +150,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
-            <.detail_section id="order-fulfillment-summary" title={~t"Fulfillment"}>
+            <.widget id="order-fulfillment-summary" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
                   {Format.weekday_day_month(@order.fulfillment_date, @locale)}
@@ -190,20 +185,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">{@order.delivery_instructions}</p>
                 </div>
               </div>
-            </.detail_section>
+            </.widget>
 
-            <.detail_section id="order-items" title={~t"To make"}>
+            <.widget id="order-items" title={~t"To make"}>
               <.readonly_line_items line_items={@order.line_items} />
-            </.detail_section>
+            </.widget>
 
-            <.detail_section :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
+            <.widget :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
               <blockquote
                 phx-no-format
                 class="text-base-content font-serif whitespace-pre-wrap break-words text-xl italic leading-relaxed"
               >{@order.card_message}</blockquote>
-            </.detail_section>
+            </.widget>
 
-            <.detail_section id="order-florist-note" title={~t"Florist note"}>
+            <.widget id="order-florist-note" title={~t"Florist note"}>
               <.form for={@note_form} id="florist-note-form" phx-submit="save_florist_note" class="space-y-3">
                 <.input
                   field={@note_form[:florist_note]}
@@ -214,7 +209,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.button type="submit" variant="neutral" size="sm">{~t"Save note"}</.button>
               </.form>
-            </.detail_section>
+            </.widget>
 
             <%!-- Last in the job: only needed once the flowers are leaving the shop. --%>
             <.delivery_map
@@ -277,7 +272,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               />
             </section>
 
-            <.detail_section id="order-customer" title={~t"Customer"}>
+            <.widget id="order-customer" title={~t"Customer"}>
               <.person_block>
                 <:contact :if={@order.customer_email}>
                   <a
@@ -318,9 +313,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   </.link>
                 </:contact>
               </.person_block>
-            </.detail_section>
+            </.widget>
 
-            <.detail_section
+            <.widget
               :if={@order.gift && present?(@order.recipient_name)}
               id="order-recipient"
               title={~t"Recipient"}
@@ -333,21 +328,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
-            </.detail_section>
+            </.widget>
 
-            <.detail_section id="order-log" title={~t"History"}>
+            <.widget id="order-log" title={~t"History"}>
               <ol class="divide-base-content/8 divide-y text-sm">
-                <li :for={{entry, index} <- Enum.with_index(@log)} class="py-2 first:pt-0 last:pb-0">
-                  <.log_heading :if={entry.details == []} entry={entry} locale={@locale} />
-                  <details
-                    :if={entry.details != []}
-                    id={"order-log-entry-#{index}"}
-                    phx-mounted={JS.ignore_attributes(["open"])}
-                    class="group"
-                  >
-                    <summary class="cursor-pointer list-none">
-                      <.log_heading entry={entry} locale={@locale} expandable />
-                    </summary>
+                <.history_entry
+                  :for={{entry, index} <- Enum.with_index(@log)}
+                  id={"order-log-entry-#{index}"}
+                  title={entry.title}
+                  at={entry.at}
+                  locale={@locale}
+                >
+                  <:details :if={entry.details != []}>
                     <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
                       <div :for={{label, value} <- entry.details}>
                         <dt :if={label} class="text-base-content/65 text-xs">{label}</dt>
@@ -359,10 +351,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                         </dd>
                       </div>
                     </dl>
-                  </details>
-                </li>
+                  </:details>
+                </.history_entry>
               </ol>
-            </.detail_section>
+            </.widget>
           </aside>
         </div>
       </.admin_page>
@@ -564,19 +556,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  attr :id, :string, default: nil
-  attr :title, :string, required: true
-  slot :inner_block, required: true
-
-  defp detail_section(assigns) do
-    ~H"""
-    <section id={@id} class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
-      <h2 class="text-base-content mb-4 text-base font-semibold">{@title}</h2>
-      {render_slot(@inner_block)}
-    </section>
-    """
-  end
-
   attr :line_items, :list, required: true
 
   # What to make, not what it costs: the prices are in the Payment section.
@@ -610,18 +589,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </div>
       </li>
     </ul>
-    """
-  end
-
-  attr :label, :string, required: true
-  slot :inner_block, required: true
-
-  defp summary_fact(assigns) do
-    ~H"""
-    <div>
-      <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
-      <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
-    </div>
     """
   end
 
@@ -756,32 +723,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <dd class={["tabular-nums", money_row_tone(@strong, @muted, "text-base-content/90")]}>
         {Format.currency(@amount, @locale)}
       </dd>
-    </div>
-    """
-  end
-
-  attr :entry, :map, required: true
-  attr :locale, :string, required: true
-  attr :expandable, :boolean, default: false
-
-  defp log_heading(assigns) do
-    ~H"""
-    <div class="flex items-baseline justify-between gap-4">
-      <p class="text-base-content flex items-center gap-1 font-medium">
-        {@entry.title}
-        <.icon
-          :if={@expandable}
-          name="hero-chevron-right"
-          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
-        />
-      </p>
-      <time
-        datetime={DateTime.to_iso8601(@entry.at)}
-        title={Format.datetime(@entry.at, @locale)}
-        class="text-base-content/65 shrink-0 text-xs tabular-nums"
-      >
-        {log_time(@entry.at, @locale)}
-      </time>
     </div>
     """
   end

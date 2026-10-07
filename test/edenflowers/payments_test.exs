@@ -402,6 +402,14 @@ defmodule Edenflowers.PaymentsTest do
     end
   end
 
+  describe "cancel/1" do
+    test "clears a course PaymentIntent so payment can be retried", %{registration: registration} do
+      assert {:ok, registration} = Payments.cancel(course_intent(registration))
+      assert registration.payment_intent_id == nil
+      assert registration.status == :pending
+    end
+  end
+
   describe "reconcile/1" do
     test "completes a course booking whose PaymentIntent succeeded", %{registration: registration} do
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn _registration -> {:ok, course_intent(registration)} end)

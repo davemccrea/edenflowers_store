@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
 
     {:ok,
      socket
-     |> assign(:page_title, ~t"Fulfillment Calendar")
+     |> assign(:page_title, ~t"Fulfillment calendar")
      |> assign(:options, options)
      |> assign(:scope, :all)
      |> assign(:today, today())}
@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="wide">
-        <.admin_page_header title={~t"Fulfillment Calendar"}></.admin_page_header>
+        <.admin_page_header title={~t"Fulfillment calendar"}></.admin_page_header>
 
         <section class="mb-6 max-w-xs">
           <form id="scope-form" phx-change="set-scope">
@@ -74,9 +74,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
               type="button"
               phx-click="reset-calendar"
               data-confirm={reset_confirm_message(@scope, @options)}
-              variant="destructive"
+              variant="ghost"
               size="sm"
-              class="self-start"
+              class="text-error self-start"
             >
               <.icon name="hero-arrow-path" class="h-4 w-4" />
               {~t"Reset calendar"}

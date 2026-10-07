@@ -17,7 +17,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
           customer_email: "ada@example.com",
           fulfillment_method: :delivery,
           fulfillment_date: ~D[2026-06-10],
-          payment_status: :paid,
           fulfillment_status: :pending,
           locale: "en-GB"
         ],

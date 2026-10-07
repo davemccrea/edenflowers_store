@@ -45,7 +45,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "payment_status",
+      "source": "payment_attempt_status",
       "type": "text"
     },
     {
@@ -58,6 +58,30 @@
       "scale": null,
       "size": null,
       "source": "fulfillment_status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "cancelled_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"online\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "origin",
       "type": "text"
     },
     {
@@ -82,6 +106,18 @@
       "scale": null,
       "size": null,
       "source": "customer_email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "customer_phone_number",
       "type": "text"
     },
     {
@@ -189,6 +225,18 @@
       "references": null,
       "scale": null,
       "size": null,
+      "source": "fulfillment_fee_override",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
       "source": "fulfillment_method",
       "type": "text"
     },
@@ -285,8 +333,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "amount_paid",
-      "type": "decimal"
+      "source": "payment_link_token",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -398,6 +446,30 @@
       "size": null,
       "source": "delivered_emailed_at",
       "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "details_emailed_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "florist_note",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -547,19 +619,11 @@
     },
     {
       "attribute": [
-        "amount_paid"
+        "fulfillment_fee_override"
       ],
       "base_filter": null,
-      "check": "amount_paid >= 0 AND amount_paid = round(amount_paid, 2)",
-      "name": "orders_valid_amount_paid"
-    },
-    {
-      "attribute": [
-        "amount_paid"
-      ],
-      "base_filter": null,
-      "check": "payment_status != 'paid' OR amount_paid IS NOT NULL",
-      "name": "orders_paid_requires_amount"
+      "check": "fulfillment_fee_override IS NULL OR (fulfillment_fee_override >= 0 AND fulfillment_fee_override = round(fulfillment_fee_override, 2))",
+      "name": "orders_valid_fulfillment_fee_override"
     }
   ],
   "create_table_options": null,
@@ -575,7 +639,7 @@
     }
   ],
   "has_create_action": true,
-  "hash": "2083D1FB592CAA61F269509DC7DF5A3E999F02FBA2270330FB94B29ED5F6A8FD",
+  "hash": "BC2D83EDD46127B75064C3DEFFA4FAEBB8661854836B8F51AFE9215C30D80313",
   "identities": [
     {
       "all_tenants?": false,
@@ -588,6 +652,20 @@
         }
       ],
       "name": "unique_order_reference",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "orders_unique_payment_link_token_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "payment_link_token"
+        }
+      ],
+      "name": "unique_payment_link_token",
       "nils_distinct?": true,
       "where": null
     }

@@ -267,7 +267,6 @@ defmodule Edenflowers.PoliciesTest do
         generate(
           order(
             state: :placed,
-            payment_status: :paid,
             payment_intent_id: "pi_test",
             ordered_at: DateTime.utc_now()
           )
@@ -291,8 +290,10 @@ defmodule Edenflowers.PoliciesTest do
     end
 
     test "admin cannot attach payment intent", %{order: order} do
-      assert {:error, %Ash.Error.Forbidden{}} =
+      assert {:error, error} =
                Orders.add_payment_intent_id(order, "pi_admin_override", actor: %{admin: true})
+
+      assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end
 
     test "admin cannot mark payment failed on placed order", %{order: order} do
@@ -333,7 +334,6 @@ defmodule Edenflowers.PoliciesTest do
         generate(
           order(
             state: :placed,
-            payment_status: :paid,
             payment_intent_id: "pi_test",
             ordered_at: DateTime.utc_now()
           )

@@ -39,11 +39,11 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           back={~p"/admin/expenses"}
           back_label={~t"Expenses"}
         >
-          <:actions :if={@expense.reviewed_at}>
+          <:subtitle :if={@expense.reviewed_at}>
             <span class="badge badge-sm badge-success admin-badge-success gap-1">
               <.icon name="hero-check" class="h-3 w-3" /> {~t"Reviewed"}
             </span>
-          </:actions>
+          </:subtitle>
         </.admin_page_header>
 
         <section class="border-base-content/12 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">

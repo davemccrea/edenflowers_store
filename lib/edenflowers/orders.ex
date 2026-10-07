@@ -79,7 +79,7 @@ defmodule Edenflowers.Orders do
   resources do
     resource Edenflowers.Orders.Order do
       define :create_for_checkout, action: :create_for_checkout
-      define :get_order_by_id, action: :read, get_by: [:id]
+      define :get_order_by_id, action: :by_id, args: [:id], get?: true
       define :get_order_for_checkout, action: :for_checkout, get_by: [:id]
       define :get_order_for_admin, action: :admin_show, get_by: [:id]
       define :list_my_orders, action: :mine
@@ -94,6 +94,7 @@ defmodule Edenflowers.Orders do
       define :return_to_delivery, action: :return_to_delivery
       define :finalize_checkout, action: :finalize_checkout, args: [:payment_intent_id]
       define :mark_payment_failed, action: :mark_payment_failed, args: [:payment_intent_id]
+      define :mark_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
       define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]

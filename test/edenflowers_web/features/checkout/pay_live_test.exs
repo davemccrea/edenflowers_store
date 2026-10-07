@@ -72,6 +72,24 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "#pay-form")
   end
 
+  test "resynchronizes the amount when the customer clicks pay", %{conn: conn, order: order} do
+    order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
+
+    expect(StripeAPI.Mock, :update_payment_intent, 2, fn
+      "pi_link", 8500 -> {:ok, %{id: "pi_link"}}
+      "pi_link", 9500 -> {:ok, %{id: "pi_link"}}
+    end)
+
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+    Ash.Seed.update!(order, %{fulfillment_fee: Decimal.new("10.00")})
+
+    view |> element("#pay-form") |> render_submit()
+
+    assert_push_event(view, "stripe:process_payment", %{})
+  end
+
   test "says so once the order is paid", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} =
       Orders.record_in_person_payment(order, "85.00", :cash, actor: admin)

@@ -86,16 +86,16 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
           <:col :let={promotion} field="discount_rate" sort label={~t"Discount"}>
             <span class="tabular-nums">{Format.percentage(promotion.discount_rate, @locale)}</span>
           </:col>
-          <:col :let={promotion} field="minimum_cart_total" sort label={~t"Minimum"}>
+          <:col :let={promotion} field="minimum_cart_total" sort label={~t"Minimum"} class="max-sm:hidden">
             <span class="whitespace-nowrap tabular-nums">{Format.currency(promotion.minimum_cart_total, @locale)}</span>
           </:col>
-          <:col :let={promotion} field="start_date" sort label={~t"Starts"}>
+          <:col :let={promotion} field="start_date" sort label={~t"Starts"} class="max-sm:hidden">
             <span class="whitespace-nowrap">{Format.date(promotion.start_date, @locale)}</span>
           </:col>
-          <:col :let={promotion} field="expiration_date" sort label={~t"Expires"}>
+          <:col :let={promotion} field="expiration_date" sort label={~t"Expires"} class="max-sm:hidden">
             <span class="whitespace-nowrap">{Format.date(promotion.expiration_date, @locale)}</span>
           </:col>
-          <:col :let={promotion} field="usage" sort label={~t"Used"}>
+          <:col :let={promotion} field="usage" sort label={~t"Used"} class="max-sm:hidden">
             <span class="tabular-nums">
               {promotion.usage}<span :if={promotion.usage_limit}> / {promotion.usage_limit}</span>
             </span>

@@ -106,6 +106,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       validate Edenflowers.Payments.Validations.PaymentIntentNotSet
     end
 
+    update :mark_payment_cancelled do
+      argument :payment_intent_id, :string, allow_nil?: false
+      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
+      change set_attribute(:payment_intent_id, nil)
+    end
+
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
     # A released hold that still got paid is confirmed anyway: the customer
     # has paid, so they have a place.
@@ -150,6 +156,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Jennie refunds in the Stripe dashboard; cancelling here frees the seats.
     update :cancel do
       change set_attribute(:status, :cancelled)
+      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+      require_atomic? false
     end
 
     update :send_confirmation_email do
@@ -171,6 +179,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action([
                      :add_payment_intent_id,
+                     :mark_payment_cancelled,
                      :confirm_payment,
                      :send_confirmation_email,
                      :reconcile_payment,

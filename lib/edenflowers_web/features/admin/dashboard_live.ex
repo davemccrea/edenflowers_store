@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp orders_widget(assigns) do
     ~H"""
-    <.widget title={~t"Upcoming Orders"} count={@open_order_count}>
+    <.widget title={~t"Upcoming orders"} count={@open_order_count}>
       <div :if={@orders_by_date == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
         <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
         <p class="text-sm">{~t"No upcoming orders right now"}</p>

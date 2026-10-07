@@ -20,9 +20,16 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   end
 
   @impl true
-  def handle_event(%Stripe.Event{type: type} = event)
-      when type in ["payment_intent.payment_failed", "payment_intent.canceled"] do
+  def handle_event(%Stripe.Event{type: "payment_intent.payment_failed"} = event) do
     case Payments.fail(event.data.object) do
+      {:ok, _outcome} -> :ok
+      error -> handle_error(error, event)
+    end
+  end
+
+  @impl true
+  def handle_event(%Stripe.Event{type: "payment_intent.canceled"} = event) do
+    case Payments.cancel(event.data.object) do
       {:ok, _outcome} -> :ok
       error -> handle_error(error, event)
     end

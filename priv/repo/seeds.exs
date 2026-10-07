@@ -709,8 +709,6 @@ for order_attrs <- orders do
     Ash.Seed.seed!(Order, %{
       order_reference: next_reference.(),
       state: :placed,
-      # Marked paid below, once the line items give it a grand_total to pay.
-      payment_status: :pending,
       fulfillment_status: order_attrs[:fulfillment_status] || :pending,
       # Already emailed, otherwise the SendConfirmationEmail and SendDeliveredEmail
       # triggers email every seeded customer — for real on staging.
@@ -790,7 +788,6 @@ for order_attrs <- orders do
 
   Ash.Seed.update!(order, %{
     vat_breakdown: Vat.breakdown(%{order | state: nil}),
-    payment_status: :paid,
     payment_intent_id: nil
   })
 

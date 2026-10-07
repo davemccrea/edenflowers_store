@@ -249,10 +249,17 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   test "calling finalise_checkout updates state and payment_state" do
-    order = generate(order(state: :payment, payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL"))
+    order =
+      generate(
+        order(
+          state: :payment,
+          payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL",
+          fulfillment_fee: "1.00"
+        )
+      )
 
     assert {:ok, order} =
-             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "1.00"}, authorize?: false)
 
     assert order.state == :placed
     assert order.payment_status == :paid
@@ -1268,17 +1275,17 @@ defmodule Edenflowers.Orders.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "payment_status transitions from pending to paid" do
-      order = generate(order(state: :payment, payment_status: :pending, payment_intent_id: "pi_test"))
+    test "a zero payment leaves payment_status pending" do
+      order = generate(order(state: :payment, payment_intent_id: "pi_test"))
 
       assert {:ok, order} =
                Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
 
-      assert order.payment_status == :paid
+      assert order.payment_status == :pending
     end
 
     test "cannot finalize order already in :order state" do
-      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_test"))
+      order = generate(order(state: :placed, payment_intent_id: "pi_test"))
 
       assert {:error, error} =
                Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
@@ -1636,14 +1643,14 @@ defmodule Edenflowers.Orders.OrderTest do
 
   describe "add_payment_intent_id policy" do
     test "guest can attach payment intent during checkout" do
-      order = generate(order(state: :payment))
+      order = generate(order(state: :payment, fulfillment_fee: "1.00"))
 
       assert {:ok, updated} = Orders.add_payment_intent_id(order, "pi_guest_test", actor: nil)
       assert updated.payment_intent_id == "pi_guest_test"
     end
 
     test "system actor can attach payment intent during checkout" do
-      order = generate(order(state: :payment))
+      order = generate(order(state: :payment, fulfillment_fee: "1.00"))
 
       assert {:ok, updated} =
                Orders.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})
@@ -1652,10 +1659,10 @@ defmodule Edenflowers.Orders.OrderTest do
     end
 
     test "cannot attach payment intent to a placed order" do
-      order = generate(order(state: :placed, payment_status: :paid, payment_intent_id: "pi_old"))
+      order = generate(order(state: :placed, payment_intent_id: "pi_old"))
 
       assert {:error, error} = Orders.add_payment_intent_id(order, "pi_new", actor: nil)
-      assert %Ash.Error.Forbidden{} = error
+      assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end
   end
 

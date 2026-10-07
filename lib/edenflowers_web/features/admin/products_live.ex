@@ -64,6 +64,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             sort
             filter={[type: :select, label: ~t"Category", prompt: ~t"All", options: @category_options]}
             label={~t"Category"}
+            class="max-sm:hidden"
           >
             {product.product_category.name}
           </:col>
@@ -92,7 +93,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
               {~t"Published"}
             </span>
           </:col>
-          <:col :let={product} field="featured" sort label={~t"Featured"}>
+          <:col :let={product} field="featured" sort label={~t"Featured"} class="max-sm:hidden">
             <.icon :if={product.featured} name="hero-star-solid" class="text-primary h-4 w-4" />
           </:col>
         </Cinder.collection>

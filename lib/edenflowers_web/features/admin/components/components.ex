@@ -142,6 +142,18 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :label, :string, required: true
+  slot :inner_block, required: true
+
+  def summary_fact(assigns) do
+    ~H"""
+    <div>
+      <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
+      <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
+    </div>
+    """
+  end
+
   attr :width, :string, default: "wide", values: ~w(wide narrow full)
   slot :inner_block, required: true
 
@@ -150,8 +162,8 @@ defmodule EdenflowersWeb.Admin.Components do
   content max-width so individual LiveViews don't each invent their own.
 
   `width` is a semantic choice, not a measurement:
-    * `wide`   — dashboards, calendars, anything multi-column
-    * `narrow` — focused single-record views (detail/edit)
+    * `wide`   — dashboards, calendars, and multi-column detail or edit views
+    * `narrow` — single-column forms, details, and card lists
     * `full`   — data tables, capped so rows stay scannable on very wide screens
   """
   def admin_page(assigns) do
@@ -162,6 +174,7 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :id, :string, default: nil
   attr :title, :string, required: true
   attr :count, :integer, default: nil, doc: "shown as a count badge beside the title"
   attr :class, :any, default: nil
@@ -174,13 +187,65 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
+    <section id={@id} class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
       <div class="mb-4 flex items-start justify-between gap-3">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
       </div>
       {render_slot(@inner_block)}
     </section>
+    """
+  end
+
+  attr :id, :string, default: nil
+  attr :title, :string, required: true
+  attr :at, DateTime, required: true
+  attr :locale, :string, required: true
+  slot :details
+
+  def history_entry(assigns) do
+    ~H"""
+    <li class="py-2 first:pt-0 last:pb-0">
+      <.history_heading :if={@details == []} title={@title} at={@at} locale={@locale} />
+      <details
+        :if={@details != []}
+        id={@id}
+        phx-mounted={JS.ignore_attributes(["open"])}
+        class="group"
+      >
+        <summary class="cursor-pointer list-none">
+          <.history_heading title={@title} at={@at} locale={@locale} expandable />
+        </summary>
+        {render_slot(@details)}
+      </details>
+    </li>
+    """
+  end
+
+  attr :title, :string, required: true
+  attr :at, DateTime, required: true
+  attr :locale, :string, required: true
+  attr :expandable, :boolean, default: false
+
+  defp history_heading(assigns) do
+    ~H"""
+    <div class="flex items-baseline justify-between gap-4">
+      <p class="text-base-content flex items-center gap-1 font-medium">
+        {@title}
+        <.icon
+          :if={@expandable}
+          name="hero-chevron-right"
+          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+        />
+      </p>
+      <time
+        datetime={DateTime.to_iso8601(@at)}
+        title={Edenflowers.Format.datetime(@at, @locale)}
+        class="text-base-content/65 shrink-0 text-xs tabular-nums"
+      >
+        {history_time(@at, @locale)}
+      </time>
+    </div>
     """
   end
 
@@ -258,6 +323,12 @@ defmodule EdenflowersWeb.Admin.Components do
   defp fulfillment_status_label(:pending), do: ~t"Pending"
   defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
+
+  defp history_time(at, locale) do
+    local = DateTime.shift_zone!(at, "Europe/Helsinki")
+
+    "#{Edenflowers.Format.day_month(DateTime.to_date(local), locale)} #{Edenflowers.Format.time(DateTime.to_time(local), locale)}"
+  end
 
   defp admin_page_width_class("wide"), do: "max-w-6xl"
   defp admin_page_width_class("narrow"), do: "max-w-2xl"

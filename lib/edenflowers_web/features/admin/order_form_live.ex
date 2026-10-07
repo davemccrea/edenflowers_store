@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.{EnteredLineItems, Order}
   alias Edenflowers.Pricing
+  alias Edenflowers.Pricing.TaxRate
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -27,7 +28,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     case load(params, actor) do
       {:ok, mode, order} ->
-        tax_rates = Pricing.list_selectable_tax_rates!(actor: actor)
+        tax_rates = tax_rates(order, actor)
 
         {:ok,
          socket
@@ -142,6 +143,23 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   # A line stores the percentage it was charged, not the rate it came from.
   defp tax_rate_id_for(tax_rates, percentage) do
     Enum.find_value(tax_rates, fn rate -> Decimal.equal?(rate.percentage, percentage) && rate.id end)
+  end
+
+  defp tax_rates(nil, actor), do: Pricing.list_selectable_tax_rates!(actor: actor)
+
+  defp tax_rates(order, actor) do
+    selectable = Pricing.list_selectable_tax_rates!(actor: actor)
+
+    used_percentages =
+      for %{product_variant_id: nil, tax_rate: percentage} <- order.line_items,
+          do: percentage
+
+    historical =
+      TaxRate
+      |> Ash.read!(actor: actor)
+      |> Enum.filter(fn rate -> Enum.any?(used_percentages, &Decimal.equal?(&1, rate.percentage)) end)
+
+    Enum.uniq_by(selectable ++ historical, & &1.id)
   end
 
   defp variant_options(actor) do
