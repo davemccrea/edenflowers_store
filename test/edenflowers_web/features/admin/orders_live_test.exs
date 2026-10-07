@@ -87,6 +87,16 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, ~s([data-item-id="#{matching.id}"] .admin-badge-warning), "To collect")
   end
 
+  test "marks orders a subscription created", %{conn: conn} do
+    occurrence = placed_order(customer_name: "Subscriber", origin: :subscription)
+    online = placed_order(customer_name: "Shopper")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+
+    assert has_element?(view, ~s([data-item-id="#{occurrence.id}"]), "Subscription")
+    refute has_element?(view, ~s([data-item-id="#{online.id}"]), "Subscription")
+  end
+
   defp placed_order(attrs) do
     {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
     order = generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))

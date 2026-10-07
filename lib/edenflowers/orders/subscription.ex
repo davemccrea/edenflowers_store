@@ -8,9 +8,12 @@ defmodule Edenflowers.Orders.Subscription do
     domain: Edenflowers.Orders,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshStateMachine, AshPaperTrail.Resource]
+    extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource]
 
   @intervals [1, 2, 4]
+
+  # Notice Jennie gets to buy the flowers before an Occurrence is delivered.
+  @lead_days 3
 
   def intervals, do: @intervals
 
@@ -25,6 +28,22 @@ defmodule Edenflowers.Orders.Subscription do
     initial_states([:active])
     default_initial_state(:active)
     extra_states([:paused, :payment_failed, :cancelled])
+  end
+
+  oban do
+    triggers do
+      trigger :create_occurrence do
+        action :create_occurrence
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "0 * * * *"
+        worker_module_name Edenflowers.Orders.Workers.CreateOccurrence
+        scheduler_module_name Edenflowers.Orders.Schedulers.CreateOccurrence
+        default_actor Edenflowers.Actors.system_actor()
+        where expr(state == :active and next_fulfillment_date <= date_add(today(), ^@lead_days, :day))
+      end
+    end
   end
 
   paper_trail do
@@ -60,9 +79,21 @@ defmodule Edenflowers.Orders.Subscription do
 
       validate attribute_in(:interval_weeks, @intervals)
     end
+
+    update :create_occurrence do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Edenflowers.Orders.Changes.CreateOccurrence
+    end
   end
 
   policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action([:create_occurrence])
+      authorize_if action_type(:read)
+    end
+
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
     end

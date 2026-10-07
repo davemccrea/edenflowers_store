@@ -7,8 +7,11 @@ defmodule Edenflowers.Orders.Order.FulfillmentStatus do
 end
 
 defmodule Edenflowers.Orders.Order.Origin do
-  @moduledoc "An online order comes through checkout; a custom order is entered by Jennie in the admin."
-  use Ash.Type.Enum, values: [:online, :custom]
+  @moduledoc """
+  An online order comes through checkout; a custom order is entered by Jennie
+  in the admin; a subscription order is an Occurrence a Subscription created.
+  """
+  use Ash.Type.Enum, values: [:online, :custom, :subscription]
 end
 
 defmodule Edenflowers.Orders.Order.PaymentMethod do
@@ -126,8 +129,10 @@ defmodule Edenflowers.Orders.Order do
   def checkout_states, do: @checkout_states
 
   state_machine do
-    # A custom order skips checkout: Jennie creates it already placed.
-    initial_states([:contact_details, :placed])
+    # A custom order skips checkout: Jennie creates it already placed. An
+    # Occurrence starts waiting for its charge, and checkout's own
+    # finalize_checkout places it once the card is charged.
+    initial_states([:contact_details, :payment, :placed])
     default_initial_state(:contact_details)
 
     transitions do
@@ -406,6 +411,43 @@ defmodule Edenflowers.Orders.Order do
       change run_oban_trigger(:send_order_details_email), where: [argument_equals(:email_customer?, true)]
     end
 
+    # An Occurrence, made by Subscription's :create_occurrence. Delivery is
+    # priced afresh, and the line item comes from the variant at its current
+    # price, as when it is added to a cart.
+    create :create_occurrence do
+      accept [
+        :subscription_id,
+        :subscription_date,
+        :user_id,
+        :customer_name,
+        :customer_email,
+        :locale,
+        :recipient_name,
+        :recipient_phone_number,
+        :delivery_address,
+        :delivery_instructions,
+        :card_message,
+        :fulfillment_option_id,
+        :fulfillment_date
+      ]
+
+      argument :product_variant_id, :uuid, allow_nil?: false
+
+      change set_attribute(:state, :payment)
+      change set_attribute(:origin, :subscription)
+      change Changes.SnapshotFulfillmentMethod
+      change Changes.SetGiftFromRecipient
+      change Changes.PriceFulfillment
+
+      change after_action(fn changeset, order, _context ->
+               variant_id = Ash.Changeset.get_argument(changeset, :product_variant_id)
+
+               with {:ok, _line_item} <- Edenflowers.Orders.add_line_item(order.id, variant_id, 1, authorize?: false) do
+                 {:ok, order}
+               end
+             end)
+    end
+
     # Forward checkout transitions
     update :submit_contact_details do
       accept [:customer_name, :customer_email]
@@ -484,7 +526,7 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
-      change Changes.ActivateSubscription
+      change Changes.ActivateSubscription, where: [attribute_equals(:origin, :online)]
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
@@ -840,6 +882,9 @@ defmodule Edenflowers.Orders.Order do
     attribute :fulfillment_date, :date
     # How often a subscription cart is to be delivered, chosen at checkout.
     attribute :subscription_interval_weeks, :integer
+    # The Subscription's date an Occurrence was made for. Its fulfillment_date
+    # is later when that day was closed.
+    attribute :subscription_date, :date
     # The fee for the address and option, before a free-delivery cart waives it;
     # see the `fulfillment_fee` calculation for what is charged.
     attribute :quoted_fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
@@ -1004,5 +1049,7 @@ defmodule Edenflowers.Orders.Order do
   identities do
     identity :unique_order_reference, [:order_reference]
     identity :unique_payment_link_token, [:payment_link_token]
+    # One Occurrence per subscription date, however often its job runs.
+    identity :unique_occurrence, [:subscription_id, :subscription_date]
   end
 end

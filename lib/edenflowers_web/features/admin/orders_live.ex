@@ -74,6 +74,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
               {order.customer_name || ~t"Unnamed customer"}
             </.link>
+            <.subscription_badge :if={order.origin == :subscription} />
           </:col>
           <:col
             :let={order}
