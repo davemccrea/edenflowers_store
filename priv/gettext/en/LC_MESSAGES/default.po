@@ -1958,7 +1958,6 @@ msgstr ""
 msgid "Your 15% welcome code is still valid:"
 msgstr ""
 
-#: lib/edenflowers/email.ex:19
 #: lib/edenflowers/email.ex:43
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference}"
@@ -4472,4 +4471,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expenses_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Open Papra"
+msgstr ""
+
+#: lib/edenflowers/email.ex:19
+#, elixir-autogen, elixir-format
+msgid "Your receipt for Eden Flowers order %{order_order_reference}"
 msgstr ""
