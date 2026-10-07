@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   def handle_event("pay", _params, socket) do
     with {:ok, order} <- Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false),
-         true <- payable?(order),
+         true <- order.payable?,
          true <- order.payment_intent_id == socket.assigns.shown_order.payment_intent_id,
          :ok <- sync_amount(order) do
       {:noreply,
@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This order has been cancelled, so there is nothing to pay. Get in touch if that's a surprise."}
               </p>
-            <% not payable?(@shown_order) -> %>
+            <% not @shown_order.payable? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">
                 {~t"This order is paid. Thank you!"}
@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 <dd class="tabular-nums">{Format.currency(@shown_order.amount_paid, @locale)}</dd>
               </div>
               <div
-                :if={@shown_order.amount_paid && payable?(@shown_order)}
+                :if={@shown_order.amount_paid && @shown_order.payable?}
                 class="flex justify-between gap-4 py-3 font-semibold"
               >
                 <dt>{~t"Left to pay"}</dt>
@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
             </dl>
           </section>
 
-          <section :if={payable?(@shown_order) and not @returned_from_stripe?} class="mt-10" aria-label={~t"Payment"}>
+          <section :if={@shown_order.payable? and not @returned_from_stripe?} class="mt-10" aria-label={~t"Payment"}>
             <form
               :if={@client_secret}
               id="pay-form"
@@ -191,16 +191,11 @@ defmodule EdenflowersWeb.Checkout.PayLive do
     """
   end
 
-  defp payable?(order),
-    do:
-      Decimal.positive?(order.balance) and order.payment_status != :refunded and
-        order.fulfillment_status != :cancelled
-
   # Stripe is only touched once the page is live, so a crawler or a link
   # preview never creates a PaymentIntent. Back from Stripe, the payment is
   # in flight and its PaymentIntent must not change.
   defp assign_payment(%{assigns: %{shown_order: order}} = socket) do
-    if connected?(socket) and payable?(order) and not socket.assigns.returned_from_stripe? do
+    if connected?(socket) and order.payable? and not socket.assigns.returned_from_stripe? do
       case client_secret(order) do
         {:ok, client_secret} ->
           assign(socket, client_secret: client_secret, payment_unavailable?: false)

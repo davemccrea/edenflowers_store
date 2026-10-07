@@ -1,7 +1,7 @@
 defmodule Edenflowers.Payments.Validations.NotAlreadyPaid do
   @moduledoc """
   Fails with `AlreadyPaid` when the record's `attribute` already holds its
-  `paid` value, e.g. `attribute: :payment_status, paid: :paid`.
+  `paid` value, e.g. `attribute: :status, paid: :confirmed`.
   """
   use Ash.Resource.Validation
 

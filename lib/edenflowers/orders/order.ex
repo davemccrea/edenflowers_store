@@ -1,9 +1,5 @@
 defmodule Edenflowers.Orders.Order.PaymentStatus do
-  use Ash.Type.Enum, values: [:pending, :paid, :failed, :refunded]
-end
-
-defmodule Edenflowers.Orders.Order.PaymentAttemptStatus do
-  use Ash.Type.Enum, values: [:pending, :failed]
+  use Ash.Type.Enum, values: [:pending, :paid, :refunded]
 end
 
 defmodule Edenflowers.Orders.Order.FulfillmentStatus do
@@ -271,13 +267,6 @@ defmodule Edenflowers.Orders.Order do
   actions do
     defaults [:read]
 
-    read :by_id do
-      argument :id, :uuid, allow_nil?: false
-      get? true
-      filter expr(id == ^arg(:id))
-      prepare build(load: [:payment_status])
-    end
-
     destroy :purge_abandoned_cart
 
     read :for_checkout do
@@ -362,7 +351,7 @@ defmodule Edenflowers.Orders.Order do
 
       prepare build(
                 load: [
-                  :payment_status,
+                  :payable?,
                   :grand_total,
                   :amount_paid,
                   :balance,
@@ -488,7 +477,6 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportPromotionOverused
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
-      change load(:payment_status)
 
       require_atomic? false
     end
@@ -579,7 +567,6 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
-      change load(:payment_status)
       require_atomic? false
     end
 
@@ -589,7 +576,6 @@ defmodule Edenflowers.Orders.Order do
       argument :stripe_refund_id, :string, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
       change {Changes.RecordPayment, method: :stripe, amount: :amount}
-      change load(:payment_status)
       require_atomic? false
     end
 
@@ -646,8 +632,7 @@ defmodule Edenflowers.Orders.Order do
     update :add_payment_intent_id do
       accept [:payment_intent_id]
       validate Edenflowers.Payments.Validations.PaymentIntentNotSet
-      change Changes.EnsurePayable
-      require_atomic? false
+      validate Validations.Payable
     end
 
     update :send_confirmation_email do
@@ -671,22 +656,10 @@ defmodule Edenflowers.Orders.Order do
       change Edenflowers.Payments.Changes.Reconcile
     end
 
-    # A succeeded event may have arrived first, or been reprocessed. Don't downgrade.
-    update :mark_payment_failed do
-      argument :payment_intent_id, :string, allow_nil?: false
-      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
-      # A placed custom order still waits for its money after a declined card, and
-      # cancelling one cancels its PaymentIntent too; neither is a failed checkout.
-      change set_attribute(:payment_attempt_status, :failed), where: [attribute_does_not_equal(:state, :placed)]
-      change load(:payment_status)
-    end
-
     update :mark_payment_cancelled do
       argument :payment_intent_id, :string, allow_nil?: false
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       change set_attribute(:payment_intent_id, nil)
-      change set_attribute(:payment_attempt_status, :failed), where: [attribute_does_not_equal(:state, :placed)]
-      change load(:payment_status)
     end
 
     action :sales_summary, :map do
@@ -756,7 +729,6 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action([
                      :finalize_checkout,
-                     :mark_payment_failed,
                      :mark_payment_cancelled,
                      :send_confirmation_email,
                      :send_delivered_email,
@@ -825,7 +797,6 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :ordered_at, :utc_datetime
 
-    attribute :payment_attempt_status, __MODULE__.PaymentAttemptStatus, allow_nil?: false, default: :pending
     attribute :fulfillment_status, __MODULE__.FulfillmentStatus, allow_nil?: false, default: :pending
     attribute :cancelled_at, :utc_datetime
 
@@ -928,14 +899,11 @@ defmodule Edenflowers.Orders.Order do
     calculate :payment_status,
               __MODULE__.PaymentStatus,
               expr(
-                if positive_payment_count == 0 do
-                  if payment_attempt_status == :failed, do: :failed, else: :pending
-                else
-                  if amount_paid <= 0 do
-                    :refunded
-                  else
-                    if balance > 0, do: :pending, else: :paid
-                  end
+                cond do
+                  not exists(payments, amount > 0) -> :pending
+                  amount_paid <= 0 -> :refunded
+                  balance > 0 -> :pending
+                  true -> :paid
                 end
               )
 
@@ -945,12 +913,12 @@ defmodule Edenflowers.Orders.Order do
               :boolean,
               expr(state == :placed and payment_status == :pending and fulfillment_status != :cancelled)
 
-    calculate :payment_link_open?,
+    # A refunded order is settled even though its balance reads as owed again.
+    calculate :payable?,
               :boolean,
-              expr(
-                not is_nil(payment_link_token) and balance > 0 and payment_status != :refunded and
-                  fulfillment_status != :cancelled
-              )
+              expr(balance > 0 and payment_status != :refunded and fulfillment_status != :cancelled)
+
+    calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?)
 
     calculate :vat, :decimal, Calculations.Vat
 
@@ -974,7 +942,6 @@ defmodule Edenflowers.Orders.Order do
 
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount
-    count :positive_payment_count, :payments, filter: expr(amount > 0)
 
     # Unauthorized because the checkout actor, often a guest, can't read the
     # order's user under the User read policy.

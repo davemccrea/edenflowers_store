@@ -181,7 +181,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   defp select_options(enum), do: Enum.map(enum.values(), &{status_label(&1), &1})
 
   defp status_label(:paid), do: ~t"Paid"
-  defp status_label(:failed), do: ~t"Failed"
   defp status_label(:refunded), do: ~t"Refunded"
   defp status_label(:pending), do: ~t"Pending"
   defp status_label(:cancelled), do: ~t"Cancelled"

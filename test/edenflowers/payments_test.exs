@@ -161,7 +161,9 @@ defmodule Edenflowers.PaymentsTest do
       assert {:ok, :completed} = Payments.complete(order_intent(order))
       assert {:ok, :already_completed} = Payments.complete(order_intent(order))
 
-      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert %{state: :placed, payment_status: :paid} =
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
+
       assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
@@ -169,7 +171,9 @@ defmodule Edenflowers.PaymentsTest do
       Orders.return_to_delivery!(order, authorize?: false)
 
       assert {:ok, :completed} = Payments.complete(order_intent(order))
-      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
+
+      assert %{state: :placed, payment_status: :paid} =
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     end
 
     test "places an order whose cart was reset while its payment was in flight", %{order: order} do
@@ -180,7 +184,7 @@ defmodule Edenflowers.PaymentsTest do
       assert log =~ "Amount mismatch"
 
       assert %{state: :placed, payment_status: :paid, customer_email: "john.smith@example.com"} =
-               Orders.get_order_by_id!(order.id, authorize?: false)
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     end
 
     test "places the order and flags an amount mismatch", %{order: order} do
@@ -238,7 +242,7 @@ defmodule Edenflowers.PaymentsTest do
       end
 
       assert %{state: :payment, payment_status: :pending} =
-               Orders.get_order_by_id!(order.id, authorize?: false)
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     end
 
     test "a stale order cannot complete twice or replace its reference", %{order: order} do
@@ -271,7 +275,7 @@ defmodule Edenflowers.PaymentsTest do
         assert inspect(error) =~ "enqueue_failed"
       end
 
-      unchanged_order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_paid])
+      unchanged_order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_paid, :payment_status])
       assert unchanged_order.state == :payment
       assert unchanged_order.payment_status == :pending
       assert unchanged_order.order_reference == order.order_reference
@@ -363,42 +367,6 @@ defmodule Edenflowers.PaymentsTest do
     test "refuses a PaymentIntent that names nothing it knows" do
       assert {:error, :unknown_payable} = Payments.complete(%{id: "pi_x", metadata: %{}})
       assert {:error, :unknown_payable} = Payments.complete(%{id: "pi_x", metadata: %{"order_id" => ""}})
-    end
-  end
-
-  describe "fail/1" do
-    test "marks the order's payment as failed", %{order: order} do
-      capture_log(fn -> assert {:ok, %Order{payment_status: :failed}} = Payments.fail(order_intent(order)) end)
-    end
-
-    test "doesn't downgrade a paid order", %{order: order} do
-      {:ok, :completed} = Payments.complete(order_intent(order))
-
-      assert {:ok, :unchanged} = Payments.fail(order_intent(order))
-      assert %{payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
-    end
-
-    test "a failure handler's stale snapshot cannot downgrade a paid order", %{order: order} do
-      assert {:ok, :completed} = Payments.complete(order_intent(order))
-
-      assert {:error, error} =
-               Orders.mark_payment_failed(order, order.payment_intent_id, actor: Edenflowers.Actors.system_actor())
-
-      assert Enum.any?(error.errors, &is_struct(&1, Payments.Errors.PaymentIntentMismatch))
-      assert %{state: :placed, payment_status: :paid} = Orders.get_order_by_id!(order.id, authorize?: false)
-    end
-
-    test "a stale PaymentIntent cannot fail an order", %{order: order} do
-      stale_intent = %{order_intent(order) | id: "pi_replaced"}
-
-      assert {:ok, :unchanged} = Payments.fail(stale_intent)
-
-      assert %{payment_status: :pending} = Orders.get_order_by_id!(order.id, authorize?: false)
-    end
-
-    test "leaves a course booking pending; its seat hold lapses on its own", %{registration: registration} do
-      assert {:ok, :unchanged} = Payments.fail(course_intent(registration))
-      assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
     end
   end
 

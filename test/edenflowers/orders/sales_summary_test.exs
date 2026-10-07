@@ -22,6 +22,8 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
     # 00:30 on 1 September in Helsinki (UTC+3): inside the range
     placed.(~U[2026-08-31 21:30:00Z], [{~U[2026-08-31 21:30:00Z], "45.00"}])
     placed.(~U[2026-09-15 12:00:00Z], [{~U[2026-09-15 12:00:00Z], "45.00"}])
+    # Edited after payment to owe more: still a sale.
+    placed.(~U[2026-09-15 12:00:00Z], [{~U[2026-09-15 12:00:00Z], "30.00"}])
     # Paid and refunded in the range: counts nothing.
     placed.(~U[2026-09-15 12:00:00Z], [
       {~U[2026-09-15 12:00:00Z], "45.00"},
@@ -39,8 +41,8 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
     summary =
       Edenflowers.Orders.sales_summary!(~D[2026-09-01], ~D[2026-09-30], actor: admin)
 
-    assert summary.order_count == 2
-    assert Decimal.equal?(summary.revenue, "94.00")
+    assert summary.order_count == 3
+    assert Decimal.equal?(summary.revenue, "124.00")
   end
 
   test "reports zero for a range without paid orders" do
