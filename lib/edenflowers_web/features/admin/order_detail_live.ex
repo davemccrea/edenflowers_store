@@ -893,21 +893,25 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :order, :map, required: true
   attr :payments, :list, required: true
 
+  # Always there, so Jennie finds it in the same place on every order. An item
+  # that doesn't apply yet says why; one that never could, like fetching Stripe
+  # refunds for an order Stripe never charged, is left out.
   defp order_menu(assigns) do
     assigns =
       assigns
-      |> assign(:can_email_details?, assigns.order.customer_email && assigns.order.fulfillment_status != :cancelled)
-      |> assign(:has_receipt?, assigns.order.payment_status == :paid)
+      |> assign(:email_details_unavailable, email_details_unavailable(assigns.order))
+      |> assign(:email_receipt_unavailable, receipt_unavailable(assigns.order) || no_email(assigns.order))
+      |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
       |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
-      |> assign(:can_cancel?, assigns.order.fulfillment_status == :pending)
+      |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
 
     ~H"""
-    <div :if={@can_email_details? || @has_receipt? || @paid_through_stripe? || @can_cancel?} class="dropdown dropdown-end">
+    <div class="dropdown dropdown-end">
       <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
         <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
       </button>
       <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-56 border p-1 shadow">
-        <li :if={@can_email_details?}>
+        <li :if={!@email_details_unavailable}>
           <button
             type="button"
             phx-click="send_order_details"
@@ -916,7 +920,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             {~t"Email order details"}
           </button>
         </li>
-        <li :if={@has_receipt? && @order.customer_email}>
+        <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
+          {~t"Email order details"}
+        </.unavailable_menu_item>
+
+        <li :if={!@email_receipt_unavailable}>
           <button
             type="button"
             phx-click="email_receipt"
@@ -925,27 +933,72 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             {~t"Email receipt"}
           </button>
         </li>
-        <li :if={@has_receipt?}>
+        <.unavailable_menu_item :if={@email_receipt_unavailable} reason={@email_receipt_unavailable}>
+          {~t"Email receipt"}
+        </.unavailable_menu_item>
+
+        <li :if={!@receipt_unavailable}>
           <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
             {~t"View receipt"}
             <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
           </.link>
         </li>
+        <.unavailable_menu_item :if={@receipt_unavailable} reason={@receipt_unavailable}>
+          {~t"View receipt"}
+        </.unavailable_menu_item>
+
         <%!-- Refunds arrive by webhook; this catches one that never did. --%>
         <li :if={@paid_through_stripe?}>
           <button type="button" phx-click="fetch_stripe_refunds">
             {~t"Fetch refunds from Stripe"}
           </button>
         </li>
-        <li :if={@can_cancel?}>
+
+        <li :if={!@cancel_unavailable}>
           <button type="button" phx-click="cancel_order" data-confirm={cancel_confirmation(@order)} class="text-error">
             {~t"Cancel order"}
           </button>
         </li>
+        <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
+          {~t"Cancel order"}
+        </.unavailable_menu_item>
       </ul>
     </div>
     """
   end
+
+  attr :reason, :string, required: true
+  slot :inner_block, required: true
+
+  # The reason is written out rather than put in a tooltip, which a touch screen never shows.
+  defp unavailable_menu_item(assigns) do
+    ~H"""
+    <li class="menu-disabled">
+      <span aria-disabled="true" class="flex flex-col items-start gap-0.5">
+        {render_slot(@inner_block)}
+        <span class="text-xs">{@reason}</span>
+      </span>
+    </li>
+    """
+  end
+
+  defp email_details_unavailable(order) do
+    cond do
+      order.fulfillment_status == :cancelled -> ~t"The order is cancelled"
+      true -> no_email(order)
+    end
+  end
+
+  defp receipt_unavailable(%{payment_status: :paid}), do: nil
+  defp receipt_unavailable(%{payment_status: :refunded}), do: ~t"The order was refunded"
+  defp receipt_unavailable(_order), do: ~t"Not paid"
+
+  defp no_email(%{customer_email: nil}), do: ~t"No email address"
+  defp no_email(_order), do: nil
+
+  defp cancel_unavailable(%{fulfillment_status: :pending}), do: nil
+  defp cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
+  defp cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"
 
   # Muted rows inherit the row's own muted tone.
   defp money_row_tone(true = _strong, _muted, _default), do: "text-base-content"

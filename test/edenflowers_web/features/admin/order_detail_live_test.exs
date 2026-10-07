@@ -48,6 +48,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
+  test "the actions menu says why each action is unavailable", %{conn: conn} do
+    order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344", fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|button[aria-label="More actions"]|)
+    assert has_element?(view, ".menu-disabled", "No email address")
+    assert has_element?(view, ".menu-disabled", "Not paid")
+    assert has_element?(view, ".menu-disabled", "Already fulfilled")
+    refute has_element?(view, ~s|button[phx-click="cancel_order"]|)
+    refute has_element?(view, ~s|button[phx-click="fetch_stripe_refunds"]|)
+  end
+
   @tag :typst
   test "opens the receipt of another customer's order", %{conn: conn} do
     order = placed_order(payment_status: :paid)
