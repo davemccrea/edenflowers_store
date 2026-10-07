@@ -10,6 +10,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Orders
   alias Edenflowers.RateLimiter
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.Components, as: AdminComponents
+  alias EdenflowersWeb.Checkout.Fields
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
@@ -34,6 +36,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(code_form: to_form(%{"code" => ""}, as: :confirm))
      |> assign(locale: Format.locale())
      |> assign(orders: Orders.list_my_orders!(actor: user))
+     |> assign(subscriptions: Orders.list_my_subscriptions!(actor: user))
      |> assign(registrations: registrations(user))
      |> assign(newsletter_form_id: @newsletter_form_id)
      |> assign(newsletter_saved?: false)
@@ -94,6 +97,76 @@ defmodule EdenflowersWeb.Account.AccountLive do
               <.button type="button" variant="text" phx-click="cancel_email_change">{~t"Cancel"}</.button>
             </div>
           </.form>
+        </section>
+
+        <section
+          :if={@subscriptions != []}
+          class="border-base-content/12 py-10 not-last:border-b sm:py-14"
+          aria-labelledby="subscriptions-heading"
+        >
+          <h2 id="subscriptions-heading" class="section-title">{~t"Subscriptions"}</h2>
+
+          <ul class="mt-6">
+            <li
+              :for={subscription <- @subscriptions}
+              id={"subscription-#{subscription.id}"}
+              class="border-base-content/12 flex flex-col gap-3 border-t py-4"
+            >
+              <div>
+                <p>{subscription_summary(subscription)}</p>
+                <p class="text-base-content/70 text-sm" data-testid="subscription-status">
+                  {subscription_status(subscription, @locale)}
+                </p>
+              </div>
+
+              <p :if={subscription.changes_closed?} class="text-base-content/70 text-sm">
+                {~t"It's too late to change your next delivery."}
+              </p>
+
+              <div :if={not subscription.changes_closed?} class="flex flex-wrap gap-x-4 gap-y-2">
+                <.button
+                  :if={subscription.state == :active and not skipped?(subscription)}
+                  type="button"
+                  variant="text"
+                  phx-click="skip_subscription"
+                  phx-value-id={subscription.id}
+                  data-confirm={
+                    ~t"Skip the delivery on #{date = Format.date(subscription.next_fulfillment_date, @locale)}?"
+                  }
+                >
+                  {~t"Skip next delivery"}
+                </.button>
+                <.button
+                  :if={subscription.state == :active}
+                  type="button"
+                  variant="text"
+                  phx-click="pause_subscription"
+                  phx-value-id={subscription.id}
+                >
+                  {~t"Pause"}
+                </.button>
+                <.button
+                  :if={subscription.state == :paused}
+                  type="button"
+                  variant="text"
+                  phx-click="resume_subscription"
+                  phx-value-id={subscription.id}
+                >
+                  {~t"Resume"}
+                </.button>
+                <.button
+                  :if={subscription.state != :cancelled}
+                  type="button"
+                  variant="text"
+                  phx-click="cancel_subscription"
+                  phx-value-id={subscription.id}
+                  data-confirm={~t"Cancel this subscription? This can't be undone."}
+                >
+                  {~t"Cancel subscription"}
+                </.button>
+              </div>
+            </li>
+          </ul>
         </section>
 
         <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="orders-heading">
@@ -315,6 +388,22 @@ defmodule EdenflowersWeb.Account.AccountLive do
     {:noreply, reset_details(socket, socket.assigns.current_user)}
   end
 
+  def handle_event("skip_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped")}
+  end
+
+  def handle_event("pause_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused")}
+  end
+
+  def handle_event("resume_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed")}
+  end
+
+  def handle_event("cancel_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
+  end
+
   def handle_event("toggle_newsletter", params, socket) do
     user = socket.assigns.current_user
     opt_in = params["newsletter_opt_in"] == "true"
@@ -348,6 +437,55 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
+
+  defp change_subscription(socket, id, action, success_message) do
+    user = socket.assigns.current_user
+    subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
+
+    socket =
+      case action.(subscription, actor: user) do
+        {:ok, _subscription} ->
+          put_flash(socket, :info, success_message)
+
+        {:error, error} ->
+          Logger.info("Subscription change refused: #{inspect(error)}")
+          put_flash(socket, :error, subscription_error_message(error))
+      end
+
+    assign(socket, subscriptions: Orders.list_my_subscriptions!(actor: user))
+  end
+
+  # The cutoff's own message says why; anything else means the page was stale.
+  defp subscription_error_message(%Ash.Error.Invalid{errors: errors}) do
+    Enum.find_value(errors, ~t"Your subscription couldn't be changed.", fn
+      %Ash.Error.Changes.InvalidAttribute{field: :next_fulfillment_date, message: message} -> message
+      _ -> nil
+    end)
+  end
+
+  defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
+
+  defp skipped?(subscription), do: subscription.next_fulfillment_date in subscription.skipped_dates
+
+  defp subscription_summary(subscription) do
+    size = AdminComponents.variant_size_label(subscription.product_variant.size)
+    "#{size} · #{Fields.interval_label(subscription.interval_weeks)}"
+  end
+
+  defp subscription_status(%{state: :active} = subscription, locale) do
+    next = Format.date(subscription.next_fulfillment_date, locale)
+
+    if skipped?(subscription) do
+      following = Format.date(Date.add(subscription.next_fulfillment_date, subscription.interval_weeks * 7), locale)
+      ~t"Skipping #{date = next}. Next delivery #{next_date = following}"
+    else
+      ~t"Next delivery #{date = next}"
+    end
+  end
+
+  defp subscription_status(%{state: :paused}, _locale), do: ~t"Paused"
+  defp subscription_status(%{state: :payment_failed}, _locale), do: ~t"On hold until the last delivery is paid"
+  defp subscription_status(%{state: :cancelled}, _locale), do: ~t"Cancelled"
 
   defp update_name(user, name) when name == user.name, do: {:ok, user}
 

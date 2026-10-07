@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Checkout.Fields
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Format
 
@@ -55,16 +56,92 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort label={~t"Next delivery"}>
             <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
+            <div :if={subscription.next_fulfillment_date in subscription.skipped_dates} class="text-base-content/65 text-sm">
+              {~t"Skipped"}
+            </div>
           </:col>
           <:col :let={subscription} field="state" sort label={~t"State"}>
             <span class={["badge badge-sm whitespace-nowrap", state_badge_class(subscription.state)]}>
               {state_label(subscription.state)}
             </span>
           </:col>
+          <:col :let={subscription} label={~t"Actions"}>
+            <div class="flex flex-wrap gap-1">
+              <button
+                :if={subscription.state == :active and subscription.next_fulfillment_date not in subscription.skipped_dates}
+                type="button"
+                phx-click="skip"
+                phx-value-id={subscription.id}
+                data-confirm={~t"Skip the delivery on #{date = Format.date(subscription.next_fulfillment_date, @locale)}?"}
+                class="btn btn-ghost btn-sm"
+              >
+                {~t"Skip"}
+              </button>
+              <button
+                :if={subscription.state == :active}
+                type="button"
+                phx-click="pause"
+                phx-value-id={subscription.id}
+                class="btn btn-ghost btn-sm"
+              >
+                {~t"Pause"}
+              </button>
+              <button
+                :if={subscription.state == :paused}
+                type="button"
+                phx-click="resume"
+                phx-value-id={subscription.id}
+                class="btn btn-ghost btn-sm"
+              >
+                {~t"Resume"}
+              </button>
+              <button
+                :if={subscription.state != :cancelled}
+                type="button"
+                phx-click="cancel"
+                phx-value-id={subscription.id}
+                data-confirm={~t"Cancel this subscription? This can't be undone."}
+                class="btn btn-ghost btn-sm text-error"
+              >
+                {~t"Cancel"}
+              </button>
+            </div>
+          </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  @impl true
+  def handle_event("skip", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped")}
+  end
+
+  def handle_event("pause", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused")}
+  end
+
+  def handle_event("resume", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed")}
+  end
+
+  def handle_event("cancel", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
+  end
+
+  defp change_subscription(socket, id, action, success_message) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, subscription} <- Orders.get_subscription(id, actor: actor),
+           {:ok, _} <- action.(subscription, actor: actor) do
+        put_flash(socket, :info, success_message)
+      else
+        _ -> put_flash(socket, :error, ~t"The subscription couldn't be changed.")
+      end
+
+    Cinder.refresh_table(socket, "subscriptions-table")
   end
 
   defp state_label(:active), do: ~t"Active"

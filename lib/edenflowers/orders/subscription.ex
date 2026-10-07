@@ -22,18 +22,19 @@ defmodule Edenflowers.Orders.Subscription do
     table "subscriptions"
   end
 
-  # Created only once the first order is paid, so it starts active. Pausing
-  # and cancelling arrive with the account page.
+  # Created only once the first order is paid, so it starts active.
   state_machine do
     initial_states([:active])
     default_initial_state(:active)
-    extra_states([:paused, :cancelled])
 
     # A refused card holds the subscription until its Occurrence is paid
     # through the payment link.
     transitions do
       transition(:create_occurrence, from: :active, to: :payment_failed)
       transition(:reactivate, from: :payment_failed, to: :active)
+      transition(:pause, from: :active, to: :paused)
+      transition(:resume, from: :paused, to: :active)
+      transition(:cancel, from: [:active, :paused, :payment_failed], to: :cancelled)
     end
   end
 
@@ -65,6 +66,11 @@ defmodule Edenflowers.Orders.Subscription do
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant])
+    end
+
+    read :mine do
+      filter expr(user_id == ^actor(:id))
+      prepare build(sort: [inserted_at: :asc], load: [:product_variant, :changes_closed?])
     end
 
     create :activate do
@@ -112,6 +118,51 @@ defmodule Edenflowers.Orders.Subscription do
 
       require_atomic? false
     end
+
+    # The occurrence job already passes over a skipped date.
+    update :skip do
+      validate attribute_equals(:state, :active)
+      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+
+      change fn changeset, _context ->
+        %{next_fulfillment_date: date, skipped_dates: skipped} = changeset.data
+        Ash.Changeset.change_attribute(changeset, :skipped_dates, Enum.uniq([date | skipped]))
+      end
+
+      require_atomic? false
+    end
+
+    update :pause do
+      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+      change transition_state(:paused)
+      require_atomic? false
+    end
+
+    # Picks up at the first date on the schedule the occurrence job hasn't
+    # already passed, so resuming never creates an Occurrence at short notice.
+    update :resume do
+      change transition_state(:active)
+
+      change fn changeset, _context ->
+        %{next_fulfillment_date: date, interval_weeks: weeks} = changeset.data
+        earliest = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(@lead_days + 1)
+
+        next_date =
+          date
+          |> Stream.iterate(&Date.add(&1, weeks * 7))
+          |> Enum.find(&(not Date.before?(&1, earliest)))
+
+        Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
+      end
+
+      require_atomic? false
+    end
+
+    update :cancel do
+      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+      change transition_state(:cancelled)
+      require_atomic? false
+    end
   end
 
   policies do
@@ -122,6 +173,11 @@ defmodule Edenflowers.Orders.Subscription do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
+      authorize_if action([:skip, :pause, :resume, :cancel])
+    end
+
+    policy action([:mine, :skip, :pause, :resume, :cancel]) do
+      authorize_if expr(user_id == ^actor(:id))
     end
   end
 
@@ -152,5 +208,18 @@ defmodule Edenflowers.Orders.Subscription do
     belongs_to :product_variant, Edenflowers.Catalog.ProductVariant, allow_nil?: false
     belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption, allow_nil?: false
     has_many :orders, Edenflowers.Orders.Order
+  end
+
+  calculations do
+    # True from 24 hours before the occurrence job would create and charge the
+    # next Occurrence (`@lead_days` before delivery), counted in Helsinki days.
+    # Only an active subscription has an Occurrence coming.
+    calculate :changes_closed?,
+              :boolean,
+              expr(
+                state == :active and
+                  next_fulfillment_date <=
+                    fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date + ?::integer", ^(@lead_days + 1))
+              )
   end
 end

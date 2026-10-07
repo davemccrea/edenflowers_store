@@ -130,6 +130,12 @@ defmodule Edenflowers.Orders do
 
     resource Edenflowers.Orders.Subscription do
       define :reactivate_subscription, action: :reactivate
+      define :get_subscription, action: :read, get_by: [:id]
+      define :list_my_subscriptions, action: :mine
+      define :skip_subscription, action: :skip
+      define :pause_subscription, action: :pause
+      define :resume_subscription, action: :resume
+      define :cancel_subscription, action: :cancel
     end
 
     resource Edenflowers.Orders.Subscription.Version
