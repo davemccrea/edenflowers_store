@@ -351,7 +351,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           fulfillment_option_name: "Pickup",
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-06-10],
-          fulfillment_fee: "4.50",
+          quoted_fulfillment_fee: "4.50",
           fulfillment_tax_rate: tax_rate.percentage,
           payment_status: :paid,
           ordered_at: DateTime.utc_now(),

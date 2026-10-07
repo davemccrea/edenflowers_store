@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
       order_attrs = [
         state: :placed,
         fulfillment_status: :fulfilled,
-        fulfillment_fee: "5.00",
+        quoted_fulfillment_fee: "5.00",
         ordered_at: ordered_at
       ]
 

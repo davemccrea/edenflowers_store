@@ -255,15 +255,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         socket
 
       true ->
-        # ponytail: quotes on the lines the order was saved with, not the lines in the
-        # form; saving prices the new lines. Track the form's lines if Jennie misreads it.
-        free_delivery? = !!(socket.assigns.order && socket.assigns.order.free_delivery?)
-
         # A newer lookup with the same name cancels one still in flight.
         socket
         |> assign(:delivery_quote, %{status: :loading, address: address, option_id: option_id})
         |> start_async(:delivery_quote, fn ->
-          {address, option_id, Fulfillment.calculate_delivery(address, option_id, free_delivery?, authorize?: false)}
+          {address, option_id, Fulfillment.calculate_delivery(address, option_id, authorize?: false)}
         end)
     end
   end
@@ -290,6 +286,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       address: address,
       option_id: option_id,
       fee: result.fulfillment_fee,
+      in_free_delivery_zone: result.in_free_delivery_zone,
       distance: result.distance
     }
 
@@ -315,9 +312,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
        when is_integer(distance) do
     case Fulfillment.get_option_by_id(order.fulfillment_option_id, authorize?: false) do
       {:ok, option} ->
-        case Fee.calculate(option, distance, order.free_delivery?) do
-          %{error: nil, fulfillment_fee: fee} ->
-            %{status: :ok, address: order.delivery_address, option_id: option.id, fee: fee, distance: distance}
+        case Fee.calculate(option, distance) do
+          %{error: nil} = fee ->
+            %{
+              status: :ok,
+              address: order.delivery_address,
+              option_id: option.id,
+              fee: fee.fulfillment_fee,
+              in_free_delivery_zone: fee.in_free_delivery_zone,
+              distance: distance
+            }
 
           _out_of_range ->
             nil
@@ -329,6 +333,15 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp stored_quote(_mode, _order), do: nil
+
+  # ponytail: charged on the lines the order was saved with, not the lines in
+  # the form; saving prices the new lines. Track the form's lines if Jennie misreads it.
+  defp charge(%{status: :ok} = quote, order) do
+    free_delivery? = !!(order && order.free_delivery?)
+    %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.in_free_delivery_zone, free_delivery?)}
+  end
+
+  defp charge(quote, _order), do: quote
 
   # A quote for an address or option no longer in the form says nothing.
   defp current_quote(quote, form, option_id) do
@@ -397,7 +410,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     assigns =
       assigns
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
-      |> assign(:quote, current_quote(assigns.delivery_quote, assigns.form, current_option_id(assigns)))
+      |> assign(
+        :quote,
+        assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
+      )
       |> assign(:line_error, line_error(assigns.form, assigns.lines))
 
     ~H"""

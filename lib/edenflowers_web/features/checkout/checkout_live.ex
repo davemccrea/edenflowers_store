@@ -775,8 +775,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp delivery_fee(%{state: :delivery, fulfillment_method: :pickup, fulfillment_option: %{} = option}, _quote),
     do: Fee.calculate(option, 0).fulfillment_fee
 
-  defp delivery_fee(%{state: :delivery, fulfillment_option: %{} = option} = order, %{distance: distance}),
-    do: Fee.calculate(option, distance, order.free_delivery?).fulfillment_fee
+  defp delivery_fee(%{state: :delivery, fulfillment_option: %{} = option} = order, %{distance: distance}) do
+    quoted = Fee.calculate(option, distance)
+    Orders.charged_fulfillment_fee!(quoted.fulfillment_fee, quoted.in_free_delivery_zone, order.free_delivery?)
+  end
 
   defp delivery_fee(%{state: :delivery}, _quote), do: nil
   defp delivery_fee(order, _quote), do: order.fulfillment_fee

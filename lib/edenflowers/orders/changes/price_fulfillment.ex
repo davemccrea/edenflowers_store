@@ -38,11 +38,9 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   end
 
   defp apply_fee(changeset, %{fulfillment_method: :pickup} = option) do
-    %{fulfillment_fee: calculated} = Fee.calculate(option, 0)
-
     changeset
     |> Ash.Changeset.force_change_attributes(Map.from_keys(ClearDeliveryFields.fields(), nil))
-    |> set_fee(calculated)
+    |> set_fee(Fee.calculate(option, 0))
   end
 
   # Only a new override reuses the stored distance; a new address or option is geocoded.
@@ -64,11 +62,11 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   defp geocode(changeset, option) do
     address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    case Fulfillment.calculate_delivery(address, option.id, free_delivery?(changeset), authorize?: false) do
+    case Fulfillment.calculate_delivery(address, option.id, authorize?: false) do
       {:ok, %{error: nil} = result} ->
         changeset
         |> Ash.Changeset.force_change_attributes(Map.take(result, @geocoded_fields))
-        |> set_fee(result.fulfillment_fee)
+        |> set_fee(result)
 
       {:ok, %{error: reason}} ->
         unpriced(changeset, reason)
@@ -79,21 +77,17 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   end
 
   defp price_stored_distance(changeset, option) do
-    case Fee.calculate(option, Ash.Changeset.get_attribute(changeset, :distance), free_delivery?(changeset)) do
-      %{error: nil, fulfillment_fee: calculated} -> set_fee(changeset, calculated)
+    case Fee.calculate(option, Ash.Changeset.get_attribute(changeset, :distance)) do
+      %{error: nil} = calculated -> set_fee(changeset, calculated)
       %{error: reason} -> unpriced(changeset, reason)
     end
   end
-
-  # Priced on the lines the order has now; `ReplaceLineItems` reprices if the edit changes them.
-  defp free_delivery?(%{action_type: :create}), do: false
-  defp free_delivery?(changeset), do: Ash.load!(changeset.data, :free_delivery?, authorize?: false).free_delivery?
 
   defp unpriced(changeset, reason) do
     if override(changeset) do
       changeset
       |> Ash.Changeset.force_change_attributes(Map.from_keys(@geocoded_fields, nil))
-      |> set_fee(nil)
+      |> set_fee(%{fulfillment_fee: nil, in_free_delivery_zone: false})
     else
       add_error(
         changeset,
@@ -103,8 +97,11 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
     end
   end
 
-  defp set_fee(changeset, calculated) do
-    Ash.Changeset.force_change_attribute(changeset, :fulfillment_fee, override(changeset) || calculated)
+  defp set_fee(changeset, %{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}) do
+    Ash.Changeset.force_change_attributes(changeset,
+      quoted_fulfillment_fee: override(changeset) || calculated,
+      in_free_delivery_zone: in_zone
+    )
   end
 
   defp override(changeset), do: Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)

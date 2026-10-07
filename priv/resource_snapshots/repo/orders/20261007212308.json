@@ -201,8 +201,20 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "fulfillment_fee",
+      "source": "quoted_fulfillment_fee",
       "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "in_free_delivery_zone",
+      "type": "boolean"
     },
     {
       "allow_nil?": true,
@@ -599,11 +611,11 @@
   "check_constraints": [
     {
       "attribute": [
-        "fulfillment_fee"
+        "quoted_fulfillment_fee"
       ],
       "base_filter": null,
-      "check": "fulfillment_fee >= 0 AND fulfillment_fee = round(fulfillment_fee, 2)",
-      "name": "orders_valid_fulfillment_fee"
+      "check": "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
+      "name": "orders_valid_quoted_fulfillment_fee"
     },
     {
       "attribute": [

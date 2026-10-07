@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
       customer_name: "Delivered Unpaid",
       payment_status: :pending,
       fulfillment_status: :fulfilled,
-      fulfillment_fee: Decimal.new("10.00")
+      quoted_fulfillment_fee: Decimal.new("10.00")
     )
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders?payment_status=pending")

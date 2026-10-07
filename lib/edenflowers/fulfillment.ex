@@ -29,11 +29,7 @@ defmodule Edenflowers.Fulfillment do
       define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
       define :set_week, action: :set_week, args: [:week, :today, :direction]
       define :reset_calendar, action: :reset_calendar
-
-      define :calculate_delivery,
-        action: :calculate_delivery,
-        args: [:delivery_address, :fulfillment_option_id, {:optional, :free_delivery?}]
-
+      define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
       define :fulfill_on_date, action: :fulfill_on_date, args: [:fulfillment_option_id, :date]
     end
   end

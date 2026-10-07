@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Changes.CalculateFulfillmentCost do
   @moduledoc """
-  For `submit_delivery`, derives `fulfillment_fee` (and, for delivery,
+  For `submit_delivery`, derives `quoted_fulfillment_fee` (and, for delivery,
   the geocoded fields) from the chosen `FulfillmentOption`. The
   corresponding attributes are not in the action's `accept` list, so this
   change is the only path that can set them — closing the trust-the-client
@@ -34,7 +34,7 @@ defmodule Edenflowers.Orders.Changes.CalculateFulfillmentCost do
 
         changeset
         |> Ash.Changeset.force_change_attributes(Map.from_keys(ClearDeliveryFields.fields(), nil))
-        |> Ash.Changeset.force_change_attribute(:fulfillment_fee, fee)
+        |> Ash.Changeset.force_change_attribute(:quoted_fulfillment_fee, fee)
 
       {:error, _} ->
         add_error(changeset, :fulfillment_option_id, :unknown)
@@ -45,14 +45,13 @@ defmodule Edenflowers.Orders.Changes.CalculateFulfillmentCost do
     id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
     delivery_address = Ash.Changeset.get_attribute(changeset, :delivery_address)
 
-    %{free_delivery?: free_delivery?} = Ash.load!(changeset.data, :free_delivery?, authorize?: false)
-
-    case Fulfillment.calculate_delivery(delivery_address, id, free_delivery?, authorize?: false) do
+    case Fulfillment.calculate_delivery(delivery_address, id, authorize?: false) do
       {:ok, %{error: nil} = result} ->
-        Ash.Changeset.force_change_attributes(
-          changeset,
-          Map.take(result, [:geocoded_address, :position, :here_id, :distance, :fulfillment_fee])
+        changeset
+        |> Ash.Changeset.force_change_attributes(
+          Map.take(result, [:geocoded_address, :position, :here_id, :distance, :in_free_delivery_zone])
         )
+        |> Ash.Changeset.force_change_attribute(:quoted_fulfillment_fee, result.fulfillment_fee)
 
       {:ok, %{error: reason}} ->
         add_error(changeset, :delivery_address, reason)

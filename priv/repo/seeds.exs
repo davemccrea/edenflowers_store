@@ -787,8 +787,7 @@ for order_attrs <- orders do
   promotion = order_attrs[:promotion]
   user = Accounts.upsert_user!(order_attrs.customer_email, order_attrs.customer_name, actor: Actors.system_actor())
 
-  %{error: nil, fulfillment_fee: fulfillment_fee} =
-    Fee.calculate(fulfillment_option, order_attrs[:distance] || 0)
+  %{error: nil} = fee = Fee.calculate(fulfillment_option, order_attrs[:distance] || 0)
 
   order =
     Ash.Seed.seed!(Order, %{
@@ -818,7 +817,8 @@ for order_attrs <- orders do
       fulfillment_option_id: fulfillment_option.id,
       fulfillment_option_name: fulfillment_option.name,
       fulfillment_method: fulfillment_option.fulfillment_method,
-      fulfillment_fee: fulfillment_fee,
+      quoted_fulfillment_fee: fee.fulfillment_fee,
+      in_free_delivery_zone: fee.in_free_delivery_zone,
       fulfillment_tax_rate: tax_rate.percentage,
       payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
       locale: order_attrs[:locale] || "sv-FI",

@@ -37,7 +37,6 @@ defmodule Edenflowers.Orders.LineItem do
 
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
-      change Edenflowers.Orders.Changes.RepriceOrderFulfillment
     end
 
     # A line on a custom order that Jennie describes and prices herself, with

@@ -203,6 +203,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :product_name, :text, null: false
       add :product_image_slug, :text
       add :is_card, :boolean, null: false, default: false
+      add :free_delivery, :boolean, null: false, default: false
       add :variant_size, :text
 
       add :inserted_at, :utc_datetime_usec,
@@ -245,8 +246,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
 
       add :response_to_id,
           references(:messages,
@@ -289,7 +289,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :delivery_address, :text
       add :delivery_instructions, :text
       add :fulfillment_date, :date
-      add :fulfillment_fee, :decimal
+      add :quoted_fulfillment_fee, :decimal
+      add :in_free_delivery_zone, :boolean
       add :fulfillment_fee_override, :decimal
       add :fulfillment_method, :text
       add :fulfillment_tax_rate, :decimal
@@ -354,8 +355,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "orders_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -391,8 +391,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:payments, [:payment_intent_id],
@@ -496,6 +495,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :description, :text, null: false
       add :draft, :boolean, null: false, default: true
       add :featured, :boolean, null: false, default: false
+      add :free_delivery, :boolean, null: false, default: false
       add :tax_rate_id, :uuid, null: false
     end
 
@@ -508,8 +508,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -676,9 +675,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
              )
     end
 
-    create constraint(:orders, :orders_valid_fulfillment_fee,
+    create constraint(:orders, :orders_valid_quoted_fulfillment_fee,
              check: """
-               fulfillment_fee >= 0 AND fulfillment_fee = round(fulfillment_fee, 2)
+               quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)
              """
            )
 
@@ -733,7 +732,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop_if_exists constraint(:orders, :orders_valid_fulfillment_fee_override)
 
-    drop_if_exists constraint(:orders, :orders_valid_fulfillment_fee)
+    drop_if_exists constraint(:orders, :orders_valid_quoted_fulfillment_fee)
 
     drop constraint(:orders, "orders_promotion_id_fkey")
 
@@ -831,6 +830,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:products) do
       remove :tax_rate_id
+      remove :free_delivery
       remove :featured
       remove :draft
       remove :description
@@ -942,7 +942,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :fulfillment_tax_rate
       remove :fulfillment_method
       remove :fulfillment_fee_override
-      remove :fulfillment_fee
+      remove :in_free_delivery_zone
+      remove :quoted_fulfillment_fee
       remove :fulfillment_date
       remove :delivery_instructions
       remove :delivery_address

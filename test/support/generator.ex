@@ -106,7 +106,7 @@ defmodule Generator do
   def order(opts \\ []) do
     # For testing orders, we use seed_generator to allow setting any attribute
     # including internal ones that wouldn't normally be accepted in actions
-    # (like fulfillment_fee, payment_intent_id, promotion_id, etc.)
+    # (like quoted_fulfillment_fee, payment_intent_id, promotion_id, etc.)
     # We provide a base struct to avoid generating random foreign keys that don't exist
     {payment_status, opts} = Keyword.pop(opts, :payment_status)
 

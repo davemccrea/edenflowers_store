@@ -324,7 +324,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     end
   end
 
-  test "removing the only free-delivery product reprices the quoted address", %{conn: conn, order: order} do
+  test "removing the only free-delivery product charges the quoted address", %{conn: conn, order: order} do
     stub_successful_geocode()
 
     nearby =
@@ -414,7 +414,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       here_id: "here-id-123",
       position: "63.0951,21.6165",
       distance: 3000,
-      fulfillment_fee: Decimal.new("5.00")
+      quoted_fulfillment_fee: Decimal.new("5.00")
     })
   end
 end

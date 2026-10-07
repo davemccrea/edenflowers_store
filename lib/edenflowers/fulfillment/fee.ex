@@ -10,23 +10,20 @@ defmodule Edenflowers.Fulfillment.Fee do
   The fee for a distance, or `:out_of_delivery_range` when it's beyond the
   option's `max_dist_km`. Out-of-range rides in `:error` rather than being an
   error proper, so callers match the reason instead of an Ash.Error.Unknown.
+
+  Within `free_dist_km` the fee is `base_price` and `in_free_delivery_zone` is
+  true: the order waives it when its cart holds a free-delivery product.
   """
   @type result ::
-          %{error: nil, fulfillment_fee: Decimal.t()}
-          | %{error: :out_of_delivery_range, fulfillment_fee: nil}
+          %{error: nil, fulfillment_fee: Decimal.t(), in_free_delivery_zone: boolean()}
+          | %{error: :out_of_delivery_range, fulfillment_fee: nil, in_free_delivery_zone: false}
 
-  @doc """
-  Within `free_dist_km`, delivery is free only when the cart holds a
-  free-delivery product; otherwise it costs `base_price`.
-  """
-  @spec calculate(FulfillmentOption.t(), non_neg_integer(), boolean()) :: result()
-  def calculate(option, distance, free_delivery? \\ false)
-
-  def calculate(%FulfillmentOption{rate_type: :fixed} = option, distance, _free_delivery?) when is_integer(distance) do
-    %{error: nil, fulfillment_fee: option.base_price}
+  @spec calculate(FulfillmentOption.t(), non_neg_integer()) :: result()
+  def calculate(%FulfillmentOption{rate_type: :fixed} = option, distance) when is_integer(distance) do
+    %{error: nil, fulfillment_fee: option.base_price, in_free_delivery_zone: false}
   end
 
-  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, distance, free_delivery?) when is_integer(distance) do
+  def calculate(%FulfillmentOption{rate_type: :dynamic} = option, distance) when is_integer(distance) do
     %{
       price_per_km: price_per_km,
       base_price: base_price,
@@ -41,7 +38,7 @@ defmodule Edenflowers.Fulfillment.Fee do
 
     cond do
       Decimal.lte?(distance, free_dist_m) ->
-        %{error: nil, fulfillment_fee: if(free_delivery?, do: Decimal.new("0"), else: base_price)}
+        %{error: nil, fulfillment_fee: base_price, in_free_delivery_zone: true}
 
       Decimal.gt?(distance, free_dist_m) and Decimal.lt?(distance, max_dist_m) ->
         fee =
@@ -51,10 +48,10 @@ defmodule Edenflowers.Fulfillment.Fee do
           |> Decimal.add(base_price)
           |> Decimal.round(2)
 
-        %{error: nil, fulfillment_fee: fee}
+        %{error: nil, fulfillment_fee: fee, in_free_delivery_zone: false}
 
       true ->
-        %{error: :out_of_delivery_range, fulfillment_fee: nil}
+        %{error: :out_of_delivery_range, fulfillment_fee: nil, in_free_delivery_zone: false}
     end
   end
 end

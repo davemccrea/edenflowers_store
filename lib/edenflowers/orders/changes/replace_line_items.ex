@@ -2,8 +2,6 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
   @moduledoc """
   Makes the order's lines the ones in the `line_items` argument (see
   `Edenflowers.Orders.EnteredLineItems`), then snapshots its VAT breakdown.
-  Changed lines also reprice delivery, as they may add or remove the order's
-  only free-delivery product.
 
   A catalogue line the order already has is kept and only its quantity
   changes, so it keeps the price it was sold at, and a card stays a card.
@@ -30,7 +28,6 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
 
       with :ok <- update_existing_lines(order, kept),
            :ok <- add_lines(order, Enum.reject(lines, &kept?/1)),
-           {:ok, order} <- maybe_reprice_fulfillment(changeset, order),
            {:ok, order} <- Orders.refresh_vat_breakdown(order, authorize?: false) do
         Ash.load(order, :payment_status, authorize?: false, reuse_values?: false)
       end
@@ -49,16 +46,13 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
         Ash.Changeset.add_error(changeset, field: :line_items, message: "contains an item that is no longer available")
 
       Enum.sort(entered) == Enum.sort(Map.values(existing)) ->
-        Ash.Changeset.set_context(changeset, %{skip_version_when_unchanged?: true, lines_unchanged?: true})
+        Ash.Changeset.set_context(changeset, %{skip_version_when_unchanged?: true})
 
       true ->
         items = Enum.map_join(entered, ", ", fn {name, quantity, _price} -> "#{quantity} × #{name}" end)
         Ash.Changeset.set_context(changeset, %{paper_trail_metadata: %{items: items}})
     end
   end
-
-  defp maybe_reprice_fulfillment(%{context: %{lines_unchanged?: true}}, order), do: {:ok, order}
-  defp maybe_reprice_fulfillment(_changeset, order), do: Orders.reprice_fulfillment(order, authorize?: false)
 
   defp existing_lines(%{action_type: :create}), do: %{}
 

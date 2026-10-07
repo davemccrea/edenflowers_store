@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :fulfillment_option_name,
     :delivery_address,
     :delivery_instructions,
-    :fulfillment_fee,
+    :quoted_fulfillment_fee,
     :recipient_name,
     :recipient_phone_number,
     :card_message,
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp field_label(:fulfillment_option_name), do: ~t"Method"
   defp field_label(:delivery_address), do: ~t"Delivery address"
   defp field_label(:delivery_instructions), do: ~t"Delivery instructions"
-  defp field_label(:fulfillment_fee), do: ~t"Fulfillment fee"
+  defp field_label(:quoted_fulfillment_fee), do: ~t"Fulfillment fee"
   defp field_label(:recipient_name), do: ~t"Recipient"
   defp field_label(:recipient_phone_number), do: ~t"Recipient phone"
   defp field_label(:card_message), do: ~t"Card message"
@@ -112,7 +112,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp items_details(version), do: [{~t"Items", String.split(version.items, ~r/, (?=\d+ × )/)}]
 
   defp show(nil, _field, _locale), do: "—"
-  defp show(value, :fulfillment_fee, locale), do: Format.currency(Decimal.new(value), locale)
+  defp show(value, :quoted_fulfillment_fee, locale), do: Format.currency(Decimal.new(value), locale)
   defp show(value, :fulfillment_date, locale), do: Format.date(Date.from_iso8601!(value), locale)
   defp show(value, :locale, _locale), do: Locales.name(value)
   defp show(value, _field, _locale), do: value
