@@ -10,7 +10,7 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
     variant = generate(product_variant(product_id: product.id, price: "40.00"))
 
     placed = fn ordered_at, payments ->
-      order = generate(order(state: :placed, fulfillment_fee: "5.00", ordered_at: ordered_at))
+      order = generate(order(state: :placed, quoted_fulfillment_fee: "5.00", ordered_at: ordered_at))
 
       generate(line_item(order_id: order.id, product_variant_id: variant.id))
 

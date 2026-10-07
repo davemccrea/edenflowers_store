@@ -1,8 +1,7 @@
 defmodule Edenflowers.Orders.Changes.RemoveLineItem do
   @moduledoc """
-  Destroys a line item belonging to the order and reprices delivery, as it
-  may have been the cart's only free-delivery product. If removing it leaves
-  the order with no non-card line items, the order's checkout state is also
+  Destroys a line item belonging to the order. If removing it leaves the
+  order with no non-card line items, the order's checkout state is also
   reset so a new browsing session starts from a clean slate.
   """
   use Ash.Resource.Change
@@ -20,7 +19,6 @@ defmodule Edenflowers.Orders.Changes.RemoveLineItem do
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
       with {:ok, line_item} <- fetch_line_item(line_item_id, order.id),
            :ok <- Ash.destroy(line_item, action: :remove_item, authorize?: false),
-           {:ok, order} <- Orders.reprice_fulfillment(order, authorize?: false),
            {:ok, order} <- maybe_restart_checkout(order) do
         {:ok, order}
       end

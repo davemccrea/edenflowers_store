@@ -24,7 +24,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
-          fulfillment_fee: "0"
+          quoted_fulfillment_fee: "0"
         )
       )
 
@@ -63,7 +63,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
-          fulfillment_fee: "0"
+          quoted_fulfillment_fee: "0"
         )
       )
 
@@ -94,7 +94,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
           ordered_at: ~U[2026-05-15 12:00:00Z],
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-05-20],
-          fulfillment_fee: "0"
+          quoted_fulfillment_fee: "0"
         )
       )
 

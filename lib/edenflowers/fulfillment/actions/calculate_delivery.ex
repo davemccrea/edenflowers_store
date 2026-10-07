@@ -10,14 +10,13 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
 
   @impl true
   def run(input, _opts, _context) do
-    %{delivery_address: delivery_address, fulfillment_option_id: option_id, free_delivery?: free_delivery?} =
-      input.arguments
+    %{delivery_address: delivery_address, fulfillment_option_id: option_id} = input.arguments
 
     with {:ok, option} <- Fulfillment.get_option_by_id(option_id, authorize?: false),
          {:ok, {geocoded_address, position, here_id}} <- here_api().geocode(delivery_address),
          {:ok, distance} <- here_api().route_distance(position) do
-      case Fee.calculate(option, distance, free_delivery?) do
-        %{error: nil, fulfillment_fee: fulfillment_fee} ->
+      case Fee.calculate(option, distance) do
+        %{error: nil} = fee ->
           {:ok,
            %{
              error: nil,
@@ -25,7 +24,8 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
              position: position,
              here_id: here_id,
              distance: distance,
-             fulfillment_fee: fulfillment_fee
+             fulfillment_fee: fee.fulfillment_fee,
+             in_free_delivery_zone: fee.in_free_delivery_zone
            }}
 
         %{error: reason} ->

@@ -12,7 +12,8 @@ defmodule Edenflowers.Orders.Changes.ClearDeliveryFields do
     :position,
     :here_id,
     :distance,
-    :fulfillment_fee
+    :quoted_fulfillment_fee,
+    :in_free_delivery_zone
   ]
 
   def fields, do: @fields

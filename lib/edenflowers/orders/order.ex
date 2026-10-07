@@ -97,11 +97,11 @@ defmodule Edenflowers.Orders.Order do
   postgres do
     repo Edenflowers.Repo
     table "orders"
-    migration_types fulfillment_fee: :decimal, fulfillment_fee_override: :decimal
+    migration_types quoted_fulfillment_fee: :decimal, fulfillment_fee_override: :decimal
 
     check_constraints do
-      check_constraint :fulfillment_fee, "orders_valid_fulfillment_fee",
-        check: "fulfillment_fee >= 0 AND fulfillment_fee = round(fulfillment_fee, 2)",
+      check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
+        check: "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
         message: "must be a non-negative amount in whole cents"
 
       check_constraint :fulfillment_fee_override, "orders_valid_fulfillment_fee_override",
@@ -719,13 +719,6 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
-    # A cart that gains or loses a free-delivery product is repriced at the
-    # distance it was already quoted for.
-    update :reprice_fulfillment do
-      change Changes.RepriceFulfillment
-      require_atomic? false
-    end
-
     update :remove_line_item do
       argument :line_item_id, :uuid, allow_nil?: false
       change Changes.RemoveLineItem
@@ -800,6 +793,16 @@ defmodule Edenflowers.Orders.Order do
     publish :clear_promotion, ["line_item", "changed", :id]
   end
 
+  # Every read and write returns the charged fee, so code that shows or totals
+  # an order reads `fulfillment_fee` as it did when the fee was stored.
+  preparations do
+    prepare build(load: [:fulfillment_fee])
+  end
+
+  changes do
+    change load(:fulfillment_fee), on: [:create, :update]
+  end
+
   attributes do
     uuid_primary_key :id
 
@@ -828,7 +831,10 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
-    attribute :fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
+    # The fee for the address and option, before a free-delivery cart waives it;
+    # see the `fulfillment_fee` calculation for what is charged.
+    attribute :quoted_fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
+    attribute :in_free_delivery_zone, :boolean
     # Set by Jennie on a custom order to charge her own fee, e.g. free delivery
     # for a regular. Nil means the fee is calculated, as at checkout.
     attribute :fulfillment_fee_override, :decimal, constraints: [min: 0, scale: 2]
@@ -898,6 +904,25 @@ defmodule Edenflowers.Orders.Order do
                 not is_nil(promotion_id) and
                   (is_nil(promotion_minimum_cart_total) or items_subtotal >= promotion_minimum_cart_total)
               )
+
+    # Derived from the cart rather than stored, so adding or removing a
+    # free-delivery product changes it with nothing to reprice. Jennie's own
+    # fee is charged as she set it.
+    calculate :fulfillment_fee, :decimal, expr(fee_for_cart(free_delivery?: free_delivery?))
+
+    # The rule itself, with the cart passed in, so a quote that isn't on an
+    # order yet can be charged the same way.
+    calculate :fee_for_cart,
+              :decimal,
+              expr(
+                if(
+                  in_free_delivery_zone == true and ^arg(:free_delivery?) and is_nil(fulfillment_fee_override),
+                  do: 0,
+                  else: quoted_fulfillment_fee
+                )
+              ) do
+      argument :free_delivery?, :boolean, allow_nil?: false, allow_expr?: true
+    end
 
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
     calculate :amount_mismatch?, :boolean, expr(not is_nil(amount_paid) and amount_paid != grand_total)

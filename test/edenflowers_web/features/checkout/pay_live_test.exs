@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
-    Ash.Seed.update!(order, %{fulfillment_fee: Decimal.new("10.00")})
+    Ash.Seed.update!(order, %{quoted_fulfillment_fee: Decimal.new("10.00")})
 
     view |> element("#pay-form") |> render_submit()
 

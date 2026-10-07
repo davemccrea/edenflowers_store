@@ -435,7 +435,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
           fulfillment_option_name: "Pickup",
           fulfillment_method: :pickup,
           fulfillment_date: ~D[2026-06-10],
-          fulfillment_fee: "4.50",
+          quoted_fulfillment_fee: "4.50",
           fulfillment_tax_rate: tax_rate.percentage,
           fulfillment_status: :pending,
           payment_intent_id: "pi_test_order_detail",

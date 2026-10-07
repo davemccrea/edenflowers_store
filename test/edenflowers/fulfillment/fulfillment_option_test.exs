@@ -151,7 +151,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
   end
 
-  describe "Fee.calculate/3" do
+  describe "Fee.calculate/2" do
     setup %{tax_rate: tax_rate} do
       option =
         generate(
@@ -172,25 +172,24 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     test "calculates fixed pricing", %{tax_rate: tax_rate} do
       option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("0")} == Fulfillment.Fee.calculate(option, 0)
+      assert %{error: nil, fulfillment_fee: Decimal.new("0"), in_free_delivery_zone: false} ==
+               Fulfillment.Fee.calculate(option, 0)
     end
 
-    test "is free within the free delivery range for a free-delivery cart", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("0")} == Fulfillment.Fee.calculate(option, 4999, true)
+    test "charges the base price within the free delivery zone", %{option: option} do
+      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: true} ==
+               Fulfillment.Fee.calculate(option, 0)
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("0")} == Fulfillment.Fee.calculate(option, 5000, true)
+      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: true} ==
+               Fulfillment.Fee.calculate(option, 5000)
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50")} == Fulfillment.Fee.calculate(option, 5001, true)
-    end
-
-    test "charges the base price within the free delivery range for any other cart", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50")} == Fulfillment.Fee.calculate(option, 0)
-
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50")} == Fulfillment.Fee.calculate(option, 5000)
+      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: false} ==
+               Fulfillment.Fee.calculate(option, 5001)
     end
 
     test "returns value when distance is within paid delivery range", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("8.10")} == Fulfillment.Fee.calculate(option, 7250)
+      assert %{error: nil, fulfillment_fee: Decimal.new("8.10"), in_free_delivery_zone: false} ==
+               Fulfillment.Fee.calculate(option, 7250)
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do

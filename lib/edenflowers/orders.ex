@@ -49,11 +49,11 @@ defmodule Edenflowers.Orders do
                  :recipient_phone_number,
                  :delivery_instructions,
                  :promotion_name,
-                 :promotion_code,
-                 :fulfillment_fee
+                 :promotion_code
                ]
 
       load [
+        :fulfillment_fee,
         :grand_total,
         :items_total,
         :vat,
@@ -117,7 +117,11 @@ defmodule Edenflowers.Orders do
       define :send_order_details_email, action: :send_order_details_email
       define :email_receipt, action: :email_receipt
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
-      define :reprice_fulfillment, action: :reprice_fulfillment
+
+      # The charged fee for a quote not yet on an order, by the order's own rule.
+      define_calculation :charged_fulfillment_fee,
+        calculation: :fee_for_cart,
+        args: [:quoted_fulfillment_fee, :in_free_delivery_zone, :free_delivery?]
     end
 
     resource Edenflowers.Orders.Order.Version

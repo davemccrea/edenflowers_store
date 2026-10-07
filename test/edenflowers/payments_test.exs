@@ -38,7 +38,7 @@ defmodule Edenflowers.PaymentsTest do
         user_id: user.id,
         fulfillment_option_id: fulfillment_option.id,
         fulfillment_date: Date.utc_today(),
-        fulfillment_fee: fulfillment_fee,
+        quoted_fulfillment_fee: fulfillment_fee,
         payment_intent_id: "pi_order_#{System.unique_integer([:positive])}"
       })
 

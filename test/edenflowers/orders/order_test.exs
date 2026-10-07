@@ -202,7 +202,7 @@ defmodule Edenflowers.Orders.OrderTest do
       generate(
         order(
           fulfillment_option_id: fulfillment_option.id,
-          fulfillment_fee: fulfillment_fee,
+          quoted_fulfillment_fee: fulfillment_fee,
           fulfillment_tax_rate: tax_rate_1.percentage
         )
       )
@@ -236,7 +236,7 @@ defmodule Edenflowers.Orders.OrderTest do
     order =
       generate(
         order(
-          fulfillment_fee: "0.03",
+          quoted_fulfillment_fee: "0.03",
           fulfillment_tax_rate: "0.14"
         )
       )
@@ -254,7 +254,7 @@ defmodule Edenflowers.Orders.OrderTest do
         order(
           state: :payment,
           payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL",
-          fulfillment_fee: "1.00"
+          quoted_fulfillment_fee: "1.00"
         )
       )
 
@@ -1276,7 +1276,8 @@ defmodule Edenflowers.Orders.OrderTest do
     end
 
     test "a zero payment leaves payment_status pending" do
-      order = generate(order(state: :payment, payment_intent_id: "pi_test", fulfillment_fee: Decimal.new("10.00")))
+      order =
+        generate(order(state: :payment, payment_intent_id: "pi_test", quoted_fulfillment_fee: Decimal.new("10.00")))
 
       log =
         capture_log(fn ->
@@ -1331,7 +1332,7 @@ defmodule Edenflowers.Orders.OrderTest do
             delivery_address: "Test Address",
             delivery_instructions: "Ring twice",
             fulfillment_date: Date.add(Date.utc_today(), 1),
-            fulfillment_fee: "5.00",
+            quoted_fulfillment_fee: "5.00",
             geocoded_address: "Calculated Address",
             here_id: "here123",
             distance: 5000,
@@ -1650,14 +1651,14 @@ defmodule Edenflowers.Orders.OrderTest do
 
   describe "add_payment_intent_id policy" do
     test "guest can attach payment intent during checkout" do
-      order = generate(order(state: :payment, fulfillment_fee: "1.00"))
+      order = generate(order(state: :payment, quoted_fulfillment_fee: "1.00"))
 
       assert {:ok, updated} = Orders.add_payment_intent_id(order, "pi_guest_test", actor: nil)
       assert updated.payment_intent_id == "pi_guest_test"
     end
 
     test "system actor can attach payment intent during checkout" do
-      order = generate(order(state: :payment, fulfillment_fee: "1.00"))
+      order = generate(order(state: :payment, quoted_fulfillment_fee: "1.00"))
 
       assert {:ok, updated} =
                Orders.add_payment_intent_id(order, "pi_system_test", actor: %{system: true})
@@ -1673,7 +1674,7 @@ defmodule Edenflowers.Orders.OrderTest do
     end
 
     test "cannot attach payment intent to a cancelled order" do
-      order = generate(order(state: :placed, fulfillment_fee: "1.00", fulfillment_status: :cancelled))
+      order = generate(order(state: :placed, quoted_fulfillment_fee: "1.00", fulfillment_status: :cancelled))
 
       assert {:error, %Ash.Error.Invalid{} = error} =
                Orders.add_payment_intent_id(order, "pi_new", actor: %{system: true})
