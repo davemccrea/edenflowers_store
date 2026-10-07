@@ -14,6 +14,11 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   `delivery_address` field error via `send_update(__MODULE__, id:
   "address-input", error_message: msg)` so the message renders next to
   the field instead of at the form root.
+
+  The parent owns the quote (`%{address: ..., distance: ...}`) and the fee
+  priced from it, so the order summary and this field always agree. A lookup
+  sends `{:delivery_quoted, quote}` to the parent, and `nil` when the quote
+  no longer describes the typed address. The quote never touches the form.
   """
   use EdenflowersWeb, :live_component
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -39,7 +44,6 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
       socket
       |> assign(assigns)
       |> assign_new(:typed, fn -> assigns.order.delivery_address end)
-      |> assign_new(:confirmed, fn -> confirmed_from_order(assigns.order) end)
 
     {:ok, socket}
   end
@@ -61,19 +65,19 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         phx-blur="lookup_address"
         phx-target={@myself}
         loading={@loading}
-        confirmed={confirmed?(@typed, @confirmed, @loading)}
+        confirmed={confirmed?(@typed, @quote, @loading)}
       />
       <div aria-live="polite">
         <p
-          :if={confirmed?(@typed, @confirmed, @loading)}
+          :if={confirmed?(@typed, @quote, @loading)}
           data-testid="address-distance"
           class="mt-1.5 text-sm"
         >
-          <span class={free?(@confirmed.result.fulfillment_fee) && "text-success"}>
-            {format_delivery_amount(@confirmed.result.fulfillment_fee, @order)}
+          <span class={free?(@fee) && "text-success"}>
+            {format_delivery_amount(@fee, @order)}
           </span>
-          <span :if={@confirmed.result.distance} class="text-base-content/65">
-            ({Edenflowers.Format.distance(@confirmed.result.distance, @order.locale)})
+          <span class="text-base-content/65">
+            ({Edenflowers.Format.distance(@quote.distance, @order.locale)})
           </span>
         </p>
       </div>
@@ -83,14 +87,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
 
   @impl true
   def handle_event("typing", %{"delivery_address" => value}, socket) do
-    confirmed = socket.assigns.confirmed
-
-    socket =
-      if confirmed && value != confirmed.address do
-        assign(socket, confirmed: nil)
-      else
-        socket
-      end
+    quote = socket.assigns.quote
+    if quote && value != quote.address, do: send(self(), {:delivery_quoted, nil})
 
     error =
       if String.trim(value) == "",
@@ -101,17 +99,17 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   end
 
   def handle_event("lookup_address", %{"value" => address}, socket) do
-    confirmed = socket.assigns.confirmed
+    quote = socket.assigns.quote
 
     cond do
       String.trim(address) == "" ->
         {:noreply, socket}
 
-      confirmed && address == confirmed.address ->
+      quote && address == quote.address ->
         {:noreply, socket}
 
       true ->
-        order = socket.assigns.order
+        fulfillment_option = socket.assigns.order.fulfillment_option
 
         # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
@@ -119,7 +117,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
          socket
          |> assign(loading: true, typed: address, error: nil)
          |> start_async(:lookup_address, fn ->
-           Fulfillment.calculate_delivery(address, order.fulfillment_option.id, order.free_delivery?)
+           Fulfillment.calculate_delivery(address, fulfillment_option.id)
          end)}
     end
   end
@@ -129,14 +127,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
     if result.error do
       {:noreply, fail(socket, DeliveryError.message(result.error))}
     else
-      address = socket.assigns.typed
-
-      {:noreply,
-       assign(socket,
-         loading: false,
-         confirmed: %{address: address, result: result},
-         error: nil
-       )}
+      send(self(), {:delivery_quoted, %{address: socket.assigns.typed, distance: result.distance}})
+      {:noreply, assign(socket, loading: false, error: nil)}
     end
   end
 
@@ -150,30 +142,12 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   end
 
   defp fail(socket, message) do
-    assign(socket, loading: false, confirmed: nil, error: {:api, message})
+    send(self(), {:delivery_quoted, nil})
+    assign(socket, loading: false, error: {:api, message})
   end
 
-  # If the order already has a persisted geocode (e.g. user navigated back
-  # from step 4), reflect it as confirmed so the check icon and delivery
-  # summary render without re-geocoding.
-  defp confirmed_from_order(%{delivery_address: address, geocoded_address: geocoded} = order)
-       when is_binary(address) and is_binary(geocoded) do
-    %{
-      address: address,
-      result: %{
-        geocoded_address: geocoded,
-        position: order.position,
-        here_id: order.here_id,
-        distance: order.distance,
-        fulfillment_fee: order.fulfillment_fee
-      }
-    }
-  end
-
-  defp confirmed_from_order(_), do: nil
-
-  defp confirmed?(typed, confirmed, loading) do
-    not loading and not is_nil(confirmed) and typed == confirmed.address
+  defp confirmed?(typed, quote, loading) do
+    not loading and not is_nil(quote) and typed == quote.address
   end
 
   # Matches Phoenix's used_input? semantics: an untouched field shows no

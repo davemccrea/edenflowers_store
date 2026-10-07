@@ -15,7 +15,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Orders.{Order}
+  alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Translations
   alias Edenflowers.PhoneNumber
 
@@ -56,6 +58,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
+       |> assign(:delivery_quote, quote_from_order(order))
        |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
        |> assign(:client_secret, nil)
        |> maybe_setup_payment(order, actor(socket))
@@ -189,6 +192,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         id="address-input"
                         module={EdenflowersWeb.Checkout.AddressInput}
                         order={@order}
+                        quote={@delivery_quote}
+                        fee={delivery_fee(@order, @delivery_quote)}
                         label={recipient_label(@order, :address)}
                         autocomplete={own_details_autocomplete(@order, "street-address")}
                       />
@@ -298,19 +303,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 />
 
                 <div class="flex flex-col gap-2 text-base">
-                  <div class="flex items-baseline justify-between" data-testid="delivery-cost">
-                    <span>{~t"Delivery"}</span>
-                    <%= cond do %>
-                      <% is_nil(@order.fulfillment_fee) -> %>
-                        <span class="text-base-content/70">—</span>
-                      <% Decimal.eq?(@order.fulfillment_fee, 0) -> %>
-                        <span>{~t"Free"}</span>
-                      <% true -> %>
-                        <span class="tabular-nums">
-                          {Edenflowers.Format.currency(@order.fulfillment_fee, @order.locale)}
-                        </span>
-                    <% end %>
-                  </div>
+                  <.delivery_cost fee={delivery_fee(@order, @delivery_quote)} locale={@order.locale} />
 
                   <div
                     :if={@order.promotion_applied?}
@@ -332,17 +325,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <span>{~t"Total"}</span>
                     <span class="tabular-nums" data-testid="total-amount">
-                      {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
+                      {Edenflowers.Format.currency(total(@order, @delivery_quote), @order.locale)}
                     </span>
                   </div>
 
                   <div
-                    :if={@order.vat && Decimal.gt?(@order.vat, 0)}
+                    :if={Decimal.gt?(vat(@order, @delivery_quote), 0)}
                     class="text-base-content/70 flex items-baseline justify-between"
                     data-testid="vat-line"
                   >
                     <span>{~t"Includes VAT"}</span>
-                    <span class="tabular-nums">{Edenflowers.Format.currency(@order.vat, @order.locale)}</span>
+                    <span class="tabular-nums">
+                      {Edenflowers.Format.currency(vat(@order, @delivery_quote), @order.locale)}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -686,7 +681,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     # new one. The action clears `:fulfillment_date` on the order; drop the
     # stale form param so the rebuilt form doesn't shadow that nil with the
     # date the customer had typed in.
-    {:noreply, reload_order(socket, drop: ["fulfillment_date"])}
+    socket = reload_order(socket, drop: ["fulfillment_date"])
+
+    # Switching to pickup unmounts the address field, which comes back empty.
+    if socket.assigns.order.fulfillment_method == :pickup do
+      {:noreply, assign(socket, delivery_quote: nil)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
@@ -730,12 +732,58 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, push_navigate(socket, to: ~p"/")}
   end
 
+  def handle_info({:delivery_quoted, quote}, socket) do
+    {:noreply, assign(socket, delivery_quote: quote)}
+  end
+
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
   end
 
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
+
+  attr :fee, :any, required: true
+  attr :locale, :string, required: true
+
+  defp delivery_cost(assigns) do
+    ~H"""
+    <div class="flex items-baseline justify-between" data-testid="delivery-cost">
+      <span>{~t"Delivery"}</span>
+      <%= cond do %>
+        <% is_nil(@fee) -> %>
+          <span class="text-base-content/70">—</span>
+        <% Decimal.eq?(@fee, 0) -> %>
+          <span>{~t"Free"}</span>
+        <% true -> %>
+          <span class="tabular-nums">{Edenflowers.Format.currency(@fee, @locale)}</span>
+      <% end %>
+    </div>
+    """
+  end
+
+  # A geocode saved by an earlier submit stands as the quote when the
+  # customer comes back to the delivery step.
+  defp quote_from_order(%{delivery_address: address, distance: distance}) when is_integer(distance),
+    do: %{address: address, distance: distance}
+
+  defp quote_from_order(_order), do: nil
+
+  # Until the delivery step is submitted the order has no fee, so the summary
+  # prices the quote, against the cart as it is now. After that the order's
+  # own fee is what Stripe charges.
+  defp delivery_fee(%{state: :delivery, fulfillment_method: :pickup, fulfillment_option: %{} = option}, _quote),
+    do: Fee.calculate(option, 0).fulfillment_fee
+
+  defp delivery_fee(%{state: :delivery, fulfillment_option: %{} = option} = order, %{distance: distance}),
+    do: Fee.calculate(option, distance, order.free_delivery?).fulfillment_fee
+
+  defp delivery_fee(%{state: :delivery}, _quote), do: nil
+  defp delivery_fee(order, _quote), do: order.fulfillment_fee
+
+  defp total(order, quote), do: Decimal.add(order.items_total, delivery_fee(order, quote) || 0)
+
+  defp vat(order, quote), do: Vat.total(%{order | fulfillment_fee: delivery_fee(order, quote)})
 
   defp handle_mount_error(socket, log_message, flash_message) do
     Logger.error(log_message)
