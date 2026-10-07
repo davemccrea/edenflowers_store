@@ -16,7 +16,7 @@ defmodule Edenflowers.Orders.Actions.SalesSummary do
       input.resource
       # Any money taken counts the order, so one edited to owe more still counts.
       |> Ash.Query.filter(
-        state == :placed and payment_status != :refunded and exists(payments, amount > 0) and
+        state == :placed and holds_money? and
           ordered_at >= ^from and ordered_at < ^until
       )
       |> Ash.aggregate([{:order_count, :count}], opts)

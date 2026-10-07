@@ -97,9 +97,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </span>
               <%!-- Worded to stand alone, so the badges need no captions. --%>
               <span id="order-status" class="inline-flex flex-wrap items-center gap-1.5">
-                <span :if={shown_payment_status(@order)}>
+                <span :if={@order.payment_status}>
                   <span class="sr-only">{~t"Payment:"}</span>
-                  <.payment_status_badge status={shown_payment_status(@order)} />
+                  <.payment_status_badge status={@order.payment_status} />
                 </span>
                 <span :if={@order.fulfillment_status != :pending}>
                   <span class="sr-only">{~t"Fulfillment:"}</span>
@@ -489,7 +489,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
 
-  defp cancel_confirmation(%{payment_status: :paid}),
+  defp cancel_confirmation(%{holds_money?: true}),
     do: ~t"Cancel this order? It is paid, so refund the customer in Stripe or by hand. This can't be undone."
 
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
@@ -988,7 +988,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp pickup_message_urls(_order), do: nil
 
   defp payment_message_urls(order) do
-    if order.payment_link_open? and owes_money?(order) and Decimal.positive?(order.balance),
+    if order.payment_link_open?,
       do: message_urls(customer_phone_number(order), payment_message(order)),
       else: nil
   end

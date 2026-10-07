@@ -49,7 +49,13 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
   test "filtering by unpaid lists orders still owed for, fulfilled or not", %{conn: conn} do
     placed_order(customer_name: "Paid Up", payment_status: :paid, fulfillment_status: :pending)
-    placed_order(customer_name: "Delivered Unpaid", payment_status: :pending, fulfillment_status: :fulfilled)
+
+    placed_order(
+      customer_name: "Delivered Unpaid",
+      payment_status: :pending,
+      fulfillment_status: :fulfilled,
+      fulfillment_fee: Decimal.new("10.00")
+    )
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders?payment_status=pending")
 

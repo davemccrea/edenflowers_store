@@ -74,6 +74,7 @@ defmodule Edenflowers.Orders.Order do
   @admin_show_load [
     :payment_status,
     :amount_paid,
+    :holds_money?,
     :balance,
     :unpaid?,
     :payment_link_open?,
@@ -281,7 +282,7 @@ defmodule Edenflowers.Orders.Order do
 
       prepare build(
                 sort: [ordered_at: :desc, inserted_at: :desc],
-                load: [:payment_status, :grand_total, :payment_link_open?]
+                load: [:payment_status, :unpaid?, :grand_total, :payment_link_open?]
               )
     end
 
@@ -899,19 +900,22 @@ defmodule Edenflowers.Orders.Order do
     calculate :payment_status,
               __MODULE__.PaymentStatus,
               expr(
+                # A €0 order that never took money owes nothing, so it reads as paid.
+                # A cancelled order still owing is called off, not unpaid.
                 cond do
-                  not exists(payments, amount > 0) -> :pending
-                  amount_paid <= 0 -> :refunded
-                  balance > 0 -> :pending
-                  true -> :paid
+                  exists(payments, amount > 0) and amount_paid <= 0 -> :refunded
+                  balance <= 0 -> :paid
+                  fulfillment_status == :cancelled -> nil
+                  true -> :pending
                 end
               )
 
-    # Money still owed: placed, not paid, and not called off. A fulfilled order
-    # can still be unpaid when the customer pays afterwards.
-    calculate :unpaid?,
-              :boolean,
-              expr(state == :placed and payment_status == :pending and fulfillment_status != :cancelled)
+    # Money still owed on a placed order. A fulfilled order can still be unpaid
+    # when the customer pays afterwards.
+    calculate :unpaid?, :boolean, expr(state == :placed and payable?)
+
+    # Some of the customer's money is still with us: paid, and not all refunded.
+    calculate :holds_money?, :boolean, expr((amount_paid || 0) > 0)
 
     # A refunded order is settled even though its balance reads as owed again.
     calculate :payable?,
