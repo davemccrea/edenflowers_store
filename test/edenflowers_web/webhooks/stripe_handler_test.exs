@@ -52,6 +52,40 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     %{order: order, expected_amount: expected_amount}
   end
 
+  describe "setup_intent.succeeded" do
+    test "stores the new card and returns a held subscription to active", %{order: order} do
+      subscription =
+        Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
+          user_id: order.user_id,
+          product_variant_id:
+            Ash.load!(order, :line_items, authorize?: false).line_items |> hd() |> Map.get(:product_variant_id),
+          fulfillment_option_id: order.fulfillment_option_id,
+          interval_weeks: 2,
+          next_fulfillment_date: Date.add(Date.utc_today(), 10),
+          locale: "en",
+          state: :payment_failed,
+          stripe_customer_id: "cus_1",
+          stripe_payment_method_id: "pm_old"
+        })
+
+      assert :ok =
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_setup_1",
+                 type: "setup_intent.succeeded",
+                 data: %{
+                   object: %{
+                     id: "seti_1",
+                     status: "succeeded",
+                     payment_method: "pm_new",
+                     metadata: %{"subscription_id" => subscription.id}
+                   }
+                 }
+               })
+
+      assert %{state: :active, stripe_payment_method_id: "pm_new"} = Ash.reload!(subscription, authorize?: false)
+    end
+  end
+
   describe "payment_intent.succeeded" do
     test "finalizes the order, marks it paid, and enqueues a confirmation email", %{
       order: order,

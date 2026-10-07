@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
   @behaviour Stripe.WebhookHandler
 
   require Logger
+  import Edenflowers.Actors
 
   alias Edenflowers.Payments
 
@@ -28,6 +29,23 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
     case Payments.cancel(event.data.object) do
       {:ok, _outcome} -> :ok
       error -> handle_error(error, event)
+    end
+  end
+
+  @impl true
+  def handle_event(%Stripe.Event{type: "setup_intent.succeeded"} = event) do
+    case Payments.save_subscription_card(event.data.object, system_actor()) do
+      {:ok, _subscription} ->
+        :ok
+
+      {:error, :not_a_saved_subscription_card} ->
+        Logger.warning("Stripe #{event.type} event #{event.id} has no subscription_id metadata")
+        :ok
+
+      # Returning :error makes Stripe retry.
+      {:error, reason} ->
+        Logger.error("Failed to save the card from Stripe #{event.type} event #{event.id}: #{inspect(reason)}")
+        :error
     end
   end
 

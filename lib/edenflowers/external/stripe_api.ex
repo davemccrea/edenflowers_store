@@ -11,6 +11,8 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback charge_off_session(amount_cents :: integer(), params :: map(), idempotency_key :: String.t()) ::
               {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_setup_intent(customer_id :: String.t(), metadata :: map()) :: {:ok, map()} | {:error, term()}
+  @callback retrieve_setup_intent(setup_intent_id :: String.t()) :: {:ok, map()} | {:error, term()}
   @callback update_payment_intent(payment_intent_id :: String.t(), amount_cents :: integer()) ::
               {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
@@ -87,6 +89,22 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def retrieve_payment_intent(%{payment_intent_id: payment_intent_id}) do
     Stripe.PaymentIntent.retrieve(payment_intent_id)
+  end
+
+  # Saves a replacement card to the Customer for charging off-session later.
+  @impl true
+  def create_setup_intent(customer_id, metadata) do
+    Stripe.SetupIntent.create(%{
+      customer: customer_id,
+      usage: "off_session",
+      automatic_payment_methods: %{enabled: true},
+      metadata: metadata
+    })
+  end
+
+  @impl true
+  def retrieve_setup_intent(setup_intent_id) do
+    Stripe.SetupIntent.retrieve(setup_intent_id)
   end
 
   @impl true

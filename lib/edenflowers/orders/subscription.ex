@@ -51,6 +51,20 @@ defmodule Edenflowers.Orders.Subscription do
         default_actor Edenflowers.Actors.system_actor()
         where expr(state == :active and next_fulfillment_date <= date_add(today(), ^@lead_days, :day))
       end
+
+      # Queued only by :activate, so subscriptions started before this email
+      # existed are never sent one.
+      trigger :send_setup_email do
+        action :send_setup_email
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionSetupEmail
+        default_actor Edenflowers.Actors.system_actor()
+        where expr(is_nil(setup_emailed_at))
+      end
     end
   end
 
@@ -70,7 +84,11 @@ defmodule Edenflowers.Orders.Subscription do
 
     read :mine do
       filter expr(user_id == ^actor(:id))
-      prepare build(sort: [inserted_at: :asc], load: [:product_variant, :changes_closed?])
+
+      prepare build(
+                sort: [inserted_at: :asc],
+                load: [:changes_closed?, product_variant: [product: :product_variants]]
+              )
     end
 
     create :activate do
@@ -91,6 +109,14 @@ defmodule Edenflowers.Orders.Subscription do
       ]
 
       validate attribute_in(:interval_weeks, @intervals)
+      change run_oban_trigger(:send_setup_email)
+    end
+
+    update :send_setup_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Edenflowers.Orders.Changes.SendSubscriptionSetupEmail
     end
 
     update :create_occurrence do
@@ -158,6 +184,36 @@ defmodule Edenflowers.Orders.Subscription do
       require_atomic? false
     end
 
+    # The occurrence job reads the subscription when it creates each
+    # Occurrence, so a change applies from the next one.
+    update :change do
+      accept [:product_variant_id, :interval_weeks]
+      validate attribute_does_not_equal(:state, :cancelled)
+      validate attribute_in(:interval_weeks, @intervals)
+      validate Edenflowers.Orders.Validations.SubscriptionVariant
+      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+      require_atomic? false
+    end
+
+    # The new card settles nothing already owed: an unpaid Occurrence keeps its
+    # payment link. A held subscription goes back to charging the new card.
+    update :replace_card do
+      argument :stripe_payment_method_id, :string, allow_nil?: false
+      change set_attribute(:stripe_payment_method_id, arg(:stripe_payment_method_id))
+
+      change fn changeset, _context ->
+        Ash.Changeset.after_action(changeset, fn
+          _changeset, %{state: :payment_failed} = subscription ->
+            Edenflowers.Orders.reactivate_subscription(subscription, actor: Edenflowers.Actors.system_actor())
+
+          _changeset, subscription ->
+            {:ok, subscription}
+        end)
+      end
+
+      require_atomic? false
+    end
+
     update :cancel do
       validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
       change transition_state(:cancelled)
@@ -167,16 +223,16 @@ defmodule Edenflowers.Orders.Subscription do
 
   policies do
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:create_occurrence, :reactivate])
+      authorize_if action([:create_occurrence, :reactivate, :send_setup_email, :replace_card])
       authorize_if action_type(:read)
     end
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
-      authorize_if action([:skip, :pause, :resume, :cancel])
+      authorize_if action([:skip, :pause, :resume, :cancel, :change])
     end
 
-    policy action([:mine, :skip, :pause, :resume, :cancel]) do
+    policy action([:read, :mine, :skip, :pause, :resume, :cancel, :change, :replace_card]) do
       authorize_if expr(user_id == ^actor(:id))
     end
   end
@@ -199,6 +255,8 @@ defmodule Edenflowers.Orders.Subscription do
 
     attribute :stripe_customer_id, :string, allow_nil?: false
     attribute :stripe_payment_method_id, :string, allow_nil?: false
+
+    attribute :setup_emailed_at, :utc_datetime
 
     timestamps()
   end

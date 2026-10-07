@@ -358,6 +358,32 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       refute has_element?(view, "#subscription-#{subscription.id} button")
     end
 
+    test "changes the size and how often", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      variant = Ash.get!(Edenflowers.Catalog.ProductVariant, subscription.product_variant_id)
+      large = generate(product_variant(product_id: variant.product_id, size: :large, draft: false))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view
+      |> form("#change-subscription-#{subscription.id}", %{
+        "product_variant_id" => large.id,
+        "interval_weeks" => "4"
+      })
+      |> render_submit()
+
+      assert %{product_variant_id: large_id, interval_weeks: 4} = reload(subscription)
+      assert large_id == large.id
+      assert has_element?(view, "#subscription-#{subscription.id}", "Large · Every 4 weeks")
+    end
+
+    test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do
+      subscription = subscription(user, %{next_fulfillment_date: days_from_today(4)})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      refute has_element?(view, "#change-subscription-#{subscription.id}")
+      assert has_element?(view, ~s|a[href="/account/subscriptions/#{subscription.id}/card"]|, "Update card")
+    end
+
     test "says why a change is refused once the cutoff passes with the page open", %{conn: conn, user: user} do
       subscription = subscription(user, %{})
       {:ok, view, _html} = live(conn, ~p"/account")

@@ -371,6 +371,39 @@ defmodule Edenflowers.Payments do
     Courses.confirm_registration_payment(id, payment_intent.id, %{amount_paid: amount_paid}, actor: system_actor())
   end
 
+  @doc """
+  Returns the client secret of a new SetupIntent that saves a replacement card
+  to the subscription's Stripe Customer.
+  """
+  def setup_card_replacement(subscription) do
+    with {:ok, setup_intent} <-
+           stripe_api().create_setup_intent(subscription.stripe_customer_id, %{"subscription_id" => subscription.id}) do
+      {:ok, setup_intent.client_secret}
+    end
+  end
+
+  @doc """
+  Puts the card a succeeded SetupIntent saved on the subscription named in its
+  metadata, given the SetupIntent or its id. Shared by the card page's return
+  URL and the `setup_intent.succeeded` webhook, so either may run first or
+  both may: saving the same card again changes nothing. The actor must be
+  allowed to update that subscription, so a customer can't save a card to
+  someone else's from an id in a URL.
+  """
+  def save_subscription_card(setup_intent_id, actor) when is_binary(setup_intent_id) do
+    with {:ok, setup_intent} <- stripe_api().retrieve_setup_intent(setup_intent_id) do
+      save_subscription_card(setup_intent, actor)
+    end
+  end
+
+  def save_subscription_card(%{status: "succeeded", metadata: %{"subscription_id" => id}} = setup_intent, actor) do
+    with {:ok, subscription} <- Orders.get_subscription(id, actor: actor) do
+      Orders.replace_subscription_card(subscription, stripe_id(setup_intent.payment_method), actor: actor)
+    end
+  end
+
+  def save_subscription_card(_setup_intent, _actor), do: {:error, :not_a_saved_subscription_card}
+
   # Stripe sends an id, or the object itself when it was expanded.
   defp stripe_id(%{id: id}), do: id
   defp stripe_id(id), do: id

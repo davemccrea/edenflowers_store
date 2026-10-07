@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.RateLimiter
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.Components, as: AdminComponents
@@ -165,6 +166,41 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   {~t"Cancel subscription"}
                 </.button>
               </div>
+
+              <form
+                :if={not subscription.changes_closed? and subscription.state != :cancelled}
+                id={"change-subscription-#{subscription.id}"}
+                phx-submit="change_subscription"
+                class="flex flex-wrap items-end gap-3"
+              >
+                <input type="hidden" name="subscription_id" value={subscription.id} />
+                <.input
+                  type="select"
+                  id={"subscription-#{subscription.id}-size"}
+                  name="product_variant_id"
+                  label={~t"Size"}
+                  options={size_options(subscription)}
+                  value={subscription.product_variant_id}
+                />
+                <.input
+                  type="select"
+                  id={"subscription-#{subscription.id}-interval"}
+                  name="interval_weeks"
+                  label={~t"How often"}
+                  options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
+                  value={subscription.interval_weeks}
+                />
+                <.button type="submit" phx-disable-with={~t"Saving…"}>{~t"Save changes"}</.button>
+              </form>
+
+              <.button
+                :if={subscription.state != :cancelled}
+                navigate={~p"/account/subscriptions/#{subscription.id}/card"}
+                variant="text"
+                class="self-start"
+              >
+                {~t"Update card"}
+              </.button>
             </li>
           </ul>
         </section>
@@ -404,6 +440,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
     {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
   end
 
+  def handle_event("change_subscription", %{"subscription_id" => id} = params, socket) do
+    changes = Map.take(params, ["product_variant_id", "interval_weeks"])
+    change = &Orders.change_subscription(&1, changes, &2)
+
+    {:noreply, change_subscription(socket, id, change, ~t"Subscription updated")}
+  end
+
   def handle_event("toggle_newsletter", params, socket) do
     user = socket.assigns.current_user
     opt_in = params["newsletter_opt_in"] == "true"
@@ -466,6 +509,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
 
   defp skipped?(subscription), do: subscription.next_fulfillment_date in subscription.skipped_dates
+
+  defp size_options(subscription) do
+    for variant <- subscription.product_variant.product.product_variants,
+        not variant.draft or variant.id == subscription.product_variant_id do
+      {AdminComponents.variant_size_label(variant.size), variant.id}
+    end
+  end
 
   defp subscription_summary(subscription) do
     size = AdminComponents.variant_size_label(subscription.product_variant.size)

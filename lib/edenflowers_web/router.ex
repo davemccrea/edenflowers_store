@@ -68,6 +68,7 @@ defmodule EdenflowersWeb.Router do
 
       scope "/", Account do
         live "/account", AccountLive
+        live "/account/subscriptions/:id/card", SubscriptionCardLive
       end
     end
 

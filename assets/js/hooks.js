@@ -593,7 +593,12 @@ Hooks.Stripe = {
         this.stripeLoading();
         this.stripeErrorMessage.textContent = ""; // Clear previous errors
 
-        const { error } = await stripe.confirmPayment({
+        // data-intent="setup" saves a card without charging it.
+        const confirm =
+          this.el.dataset.intent === "setup"
+            ? stripe.confirmSetup
+            : stripe.confirmPayment;
+        const { error } = await confirm.call(stripe, {
           elements,
           confirmParams: {
             return_url: this.returnUrl,
