@@ -48,6 +48,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
+  test "the actions menu offers the order details until paid, then the receipt", %{conn: conn} do
+    order = placed_order()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|button[phx-click="send_order_details"]|)
+    refute has_element?(view, "li", "Email receipt")
+
+    order = Ash.load!(order, :grand_total, authorize?: false)
+    generate(payment(order_id: order.id, amount: order.grand_total, payment_intent_id: "pi_test_menu_paid"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|button[phx-click="email_receipt"]|, "Email receipt")
+    refute has_element?(view, "li", "Email order details")
+
+    Ash.Seed.update!(order, %{receipt_emailed_at: DateTime.utc_now()})
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|button[phx-click="email_receipt"]|, "Resend receipt")
+  end
+
   test "the actions menu says why each action is unavailable", %{conn: conn} do
     order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344", fulfillment_status: :fulfilled)
 
