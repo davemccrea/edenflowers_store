@@ -3,7 +3,9 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   Turns the Subscription's next date into an Occurrence: an ordinary Online
   Order, charged to the saved card and placed by `Payments.complete/1`, as a
   checkout payment is. Then moves the Subscription on by one interval. A
-  skipped or missed date makes no order and just moves it on.
+  skipped or missed date makes no order and just moves it on. A refused card
+  places the order unpaid with a payment link and holds the Subscription at
+  `:payment_failed` until it is paid.
 
   Every step can be run again. The order is looked up by its subscription
   date before one is made, the charge's idempotency key is the subscription
@@ -41,14 +43,23 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
     case deliver(subscription, date) do
       :ok ->
-        Ash.Changeset.force_change_attributes(changeset,
-          next_fulfillment_date: Date.add(date, subscription.interval_weeks * 7),
-          skipped_dates: List.delete(subscription.skipped_dates, date)
-        )
+        move_on(changeset, subscription, date)
+
+      :payment_failed ->
+        changeset
+        |> move_on(subscription, date)
+        |> AshStateMachine.transition_state(:payment_failed)
 
       {:error, error} ->
         Ash.Changeset.add_error(changeset, error)
     end
+  end
+
+  defp move_on(changeset, subscription, date) do
+    Ash.Changeset.force_change_attributes(changeset,
+      next_fulfillment_date: Date.add(date, subscription.interval_weeks * 7),
+      skipped_dates: List.delete(subscription.skipped_dates, date)
+    )
   end
 
   defp deliver(subscription, date) do
@@ -56,6 +67,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
       :ok
     else
       case find_occurrence(subscription, date) do
+        {:ok, %Order{state: :placed, unpaid?: true}} -> :payment_failed
         {:ok, %Order{state: :placed}} -> :ok
         {:ok, %Order{} = order} -> pay(order, subscription)
         {:ok, nil} -> occur_unless_missed(subscription, date)
@@ -78,7 +90,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   defp find_occurrence(subscription, date) do
     Order
     |> Ash.Query.filter(subscription_id == ^subscription.id and subscription_date == ^date)
-    |> Ash.Query.load(:grand_total)
+    |> Ash.Query.load([:grand_total, :unpaid?])
     |> Ash.read_one(authorize?: false)
   end
 
@@ -124,9 +136,19 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   end
 
   defp pay(%Order{payment_intent_id: nil} = order, subscription) do
-    with {:ok, payment_intent} <- charge(order, subscription),
-         {:ok, _order} <- keep_payment_intent(order, payment_intent) do
-      place(order, payment_intent)
+    case charge(order, subscription) do
+      {:ok, payment_intent} ->
+        with {:ok, _order} <- keep_payment_intent(order, payment_intent) do
+          place(order, payment_intent)
+        end
+
+      # Declined, or the bank wants the customer to authenticate. Stripe
+      # replays this answer for the same key, so a retry lands here again.
+      {:error, %Stripe.Error{code: :card_error} = error} ->
+        place_unpaid(order, subscription, error)
+
+      {:error, error} ->
+        {:error, error}
     end
   end
 
@@ -146,20 +168,17 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
     key = "sub-#{subscription.id}-#{order.subscription_date}"
 
-    case stripe_api().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key) do
-      {:ok, payment_intent} ->
-        {:ok, payment_intent}
+    stripe_api().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key)
+  end
 
-      # Slice 03 replaces this: the order is placed unpaid with a Payment
-      # Link, and the subscription moves to :payment_failed. Until then the
-      # occurrence stops here, and the job fails until someone steps in.
-      {:error, %Stripe.Error{code: :card_error} = error} ->
-        Logger.error("The card for subscription #{subscription.id} was refused for order #{order.id}: #{error.message}")
+  defp place_unpaid(order, subscription, error) do
+    Logger.warning(
+      "The card for subscription #{subscription.id} was refused for order #{order.id}: #{error.message}. " <>
+        "The order is placed unpaid and the customer emailed a payment link."
+    )
 
-        {:error, error}
-
-      {:error, error} ->
-        {:error, error}
+    with {:ok, _order} <- Orders.place_unpaid_occurrence(order, actor: system_actor()) do
+      :payment_failed
     end
   end
 

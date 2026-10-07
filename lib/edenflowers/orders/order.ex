@@ -141,6 +141,7 @@ defmodule Edenflowers.Orders.Order do
       transition(:submit_delivery, from: :delivery, to: :payment)
       # The customer has paid, so any step they have since stepped back to still places the order.
       transition(:finalize_checkout, from: @checkout_states, to: :placed)
+      transition(:place_unpaid_occurrence, from: :payment, to: :placed)
 
       transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
       transition(:return_to_gift_options, from: [:delivery, :payment], to: :gift_options)
@@ -180,6 +181,23 @@ defmodule Edenflowers.Orders.Order do
         scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderDetailsEmail
         default_actor Edenflowers.Actors.system_actor()
         where expr(origin == :custom and not is_nil(customer_email) and is_nil(details_emailed_at))
+      end
+
+      # Queued only when an Occurrence's card is refused, by :place_unpaid_occurrence.
+      trigger :send_payment_failed_email do
+        action :send_payment_failed_email
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
+        default_actor Edenflowers.Actors.system_actor()
+
+        where expr(
+                origin == :subscription and payment_link_open? and not is_nil(customer_email) and
+                  is_nil(details_emailed_at)
+              )
       end
 
       trigger :send_delivered_email do
@@ -260,6 +278,7 @@ defmodule Edenflowers.Orders.Order do
 
     on_actions [
       :finalize_checkout,
+      :place_unpaid_occurrence,
       :place_custom,
       :edit,
       :update_florist_note,
@@ -267,6 +286,7 @@ defmodule Edenflowers.Orders.Order do
       :mark_fulfilled,
       :open_payment_link,
       :send_order_details_email,
+      :send_payment_failed_email,
       :send_confirmation_email,
       :send_delivered_email,
       :email_receipt
@@ -533,6 +553,19 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    # An Occurrence whose card was refused. Jennie has committed to it, so it
+    # is placed all the same (ADR 0001), and the customer is emailed a payment
+    # link for it.
+    update :place_unpaid_occurrence do
+      change transition_state(:placed)
+      change set_attribute(:ordered_at, &DateTime.utc_now/0)
+      change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
+      change Changes.SnapshotVatBreakdown
+      change Changes.OpenPaymentLink
+      change run_oban_trigger(:send_payment_failed_email)
+      require_atomic? false
+    end
+
     # Jennie can change anything on an open order, online or custom, paid or
     # not. A paid order whose total changes is left with a balance to collect
     # or refund; an unpaid one's payment link charges the new total.
@@ -618,6 +651,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:receipt_emailed_at, nil)
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
+      change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
       require_atomic? false
     end
@@ -646,6 +680,13 @@ defmodule Edenflowers.Orders.Order do
       transaction? false
       require_atomic? false
       change Changes.SendOrderDetailsEmail
+    end
+
+    update :send_payment_failed_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.SendPaymentFailedEmail
     end
 
     # For an in-person payment, whose receipt is only sent when the customer asks.
@@ -781,6 +822,8 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action([
                      :finalize_checkout,
+                     :place_unpaid_occurrence,
+                     :send_payment_failed_email,
                      :mark_payment_cancelled,
                      :send_confirmation_email,
                      :send_delivered_email,

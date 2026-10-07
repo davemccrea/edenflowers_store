@@ -57,7 +57,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
             <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
           </:col>
           <:col :let={subscription} field="state" sort label={~t"State"}>
-            {state_label(subscription.state)}
+            <span class={["badge badge-sm whitespace-nowrap", state_badge_class(subscription.state)]}>
+              {state_label(subscription.state)}
+            </span>
           </:col>
         </Cinder.collection>
       </.admin_page>
@@ -69,4 +71,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   defp state_label(:paused), do: ~t"Paused"
   defp state_label(:payment_failed), do: ~t"Payment failed"
   defp state_label(:cancelled), do: ~t"Cancelled"
+
+  defp state_badge_class(:active), do: "badge-success admin-badge-success"
+  defp state_badge_class(:payment_failed), do: "badge-error admin-badge-error"
+  defp state_badge_class(_), do: "admin-badge-neutral"
 end

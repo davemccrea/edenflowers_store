@@ -52,6 +52,29 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  What a subscriber is sent when the card saved for their subscription is
+  refused for an Occurrence: the delivery still happens, and the payment link
+  pays for it. Expects `:customer_first_name` and `:grand_total` loaded.
+  """
+  def payment_failed(order, payment_link_url) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(from_address())
+      |> subject(~t"Payment needed for your Eden Flowers order #{order.order_reference}")
+      |> text_body(
+        Templates.payment_failed(%{
+          order: order,
+          payment_link_url: payment_link_url,
+          format_date: &Format.weekday_date(&1, order.locale),
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
   def order_delivered(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()

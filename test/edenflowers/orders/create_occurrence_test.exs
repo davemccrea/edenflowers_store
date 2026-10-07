@@ -6,12 +6,14 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   import ExUnit.CaptureLog
   import Generator
   import Mox
+  import Swoosh.TestAssertions
 
   alias Edenflowers.External.{HereAPI, StripeAPI}
   alias Edenflowers.Orders.{Order, Payment, Subscription}
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
   alias Edenflowers.Orders.Workers.CreateOccurrence
   alias Edenflowers.Orders.Workers.SendConfirmationEmail
+  alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
 
   setup :verify_on_exit!
 
@@ -248,24 +250,138 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     end
   end
 
-  test "a refused card stops the occurrence and reports it, until failed charges are handled", ctx do
-    subscription = subscription(ctx)
-    stub_geocoding()
+  describe "a refused card" do
+    setup ctx do
+      stub_geocoding()
+      %{subscription: subscription(ctx)}
+    end
 
-    expect(StripeAPI.Mock, :charge_off_session, fn _cents, _params, _key ->
-      {:error,
-       %Stripe.Error{
-         source: :stripe,
-         code: :card_error,
-         message: "Your card was declined.",
-         extra: %{card_code: :card_declined}
-       }}
-    end)
+    defp refuse(card_code) do
+      expect(StripeAPI.Mock, :charge_off_session, fn _cents, _params, _key ->
+        {:error, %Stripe.Error{source: :stripe, code: :card_error, message: "Refused", extra: %{card_code: card_code}}}
+      end)
+    end
 
-    log = run_failing(subscription)
+    defp run_refused(subscription) do
+      capture_log(fn -> assert {:ok, _} = run(subscription) end)
+    end
 
-    assert log =~ "was refused"
-    assert [%{state: :payment, payments: []}] = occurrences(subscription)
-    assert reload(subscription).next_fulfillment_date == ctx.date
+    for card_code <- [:card_declined, :authentication_required] do
+      test "#{card_code} places the order unpaid, emails a payment link and holds the subscription", ctx do
+        refuse(unquote(card_code))
+
+        run_refused(ctx.subscription)
+
+        assert [order] = occurrences(ctx.subscription)
+        order = Ash.load!(order, [:unpaid?], authorize?: false)
+        assert order.state == :placed
+        assert order.unpaid?
+        assert order.ordered_at
+        assert order.order_reference
+        assert order.payment_link_token
+        assert order.payments == []
+
+        subscription = reload(ctx.subscription)
+        assert subscription.state == :payment_failed
+        assert subscription.next_fulfillment_date == Date.add(ctx.date, 14)
+
+        assert_enqueued(worker: SendPaymentFailedEmail, args: %{"primary_key" => %{"id" => order.id}})
+        assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+
+        assert_email_sent(fn email ->
+          assert email.to == [{"", "ada@example.com"}]
+          assert email.subject =~ order.order_reference
+          assert email.text_body =~ "/pay/#{order.payment_link_token}"
+        end)
+      end
+    end
+
+    test "run again, neither charges nor emails again", ctx do
+      refuse(:card_declined)
+      run_refused(ctx.subscription)
+      Oban.drain_queue(queue: :default)
+      assert_email_sent()
+
+      # As if moving the subscription on had failed after the order was placed.
+      Ecto.Adapters.SQL.query!(
+        Edenflowers.Repo,
+        "UPDATE subscriptions SET next_fulfillment_date = $1, state = 'active' WHERE id = $2",
+        [ctx.date, Ecto.UUID.dump!(ctx.subscription.id)]
+      )
+
+      assert {:ok, _} = run(ctx.subscription)
+
+      assert [_one_order] = occurrences(ctx.subscription)
+      assert reload(ctx.subscription).state == :payment_failed
+      refute_enqueued(worker: SendPaymentFailedEmail)
+      assert_no_email_sent()
+    end
+
+    test "creates no further occurrences while held", ctx do
+      refuse(:card_declined)
+      run_refused(ctx.subscription)
+
+      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
+        ctx.date,
+        Ecto.UUID.dump!(ctx.subscription.id)
+      ])
+
+      Oban.drain_queue(queue: :default)
+      assert :ok = perform_job(ScheduleOccurrences, %{})
+      assert all_enqueued(worker: CreateOccurrence) == []
+
+      assert {:cancel, :trigger_no_longer_applies} = run(ctx.subscription)
+      assert [_one_order] = occurrences(ctx.subscription)
+    end
+
+    test "paying the payment link reactivates the subscription", ctx do
+      refuse(:authentication_required)
+      run_refused(ctx.subscription)
+      [order] = occurrences(ctx.subscription)
+
+      assert :ok =
+               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_link_paid",
+                 type: "payment_intent.succeeded",
+                 data: %{
+                   object: %{
+                     id: "pi_link",
+                     metadata: %{"order_id" => order.id},
+                     amount_received: StripeAPI.to_stripe_amount(order.grand_total)
+                   }
+                 }
+               })
+
+      assert [%{payments: [%Payment{payment_intent_id: "pi_link"}]}] = occurrences(ctx.subscription)
+      subscription = reload(ctx.subscription)
+      assert subscription.state == :active
+      assert subscription.next_fulfillment_date == Date.add(ctx.date, 14)
+    end
+
+    test "paid after its next date has passed, picks up at the first date still ahead", ctx do
+      refuse(:card_declined)
+      run_refused(ctx.subscription)
+      [order] = occurrences(ctx.subscription)
+
+      passed = Date.add(Date.utc_today(), -1)
+
+      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
+        passed,
+        Ecto.UUID.dump!(ctx.subscription.id)
+      ])
+
+      payment_intent = %{
+        id: "pi_link",
+        status: "succeeded",
+        metadata: %{"order_id" => order.id},
+        amount_received: StripeAPI.to_stripe_amount(order.grand_total)
+      }
+
+      assert {:ok, :completed} = Edenflowers.Payments.complete(payment_intent)
+
+      subscription = reload(ctx.subscription)
+      assert subscription.state == :active
+      assert subscription.next_fulfillment_date == Date.add(passed, 14)
+    end
   end
 end
