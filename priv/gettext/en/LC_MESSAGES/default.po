@@ -388,12 +388,12 @@ msgstr ""
 msgid "Small"
 msgstr ""
 
-#: lib/edenflowers/email.ex:103
+#: lib/edenflowers/email.ex:104
 #, elixir-autogen, elixir-format
 msgid "Welcome back to the Eden Flowers newsletter"
 msgstr ""
 
-#: lib/edenflowers/email.ex:87
+#: lib/edenflowers/email.ex:88
 #, elixir-autogen, elixir-format
 msgid "Welcome to Eden Flowers: your 15% off code inside"
 msgstr ""
@@ -413,7 +413,7 @@ msgstr ""
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr ""
 
-#: lib/edenflowers/email.ex:95
+#: lib/edenflowers/email.ex:96
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers promo code"
 msgstr ""
@@ -768,7 +768,7 @@ msgstr ""
 msgid "We've sent you a new code."
 msgstr ""
 
-#: lib/edenflowers/email.ex:127
+#: lib/edenflowers/email.ex:128
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers sign-in code"
 msgstr ""
@@ -1959,7 +1959,7 @@ msgid "Your 15% welcome code is still valid:"
 msgstr ""
 
 #: lib/edenflowers/email.ex:19
-#: lib/edenflowers/email.ex:42
+#: lib/edenflowers/email.ex:43
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference}"
 msgstr ""
@@ -2126,7 +2126,7 @@ msgstr ""
 msgid "Change booking"
 msgstr ""
 
-#: lib/edenflowers/email.ex:70
+#: lib/edenflowers/email.ex:71
 #, elixir-autogen, elixir-format
 msgid "You're booked: %{course}"
 msgstr ""
@@ -3555,7 +3555,7 @@ msgstr "View customer's orders"
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr ""
 
-#: lib/edenflowers/email.ex:59
+#: lib/edenflowers/email.ex:60
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Your Eden Flowers order %{order_order_reference} has been delivered"
 msgstr ""
@@ -4437,4 +4437,14 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:993
 #, elixir-autogen, elixir-format
 msgid "The order was refunded"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_details.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here is your order as it stands now:"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order."
 msgstr ""
