@@ -1,0 +1,9 @@
+<%= gettext("Hi,") %>
+
+<%= gettext("Here's your code to confirm this as the email for your Eden Flowers account:") %>
+
+    <%= @code %>
+
+<%= gettext("It expires in 10 minutes. If you didn't ask for it, you can ignore this email.") %>
+
+Eden Flowers

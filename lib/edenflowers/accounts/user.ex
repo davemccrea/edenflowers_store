@@ -86,6 +86,12 @@ defmodule Edenflowers.Accounts.User do
       accept [:name, :newsletter_opt_in]
     end
 
+    # Only for an address the customer has proved they own; AccountLive emails
+    # a code to the new address first.
+    update :change_email do
+      accept [:email]
+    end
+
     create :subscribe_to_newsletter do
       accept [:email]
       upsert? true
