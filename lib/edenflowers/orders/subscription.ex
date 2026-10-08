@@ -26,6 +26,11 @@ defmodule Edenflowers.Orders.Subscription do
   @doc "The day the occurrence job charges the card for a delivery on `date`."
   def charged_on(date), do: Date.add(date, -@lead_days)
 
+  @doc "Whether a customer can still change an occurrence scheduled for `date`."
+  def changes_open_for?(date) do
+    Date.after?(date, Date.add(Edenflowers.Expressions.HelsinkiToday.today(), @lead_days + 1))
+  end
+
   @doc "The next delivery date a paused subscription would get if it resumed today."
   def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
     Edenflowers.Orders.Changes.StepToScheduledDate.scheduled_date(date, weeks, @lead_days + 1)
@@ -95,7 +100,7 @@ defmodule Edenflowers.Orders.Subscription do
 
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
-      prepare build(sort: [next_fulfillment_date: :asc], load: [:next_delivery_skipped?, :user, :product_variant])
+      prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant])
     end
 
     # A cancelled subscription drops off the account page a month after.
@@ -106,7 +111,6 @@ defmodule Edenflowers.Orders.Subscription do
                 sort: [inserted_at: :asc],
                 load: [
                   :changes_closed?,
-                  :next_delivery_skipped?,
                   :fulfillment_option,
                   product_variant: [product: :product_variants]
                 ]
@@ -157,35 +161,9 @@ defmodule Edenflowers.Orders.Subscription do
       require_atomic? false
     end
 
-    # The occurrence job already passes over a skipped date.
-    update :skip do
-      validate attribute_equals(:state, :active)
-      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
-
-      change fn changeset, _context ->
-        %{next_fulfillment_date: date, skipped_dates: skipped} = changeset.data
-        Ash.Changeset.change_attribute(changeset, :skipped_dates, Enum.uniq([date | skipped]))
-      end
-
-      require_atomic? false
-    end
-
-    update :unskip do
-      validate attribute_equals(:state, :active)
-      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
-
-      change fn changeset, _context ->
-        %{next_fulfillment_date: date, skipped_dates: skipped} = changeset.data
-        Ash.Changeset.change_attribute(changeset, :skipped_dates, List.delete(skipped, date))
-      end
-
-      require_atomic? false
-    end
-
     update :pause do
       validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
       change transition_state(:paused)
-      require_atomic? false
     end
 
     # Picks up at the first date on the schedule the occurrence job hasn't
@@ -241,8 +219,8 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     update :cancel do
-      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
       change transition_state(:cancelled)
+      change Edenflowers.Orders.Changes.CancelOpenOccurrences
       require_atomic? false
     end
   end
@@ -263,10 +241,10 @@ defmodule Edenflowers.Orders.Subscription do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
-      authorize_if action([:skip, :unskip, :pause, :resume, :cancel, :change])
+      authorize_if action([:pause, :resume, :cancel, :change])
     end
 
-    policy action([:read, :mine, :skip, :unskip, :pause, :resume, :cancel, :change, :replace_card]) do
+    policy action([:read, :mine, :pause, :resume, :cancel, :change, :replace_card]) do
       authorize_if expr(user_id == ^actor(:id))
     end
   end
@@ -276,7 +254,6 @@ defmodule Edenflowers.Orders.Subscription do
 
     attribute :interval_weeks, :integer, allow_nil?: false
     attribute :next_fulfillment_date, :date, allow_nil?: false
-    attribute :skipped_dates, {:array, :date}, allow_nil?: false, default: []
 
     # Copied from the first order. Each occurrence prices its fee afresh from
     # the address, so no fee or geocode is kept here.
@@ -315,9 +292,6 @@ defmodule Edenflowers.Orders.Subscription do
     calculate :changes_closed?,
               :boolean,
               expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^(@lead_days + 1), :day))
-
-    # The occurrence job will pass over it rather than deliver it.
-    calculate :next_delivery_skipped?, :boolean, expr(next_fulfillment_date in skipped_dates)
 
     # Occurrences carry no promotion, so only the order that started the
     # subscription can have been discounted.

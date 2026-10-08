@@ -14,7 +14,7 @@
 <% end %>
 <%= gettext("Your first delivery comes as ordered, and its receipt is in a separate email. I charge your saved card a few days before each delivery.") %>
 
-<%= gettext("You can skip a delivery, pause, change the size or how often, update your card or cancel from your account:") %>
+<%= gettext("You can pause, change the size or how often, update your card or cancel from your account:") %>
 <%= @account_url %>
 
 <%= gettext("If anything needs changing, just reply and I'll take care of it.") %>

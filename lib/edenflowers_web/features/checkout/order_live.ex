@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               class="font-serif text-base-content/80 mt-1 text-xl leading-snug"
               data-testid="order-subscription"
             >
-              {~t"Then #{interval = String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks))}, until you skip, pause or cancel it from your account."}
+              {~t"Then #{interval = String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks))}, until you pause or cancel it from your account."}
             </p>
             <div :if={@next_delivery} class="mt-6 flex flex-col gap-2" data-testid="order-next-delivery">
               <p>
@@ -121,7 +121,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                   <.link navigate={~p"/sign-in"} class="link-underline-hover">
                     {~t"Sign in with #{email = @shown_order.customer_email}"}
                   </.link>
-                  {~t"to skip, pause or cancel."}
+                  {~t"to pause or cancel."}
                 </p>
               <% end %>
             </div>

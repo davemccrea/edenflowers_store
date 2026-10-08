@@ -171,20 +171,21 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
   end
 
-  test "a skipped date creates no order and just moves on", ctx do
-    later = Date.add(ctx.date, 14)
-    subscription = subscription(ctx, %{skipped_dates: [ctx.date, later]})
+  test "a closed schedule window is skipped instead of colliding with the next occurrence", ctx do
+    disabled_dates = Enum.map(0..6, &Date.add(ctx.date, &1))
+    closed = generate(fulfillment_option(fulfillment_method: :delivery, disabled_dates: disabled_dates))
+    subscription = subscription(ctx, %{fulfillment_option_id: closed.id, interval_weeks: 1})
+    stub_geocoding()
+    stub(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
     assert {:ok, _} = run(subscription)
 
     assert occurrences(subscription) == []
-    subscription = reload(subscription)
-    assert subscription.next_fulfillment_date == later
-    assert subscription.skipped_dates == [later]
+    assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 7)
   end
 
   test "a date missed while the job was down creates no order and is reported", ctx do
-    missed = Date.add(HelsinkiToday.today(), -1)
+    missed = Date.add(HelsinkiToday.today(), -15)
     subscription = subscription(ctx, %{next_fulfillment_date: missed})
 
     log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
@@ -192,6 +193,28 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert log =~ "missed its delivery"
     assert occurrences(subscription) == []
     assert reload(subscription).next_fulfillment_date == Date.add(missed, 14)
+  end
+
+  test "a past scheduled date is delivered when its first open fulfillment date is today", ctx do
+    today = HelsinkiToday.today()
+
+    delivery =
+      generate(
+        fulfillment_option(
+          fulfillment_method: :delivery,
+          same_day: true,
+          order_deadline: ~T[23:59:59]
+        )
+      )
+
+    subscription =
+      subscription(ctx, %{fulfillment_option_id: delivery.id, next_fulfillment_date: Date.add(today, -1)})
+
+    stub_geocoding()
+    expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
+
+    assert {:ok, _} = run(subscription)
+    assert [%{fulfillment_date: ^today}] = occurrences(subscription)
   end
 
   describe "run again" do
@@ -265,6 +288,29 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       assert {:ok, _} = run(subscription)
       assert [%{state: :placed, payments: [_one_payment]}] = occurrences(subscription)
     end
+
+    test "a persisted authentication-required intent places the occurrence unpaid", ctx do
+      subscription = subscription(ctx)
+      stub_geocoding()
+
+      expect(StripeAPI.Mock, :charge_off_session, fn _cents, params, _key ->
+        {:ok, %{id: "pi_requires_action", status: "processing", amount_received: 0, metadata: params.metadata}}
+      end)
+
+      run_failing(subscription)
+      assert [%{payment_intent_id: "pi_requires_action"}] = occurrences(subscription)
+
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_requires_action"} ->
+        {:ok, %{id: "pi_requires_action", status: "requires_action"}}
+      end)
+
+      capture_log(fn -> assert {:ok, _} = run(subscription) end)
+
+      assert [order] = occurrences(subscription)
+      assert order.state == :placed
+      assert Ash.load!(order, :unpaid?, authorize?: false).unpaid?
+      assert reload(subscription).state == :payment_failed
+    end
   end
 
   describe "a refused card" do
@@ -311,6 +357,20 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
           assert email.text_body =~ "/pay/#{order.payment_link_token}"
         end)
       end
+    end
+
+    test "a requires_action response places the order unpaid and holds the subscription", ctx do
+      expect(StripeAPI.Mock, :charge_off_session, fn _cents, params, _key ->
+        {:ok, %{id: "pi_requires_action", status: "requires_action", amount_received: 0, metadata: params.metadata}}
+      end)
+
+      run_refused(ctx.subscription)
+
+      assert [order] = occurrences(ctx.subscription)
+      assert order.state == :placed
+      assert order.payment_intent_id == "pi_requires_action"
+      assert Ash.load!(order, :unpaid?, authorize?: false).unpaid?
+      assert reload(ctx.subscription).state == :payment_failed
     end
 
     test "run again, neither charges nor emails again", ctx do

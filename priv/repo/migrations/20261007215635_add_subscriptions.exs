@@ -38,7 +38,6 @@ defmodule Edenflowers.Repo.Migrations.AddSubscriptions do
     alter table(:subscriptions) do
       add :interval_weeks, :bigint, null: false
       add :next_fulfillment_date, :date, null: false
-      add :skipped_dates, {:array, :date}, null: false, default: []
       add :recipient_name, :text
       add :recipient_phone_number, :text
       add :delivery_address, :text
@@ -138,7 +137,6 @@ defmodule Edenflowers.Repo.Migrations.AddSubscriptions do
       remove :delivery_address
       remove :recipient_phone_number
       remove :recipient_name
-      remove :skipped_dates
       remove :next_fulfillment_date
       remove :interval_weeks
     end

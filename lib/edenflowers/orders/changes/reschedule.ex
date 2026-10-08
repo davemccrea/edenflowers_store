@@ -42,23 +42,10 @@ defmodule Edenflowers.Orders.Changes.Reschedule do
           |> on_weekday(new_day(changeset))
           |> StepToScheduledDate.scheduled_date(weeks, Subscription.lead_days() + 1)
 
-        changeset
-        |> Ash.Changeset.force_change_attribute(:next_fulfillment_date, next_date)
-        |> carry_skip(next, next_date)
+        Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
 
       {:error, error} ->
         Ash.Changeset.add_error(changeset, error)
-    end
-  end
-
-  # A skipped next delivery stays skipped when it moves.
-  defp carry_skip(changeset, old_date, new_date) do
-    skipped = changeset.data.skipped_dates
-
-    if old_date in skipped do
-      Ash.Changeset.force_change_attribute(changeset, :skipped_dates, [new_date | List.delete(skipped, old_date)])
-    else
-      changeset
     end
   end
 

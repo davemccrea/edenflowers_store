@@ -56,26 +56,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort label={~t"Next delivery"}>
             <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
-            <div :if={subscription.next_delivery_skipped?} class="text-base-content/65 text-sm">
-              {~t"Skipped"}
-            </div>
           </:col>
           <:col :let={subscription} field="state" sort label={~t"Status"}>
             <.badge tone={state_tone(subscription.state)}>{state_label(subscription.state)}</.badge>
           </:col>
           <:col :let={subscription} label={~t"Actions"}>
             <div class="flex flex-wrap gap-1">
-              <.button
-                :if={subscription.state == :active and not subscription.next_delivery_skipped?}
-                type="button"
-                phx-click="skip"
-                phx-value-id={subscription.id}
-                data-confirm={~t"Skip the delivery on #{date = Format.date(subscription.next_fulfillment_date, @locale)}?"}
-                variant="ghost"
-                size="sm"
-              >
-                {~t"Skip"}
-              </.button>
               <.button
                 :if={subscription.state == :active}
                 type="button"
@@ -117,10 +103,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   end
 
   @impl true
-  def handle_event("skip", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped.")}
-  end
-
   def handle_event("pause", %{"id" => id}, socket) do
     {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused.")}
   end

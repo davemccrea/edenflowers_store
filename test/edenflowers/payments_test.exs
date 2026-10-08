@@ -20,7 +20,7 @@ defmodule Edenflowers.PaymentsTest do
 
   setup do
     tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
+    product = generate(product(tax_rate_id: tax_rate.id, subscribable: true, free_delivery: true))
     product_variant = generate(product_variant(product_id: product.id))
     fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
 
@@ -54,7 +54,7 @@ defmodule Edenflowers.PaymentsTest do
         )
       )
 
-    %{order: order, registration: registration}
+    %{order: order, registration: registration, product_variant: product_variant}
   end
 
   defp order_intent(order, amount_received \\ nil) do
@@ -108,6 +108,53 @@ defmodule Edenflowers.PaymentsTest do
       end)
 
       assert {:ok, ^order, "pi_existing_secret"} = Payments.setup(order, nil)
+    end
+
+    test "replaces a one-off PaymentIntent when the cart becomes a subscription", %{
+      order: order,
+      product_variant: product_variant
+    } do
+      Orders.add_line_item!(order.id, product_variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+      old_intent = %{id: order.payment_intent_id, client_secret: "old_secret", setup_future_usage: nil}
+      order_id = order.id
+
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, old_intent} end)
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent -> {:ok, %{id: old_intent.id}} end)
+
+      expect(StripeAPI.Mock, :create_customer, fn %{email: "john.smith@example.com", name: "John Smith"} ->
+        {:ok, %{id: "cus_subscription"}}
+      end)
+
+      expect(StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount,
+                                                                    %{"order_id" => ^order_id},
+                                                                    "cus_subscription" ->
+        {:ok, %{id: "pi_subscription", client_secret: "subscription_secret", amount: 0}}
+      end)
+
+      assert {:ok, updated, "subscription_secret"} = Payments.setup(order, nil)
+      assert updated.payment_intent_id == "pi_subscription"
+    end
+
+    test "replaces a card-saving PaymentIntent when the cart becomes one-off", %{
+      order: order,
+      product_variant: product_variant
+    } do
+      Orders.add_line_item!(order.id, product_variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      Orders.add_line_item!(order.id, product_variant.id, 1, authorize?: false)
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+      old_intent = %{id: order.payment_intent_id, client_secret: "old_secret", setup_future_usage: "off_session"}
+      order_id = order.id
+
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, old_intent} end)
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent -> {:ok, %{id: old_intent.id}} end)
+
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, %{"order_id" => ^order_id} ->
+        {:ok, %{id: "pi_one_off", client_secret: "one_off_secret", amount: 0}}
+      end)
+
+      assert {:ok, updated, "one_off_secret"} = Payments.setup(order, nil)
+      assert updated.payment_intent_id == "pi_one_off"
     end
 
     test "returns an error when Stripe fails", %{order: order} do

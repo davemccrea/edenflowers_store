@@ -76,6 +76,12 @@ defmodule Edenflowers.Catalog.Product do
       argument :product_variants, {:array, :map}
       require_atomic? false
 
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+                reference: :product, field: :subscribable, changing_to: {:subscribable, false}}
+
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+                reference: :product, field: :free_delivery, changing_to: {:free_delivery, false}}
+
       # A size left out of the form was removed; destroying archives it.
       change manage_relationship(:product_variants,
                type: :direct_control,

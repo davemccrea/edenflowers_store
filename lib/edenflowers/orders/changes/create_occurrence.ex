@@ -3,7 +3,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   Turns the Subscription's next date into an Occurrence: an ordinary Online
   Order, charged to the saved card and placed by `Payments.complete/1`, as a
   checkout payment is. Then moves the Subscription on by one interval. A
-  skipped or missed date makes no order and just moves it on. A refused card
+  missed date makes no order and just moves it on. A refused card
   places the order unpaid with a payment link and holds the Subscription at
   `:payment_failed` until it is paid.
 
@@ -23,15 +23,11 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments
-
-  # A closed date moves to the next open day within this many days.
-  @days_to_search 28
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -56,43 +52,42 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     end
   end
 
-  # Atomic, so a skip or change Jennie makes while the card is being charged
-  # isn't overwritten with what the subscription held when the job started.
+  # Atomic, so a change Jennie makes while the card is being charged isn't
+  # overwritten with what the subscription held when the job started.
   defp move_on(changeset, date) do
-    changeset
-    |> Ash.Changeset.atomic_update(
+    Ash.Changeset.atomic_update(
+      changeset,
       :next_fulfillment_date,
       expr(fragment("?::date + (? * 7)::integer", ^date, interval_weeks))
-    )
-    # Ash can't cast an array expression, so it is passed to the database as it is.
-    |> Ash.Changeset.atomic_update(
-      :skipped_dates,
-      {:atomic, expr(type(fragment("array_remove(?, ?::date)", skipped_dates, ^date), {:array, :date}))}
     )
   end
 
   defp deliver(subscription, date) do
-    if date in subscription.skipped_dates do
-      :ok
-    else
-      case find_occurrence(subscription, date) do
-        {:ok, %Order{state: :placed, unpaid?: true}} -> :payment_failed
-        {:ok, %Order{state: :placed}} -> :ok
-        {:ok, %Order{} = order} -> pay(order, subscription)
-        {:ok, nil} -> occur_unless_missed(subscription, date)
-        {:error, error} -> {:error, error}
-      end
+    case find_occurrence(subscription, date) do
+      {:ok, %Order{state: :placed, unpaid?: true}} -> :payment_failed
+      {:ok, %Order{state: :placed}} -> :ok
+      {:ok, %Order{} = order} -> pay(order, subscription)
+      {:ok, nil} -> occur_unless_missed(subscription, date)
+      {:error, error} -> {:error, error}
     end
   end
 
-  # Only when the job was down past the date. Nothing was charged, so the date
-  # is dropped rather than piling several deliveries onto the next open day.
+  # Each occurrence may move within its own schedule window, but never into the
+  # next one's window. This keeps closed periods from piling up deliveries.
   defp occur_unless_missed(subscription, date) do
-    if Date.before?(date, HelsinkiToday.today()) do
-      Logger.error("Subscription #{subscription.id} missed its delivery on #{date}. No order was made or charged.")
-      :ok
-    else
-      with {:ok, order} <- create_occurrence(subscription, date), do: pay(order, subscription)
+    with {:ok, subscription} <- Ash.load(subscription, [:user, :fulfillment_option], actor: system_actor()) do
+      case first_open_day(subscription.fulfillment_option, date, subscription.interval_weeks) do
+        nil ->
+          Logger.error(
+            "Subscription #{subscription.id} missed its delivery on #{date}: " <>
+              "there was no open fulfillment date before the next scheduled date. No order was made or charged."
+          )
+
+          :ok
+
+        fulfillment_date ->
+          with {:ok, order} <- create_occurrence(subscription, date, fulfillment_date), do: pay(order, subscription)
+      end
     end
   end
 
@@ -104,55 +99,48 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     )
   end
 
-  defp create_occurrence(subscription, date) do
-    with {:ok, subscription} <- Ash.load(subscription, [:user, :fulfillment_option], actor: system_actor()),
-         {:ok, fulfillment_date} <- first_open_day(subscription.fulfillment_option, date) do
-      Orders.create_occurrence(
-        %{
-          subscription_id: subscription.id,
-          subscription_date: date,
-          product_variant_id: subscription.product_variant_id,
-          user_id: subscription.user_id,
-          customer_name: subscription.user.name,
-          customer_email: to_string(subscription.user.email),
-          locale: subscription.locale,
-          recipient_name: subscription.recipient_name,
-          recipient_phone_number: subscription.recipient_phone_number,
-          delivery_address: subscription.delivery_address,
-          delivery_instructions: subscription.delivery_instructions,
-          fulfillment_option_id: subscription.fulfillment_option_id,
-          fulfillment_date: fulfillment_date
-        },
-        load: [:grand_total],
-        actor: system_actor()
-      )
-    end
+  defp create_occurrence(subscription, date, fulfillment_date) do
+    Orders.create_occurrence(
+      %{
+        subscription_id: subscription.id,
+        subscription_date: date,
+        product_variant_id: subscription.product_variant_id,
+        user_id: subscription.user_id,
+        customer_name: subscription.user.name,
+        customer_email: to_string(subscription.user.email),
+        locale: subscription.locale,
+        recipient_name: subscription.recipient_name,
+        recipient_phone_number: subscription.recipient_phone_number,
+        delivery_address: subscription.delivery_address,
+        delivery_instructions: subscription.delivery_instructions,
+        fulfillment_option_id: subscription.fulfillment_option_id,
+        fulfillment_date: fulfillment_date
+      },
+      load: [:grand_total],
+      actor: system_actor()
+    )
   end
 
-  defp first_open_day(option, date) do
+  defp first_open_day(option, date, interval_weeks) do
     now = DateTime.now!("Europe/Helsinki")
 
     date
     |> Stream.iterate(&Date.add(&1, 1))
-    |> Enum.take(@days_to_search)
+    |> Enum.take(interval_weeks * 7)
     |> Enum.find(&is_nil(Availability.unavailable_reason(option, &1, now)))
-    |> case do
-      nil -> {:error, "#{option.name} has no open day in the #{@days_to_search} days from #{date}"}
-      open_day -> {:ok, open_day}
-    end
   end
 
   defp pay(%Order{payment_intent_id: nil} = order, subscription) do
     case charge(order, subscription) do
       {:ok, payment_intent} ->
-        with {:ok, _order} <- keep_payment_intent(order, payment_intent) do
-          place(order, payment_intent)
+        with {:ok, order} <- keep_payment_intent(order, payment_intent) do
+          place(order, payment_intent, subscription)
         end
 
       # Declined, or the bank wants the customer to authenticate. Stripe
       # replays this answer for the same key, so a retry lands here again.
       {:error, %Stripe.Error{code: :card_error} = error} ->
-        place_unpaid(order, subscription, error)
+        place_unpaid(order, subscription, error.message)
 
       {:error, error} ->
         {:error, error}
@@ -160,9 +148,9 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   end
 
   # An earlier attempt charged the card but stopped before placing the order.
-  defp pay(order, _subscription) do
+  defp pay(order, subscription) do
     with {:ok, payment_intent} <- stripe_api().retrieve_payment_intent(order) do
-      place(order, payment_intent)
+      place(order, payment_intent, subscription)
     end
   end
 
@@ -178,9 +166,9 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     stripe_api().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key)
   end
 
-  defp place_unpaid(order, subscription, error) do
+  defp place_unpaid(order, subscription, message) do
     Logger.warning(
-      "The card for subscription #{subscription.id} was refused for order #{order.id}: #{error.message}. " <>
+      "The card for subscription #{subscription.id} was refused for order #{order.id}: #{message}. " <>
         "The order is placed unpaid and the customer emailed a payment link."
     )
 
@@ -198,6 +186,12 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
         report_unplaced(order, payment_intent, error)
     end
   end
+
+  defp place(order, %{status: "requires_action"} = payment_intent, subscription) do
+    place_unpaid(order, subscription, "PaymentIntent #{payment_intent.id} requires customer authentication")
+  end
+
+  defp place(order, payment_intent, _subscription), do: place(order, payment_intent)
 
   defp place(order, %{status: "succeeded"} = payment_intent) do
     case Payments.complete(payment_intent) do

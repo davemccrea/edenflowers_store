@@ -55,8 +55,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :disabled_dates,
         :tax_rate_id,
         :translations
-      ],
-      update: [
+      ]
+    ]
+
+    update :update do
+      accept [
         :name,
         :sort_key,
         :fulfillment_method,
@@ -70,7 +73,12 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :tax_rate_id,
         :translations
       ]
-    ]
+
+      require_atomic? false
+
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+                reference: :fulfillment_option, field: :fulfillment_method, changing_to: {:fulfillment_method, :pickup}}
+    end
 
     read :list_for_checkout do
       prepare build(sort: [sort_key: :asc, name: :asc])

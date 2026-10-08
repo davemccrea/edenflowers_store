@@ -94,6 +94,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         {:ok, %{id: "pi_sub", client_secret: "pi_sub_secret"}}
       end)
 
+      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+        {:ok, %{id: "pi_sub", client_secret: "pi_sub_secret", setup_future_usage: "off_session"}}
+      end)
+
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
       amount = Edenflowers.Format.currency(Decimal.add(variant.price, "5.00"), "en")
