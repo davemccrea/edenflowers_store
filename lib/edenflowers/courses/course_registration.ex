@@ -206,12 +206,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
   end
 
-  pub_sub do
-    module EdenflowersWeb.Endpoint
-
-    publish :confirm_payment, ["course_registration", "confirmed", :id]
-  end
-
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]

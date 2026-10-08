@@ -56,12 +56,13 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 
-    assert has_element?(view, "[data-testid=order-subscription]", "Then every 2 weeks")
+    assert has_element?(view, "[data-testid=order-subscription]", "Every 2 weeks")
 
     next = Edenflowers.Format.weekday_date(~D[2026-06-24], "en-GB")
-    assert has_element?(view, "[data-testid=order-next-delivery]", "Next delivery #{next}")
-    assert has_element?(view, "[data-testid=order-next-delivery]", "charged 3 days before")
-    assert has_element?(view, ~s|[data-testid=order-next-delivery] a[href="/account"]|, "Manage subscription")
+    charged = Edenflowers.Format.weekday_date(~D[2026-06-21], "en-GB")
+    assert has_element?(view, "[data-testid=order-next-delivery]", next)
+    assert has_element?(view, "[data-testid=order-next-charge]", "on #{charged}")
+    assert has_element?(view, ~s|[data-testid=order-subscription] a[href="/account"]|, "Manage subscription")
   end
 
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
@@ -86,14 +87,12 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, "h1", "Thank you, Ada.")
-    assert has_element?(view, "[data-testid=order-pending]")
     refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
     Orders.finalize_checkout!(order, order.payment_intent_id, %{amount_paid: "88.50"},
       actor: Edenflowers.Actors.system_actor()
     )
 
-    assert has_element?(view, "[data-testid=order-paid]")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
   end
 
@@ -158,13 +157,13 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
       assert has_element?(view, "h1", "Thank you")
-      assert has_element?(view, "[data-testid=order-pending]")
+      refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
       Orders.finalize_checkout!(order, order.payment_intent_id, %{amount_paid: "88.50"},
         actor: Edenflowers.Actors.system_actor()
       )
 
-      assert has_element?(view, "[data-testid=order-paid]")
+      assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
     test "goes back to checkout, keeping their cart, when a redirect payment fails", %{conn: conn} do

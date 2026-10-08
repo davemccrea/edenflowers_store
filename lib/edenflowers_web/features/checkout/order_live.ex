@@ -69,8 +69,11 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   defp next_delivery(order, line) do
     locale = Format.locale()
 
+    date = Date.add(order.fulfillment_date, line.interval_weeks * 7)
+
     %{
-      date: Format.weekday_date(Date.add(order.fulfillment_date, line.interval_weeks * 7), locale),
+      date: Format.weekday_date(date, locale),
+      charge_date: Format.weekday_date(Edenflowers.Orders.Subscription.charged_on(date), locale),
       amount: Format.currency(Decimal.add(line.subtotal, order.fulfillment_fee || 0), locale)
     }
   end
@@ -101,45 +104,35 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             >
               {~t"I'll send a text message when it's ready."}
             </p>
-            <p
-              :if={@interval_weeks}
-              class="font-serif text-base-content/80 mt-1 text-xl leading-snug"
-              data-testid="order-subscription"
-            >
-              {~t"Then #{interval = String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks))}, until you pause or cancel it from your account."}
-            </p>
-            <div :if={@next_delivery} class="mt-6 flex flex-col gap-2" data-testid="order-next-delivery">
-              <p>
-                {~t"Next delivery #{date = @next_delivery.date}, #{amount = @next_delivery.amount} charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before."}
-              </p>
-              <%= if @current_user do %>
-                <.button navigate={~p"/account"} variant="secondary" class="self-start">
-                  {~t"Manage subscription"}
-                </.button>
-              <% else %>
-                <p class="text-base-content/80">
-                  <.link navigate={~p"/sign-in"} class="link-underline-hover">
-                    {~t"Sign in with #{email = @shown_order.customer_email}"}
-                  </.link>
-                  {~t"to pause or cancel."}
-                </p>
-              <% end %>
-            </div>
           </div>
 
-          <%!-- A live region, so the swap from confirming to received is announced. --%>
-          <p
-            id="payment-status"
-            role="status"
-            class="text-base-content/70 mt-6 text-sm"
-            data-testid={if @paid?, do: "order-paid", else: "order-pending"}
-          >
-            <%= if @paid? do %>
-              {~t"Payment received. A confirmation email is on its way."}
+          <div :if={@next_delivery} class="mt-10" data-testid="order-subscription">
+            <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-6">
+              <dt class="eyebrow text-base-content/70">{~t"Subscription"}</dt>
+              <dd>{EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks)}</dd>
+
+              <dt class="eyebrow text-base-content/70">{~t"Next delivery"}</dt>
+              <dd data-testid="order-next-delivery">{@next_delivery.date}</dd>
+
+              <dt class="eyebrow text-base-content/70">{~t"Payment"}</dt>
+              <dd class="tabular-nums" data-testid="order-next-charge">
+                {~t"#{amount = @next_delivery.amount} on #{date = @next_delivery.charge_date}"}
+              </dd>
+            </dl>
+
+            <%= if @current_user do %>
+              <.button navigate={~p"/account"} variant="secondary" class="mt-6" data-testid="manage-subscription">
+                {~t"Manage subscription"}
+              </.button>
             <% else %>
-              {~t"Confirming your payment… You'll get a confirmation email once it's done."}
+              <p class="text-base-content/70 mt-6">
+                <.link navigate={~p"/sign-in"} class="link-underline-hover">
+                  {~t"Sign in with #{email = @shown_order.customer_email}"}
+                </.link>
+                {~t"to pause or cancel."}
+              </p>
             <% end %>
-          </p>
+          </div>
 
           <figure
             :if={@shown_order.card_message}
