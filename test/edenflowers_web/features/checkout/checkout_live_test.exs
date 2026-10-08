@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       render_change: 2,
       element: 2,
       assert_redirect: 2,
+      assert_redirect: 3,
       assert_push_event: 3,
       refute_push_event: 3
     ]
@@ -716,7 +717,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       capture_log(fn ->
         Orders.remove_line_item!(order, non_card_line_item.id, authorize?: false)
-        assert_redirect(view, "/")
+        # Destroy, reset and PubSub all run before the redirect; slow under a full suite.
+        assert_redirect(view, "/", 1_000)
       end)
 
       reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)

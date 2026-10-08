@@ -149,13 +149,11 @@ defmodule Edenflowers.Orders.SubscriptionTest do
                subscribe(order, ctx.subscription_variant, 3)
     end
 
-    test "rejects pickup", ctx do
+    test "can be picked up", ctx do
       order = subscription_cart(ctx, state: :delivery)
 
-      assert {:error, %Ash.Error.Invalid{errors: errors}} =
+      assert {:ok, %Order{fulfillment_method: :pickup}} =
                submit_delivery(order, %{fulfillment_option_id: ctx.pickup.id})
-
-      assert Enum.any?(errors, &(&1.field == :fulfillment_option_id))
     end
   end
 
@@ -201,6 +199,14 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   end
 
   describe "when the first order is paid" do
+    test "the subscription is queued to start straight away", ctx do
+      order = subscription_cart(ctx, state: :payment)
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+
+      assert_enqueued(worker: StartSubscription, args: %{"primary_key" => %{"id" => order.id}})
+    end
+
     test "the subscription starts from it", ctx do
       order = subscription_cart(ctx, state: :payment)
 

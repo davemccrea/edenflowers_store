@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       }
     end
 
-    test "subscribed to, shows how often and offers delivery only", %{conn: conn, variant: variant} do
+    test "subscribed to, shows how often and offers pickup too", %{conn: conn, variant: variant} do
       order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
@@ -66,8 +66,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       assert has_element?(view, "#checkout-line-items", "Subscription · Every 2 weeks")
-      refute has_element?(view, "label", "Fulfillment Option")
-      assert has_element?(view, "[data-testid='subscription-delivery-only']")
+      assert has_element?(view, "label", "Fulfillment Option")
     end
 
     test "subscribed to, says what the card is charged and how often before paying",
@@ -169,7 +168,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       refute has_element?(view, "#checkout-line-items", "Subscription")
-      refute has_element?(view, "[data-testid='subscription-delivery-only']")
       assert has_element?(view, "label", "Fulfillment Option")
     end
   end

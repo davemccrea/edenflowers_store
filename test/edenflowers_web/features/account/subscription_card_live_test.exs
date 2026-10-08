@@ -49,29 +49,34 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
     assert has_element?(view, ~s|#card-form[data-intent="setup"][data-client-secret="seti_1_secret"]|)
   end
 
-  test "says a new card doesn't pay the delivery a held subscription owes", %{conn: conn, user: user} do
-    subscription = subscription(user, %{state: :payment_failed})
+  # A new card restarts a held subscription but leaves the delivery owed.
+  for state <- [:payment_failed, :active] do
+    test "says a new card doesn't pay the delivery still owed, when #{state}", %{conn: conn, user: user} do
+      subscription = subscription(user, %{state: unquote(state)})
 
-    stub(StripeAPI.Mock, :create_setup_intent, fn _customer, _metadata -> {:ok, %{id: "seti_1", client_secret: "s"}} end)
+      stub(StripeAPI.Mock, :create_setup_intent, fn _customer, _metadata ->
+        {:ok, %{id: "seti_1", client_secret: "s"}}
+      end)
 
-    generate(
-      order(
-        state: :placed,
-        user_id: user.id,
-        subscription_id: subscription.id,
-        customer_name: "Ada Lovelace",
-        customer_email: "ada@example.com",
-        fulfillment_date: Date.add(Date.utc_today(), 2),
-        quoted_fulfillment_fee: "5.00",
-        ordered_at: DateTime.utc_now(),
-        locale: "en",
-        payment_link_token: "tok_held"
+      generate(
+        order(
+          state: :placed,
+          user_id: user.id,
+          subscription_id: subscription.id,
+          customer_name: "Ada Lovelace",
+          customer_email: "ada@example.com",
+          fulfillment_date: Date.add(Date.utc_today(), 2),
+          quoted_fulfillment_fee: "5.00",
+          ordered_at: DateTime.utc_now(),
+          locale: "en",
+          payment_link_token: "tok_held"
+        )
       )
-    )
 
-    {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
+      {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
 
-    assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/pay/tok_held"]|, "Pay now")
+      assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/pay/tok_held"]|, "Pay now")
+    end
   end
 
   test "stores the card when Stripe returns, and goes back to the account", %{

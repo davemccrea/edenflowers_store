@@ -24,7 +24,6 @@ defmodule Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription do
       case reference do
         :product -> Ash.Query.filter(Subscription, product_variant.product_id == ^changeset.data.id)
         :product_variant -> Ash.Query.filter(Subscription, product_variant_id == ^changeset.data.id)
-        :fulfillment_option -> Ash.Query.filter(Subscription, fulfillment_option_id == ^changeset.data.id)
       end
 
     query

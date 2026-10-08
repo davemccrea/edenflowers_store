@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       type="radio-card"
                       field={@form[:fulfillment_option_id]}
                       options={
-                        Enum.map(available_options(@fulfillment_options, @order), fn %{id: id, name: name} ->
+                        Enum.map(@fulfillment_options, fn %{id: id, name: name} ->
                           %{name: name, value: id}
                         end)
                       }
@@ -184,13 +184,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     >
                       {option.name}
                     </.input>
-                    <p
-                      :if={@order.subscription?}
-                      class="text-base-content/70 mt-2 text-sm"
-                      data-testid="subscription-delivery-only"
-                    >
-                      {~t"A subscription is always delivered, so it can't be collected from the shop."}
-                    </p>
                   </.form>
 
                   <%= if @order.fulfillment_option do %>
@@ -1034,7 +1027,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # value flows through on submit. Re-read afterwards: the update's result
   # still holds the unset fulfillment_option and totals from before it.
   defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
-    case List.first(available_options(options, order)) do
+    case List.first(options) do
       nil ->
         order
 
@@ -1045,11 +1038,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp ensure_fulfillment_default(order, _options, _actor), do: order
-
-  defp available_options(options, %{subscription?: true}),
-    do: Enum.filter(options, &(&1.fulfillment_method == :delivery))
-
-  defp available_options(options, _order), do: options
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok

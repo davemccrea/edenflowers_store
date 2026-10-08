@@ -515,7 +515,6 @@ defmodule Edenflowers.Orders.Order do
       ]
 
       change Changes.SnapshotFulfillmentMethod
-      validate Validations.SubscriptionDelivery
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDate
       validate Validations.DeliveryAddress
@@ -557,6 +556,22 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportPromotionOverused
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+
+      # Starts the Subscription straight away, so the confirmation page's link
+      # to it has something to show. Outside the transaction, so a failed
+      # enqueue never stops the order being placed; the minute scheduler
+      # picks it up instead.
+      change after_transaction(fn
+               _changeset, {:ok, order} = result, _context ->
+                 with {:ok, %{subscription?: true}} <- Ash.load(order, :subscription?, authorize?: false) do
+                   AshOban.run_trigger(order, :start_subscription)
+                 end
+
+                 result
+
+               _changeset, result, _context ->
+                 result
+             end)
 
       require_atomic? false
     end

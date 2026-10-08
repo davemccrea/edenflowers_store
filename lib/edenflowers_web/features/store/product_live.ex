@@ -223,9 +223,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 </div>
                 <div class="text-base-content/75 flex flex-col gap-1 text-base" data-testid="subscription-explainer">
                   <p>
-                    {~t"A bouquet of whatever is best that week, delivered on the schedule you choose. Your card is charged #{days = Subscription.lead_days()} days before each delivery."}
+                    {~t"A bouquet of whatever is best that week, on the schedule you choose, delivered or picked up. Your card is charged #{days = Subscription.lead_days()} days before each one."}
                   </p>
-                  <p>{~t"Always delivered, never collected. Pause or cancel from your account."}</p>
+                  <p>{~t"Pause or cancel from your account."}</p>
                   <p :if={@has_subscription?} data-testid="already-subscribed">
                     {~t"You already have a subscription."}
                     <.link navigate={~p"/account"} class="link-underline-hover text-base-content">
