@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     |> render_click()
 
     refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
-    assert has_element?(view, ".badge-success", "Fulfilled")
+    assert has_element?(view, ".admin-badge-success", "Fulfilled")
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled

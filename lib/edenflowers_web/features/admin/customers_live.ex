@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
           <:col :let={customer} field="placed_order_count" sort label={~t"Orders"}>
             <span class="tabular-nums">{customer.placed_order_count}</span>
           </:col>
-          <:col :let={customer} field="total_spent" sort label={~t"Total spent"} class="max-sm:hidden">
+          <:col :let={customer} field="total_spent" sort label={~t"Total spent"} class="text-right max-sm:hidden">
             <span class="whitespace-nowrap tabular-nums">
               {Format.currency(customer.total_spent, @locale)}
             </span>
@@ -67,9 +67,10 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
             label={~t"Last order"}
             class="max-sm:hidden"
           >
-            <span class="whitespace-nowrap tabular-nums">
+            <span :if={customer.last_ordered_at} class="whitespace-nowrap tabular-nums">
               {Format.date(customer.last_ordered_at, @locale)}
             </span>
+            <.blank :if={is_nil(customer.last_ordered_at)} />
           </:col>
         </Cinder.collection>
       </.admin_page>

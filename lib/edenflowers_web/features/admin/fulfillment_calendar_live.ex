@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="wide">
-        <.admin_page_header title={~t"Fulfillment calendar"}></.admin_page_header>
+        <.admin_page_header title={~t"Fulfillment calendar"} />
 
         <section class="mb-6 max-w-xs">
           <form id="scope-form" phx-change="set-scope">

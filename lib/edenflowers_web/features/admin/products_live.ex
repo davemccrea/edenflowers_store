@@ -68,13 +68,11 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           >
             {product.product_category.name}
           </:col>
-          <:col :let={product} field="cheapest_price" sort label={~t"From"}>
+          <:col :let={product} field="cheapest_price" sort label={~t"From"} class="text-right">
             <span :if={product.cheapest_price} class="whitespace-nowrap tabular-nums">
               {Format.currency(product.cheapest_price, @locale)}
             </span>
-            <span :if={is_nil(product.cheapest_price)} class="badge badge-sm admin-badge-warning font-medium">
-              {~t"No sizes"}
-            </span>
+            <.badge :if={is_nil(product.cheapest_price)} tone={:warning}>{~t"No sizes"}</.badge>
           </:col>
           <:col
             :let={product}
@@ -88,13 +86,14 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             ]}
             label={~t"Status"}
           >
-            <span :if={product.draft} class="badge badge-sm admin-badge-neutral font-medium">{~t"Draft"}</span>
-            <span :if={!product.draft} class="badge badge-sm admin-badge-success font-medium">
-              {~t"Published"}
-            </span>
+            <.badge :if={product.draft} tone={:neutral}>{~t"Draft"}</.badge>
+            <.badge :if={!product.draft} tone={:success}>{~t"Published"}</.badge>
           </:col>
           <:col :let={product} field="featured" sort label={~t"Featured"} class="max-sm:hidden">
-            <.icon :if={product.featured} name="hero-star-solid" class="text-primary h-4 w-4" />
+            <span :if={product.featured}>
+              <.icon name="hero-star-solid" class="text-primary h-4 w-4" />
+              <span class="sr-only">{~t"Featured on the home page"}</span>
+            </span>
           </:col>
           <:col :let={product} field="subscribable" sort label={~t"Subscription"} class="max-sm:hidden">
             <span :if={product.subscribable}>

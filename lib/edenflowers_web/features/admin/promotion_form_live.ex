@@ -130,7 +130,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       {:ok, _promotion} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Promotion saved")
+         |> put_flash(:info, ~t"Promotion saved.")
          |> push_navigate(to: PromotionsLive.default_path())}
 
       {:error, form} ->
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       :ok ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Promotion deleted")
+         |> put_flash(:info, ~t"Promotion deleted.")
          |> push_navigate(to: PromotionsLive.default_path())}
 
       # Orders and newsletter subscribers keep a reference to the promotion.
@@ -165,9 +165,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:actions :if={@form.source.type == :update}>
             <div class="dropdown dropdown-end">
-              <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
+              <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
                 <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
-              </button>
+              </.icon_button>
               <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-44 border p-1 shadow">
                 <li>
                   <button
@@ -198,34 +198,21 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                     class="input font-mono w-full"
                   />
                 </div>
-                <button
-                  type="button"
+                <.icon_button
                   phx-click="generate_code"
-                  class="btn btn-ghost btn-sm btn-square mt-7"
+                  size="sm"
+                  class="mt-7"
                   title={~t"Generate code"}
-                  aria-label={~t"Generate code"}
+                  aria_label={~t"Generate code"}
                 >
                   <.icon name="hero-arrow-path" class="h-4 w-4" />
-                </button>
-                <button
+                </.icon_button>
+                <.copy_button
                   id="copy-promotion-code"
-                  type="button"
-                  phx-click={
-                    JS.dispatch("edenflowers:copy",
-                      to: "##{@form[:code].id}",
-                      detail: %{trigger: "#copy-promotion-code"}
-                    )
-                  }
-                  class="btn btn-ghost btn-sm btn-square group mt-7"
-                  title={~t"Copy code"}
-                  aria-label={~t"Copy code"}
-                >
-                  <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
-                  <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
-                  <span class="sr-only" aria-live="polite">
-                    <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
-                  </span>
-                </button>
+                  target={"##{@form[:code].id}"}
+                  label={~t"Copy code"}
+                  class="mt-7"
+                />
               </div>
             </div>
           </.form_section>

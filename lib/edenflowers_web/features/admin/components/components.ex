@@ -12,15 +12,95 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :tone, :atom, required: true, values: [:success, :warning, :attention, :error, :neutral, :tag]
+  attr :icon, :string, default: nil
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(href)
+  slot :inner_block, required: true
+
+  @doc """
+  The one pill every admin badge is drawn with, so they can't drift apart.
+
+  The coloured tones are states; `:tag` is a quieter, borderless fill for
+  facts about a record, like its category or that it's a gift.
+  """
+  def badge(%{rest: %{href: _}} = assigns) do
+    ~H"""
+    <a class={badge_class(@tone, @class)} {@rest}>
+      <.icon :if={@icon} name={@icon} class="h-3.5 w-3.5 shrink-0" />
+      {render_slot(@inner_block)}
+    </a>
+    """
+  end
+
+  def badge(assigns) do
+    ~H"""
+    <span class={badge_class(@tone, @class)} {@rest}>
+      <.icon :if={@icon} name={@icon} class="h-3.5 w-3.5 shrink-0" />
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  defp badge_class(tone, class),
+    do: ["badge badge-sm inline-flex items-center gap-1 whitespace-nowrap", badge_tone_class(tone), class]
+
+  defp badge_tone_class(:success), do: "admin-badge-success"
+  defp badge_tone_class(:warning), do: "admin-badge-warning"
+  defp badge_tone_class(:attention), do: "admin-badge-attention"
+  defp badge_tone_class(:error), do: "admin-badge-error"
+  defp badge_tone_class(:neutral), do: "admin-badge-neutral"
+  defp badge_tone_class(:tag), do: "badge-soft badge-neutral"
+
   attr :category, :atom, default: nil
 
   @doc "Neutral tag for an expense category. Humanises the enum and renders an em-dash when unset."
   def category_badge(assigns) do
     ~H"""
-    <span :if={@category} class="badge badge-soft badge-sm badge-neutral whitespace-nowrap">
-      {category_label(@category)}
-    </span>
+    <.badge :if={@category} tone={:tag}>{category_label(@category)}</.badge>
     <.blank :if={is_nil(@category)} />
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :target, :string, required: true, doc: "selector of the element whose text or value is copied"
+  attr :label, :string, required: true
+  attr :size, :string, default: "sm", values: ~w(xs sm)
+  attr :class, :any, default: nil
+
+  @doc "Icon button that copies `target` and turns into a tick once it has."
+  def copy_button(assigns) do
+    ~H"""
+    <button
+      id={@id}
+      type="button"
+      phx-click={JS.dispatch("edenflowers:copy", to: @target, detail: %{trigger: "##{@id}"})}
+      class={["btn btn-ghost btn-square group shadow-none", if(@size == "xs", do: "btn-xs", else: "btn-sm"), @class]}
+      title={@label}
+      aria-label={@label}
+    >
+      <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
+      <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
+      <span class="sr-only" aria-live="polite">
+        <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+      </span>
+    </button>
+    """
+  end
+
+  attr :recipient_name, :string, default: nil
+
+  @doc "Marks a gift order, naming who it's for when the customer said."
+  def gift_badge(assigns) do
+    ~H"""
+    <.badge
+      tone={:tag}
+      icon="hero-gift"
+      title={if @recipient_name, do: ~t"Gift for #{order_recipient_name = @recipient_name}", else: ~t"Gift order"}
+    >
+      <span :if={@recipient_name} class="max-w-[10rem] truncate">{~t"For #{name = @recipient_name}"}</span>
+      <span :if={is_nil(@recipient_name)}>{~t"Gift"}</span>
+    </.badge>
     """
   end
 
@@ -77,14 +157,14 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Extraction-confidence pill, shared by the expenses table and detail view."
   def confidence_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm capitalize", confidence_badge_class(@confidence)]}>
+    <.badge tone={confidence_tone(@confidence)}>
       <span
         :if={@confidence == :low}
         class="inline-block h-1.5 w-1.5 rounded-full bg-current"
         aria-hidden="true"
       />
       {confidence_label(@confidence)}
-    </span>
+    </.badge>
     """
   end
 
@@ -97,15 +177,13 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def payment_status_badge(%{status: nil} = assigns) do
     ~H"""
-    <span class="text-base-content/65 text-sm">—</span>
+    <.blank />
     """
   end
 
   def payment_status_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm whitespace-nowrap capitalize", payment_status_badge_class(@status)]}>
-      {payment_status_label(@status)}
-    </span>
+    <.badge tone={payment_status_tone(@status)}>{payment_status_label(@status)}</.badge>
     """
   end
 
@@ -114,19 +192,14 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Fulfillment-status pill for an order: fulfilled reads as success, cancelled as error, pending stays neutral."
   def fulfillment_status_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm whitespace-nowrap capitalize", fulfillment_status_badge_class(@status)]}>
-      {fulfillment_status_label(@status)}
-    </span>
+    <.badge tone={fulfillment_status_tone(@status)}>{fulfillment_status_label(@status)}</.badge>
     """
   end
 
   @doc "Marks an Occurrence: an order a Subscription created, not one the customer placed at checkout."
   def subscription_badge(assigns) do
     ~H"""
-    <span class="badge badge-soft badge-sm badge-neutral inline-flex items-center gap-1 whitespace-nowrap">
-      <.icon name="hero-arrow-path" class="h-3.5 w-3.5" />
-      {~t"Subscription"}
-    </span>
+    <.badge tone={:tag} icon="hero-arrow-path">{~t"Subscription"}</.badge>
     """
   end
 
@@ -293,10 +366,10 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  defp confidence_badge_class(:low), do: "badge-error admin-badge-error"
-  defp confidence_badge_class(:medium), do: "badge-warning admin-badge-warning"
-  defp confidence_badge_class(:high), do: "badge-success admin-badge-success"
-  defp confidence_badge_class(_), do: "admin-badge-neutral"
+  defp confidence_tone(:low), do: :error
+  defp confidence_tone(:medium), do: :warning
+  defp confidence_tone(:high), do: :success
+  defp confidence_tone(_), do: :neutral
 
   def confidence_options do
     Edenflowers.Expenses.Expense.Confidence.values()
@@ -309,19 +382,19 @@ defmodule EdenflowersWeb.Admin.Components do
   defp confidence_label(:high), do: pgettext("expense confidence", "High")
   defp confidence_label(value), do: to_string(value)
 
-  defp payment_status_badge_class(:paid), do: "badge-success admin-badge-success"
-  defp payment_status_badge_class(:refunded), do: "badge-warning admin-badge-attention"
-  defp payment_status_badge_class(:pending), do: "badge-warning admin-badge-warning"
-  defp payment_status_badge_class(_), do: "admin-badge-neutral"
+  defp payment_status_tone(:paid), do: :success
+  defp payment_status_tone(:refunded), do: :attention
+  defp payment_status_tone(:pending), do: :warning
+  defp payment_status_tone(_), do: :neutral
 
   defp payment_status_label(:paid), do: ~t"Paid"
   defp payment_status_label(:refunded), do: ~t"Refunded"
   defp payment_status_label(:pending), do: ~t"Unpaid"
   defp payment_status_label(value), do: to_string(value)
 
-  defp fulfillment_status_badge_class(:fulfilled), do: "badge-success admin-badge-success"
-  defp fulfillment_status_badge_class(:cancelled), do: "badge-error admin-badge-error"
-  defp fulfillment_status_badge_class(_), do: "admin-badge-neutral"
+  defp fulfillment_status_tone(:fulfilled), do: :success
+  defp fulfillment_status_tone(:cancelled), do: :error
+  defp fulfillment_status_tone(_), do: :neutral
 
   defp fulfillment_status_label(:fulfilled), do: ~t"Fulfilled"
   defp fulfillment_status_label(:pending), do: ~t"Pending"

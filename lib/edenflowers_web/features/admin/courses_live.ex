@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Booking added")
+         |> put_flash(:info, ~t"Booking added.")
          |> assign(booking_form: nil, booking_course_id: nil)
          |> load_courses()}
 
@@ -62,9 +62,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <- Courses.mark_registration_paid(registration, actor: actor) do
-        socket
+        put_flash(socket, :info, ~t"Booking marked as paid.")
       else
-        _ -> put_flash(socket, :error, ~t"Could not mark the booking as paid")
+        _ -> put_flash(socket, :error, ~t"Could not mark the booking as paid.")
       end
 
     {:noreply, load_courses(socket)}
@@ -76,9 +76,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
-        socket
+        put_flash(socket, :info, ~t"Seat removed.")
       else
-        _ -> put_flash(socket, :error, ~t"Could not remove the seat")
+        _ -> put_flash(socket, :error, ~t"Could not remove the seat.")
       end
 
     {:noreply, load_courses(socket)}
@@ -90,9 +90,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <- Courses.cancel_registration(registration, actor: actor) do
-        put_flash(socket, :info, ~t"Booking cancelled")
+        put_flash(socket, :info, ~t"Booking cancelled.")
       else
-        _ -> put_flash(socket, :error, ~t"Could not cancel the booking")
+        _ -> put_flash(socket, :error, ~t"Could not cancel the booking.")
       end
 
     {:noreply, load_courses(socket)}
@@ -211,10 +211,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             <.icon name="hero-plus" class="h-4 w-4" />
             {~t"Add booking"}
           </.button>
-          <.link navigate={~p"/admin/courses/#{@course.id}"} class="btn btn-sm btn-ghost">
+          <.button navigate={~p"/admin/courses/#{@course.id}"} variant="ghost" size="sm">
             <.icon name="hero-pencil-square" class="h-4 w-4" />
             {~t"Edit course"}
-          </.link>
+          </.button>
         </div>
 
         <.form
@@ -247,8 +247,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             {~t"They'll get a confirmation email. Payment is taken at the course."}
           </p>
           <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary btn-sm">{~t"Add booking"}</button>
-            <button type="button" phx-click="close_booking" class="btn btn-ghost btn-sm">{~t"Close"}</button>
+            <.button type="submit" variant="primary" size="sm">{~t"Add booking"}</.button>
+            <.button type="button" phx-click="close_booking" variant="ghost" size="sm">{~t"Close"}</.button>
           </div>
         </.form>
 
@@ -260,12 +260,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
                   +{registration.seats_held - 1}
                 </span>
-                <span
-                  :if={registration.pays_at_course?}
-                  class="badge badge-sm admin-badge-warning ml-1 align-middle"
-                >
+                <.badge :if={registration.pays_at_course?} tone={:warning} class="ml-1 align-middle">
                   {~t"Pays at course"}
-                </span>
+                </.badge>
               </p>
               <a
                 href={fastmail_compose(to: registration.email)}
@@ -277,25 +274,27 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               </a>
             </div>
             <div class="flex shrink-0 gap-1">
-              <a
+              <.button
                 :if={registration.payment_intent_id}
                 href={StripeAPI.dashboard_payment_url(registration.payment_intent_id)}
                 target="_blank"
                 rel="noopener"
-                class="btn btn-ghost btn-sm"
+                variant="ghost"
+                size="sm"
               >
                 Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-              </a>
-              <button
+              </.button>
+              <.button
                 :if={registration.seats_held > 1}
                 type="button"
                 phx-click="remove_seat"
                 phx-value-id={registration.id}
                 data-confirm={remove_seat_confirmation(registration)}
-                class="btn btn-ghost btn-sm"
+                variant="ghost"
+                size="sm"
               >
                 {~t"Remove a seat"}
-              </button>
+              </.button>
               <.button
                 :if={registration.pays_at_course?}
                 type="button"
@@ -306,15 +305,17 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               >
                 {~t"Mark paid"}
               </.button>
-              <button
+              <.button
                 type="button"
                 phx-click="cancel"
                 phx-value-id={registration.id}
                 data-confirm={cancel_confirmation(registration)}
-                class="btn btn-ghost btn-sm text-error"
+                variant="ghost"
+                size="sm"
+                class="text-error"
               >
                 {~t"Cancel"}
-              </button>
+              </.button>
             </div>
           </li>
           <li :for={registration <- @cancelled} class="text-base-content/50 py-2.5">

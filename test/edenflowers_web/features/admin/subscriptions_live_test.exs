@@ -78,7 +78,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
 
-    assert has_element?(view, "[data-item-id] .badge-error", "Payment failed")
+    assert has_element?(view, "[data-item-id] .admin-badge-error", "Payment failed")
   end
 
   test "Jennie can skip, pause, resume and cancel, even inside the customer's cutoff", %{conn: conn} do

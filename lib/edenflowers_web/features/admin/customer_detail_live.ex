@@ -67,7 +67,8 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             <span class="tabular-nums">{Format.currency(@customer.total_spent, @locale)}</span>
           </.summary_fact>
           <.summary_fact label={~t"Last order"}>
-            <span class="tabular-nums">{Format.date(@customer.last_ordered_at, @locale)}</span>
+            <span :if={@customer.last_ordered_at} class="tabular-nums">{Format.date(@customer.last_ordered_at, @locale)}</span>
+            <.blank :if={is_nil(@customer.last_ordered_at)} />
           </.summary_fact>
           <.summary_fact label={~t"Newsletter"}>
             {if @customer.newsletter_opt_in, do: ~t"Subscribed", else: ~t"Not subscribed"}
@@ -106,7 +107,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           <:col :let={order} field="payment_status" label={~t"Payment"}>
             <.payment_status_badge status={order.payment_status} />
           </:col>
-          <:col :let={order} field="grand_total" label={~t"Total"}>
+          <:col :let={order} field="grand_total" label={~t"Total"} class="text-right">
             <span class="whitespace-nowrap tabular-nums">
               {Format.currency(order.grand_total, @locale)}
             </span>

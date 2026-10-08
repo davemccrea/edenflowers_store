@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
   def put_translations(socket, _failed) do
     socket
     |> assign(:translating, nil)
-    |> put_flash(:error, ~t"Translation failed, please try again.")
+    |> put_flash(:error, ~t"Could not translate. Try again in a moment.")
   end
 
   # Read from the form rather than its params: an edit form that hasn't been

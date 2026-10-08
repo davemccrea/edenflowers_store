@@ -139,31 +139,17 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
             <span class="text-base-content truncate font-semibold">
               {@order.customer_name || ~t"Unnamed customer"}
             </span>
-            <span
-              :if={@order.gift}
-              class="badge badge-sm admin-badge-attention inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
-            >
-              <.icon name="hero-gift" class="h-3.5 w-3.5" />
-              <span :if={@order.recipient_name} class="max-w-[9rem] truncate">{~t"For #{@order.recipient_name}"}</span>
-              <span :if={is_nil(@order.recipient_name)}>{~t"Gift"}</span>
-            </span>
-            <span
-              :if={present?(@order.card_message)}
-              class="badge badge-sm admin-badge-warning inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
-            >
-              <.icon name="hero-pencil-square" class="h-3.5 w-3.5" />
+            <.gift_badge :if={@order.gift} recipient_name={if present?(@order.recipient_name), do: @order.recipient_name} />
+            <.badge :if={present?(@order.card_message)} tone={:warning} icon="hero-pencil-square">
               {~t"Card to write"}
-            </span>
-            <span
-              :if={Decimal.positive?(@order.balance)}
-              class="badge badge-sm badge-warning admin-badge-warning shrink-0 whitespace-nowrap"
-            >
+            </.badge>
+            <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
               <%= if @order.amount_paid do %>
                 {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
               <% else %>
                 {~t"Unpaid"}
               <% end %>
-            </span>
+            </.badge>
           </div>
 
           <p

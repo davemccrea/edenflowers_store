@@ -60,51 +60,54 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
               {~t"Skipped"}
             </div>
           </:col>
-          <:col :let={subscription} field="state" sort label={~t"State"}>
-            <span class={["badge badge-sm whitespace-nowrap", state_badge_class(subscription.state)]}>
-              {state_label(subscription.state)}
-            </span>
+          <:col :let={subscription} field="state" sort label={~t"Status"}>
+            <.badge tone={state_tone(subscription.state)}>{state_label(subscription.state)}</.badge>
           </:col>
           <:col :let={subscription} label={~t"Actions"}>
             <div class="flex flex-wrap gap-1">
-              <button
+              <.button
                 :if={subscription.state == :active and not subscription.next_delivery_skipped?}
                 type="button"
                 phx-click="skip"
                 phx-value-id={subscription.id}
                 data-confirm={~t"Skip the delivery on #{date = Format.date(subscription.next_fulfillment_date, @locale)}?"}
-                class="btn btn-ghost btn-sm"
+                variant="ghost"
+                size="sm"
               >
                 {~t"Skip"}
-              </button>
-              <button
+              </.button>
+              <.button
                 :if={subscription.state == :active}
                 type="button"
                 phx-click="pause"
                 phx-value-id={subscription.id}
-                class="btn btn-ghost btn-sm"
+                variant="ghost"
+                size="sm"
               >
                 {~t"Pause"}
-              </button>
-              <button
+              </.button>
+              <.button
                 :if={subscription.state == :paused}
                 type="button"
                 phx-click="resume"
                 phx-value-id={subscription.id}
-                class="btn btn-ghost btn-sm"
+                variant="ghost"
+                size="sm"
               >
                 {~t"Resume"}
-              </button>
-              <button
+              </.button>
+              <.button
                 :if={subscription.state != :cancelled}
                 type="button"
                 phx-click="cancel"
                 phx-value-id={subscription.id}
                 data-confirm={~t"Cancel this subscription? This can't be undone."}
-                class="btn btn-ghost btn-sm text-error"
+                variant="ghost"
+                size="sm"
+                class="text-error"
               >
                 {~t"Cancel"}
-              </button>
+              </.button>
             </div>
           </:col>
         </Cinder.collection>
@@ -115,19 +118,19 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   @impl true
   def handle_event("skip", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped")}
+    {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped.")}
   end
 
   def handle_event("pause", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused")}
+    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused.")}
   end
 
   def handle_event("resume", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed")}
+    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed.")}
   end
 
   def handle_event("cancel", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
+    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled.")}
   end
 
   defp change_subscription(socket, id, action, success_message) do
@@ -138,7 +141,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
            {:ok, _} <- action.(subscription, actor: actor) do
         put_flash(socket, :info, success_message)
       else
-        _ -> put_flash(socket, :error, ~t"The subscription couldn't be changed.")
+        _ -> put_flash(socket, :error, ~t"Could not change the subscription.")
       end
 
     Cinder.refresh_table(socket, "subscriptions-table")
@@ -149,7 +152,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   defp state_label(:payment_failed), do: ~t"Payment failed"
   defp state_label(:cancelled), do: ~t"Cancelled"
 
-  defp state_badge_class(:active), do: "badge-success admin-badge-success"
-  defp state_badge_class(:payment_failed), do: "badge-error admin-badge-error"
-  defp state_badge_class(_), do: "admin-badge-neutral"
+  defp state_tone(:active), do: :success
+  defp state_tone(:payment_failed), do: :error
+  defp state_tone(_), do: :neutral
 end
