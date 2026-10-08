@@ -252,6 +252,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   options={Enum.map(@tax_rates, &{&1.name, &1.id})}
                   class="select w-full"
                 />
+                <.input
+                  field={@form[:position]}
+                  type="number"
+                  min="0"
+                  label={~t"Position in store (0 = first)"}
+                  class="input w-full tabular-nums"
+                />
                 <div>
                   <.input field={@form[:draft]} type="checkbox" label={~t"Draft (hidden from the store)"} />
                   <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />

@@ -201,23 +201,27 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert products == []
     end
 
-    test "lists featured products first", %{tax_rate: tax_rate} do
+    test "lists products by position, then name", %{tax_rate: tax_rate} do
       category = generate(product_category(visibility: :public))
 
-      plain =
-        generate(product(name: "A", tax_rate_id: tax_rate.id, product_category_id: category.id, draft: false))
+      for {name, position} <- [{"A", nil}, {"B", 1}, {"C", 0}] do
+        product =
+          generate(
+            product(
+              name: name,
+              position: position,
+              tax_rate_id: tax_rate.id,
+              product_category_id: category.id,
+              draft: false
+            )
+          )
 
-      featured =
-        generate(
-          product(name: "B", tax_rate_id: tax_rate.id, product_category_id: category.id, draft: false, featured: true)
-        )
-
-      generate(product_variant(product_id: plain.id))
-      generate(product_variant(product_id: featured.id))
+        generate(product_variant(product_id: product.id))
+      end
 
       products = Catalog.list_products_by_category!(category.id, authorize?: false)
 
-      assert Enum.map(products, &{&1.name, &1.featured}) == [{"B", true}, {"A", false}]
+      assert Enum.map(products, & &1.name) == ["C", "B", "A"]
     end
   end
 end

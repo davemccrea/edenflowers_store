@@ -321,6 +321,8 @@ subscription_product =
       }
     },
     draft: false,
+    featured: true,
+    position: 0,
     free_delivery: true,
     subscribable: true
   })
