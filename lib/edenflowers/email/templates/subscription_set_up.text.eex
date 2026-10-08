@@ -6,7 +6,9 @@
 <%= gettext("How often") %>: <%= @interval %>
 <%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
 <%= gettext("Next delivery") %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
-
+<%= if @subscription.first_order_discounted? do %>
+<%= gettext("The discount applies to your first delivery.") %>
+<% end %>
 <%= gettext("Your first delivery comes as ordered, and its receipt is in a separate email. I charge your saved card a few days before each delivery.") %>
 
 <%= gettext("You can skip a delivery, pause, change the size or how often, update your card or cancel from your account:") %>

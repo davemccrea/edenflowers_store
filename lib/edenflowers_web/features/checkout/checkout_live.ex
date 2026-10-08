@@ -326,6 +326,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     </span>
                   </div>
 
+                  <p
+                    :if={@order.promotion_applied? and @order.subscription?}
+                    class="text-base-content/70 text-sm"
+                    data-testid="first-delivery-discount"
+                  >
+                    {~t"The discount applies to your first delivery."}
+                  </p>
+
                   <div
                     class="flex items-baseline justify-between font-semibold"
                     data-testid="order-total"

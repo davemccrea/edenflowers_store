@@ -279,5 +279,9 @@ defmodule Edenflowers.Orders.Subscription do
                   next_fulfillment_date <=
                     fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date + ?::integer", ^(@lead_days + 1))
               )
+
+    # Occurrences carry no promotion, so only the order that started the
+    # subscription can have been discounted.
+    calculate :first_order_discounted?, :boolean, expr(exists(orders, origin == :online and promotion_applied?))
   end
 end
