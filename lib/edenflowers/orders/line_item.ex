@@ -31,8 +31,8 @@ defmodule Edenflowers.Orders.LineItem do
     create :add_to_cart do
       accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks]
 
-      # SubscriptionCheckedOutAlone and ReplaceCart run before the upsert, so
-      # it can never merge a one-off and a subscription of the same variant.
+      # KeepSubscriptionAlone replaces or refuses before the upsert can merge a
+      # one-off and a subscription of the same variant.
       upsert? true
       upsert_identity :unique_product_variant
       upsert_fields [:quantity]
@@ -40,9 +40,7 @@ defmodule Edenflowers.Orders.LineItem do
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
       validate Edenflowers.Orders.Validations.Subscribable
       change Edenflowers.Orders.Changes.PopulateFromVariant
-      # After PopulateFromVariant has set the line's product.
-      validate Edenflowers.Orders.Validations.SubscriptionCheckedOutAlone, before_action?: true
-      change Edenflowers.Orders.Changes.ReplaceCart
+      change Edenflowers.Orders.Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 

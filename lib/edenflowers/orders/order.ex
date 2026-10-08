@@ -1040,11 +1040,6 @@ defmodule Edenflowers.Orders.Order do
       argument :free_delivery?, :boolean, allow_nil?: false, allow_expr?: true
     end
 
-    calculate :replaced_by_adding?, :boolean, Edenflowers.Orders.Calculations.ReplacedByAdding do
-      argument :product_id, :uuid, allow_nil?: false
-      argument :subscription?, :boolean, allow_nil?: false
-    end
-
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
     calculate :amount_mismatch?, :boolean, expr(not is_nil(amount_paid) and amount_paid != grand_total)
 
