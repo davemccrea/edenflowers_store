@@ -4,6 +4,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
   import Generator
   import Mox
 
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
@@ -42,7 +43,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     )
   end
 
-  defp days_from_today(days), do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(days)
+  defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
 
   describe "changing size and how often" do
     test "keeps the next date, so the change applies from the next occurrence", context do
@@ -139,6 +140,16 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
                Ash.reload!(subscription, authorize?: false)
 
       assert next_date == days_from_today(10)
+    end
+
+    test "not once cancelled", context do
+      cancelled = subscription(context, %{state: :cancelled})
+      expect_setup_intent("seti_1", cancelled)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :state}]}} =
+               Payments.save_subscription_card("seti_1", context.customer)
+
+      assert Ash.reload!(cancelled, authorize?: false).stripe_payment_method_id == "pm_old"
     end
 
     test "a customer can't save a card to someone else's subscription", context do

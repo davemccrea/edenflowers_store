@@ -1,51 +1,29 @@
 defmodule Edenflowers.Orders.Changes.ActivateSubscription do
   @moduledoc """
-  When a subscription cart is paid, starts the Subscription from the order's
-  delivery details and the card Stripe saved, and links the order to it as
-  its first delivery.
+  Starts the Subscription a paid subscription cart asked for, from the order's
+  delivery details and the card Stripe saved, and links the order to it as its
+  first delivery.
 
-  Runs in finalize_checkout's transaction, which only ever places an order
-  once, so a redelivered webhook can't start a second subscription.
-
-  The money has already moved, so a subscription that can't be started never
-  stops the order being placed (ADR 0002). It is logged as an error so it
-  reaches ErrorTracker and Jennie can contact the customer.
+  Run by the `:start_subscription` trigger once the order is placed, so a
+  failure fails the job, which retries, and the order stays placed.
   """
   use Ash.Resource.Change
 
-  require Logger
-
-  alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Orders
 
   @impl true
-  def change(changeset, _opts, _context) do
-    Ash.Changeset.before_action(changeset, &activate/1)
-  end
-
-  defp activate(changeset) do
-    order = Ash.load!(changeset.data, [:subscription?, :line_items], authorize?: false)
-
-    if order.subscription? do
-      Subscription
-      |> Ash.Changeset.for_create(:activate, attributes(order, changeset), authorize?: false)
-      |> Ash.create()
-      |> case do
-        {:ok, subscription} ->
-          Ash.Changeset.force_change_attribute(changeset, :subscription_id, subscription.id)
-
-        {:error, error} ->
-          Logger.error(
-            "Order #{order.id} was paid but its subscription could not be started: #{Exception.message(error)}"
-          )
-
-          changeset
+  def change(changeset, _opts, context) do
+    Ash.Changeset.before_action(changeset, fn changeset ->
+      with {:ok, order} <- Ash.load(changeset.data, :line_items, Ash.Context.to_opts(context)),
+           {:ok, subscription} <- Orders.activate_subscription(attributes(order), Ash.Context.to_opts(context)) do
+        Ash.Changeset.force_change_attribute(changeset, :subscription_id, subscription.id)
+      else
+        {:error, error} -> Ash.Changeset.add_error(changeset, error)
       end
-    else
-      changeset
-    end
+    end)
   end
 
-  defp attributes(order, changeset) do
+  defp attributes(order) do
     line_item = Enum.find(order.line_items, & &1.interval_weeks)
 
     %{
@@ -60,8 +38,8 @@ defmodule Edenflowers.Orders.Changes.ActivateSubscription do
       fulfillment_option_id: order.fulfillment_option_id,
       card_message: order.card_message,
       locale: order.locale,
-      stripe_customer_id: Ash.Changeset.get_argument(changeset, :stripe_customer_id),
-      stripe_payment_method_id: Ash.Changeset.get_argument(changeset, :stripe_payment_method_id)
+      stripe_customer_id: order.stripe_customer_id,
+      stripe_payment_method_id: order.stripe_payment_method_id
     }
   end
 end

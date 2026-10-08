@@ -6,18 +6,19 @@ defmodule Edenflowers.Orders.Validations.SubscriptionVariant do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Catalog
 
   @impl true
-  def validate(changeset, _opts, _context) do
+  def validate(changeset, _opts, context) do
     new_id = Ash.Changeset.get_attribute(changeset, :product_variant_id)
 
     if new_id == changeset.data.product_variant_id do
       :ok
     else
-      %{product_id: product_id} = Ash.get!(ProductVariant, changeset.data.product_variant_id, authorize?: false)
+      %{product_id: product_id} =
+        Catalog.get_variant_by_id!(changeset.data.product_variant_id, Ash.Context.to_opts(context))
 
-      case Ash.get(ProductVariant, new_id, authorize?: false) do
+      case Catalog.get_variant_by_id(new_id, Ash.Context.to_opts(context)) do
         {:ok, %{product_id: ^product_id, draft: false}} -> :ok
         _other -> {:error, field: :product_variant_id, message: ~t"Choose one of the sizes on offer."}
       end

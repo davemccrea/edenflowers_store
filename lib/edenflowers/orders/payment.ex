@@ -39,6 +39,10 @@ defmodule Edenflowers.Orders.Payment do
   end
 
   policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
+    end
+
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
     end

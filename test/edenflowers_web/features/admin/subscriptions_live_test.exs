@@ -32,6 +32,32 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
     assert has_element?(view, "[data-item-id]", "Active")
   end
 
+  test "names the size in Jennie's language", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+
+    conn =
+      conn
+      |> Plug.Test.init_test_session(%{Localize.Plug.PutLocale.session_key() => "sv-FI"})
+      |> Helpers.store_in_session(admin)
+
+    {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
+
+    Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
+      user_id: customer.id,
+      product_variant_id: generate(product_variant(product_id: generate(product()).id, size: :large)).id,
+      fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
+      interval_weeks: 2,
+      next_fulfillment_date: ~D[2026-11-03],
+      locale: "en",
+      stripe_customer_id: "cus_ada",
+      stripe_payment_method_id: "pm_card"
+    })
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
+
+    assert has_element?(view, "[data-item-id]", "Stor")
+  end
+
   test "flags a subscription whose card was refused", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)

@@ -194,10 +194,22 @@ defmodule Edenflowers.Orders.Order do
         scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
         default_actor Edenflowers.Actors.system_actor()
 
-        where expr(
-                origin == :subscription and payment_link_open? and not is_nil(customer_email) and
-                  is_nil(details_emailed_at)
-              )
+        where expr(payment_link_open? and is_nil(details_emailed_at))
+      end
+
+      # Started after the paid order is placed, never inside finalize_checkout,
+      # so a Subscription that can't start retries here and never stops the
+      # order being placed (ADR 0002).
+      trigger :start_subscription do
+        action :start_subscription
+        queue :default
+        max_attempts 20
+        lock_for_update? false
+        scheduler_cron "* * * * *"
+        worker_module_name Edenflowers.Orders.Workers.StartSubscription
+        scheduler_module_name Edenflowers.Orders.Schedulers.StartSubscription
+        default_actor Edenflowers.Actors.system_actor()
+        where expr(state == :placed and origin == :online and subscription? and is_nil(subscription_id))
       end
 
       trigger :send_delivered_email do
@@ -458,10 +470,11 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SetGiftFromRecipient
       change Changes.PriceFulfillment
 
-      change after_action(fn changeset, order, _context ->
+      change after_action(fn changeset, order, context ->
                variant_id = Ash.Changeset.get_argument(changeset, :product_variant_id)
 
-               with {:ok, _line_item} <- Edenflowers.Orders.add_line_item(order.id, variant_id, 1, authorize?: false) do
+               with {:ok, _line_item} <-
+                      Edenflowers.Orders.add_line_item(order.id, variant_id, 1, Ash.Context.to_opts(context)) do
                  {:ok, order}
                end
              end)
@@ -530,9 +543,7 @@ defmodule Edenflowers.Orders.Order do
     update :finalize_checkout do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
-      # Set by Stripe when a subscription cart saves its card.
-      argument :stripe_customer_id, :string
-      argument :stripe_payment_method_id, :string
+      accept [:stripe_customer_id, :stripe_payment_method_id]
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
 
       change transition_state(:placed), always_atomic?: true
@@ -544,10 +555,15 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
-      change Changes.ActivateSubscription, where: [attribute_equals(:origin, :online)]
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
+      require_atomic? false
+    end
+
+    update :start_subscription do
+      accept []
+      change Changes.ActivateSubscription
       require_atomic? false
     end
 
@@ -820,7 +836,9 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action([
                      :finalize_checkout,
+                     :create_occurrence,
                      :place_unpaid_occurrence,
+                     :start_subscription,
                      :send_payment_failed_email,
                      :mark_payment_cancelled,
                      :send_confirmation_email,
@@ -943,6 +961,9 @@ defmodule Edenflowers.Orders.Order do
 
     # Step 4 - Payment
     attribute :payment_intent_id, :string
+    # The card a subscription cart saved, which its Subscription is started with.
+    attribute :stripe_customer_id, :string
+    attribute :stripe_payment_method_id, :string
     # What Stripe actually charged. Differs from grand_total when the cart
     # changed while payment was in flight.
     # The secret in a custom order's payment link URL. Nil when the customer

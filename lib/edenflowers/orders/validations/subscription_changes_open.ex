@@ -10,8 +10,8 @@ defmodule Edenflowers.Orders.Validations.SubscriptionChangesOpen do
   @impl true
   def validate(_changeset, _opts, %{actor: %{admin: true}}), do: :ok
 
-  def validate(changeset, _opts, _context) do
-    if Ash.load!(changeset.data, :changes_closed?, authorize?: false).changes_closed? do
+  def validate(changeset, _opts, context) do
+    if Ash.load!(changeset.data, :changes_closed?, Ash.Context.to_opts(context)).changes_closed? do
       {:error, field: :next_fulfillment_date, message: ~t"It's too late to change your next delivery."}
     else
       :ok

@@ -7,10 +7,14 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
   alias Edenflowers.Mailer
 
   @impl true
-  def change(changeset, _opts, _context) do
+  def change(changeset, _opts, context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       subscription =
-        Ash.load!(changeset.data, [:product_variant, :first_order_discounted?, user: [:first_name]], authorize?: false)
+        Ash.load!(
+          changeset.data,
+          [:product_variant, :first_order_discounted?, user: [:first_name]],
+          Ash.Context.to_opts(context)
+        )
 
       case subscription |> Email.subscription_set_up() |> Mailer.deliver() do
         {:ok, _result} ->

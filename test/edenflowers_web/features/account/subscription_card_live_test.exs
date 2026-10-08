@@ -58,13 +58,30 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
        %{id: "seti_1", status: "succeeded", payment_method: "pm_new", metadata: %{"subscription_id" => subscription.id}}}
     end)
 
-    assert {:error, {:live_redirect, %{to: "/account", flash: %{"info" => "Your card has been updated."}}}} =
-             live(
-               conn,
-               ~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded"
-             )
+    {:ok, _view, html} =
+      conn
+      |> live(~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
+      |> follow_redirect(conn, ~p"/account")
 
+    assert html =~ "Your card has been updated."
     assert Ash.reload!(subscription, authorize?: false).stripe_payment_method_id == "pm_new"
+  end
+
+  @tag capture_log: true
+  test "asks Stripe once when the card couldn't be saved", %{conn: conn, subscription: subscription} do
+    expect(StripeAPI.Mock, :retrieve_setup_intent, fn "seti_1" ->
+      {:ok, %{id: "seti_1", status: "requires_payment_method", metadata: %{"subscription_id" => subscription.id}}}
+    end)
+
+    expect(StripeAPI.Mock, :create_setup_intent, fn "cus_ada", _metadata ->
+      {:ok, %{id: "seti_2", client_secret: "seti_2_secret"}}
+    end)
+
+    {:ok, view, _html} =
+      live(conn, ~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
+
+    assert render(view) =~ "Your card couldn&#39;t be saved."
+    assert has_element?(view, ~s|#card-form[data-client-secret="seti_2_secret"]|)
   end
 
   test "won't open someone else's subscription", %{conn: conn} do

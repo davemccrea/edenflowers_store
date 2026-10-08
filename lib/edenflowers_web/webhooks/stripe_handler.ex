@@ -42,6 +42,12 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
         Logger.warning("Stripe #{event.type} event #{event.id} has no subscription_id metadata")
         :ok
 
+      # Nothing will charge a card saved after the subscription was cancelled,
+      # and a retry would be refused the same way.
+      {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.InvalidAttribute{field: :state}]}} ->
+        Logger.warning("Stripe #{event.type} event #{event.id} saved a card to a cancelled subscription")
+        :ok
+
       # Returning :error makes Stripe retry.
       {:error, reason} ->
         Logger.error("Failed to save the card from Stripe #{event.type} event #{event.id}: #{inspect(reason)}")
