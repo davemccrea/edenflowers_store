@@ -69,6 +69,57 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       refute has_element?(view, "label", "Fulfillment Option")
     end
 
+    test "subscribed to with a promotion, says the discount is for the first delivery",
+         %{conn: conn, variant: variant} do
+      order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      assert has_element?(view, "[data-testid='discount-section']")
+
+      assert has_element?(
+               view,
+               "[data-testid='first-delivery-discount']",
+               "The discount applies to your first delivery."
+             )
+    end
+
+    test "subscribed to below a promotion's minimum, says nothing about the discount",
+         %{conn: conn, variant: variant} do
+      order =
+        generate(
+          order(
+            state: :delivery,
+            customer_name: "Jane",
+            customer_email: "jane@example.com",
+            promotion_id: generate(promotion()).id,
+            promotion_minimum_cart_total: Decimal.new("1000")
+          )
+        )
+
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      refute has_element?(view, "[data-testid='first-delivery-discount']")
+    end
+
+    test "bought once with a promotion, says nothing about the first delivery", %{conn: conn, variant: variant} do
+      order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      assert has_element?(view, "[data-testid='discount-section']")
+      refute has_element?(view, "[data-testid='first-delivery-discount']")
+    end
+
     test "bought once, can be picked up", %{conn: conn, variant: variant} do
       order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
       Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)

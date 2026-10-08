@@ -185,11 +185,28 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
+        refute email.text_body =~ "Alennus koskee ensimmäistä toimitustasi."
         assert email.text_body =~ "Hovrättsesplanaden 1, Vasa"
       end)
 
       assert {:cancel, _} = perform_job(SendSubscriptionSetupEmail, job.args)
       refute_email_sent()
+    end
+
+    test "the set-up email says a promotion only discounted the first delivery", ctx do
+      order =
+        ctx
+        |> subscription_cart(state: :payment)
+        |> Orders.add_promotion_with_code!(generate(promotion()).code, authorize?: false)
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+
+      assert [job] = all_enqueued(worker: SendSubscriptionSetupEmail)
+      assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ "Alennus koskee ensimmäistä toimitustasi."
+      end)
     end
 
     test "a redelivered webhook doesn't start a second one", ctx do
