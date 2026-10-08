@@ -98,9 +98,6 @@ defmodule EdenflowersWeb.Store.ProductLive do
               priority
               class="h-full w-full object-cover"
             />
-            <figcaption :if={@product.featured} class="product-mark">
-              <span class="eyebrow text-base-content text-xs">{~t"Favourite"}</span>
-            </figcaption>
           </figure>
 
           <div class="flex flex-col gap-8 md:max-w-prose">

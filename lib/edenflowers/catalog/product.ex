@@ -33,6 +33,7 @@ defmodule Edenflowers.Catalog.Product do
 
       filter expr(product_category_id == ^arg(:category_id))
       prepare Edenflowers.Catalog.Preparations.VisibleInStore
+      prepare build(sort: [featured: :desc, name: :asc])
     end
 
     create :create do

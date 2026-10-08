@@ -64,19 +64,6 @@
   outline-offset: 2px;
 }
 
-/* Translucent so the label sits on the photo rather than burned into it. */
-.product-mark {
-  position: absolute;
-  inset-block-start: 1rem;
-  inset-inline-end: 1rem;
-  padding: 0.4rem 0.75rem;
-  background: color-mix(in oklab, var(--color-base-100) 85%, transparent);
-  border: 1px solid
-    color-mix(in oklab, var(--color-base-content) 55%, transparent);
-  pointer-events: none;
-  backdrop-filter: blur(2px);
-}
-
 /* Featured carousel, driven by the FeaturedCarousel hook. */
 .embla__viewport {
   overflow: hidden;
