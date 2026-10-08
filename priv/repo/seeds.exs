@@ -300,29 +300,9 @@ for n <- 1..3 do
   end
 end
 
-subscriptions_category =
-  ProductCategory
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Subscriptions",
-    slug: "subscriptions",
-    visibility: :public,
-    description: "Seasonal flowers chosen by the florist, delivered every one, two or four weeks.",
-    translations: %{
-      "sv-FI": %{
-        name: "Prenumerationer",
-        description: "Säsongens blommor valda av floristen, levererade varje, varannan eller var fjärde vecka."
-      },
-      fi: %{
-        name: "Tilaukset",
-        description: "Floristin valitsemia sesongin kukkia, toimitettuna viikon, kahden tai neljän viikon välein."
-      }
-    }
-  })
-  |> Ash.create!(authorize?: false)
-
 subscription_product =
   Ash.Changeset.for_create(Product, :create, %{
-    product_category_id: subscriptions_category.id,
+    product_category_id: bouquets_category.id,
     tax_rate_id: tax_rate.id,
     name: "Florist's choice bouquet",
     image_slug: "https://placehold.co/400x400",
@@ -946,9 +926,12 @@ end
 
 # Subscriptions, one per state the admin list and account page show, each with
 # the order that started it and some with later deliveries (Occurrences).
-# Ash.Seed for the same reason as the orders above. Next dates sit beyond the
-# lead time and the change cutoff, so the hourly occurrence job doesn't try to
-# charge the fake Stripe ids in dev, and customers can still change them.
+# Ash.Seed for the same reason as the orders above. As in the app, the schedule
+# runs on whole intervals from the first order's date: each Occurrence is the
+# next date on it, and next_fulfillment_date the one after the latest. Active
+# next dates sit beyond the lead time and the change cutoff, so the hourly
+# occurrence job doesn't try to charge the fake Stripe ids in dev, and
+# customers can still change them.
 # Every email is marked sent, for the same reason as above.
 alias Edenflowers.Orders.Subscription
 
@@ -1029,11 +1012,8 @@ seed_subscription_order = fn subscription, user, attrs ->
   order
 end
 
-# A date on the delivery schedule this many days out, moved to an open day.
-delivery_date = fn days_out -> fulfillment_date_for.(home_delivery, days_out) end
-
 subscriptions = [
-  # David's own, so the account page has one to try skip, pause and change on.
+  # David's own, so the account page has one to try pause and change on.
   %{
     email: "mail@dmccrea.me",
     name: "David McCrea",
@@ -1041,26 +1021,25 @@ subscriptions = [
     size: :medium,
     interval_weeks: 1,
     first_days_out: -7,
-    next_days_out: 7,
     recipient_name: "David McCrea",
     locale: "sv-FI",
-    occurrences: [%{days_out: 0, fulfillment_status: :fulfilled}]
+    occurrences: [%{fulfillment_status: :fulfilled}]
   },
-  # A gift every two weeks, with its next delivery skipped.
+  # A gift every two weeks.
   %{
     email: "helena.nyman@example.fi",
     name: "Helena Nyman",
     state: :active,
     size: :large,
     interval_weeks: 2,
-    first_days_out: -14,
-    next_days_out: 6,
-    skip_next?: true,
+    first_days_out: -15,
     recipient_name: "Ingrid Nyman",
     card_message: "Lots of love from Helena",
     locale: "sv-FI",
-    occurrences: [%{days_out: -1, fulfillment_status: :fulfilled}]
+    occurrences: [%{fulfillment_status: :fulfilled}]
   },
+  # Paused before its second delivery was charged, so its next date stays put
+  # until it resumes.
   %{
     email: "otto.makinen@example.fi",
     name: "Otto Mäkinen",
@@ -1068,7 +1047,6 @@ subscriptions = [
     size: :small,
     interval_weeks: 4,
     first_days_out: -28,
-    next_days_out: 10,
     recipient_name: "Otto Mäkinen",
     locale: "fi",
     occurrences: []
@@ -1082,10 +1060,9 @@ subscriptions = [
     size: :medium,
     interval_weeks: 1,
     first_days_out: -10,
-    next_days_out: 11,
     recipient_name: "Sara Holm",
     locale: "en",
-    occurrences: [%{days_out: -3, fulfillment_status: :fulfilled}, %{days_out: 4, paid?: false}]
+    occurrences: [%{fulfillment_status: :fulfilled}, %{paid?: false}]
   },
   %{
     email: "jonas.berg@example.fi",
@@ -1094,16 +1071,16 @@ subscriptions = [
     size: :medium,
     interval_weeks: 2,
     first_days_out: -21,
-    next_days_out: 7,
     recipient_name: "Jonas Berg",
     locale: "sv-FI",
-    occurrences: [%{days_out: -7, fulfillment_status: :fulfilled}]
+    occurrences: [%{fulfillment_status: :fulfilled}]
   }
 ]
 
 for attrs <- subscriptions do
   user = Accounts.upsert_user!(attrs.email, attrs.name, actor: Actors.system_actor())
-  next_date = delivery_date.(attrs.next_days_out)
+  first_date = fulfillment_date_for.(home_delivery, attrs.first_days_out)
+  scheduled_date = fn n -> Date.add(first_date, n * attrs.interval_weeks * 7) end
 
   subscription =
     Ash.Seed.seed!(Subscription, %{
@@ -1112,8 +1089,7 @@ for attrs <- subscriptions do
       fulfillment_option_id: home_delivery.id,
       state: attrs.state,
       interval_weeks: attrs.interval_weeks,
-      next_fulfillment_date: next_date,
-      skipped_dates: if(attrs[:skip_next?], do: [next_date], else: []),
+      next_fulfillment_date: scheduled_date.(length(attrs.occurrences) + 1),
       recipient_name: attrs.recipient_name,
       recipient_phone_number: "040 1234567",
       delivery_address: "Gerbyntie 16, 65230 Vaasa",
@@ -1131,19 +1107,17 @@ for attrs <- subscriptions do
   seed_subscription_order.(subscription, user, %{
     origin: :online,
     size: attrs.size,
-    fulfillment_date: fulfillment_date_for.(home_delivery, attrs.first_days_out),
+    fulfillment_date: first_date,
     fulfillment_status: :fulfilled,
     card_message: attrs[:card_message]
   })
 
-  for occurrence <- attrs.occurrences do
-    fulfillment_date = fulfillment_date_for.(home_delivery, occurrence.days_out)
-
+  for {occurrence, n} <- Enum.with_index(attrs.occurrences, 1) do
     seed_subscription_order.(subscription, user, %{
       origin: :subscription,
       size: attrs.size,
-      subscription_date: fulfillment_date,
-      fulfillment_date: fulfillment_date,
+      subscription_date: scheduled_date.(n),
+      fulfillment_date: scheduled_date.(n),
       fulfillment_status: occurrence[:fulfillment_status],
       paid?: Map.get(occurrence, :paid?, true)
     })
