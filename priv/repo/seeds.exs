@@ -932,6 +932,208 @@ for order_attrs <- orders do
   })
 end
 
+# Subscriptions, one per state the admin list and account page show, each with
+# the order that started it and some with later deliveries (Occurrences).
+# Ash.Seed for the same reason as the orders above. Next dates sit beyond the
+# lead time and the change cutoff, so the hourly occurrence job doesn't try to
+# charge the fake Stripe ids in dev, and customers can still change them.
+# Every email is marked sent, for the same reason as above.
+alias Edenflowers.Orders.Subscription
+
+weekly_bouquet = fn size -> variant_for.("Weekly bouquet", size) end
+
+seed_subscription_order = fn subscription, user, attrs ->
+  variant = weekly_bouquet.(attrs.size)
+  %{error: nil} = fee = Fee.calculate(home_delivery, 1651)
+  paid? = Map.get(attrs, :paid?, true)
+
+  order =
+    Ash.Seed.seed!(Order, %{
+      order_reference: next_reference.(),
+      state: :placed,
+      origin: attrs.origin,
+      subscription_id: subscription.id,
+      subscription_date: attrs[:subscription_date],
+      fulfillment_status: attrs[:fulfillment_status] || :pending,
+      receipt_emailed_at: DateTime.utc_now(),
+      details_emailed_at: if(not paid?, do: DateTime.utc_now()),
+      delivered_emailed_at: if(attrs[:fulfillment_status] == :fulfilled, do: DateTime.utc_now()),
+      ordered_at: DateTime.utc_now(),
+      customer_name: user.name,
+      customer_email: to_string(user.email),
+      user_id: user.id,
+      gift: subscription.recipient_name != user.name,
+      card_message: attrs[:card_message],
+      recipient_name: subscription.recipient_name,
+      recipient_phone_number: subscription.recipient_phone_number,
+      delivery_address: subscription.delivery_address,
+      geocoded_address: "Gerbyvägen 16, 65230 Vasa",
+      position: "63.1157,21.61864",
+      here_id: "here:af:streetsection:olhtF0fcY2Tg2P7kFPBnMB:EAIaAjE2",
+      distance: 1651,
+      fulfillment_date: attrs.fulfillment_date,
+      fulfillment_option_id: home_delivery.id,
+      fulfillment_option_name: home_delivery.name,
+      fulfillment_method: :delivery,
+      quoted_fulfillment_fee: fee.fulfillment_fee,
+      in_free_delivery_zone: fee.in_free_delivery_zone,
+      fulfillment_tax_rate: tax_rate.percentage,
+      payment_link_token: if(not paid?, do: :crypto.strong_rand_bytes(24) |> Base.url_encode64(padding: false)),
+      stripe_customer_id: if(attrs.origin == :online, do: subscription.stripe_customer_id),
+      stripe_payment_method_id: if(attrs.origin == :online, do: subscription.stripe_payment_method_id),
+      locale: subscription.locale
+    })
+
+  Ash.Seed.seed!(LineItem, %{
+    order_id: order.id,
+    product_id: variant.product.id,
+    product_variant_id: variant.id,
+    quantity: 1,
+    unit_price: variant.price,
+    tax_rate: variant.product.tax_rate.percentage,
+    product_name: variant.product.name,
+    product_image_slug: variant.image_slug,
+    variant_size: variant.size,
+    free_delivery: true,
+    # Only the order that started the subscription carries the interval; an
+    # Occurrence's line is a one-off.
+    interval_weeks: if(attrs.origin == :online, do: subscription.interval_weeks),
+    is_card: false
+  })
+
+  order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
+  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
+
+  if paid? do
+    Ash.Seed.seed!(Payment, %{
+      order_id: order.id,
+      amount: order.grand_total,
+      method: :stripe,
+      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      paid_at: order.ordered_at
+    })
+  end
+
+  order
+end
+
+# A date on the delivery schedule this many days out, moved to an open day.
+delivery_date = fn days_out -> fulfillment_date_for.(home_delivery, days_out) end
+
+subscriptions = [
+  # David's own, so the account page has one to try skip, pause and change on.
+  %{
+    email: "mail@dmccrea.me",
+    name: "David McCrea",
+    state: :active,
+    size: :medium,
+    interval_weeks: 1,
+    first_days_out: -7,
+    next_days_out: 7,
+    recipient_name: "David McCrea",
+    locale: "sv-FI",
+    occurrences: [%{days_out: 0, fulfillment_status: :fulfilled}]
+  },
+  # A gift every two weeks, with its next delivery skipped.
+  %{
+    email: "helena.nyman@example.fi",
+    name: "Helena Nyman",
+    state: :active,
+    size: :large,
+    interval_weeks: 2,
+    first_days_out: -14,
+    next_days_out: 6,
+    skip_next?: true,
+    recipient_name: "Ingrid Nyman",
+    card_message: "Lots of love from Helena",
+    locale: "sv-FI",
+    occurrences: [%{days_out: -1, fulfillment_status: :fulfilled}]
+  },
+  %{
+    email: "otto.makinen@example.fi",
+    name: "Otto Mäkinen",
+    state: :paused,
+    size: :small,
+    interval_weeks: 4,
+    first_days_out: -28,
+    next_days_out: 10,
+    recipient_name: "Otto Mäkinen",
+    locale: "fi",
+    occurrences: []
+  },
+  # The card was refused for the latest delivery, which is placed unpaid with a
+  # payment link; the subscription waits until it is paid.
+  %{
+    email: "sara.holm@example.fi",
+    name: "Sara Holm",
+    state: :payment_failed,
+    size: :medium,
+    interval_weeks: 1,
+    first_days_out: -10,
+    next_days_out: 11,
+    recipient_name: "Sara Holm",
+    locale: "en",
+    occurrences: [%{days_out: -3, fulfillment_status: :fulfilled}, %{days_out: 4, paid?: false}]
+  },
+  %{
+    email: "jonas.berg@example.fi",
+    name: "Jonas Berg",
+    state: :cancelled,
+    size: :medium,
+    interval_weeks: 2,
+    first_days_out: -21,
+    next_days_out: 7,
+    recipient_name: "Jonas Berg",
+    locale: "sv-FI",
+    occurrences: [%{days_out: -7, fulfillment_status: :fulfilled}]
+  }
+]
+
+for attrs <- subscriptions do
+  user = Accounts.upsert_user!(attrs.email, attrs.name, actor: Actors.system_actor())
+  next_date = delivery_date.(attrs.next_days_out)
+
+  subscription =
+    Ash.Seed.seed!(Subscription, %{
+      user_id: user.id,
+      product_variant_id: weekly_bouquet.(attrs.size).id,
+      fulfillment_option_id: home_delivery.id,
+      state: attrs.state,
+      interval_weeks: attrs.interval_weeks,
+      next_fulfillment_date: next_date,
+      skipped_dates: if(attrs[:skip_next?], do: [next_date], else: []),
+      recipient_name: attrs.recipient_name,
+      recipient_phone_number: "040 1234567",
+      delivery_address: "Gerbyntie 16, 65230 Vaasa",
+      card_message: attrs[:card_message],
+      locale: attrs.locale,
+      stripe_customer_id: "cus_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      stripe_payment_method_id: "pm_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      setup_emailed_at: DateTime.utc_now()
+    })
+
+  seed_subscription_order.(subscription, user, %{
+    origin: :online,
+    size: attrs.size,
+    fulfillment_date: fulfillment_date_for.(home_delivery, attrs.first_days_out),
+    fulfillment_status: :fulfilled,
+    card_message: attrs[:card_message]
+  })
+
+  for occurrence <- attrs.occurrences do
+    fulfillment_date = fulfillment_date_for.(home_delivery, occurrence.days_out)
+
+    seed_subscription_order.(subscription, user, %{
+      origin: :subscription,
+      size: attrs.size,
+      subscription_date: fulfillment_date,
+      fulfillment_date: fulfillment_date,
+      fulfillment_status: occurrence[:fulfillment_status],
+      paid?: Map.get(occurrence, :paid?, true)
+    })
+  end
+end
+
 # Custom orders, payments and edits. Unlike the orders above, these go through
 # the real actions as Jennie, so the order log, the payment rows, balances and
 # payment links come out exactly as the app makes them. All pickups, so no
