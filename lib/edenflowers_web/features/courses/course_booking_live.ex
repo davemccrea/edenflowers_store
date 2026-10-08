@@ -28,10 +28,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
          |> push_navigate(to: ~p"/courses/#{registration.course_id}")}
 
       {:ok, registration} ->
-        if connected?(socket) and registration.status == :pending do
-          Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:confirmed:#{id}")
-        end
-
         {:ok, assign(socket, page_title: ~t"Your booking", locale: Format.locale(), registration: registration)}
 
       {:error, _} ->
@@ -40,11 +36,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
          |> put_flash(:error, ~t"Booking not found.")
          |> push_navigate(to: ~p"/courses")}
     end
-  end
-
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:confirmed:" <> id}, socket) do
-    {:ok, registration} = load_registration(id)
-    {:noreply, assign(socket, registration: registration)}
   end
 
   def render(assigns) do
@@ -58,16 +49,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
             <p class="leading-relaxed">{~t"This booking has been cancelled. Get in touch if that's a surprise."}</p>
           <% else %>
             <h1 class="page-title">{~t"You're booked"}</h1>
-
-            <%!-- Stripe can redirect here before its webhook confirms the booking. A live
-          region, so the swap from confirming to received is announced. --%>
-            <p role="status" class="text-base-content/70 mt-6 text-sm" data-testid="payment-status">
-              <%= if @registration.status == :confirmed do %>
-                {~t"Payment received. A confirmation email is on its way."}
-              <% else %>
-                {~t"Confirming your payment… You'll get a confirmation email once it's done."}
-              <% end %>
-            </p>
           <% end %>
 
           <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-10 grid items-baseline gap-x-6 gap-y-3 border-y py-6">
