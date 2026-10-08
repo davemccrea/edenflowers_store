@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   def legend(assigns) do
     ~H"""
     <aside class="text-sm md:max-w-xs md:pt-2">
-      <h2 class="eyebrow text-base-content/70 mb-3">{~t"Legend"}</h2>
+      <h2 class="eyebrow text-base-content/65 mb-3">{~t"Legend"}</h2>
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-start">
           <span class={legend_swatch(:closed)}></span>

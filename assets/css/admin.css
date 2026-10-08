@@ -10,6 +10,12 @@
   --color-error-content: var(--color-red-700);
 }
 
+/* daisyUI draws checkbox labels as small grey captions; in admin forms they
+   sit beside text-field labels, so they match those instead. */
+.admin-theme .fieldset-label {
+  @apply text-base-content text-base;
+}
+
 /* Rendered Markdown from the assistant. There is no typography plugin. */
 .chat-prose {
   @apply text-base-content text-[0.9375rem] leading-relaxed;

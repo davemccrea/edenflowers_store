@@ -40,9 +40,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           back_label={~t"Expenses"}
         >
           <:subtitle :if={@expense.reviewed_at}>
-            <span class="badge badge-sm badge-success admin-badge-success gap-1">
-              <.icon name="hero-check" class="h-3 w-3" /> {~t"Reviewed"}
-            </span>
+            <.badge tone={:success} icon="hero-check">{~t"Reviewed"}</.badge>
           </:subtitle>
         </.admin_page_header>
 

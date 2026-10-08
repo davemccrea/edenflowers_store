@@ -105,19 +105,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <span class="sr-only">{~t"Fulfillment:"}</span>
                   <.fulfillment_status_badge status={@order.fulfillment_status} />
                 </span>
-                <.gift_badge :if={@order.gift} order={@order} />
+                <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
                 <.subscription_badge :if={@order.origin == :subscription} />
                 <%!-- The payment card sits below the job on narrow screens; this says money is waiting there. --%>
-                <a
+                <.badge
                   :if={owes_money?(@order)}
                   href="#order-payment-summary"
-                  class="badge badge-sm admin-badge-warning inline-flex items-center gap-1 whitespace-nowrap tabular-nums xl:hidden"
+                  tone={if Decimal.positive?(@order.balance), do: :warning, else: :error}
+                  class="tabular-nums xl:hidden"
                 >
                   {if Decimal.positive?(@order.balance),
                     do: ~t"To collect #{amount = Format.currency(@order.balance, @locale)}",
                     else: ~t"To refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)}"}
                   <.icon name="hero-arrow-down" class="h-3 w-3" />
-                </a>
+                </.badge>
               </span>
             </span>
           </:subtitle>
@@ -643,21 +644,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  attr :order, :map, required: true
-
-  defp gift_badge(assigns) do
-    ~H"""
-    <span
-      class="badge badge-soft badge-sm badge-neutral inline-flex items-center gap-1 whitespace-nowrap"
-      title={(present?(@order.recipient_name) && ~t"Gift for #{@order.recipient_name}") || ~t"Gift order"}
-    >
-      <.icon name="hero-gift" class="h-3.5 w-3.5" />
-      <span :if={present?(@order.recipient_name)} class="max-w-[10rem] truncate">{@order.recipient_name}</span>
-      <span :if={!present?(@order.recipient_name)}>{~t"Gift"}</span>
-    </span>
-    """
-  end
-
   attr :label, :string, required: true
   attr :tone, :atom, required: true, values: [:overdue, :today, :upcoming]
 
@@ -669,9 +655,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium", relative_date_badge_class(@tone)]}>
-      {@label}
-    </span>
+    <.badge tone={relative_date_badge_tone(@tone)} class="ml-1.5 align-middle">{@label}</.badge>
     """
   end
 
@@ -829,20 +813,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             value={EdenflowersWeb.PaymentLink.url_for(@order)}
             class="input input-sm font-mono min-w-0 flex-1 text-xs"
           />
-          <button
-            id="copy-payment-link"
-            type="button"
-            phx-click={JS.dispatch("edenflowers:copy", to: "#payment-link-url", detail: %{trigger: "#copy-payment-link"})}
-            class="btn btn-ghost btn-sm btn-square group"
-            title={~t"Copy payment link"}
-            aria-label={~t"Copy payment link"}
-          >
-            <.icon name="hero-clipboard" class="h-4 w-4 group-data-copied:hidden" />
-            <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
-            <span class="sr-only" aria-live="polite">
-              <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
-            </span>
-          </button>
+          <.copy_button id="copy-payment-link" target="#payment-link-url" label={~t"Copy payment link"} />
         </div>
         <div :if={@payment_message_urls} class="mt-2.5 text-sm">
           <.message_links
@@ -919,9 +890,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     ~H"""
     <div class="dropdown dropdown-end">
-      <button type="button" tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label={~t"More actions"}>
+      <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
         <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
-      </button>
+      </.icon_button>
       <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-56 border p-1 shadow">
         <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
         <%= if @paid? do %>
@@ -1125,6 +1096,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp present?(""), do: false
   defp present?(_), do: true
 
+  defp presence(value), do: if(present?(value), do: value)
+
   defp positive?(nil), do: false
   defp positive?(value), do: Decimal.compare(value, 0) == :gt
 
@@ -1159,8 +1132,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp relative_date_badge_class(:overdue), do: "admin-badge-error"
-  defp relative_date_badge_class(:today), do: "admin-badge-success"
+  defp relative_date_badge_tone(:overdue), do: :error
+  defp relative_date_badge_tone(:today), do: :success
 
   defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 

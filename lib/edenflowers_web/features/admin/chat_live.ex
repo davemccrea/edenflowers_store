@@ -36,17 +36,19 @@ defmodule EdenflowersWeb.Admin.ChatLive do
               <.icon name="hero-plus" class="h-4 w-4" />
               <span class="hidden sm:inline">{~t"New conversation"}</span>
             </.button>
-            <button
+            <.button
               :if={@conversation}
               type="button"
               phx-click="delete_conversation"
               data-confirm={~t"Delete this conversation? This can't be undone."}
               aria-label={~t"Delete"}
-              class="btn btn-ghost btn-sm text-error shrink-0"
+              variant="ghost"
+              size="sm"
+              class="text-error shrink-0"
             >
               <.icon name="hero-trash" class="h-4 w-4" />
               <span class="hidden sm:inline">{~t"Delete"}</span>
-            </button>
+            </.button>
           </header>
 
           <div class="min-h-0 flex-1 overflow-y-auto">
@@ -113,10 +115,10 @@ defmodule EdenflowersWeb.Admin.ChatLive do
                   class="input min-w-0 flex-1"
                   autocomplete="off"
                 />
-                <button type="submit" class="btn btn-primary shrink-0" aria-label={~t"Send"}>
+                <.button type="submit" variant="primary" class="shrink-0" aria-label={~t"Send"}>
                   <.icon name="hero-paper-airplane" class="h-4 w-4" />
                   <span class="hidden sm:inline">{~t"Send"}</span>
-                </button>
+                </.button>
               </.form>
             </div>
           </div>
@@ -233,7 +235,7 @@ defmodule EdenflowersWeb.Admin.ChatLive do
     {:noreply,
      socket
      |> stream_delete(:conversations, conversation)
-     |> put_flash(:info, ~t"Conversation deleted")
+     |> put_flash(:info, ~t"Conversation deleted.")
      |> push_patch(to: ~p"/admin/chat")}
   end
 

@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       {:ok, _product} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Product saved")
+         |> put_flash(:info, ~t"Product saved.")
          |> push_navigate(to: ~p"/admin/products")}
 
       {:error, form} ->
@@ -197,14 +197,16 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                           />
                         </div>
                         <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
-                        <button
+                        <.button
                           type="button"
                           phx-click="remove_variant"
                           phx-value-path={variant.name}
-                          class="btn btn-ghost btn-sm text-error ml-auto"
+                          variant="ghost"
+                          size="sm"
+                          class="text-error ml-auto"
                         >
                           {~t"Remove"}
-                        </button>
+                        </.button>
                       </div>
                     </div>
                   </li>

@@ -573,11 +573,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
           </.form_section>
 
-          <div class="flex justify-end">
-            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"}>
-              {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
-            </.button>
-          </div>
+          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"}>
+            {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
+          </.button>
         </.form>
       </.admin_page>
     </Layouts.admin>
@@ -749,15 +747,14 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp remove_line_button(assigns) do
     ~H"""
-    <button
-      type="button"
+    <.icon_button
       phx-click="remove_line"
       phx-value-index={@index}
-      class="btn btn-ghost btn-square text-error size-10"
-      aria-label={~t"Remove item #{number = @index + 1}"}
+      class="text-error size-10"
+      aria_label={~t"Remove item #{number = @index + 1}"}
     >
       <.icon name="hero-trash" class="h-4 w-4" />
-    </button>
+    </.icon_button>
     """
   end
 end

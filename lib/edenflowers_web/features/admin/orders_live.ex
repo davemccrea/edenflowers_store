@@ -63,12 +63,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             <span class="whitespace-nowrap tabular-nums">
               {Format.date(order.fulfillment_date, @locale)}
             </span>
-            <span
-              :if={overdue?(order, @today)}
-              class="badge badge-sm admin-badge-error ml-1.5 whitespace-nowrap align-middle font-medium"
-            >
-              {~t"Overdue"}
-            </span>
+            <.badge :if={overdue?(order, @today)} tone={:error} class="ml-1.5 align-middle">{~t"Overdue"}</.badge>
           </:col>
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
@@ -105,20 +100,21 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           >
             <.payment_status_badge status={order.payment_status} />
           </:col>
-          <:col :let={order} field="grand_total" label={~t"Total"}>
-            <span class="whitespace-nowrap tabular-nums">
+          <:col :let={order} field="grand_total" label={~t"Total"} class="text-right">
+            <div class="whitespace-nowrap tabular-nums">
               {Format.currency(order.grand_total, @locale)}
-            </span>
-            <span
+            </div>
+            <.badge
               :if={order.amount_mismatch? && order.fulfillment_status != :cancelled}
-              class={["badge badge-sm ml-1.5 whitespace-nowrap align-middle font-medium", if(Decimal.positive?(order.balance), do: "admin-badge-warning", else: "admin-badge-error")]}
+              tone={if Decimal.positive?(order.balance), do: :warning, else: :error}
+              class="mt-1"
             >
               <%= if Decimal.positive?(order.balance) do %>
                 {~t"To collect #{amount = Format.currency(order.balance, @locale)}"}
               <% else %>
                 {~t"To refund #{amount = Format.currency(Decimal.abs(order.balance), @locale)}"}
               <% end %>
-            </span>
+            </.badge>
           </:col>
           <:col
             :let={order}

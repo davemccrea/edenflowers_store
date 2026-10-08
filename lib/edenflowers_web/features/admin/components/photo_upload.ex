@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     """
   end
 
-  defp upload_error_message(:too_large), do: ~t"The photo is too large (max 40 MB)"
-  defp upload_error_message(:not_accepted), do: ~t"Use a JPG, PNG or WebP photo"
-  defp upload_error_message(_), do: ~t"The photo could not be uploaded"
+  defp upload_error_message(:too_large), do: ~t"The photo must be under 40 MB."
+  defp upload_error_message(:not_accepted), do: ~t"Use a JPG, PNG or WebP photo."
+  defp upload_error_message(_), do: ~t"Could not upload the photo."
 end
