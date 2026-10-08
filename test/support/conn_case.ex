@@ -31,6 +31,7 @@ defmodule EdenflowersWeb.ConnCase do
 
   setup tags do
     Edenflowers.DataCase.setup_sandbox(tags)
+    Edenflowers.DataCase.stub_card_lookup()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

@@ -52,7 +52,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   def get_order(id, _guest_order_id, user), do: Orders.get_order_by_id(id, actor: user, load: [:payment_status])
 
   defp assign_order(socket, order) do
-    {:ok, order} = Ash.load(order, :customer_first_name, authorize?: false)
+    {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)
+    subscription_line = Enum.find(order.line_items, & &1.interval_weeks)
 
     socket
     |> assign(:page_title, ~t"Thank you for your order")
@@ -60,6 +61,18 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     |> assign(:paid?, order.state == :placed)
     |> assign(:first_name, order.customer_first_name)
     |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
+    |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
+    |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
+  end
+
+  # Each later delivery is priced afresh, so this is today's price for it.
+  defp next_delivery(order, line) do
+    locale = Format.locale()
+
+    %{
+      date: Format.weekday_date(Date.add(order.fulfillment_date, line.interval_weeks * 7), locale),
+      amount: Format.currency(Decimal.add(line.subtotal, order.fulfillment_fee || 0), locale)
+    }
   end
 
   def render(assigns) do
@@ -88,6 +101,30 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             >
               {~t"I'll send a text message when it's ready."}
             </p>
+            <p
+              :if={@interval_weeks}
+              class="font-serif text-base-content/80 mt-1 text-xl leading-snug"
+              data-testid="order-subscription"
+            >
+              {~t"Then #{interval = String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks))}, until you skip, pause or cancel it from your account."}
+            </p>
+            <div :if={@next_delivery} class="mt-6 flex flex-col gap-2" data-testid="order-next-delivery">
+              <p>
+                {~t"Next delivery #{date = @next_delivery.date}, #{amount = @next_delivery.amount} charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before."}
+              </p>
+              <%= if @current_user do %>
+                <.button navigate={~p"/account"} variant="secondary" class="self-start">
+                  {~t"Manage subscription"}
+                </.button>
+              <% else %>
+                <p class="text-base-content/80">
+                  <.link navigate={~p"/sign-in"} class="link-underline-hover">
+                    {~t"Sign in with #{email = @shown_order.customer_email}"}
+                  </.link>
+                  {~t"to skip, pause or cancel."}
+                </p>
+              <% end %>
+            </div>
           </div>
 
           <%!-- A live region, so the swap from confirming to received is announced. --%>

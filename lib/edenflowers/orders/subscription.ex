@@ -17,6 +17,22 @@ defmodule Edenflowers.Orders.Subscription do
 
   def intervals, do: @intervals
 
+  @doc """
+  The day a closed subscription opens to changes again: the occurrence job
+  creates the next Occurrence then and moves on to the following date.
+  """
+  def changes_reopen_on(%{next_fulfillment_date: date}), do: charged_on(date)
+
+  @doc "The day the occurrence job charges the card for a delivery on `date`."
+  def charged_on(date), do: Date.add(date, -@lead_days)
+
+  @doc "The next delivery date a paused subscription would get if it resumed today."
+  def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
+    Edenflowers.Orders.Changes.StepToScheduledDate.scheduled_date(date, weeks, @lead_days + 1)
+  end
+
+  def lead_days, do: @lead_days
+
   postgres do
     repo Edenflowers.Repo
     table "subscriptions"
@@ -82,12 +98,18 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:next_delivery_skipped?, :user, :product_variant])
     end
 
+    # A cancelled subscription drops off the account page a month after.
     read :mine do
-      filter expr(user_id == ^actor(:id))
+      filter expr(user_id == ^actor(:id) and (state != :cancelled or updated_at > ago(30, :day)))
 
       prepare build(
                 sort: [inserted_at: :asc],
-                load: [:changes_closed?, :next_delivery_skipped?, product_variant: [product: :product_variants]]
+                load: [
+                  :changes_closed?,
+                  :next_delivery_skipped?,
+                  :fulfillment_option,
+                  product_variant: [product: :product_variants]
+                ]
               )
     end
 
@@ -109,6 +131,7 @@ defmodule Edenflowers.Orders.Subscription do
       ]
 
       validate attribute_in(:interval_weeks, @intervals)
+      change Edenflowers.Orders.Changes.SnapshotCard
       change run_oban_trigger(:send_setup_email)
     end
 
@@ -147,6 +170,18 @@ defmodule Edenflowers.Orders.Subscription do
       require_atomic? false
     end
 
+    update :unskip do
+      validate attribute_equals(:state, :active)
+      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+
+      change fn changeset, _context ->
+        %{next_fulfillment_date: date, skipped_dates: skipped} = changeset.data
+        Ash.Changeset.change_attribute(changeset, :skipped_dates, List.delete(skipped, date))
+      end
+
+      require_atomic? false
+    end
+
     update :pause do
       validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
       change transition_state(:paused)
@@ -162,13 +197,17 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     # The occurrence job reads the subscription when it creates each
-    # Occurrence, so a change applies from the next one.
+    # Occurrence, so a change applies from the next one. A new interval or
+    # delivery day also moves that next date; see Reschedule.
     update :change do
       accept [:product_variant_id, :interval_weeks]
+      argument :delivery_day, Edenflowers.Fulfillment.Weekday
       validate attribute_does_not_equal(:state, :cancelled)
       validate attribute_in(:interval_weeks, @intervals)
       validate Edenflowers.Orders.Validations.SubscriptionVariant
+      validate Edenflowers.Orders.Validations.SubscriptionDeliveryDay
       validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+      change Edenflowers.Orders.Changes.Reschedule
       require_atomic? false
     end
 
@@ -178,6 +217,7 @@ defmodule Edenflowers.Orders.Subscription do
       argument :stripe_payment_method_id, :string, allow_nil?: false
       validate attribute_does_not_equal(:state, :cancelled)
       change set_attribute(:stripe_payment_method_id, arg(:stripe_payment_method_id))
+      change Edenflowers.Orders.Changes.SnapshotCard
 
       change fn changeset, _context ->
         Ash.Changeset.after_action(changeset, fn
@@ -192,6 +232,14 @@ defmodule Edenflowers.Orders.Subscription do
       require_atomic? false
     end
 
+    # For subscriptions saved before the card was kept: see
+    # `Edenflowers.Release.backfill_subscription_cards/0`.
+    update :snapshot_card do
+      accept []
+      change Edenflowers.Orders.Changes.SnapshotCard
+      require_atomic? false
+    end
+
     update :cancel do
       validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
       change transition_state(:cancelled)
@@ -201,16 +249,24 @@ defmodule Edenflowers.Orders.Subscription do
 
   policies do
     bypass actor_attribute_equals(:system, true) do
-      authorize_if action([:activate, :create_occurrence, :reactivate, :send_setup_email, :replace_card])
+      authorize_if action([
+                     :activate,
+                     :create_occurrence,
+                     :reactivate,
+                     :send_setup_email,
+                     :replace_card,
+                     :snapshot_card
+                   ])
+
       authorize_if action_type(:read)
     end
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
-      authorize_if action([:skip, :pause, :resume, :cancel, :change])
+      authorize_if action([:skip, :unskip, :pause, :resume, :cancel, :change])
     end
 
-    policy action([:read, :mine, :skip, :pause, :resume, :cancel, :change, :replace_card]) do
+    policy action([:read, :mine, :skip, :unskip, :pause, :resume, :cancel, :change, :replace_card]) do
       authorize_if expr(user_id == ^actor(:id))
     end
   end
@@ -233,6 +289,12 @@ defmodule Edenflowers.Orders.Subscription do
 
     attribute :stripe_customer_id, :string, allow_nil?: false
     attribute :stripe_payment_method_id, :string, allow_nil?: false
+
+    # Shown to the customer only; Stripe holds the card.
+    attribute :card_brand, :string
+    attribute :card_last4, :string
+    attribute :card_exp_month, :integer
+    attribute :card_exp_year, :integer
 
     attribute :setup_emailed_at, :utc_datetime
 
@@ -260,5 +322,12 @@ defmodule Edenflowers.Orders.Subscription do
     # Occurrences carry no promotion, so only the order that started the
     # subscription can have been discounted.
     calculate :first_order_discounted?, :boolean, expr(exists(orders, origin == :online and promotion_applied?))
+  end
+
+  aggregates do
+    # The schedule runs on from the latest delivery, booked or done.
+    max :last_delivery_date, :orders, :fulfillment_date do
+      filter expr(state == :placed and fulfillment_status != :cancelled)
+    end
   end
 end

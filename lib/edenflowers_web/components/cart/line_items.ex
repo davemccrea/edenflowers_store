@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
   use EdenflowersWeb, :live_component
 
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
   attr :id, :string, required: true
@@ -52,13 +53,19 @@ defmodule EdenflowersWeb.Cart.LineItems do
                     <span>{line_item.product_name}</span>
                   <% end %>
                   <span :if={line_item.variant_size} class="font-serif text-base-content/65 text-sm italic leading-none">
-                    {String.capitalize(to_string(line_item.variant_size))}
+                    {AdminComponents.variant_size_label(line_item.variant_size)}
                   </span>
-                  <span :if={line_item.interval_weeks} class="text-base-content/65 text-sm">
-                    {~t"Subscription"} · {Fields.interval_label(line_item.interval_weeks)}
+                  <span :if={line_item.interval_weeks} class="text-sm" data-testid="line-item-subscription">
+                    {~t"Subscription"} · {Fields.interval_label(line_item.interval_weeks)} ·
+                    <.link navigate={~p"/product/#{line_item.product_id}"} class="link-underline-hover">
+                      {~t"Change"}
+                    </.link>
                   </span>
                 </div>
-                <span class="shrink-0 tabular-nums">{Edenflowers.Format.currency(line_item.subtotal, @order.locale)}</span>
+                <span class="shrink-0 text-right tabular-nums">
+                  {Edenflowers.Format.currency(line_item.subtotal, @order.locale)}
+                  <span :if={line_item.interval_weeks} class="block text-sm">{~t"per delivery"}</span>
+                </span>
               </div>
 
               <%!-- gap-2 and the 4rem mobile thumbnail are load-bearing: three 3rem

@@ -38,7 +38,7 @@ Apply the findings from two reviews of the subscriptions feature (commits ebb1fa
 - [x] **Drop the always-true conditions** in the `send_payment_failed_email` trigger's `where`: `origin == :subscription` and `not is_nil(customer_email)`.
 - [x] **One subscription-line lookup in `ActivateSubscription`.** Find the subscription line once instead of loading `:subscription?` as well.
 - [x] **One expression in `SubscriptionDelivery.subscription?/1`**, not two clauses.
-- [ ] **Drop the duplicate interval test** in `change_subscription_test.exs`; `subscription_test.exs` already covers it.
+- ~~Drop the duplicate interval test~~: **kept** (2026-10-09). The two tests aren't duplicates: `subscription_test.exs` checks the interval on the cart line at subscribe time, while `change_subscription_test.exs` checks `Subscription :change`'s own `attribute_in(:interval_weeks, ...)` validation. Dropping it would leave that validation untested.
 
 ### Alerting
 

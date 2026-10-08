@@ -292,7 +292,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     defp days_from_today(days), do: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), days)
 
+    defp weekday_date(date), do: Edenflowers.Format.weekday_date(date, @locale)
+
     defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)
+
+    defp row(subscription), do: "#subscription-#{subscription.id}"
+    defp drawer(subscription), do: "#manage-subscription-#{subscription.id}"
 
     test "lists the customer's subscriptions, not anyone else's", %{conn: conn, user: user} do
       mine = subscription(user, %{})
@@ -300,43 +305,139 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "#subscription-#{mine.id}", "Medium · Every 2 weeks")
+      variant = Ash.load!(mine, product_variant: :product).product_variant
+      next = mine.next_fulfillment_date
+
+      assert has_element?(view, "#{row(mine)} th", variant.product.name)
+      assert has_element?(view, "#{row(mine)} th", "Medium · Every 2 weeks")
+      assert has_element?(view, row(mine), Edenflowers.Format.currency(variant.price, @locale))
 
       assert has_element?(
                view,
-               "#subscription-#{mine.id}",
-               "Next delivery #{Edenflowers.Format.date(mine.next_fulfillment_date, @locale)}"
+               "#{row(mine)} [data-testid=subscription-status]",
+               Edenflowers.Format.weekday_day_month(next, @locale)
              )
 
-      refute has_element?(view, "#subscription-#{theirs.id}")
+      assert has_element?(
+               view,
+               "#{row(mine)} [data-testid=subscription-status]",
+               "Charged #{Edenflowers.Format.day_month(Date.add(next, -3), @locale)}"
+             )
+
+      assert has_element?(
+               view,
+               "#{drawer(mine)} [data-testid=subscription-drawer-status]",
+               "Charged to your card on #{weekday_date(Date.add(next, -3))}."
+             )
+
+      refute has_element?(view, row(theirs))
+      refute has_element?(view, drawer(theirs))
     end
 
-    test "hides the section without a subscription", %{conn: conn} do
+    test "shows a delivery that's already booked as the next one", %{conn: conn, user: user} do
+      subscription = subscription(user, %{next_fulfillment_date: days_from_today(30)})
+      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      refute has_element?(view, "#subscriptions-heading")
+      assert has_element?(
+               view,
+               "#{row(subscription)} [data-testid=subscription-status]",
+               Edenflowers.Format.weekday_day_month(days_from_today(2), @locale)
+             )
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
+               "The one after: #{weekday_date(days_from_today(30))}"
+             )
     end
 
-    test "skips the next delivery", %{conn: conn, user: user} do
+    test "lists cancelled subscriptions last, and drops them after a month", %{conn: conn, user: user} do
+      cancelled = subscription(user, %{state: :cancelled})
+      active = subscription(user, %{})
+      long_gone = subscription(user, %{state: :cancelled, updated_at: DateTime.add(DateTime.utc_now(), -31, :day)})
+      {:ok, _view, html} = live(conn, ~p"/account")
+
+      ids = Regex.scan(~r/<tr[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
+      assert ids == [active.id, cancelled.id]
+      assert html =~ "Cancelled on #{weekday_date(Edenflowers.Expressions.HelsinkiToday.today())}."
+      refute html =~ long_gone.id
+    end
+
+    test "points to the subscription product without a subscription", %{conn: conn} do
+      category = generate(product_category(visibility: :public))
+
+      product =
+        generate(product(subscribable: true, free_delivery: true, draft: false, product_category_id: category.id))
+
+      generate(product_variant(product_id: product.id))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/product/#{product.id}"]|)
+    end
+
+    test "shows who a subscription delivers to, and offers a fresh start once cancelled", %{conn: conn, user: user} do
+      gift = subscription(user, %{recipient_name: "Ingrid Nyman", delivery_address: "Gerbyntie 16, Vaasa"})
+      cancelled = subscription(user, %{state: :cancelled})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Ingrid Nyman")
+      assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Gerbyntie 16, Vaasa")
+
+      variant = Ash.get!(Edenflowers.Catalog.ProductVariant, cancelled.product_variant_id)
+
+      assert has_element?(
+               view,
+               ~s|#{drawer(cancelled)} a[href="/product/#{variant.product_id}"]|,
+               "Start a new subscription"
+             )
+    end
+
+    test "marks subscription deliveries in the orders", %{conn: conn, user: user} do
       subscription = subscription(user, %{})
+      placed_order(user_id: user.id, subscription_id: subscription.id)
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      view |> element("#subscription-#{subscription.id} button", "Skip next delivery") |> render_click()
+      assert has_element?(view, "[data-testid=orders-table] [data-testid=order-subscription]", "Subscription")
+    end
+
+    test "skips the next delivery, and takes the skip back", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      skipped = Edenflowers.Format.day_month(subscription.next_fulfillment_date, @locale)
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> element("#{drawer(subscription)} button", "Skip #{skipped}") |> render_click()
 
       assert reload(subscription).skipped_dates == [subscription.next_fulfillment_date]
-      assert has_element?(view, "#subscription-#{subscription.id} [data-testid=subscription-status]", "Skipping")
-      refute has_element?(view, "#subscription-#{subscription.id} button", "Skip next delivery")
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Skipping #{skipped}")
+      assert has_element?(view, "#{drawer(subscription)} [data-testid=subscription-notice]", "Delivery skipped")
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
+               "You're skipping #{weekday_date(subscription.next_fulfillment_date)}. Away for longer? Pause instead."
+             )
+
+      view |> element("#{drawer(subscription)} button", "Deliver on #{skipped} after all") |> render_click()
+
+      assert reload(subscription).skipped_dates == []
     end
 
     test "pauses and resumes", %{conn: conn, user: user} do
       subscription = subscription(user, %{})
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      view |> element("#subscription-#{subscription.id} button", "Pause") |> render_click()
+      view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
       assert reload(subscription).state == :paused
-      assert has_element?(view, "#subscription-#{subscription.id}", "Paused")
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "No deliveries or charges")
 
-      view |> element("#subscription-#{subscription.id} button", "Resume") |> render_click()
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
+               "Resume now and your next delivery is #{weekday_date(subscription.next_fulfillment_date)}."
+             )
+
+      view |> element("#subscription-#{subscription.id}-pause", "Resume") |> render_click()
       assert reload(subscription).state == :active
     end
 
@@ -344,18 +445,91 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       subscription = subscription(user, %{})
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      view |> element("#subscription-#{subscription.id} button", "Cancel subscription") |> render_click()
+      assert has_element?(view, "#cancel-subscription-#{subscription.id}", "Want a break instead?")
+      view |> element("#cancel-subscription-#{subscription.id} button", "Stop subscription") |> render_click()
 
       assert reload(subscription).state == :cancelled
-      refute has_element?(view, "#subscription-#{subscription.id} button")
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Cancelled")
+      refute has_element?(view, "#cancel-subscription-#{subscription.id}")
+      refute has_element?(view, "#change-subscription-#{subscription.id}")
+    end
+
+    test "pauses from the cancel dialog instead", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> element("#cancel-subscription-#{subscription.id} button", "Pause it") |> render_click()
+
+      assert reload(subscription).state == :paused
     end
 
     test "offers no changes inside the cutoff", %{conn: conn, user: user} do
       subscription = subscription(user, %{next_fulfillment_date: days_from_today(4)})
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "#subscription-#{subscription.id}", "It's too late to change your next delivery.")
-      refute has_element?(view, "#subscription-#{subscription.id} button")
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=changes-closed]",
+               "You can make changes again from #{weekday_date(days_from_today(1))}."
+             )
+
+      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=changes-closed] a[href="/contact"]|)
+      refute has_element?(view, "#subscription-#{subscription.id}-pause")
+      refute has_element?(view, "#change-subscription-#{subscription.id}")
+      refute has_element?(view, "#cancel-subscription-#{subscription.id}")
+    end
+
+    test "asks a held subscription for a new card and the unpaid delivery", %{conn: conn, user: user} do
+      subscription = subscription(user, %{state: :payment_failed})
+
+      unpaid =
+        placed_order(
+          user_id: user.id,
+          subscription_id: subscription.id,
+          payment_status: :pending,
+          payment_link_token: "tok_held"
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      date = weekday_date(unpaid.fulfillment_date)
+
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Payment failed")
+      assert has_element?(view, ~s|#{row(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-payment]",
+               "We couldn't charge your card for #{date}"
+             )
+
+      assert has_element?(
+               view,
+               ~s|#{drawer(subscription)} [data-testid=subscription-update-card][href="/account/subscriptions/#{subscription.id}/card"]|
+             )
+
+      refute has_element?(view, "#change-subscription-#{subscription.id}")
+    end
+
+    test "keeps asking for an unpaid delivery once the new card has restarted the subscription", %{
+      conn: conn,
+      user: user
+    } do
+      subscription = subscription(user, %{})
+
+      placed_order(
+        user_id: user.id,
+        subscription_id: subscription.id,
+        payment_status: :pending,
+        payment_link_token: "tok_held"
+      )
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Unpaid")
+      assert has_element?(view, "#{drawer(subscription)} [data-testid=subscription-payment]", "is still unpaid")
+      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
+      refute has_element?(view, "#{drawer(subscription)} [data-testid=subscription-update-card]")
     end
 
     test "changes the size and how often", %{conn: conn, user: user} do
@@ -364,16 +538,55 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       large = generate(product_variant(product_id: variant.product_id, size: :large, draft: false))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      view
-      |> form("#change-subscription-#{subscription.id}", %{
-        "product_variant_id" => large.id,
-        "interval_weeks" => "4"
-      })
-      |> render_submit()
+      save = "#change-subscription-#{subscription.id} button[type=submit]"
+      assert has_element?(view, "#{save}[disabled]")
+
+      changes = %{"product_variant_id" => large.id, "interval_weeks" => "4"}
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_change()
+      refute has_element?(view, "#{save}[disabled]")
+
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_submit()
 
       assert %{product_variant_id: large_id, interval_weeks: 4} = reload(subscription)
       assert large_id == large.id
-      assert has_element?(view, "#subscription-#{subscription.id}", "Large · Every 4 weeks")
+      assert has_element?(view, "#{row(subscription)} th", "Large · Every 4 weeks")
+
+      price = Edenflowers.Format.storefront_price(large.price, @locale)
+
+      assert render(view) =~
+               "From #{weekday_date(reload(subscription).next_fulfillment_date)}: Large, every 4 weeks, #{price} per delivery."
+    end
+
+    test "moves deliveries to another day", %{conn: conn, user: user} do
+      subscription = subscription(user, %{})
+      next = subscription.next_fulfillment_date
+      day = Edenflowers.Fulfillment.Weekday.from_date(Date.add(next, 1))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      changes = %{
+        "product_variant_id" => subscription.product_variant_id,
+        "interval_weeks" => "2",
+        "delivery_day" => day
+      }
+
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_change()
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_submit()
+
+      assert reload(subscription).next_fulfillment_date == Date.add(next, 1)
+      assert render(view) =~ "From #{weekday_date(Date.add(next, 1))}:"
+    end
+
+    test "shows the card deliveries are charged to", %{conn: conn, user: user} do
+      subscription =
+        subscription(user, %{card_brand: "visa", card_last4: "4242", card_exp_month: 8, card_exp_year: 2027})
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-card]",
+               "Visa •••• 4242, expires 08/27"
+             )
     end
 
     test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do
@@ -400,7 +613,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(4)})
-      view |> element("#subscription-#{subscription.id} button", "Pause") |> render_click()
+      view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
 
       assert reload(subscription).state == :active
       assert render(view) =~ "It&#39;s too late to change your next delivery."

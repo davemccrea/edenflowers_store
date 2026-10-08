@@ -24,6 +24,7 @@ defmodule Edenflowers.DataCase do
 
   setup tags do
     Edenflowers.DataCase.setup_sandbox(tags)
+    Edenflowers.DataCase.stub_card_lookup()
     :ok
   end
 
@@ -33,5 +34,13 @@ defmodule Edenflowers.DataCase do
   def setup_sandbox(tags) do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Edenflowers.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+  end
+
+  @doc """
+  Saving a subscription's card looks the card up in Stripe to show it. Tests
+  that don't care get no details back; a test can still `expect` the call.
+  """
+  def stub_card_lookup do
+    Mox.stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_method, fn id -> {:ok, %{id: id}} end)
   end
 end

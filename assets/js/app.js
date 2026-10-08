@@ -98,6 +98,14 @@ cinderFilterObserver.observe(document.body, {
   attributeFilter: ["class", "style"],
 });
 
+// Runs the JS command stored in an element's attribute, so the server can open
+// the cart drawer only once an add has succeeded.
+window.addEventListener("phx:js-exec", ({ detail }) => {
+  document
+    .querySelectorAll(detail.to)
+    .forEach((el) => liveSocket.execJS(el, el.getAttribute(detail.attr)));
+});
+
 // The drawer component's phx-show/phx-hide dispatch these to its <dialog>.
 window.addEventListener("drawer:open", (event) => event.target.showModal());
 window.addEventListener("drawer:close", (event) => event.target.close());

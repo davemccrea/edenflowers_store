@@ -11,13 +11,16 @@ defmodule Edenflowers.Orders.Changes.StepToScheduledDate do
   @impl true
   def change(changeset, opts, _context) do
     %{next_fulfillment_date: date, interval_weeks: weeks} = changeset.data
-    earliest = Date.add(HelsinkiToday.today(), Keyword.fetch!(opts, :days_from_today))
-
-    next_date =
-      date
-      |> Stream.iterate(&Date.add(&1, weeks * 7))
-      |> Enum.find(&(not Date.before?(&1, earliest)))
+    next_date = scheduled_date(date, weeks, Keyword.fetch!(opts, :days_from_today))
 
     Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
+  end
+
+  def scheduled_date(date, weeks, days_from_today) do
+    earliest = Date.add(HelsinkiToday.today(), days_from_today)
+
+    date
+    |> Stream.iterate(&Date.add(&1, weeks * 7))
+    |> Enum.find(&(not Date.before?(&1, earliest)))
   end
 end

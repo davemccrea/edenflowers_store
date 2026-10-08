@@ -37,6 +37,41 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "#order-status", "I'll send a text message when it's ready.")
   end
 
+  test "says a subscription carries on until it is changed", %{conn: conn, user: user} do
+    order =
+      generate(
+        order(
+          state: :placed,
+          user_id: user.id,
+          customer_name: "Ada Lovelace",
+          customer_email: "ada@example.com",
+          fulfillment_method: :delivery,
+          fulfillment_date: ~D[2026-06-10],
+          locale: "en-GB"
+        )
+      )
+
+    variant = generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1, interval_weeks: 2))
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+
+    assert has_element?(view, "[data-testid=order-subscription]", "Then every 2 weeks")
+
+    next = Edenflowers.Format.weekday_date(~D[2026-06-24], "en-GB")
+    assert has_element?(view, "[data-testid=order-next-delivery]", "Next delivery #{next}")
+    assert has_element?(view, "[data-testid=order-next-delivery]", "charged 3 days before")
+    assert has_element?(view, ~s|[data-testid=order-next-delivery] a[href="/account"]|, "Manage subscription")
+  end
+
+  test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
+    order = placed_order(user_id: user.id)
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+
+    refute has_element?(view, "[data-testid=order-subscription]")
+  end
+
   test "hides another customer's order", %{conn: conn} do
     other = generate(admin_user(admin: false))
     order = placed_order(user_id: other.id)

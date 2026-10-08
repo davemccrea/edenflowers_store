@@ -116,9 +116,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       aria-required="true"
                       data-testid="customer-email-input"
                     />
+                    <p :if={@order.subscription?} class="text-base-content/70 -mt-4 text-sm" data-testid="account-note">
+                      {~t"We'll set up an account with this email so you can skip, pause or cancel."}
+                    </p>
 
                     <.input
-                      :if={!hide_newsletter_offer?(@order, @current_user)}
+                      :if={not @order.subscription? and !hide_newsletter_offer?(@order, @current_user)}
                       label={~t"Subscribe to the newsletter to receive 15% off your first order by email."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
@@ -181,6 +184,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     >
                       {option.name}
                     </.input>
+                    <p
+                      :if={@order.subscription?}
+                      class="text-base-content/70 mt-2 text-sm"
+                      data-testid="subscription-delivery-only"
+                    >
+                      {~t"A subscription is always delivered, so it can't be collected from the shop."}
+                    </p>
                   </.form>
 
                   <%= if @order.fulfillment_option do %>
@@ -274,6 +284,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <div phx-update="ignore" id="payment-element"></div>
                     <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
+
+                    <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />
 
                     <.form_button disabled={true} id="payment-button" busy_label={~t"Tying the ribbon…"}>
                       {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
@@ -508,6 +520,35 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       </p>
     </div>
     """
+  end
+
+  attr :order, :map, required: true
+  attr :fee, :any, required: true
+
+  # Saying what the saved card will be charged, and how often, is the consent
+  # for every later charge, so it sits right above the button that gives it.
+  defp recurring_charge(assigns) do
+    %{order: order, fee: fee} = assigns
+
+    case Enum.find(order.line_items, & &1.interval_weeks) do
+      %{} = line when not is_nil(order.fulfillment_date) ->
+        assigns =
+          assign(assigns,
+            amount: Edenflowers.Format.currency(Decimal.add(line.subtotal, fee || 0), order.locale),
+            interval: String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(line.interval_weeks)),
+            from:
+              Edenflowers.Format.weekday_date(Date.add(order.fulfillment_date, line.interval_weeks * 7), order.locale)
+          )
+
+        ~H"""
+        <p class="text-base-content/80 text-sm leading-relaxed" data-testid="recurring-charge">
+          {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged to this card #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery. Skip, pause or cancel from your account."}
+        </p>
+        """
+
+      _not_a_subscription ->
+        ~H""
+    end
   end
 
   defp card_from_price([], _locale), do: nil

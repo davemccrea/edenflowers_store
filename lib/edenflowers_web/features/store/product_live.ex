@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
+  alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
   alias Edenflowers.Catalog
@@ -18,7 +19,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
     product_category = Translations.translate(product.product_category)
     product = Translations.translate(product)
 
-    selected_variant =
+    cart_line = cart_line(socket.assigns.order, product.id)
+
+    default_variant =
       case length(product_variants) do
         1 ->
           List.first(product_variants)
@@ -35,6 +38,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
           Enum.at(product_variants, middle_index)
       end
 
+    selected_variant =
+      (cart_line && Enum.find(product_variants, &(&1.id == cart_line.product_variant_id))) || default_variant
+
     {:ok,
      socket
      |> assign(order_id: order_id)
@@ -42,15 +48,23 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
-     |> assign(subscribe?: false, interval_weeks: "1")
+     |> assign(subscribe?: if(cart_line, do: cart_line.interval_weeks != nil, else: product.subscribable))
+     |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
+     |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
   def render(assigns) do
+    %{order: order, product: product, subscribe?: subscribe?} = assigns
+    lines = Enum.reject(order.line_items, & &1.is_card)
+    replaces_cart? = KeepSubscriptionAlone.replaces?(order.line_items, product.id, subscribe?)
+
     assigns =
       assign(assigns,
-        replaces_cart?:
-          KeepSubscriptionAlone.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?)
+        in_cart?: in_cart?(assigns),
+        replaces_cart?: replaces_cart?,
+        cart_note: replaces_cart? && replace_note(lines, assigns),
+        blocked?: lines != [] and not replaces_cart? and (subscribe? or Enum.any?(lines, & &1.interval_weeks))
       )
 
     ~H"""
@@ -69,6 +83,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
             </h1>
             <p class="font-serif text-base-content text-2xl">
               {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
+              <span :if={@subscribe?} class="text-base-content/70 text-lg">{~t"per delivery"}</span>
             </p>
           </header>
 
@@ -76,7 +91,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
             <.image
               data-testid="product-image"
               src={@selected_variant.image_slug}
-              alt={"#{@product.name} #{String.capitalize(to_string(@selected_variant.size))}"}
+              alt={"#{@product.name} #{AdminComponents.variant_size_label(@selected_variant.size)}"}
               width={1000}
               height={1250}
               sizes="(min-width: 768px) 480px, 100vw"
@@ -84,7 +99,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               class="h-full w-full object-cover"
             />
             <figcaption :if={@product.featured} class="product-mark">
-              <span class="eyebrow text-base-content text-[0.6875rem]">{~t"Favourite"}</span>
+              <span class="eyebrow text-base-content text-xs">{~t"Favourite"}</span>
             </figcaption>
           </figure>
 
@@ -101,6 +116,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
               </h1>
               <p data-testid="product-price" class="font-serif text-base-content text-2xl">
                 {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
+                <span :if={@subscribe?} class="text-base-content/70 text-lg" data-testid="per-delivery">
+                  {~t"per delivery"}
+                </span>
               </p>
             </header>
 
@@ -108,25 +126,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
               {@product.description}
             </p>
 
-            <div :if={@free_dist_km || @product.subscribable} class="flex flex-col gap-2">
-              <p
-                :if={@free_dist_km}
-                data-testid="product-free-delivery"
-                class="text-base-content/80 flex items-center gap-2"
-              >
-                <.icon name="hero-truck" class="h-5 w-5" />
-                {~t"Free delivery within #{km = @free_dist_km} km"}
-              </p>
-
-              <p
-                :if={@product.subscribable}
-                data-testid="product-subscribable"
-                class="text-base-content/80 flex items-center gap-2"
-              >
-                <.icon name="hero-arrow-path" class="h-5 w-5" />
-                {~t"Also as a subscription"}
-              </p>
-            </div>
+            <p
+              :if={@free_dist_km}
+              data-testid="product-free-delivery"
+              class="text-base-content/80 flex items-center gap-2"
+            >
+              <.icon name="hero-truck" class="h-5 w-5" />
+              {~t"Free delivery within #{km = @free_dist_km} km"}
+            </p>
 
             <.form
               id="product-form"
@@ -154,7 +161,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       data-testid={"variant-option-#{variant.size}"}
                     />
                     <span class="size-option__label font-serif text-xl">
-                      {String.capitalize(to_string(variant.size))}
+                      {AdminComponents.variant_size_label(variant.size)}
                     </span>
                     <span class="size-option__price text-base-content font-serif ml-2 text-lg">
                       {Edenflowers.Format.storefront_price(variant.price, Edenflowers.Format.locale())}
@@ -214,24 +221,55 @@ defmodule EdenflowersWeb.Store.ProductLive do
                     <span class="size-option__label font-serif text-xl">{Fields.interval_label(weeks)}</span>
                   </label>
                 </div>
-                <p class="text-base-content/75 text-base">{~t"Delivered regularly, skip or cancel any time"}</p>
+                <div class="text-base-content/75 flex flex-col gap-1 text-base" data-testid="subscription-explainer">
+                  <p>
+                    {~t"A bouquet of whatever is best that week, delivered on the schedule you choose. Your card is charged #{days = Subscription.lead_days()} days before each delivery."}
+                  </p>
+                  <p>{~t"Always delivered, never collected. Skip, pause or cancel from your account."}</p>
+                  <p :if={@has_subscription?} data-testid="already-subscribed">
+                    {~t"You already have a subscription."}
+                    <.link navigate={~p"/account"} class="link-underline-hover text-base-content">
+                      {~t"Manage it from your account."}
+                    </.link>
+                  </p>
+                </div>
               </fieldset>
 
-              <p :if={@replaces_cart?} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
-                {if @order.subscription?,
-                  do: ~t"Replaces the subscription in your cart",
-                  else: ~t"Replaces the bouquet in your cart"}
-              </p>
-              <.button
-                type="submit"
-                variant="primary"
-                size="lg"
-                phx-click={JS.exec("phx-show", to: "#cart-drawer")}
-                data-testid="add-to-cart-button"
-                class="w-full"
-              >
-                {if @replaces_cart?, do: ~t"Update cart", else: ~t"Add to cart"}
-              </.button>
+              <%= cond do %>
+                <% @in_cart? -> %>
+                  <p class="text-base-content/75 text-base" data-testid="in-cart-note">{~t"This is in your cart."}</p>
+                  <.button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+                    data-testid="add-to-cart-button"
+                    class="w-full"
+                  >
+                    {~t"View cart"}
+                  </.button>
+                <% @blocked? -> %>
+                  <p class="text-base-content/75 text-base" data-testid="blocked-note">
+                    {~t"A subscription is checked out on its own. Empty your cart to add this."}
+                  </p>
+                  <.button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    phx-click={JS.exec("phx-show", to: "#cart-drawer")}
+                    data-testid="add-to-cart-button"
+                    class="w-full"
+                  >
+                    {~t"View cart"}
+                  </.button>
+                <% true -> %>
+                  <p :if={@cart_note} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
+                    {@cart_note}
+                  </p>
+                  <.button type="submit" variant="primary" size="lg" data-testid="add-to-cart-button" class="w-full">
+                    {if @replaces_cart?, do: ~t"Update cart", else: ~t"Add to cart"}
+                  </.button>
+              <% end %>
             </.form>
 
             <p class="text-base-content/75 text-base">
@@ -263,11 +301,50 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, subscription) do
       {:ok, _line_item} ->
-        {:noreply, socket}
+        {:noreply, push_event(socket, "js-exec", %{to: "#cart-drawer", attr: "phx-show"})}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, add_error_message(error))}
     end
+  end
+
+  defp cart_line(order, product_id), do: Enum.find(order.line_items, &(not &1.is_card and &1.product_id == product_id))
+
+  defp in_cart?(%{order: order, product: product, selected_variant: variant} = assigns) do
+    interval = if assigns.subscribe?, do: String.to_integer(assigns.interval_weeks)
+
+    case Enum.reject(order.line_items, & &1.is_card) do
+      [%{product_id: product_id, product_variant_id: variant_id, quantity: 1, interval_weeks: ^interval}] ->
+        product_id == product.id and variant_id == variant.id
+
+      _ ->
+        false
+    end
+  end
+
+  # Says what the add takes out of the cart, so nothing goes silently.
+  defp replace_note([%{quantity: 1} = line], assigns) do
+    ~t"Changes your cart from #{from = line_label(line.variant_size, line.interval_weeks)} to #{to = line_label(assigns.selected_variant.size, assigns.subscribe? && String.to_integer(assigns.interval_weeks))}."
+  end
+
+  defp replace_note(lines, _assigns) do
+    count = Enum.sum_by(lines, & &1.quantity)
+    amount = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&2, &1.subtotal))
+
+    ~t"Replaces the #{count = count} bouquets (#{amount = Edenflowers.Format.currency(amount, Edenflowers.Format.locale())}) in your cart."
+  end
+
+  defp line_label(size, nil), do: ~t"#{size = AdminComponents.variant_size_label(size)}, bought once"
+  defp line_label(size, false), do: line_label(size, nil)
+
+  defp line_label(size, weeks),
+    do: "#{AdminComponents.variant_size_label(size)}, #{String.downcase(Fields.interval_label(weeks))}"
+
+  defp has_subscription?(nil), do: false
+
+  defp has_subscription?(user) do
+    Orders.list_my_subscriptions!(actor: user)
+    |> Enum.any?(&(&1.state != :cancelled))
   end
 
   # The cart's rules say why in their own message, already translated.
