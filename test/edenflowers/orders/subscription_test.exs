@@ -9,7 +9,8 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.{LineItem, Order, Subscription}
-  alias Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
+  alias Edenflowers.Orders.Schedulers.StartSubscription, as: ScheduleStartSubscription
+  alias Edenflowers.Orders.Workers.{SendSubscriptionSetupEmail, StartSubscription}
   alias Edenflowers.Payments
 
   setup :verify_on_exit!
@@ -150,7 +151,8 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
   test "paying a subscription cart saves the card to a Stripe Customer", ctx do
     order = subscription_cart(ctx, state: :payment, payment_intent_id: nil)
-    order = Orders.get_order_for_checkout!(order.id, authorize?: false)
+    # Without `subscription?` loaded: setup finds that out for itself.
+    order = Ash.load!(order, :grand_total, authorize?: false)
     order_id = order.id
 
     expect(StripeAPI.Mock, :create_customer, fn %{email: "ada@example.com", name: "Ada Lovelace"} ->
@@ -169,6 +171,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       order = subscription_cart(ctx, state: :payment)
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
 
       order = Ash.get!(Order, order.id, authorize?: false)
       subscription = Ash.get!(Subscription, order.subscription_id, authorize?: false)
@@ -193,6 +196,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       order = subscription_cart(ctx, state: :payment)
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
 
       assert [job] = all_enqueued(worker: SendSubscriptionSetupEmail)
       assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
@@ -215,6 +219,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
         |> Orders.add_promotion_with_code!(generate(promotion()).code, authorize?: false)
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
 
       assert [job] = all_enqueued(worker: SendSubscriptionSetupEmail)
       assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
@@ -229,20 +234,24 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
       assert {:ok, :already_completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
+      start_subscriptions()
 
       assert [_one] = Ash.read!(Subscription, authorize?: false)
     end
 
-    test "a subscription that can't start still places the paid order", ctx do
+    test "a subscription that can't start leaves the paid order placed, and is tried again", ctx do
       order = subscription_cart(ctx, state: :payment)
       payment_intent = Map.put(payment_intent(order), :payment_method, nil)
 
-      log =
-        capture_log(fn ->
-          assert {:ok, :completed} = Payments.complete(payment_intent)
-        end)
+      assert {:ok, :completed} = Payments.complete(payment_intent)
+      assert %{state: :placed, subscription_id: nil} = Ash.get!(Order, order.id, authorize?: false)
 
-      assert log =~ "subscription could not be started"
+      assert :ok = perform_job(ScheduleStartSubscription, %{})
+      assert [job] = all_enqueued(worker: StartSubscription)
+      log = capture_log(fn -> catch_error(perform_job(StartSubscription, job.args)) end)
+
+      assert log =~ "stripe_payment_method_id"
       assert %{state: :placed, subscription_id: nil} = Ash.get!(Order, order.id, authorize?: false)
       assert Ash.read!(Subscription, authorize?: false) == []
     end
@@ -251,8 +260,17 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       order = subscription_cart(ctx, state: :payment, variant: ctx.bouquet_variant, interval_weeks: nil)
 
       assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
 
       assert Ash.read!(Subscription, authorize?: false) == []
+    end
+  end
+
+  defp start_subscriptions do
+    assert :ok = perform_job(ScheduleStartSubscription, %{})
+
+    for job <- all_enqueued(worker: StartSubscription) do
+      perform_job(StartSubscription, job.args)
     end
   end
 

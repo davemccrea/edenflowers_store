@@ -8,7 +8,9 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   import Mox
   import Swoosh.TestAssertions
 
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.{HereAPI, StripeAPI}
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.{Order, Payment, Subscription}
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
   alias Edenflowers.Orders.Workers.CreateOccurrence
@@ -39,7 +41,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       )
 
     {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
-    date = Date.add(Date.utc_today(), 3)
+    date = Date.add(HelsinkiToday.today(), 3)
 
     %{variant: variant, delivery: delivery, user: user, date: date}
   end
@@ -133,6 +135,21 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
   end
 
+  test "keeps a change Jennie makes while the card is being charged", ctx do
+    subscription = subscription(ctx)
+    stub_geocoding()
+
+    expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key ->
+      Orders.change_subscription!(reload(subscription), %{interval_weeks: 4}, actor: generate(admin_user()))
+      succeeded(cents, params)
+    end)
+
+    assert {:ok, _} = run(subscription)
+
+    assert %{interval_weeks: 4, next_fulfillment_date: next_date} = reload(subscription)
+    assert next_date == Date.add(ctx.date, 28)
+  end
+
   test "is not picked up before its lead time", ctx do
     subscription(ctx, %{next_fulfillment_date: Date.add(ctx.date, 1)})
 
@@ -167,7 +184,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "a date missed while the job was down creates no order and is reported", ctx do
-    missed = Date.add(Date.utc_today(), -1)
+    missed = Date.add(HelsinkiToday.today(), -1)
     subscription = subscription(ctx, %{next_fulfillment_date: missed})
 
     log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
@@ -363,7 +380,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       run_refused(ctx.subscription)
       [order] = occurrences(ctx.subscription)
 
-      passed = Date.add(Date.utc_today(), -1)
+      passed = Date.add(HelsinkiToday.today(), -1)
 
       Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
         passed,

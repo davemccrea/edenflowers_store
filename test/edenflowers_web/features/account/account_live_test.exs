@@ -290,7 +290,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       )
     end
 
-    defp days_from_today(days), do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(days)
+    defp days_from_today(days), do: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), days)
 
     defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)
 
@@ -382,6 +382,17 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       refute has_element?(view, "#change-subscription-#{subscription.id}")
       assert has_element?(view, ~s|a[href="/account/subscriptions/#{subscription.id}/card"]|, "Update card")
+    end
+
+    test "refuses a change to a subscription that isn't the customer's", %{conn: conn, user: user} do
+      subscription(user, %{})
+      theirs = subscription(generate(admin_user(admin: false)), %{})
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      render_click(view, "pause_subscription", %{"id" => theirs.id})
+
+      assert reload(theirs).state == :active
+      assert render(view) =~ "Your subscription couldn&#39;t be changed."
     end
 
     test "says why a change is refused once the cutoff passes with the page open", %{conn: conn, user: user} do

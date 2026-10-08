@@ -3,6 +3,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
   import Generator
 
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
 
@@ -34,7 +35,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     )
   end
 
-  defp days_from_today(days), do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(days)
+  defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
 
   test "lists only the customer's own subscriptions", context do
     mine = subscription(context)

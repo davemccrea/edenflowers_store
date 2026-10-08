@@ -39,6 +39,7 @@ defmodule Edenflowers.Orders.LineItem do
       upsert_fields [:quantity]
 
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
+      validate Edenflowers.Orders.Validations.Subscribable
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change Edenflowers.Orders.Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
@@ -70,6 +71,10 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   policies do
+    bypass actor_attribute_equals(:system, true) do
+      authorize_if action_type(:read)
+    end
+
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type(:read)
     end

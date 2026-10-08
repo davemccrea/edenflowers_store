@@ -26,19 +26,11 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
           |> assign(:page_title, ~t"Update your card")
           |> assign(:subscription, subscription)
 
-        case params do
-          %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"} ->
-            {:ok, save_card(socket, setup_intent_id)}
-
-          %{"redirect_status" => "failed"} ->
-            {:ok,
-             socket
-             |> put_flash(:error, ~t"Your card couldn't be saved. Please try again or use another card.")
-             |> assign_setup_intent()}
-
-          _params ->
-            {:ok, assign_setup_intent(socket)}
-        end
+        # Stripe is only touched once the page is live, so a link preview or
+        # the static first render never calls it.
+        if connected?(socket),
+          do: {:ok, set_up_card(socket, params)},
+          else: {:ok, assign(socket, client_secret: nil, payment_unavailable?: false)}
 
       _not_found_or_cancelled ->
         {:ok,
@@ -101,20 +93,26 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
     """
   end
 
-  # Stripe is only touched once the page is live, so a link preview never
-  # creates a SetupIntent.
-  defp assign_setup_intent(socket) do
-    if connected?(socket) do
-      case Payments.setup_card_replacement(socket.assigns.subscription) do
-        {:ok, client_secret} ->
-          assign(socket, client_secret: client_secret, payment_unavailable?: false)
+  defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do
+    save_card(socket, setup_intent_id)
+  end
 
-        {:error, reason} ->
-          Logger.error("Could not set up a card for subscription #{socket.assigns.subscription.id}: #{inspect(reason)}")
-          assign(socket, client_secret: nil, payment_unavailable?: true)
-      end
-    else
-      assign(socket, client_secret: nil, payment_unavailable?: false)
+  defp set_up_card(socket, %{"redirect_status" => "failed"}) do
+    socket
+    |> put_flash(:error, ~t"Your card couldn't be saved. Please try again or use another card.")
+    |> assign_setup_intent()
+  end
+
+  defp set_up_card(socket, _params), do: assign_setup_intent(socket)
+
+  defp assign_setup_intent(socket) do
+    case Payments.setup_card_replacement(socket.assigns.subscription) do
+      {:ok, client_secret} ->
+        assign(socket, client_secret: client_secret, payment_unavailable?: false)
+
+      {:error, reason} ->
+        Logger.error("Could not set up a card for subscription #{socket.assigns.subscription.id}: #{inspect(reason)}")
+        assign(socket, client_secret: nil, payment_unavailable?: true)
     end
   end
 

@@ -247,9 +247,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
       {:ok, _line_item} ->
         {:noreply, socket}
 
-      {:error, _error} ->
-        {:noreply,
-         put_flash(socket, :error, ~t"A subscription is checked out on its own. Empty your cart to add this.")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, add_error_message(error))}
     end
   end
+
+  # The cart's rules say why in their own message, already translated.
+  defp add_error_message(%Ash.Error.Invalid{errors: [%{message: message} | _]}) when is_binary(message), do: message
+  defp add_error_message(_error), do: ~t"This couldn't be added to your cart."
 end

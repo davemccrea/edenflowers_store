@@ -55,20 +55,26 @@ defmodule Edenflowers.Payments do
 
   # A subscription cart saves its card to a Stripe Customer, so later
   # deliveries can be charged without the customer present.
-  defp create_payment_intent(payable) do
-    amount_cents = StripeAPI.to_stripe_amount(expected_amount(payable))
-    metadata = %{metadata_key(payable) => payable.id}
+  defp create_payment_intent(%Order{} = order) do
+    amount_cents = StripeAPI.to_stripe_amount(expected_amount(order))
+    metadata = %{"order_id" => order.id}
 
-    case payable do
-      %Order{subscription?: true} ->
+    with {:ok, order} <- Ash.load(order, :subscription?, actor: system_actor()) do
+      if order.subscription? do
         with {:ok, customer} <-
-               stripe_api().create_customer(%{email: payable.customer_email, name: payable.customer_name}) do
+               stripe_api().create_customer(%{email: order.customer_email, name: order.customer_name}) do
           stripe_api().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
         end
-
-      _ ->
+      else
         stripe_api().create_payment_intent(amount_cents, metadata)
+      end
     end
+  end
+
+  defp create_payment_intent(payable) do
+    stripe_api().create_payment_intent(StripeAPI.to_stripe_amount(expected_amount(payable)), %{
+      metadata_key(payable) => payable.id
+    })
   end
 
   @doc "Brings the order's PaymentIntent amount in line with what it still owes."
@@ -358,8 +364,8 @@ defmodule Edenflowers.Payments do
             payment_intent.id,
             %{
               amount_paid: amount_paid,
-              stripe_customer_id: stripe_id(Map.get(payment_intent, :customer)),
-              stripe_payment_method_id: stripe_id(Map.get(payment_intent, :payment_method))
+              stripe_customer_id: Map.get(payment_intent, :customer),
+              stripe_payment_method_id: Map.get(payment_intent, :payment_method)
             },
             actor: system_actor()
           )
@@ -398,15 +404,11 @@ defmodule Edenflowers.Payments do
 
   def save_subscription_card(%{status: "succeeded", metadata: %{"subscription_id" => id}} = setup_intent, actor) do
     with {:ok, subscription} <- Orders.get_subscription(id, actor: actor) do
-      Orders.replace_subscription_card(subscription, stripe_id(setup_intent.payment_method), actor: actor)
+      Orders.replace_subscription_card(subscription, setup_intent.payment_method, actor: actor)
     end
   end
 
   def save_subscription_card(_setup_intent, _actor), do: {:error, :not_a_saved_subscription_card}
-
-  # Stripe sends an id, or the object itself when it was expanded.
-  defp stripe_id(%{id: id}), do: id
-  defp stripe_id(id), do: id
 
   defp recorded?(payment_intent_id) do
     Payment

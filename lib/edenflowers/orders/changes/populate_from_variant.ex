@@ -25,11 +25,7 @@ defmodule Edenflowers.Orders.Changes.PopulateFromVariant do
         free_delivery: variant.product.free_delivery
       }
 
-      if Ash.Changeset.get_attribute(changeset, :interval_weeks) && not variant.product.subscribable do
-        Ash.Changeset.add_error(changeset, field: :interval_weeks, message: ~t"This product can't be subscribed to")
-      else
-        Ash.Changeset.force_change_attributes(changeset, attrs)
-      end
+      Ash.Changeset.force_change_attributes(changeset, attrs)
     else
       _ ->
         Ash.Changeset.add_error(changeset, %Ash.Error.Changes.InvalidAttribute{

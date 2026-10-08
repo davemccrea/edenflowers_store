@@ -49,14 +49,14 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
             <div class="text-base-content/65 mt-0.5 break-all text-sm">{subscription.user.email}</div>
           </:col>
           <:col :let={subscription} label={~t"Size"}>
-            {subscription.product_variant && String.capitalize(to_string(subscription.product_variant.size))}
+            {variant_size_label(subscription.product_variant.size)}
           </:col>
           <:col :let={subscription} field="interval_weeks" sort label={~t"Interval"}>
             {Fields.interval_label(subscription.interval_weeks)}
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort label={~t"Next delivery"}>
             <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
-            <div :if={subscription.next_fulfillment_date in subscription.skipped_dates} class="text-base-content/65 text-sm">
+            <div :if={subscription.next_delivery_skipped?} class="text-base-content/65 text-sm">
               {~t"Skipped"}
             </div>
           </:col>
@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           <:col :let={subscription} label={~t"Actions"}>
             <div class="flex flex-wrap gap-1">
               <button
-                :if={subscription.state == :active and subscription.next_fulfillment_date not in subscription.skipped_dates}
+                :if={subscription.state == :active and not subscription.next_delivery_skipped?}
                 type="button"
                 phx-click="skip"
                 phx-value-id={subscription.id}

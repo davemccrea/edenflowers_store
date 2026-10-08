@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
               <div :if={not subscription.changes_closed?} class="flex flex-wrap gap-x-4 gap-y-2">
                 <.button
-                  :if={subscription.state == :active and not skipped?(subscription)}
+                  :if={subscription.state == :active and not subscription.next_delivery_skipped?}
                   type="button"
                   variant="text"
                   phx-click="skip_subscription"
@@ -483,13 +483,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp change_subscription(socket, id, action, success_message) do
     user = socket.assigns.current_user
-    subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
 
     socket =
-      case action.(subscription, actor: user) do
-        {:ok, _subscription} ->
-          put_flash(socket, :info, success_message)
-
+      with {:ok, subscription} <- Orders.get_subscription(id, actor: user),
+           {:ok, _subscription} <- action.(subscription, actor: user) do
+        put_flash(socket, :info, success_message)
+      else
         {:error, error} ->
           Logger.info("Subscription change refused: #{inspect(error)}")
           put_flash(socket, :error, subscription_error_message(error))
@@ -508,8 +507,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
 
-  defp skipped?(subscription), do: subscription.next_fulfillment_date in subscription.skipped_dates
-
   defp size_options(subscription) do
     for variant <- subscription.product_variant.product.product_variants,
         not variant.draft or variant.id == subscription.product_variant_id do
@@ -525,7 +522,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp subscription_status(%{state: :active} = subscription, locale) do
     next = Format.date(subscription.next_fulfillment_date, locale)
 
-    if skipped?(subscription) do
+    if subscription.next_delivery_skipped? do
       following = Format.date(Date.add(subscription.next_fulfillment_date, subscription.interval_weeks * 7), locale)
       ~t"Skipping #{date = next}. Next delivery #{next_date = following}"
     else

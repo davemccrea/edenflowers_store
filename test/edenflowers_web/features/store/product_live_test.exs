@@ -59,6 +59,18 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     refute has_element?(view, "[data-testid=subscribe-option]")
   end
 
+  test "says why an add to the cart was refused", %{conn: conn, order: order} do
+    product = generate(product(draft: false))
+    variant = generate(product_variant(product_id: product.id))
+    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+    render_change(view, "change", %{product_variant_id: variant.id, subscribe: "true", interval_weeks: "2"})
+    render_submit(view, "submit", %{})
+
+    assert render(view) =~ "This product can&#39;t be subscribed to"
+    assert line_items(order) == []
+  end
+
   test "the store marks a subscribable product", %{conn: conn} do
     category = generate(product_category(slug: "bouquets", visibility: :public))
     product = generate(product(product_category_id: category.id, subscribable: true, free_delivery: true, draft: false))

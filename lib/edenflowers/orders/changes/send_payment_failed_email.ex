@@ -7,9 +7,9 @@ defmodule Edenflowers.Orders.Changes.SendPaymentFailedEmail do
   alias Edenflowers.Mailer
 
   @impl true
-  def change(changeset, _opts, _context) do
+  def change(changeset, _opts, context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
-      order = Ash.load!(changeset.data, [:customer_first_name, :grand_total], authorize?: false)
+      order = Ash.load!(changeset.data, [:customer_first_name, :grand_total], Ash.Context.to_opts(context))
 
       case order |> Email.payment_failed(EdenflowersWeb.PaymentLink.url_for(order)) |> Mailer.deliver() do
         {:ok, _result} ->

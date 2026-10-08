@@ -18,11 +18,12 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   """
   use Ash.Resource.Change
 
-  require Ash.Query
   require Logger
 
+  import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
@@ -43,11 +44,11 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
     case deliver(subscription, date) do
       :ok ->
-        move_on(changeset, subscription, date)
+        move_on(changeset, date)
 
       :payment_failed ->
         changeset
-        |> move_on(subscription, date)
+        |> move_on(date)
         |> AshStateMachine.transition_state(:payment_failed)
 
       {:error, error} ->
@@ -55,10 +56,18 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     end
   end
 
-  defp move_on(changeset, subscription, date) do
-    Ash.Changeset.force_change_attributes(changeset,
-      next_fulfillment_date: Date.add(date, subscription.interval_weeks * 7),
-      skipped_dates: List.delete(subscription.skipped_dates, date)
+  # Atomic, so a skip or change Jennie makes while the card is being charged
+  # isn't overwritten with what the subscription held when the job started.
+  defp move_on(changeset, date) do
+    changeset
+    |> Ash.Changeset.atomic_update(
+      :next_fulfillment_date,
+      expr(fragment("?::date + (? * 7)::integer", ^date, interval_weeks))
+    )
+    # Ash can't cast an array expression, so it is passed to the database as it is.
+    |> Ash.Changeset.atomic_update(
+      :skipped_dates,
+      {:atomic, expr(type(fragment("array_remove(?, ?::date)", skipped_dates, ^date), {:array, :date}))}
     )
   end
 
@@ -79,7 +88,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   # Only when the job was down past the date. Nothing was charged, so the date
   # is dropped rather than piling several deliveries onto the next open day.
   defp occur_unless_missed(subscription, date) do
-    if Date.before?(date, Date.utc_today()) do
+    if Date.before?(date, HelsinkiToday.today()) do
       Logger.error("Subscription #{subscription.id} missed its delivery on #{date}. No order was made or charged.")
       :ok
     else
@@ -88,18 +97,17 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   end
 
   defp find_occurrence(subscription, date) do
-    Order
-    |> Ash.Query.filter(subscription_id == ^subscription.id and subscription_date == ^date)
-    |> Ash.Query.load([:grand_total, :unpaid?])
-    |> Ash.read_one(authorize?: false)
+    Orders.get_occurrence(subscription.id, date,
+      load: [:grand_total, :unpaid?],
+      not_found_error?: false,
+      actor: system_actor()
+    )
   end
 
   defp create_occurrence(subscription, date) do
-    with {:ok, subscription} <- Ash.load(subscription, [:user, :fulfillment_option], authorize?: false),
+    with {:ok, subscription} <- Ash.load(subscription, [:user, :fulfillment_option], actor: system_actor()),
          {:ok, fulfillment_date} <- first_open_day(subscription.fulfillment_option, date) do
-      Order
-      |> Ash.Changeset.for_create(
-        :create_occurrence,
+      Orders.create_occurrence(
         %{
           subscription_id: subscription.id,
           subscription_date: date,
@@ -115,9 +123,9 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
           fulfillment_option_id: subscription.fulfillment_option_id,
           fulfillment_date: fulfillment_date
         },
-        authorize?: false
+        load: [:grand_total],
+        actor: system_actor()
       )
-      |> Ash.create(load: [:grand_total])
     end
   end
 
