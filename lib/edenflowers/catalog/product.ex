@@ -26,6 +26,7 @@ defmodule Edenflowers.Catalog.Product do
     read :featured do
       filter expr(featured == true)
       prepare Edenflowers.Catalog.Preparations.VisibleInStore
+      prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
     read :by_category do
@@ -33,7 +34,7 @@ defmodule Edenflowers.Catalog.Product do
 
       filter expr(product_category_id == ^arg(:category_id))
       prepare Edenflowers.Catalog.Preparations.VisibleInStore
-      prepare build(sort: [featured: :desc, name: :asc])
+      prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
     create :create do
@@ -45,6 +46,7 @@ defmodule Edenflowers.Catalog.Product do
         :product_category_id,
         :draft,
         :featured,
+        :position,
         :free_delivery,
         :subscribable,
         :translations
@@ -69,6 +71,7 @@ defmodule Edenflowers.Catalog.Product do
         :product_category_id,
         :draft,
         :featured,
+        :position,
         :free_delivery,
         :subscribable,
         :translations
@@ -124,6 +127,8 @@ defmodule Edenflowers.Catalog.Product do
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
+    # Store order within a category: 0 first, unset after all positioned products.
+    attribute :position, :integer, constraints: [min: 0]
     attribute :free_delivery, :boolean, allow_nil?: false, default: false
     # Can also be bought as a Subscription, which the customer opts into on
     # the product page. Bought once, it is like any other product.
