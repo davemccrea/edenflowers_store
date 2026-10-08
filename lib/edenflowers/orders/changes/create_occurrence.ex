@@ -112,7 +112,6 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
           recipient_phone_number: subscription.recipient_phone_number,
           delivery_address: subscription.delivery_address,
           delivery_instructions: subscription.delivery_instructions,
-          card_message: subscription.card_message,
           fulfillment_option_id: subscription.fulfillment_option_id,
           fulfillment_date: fulfillment_date
         },
