@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Calculations.ReplacedByAdding
+  alias Edenflowers.Orders.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Checkout.Fields
 
@@ -49,7 +49,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   def render(assigns) do
     assigns =
       assign(assigns,
-        replaces_cart?: ReplacedByAdding.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?)
+        replaces_cart?:
+          KeepSubscriptionAlone.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?)
       )
 
     ~H"""
