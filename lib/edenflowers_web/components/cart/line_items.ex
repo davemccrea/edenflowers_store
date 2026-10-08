@@ -64,6 +64,13 @@ defmodule EdenflowersWeb.Cart.LineItems do
                     |> Enum.reject(&is_nil/1)
                     |> Enum.join(" · ")}
                   </span>
+                  <span
+                    :if={line_item.interval_weeks}
+                    class="border-base-content/30 text-base-content/70 mt-1 inline-flex items-center gap-1 self-start border px-2 py-0.5 text-xs"
+                  >
+                    <.icon name="hero-arrow-path" class="h-3 w-3" />
+                    {~t"Subscription"}
+                  </span>
                 </div>
                 <span class="shrink-0 text-right tabular-nums">
                   {Edenflowers.Format.currency(line_item.subtotal, @order.locale)}
