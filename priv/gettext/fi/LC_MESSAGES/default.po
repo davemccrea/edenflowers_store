@@ -540,7 +540,7 @@ msgstr "Siirry pääsisältöön"
 msgid "is invalid"
 msgstr "on virheellinen"
 
-#: lib/edenflowers_web/features/store/product_live.ex:215
+#: lib/edenflowers_web/features/store/product_live.ex:228
 #, elixir-autogen, elixir-format
 msgid "Add to cart"
 msgstr "Lisää ostoskoriin"
@@ -555,7 +555,7 @@ msgstr "Asetelmamme säilyvät 5–7 päivää oikein hoidettuina. Vaihda vesi 2
 msgid "FAQ"
 msgstr "UKK"
 
-#: lib/edenflowers_web/features/store/product_live.ex:80
+#: lib/edenflowers_web/features/store/product_live.ex:88
 #, elixir-autogen, elixir-format
 msgid "Favourite"
 msgstr "Suosikki"
@@ -592,7 +592,7 @@ msgstr "Saat 15 % alennuksen ensimmäisestä tilauksestasi."
 msgid "Gift options"
 msgstr "Lahjavalinnat"
 
-#: lib/edenflowers_web/features/store/product_live.ex:220
+#: lib/edenflowers_web/features/store/product_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "Have a question?"
 msgstr "Onko sinulla kysyttävää?"
@@ -630,7 +630,7 @@ msgstr "Tarjouskoodi"
 msgid "Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM. Every delivery is handled carefully so the flowers arrive in perfect condition."
 msgstr "Toimitus samana päivänä onnistuu arkisin ennen klo 14 tehdyille tilauksille. Viikonlopun toimitukset tulee tilata viimeistään perjantaina klo 14. Jokainen toimitus hoidetaan huolellisesti, jotta kukat saapuvat moitteettomassa kunnossa."
 
-#: lib/edenflowers_web/features/store/product_live.ex:222
+#: lib/edenflowers_web/features/store/product_live.ex:235
 #, elixir-autogen, elixir-format
 msgid "See the FAQ"
 msgstr "Lue usein kysytyt kysymykset"
@@ -650,7 +650,7 @@ msgstr "Ostoskori"
 #: lib/edenflowers_web/features/account/account_live.ex:181
 #: lib/edenflowers_web/features/admin/product_form_live.ex:174
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:51
-#: lib/edenflowers_web/features/store/product_live.ex:127
+#: lib/edenflowers_web/features/store/product_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Size"
 msgstr "Koko"
@@ -4529,7 +4529,7 @@ msgid "Enter a valid email address."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:260
-#: lib/edenflowers_web/features/store/product_live.ex:106
+#: lib/edenflowers_web/features/store/product_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km"
 msgstr "Ilmainen toimitus %{km} km:n säteellä"
@@ -4594,12 +4594,12 @@ msgstr "Ilmainen toimitus"
 msgid "Delivering to %{address}"
 msgstr "Toimitetaan osoitteeseen %{address}"
 
-#: lib/edenflowers/orders/validations/subscription_delivery.ex:9
+#: lib/edenflowers/orders/validations/subscription_delivery.ex:10
 #, elixir-autogen, elixir-format
 msgid "A subscription can only be delivered"
 msgstr "Kestotilaus on mahdollinen vain kotiinkuljetuksena"
 
-#: lib/edenflowers/orders/changes/keep_subscription_alone.ex:50
+#: lib/edenflowers/orders/changes/keep_subscription_alone.ex:54
 #, elixir-autogen, elixir-format
 msgid "A subscription is checked out on its own. Empty your cart to add this."
 msgstr "Kestotilaus tilataan erikseen. Tyhjennä ostoskori lisätäksesi sen."
@@ -4662,7 +4662,7 @@ msgstr "Kestotilaukset"
 #: lib/edenflowers_web/components/cart/line_items.ex:58
 #: lib/edenflowers_web/features/admin/components/components.ex:128
 #: lib/edenflowers_web/features/admin/products_live.ex:99
-#: lib/edenflowers_web/features/store/product_live.ex:176
+#: lib/edenflowers_web/features/store/product_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Subscription"
 msgstr "Kestotilaus"
@@ -4825,7 +4825,7 @@ msgstr "Toimitusosoite"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:6
 #: lib/edenflowers_web/features/account/account_live.ex:189
-#: lib/edenflowers_web/features/store/product_live.ex:186
+#: lib/edenflowers_web/features/store/product_live.ex:194
 #, elixir-autogen, elixir-format
 msgid "How often"
 msgstr "Kuinka usein"
@@ -4888,12 +4888,12 @@ msgid "Your subscription will charge this card from the next delivery on."
 msgstr "Kestotilauksesi veloitetaan tältä kortilta seuraavasta toimituksesta alkaen."
 
 #: lib/edenflowers_web/components/core_components.ex:811
-#: lib/edenflowers_web/features/store/product_live.ex:115
+#: lib/edenflowers_web/features/store/product_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Also as a subscription"
 msgstr "Saatavana myös kestotilauksena"
 
-#: lib/edenflowers_web/features/store/product_live.ex:165
+#: lib/edenflowers_web/features/store/product_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Buy once"
 msgstr "Osta kerran"
@@ -4909,12 +4909,12 @@ msgstr "Voidaan ostaa kestotilauksena"
 msgid "Customers choose on its product page to buy it once or to subscribe, every 1, 2 or 4 weeks. Free delivery must be ticked too."
 msgstr "Asiakas valitsee tuotesivulla, ostaako tuotteen kerran vai kestotilauksena viikon, kahden tai neljän viikon välein. Myös ilmainen toimitus on valittava."
 
-#: lib/edenflowers_web/features/store/product_live.ex:204
+#: lib/edenflowers_web/features/store/product_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "Delivered regularly, skip or cancel any time"
 msgstr "Toimitetaan säännöllisesti, voit jättää väliin tai peruuttaa milloin tahansa"
 
-#: lib/edenflowers_web/features/store/product_live.ex:154
+#: lib/edenflowers_web/features/store/product_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "How to buy"
 msgstr "Miten haluat ostaa"
@@ -4936,7 +4936,22 @@ msgstr "Alennus koskee ensimmäistä toimitustasi."
 msgid "The card comes with your first delivery."
 msgstr "Kortti tulee ensimmäisen toimituksesi mukana."
 
-#: lib/edenflowers_web/features/store/product_live.ex:257
+#: lib/edenflowers_web/features/store/product_live.ex:270
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Tätä ei voitu lisätä ostoskoriin."
+
+#: lib/edenflowers_web/features/store/product_live.ex:218
+#, elixir-autogen, elixir-format
+msgid "Replaces the bouquet in your cart"
+msgstr "Korvaa ostoskorissasi olevan kimpun"
+
+#: lib/edenflowers_web/features/store/product_live.ex:217
+#, elixir-autogen, elixir-format
+msgid "Replaces the subscription in your cart"
+msgstr "Korvaa ostoskorissasi olevan kestotilauksen"
+
+#: lib/edenflowers_web/features/store/product_live.ex:228
+#, elixir-autogen, elixir-format
+msgid "Update cart"
+msgstr "Päivitä ostoskori"

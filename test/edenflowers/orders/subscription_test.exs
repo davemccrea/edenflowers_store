@@ -58,8 +58,33 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       subscribe(order, ctx.subscription_variant, 2)
 
       assert {:error, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, authorize?: false)
-      assert {:error, _} = Orders.add_line_item(order.id, ctx.subscription_variant.id, 1, authorize?: false)
       assert {:ok, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, %{is_card: true}, authorize?: false)
+    end
+
+    test "is replaced when the same product is bought once instead", ctx do
+      order = generate(order())
+      subscribe(order, ctx.subscription_variant, 2)
+      large = generate(product_variant(product_id: ctx.subscription_variant.product_id, size: :large))
+
+      assert {:ok, _} = Orders.add_line_item(order.id, large.id, 1, authorize?: false)
+
+      assert [%LineItem{product_variant_id: variant_id, quantity: 1, interval_weeks: nil}] =
+               Ash.read!(LineItem, authorize?: false)
+
+      assert variant_id == large.id
+      refute Ash.load!(order, :subscription?, authorize?: false).subscription?
+    end
+
+    test "isn't replaced by a different product", ctx do
+      order = generate(order())
+      subscribe(order, ctx.subscription_variant, 2)
+
+      other =
+        generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
+
+      assert {:error, _} = subscribe(order, other, 2)
+      assert {:error, _} = Orders.add_line_item(order.id, other.id, 1, authorize?: false)
+      assert [%LineItem{interval_weeks: 2}] = Ash.read!(LineItem, authorize?: false)
     end
 
     test "is replaced by another subscription, so its size or frequency can change", ctx do
@@ -84,14 +109,23 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
     end
 
-    test "isn't merged into a one-off of the same size", ctx do
+    test "replaces a one-off of the same product, so a customer can switch to subscribing", ctx do
       order = generate(order())
       Orders.add_line_item!(order.id, ctx.subscription_variant.id, 1, authorize?: false)
 
-      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
+      assert {:ok, _} = subscribe(order, ctx.subscription_variant, 2)
 
-      assert [%LineItem{quantity: 1, interval_weeks: nil}] = Ash.read!(LineItem, authorize?: false)
-      refute Ash.load!(order, :subscription?, authorize?: false).subscription?
+      assert [%LineItem{quantity: 1, interval_weeks: 2}] = Ash.read!(LineItem, authorize?: false)
+      assert Ash.load!(order, :subscription?, authorize?: false).subscription?
+    end
+
+    test "doesn't replace a one-off cart that also holds another product", ctx do
+      order = generate(order())
+      Orders.add_line_item!(order.id, ctx.subscription_variant.id, 1, authorize?: false)
+      Orders.add_line_item!(order.id, ctx.bouquet_variant.id, 1, authorize?: false)
+
+      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
+      assert [_, _] = Ash.read!(LineItem, authorize?: false)
     end
 
     test "is for one bouquet", ctx do

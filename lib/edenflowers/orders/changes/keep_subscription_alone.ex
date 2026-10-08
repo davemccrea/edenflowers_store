@@ -3,8 +3,11 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
   A subscription is checked out on its own, one bouquet, so each occurrence's
   fee and VAT come from that one line. A card may still go with it.
 
-  Adding a subscription to a cart that holds only a subscription replaces it,
-  so a customer can change its size or frequency without emptying the cart.
+  When the cart holds only the product being added and either side is a
+  subscription, the add replaces what's there. So a customer can change a
+  subscription's size or frequency, or switch between buying once and
+  subscribing, without emptying the cart. The product page asks `replaces?/3`
+  so its button can say so.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -36,12 +39,13 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
 
   defp check_against(changeset, others, context) do
     subscription? = not is_nil(Ash.Changeset.get_attribute(changeset, :interval_weeks))
+    product_id = Ash.Changeset.get_attribute(changeset, :product_id)
 
     cond do
       others == [] ->
         changeset
 
-      subscription? and Enum.all?(others, & &1.interval_weeks) ->
+      replaces?(others, product_id, subscription?) ->
         replace(changeset, others, context)
 
       subscription? or Enum.any?(others, & &1.interval_weeks) ->
@@ -55,10 +59,18 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
     end
   end
 
-  defp replace(changeset, subscription_lines, context) do
+  @doc "Whether adding the product, once or as a subscription, replaces what the cart holds."
+  def replaces?(line_items, product_id, subscription?) do
+    lines = Enum.reject(line_items, & &1.is_card)
+
+    lines != [] and Enum.all?(lines, &(&1.product_id == product_id)) and
+      (subscription? or Enum.any?(lines, & &1.interval_weeks))
+  end
+
+  defp replace(changeset, lines, context) do
     opts = Ash.Context.to_opts(context, action: :remove_item, return_notifications?: true)
 
-    Enum.reduce_while(subscription_lines, {changeset, %{notifications: []}}, fn line_item, {changeset, acc} ->
+    Enum.reduce_while(lines, {changeset, %{notifications: []}}, fn line_item, {changeset, acc} ->
       case Ash.destroy(line_item, opts) do
         {:ok, notifications} ->
           {:cont, {changeset, %{notifications: acc.notifications ++ notifications}}}
