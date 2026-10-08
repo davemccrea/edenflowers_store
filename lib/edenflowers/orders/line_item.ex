@@ -31,9 +31,8 @@ defmodule Edenflowers.Orders.LineItem do
     create :add_to_cart do
       accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks]
 
-      # KeepSubscriptionAlone refuses an add to a cart holding a subscription
-      # line, or a subscription to a cart holding anything, before the upsert
-      # can merge a one-off and a subscription of the same variant.
+      # KeepSubscriptionAlone replaces or refuses before the upsert can merge a
+      # one-off and a subscription of the same variant.
       upsert? true
       upsert_identity :unique_product_variant
       upsert_fields [:quantity]

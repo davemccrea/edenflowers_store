@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Checkout.Fields
 
@@ -46,6 +47,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   def render(assigns) do
+    assigns =
+      assign(assigns,
+        replaces_cart?:
+          KeepSubscriptionAlone.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?),
+        cart_subscription?: Enum.any?(assigns.order.line_items, & &1.interval_weeks)
+      )
+
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
@@ -204,6 +212,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 <p class="text-base-content/75 text-base">{~t"Delivered regularly, skip or cancel any time"}</p>
               </fieldset>
 
+              <p :if={@replaces_cart?} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
+                {if @cart_subscription?,
+                  do: ~t"Replaces the subscription in your cart",
+                  else: ~t"Replaces the bouquet in your cart"}
+              </p>
               <.button
                 type="submit"
                 variant="primary"
@@ -212,7 +225,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 data-testid="add-to-cart-button"
                 class="w-full"
               >
-                {~t"Add to cart"}
+                {if @replaces_cart?, do: ~t"Update cart", else: ~t"Add to cart"}
               </.button>
             </.form>
 

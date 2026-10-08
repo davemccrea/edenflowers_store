@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.LineItem
 
   setup %{conn: conn} do
@@ -46,6 +47,43 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       view |> form("[data-testid=product-form]") |> render_submit()
 
       assert [%LineItem{interval_weeks: 2, quantity: 1}] = line_items(order)
+    end
+
+    test "says when adding replaces the subscription in the cart", %{
+      conn: conn,
+      product: product,
+      variant: variant,
+      order: order
+    } do
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+      assert has_element?(view, "[data-testid=replaces-cart-note]", "Replaces the subscription in your cart")
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
+
+      view |> form("[data-testid=product-form]") |> render_submit()
+
+      assert [%LineItem{interval_weeks: nil}] = line_items(order)
+    end
+
+    test "says when subscribing replaces the bouquet in the cart", %{
+      conn: conn,
+      product: product,
+      variant: variant,
+      order: order
+    } do
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "Add to cart")
+      refute has_element?(view, "[data-testid=replaces-cart-note]")
+
+      view
+      |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "true"})
+      |> render_change()
+
+      assert has_element?(view, "[data-testid=replaces-cart-note]", "Replaces the bouquet in your cart")
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
     end
   end
 
