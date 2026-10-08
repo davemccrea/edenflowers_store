@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
-      assert has_element?(view, "#checkout-line-items", "Subscription · Every 2 weeks")
+      assert has_element?(view, "#checkout-line-items [data-testid=line-item-meta]", "Every 2 weeks")
       assert has_element?(view, "label", "Fulfillment Option")
     end
 
