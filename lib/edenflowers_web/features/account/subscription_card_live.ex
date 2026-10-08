@@ -109,12 +109,10 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   end
 
   # `replace_card` settles nothing already owed, so the unpaid Occurrence
-  # still needs its payment link.
-  defp unpaid_occurrence(%{state: :payment_failed, id: id}, user) do
+  # still needs its payment link, even once the new card restarts it.
+  defp unpaid_occurrence(%{id: id}, user) do
     Enum.find(Orders.list_my_orders!(actor: user), &(&1.subscription_id == id and &1.payment_link_open?))
   end
-
-  defp unpaid_occurrence(_subscription, _user), do: nil
 
   defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do
     save_card(socket, setup_intent_id)

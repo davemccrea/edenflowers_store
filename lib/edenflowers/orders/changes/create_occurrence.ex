@@ -34,9 +34,14 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     Ash.Changeset.before_action(changeset, &occur/1)
   end
 
+  # Only while still active: a cancel or pause made while the card was being
+  # charged wins, rather than being overwritten with `:payment_failed` or a
+  # new date. AshOban reads the stale update as the trigger no longer
+  # applying. The Occurrence stays, as one past the change cutoff does.
   defp occur(changeset) do
     subscription = changeset.data
     date = subscription.next_fulfillment_date
+    changeset = Ash.Changeset.filter(changeset, expr(state == :active))
 
     case deliver(subscription, date) do
       :ok ->

@@ -22,5 +22,5 @@ defmodule Edenflowers.Orders.Validations.SubscriptionDeliveryDay do
     end
   end
 
-  defp error, do: {:error, field: :delivery_day, message: ~t"Choose one of the days we deliver on."}
+  defp error, do: {:error, field: :delivery_day, message: ~t"Choose one of the days on offer."}
 end

@@ -23,7 +23,7 @@ defmodule Edenflowers.Orders.SubscriptionReferenceGuardsTest do
         stripe_payment_method_id: "pm_1"
       })
 
-    %{product: product, variant: variant, fulfillment_option: fulfillment_option, subscription: subscription}
+    %{product: product, variant: variant, subscription: subscription}
   end
 
   test "does not archive a variant used by a current subscription", %{variant: variant} do
@@ -41,15 +41,6 @@ defmodule Edenflowers.Orders.SubscriptionReferenceGuardsTest do
     assert Enum.any?(errors, &(&1.field == :free_delivery))
   end
 
-  test "does not change a subscription's delivery option to pickup", %{fulfillment_option: option} do
-    assert {:error, %Ash.Error.Invalid{errors: errors}} =
-             option
-             |> Ash.Changeset.for_update(:update, %{fulfillment_method: :pickup})
-             |> Ash.update(authorize?: false)
-
-    assert Enum.any?(errors, &(&1.field == :fulfillment_method))
-  end
-
   test "allows the changes once the subscription is cancelled", context do
     context.subscription
     |> Ash.Changeset.for_update(:cancel)
@@ -58,11 +49,6 @@ defmodule Edenflowers.Orders.SubscriptionReferenceGuardsTest do
     assert {:ok, _product} =
              context.product
              |> Ash.Changeset.for_update(:update, %{subscribable: false, free_delivery: false})
-             |> Ash.update(authorize?: false)
-
-    assert {:ok, _option} =
-             context.fulfillment_option
-             |> Ash.Changeset.for_update(:update, %{fulfillment_method: :pickup})
              |> Ash.update(authorize?: false)
 
     assert :ok = Ash.destroy(context.variant, authorize?: false)

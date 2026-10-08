@@ -373,6 +373,18 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       assert reload(ctx.subscription).state == :payment_failed
     end
 
+    test "a cancel made while the card is charged stays cancelled", ctx do
+      expect(StripeAPI.Mock, :charge_off_session, fn _cents, _params, _key ->
+        Orders.cancel_subscription!(reload(ctx.subscription), actor: generate(admin_user()))
+        {:error, %Stripe.Error{source: :stripe, code: :card_error, message: "Refused"}}
+      end)
+
+      capture_log(fn -> assert {:cancel, :trigger_no_longer_applies} = run(ctx.subscription) end)
+
+      assert reload(ctx.subscription).state == :cancelled
+      assert [%{state: :placed}] = occurrences(ctx.subscription)
+    end
+
     test "run again, neither charges nor emails again", ctx do
       refuse(:card_declined)
       run_refused(ctx.subscription)

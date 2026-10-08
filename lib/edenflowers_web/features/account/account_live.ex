@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
           <div :if={@subscriptions == []} class="mt-6" data-testid="no-subscriptions">
             <p class="text-base-content/80">
-              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel any time."}
+              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."}
             </p>
             <.button
               :if={@subscription_product}
@@ -743,10 +743,16 @@ defmodule EdenflowersWeb.Account.AccountLive do
     """
   end
 
+  # Pausing leaves a delivery already being prepared in place.
   defp next_delivery(%{subscription: %{state: :paused}} = assigns) do
+    assigns = assign(assigns, booked: booked_delivery(assigns.orders, assigns.subscription))
+
     ~H"""
     {~t"Paused"}
-    <span class="text-base-content/70 block text-sm">{~t"No deliveries or charges"}</span>
+    <span :if={@booked} class="text-base-content/70 block text-sm">
+      {~t"After #{date = Format.day_month(@booked.fulfillment_date, @locale)}"}
+    </span>
+    <span :if={!@booked} class="text-base-content/70 block text-sm">{~t"No deliveries or charges"}</span>
     """
   end
 
@@ -1035,6 +1041,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp drawer_status(%{subscription: %{state: :paused}} = assigns) do
     ~H"""
     <p class="font-serif text-lg">{~t"Paused"}</p>
+    <p :if={@booked} class="text-base-content/70 text-sm">
+      {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and still comes."}
+    </p>
     <p class="text-base-content/70 text-sm">
       {~t"No deliveries or charges. Resume now and your next delivery is #{date = Format.weekday_date(Subscription.resume_date(@subscription), @locale)}."}
     </p>
@@ -1044,7 +1053,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp drawer_status(%{subscription: %{state: :payment_failed}} = assigns) do
     ~H"""
     <p class="font-serif text-lg">{~t"On hold"}</p>
-    <p class="text-base-content/70 text-sm">{~t"No deliveries until your card is updated."}</p>
+    <p class="text-base-content/70 text-sm">{~t"No deliveries until the unpaid one is paid or your card is updated."}</p>
     """
   end
 

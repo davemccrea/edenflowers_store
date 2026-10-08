@@ -4,8 +4,8 @@
 
 <%= gettext("Size") %>: <%= @size %>
 <%= gettext("How often") %>: <%= @interval %>
-<%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
-<%= gettext("Next delivery") %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
+<%= if @subscription.delivery_address do %><%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
+<% end %><%= gettext("Next delivery") %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
 <%= if @subscription.first_order_discounted? do %>
 <%= gettext("The discount applies to your first delivery.") %>
 <% end %>
