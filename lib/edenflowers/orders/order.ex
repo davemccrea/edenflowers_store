@@ -446,7 +446,6 @@ defmodule Edenflowers.Orders.Order do
         :recipient_phone_number,
         :delivery_address,
         :delivery_instructions,
-        :card_message,
         :fulfillment_option_id,
         :fulfillment_date
       ]

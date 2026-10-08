@@ -258,6 +258,28 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
     end
+
+    test "a subscription gift says the card comes with the first delivery", %{conn: conn} do
+      variant = generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
+      gift_order = generate(order(state: :gift_options, gift: true))
+      Orders.add_line_item!(gift_order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='first-delivery-card']", text: "The card comes with your first delivery.")
+    end
+
+    test "a one-off gift says nothing about the first delivery", %{conn: conn, variant: variant} do
+      gift_order = generate(order(state: :gift_options, gift: true))
+      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='select-card-button']")
+      |> refute_has("[data-testid='first-delivery-card']")
+    end
   end
 
   describe "Card selection" do

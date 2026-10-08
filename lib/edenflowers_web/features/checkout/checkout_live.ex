@@ -502,6 +502,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </span>
         <.icon name="hero-chevron-right" class="ml-auto h-5 w-5 shrink-0" />
       </button>
+
+      <p :if={@order.subscription?} class="text-base-content/70 text-sm" data-testid="first-delivery-card">
+        {~t"The card comes with your first delivery."}
+      </p>
     </div>
     """
   end

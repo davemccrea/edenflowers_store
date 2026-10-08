@@ -118,7 +118,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert order.customer_email == "ada@example.com"
     assert order.recipient_name == "Grace Hopper"
     assert order.gift
-    assert order.card_message == "Enjoy"
+    assert is_nil(order.card_message)
     assert order.delivery_instructions == "Door code 1234"
     assert order.locale == "fi"
     assert order.order_reference
