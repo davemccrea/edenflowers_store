@@ -58,8 +58,22 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
       assert {:error, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, authorize?: false)
       assert {:error, _} = Orders.add_line_item(order.id, ctx.subscription_variant.id, 1, authorize?: false)
-      assert {:error, _} = subscribe(order, ctx.subscription_variant, 2)
       assert {:ok, _} = Orders.add_line_item(order.id, ctx.bouquet_variant.id, 1, %{is_card: true}, authorize?: false)
+    end
+
+    test "is replaced by another subscription, so its size or frequency can change", ctx do
+      order = generate(order())
+      large = generate(product_variant(product_id: ctx.subscription_variant.product_id, size: :large))
+      subscribe(order, ctx.subscription_variant, 2)
+      card = Orders.add_line_item!(order.id, ctx.bouquet_variant.id, 1, %{is_card: true}, authorize?: false)
+
+      assert {:ok, _} = subscribe(order, large, 4)
+      assert {:ok, _} = subscribe(order, large, 4)
+
+      lines = Ash.read!(LineItem, authorize?: false)
+      assert [%LineItem{quantity: 1, interval_weeks: 4}] = Enum.filter(lines, &(&1.product_variant_id == large.id))
+      refute Enum.any?(lines, &(&1.product_variant_id == ctx.subscription_variant.id))
+      assert Enum.any?(lines, &(&1.id == card.id))
     end
 
     test "can't be added to a cart that already holds something", ctx do
