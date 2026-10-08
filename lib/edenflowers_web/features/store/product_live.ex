@@ -107,19 +107,25 @@ defmodule EdenflowersWeb.Store.ProductLive do
               {@product.description}
             </p>
 
-            <p :if={@free_dist_km} data-testid="product-free-delivery" class="text-base-content/80 flex items-center gap-2">
-              <.icon name="hero-truck" class="h-5 w-5" />
-              {~t"Free delivery within #{km = @free_dist_km} km"}
-            </p>
+            <div :if={@free_dist_km || @product.subscribable} class="flex flex-col gap-2">
+              <p
+                :if={@free_dist_km}
+                data-testid="product-free-delivery"
+                class="text-base-content/80 flex items-center gap-2"
+              >
+                <.icon name="hero-truck" class="h-5 w-5" />
+                {~t"Free delivery within #{km = @free_dist_km} km"}
+              </p>
 
-            <p
-              :if={@product.subscribable}
-              data-testid="product-subscribable"
-              class="text-base-content/80 flex items-center gap-2"
-            >
-              <.icon name="hero-arrow-path" class="h-5 w-5" />
-              {~t"Also as a subscription"}
-            </p>
+              <p
+                :if={@product.subscribable}
+                data-testid="product-subscribable"
+                class="text-base-content/80 flex items-center gap-2"
+              >
+                <.icon name="hero-arrow-path" class="h-5 w-5" />
+                {~t"Also as a subscription"}
+              </p>
+            </div>
 
             <.form
               id="product-form"
