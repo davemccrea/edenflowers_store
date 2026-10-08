@@ -103,6 +103,15 @@ defmodule Edenflowers.Format do
     Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMM")
   end
 
+  @doc "Localized weekday name for a `Fulfillment.Weekday`, e.g. \"Friday\" / \"fredag\"."
+  @spec weekday_name(Edenflowers.Fulfillment.Weekday.t(), Localize.Locale.locale_id()) :: String.t()
+  def weekday_name(weekday, locale) do
+    # 1 January 2024 was a Monday.
+    ~D[2024-01-01]
+    |> Date.add(Edenflowers.Fulfillment.Weekday.to_integer(weekday) - 1)
+    |> Localize.Date.to_string!(locale: locale, format: "EEEE")
+  end
+
   @doc "Localized weekday with day and full month, e.g. \"Monday 8 June\" / \"måndag 8 juni\". For prose."
   @spec weekday_date(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_date(date, locale) do

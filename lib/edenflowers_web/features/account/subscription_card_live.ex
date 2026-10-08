@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   alias Edenflowers.Orders
   alias Edenflowers.Payments
+  alias EdenflowersWeb.Checkout.Fields
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
@@ -25,6 +26,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
           socket
           |> assign(:page_title, ~t"Update your card")
           |> assign(:subscription, subscription)
+          |> assign(:unpaid, unpaid_occurrence(subscription, user))
 
         # Stripe is only touched once the page is live, so a link preview or
         # the static first render never calls it.
@@ -57,7 +59,16 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
       <.container class="max-w-xl">
         <h1 class="page-title mb-6">{~t"Update your card"}</h1>
         <p class="leading-relaxed">
-          {~t"Your subscription will charge this card from the next delivery on."}
+          {~t"Every delivery from now on is charged to the card you save here."}
+        </p>
+        <p :if={Fields.card_label(@subscription)} class="mt-4 leading-relaxed" data-testid="current-card">
+          {~t"Your deliveries are charged to #{card = Fields.card_label(@subscription)} at the moment."}
+        </p>
+        <p :if={@unpaid} class="mt-4 leading-relaxed" data-testid="unpaid-occurrence">
+          {~t"Your delivery on #{date = Edenflowers.Format.date(@unpaid.fulfillment_date, Edenflowers.Format.locale())} is still unpaid, and a new card doesn't pay it."}
+          <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+            {~t"Pay now"}
+          </.link>
         </p>
 
         <section class="mt-10" aria-label={~t"Card"}>
@@ -82,9 +93,13 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
             <.form_button disabled={true} id="payment-button">{~t"Save card"}</.form_button>
           </form>
 
-          <p :if={@payment_unavailable?} class="text-error" data-testid="stripe-unavailable">
-            {~t"Payment is temporarily unavailable. Please try again in a moment."}
-          </p>
+          <div :if={@payment_unavailable?} data-testid="stripe-unavailable">
+            <p class="text-error">{~t"Payment is temporarily unavailable. Please try again in a moment."}</p>
+            <p class="mt-2">
+              {~t"Your current card stays in place until you save a new one. If this keeps happening,"}
+              <.link navigate={~p"/contact"} class="link-underline-hover text-primary">{~t"contact us"}</.link>.
+            </p>
+          </div>
         </section>
 
         <.button navigate={~p"/account"} variant="text" class="mt-6">{~t"Back to your account"}</.button>
@@ -92,6 +107,14 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
     </Layouts.app>
     """
   end
+
+  # `replace_card` settles nothing already owed, so the unpaid Occurrence
+  # still needs its payment link.
+  defp unpaid_occurrence(%{state: :payment_failed, id: id}, user) do
+    Enum.find(Orders.list_my_orders!(actor: user), &(&1.subscription_id == id and &1.payment_link_open?))
+  end
+
+  defp unpaid_occurrence(_subscription, _user), do: nil
 
   defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do
     save_card(socket, setup_intent_id)

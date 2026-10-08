@@ -194,6 +194,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
 
+    test "a subscription cart says an account is made, and offers no first-order discount", %{conn: conn} do
+      product = generate(product(subscribable: true, free_delivery: true))
+      variant = generate(product_variant(product_id: product.id))
+      order = generate(order())
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> visit("/checkout")
+      |> assert_has("[data-testid='account-note']", text: "set up an account with this email")
+      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
+    end
+
     test "newsletter checkbox is hidden on arrival for a signed-in subscriber", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
 

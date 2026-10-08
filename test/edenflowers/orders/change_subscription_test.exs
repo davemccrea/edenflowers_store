@@ -45,18 +45,101 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
   defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
 
+  defp first_on_or_after(date, day_of_week),
+    do: Date.add(date, rem(day_of_week - Date.day_of_week(date) + 7, 7))
+
   describe "changing size and how often" do
-    test "keeps the next date, so the change applies from the next occurrence", context do
+    test "keeps the next date when only the size changes", context do
       subscription = subscription(context)
 
       changed =
-        Orders.change_subscription!(subscription, %{product_variant_id: context.large.id, interval_weeks: 4},
+        Orders.change_subscription!(subscription, %{product_variant_id: context.large.id}, actor: context.customer)
+
+      assert changed.product_variant_id == context.large.id
+      assert changed.next_fulfillment_date == subscription.next_fulfillment_date
+    end
+
+    test "counts a new interval from the last delivery, so more often starts sooner", context do
+      # Every 4 weeks, last delivered yesterday.
+      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: days_from_today(27)})
+
+      weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
+
+      assert weekly.next_fulfillment_date == days_from_today(6)
+    end
+
+    test "counts a new interval from the last delivery, so less often starts later", context do
+      subscription = subscription(context, %{interval_weeks: 1, next_fulfillment_date: days_from_today(6)})
+
+      monthly = Orders.change_subscription!(subscription, %{interval_weeks: 4}, actor: context.customer)
+
+      assert monthly.next_fulfillment_date == days_from_today(27)
+    end
+
+    test "counts from the latest delivery even when the next date is off the schedule", context do
+      # Weekly, but its next date was left four weeks after the last delivery.
+      subscription = subscription(context, %{interval_weeks: 1, next_fulfillment_date: days_from_today(29)})
+
+      Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: days_from_today(1))), %{
+        subscription_id: subscription.id
+      })
+
+      fortnightly = Orders.change_subscription!(subscription, %{interval_weeks: 2}, actor: context.customer)
+
+      assert fortnightly.next_fulfillment_date == days_from_today(15)
+    end
+
+    test "moves a new date that falls inside the charge window on along the new schedule", context do
+      # Every 4 weeks, last delivered 5 days ago: weekly would make it 2 days away.
+      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: days_from_today(23)})
+
+      weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
+
+      assert weekly.next_fulfillment_date == days_from_today(9)
+    end
+
+    test "moves to the nearest date on a new delivery day", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription(context, %{next_fulfillment_date: friday})
+
+      tuesday = Orders.change_subscription!(subscription, %{delivery_day: :tuesday}, actor: context.customer)
+      assert tuesday.next_fulfillment_date == Date.add(friday, -3)
+
+      monday = Orders.change_subscription!(tuesday, %{delivery_day: :monday}, actor: context.customer)
+      assert monday.next_fulfillment_date == Date.add(friday, -4)
+    end
+
+    test "changes how often and the day together, counting from the latest delivery", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: Date.add(friday, 14)})
+
+      Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: Date.add(friday, -14))), %{
+        subscription_id: subscription.id
+      })
+
+      changed =
+        Orders.change_subscription!(subscription, %{interval_weeks: 2, delivery_day: :wednesday},
           actor: context.customer
         )
 
-      assert changed.product_variant_id == context.large.id
-      assert changed.interval_weeks == 4
-      assert changed.next_fulfillment_date == subscription.next_fulfillment_date
+      assert changed.next_fulfillment_date == Date.add(friday, -2)
+    end
+
+    test "keeps a skipped next delivery skipped when it moves", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription(context, %{next_fulfillment_date: friday, skipped_dates: [friday]})
+
+      moved = Orders.change_subscription!(subscription, %{delivery_day: :thursday}, actor: context.customer)
+
+      assert moved.skipped_dates == [Date.add(friday, -1)]
+    end
+
+    test "only to a day the delivery option runs on", context do
+      fridays_only = generate(fulfillment_option(fulfillment_method: :delivery, available_days: [:friday]))
+      subscription = subscription(context, %{fulfillment_option_id: fridays_only.id})
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :delivery_day}]}} =
+               Orders.change_subscription(subscription, %{delivery_day: :monday}, actor: context.customer)
     end
 
     test "only to another size of the same product", context do
@@ -115,6 +198,20 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert {:ok, _} = Payments.save_subscription_card("seti_1", context.customer)
 
       assert %{stripe_payment_method_id: "pm_new", state: :active} = Ash.reload!(subscription, authorize?: false)
+    end
+
+    test "keeps the new card's brand, last digits and expiry to show the customer", context do
+      subscription = subscription(context)
+      expect_setup_intent("seti_1", subscription)
+
+      expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_new" ->
+        {:ok, %{id: "pm_new", card: %{brand: "visa", last4: "4242", exp_month: 8, exp_year: 2027}}}
+      end)
+
+      assert {:ok, _} = Payments.save_subscription_card("seti_1", context.customer)
+
+      assert %{card_brand: "visa", card_last4: "4242", card_exp_month: 8, card_exp_year: 2027} =
+               Ash.reload!(subscription, authorize?: false)
     end
 
     test "returns a held subscription to active from the first date not past", context do

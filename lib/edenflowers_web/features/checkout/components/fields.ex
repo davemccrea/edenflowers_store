@@ -148,4 +148,14 @@ defmodule EdenflowersWeb.Checkout.Fields do
   def interval_label(1), do: ~t"Every week"
   def interval_label(2), do: ~t"Every 2 weeks"
   def interval_label(4), do: ~t"Every 4 weeks"
+
+  @doc "The subscription's saved card, e.g. \"Visa •••• 4242, expires 08/27\", or nil before it's known."
+  def card_label(%{card_brand: nil}), do: nil
+
+  def card_label(%{card_brand: brand, card_last4: last4, card_exp_month: month, card_exp_year: year}) do
+    expiry =
+      "#{String.pad_leading(to_string(month), 2, "0")}/#{rem(year, 100) |> to_string() |> String.pad_leading(2, "0")}"
+
+    ~t"#{brand = String.capitalize(brand)} •••• #{last4 = last4}, expires #{expiry = expiry}"
+  end
 end

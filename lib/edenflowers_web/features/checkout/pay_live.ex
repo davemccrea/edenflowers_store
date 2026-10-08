@@ -106,6 +106,16 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               </p>
             <% true -> %>
               <h1 class="page-title mb-6">{~t"Pay for your order"}</h1>
+              <p :if={@shown_order.subscription_id} class="leading-relaxed" data-testid="pay-subscription">
+                {~t"This delivery is part of your subscription. Paying for it restarts the subscription if it's on hold."}
+                {~t"It doesn't change the card your later deliveries are charged to."}
+                <.link
+                  navigate={~p"/account/subscriptions/#{@shown_order.subscription_id}/card"}
+                  class="link-underline-hover text-primary"
+                >
+                  {~t"Update your card"}
+                </.link>
+              </p>
           <% end %>
 
           <section class="mt-10" aria-labelledby="order-summary-heading">

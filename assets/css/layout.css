@@ -34,8 +34,13 @@ html:has(dialog.slide-drawer:modal) {
 }
 
 /* Undo the UA's centred dialog box so the drawer runs full height against
-   one edge. The inner div owns the width and background. */
+   one edge. The inner div owns the width and background.
+   WebKit has no `overlay` transition, so a closing dialog leaves the top
+   layer at once and loses the UA's `dialog:modal` positioning. Pinning it
+   here keeps it on screen while it slides out. */
 .slide-drawer {
+  position: fixed;
+  z-index: 100;
   inset-block: 0;
   height: auto;
   max-height: none;

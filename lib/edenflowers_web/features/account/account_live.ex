@@ -1,12 +1,15 @@
 defmodule EdenflowersWeb.Account.AccountLive do
   use EdenflowersWeb, :live_view
 
+  require Ash.Query
   require Logger
 
   alias Edenflowers.Accounts
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
+  alias Edenflowers.Catalog
   alias Edenflowers.Courses
   alias Edenflowers.Format
+  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.RateLimiter
@@ -37,7 +40,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(code_form: to_form(%{"code" => ""}, as: :confirm))
      |> assign(locale: Format.locale())
      |> assign(orders: Orders.list_my_orders!(actor: user))
-     |> assign(subscriptions: Orders.list_my_subscriptions!(actor: user))
+     |> assign(subscriptions: subscriptions(user))
+     |> assign(edited_subscriptions: MapSet.new())
+     |> assign(subscription_notice: nil)
+     |> assign_subscription_product()
      |> assign(registrations: registrations(user))
      |> assign(newsletter_form_id: @newsletter_form_id)
      |> assign(newsletter_saved?: false)
@@ -52,9 +58,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
           <h1 class="page-title">
             {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}", else: ~t"Account"}
           </h1>
-          <.link href={~p"/sign-out"} method="delete" class="link-underline-hover -my-1.5 w-fit py-1.5 text-sm">
+          <.button href={~p"/sign-out"} method="delete" variant="neutral" size="sm" class="w-fit">
             {~t"Sign out"}
-          </.link>
+          </.button>
         </div>
 
         <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="details-heading">
@@ -100,111 +106,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
           </.form>
         </section>
 
-        <section
-          :if={@subscriptions != []}
-          class="border-base-content/12 py-10 not-last:border-b sm:py-14"
-          aria-labelledby="subscriptions-heading"
-        >
-          <h2 id="subscriptions-heading" class="section-title">{~t"Subscriptions"}</h2>
-
-          <ul class="mt-6">
-            <li
-              :for={subscription <- @subscriptions}
-              id={"subscription-#{subscription.id}"}
-              class="border-base-content/12 flex flex-col gap-3 border-t py-4"
-            >
-              <div>
-                <p>{subscription_summary(subscription)}</p>
-                <p class="text-base-content/70 text-sm" data-testid="subscription-status">
-                  {subscription_status(subscription, @locale)}
-                </p>
-              </div>
-
-              <p :if={subscription.changes_closed?} class="text-base-content/70 text-sm">
-                {~t"It's too late to change your next delivery."}
-              </p>
-
-              <div :if={not subscription.changes_closed?} class="flex flex-wrap gap-x-4 gap-y-2">
-                <.button
-                  :if={subscription.state == :active and not subscription.next_delivery_skipped?}
-                  type="button"
-                  variant="text"
-                  phx-click="skip_subscription"
-                  phx-value-id={subscription.id}
-                  data-confirm={
-                    ~t"Skip the delivery on #{date = Format.date(subscription.next_fulfillment_date, @locale)}?"
-                  }
-                >
-                  {~t"Skip next delivery"}
-                </.button>
-                <.button
-                  :if={subscription.state == :active}
-                  type="button"
-                  variant="text"
-                  phx-click="pause_subscription"
-                  phx-value-id={subscription.id}
-                >
-                  {~t"Pause"}
-                </.button>
-                <.button
-                  :if={subscription.state == :paused}
-                  type="button"
-                  variant="text"
-                  phx-click="resume_subscription"
-                  phx-value-id={subscription.id}
-                >
-                  {~t"Resume"}
-                </.button>
-                <.button
-                  :if={subscription.state != :cancelled}
-                  type="button"
-                  variant="text"
-                  phx-click="cancel_subscription"
-                  phx-value-id={subscription.id}
-                  data-confirm={~t"Cancel this subscription? This can't be undone."}
-                >
-                  {~t"Cancel subscription"}
-                </.button>
-              </div>
-
-              <form
-                :if={not subscription.changes_closed? and subscription.state != :cancelled}
-                id={"change-subscription-#{subscription.id}"}
-                phx-submit="change_subscription"
-                class="flex flex-wrap items-end gap-3"
-              >
-                <input type="hidden" name="subscription_id" value={subscription.id} />
-                <.input
-                  type="select"
-                  id={"subscription-#{subscription.id}-size"}
-                  name="product_variant_id"
-                  label={~t"Size"}
-                  options={size_options(subscription)}
-                  value={subscription.product_variant_id}
-                />
-                <.input
-                  type="select"
-                  id={"subscription-#{subscription.id}-interval"}
-                  name="interval_weeks"
-                  label={~t"How often"}
-                  options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
-                  value={subscription.interval_weeks}
-                />
-                <.button type="submit" phx-disable-with={~t"Saving…"}>{~t"Save changes"}</.button>
-              </form>
-
-              <.button
-                :if={subscription.state != :cancelled}
-                navigate={~p"/account/subscriptions/#{subscription.id}/card"}
-                variant="text"
-                class="self-start"
-              >
-                {~t"Update card"}
-              </.button>
-            </li>
-          </ul>
-        </section>
-
         <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="orders-heading">
           <h2 id="orders-heading" class="section-title">{~t"Orders"}</h2>
 
@@ -242,12 +143,19 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   <.receipt_link
                     :if={order.payment_status == :paid}
                     href={~p"/order/#{order.id}/receipt"}
-                    class="mt-1 block sm:hidden"
+                    class="mt-1 sm:hidden"
                   />
                 </th>
                 <td class="hidden py-4 pr-4 tabular-nums sm:table-cell">{order.order_reference}</td>
                 <td class="py-4 pr-4">
                   {status_label(order, @locale)}
+                  <span
+                    :if={order.subscription_id}
+                    class="text-base-content/70 block text-sm"
+                    data-testid="order-subscription"
+                  >
+                    {~t"Subscription"}
+                  </span>
                   <.unpaid_note :if={order.unpaid?} order={order} />
                 </td>
                 <%!-- Sans, not serif: Crimson Text ships no `tnum`, so a serif total
@@ -261,6 +169,78 @@ defmodule EdenflowersWeb.Account.AccountLive do
               </tr>
             </tbody>
           </table>
+        </section>
+
+        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="subscriptions-heading">
+          <h2 id="subscriptions-heading" class="section-title">{~t"Subscriptions"}</h2>
+
+          <div :if={@subscriptions == []} class="mt-6" data-testid="no-subscriptions">
+            <p class="text-base-content/80">
+              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Skip, pause or cancel any time."}
+            </p>
+            <.button
+              :if={@subscription_product}
+              navigate={~p"/product/#{@subscription_product.id}"}
+              variant="text"
+              class="mt-4"
+            >
+              {~t"See the subscription"}
+            </.button>
+          </div>
+
+          <table
+            :if={@subscriptions != []}
+            class="mt-8 w-full table-fixed text-left text-sm sm:text-base"
+            data-testid="subscriptions-table"
+          >
+            <thead>
+              <tr class="text-base-content/70">
+                <%!-- Widths match the Orders table above, so the two read as one ledger. --%>
+                <th scope="col" class="eyebrow w-2/5 pr-4 pb-3 sm:w-1/3">{~t"Plan"}</th>
+                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Next delivery"}</th>
+                <th scope="col" class="eyebrow hidden w-1/6 pb-3 text-right sm:table-cell sm:pr-4">{~t"Price"}</th>
+                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
+                  <span class="sr-only">{~t"Manage"}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                :for={subscription <- @subscriptions}
+                id={"subscription-#{subscription.id}"}
+                class="border-base-content/12 border-t align-top"
+              >
+                <th scope="row" class="py-4 pr-4 font-normal">
+                  <span id={"subscription-#{subscription.id}-name"}>{subscription_name(subscription)}</span>
+                  <span class="text-base-content/70 block text-xs sm:text-sm">{plan_label(subscription)}</span>
+                  <%!-- Below sm neither the price nor Manage has a column of its own;
+                       both ride under the name. --%>
+                  <span class="text-base-content/70 block text-xs tabular-nums sm:hidden">
+                    {~t"#{price = Format.currency(subscription.product_variant.price, @locale)} per delivery"}
+                  </span>
+                  <.manage_button subscription={subscription} class="mt-1 sm:hidden" />
+                </th>
+                <td class="py-4 pr-4" data-testid="subscription-status">
+                  <.next_delivery subscription={subscription} orders={@orders} locale={@locale} />
+                </td>
+                <td class="hidden py-4 text-right tabular-nums sm:table-cell sm:pr-4">
+                  {Format.currency(subscription.product_variant.price, @locale)}
+                </td>
+                <td class="hidden py-4 text-right sm:table-cell">
+                  <.manage_button subscription={subscription} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <.manage_drawer
+            :for={subscription <- @subscriptions}
+            subscription={subscription}
+            orders={@orders}
+            locale={@locale}
+            edited?={subscription.id in @edited_subscriptions}
+            notice={notice_for(@subscription_notice, subscription)}
+          />
         </section>
 
         <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="courses-heading">
@@ -298,7 +278,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
                   <span class="text-base-content/70 block text-xs sm:hidden">
                     {registration.course.location_name}
                   </span>
-                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} class="mt-1 block sm:hidden" />
+                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} class="mt-1 sm:hidden" />
                 </th>
                 <td class="hidden py-4 pr-4 sm:table-cell">{registration.course.location_name}</td>
                 <td class="py-4 pr-4 tabular-nums">
@@ -353,15 +333,17 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp receipt_link(assigns) do
     ~H"""
-    <.link
+    <.button
       href={@href}
       target="_blank"
       rel="noopener"
       aria-label={~t"Receipt (opens in a new tab)"}
-      class={["link-underline-hover whitespace-nowrap py-1.5", @class]}
+      variant="neutral"
+      size="sm"
+      class={["whitespace-nowrap", @class]}
     >
       {~t"Receipt"}
-    </.link>
+    </.button>
     """
   end
 
@@ -428,6 +410,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
     {:noreply, change_subscription(socket, id, &Orders.skip_subscription/2, ~t"Delivery skipped")}
   end
 
+  def handle_event("unskip_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.unskip_subscription/2, ~t"Delivery back on")}
+  end
+
   def handle_event("pause_subscription", %{"id" => id}, socket) do
     {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused")}
   end
@@ -440,11 +426,33 @@ defmodule EdenflowersWeb.Account.AccountLive do
     {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
   end
 
-  def handle_event("change_subscription", %{"subscription_id" => id} = params, socket) do
-    changes = Map.take(params, ["product_variant_id", "interval_weeks"])
-    change = &Orders.change_subscription(&1, changes, &2)
+  def handle_event("edit_subscription", %{"subscription_id" => id} = params, socket) do
+    subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
 
-    {:noreply, change_subscription(socket, id, change, ~t"Subscription updated")}
+    edited? =
+      subscription != nil and
+        (params["product_variant_id"] != subscription.product_variant_id or
+           params["interval_weeks"] != to_string(subscription.interval_weeks) or
+           params["delivery_day"] != to_string(delivery_day(subscription)))
+
+    edited =
+      if edited?,
+        do: MapSet.put(socket.assigns.edited_subscriptions, id),
+        else: MapSet.delete(socket.assigns.edited_subscriptions, id)
+
+    {:noreply, assign(socket, edited_subscriptions: edited)}
+  end
+
+  def handle_event("change_subscription", %{"subscription_id" => id} = params, socket) do
+    changes = Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"])
+    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, :product_variant))
+
+    socket =
+      socket
+      |> change_subscription(id, change, &change_confirmation(&1, socket.assigns.locale))
+      |> assign(edited_subscriptions: MapSet.delete(socket.assigns.edited_subscriptions, id))
+
+    {:noreply, socket}
   end
 
   def handle_event("toggle_newsletter", params, socket) do
@@ -481,20 +489,43 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
 
+  # The outcome shows inside the subscription's drawer, which sits above the
+  # page's flash while it's open.
   defp change_subscription(socket, id, action, success_message) do
     user = socket.assigns.current_user
 
     socket =
-      with {:ok, subscription} <- Orders.get_subscription(id, actor: user),
-           {:ok, _subscription} <- action.(subscription, actor: user) do
-        put_flash(socket, :info, success_message)
-      else
+      case Orders.get_subscription(id, actor: user) do
+        {:ok, subscription} ->
+          case action.(subscription, actor: user) do
+            {:ok, subscription} ->
+              message = if is_function(success_message), do: success_message.(subscription), else: success_message
+              assign(socket, subscription_notice: {id, :info, message})
+
+            {:error, error} ->
+              Logger.info("Subscription change refused: #{inspect(error)}")
+              assign(socket, subscription_notice: {id, :error, subscription_error_message(error)})
+          end
+
         {:error, error} ->
           Logger.info("Subscription change refused: #{inspect(error)}")
           put_flash(socket, :error, subscription_error_message(error))
       end
 
-    assign(socket, subscriptions: Orders.list_my_subscriptions!(actor: user))
+    assign(socket, subscriptions: subscriptions(user))
+  end
+
+  # Only the empty state links to it, so it's looked up only then.
+  defp assign_subscription_product(%{assigns: %{subscriptions: []}} = socket) do
+    query = Ash.Query.filter(Edenflowers.Catalog.Product, subscribable == true)
+    assign(socket, subscription_product: List.first(Catalog.list_store_products!(query: query)))
+  end
+
+  defp assign_subscription_product(socket), do: assign(socket, subscription_product: nil)
+
+  defp subscriptions(user) do
+    Orders.list_my_subscriptions!(actor: user)
+    |> Enum.sort_by(&(&1.state == :cancelled))
   end
 
   # The cutoff's own message says why; anything else means the page was stale.
@@ -507,32 +538,536 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
 
-  defp size_options(subscription) do
+  defp size_options(subscription, locale) do
     for variant <- subscription.product_variant.product.product_variants,
         not variant.draft or variant.id == subscription.product_variant_id do
-      {AdminComponents.variant_size_label(variant.size), variant.id}
+      {"#{AdminComponents.variant_size_label(variant.size)} · #{Format.storefront_price(variant.price, locale)}",
+       variant.id}
     end
   end
 
-  defp subscription_summary(subscription) do
-    size = AdminComponents.variant_size_label(subscription.product_variant.size)
-    "#{size} · #{Fields.interval_label(subscription.interval_weeks)}"
-  end
+  defp delivery_day(subscription), do: Weekday.from_date(subscription.next_fulfillment_date)
 
-  defp subscription_status(%{state: :active} = subscription, locale) do
-    next = Format.date(subscription.next_fulfillment_date, locale)
-
-    if subscription.next_delivery_skipped? do
-      following = Format.date(Date.add(subscription.next_fulfillment_date, subscription.interval_weeks * 7), locale)
-      ~t"Skipping #{date = next}. Next delivery #{next_date = following}"
-    else
-      ~t"Next delivery #{date = next}"
+  defp delivery_day_options(subscription, locale) do
+    for day <- Weekday.all(), day in subscription.fulfillment_option.available_days do
+      {String.capitalize(Format.weekday_name(day, locale)), day}
     end
   end
 
-  defp subscription_status(%{state: :paused}, _locale), do: ~t"Paused"
-  defp subscription_status(%{state: :payment_failed}, _locale), do: ~t"On hold until the last delivery is paid"
-  defp subscription_status(%{state: :cancelled}, _locale), do: ~t"Cancelled"
+  # The occurrence job reads the subscription when it books each delivery, so a
+  # change applies from the first one it hasn't booked or been told to skip.
+  defp change_confirmation(subscription, locale) do
+    %{product_variant: variant, interval_weeks: weeks} = subscription
+    from = Format.weekday_date(first_delivery_to_book(subscription), locale)
+    size = AdminComponents.variant_size_label(variant.size)
+    price = Format.storefront_price(variant.price, locale)
+
+    ~t"From #{date = from}: #{size = size}, #{interval = String.downcase(Fields.interval_label(weeks))}, #{price = price} per delivery."
+  end
+
+  defp first_delivery_to_book(%{next_fulfillment_date: date} = subscription) do
+    if date in subscription.skipped_dates, do: Date.add(date, subscription.interval_weeks * 7), else: date
+  end
+
+  attr :subscription, :map, required: true
+
+  defp cancel_dialog(assigns) do
+    ~H"""
+    <dialog
+      id={"cancel-subscription-#{@subscription.id}"}
+      class="modal"
+      aria-labelledby={"cancel-subscription-#{@subscription.id}-title"}
+      phx-mounted={JS.ignore_attributes(["open"])}
+    >
+      <div class="modal-box bg-base-100 rounded-none">
+        <h3 id={"cancel-subscription-#{@subscription.id}-title"} class="font-serif text-2xl">
+          {~t"Stop your subscription?"}
+        </h3>
+        <p class="mt-3">{~t"There will be no more deliveries or charges."}</p>
+        <p :if={@subscription.state == :active} class="mt-2">
+          {~t"Want a break instead?"}
+          <.button
+            type="button"
+            variant="text"
+            phx-click={
+              JS.push("pause_subscription", value: %{id: @subscription.id})
+              |> JS.dispatch("drawer:close", to: "#cancel-subscription-#{@subscription.id}")
+            }
+          >
+            {~t"Pause it"}
+          </.button>
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <form method="dialog">
+            <.button type="submit" variant="primary" autofocus>{~t"Keep it"}</.button>
+          </form>
+          <.button
+            type="button"
+            variant="destructive"
+            phx-click={
+              JS.push("cancel_subscription", value: %{id: @subscription.id})
+              |> JS.dispatch("drawer:close", to: "#cancel-subscription-#{@subscription.id}")
+            }
+          >
+            {~t"Stop subscription"}
+          </.button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="submit">{~t"Close"}</button>
+      </form>
+    </dialog>
+    """
+  end
+
+  attr :subscription, :map, required: true
+  attr :unpaid, :map, default: nil
+  attr :locale, :string, required: true
+
+  # Saving a new card restarts a held subscription and paying the link restarts
+  # it too, but neither does the other's job, so a held row asks for both.
+  defp subscription_payment(assigns) do
+    assigns = assign(assigns, held?: assigns.subscription.state == :payment_failed)
+
+    ~H"""
+    <div :if={@held? or @unpaid} class="flex flex-col gap-3" data-testid="subscription-payment">
+      <div>
+        <p class="font-medium">
+          <%= cond do %>
+            <% @held? and @unpaid -> %>
+              {~t"We couldn't charge your card for #{date = Format.weekday_date(@unpaid.fulfillment_date, @locale)} (#{amount = Format.currency(@unpaid.grand_total, @locale)})."}
+            <% @held? -> %>
+              {~t"Your subscription is on hold because a payment didn't go through."}
+            <% true -> %>
+              {~t"Your delivery on #{date = Format.weekday_date(@unpaid.fulfillment_date, @locale)} (#{amount = Format.currency(@unpaid.grand_total, @locale)}) is still unpaid."}
+          <% end %>
+        </p>
+        <p :if={@held?} class="text-base-content/70 text-sm">
+          {~t"Update your card to restart your subscription."}
+          <span :if={@unpaid}>{~t"A new card doesn't pay for this delivery, so pay for it separately."}</span>
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <.button
+          :if={@held?}
+          navigate={~p"/account/subscriptions/#{@subscription.id}/card"}
+          variant="primary"
+          data-testid="subscription-update-card"
+        >
+          {~t"Update card"}
+        </.button>
+        <.button
+          :if={@unpaid}
+          navigate={~p"/pay/#{@unpaid.payment_link_token}"}
+          variant={if @held?, do: "secondary", else: "primary"}
+          data-testid="subscription-pay-now"
+        >
+          {~t"Pay #{amount = Format.currency(@unpaid.grand_total, @locale)} now"}
+        </.button>
+      </div>
+    </div>
+    """
+  end
+
+  defp subscription_name(subscription), do: Translations.translate(subscription.product_variant.product).name
+
+  defp plan_label(%{product_variant: variant, interval_weeks: weeks}) do
+    "#{AdminComponents.variant_size_label(variant.size)} · #{Fields.interval_label(weeks)}"
+  end
+
+  defp notice_for({id, kind, message}, %{id: id}), do: {kind, message}
+  defp notice_for(_notice, _subscription), do: nil
+
+  defp unpaid_occurrence(orders, subscription) do
+    Enum.find(orders, &(&1.subscription_id == subscription.id and &1.payment_link_open?))
+  end
+
+  # The occurrence job books each delivery ahead of its date, after which
+  # `next_fulfillment_date` has already moved on to the one after.
+  defp booked_delivery(orders, subscription) do
+    orders
+    |> Enum.filter(fn order ->
+      order.subscription_id == subscription.id and order.fulfillment_status != :cancelled and
+        not Date.before?(order.fulfillment_date, store_today())
+    end)
+    |> Enum.min_by(& &1.fulfillment_date, Date, fn -> nil end)
+  end
+
+  attr :subscription, :map, required: true
+  attr :class, :string, default: nil
+
+  defp manage_button(assigns) do
+    ~H"""
+    <.button
+      type="button"
+      variant="neutral"
+      size="sm"
+      class={["whitespace-nowrap", @class]}
+      aria-label={~t"Manage #{name = subscription_name(@subscription)}"}
+      phx-click={JS.exec("phx-show", to: "#manage-subscription-#{@subscription.id}")}
+    >
+      {~t"Manage"}
+    </.button>
+    """
+  end
+
+  attr :subscription, :map, required: true
+  attr :orders, :list, required: true
+  attr :locale, :string, required: true
+
+  # The table's short form: the date, then one line on what's happening.
+  defp next_delivery(%{subscription: %{state: :payment_failed}} = assigns) do
+    assigns = assign(assigns, unpaid: unpaid_occurrence(assigns.orders, assigns.subscription))
+
+    ~H"""
+    <span class="font-medium">{~t"Payment failed"}</span>
+    <span class="block text-sm">
+      <.link
+        :if={@unpaid}
+        navigate={~p"/pay/#{@unpaid.payment_link_token}"}
+        class="link-underline-hover text-primary"
+        data-testid="subscription-pay-now"
+      >
+        {~t"Pay #{amount = Format.currency(@unpaid.grand_total, @locale)} now"}
+      </.link>
+      <span :if={@unpaid}>·</span>
+      <.link
+        navigate={~p"/account/subscriptions/#{@subscription.id}/card"}
+        class="link-underline-hover text-primary"
+        data-testid="subscription-update-card"
+      >
+        {~t"Update card"}
+      </.link>
+    </span>
+    """
+  end
+
+  defp next_delivery(%{subscription: %{state: :paused}} = assigns) do
+    ~H"""
+    {~t"Paused"}
+    <span class="text-base-content/70 block text-sm">{~t"No deliveries or charges"}</span>
+    """
+  end
+
+  defp next_delivery(%{subscription: %{state: :cancelled}} = assigns) do
+    ~H"""
+    {~t"Cancelled"}
+    <span class="text-base-content/70 block text-sm tabular-nums">
+      {Format.day_month(helsinki_date(@subscription.updated_at), @locale)}
+    </span>
+    """
+  end
+
+  defp next_delivery(assigns) do
+    %{subscription: subscription, orders: orders} = assigns
+
+    assigns =
+      assign(assigns,
+        booked: booked_delivery(orders, subscription),
+        unpaid: unpaid_occurrence(orders, subscription),
+        next: first_delivery_to_book(subscription)
+      )
+
+    ~H"""
+    <span class="tabular-nums">
+      {Format.weekday_day_month(if(@booked, do: @booked.fulfillment_date, else: @next), @locale)}
+    </span>
+    <span class="text-base-content/70 block text-sm">
+      <%= cond do %>
+        <% @unpaid -> %>
+          {~t"Unpaid"} ·
+          <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+            {~t"Pay now"}
+          </.link>
+        <% @booked -> %>
+          {~t"Being prepared"}
+        <% @subscription.next_delivery_skipped? -> %>
+          {~t"Skipping #{date = Format.day_month(@subscription.next_fulfillment_date, @locale)}"}
+        <% true -> %>
+          {~t"Charged #{date = Format.day_month(Subscription.charged_on(@next), @locale)}"}
+      <% end %>
+    </span>
+    """
+  end
+
+  attr :subscription, :map, required: true
+  attr :orders, :list, required: true
+  attr :locale, :string, required: true
+  attr :edited?, :boolean, required: true
+  attr :notice, :any, default: nil
+
+  defp manage_drawer(assigns) do
+    %{subscription: subscription, orders: orders} = assigns
+
+    assigns =
+      assign(assigns,
+        id: subscription.id,
+        unpaid: unpaid_occurrence(orders, subscription),
+        booked: booked_delivery(orders, subscription),
+        open?: subscription.state != :cancelled and not subscription.changes_closed?
+      )
+
+    ~H"""
+    <.drawer
+      id={"manage-subscription-#{@id}"}
+      placement="right"
+      label={subscription_name(@subscription)}
+      class="bg-base-100 border-l-1 w-[88vw] flex h-full flex-col sm:w-[28rem]"
+    >
+      <header class="flex flex-row items-start justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
+        <h2 class="section-title">{subscription_name(@subscription)}</h2>
+        <.icon_button
+          aria_label={~t"Close"}
+          phx-click={JS.exec("phx-hide", to: "#manage-subscription-#{@id}")}
+        >
+          <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+        </.icon_button>
+      </header>
+
+      <div class="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4 sm:p-8">
+        <p
+          :if={@notice}
+          role="status"
+          class={["bg-cream text-cream-content px-4 py-3 text-sm", elem(@notice, 0) == :error && "text-error"]}
+          data-testid="subscription-notice"
+        >
+          {elem(@notice, 1)}
+        </p>
+
+        <.subscription_payment subscription={@subscription} unpaid={@unpaid} locale={@locale} />
+
+        <dl class="border-base-content/12 border-t">
+          <.detail_row label={if @subscription.state == :active, do: ~t"Next delivery", else: ~t"Status"}>
+            <div data-testid="subscription-drawer-status">
+              <.drawer_status subscription={@subscription} booked={@booked} locale={@locale} />
+            </div>
+
+            <p :if={@subscription.changes_closed?} class="text-base-content/70 mt-2 text-sm" data-testid="changes-closed">
+              {~t"Your next delivery is already being prepared. You can make changes again from #{date = Format.weekday_date(Subscription.changes_reopen_on(@subscription), @locale)}."}
+              <.link navigate={~p"/contact"} class="link-underline-hover text-primary">
+                {~t"Need to change this one? Contact us."}
+              </.link>
+            </p>
+
+            <div
+              :if={@open? and @subscription.state in [:active, :paused]}
+              role="group"
+              aria-label={~t"Deliveries"}
+              class="mt-4 flex flex-wrap gap-3"
+            >
+              <.button
+                :if={@subscription.state == :active and not @subscription.next_delivery_skipped?}
+                type="button"
+                variant="secondary"
+                phx-click="skip_subscription"
+                phx-value-id={@id}
+              >
+                {~t"Skip #{date = Format.day_month(@subscription.next_fulfillment_date, @locale)}"}
+              </.button>
+              <.button
+                :if={@subscription.state == :active and @subscription.next_delivery_skipped?}
+                type="button"
+                variant="secondary"
+                phx-click="unskip_subscription"
+                phx-value-id={@id}
+              >
+                {~t"Deliver on #{date = Format.day_month(@subscription.next_fulfillment_date, @locale)} after all"}
+              </.button>
+              <%!-- One id for both, so the button is patched in place and keeps focus. --%>
+              <.button
+                id={"subscription-#{@id}-pause"}
+                type="button"
+                variant={if @subscription.state == :paused, do: "primary", else: "secondary"}
+                phx-click={if @subscription.state == :active, do: "pause_subscription", else: "resume_subscription"}
+                phx-value-id={@id}
+              >
+                {if @subscription.state == :active, do: ~t"Pause", else: ~t"Resume"}
+              </.button>
+            </div>
+
+            <.button
+              :if={@subscription.state == :cancelled}
+              navigate={~p"/product/#{@subscription.product_variant.product_id}"}
+              variant="secondary"
+              class="mt-3"
+            >
+              {~t"Start a new subscription"}
+            </.button>
+          </.detail_row>
+
+          <.detail_row :if={@subscription.state != :cancelled} label={~t"Plan"}>
+            <div class="flex items-baseline justify-between gap-4">
+              <div>
+                <p class="font-serif text-lg">{plan_label(@subscription)}</p>
+                <p class="text-base-content/70 text-sm">
+                  {~t"#{price = Format.storefront_price(@subscription.product_variant.price, @locale)} per delivery"}
+                </p>
+              </div>
+              <.button
+                :if={@open? and @subscription.state in [:active, :paused]}
+                type="button"
+                variant="text"
+                class="min-h-11 shrink-0"
+                aria-controls={"change-subscription-#{@id}"}
+                aria-expanded="false"
+                phx-click={
+                  JS.toggle(to: "#change-subscription-#{@id}", display: "flex")
+                  |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+                }
+              >
+                {~t"Change"}
+              </.button>
+            </div>
+            <form
+              :if={@open? and @subscription.state in [:active, :paused]}
+              id={"change-subscription-#{@id}"}
+              phx-change="edit_subscription"
+              phx-submit="change_subscription"
+              class="mt-4 hidden flex-col gap-3"
+            >
+              <input type="hidden" name="subscription_id" value={@id} />
+              <.input
+                type="select"
+                id={"subscription-#{@id}-size"}
+                name="product_variant_id"
+                label={~t"Size"}
+                options={size_options(@subscription, @locale)}
+                value={@subscription.product_variant_id}
+              />
+              <.input
+                type="select"
+                id={"subscription-#{@id}-interval"}
+                name="interval_weeks"
+                label={~t"How often"}
+                options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
+                value={@subscription.interval_weeks}
+              />
+              <.input
+                type="select"
+                id={"subscription-#{@id}-day"}
+                name="delivery_day"
+                label={~t"Delivery day"}
+                options={delivery_day_options(@subscription, @locale)}
+                value={delivery_day(@subscription)}
+              />
+              <.button
+                type="submit"
+                variant="secondary"
+                class="self-start"
+                disabled={not @edited?}
+                phx-disable-with={~t"Saving…"}
+              >
+                {~t"Save changes"}
+              </.button>
+            </form>
+          </.detail_row>
+
+          <.detail_row :if={@subscription.state != :cancelled and @subscription.delivery_address} label={~t"Delivers to"}>
+            <p class="font-serif text-lg" data-testid="subscription-recipient">
+              <span :if={@subscription.recipient_name} class="block">{@subscription.recipient_name}</span>
+              {@subscription.delivery_address}
+            </p>
+            <p class="text-base-content/70 mt-1 text-sm">
+              {~t"Moving?"}
+              <.link navigate={~p"/contact"} class="link-underline-hover text-base-content">
+                {~t"Contact us to change the address."}
+              </.link>
+            </p>
+          </.detail_row>
+
+          <.detail_row :if={@subscription.state not in [:cancelled, :payment_failed]} label={~t"Card"}>
+            <div class="flex items-baseline justify-between gap-4">
+              <p data-testid="subscription-card">{Fields.card_label(@subscription) || ~t"Saved card"}</p>
+              <.link
+                navigate={~p"/account/subscriptions/#{@id}/card"}
+                class="link-underline-static-body min-h-11 inline-flex shrink-0 items-center"
+              >
+                {~t"Update card"}
+              </.link>
+            </div>
+          </.detail_row>
+        </dl>
+
+        <.button
+          :if={not @subscription.changes_closed? and @subscription.state != :cancelled}
+          type="button"
+          variant="text"
+          class="text-base-content/70 min-h-11 mt-auto self-start"
+          phx-click={JS.dispatch("drawer:open", to: "#cancel-subscription-#{@id}")}
+        >
+          {~t"Cancel subscription"}
+        </.button>
+
+        <.cancel_dialog
+          :if={not @subscription.changes_closed? and @subscription.state != :cancelled}
+          subscription={@subscription}
+        />
+      </div>
+    </.drawer>
+    """
+  end
+
+  attr :label, :string, required: true
+  slot :inner_block, required: true
+
+  defp detail_row(assigns) do
+    ~H"""
+    <div class="border-base-content/12 border-b py-5">
+      <dt class="eyebrow text-base-content/70 mb-2">{@label}</dt>
+      <dd>{render_slot(@inner_block)}</dd>
+    </div>
+    """
+  end
+
+  attr :subscription, :map, required: true
+  attr :booked, :map, default: nil
+  attr :locale, :string, required: true
+
+  defp drawer_status(%{subscription: %{state: :active}} = assigns) do
+    assigns = assign(assigns, next: first_delivery_to_book(assigns.subscription))
+
+    ~H"""
+    <%= if @booked do %>
+      <p class="font-serif text-lg">{Format.weekday_date(@booked.fulfillment_date, @locale)}</p>
+      <p class="text-base-content/70 text-sm">{~t"Already booked and being prepared."}</p>
+      <p class="text-base-content/70 text-sm">
+        {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(Subscription.charged_on(@next), @locale)}."}
+      </p>
+    <% else %>
+      <p class="font-serif text-lg">{Format.weekday_date(@next, @locale)}</p>
+      <p class="text-base-content/70 text-sm">
+        {~t"Charged to your card on #{date = Format.weekday_date(Subscription.charged_on(@next), @locale)}."}
+      </p>
+    <% end %>
+    <p :if={@subscription.next_delivery_skipped?} class="text-base-content/70 mt-2 text-sm">
+      {~t"You're skipping #{date = Format.weekday_date(@subscription.next_fulfillment_date, @locale)}. Away for longer? Pause instead."}
+    </p>
+    """
+  end
+
+  defp drawer_status(%{subscription: %{state: :paused}} = assigns) do
+    ~H"""
+    <p class="font-serif text-lg">{~t"Paused"}</p>
+    <p class="text-base-content/70 text-sm">
+      {~t"No deliveries or charges. Resume now and your next delivery is #{date = Format.weekday_date(Subscription.resume_date(@subscription), @locale)}."}
+    </p>
+    """
+  end
+
+  defp drawer_status(%{subscription: %{state: :payment_failed}} = assigns) do
+    ~H"""
+    <p class="font-serif text-lg">{~t"On hold"}</p>
+    <p class="text-base-content/70 text-sm">{~t"No deliveries until your card is updated."}</p>
+    """
+  end
+
+  defp drawer_status(%{subscription: %{state: :cancelled}} = assigns) do
+    ~H"""
+    <p class="font-serif text-lg">
+      {~t"Cancelled on #{date = Format.weekday_date(helsinki_date(@subscription.updated_at), @locale)}."}
+    </p>
+    """
+  end
 
   defp update_name(user, name) when name == user.name, do: {:ok, user}
 
@@ -675,11 +1210,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
     |> Enum.sort_by(& &1.course.date, Date)
   end
 
-  defp ordered_on(order) do
-    (order.ordered_at || order.inserted_at)
-    |> DateTime.shift_zone!(@timezone)
-    |> DateTime.to_date()
-  end
+  defp ordered_on(order), do: helsinki_date(order.ordered_at || order.inserted_at)
+
+  defp helsinki_date(datetime), do: datetime |> DateTime.shift_zone!(@timezone) |> DateTime.to_date()
 
   defp store_today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 end

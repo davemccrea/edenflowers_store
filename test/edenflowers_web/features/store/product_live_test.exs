@@ -18,12 +18,16 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       %{product: product, variant: generate(product_variant(product_id: product.id))}
     end
 
-    test "is bought once unless the customer subscribes", %{conn: conn, product: product, order: order} do
+    test "starts as a subscription, and can be bought once instead", %{conn: conn, product: product, order: order} do
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
 
-      assert has_element?(view, "[data-testid=product-subscribable]", "Also as a subscription")
-      assert has_element?(view, "[data-testid=buy-once-option][checked]")
+      assert has_element?(view, "[data-testid=subscribe-option][checked]")
+      assert has_element?(view, "[data-testid=subscription-explainer]", "charged 3 days before each delivery")
+
+      view |> form("[data-testid=product-form]", %{subscribe: "false"}) |> render_change()
+
       refute has_element?(view, "[data-testid=interval-options]")
+      refute has_element?(view, "[data-testid=per-delivery]")
 
       view |> form("[data-testid=product-form]") |> render_submit()
 
@@ -33,23 +37,19 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     test "can be subscribed to every few weeks", %{conn: conn, product: product, variant: variant, order: order} do
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
 
-      view
-      |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "true"})
-      |> render_change()
-
-      assert has_element?(view, "[data-testid=interval-options]")
       assert has_element?(view, "[data-testid=interval-option-4]")
+      assert has_element?(view, "[data-testid=per-delivery]", "per delivery")
 
       view
       |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "true", interval_weeks: "2"})
       |> render_change()
 
-      view |> form("[data-testid=product-form]") |> render_submit()
-
+      assert render_submit(form(view, "[data-testid=product-form]"))
+      assert_push_event(view, "js-exec", %{to: "#cart-drawer"})
       assert [%LineItem{interval_weeks: 2, quantity: 1}] = line_items(order)
     end
 
-    test "says when adding replaces the subscription in the cart", %{
+    test "starts from what's in the cart, and says what a change replaces", %{
       conn: conn,
       product: product,
       variant: variant,
@@ -58,7 +58,16 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
 
-      assert has_element?(view, "[data-testid=replaces-cart-note]", "Replaces the subscription in your cart")
+      assert has_element?(view, "[data-testid=interval-option-2][checked]")
+      assert has_element?(view, "[data-testid=in-cart-note]", "This is in your cart.")
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "View cart")
+
+      view
+      |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "false"})
+      |> render_change()
+
+      assert has_element?(view, "[data-testid=replaces-cart-note]", "every 2 weeks to")
+      assert has_element?(view, "[data-testid=replaces-cart-note]", "bought once.")
       assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
 
       view |> form("[data-testid=product-form]") |> render_submit()
@@ -66,24 +75,49 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert [%LineItem{interval_weeks: nil}] = line_items(order)
     end
 
-    test "says when subscribing replaces the bouquet in the cart", %{
-      conn: conn,
-      product: product,
-      variant: variant,
-      order: order
-    } do
-      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+    test "counts the bouquets subscribing replaces", %{conn: conn, product: product, variant: variant, order: order} do
+      Orders.add_line_item!(order.id, variant.id, 3, authorize?: false)
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
-
-      assert has_element?(view, "[data-testid=add-to-cart-button]", "Add to cart")
-      refute has_element?(view, "[data-testid=replaces-cart-note]")
 
       view
       |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "true"})
       |> render_change()
 
-      assert has_element?(view, "[data-testid=replaces-cart-note]", "Replaces the bouquet in your cart")
-      assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
+      assert has_element?(view, "[data-testid=replaces-cart-note]", "Replaces the 3 bouquets")
+    end
+
+    test "tells a subscriber they already have one", %{conn: conn, product: product, variant: variant} do
+      user = generate(admin_user(admin: false)) |> with_token()
+
+      Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
+        user_id: user.id,
+        product_variant_id: variant.id,
+        fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
+        interval_weeks: 2,
+        next_fulfillment_date: Date.add(Date.utc_today(), 14),
+        locale: "en",
+        stripe_customer_id: "cus_1",
+        stripe_payment_method_id: "pm_1"
+      })
+
+      conn = AshAuthentication.Plug.Helpers.store_in_session(conn, user)
+      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+      assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/account"]|)
+    end
+
+    test "says before the click that a subscription can't join other products", %{
+      conn: conn,
+      product: product,
+      order: order
+    } do
+      other = generate(product(draft: false))
+      other_variant = generate(product_variant(product_id: other.id))
+      Orders.add_line_item!(order.id, other_variant.id, 1, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+      assert has_element?(view, "[data-testid=blocked-note]", "checked out on its own")
+      refute has_element?(view, "[data-testid=add-to-cart-button][type=submit]")
     end
   end
 

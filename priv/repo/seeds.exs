@@ -324,10 +324,22 @@ subscription_product =
   Ash.Changeset.for_create(Product, :create, %{
     product_category_id: subscriptions_category.id,
     tax_rate_id: tax_rate.id,
-    name: "Weekly bouquet",
+    name: "Florist's choice bouquet",
     image_slug: "https://placehold.co/400x400",
     description:
       "A florist's-choice bouquet of whatever is best that week. Buy one, or subscribe to have it delivered every one, two or four weeks.",
+    translations: %{
+      "sv-FI": %{
+        name: "Floristens val",
+        description:
+          "En bukett av veckans finaste blommor, vald av floristen. Köp en, eller prenumerera och få den levererad varje, varannan eller var fjärde vecka."
+      },
+      fi: %{
+        name: "Floristin valinta",
+        description:
+          "Floristin valitsema kimppu viikon parhaista kukista. Osta yksi tai tilaa se toimitettavaksi viikon, kahden tai neljän viikon välein."
+      }
+    },
     draft: false,
     free_delivery: true,
     subscribable: true
@@ -940,7 +952,7 @@ end
 # Every email is marked sent, for the same reason as above.
 alias Edenflowers.Orders.Subscription
 
-weekly_bouquet = fn size -> variant_for.("Weekly bouquet", size) end
+weekly_bouquet = fn size -> variant_for.("Florist's choice bouquet", size) end
 
 seed_subscription_order = fn subscription, user, attrs ->
   variant = weekly_bouquet.(attrs.size)
@@ -1109,6 +1121,10 @@ for attrs <- subscriptions do
       locale: attrs.locale,
       stripe_customer_id: "cus_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
       stripe_payment_method_id: "pm_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      card_brand: "visa",
+      card_last4: "4242",
+      card_exp_month: 8,
+      card_exp_year: 2028,
       setup_emailed_at: DateTime.utc_now()
     })
 

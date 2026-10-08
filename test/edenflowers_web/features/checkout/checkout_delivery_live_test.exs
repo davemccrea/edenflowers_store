@@ -67,6 +67,43 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       assert has_element?(view, "#checkout-line-items", "Subscription · Every 2 weeks")
       refute has_element?(view, "label", "Fulfillment Option")
+      assert has_element?(view, "[data-testid='subscription-delivery-only']")
+    end
+
+    test "subscribed to, says what the card is charged and how often before paying",
+         %{conn: conn, variant: variant, delivery_option: delivery_option} do
+      first_delivery = Date.add(Edenflowers.Expressions.HelsinkiToday.today(), 5)
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            customer_name: "Jane",
+            customer_email: "jane@example.com",
+            fulfillment_option_id: delivery_option.id,
+            fulfillment_date: first_delivery,
+            quoted_fulfillment_fee: Decimal.new("5.00"),
+            in_free_delivery_zone: false
+          )
+        )
+
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      stub(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_jane"}} end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount, _metadata, _customer ->
+        {:ok, %{id: "pi_sub", client_secret: "pi_sub_secret"}}
+      end)
+
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+      amount = Edenflowers.Format.currency(Decimal.add(variant.price, "5.00"), "en")
+      second_delivery = Edenflowers.Format.weekday_date(Date.add(first_delivery, 14), "en")
+
+      assert has_element?(
+               view,
+               "[data-testid='recurring-charge']",
+               "Then #{amount} every 2 weeks from #{second_delivery}, charged to this card 3 days before each delivery."
+             )
     end
 
     test "subscribed to with a promotion, says the discount is for the first delivery",
@@ -128,6 +165,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       refute has_element?(view, "#checkout-line-items", "Subscription")
+      refute has_element?(view, "[data-testid='subscription-delivery-only']")
       assert has_element?(view, "label", "Fulfillment Option")
     end
   end
