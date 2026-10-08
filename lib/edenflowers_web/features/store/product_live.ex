@@ -220,9 +220,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 </div>
                 <div class="text-base-content/75 flex flex-col gap-1 text-base" data-testid="subscription-explainer">
                   <p>
-                    {~t"A bouquet of whatever is best that week, on the schedule you choose, delivered or picked up. Your card is charged #{days = Subscription.lead_days()} days before each one."}
+                    {~t"Your card is charged #{days = Subscription.lead_days()} days before each one. Pause or cancel from your account."}
                   </p>
-                  <p>{~t"Pause or cancel from your account."}</p>
                   <p :if={@has_subscription?} data-testid="already-subscribed">
                     {~t"You already have a subscription."}
                     <.link navigate={~p"/account"} class="link-underline-hover text-base-content">
@@ -277,6 +276,24 @@ defmodule EdenflowersWeb.Store.ProductLive do
             </p>
           </div>
         </div>
+
+        <section
+          :if={@product.subscribable}
+          aria-labelledby="subscription-faq-heading"
+          class="mt-20 max-w-3xl md:mt-28"
+          data-testid="subscription-faq"
+        >
+          <h2 id="subscription-faq-heading" class="section-title mb-6">{~t"How subscriptions work"}</h2>
+          <details
+            :for={{question, answer} <- EdenflowersWeb.Marketing.FaqLive.subscription_questions()}
+            class="collapse-arrow border-base-content/12 collapse rounded-none border-b first-of-type:border-t"
+          >
+            <summary class="collapse-title font-serif text-balance px-0 text-xl leading-snug">{question}</summary>
+            <div class="collapse-content text-base-content/80 text-[1.0625rem] px-0 leading-relaxed">
+              <p class="max-w-[60ch]">{answer}</p>
+            </div>
+          </details>
+        </section>
       </.container>
     </Layouts.app>
     """

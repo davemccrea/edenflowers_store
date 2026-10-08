@@ -9,11 +9,14 @@ defmodule Edenflowers.Fulfillment do
 
   def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
 
+  @doc "The delivery option priced by distance, whose free distance free-delivery products get."
+  def distance_priced_delivery do
+    Enum.find(list_options!(authorize?: false), &(&1.fulfillment_method == :delivery and &1.rate_type == :dynamic))
+  end
+
   @doc "How far free-delivery products are delivered for free, or nil when nothing is."
   def free_dist_km do
-    list_options!(authorize?: false)
-    |> Enum.find(&(&1.fulfillment_method == :delivery and &1.rate_type == :dynamic))
-    |> case do
+    case distance_priced_delivery() do
       %{free_dist_km: km} when km > 0 -> km
       _ -> nil
     end

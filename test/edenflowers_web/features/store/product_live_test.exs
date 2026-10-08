@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
       assert has_element?(view, "[data-testid=subscribe-option][checked]")
       assert has_element?(view, "[data-testid=subscription-explainer]", "charged 3 days before each one")
+      assert has_element?(view, "[data-testid=subscription-faq] summary", "When do I pay?")
 
       view |> form("[data-testid=product-form]", %{subscribe: "false"}) |> render_change()
 
@@ -129,6 +130,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     refute has_element?(view, "[data-testid=product-subscribable]")
     refute has_element?(view, "[data-testid=subscribe-option]")
+    refute has_element?(view, "[data-testid=subscription-faq]")
   end
 
   test "says why an add to the cart was refused", %{conn: conn, order: order} do
