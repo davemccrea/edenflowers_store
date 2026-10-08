@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Changes.KeepSubscriptionAlone
+  alias Edenflowers.Orders.Calculations.ReplacedByAdding
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Checkout.Fields
 
@@ -49,9 +49,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   def render(assigns) do
     assigns =
       assign(assigns,
-        replaces_cart?:
-          KeepSubscriptionAlone.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?),
-        cart_subscription?: Enum.any?(assigns.order.line_items, & &1.interval_weeks)
+        replaces_cart?: ReplacedByAdding.replaces?(assigns.order.line_items, assigns.product.id, assigns.subscribe?)
       )
 
     ~H"""
@@ -213,7 +211,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               </fieldset>
 
               <p :if={@replaces_cart?} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
-                {if @cart_subscription?,
+                {if @order.subscription?,
                   do: ~t"Replaces the subscription in your cart",
                   else: ~t"Replaces the bouquet in your cart"}
               </p>

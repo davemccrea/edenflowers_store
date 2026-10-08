@@ -540,7 +540,7 @@ msgstr ""
 msgid "is invalid"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:228
+#: lib/edenflowers_web/features/store/product_live.ex:227
 #, elixir-autogen, elixir-format
 msgid "Add to cart"
 msgstr ""
@@ -555,7 +555,7 @@ msgstr ""
 msgid "FAQ"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:88
+#: lib/edenflowers_web/features/store/product_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Favourite"
 msgstr ""
@@ -592,7 +592,7 @@ msgstr ""
 msgid "Gift options"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:233
+#: lib/edenflowers_web/features/store/product_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "Have a question?"
 msgstr ""
@@ -630,7 +630,7 @@ msgstr ""
 msgid "Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM. Every delivery is handled carefully so the flowers arrive in perfect condition."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:235
+#: lib/edenflowers_web/features/store/product_live.ex:234
 #, elixir-autogen, elixir-format
 msgid "See the FAQ"
 msgstr ""
@@ -650,7 +650,7 @@ msgstr ""
 #: lib/edenflowers_web/features/account/account_live.ex:181
 #: lib/edenflowers_web/features/admin/product_form_live.ex:174
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:51
-#: lib/edenflowers_web/features/store/product_live.ex:135
+#: lib/edenflowers_web/features/store/product_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Size"
 msgstr ""
@@ -4529,7 +4529,7 @@ msgid "Enter a valid email address."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:260
-#: lib/edenflowers_web/features/store/product_live.ex:114
+#: lib/edenflowers_web/features/store/product_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km"
 msgstr ""
@@ -4599,7 +4599,7 @@ msgstr ""
 msgid "A subscription can only be delivered"
 msgstr ""
 
-#: lib/edenflowers/orders/changes/keep_subscription_alone.ex:54
+#: lib/edenflowers/orders/validations/subscription_checked_out_alone.ex:30
 #, elixir-autogen, elixir-format
 msgid "A subscription is checked out on its own. Empty your cart to add this."
 msgstr ""
@@ -4662,7 +4662,7 @@ msgstr ""
 #: lib/edenflowers_web/components/cart/line_items.ex:58
 #: lib/edenflowers_web/features/admin/components/components.ex:128
 #: lib/edenflowers_web/features/admin/products_live.ex:99
-#: lib/edenflowers_web/features/store/product_live.ex:184
+#: lib/edenflowers_web/features/store/product_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Subscription"
 msgstr ""
@@ -4825,7 +4825,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:6
 #: lib/edenflowers_web/features/account/account_live.ex:189
-#: lib/edenflowers_web/features/store/product_live.ex:194
+#: lib/edenflowers_web/features/store/product_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "How often"
 msgstr ""
@@ -4888,12 +4888,12 @@ msgid "Your subscription will charge this card from the next delivery on."
 msgstr ""
 
 #: lib/edenflowers_web/components/core_components.ex:811
-#: lib/edenflowers_web/features/store/product_live.ex:123
+#: lib/edenflowers_web/features/store/product_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Also as a subscription"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:173
+#: lib/edenflowers_web/features/store/product_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Buy once"
 msgstr ""
@@ -4909,12 +4909,12 @@ msgstr ""
 msgid "Customers choose on its product page to buy it once or to subscribe, every 1, 2 or 4 weeks. Free delivery must be ticked too."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:212
+#: lib/edenflowers_web/features/store/product_live.ex:211
 #, elixir-autogen, elixir-format
 msgid "Delivered regularly, skip or cancel any time"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:162
+#: lib/edenflowers_web/features/store/product_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "How to buy"
 msgstr ""
@@ -4936,22 +4936,22 @@ msgstr ""
 msgid "The card comes with your first delivery."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:270
+#: lib/edenflowers_web/features/store/product_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:218
+#: lib/edenflowers_web/features/store/product_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Replaces the bouquet in your cart"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:217
+#: lib/edenflowers_web/features/store/product_live.ex:216
 #, elixir-autogen, elixir-format
 msgid "Replaces the subscription in your cart"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:228
+#: lib/edenflowers_web/features/store/product_live.ex:227
 #, elixir-autogen, elixir-format
 msgid "Update cart"
 msgstr ""
