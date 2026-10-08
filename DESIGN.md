@@ -92,11 +92,6 @@ components:
     textColor: "{colors.base-content}"
     rounded: "{rounded.none}"
     padding: "0.75rem 1rem"
-  product-mark:
-    backgroundColor: "{colors.base-100}"
-    textColor: "{colors.base-content}"
-    rounded: "{rounded.none}"
-    padding: "0.4rem 0.75rem"
   eyebrow:
     textColor: "{colors.base-content}"
     typography: "{typography.label}"
@@ -141,7 +136,7 @@ A single warm family — paper at hue ~75, forest at hue ~150 — with one amber
 - **Pale Warm Cream** (`{colors.forest-content}`): text and flower marks on forest.
 
 ### Neutral
-- **Warm Off-White** (`{colors.base-100}`): the page. Header background, input backgrounds, the base of the product mark.
+- **Warm Off-White** (`{colors.base-100}`): the page. Header background, input backgrounds.
 - **Light Warm Oat** (`{colors.base-200}`): the first tonal step up — admin table tracks, subtle recessed areas.
 - **Warm Oat** (`{colors.base-300}`): the resting border of radio cards and floating menus, and hover fills in the admin sidebar. It is not the rule colour: at 93.5% on a 99% page it is too faint to structure anything. Rules use `base-content/12` (see The Hairline Rule).
 - **Near-Black Warm Grey** (`{colors.base-content}`): all body and heading text. Its `/65`, `/70`, `/60`, `/40`, `/15`, `/12` and `/8` mixes are the system's entire secondary-text, rule and decoration scale — there is no separate muted-text token.
@@ -220,14 +215,14 @@ A shadow is permitted only when it carries information: something genuinely floa
 
 ## Shapes
 
-Square is the system. Buttons are explicitly `rounded-none` against daisyUI's default. Product figures, category tiles, the product mark, section rules and the header are all hard-cornered. The form language is a rectangle and a hairline.
+Square is the system. Buttons are explicitly `rounded-none` against daisyUI's default. Product figures, category tiles, section rules and the header are all hard-cornered. The form language is a rectangle and a hairline.
 
 - **Corners:** square is set at the token, not at the call site. The theme block pins daisyUI's `--radius-field` and `--radius-box` to `0`, so every input, select, textarea, dropdown, modal and drawer is square without any markup saying so. There are no radius utilities in the storefront or admin markup, and none should be added.
 - **The radio carve-out:** `--radius-selector` deliberately keeps daisyUI's `0.5rem`. It shapes radios, and a square radio reads as a checkbox — the checkout fulfillment picker depends on that distinction. This is the one place softness is load-bearing.
 - **No 0.25rem tier.** There used to be one — the radio card, the checkout date-picker frame, the admin warning banner, the admin calendar's cells, swatches and weekday chips, the admin nav's `rounded-r`, and the skip link all carried `0.25rem`. None of it was a deliberate tier: every one was hand-matching daisyUI's old `--radius-field` default. When that token went to `0` they were orphaned, and a soft radio card sitting above a square text input in the same checkout step is what it looked like. All removed.
 - **Badges:** daisyUI rounds `.badge` with `--radius-selector`, so the admin status badges (confidence, payment, fulfillment, category) are soft pills. That is intended: a status reads as a tag, not as a field.
 - **Pills:** `9999px` on the cart count badge, avatar initials, carousel dots, the calendar strike and the admin scrollbar thumb, where the shape *is* the meaning. These are the only curves left in the system.
-- **Borders:** one pixel, in ink or `base-content/12` (see The Hairline Rule), used as separation rather than as containment. The product mark is the exception: a hairline frame at `base-content/55` over a 85%-opaque `base-100` backdrop with a 2px blur, so a label sits *on* a photograph instead of being burned into it.
+- **Borders:** one pixel, in ink or `base-content/12` (see The Hairline Rule), used as separation rather than as containment.
 - **Decoration:** line-drawn flower SVGs (`priv/svg/`, inlined at compile time, `fill: currentColor`) are the only ornament. They appear at low opacity (`/15`, `/70`) as watermarks in quiet corners — the footer's top-right, reverse-out sections. They are always `aria-hidden`.
 - **Calendar primitives:** the admin fulfillment calendar has its own tiny shape vocabulary — a 45° strike through a closed cell (`::after`), a top-right triangle for a rule override (`::before`), and 45° repeating stripes for a mixed state. Two of them layer, which is why they use different pseudo-elements.
 
@@ -276,6 +271,7 @@ There are no cards. The product card is a link, a figure and two lines of text w
 - **Image:** scales to 1.04 over 700ms `ease-out` on group hover.
 - **Name:** `card-title`, with the honey underline fading in on group hover.
 - **Price:** serif `text-lg` at full `base-content`, prefixed by the `eyebrow` utility reading "From".
+- **Attributes:** "Free delivery · Subscription" as one sans line under the price, styled like the "From" prefix. Nothing is ever laid over the photograph.
 - **Focus:** a full-bleed `::after` pseudo-element becomes a 2px primary border on `focus-visible`, so the ring frames the whole card rather than the text.
 
 ### Navigation

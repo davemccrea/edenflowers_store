@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/store/bouquets")
 
-    assert has_element?(view, "#store-products", "Also as a subscription")
+    assert has_element?(view, "#store-products", "Subscription")
   end
 
   defp line_items(order) do

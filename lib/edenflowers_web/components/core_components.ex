@@ -797,20 +797,6 @@ defmodule EdenflowersWeb.CoreComponents do
           sizes="(min-width: 640px) 25vw, 50vw"
           class="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
         />
-        <div class="absolute top-3 left-3 flex flex-col items-start gap-1.5">
-          <span
-            :if={@product.free_delivery}
-            class="bg-cream/90 text-base-content tracking-[0.18em] px-2.5 py-1 text-xs uppercase"
-          >
-            {~t"Free delivery"}
-          </span>
-          <span
-            :if={@product.subscribable}
-            class="bg-cream/90 text-base-content tracking-[0.18em] px-2.5 py-1 text-xs uppercase"
-          >
-            {~t"Also as a subscription"}
-          </span>
-        </div>
       </figure>
 
       <div class="text-base-content flex flex-col gap-1.5">
@@ -825,6 +811,14 @@ defmodule EdenflowersWeb.CoreComponents do
             {~t"From"}
           </span>
           {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
+        </p>
+        <p
+          :if={@product.free_delivery or @product.subscribable}
+          class="text-base-content/60 font-sans tracking-[0.18em] text-xs uppercase leading-snug"
+        >
+          <span :if={@product.free_delivery}>{~t"Free delivery"}</span>
+          <span :if={@product.free_delivery and @product.subscribable} aria-hidden="true">·</span>
+          <span :if={@product.subscribable}>{~t"Subscription"}</span>
         </p>
       </div>
     </.link>
