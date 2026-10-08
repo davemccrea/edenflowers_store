@@ -7,6 +7,8 @@ defmodule Edenflowers.Orders.Validations.SubscriptionChangesOpen do
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  alias Ash.Error.Changes.InvalidAttribute
+
   @impl true
   def validate(_changeset, _opts, %{actor: %{admin: true}}), do: :ok
 
@@ -16,5 +18,19 @@ defmodule Edenflowers.Orders.Validations.SubscriptionChangesOpen do
     else
       :ok
     end
+  end
+
+  @impl true
+  def atomic(_changeset, _opts, %{actor: %{admin: true}}), do: :ok
+
+  def atomic(_changeset, _opts, _context) do
+    {:atomic, [:state, :next_fulfillment_date], expr(changes_closed?),
+     expr(
+       error(^InvalidAttribute, %{
+         field: :next_fulfillment_date,
+         value: next_fulfillment_date,
+         message: ^~t"It's too late to change your next delivery."
+       })
+     )}
   end
 end

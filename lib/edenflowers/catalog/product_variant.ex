@@ -38,10 +38,17 @@ defmodule Edenflowers.Catalog.ProductVariant do
   actions do
     defaults [
       :read,
-      :destroy,
       create: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id, :draft],
       update: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
     ]
+
+    destroy :destroy do
+      primary? true
+      require_atomic? false
+
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+                reference: :product_variant, field: :id}
+    end
 
     read :for_card_drawer do
       # The Cards category is intentionally hidden from the storefront

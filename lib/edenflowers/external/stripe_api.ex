@@ -83,7 +83,13 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def charge_off_session(amount_cents, params, idempotency_key) do
     params
-    |> Map.merge(%{amount: amount_cents, currency: "EUR", off_session: true, confirm: true})
+    |> Map.merge(%{
+      amount: amount_cents,
+      currency: "EUR",
+      off_session: true,
+      confirm: true,
+      error_on_requires_action: true
+    })
     |> Stripe.PaymentIntent.create(headers: %{"Idempotency-Key" => idempotency_key})
   end
 

@@ -125,15 +125,6 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert changed.next_fulfillment_date == Date.add(friday, -2)
     end
 
-    test "keeps a skipped next delivery skipped when it moves", context do
-      friday = first_on_or_after(days_from_today(14), 5)
-      subscription = subscription(context, %{next_fulfillment_date: friday, skipped_dates: [friday]})
-
-      moved = Orders.change_subscription!(subscription, %{delivery_day: :thursday}, actor: context.customer)
-
-      assert moved.skipped_dates == [Date.add(friday, -1)]
-    end
-
     test "only to a day the delivery option runs on", context do
       fridays_only = generate(fulfillment_option(fulfillment_method: :delivery, available_days: [:friday]))
       subscription = subscription(context, %{fulfillment_option_id: fridays_only.id})

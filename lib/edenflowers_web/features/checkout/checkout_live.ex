@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       data-testid="customer-email-input"
                     />
                     <p :if={@order.subscription?} class="text-base-content/70 -mt-4 text-sm" data-testid="account-note">
-                      {~t"We'll set up an account with this email so you can skip, pause or cancel."}
+                      {~t"We'll set up an account with this email so you can pause or cancel."}
                     </p>
 
                     <.input
@@ -542,7 +542,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
         ~H"""
         <p class="text-base-content/80 text-sm leading-relaxed" data-testid="recurring-charge">
-          {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged to this card #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery. Skip, pause or cancel from your account."}
+          {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged to this card #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery. Pause or cancel from your account."}
         </p>
         """
 
@@ -773,19 +773,26 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
      )}
   end
 
-  # No PaymentIntent sync here: the `pay` handler updates the amount
+  # No PaymentIntent amount sync here: the `pay` handler updates it
   # synchronously before pushing `stripe:process_payment`, so Stripe always
-  # charges the cart total at the moment of click.
+  # charges the cart total at the moment of click. A one-off/subscription
+  # switch does replace the intent because its card-saving mode also changes.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
 
     # A card removed from the cart takes its message with it; drop the typed
     # value too, or it would reappear if a card is picked again.
-    if has_card?(socket.assigns.order) and not has_card?(order) do
-      {:noreply, assign_forms(socket, order, drop: ["card_message"])}
-    else
-      {:noreply, assign(socket, order: order)}
-    end
+    socket =
+      if has_card?(socket.assigns.order) and not has_card?(order) do
+        assign_forms(socket, order, drop: ["card_message"])
+      else
+        assign(socket, order: order)
+      end
+
+    socket = if payment_mode_changed?, do: maybe_setup_payment(socket, order, actor(socket)), else: socket
+
+    {:noreply, socket}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do

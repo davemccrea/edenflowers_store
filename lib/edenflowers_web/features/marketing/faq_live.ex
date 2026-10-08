@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}
           </.faq_item>
           <.faq_item question={~t"Do you offer subscription services?"}>
-            {~t"Yes. Choose a bouquet size and have it delivered every 1, 2 or 4 weeks, free within #{km = Edenflowers.Fulfillment.free_dist_km()} km. Your card is charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery, and you can skip, pause or cancel from your account."}
+            {~t"Yes. Choose a bouquet size and have it delivered every 1, 2 or 4 weeks, free within #{km = Edenflowers.Fulfillment.free_dist_km()} km. Your card is charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery, and you can pause or cancel from your account."}
           </.faq_item>
           <.faq_item question={~t"What happens if I'm not home for delivery?"}>
             {~t"If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."}

@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
     assert has_element?(view, "[data-item-id] .admin-badge-error", "Payment failed")
   end
 
-  test "Jennie can skip, pause, resume and cancel, even inside the customer's cutoff", %{conn: conn} do
+  test "Jennie can pause, resume and cancel, even inside the customer's cutoff", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
 
@@ -101,9 +101,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
       })
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
-
-    view |> element("[data-item-id] button", "Skip") |> render_click()
-    assert reload(subscription).skipped_dates == [next_date]
 
     view |> element("[data-item-id] button", "Pause") |> render_click()
     assert reload(subscription).state == :paused

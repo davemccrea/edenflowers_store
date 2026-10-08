@@ -57,6 +57,59 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     %{order: order, product: product, variant: variant}
   end
 
+  describe "payment mode changes" do
+    test "replaces the PaymentIntent when switching to a subscription and back", %{conn: conn} do
+      product = generate(product(subscribable: true, free_delivery: true))
+      variant = generate(product_variant(product_id: product.id))
+
+      order =
+        generate(
+          order(
+            state: :payment,
+            customer_name: "Jane Doe",
+            customer_email: "jane@example.com"
+          )
+        )
+
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      {:ok, creations} = Agent.start_link(fn -> 0 end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata ->
+        number = Agent.get_and_update(creations, &{&1, &1 + 1})
+        {:ok, %{id: "pi_one_off_#{number}", client_secret: "one_off_secret_#{number}", amount: 0}}
+      end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn order ->
+        setup_future_usage = if order.payment_intent_id == "pi_subscription", do: "off_session"
+
+        {:ok,
+         %{
+           id: order.payment_intent_id,
+           client_secret: "#{order.payment_intent_id}_secret",
+           setup_future_usage: setup_future_usage
+         }}
+      end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      stub(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_jane"}} end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount, _metadata, "cus_jane" ->
+        {:ok, %{id: "pi_subscription", client_secret: "subscription_secret", amount: 0}}
+      end)
+
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_one_off_0"
+
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      render(view)
+      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_subscription"
+
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      render(view)
+      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_one_off_1"
+    end
+  end
+
   describe "Step 1: Your Details" do
     test "prefills the name and email of a signed-in customer", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, name: "Ada Lovelace", email: "ada@example.com"))

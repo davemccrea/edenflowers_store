@@ -42,14 +42,44 @@ defmodule Edenflowers.Payments do
     end
   end
 
+  def setup(%Order{} = order, actor) do
+    with {:ok, payment_intent} <- retrieve_payment_intent(order),
+         {:ok, loaded_order} <- Ash.load(order, :subscription?, actor: system_actor()) do
+      if loaded_order.subscription? == (Map.get(payment_intent, :setup_future_usage) == "off_session") do
+        {:ok, order, payment_intent.client_secret}
+      else
+        replace_payment_intent(loaded_order, payment_intent, actor)
+      end
+    end
+  end
+
   def setup(payable, _actor) do
+    with {:ok, payment_intent} <- retrieve_payment_intent(payable) do
+      {:ok, payable, payment_intent.client_secret}
+    end
+  end
+
+  defp retrieve_payment_intent(payable) do
     case stripe_api().retrieve_payment_intent(payable) do
       {:ok, payment_intent} ->
-        {:ok, payable, payment_intent.client_secret}
+        {:ok, payment_intent}
 
       {:error, reason} ->
         Logger.error("Failed to retrieve payment intent for #{describe(payable)}: #{inspect(reason)}")
         {:error, :payment_intent_retrieve_failed}
+    end
+  end
+
+  defp replace_payment_intent(order, payment_intent, actor) do
+    with {:ok, _cancelled} <- stripe_api().cancel_payment_intent(payment_intent),
+         {:ok, _order} <-
+           Orders.mark_payment_cancelled(order, payment_intent.id, actor: system_actor()),
+         {:ok, order} <- Orders.get_order_for_checkout(order.id, actor: actor) do
+      setup(order, actor)
+    else
+      {:error, reason} ->
+        Logger.error("Failed to replace payment intent for #{describe(order)}: #{inspect(reason)}")
+        {:error, :payment_intent_replace_failed}
     end
   end
 

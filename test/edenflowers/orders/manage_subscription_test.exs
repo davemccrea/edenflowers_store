@@ -37,6 +37,18 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
   defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
 
+  defp occurrence(subscription, days) do
+    generate(
+      order(
+        state: :placed,
+        origin: :subscription,
+        subscription_id: subscription.id,
+        subscription_date: days_from_today(days),
+        fulfillment_date: days_from_today(days)
+      )
+    )
+  end
+
   test "lists only the customer's own subscriptions", context do
     mine = subscription(context)
     _theirs = subscription(context, %{user_id: generate(admin_user(admin: false)).id})
@@ -48,28 +60,12 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
   test "a customer can't act on someone else's subscription", context do
     theirs = subscription(context, %{user_id: generate(admin_user(admin: false)).id})
 
-    for action <- [:skip_subscription, :unskip_subscription, :pause_subscription, :cancel_subscription] do
+    for action <- [:pause_subscription, :cancel_subscription] do
       assert {:error, %Ash.Error.Forbidden{}} = apply(Orders, action, [theirs, [actor: context.customer]])
     end
 
     paused = subscription(context, %{user_id: theirs.user_id, state: :paused})
     assert {:error, %Ash.Error.Forbidden{}} = Orders.resume_subscription(paused, actor: context.customer)
-  end
-
-  test "skip adds the next date to skipped_dates", context do
-    subscription = subscription(context)
-
-    skipped = Orders.skip_subscription!(subscription, actor: context.customer)
-
-    assert skipped.skipped_dates == [subscription.next_fulfillment_date]
-    assert skipped.next_fulfillment_date == subscription.next_fulfillment_date
-  end
-
-  test "unskip puts the next date back, and leaves other skipped dates alone", context do
-    later = days_from_today(42)
-    skipped = subscription(context, %{skipped_dates: [days_from_today(14), later]})
-
-    assert Orders.unskip_subscription!(skipped, actor: context.customer).skipped_dates == [later]
   end
 
   test "pause stops occurrences being created", context do
@@ -103,7 +99,40 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     assert cancelled.state == :cancelled
     assert {:error, _} = Orders.resume_subscription(cancelled, actor: context.customer)
     assert {:error, _} = Orders.pause_subscription(cancelled, actor: context.customer)
-    assert {:error, _} = Orders.skip_subscription(cancelled, actor: context.customer)
+  end
+
+  test "cancel also cancels a future occurrence while customer changes are open", context do
+    subscription = subscription(context)
+    occurrence = occurrence(subscription, 5)
+    payment = generate(payment(order_id: occurrence.id))
+
+    assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
+    assert Ash.reload!(occurrence, authorize?: false).fulfillment_status == :cancelled
+    assert Ash.get!(Edenflowers.Orders.Payment, payment.id, authorize?: false).amount == payment.amount
+  end
+
+  test "cancel leaves a booked occurrence in place after its customer-change deadline", context do
+    subscription = subscription(context)
+    occurrence = occurrence(subscription, 4)
+
+    assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
+    assert Ash.reload!(occurrence, authorize?: false).fulfillment_status == :pending
+  end
+
+  test "cancel stops subsequent occurrences even inside the next delivery cutoff", context do
+    subscription = subscription(context, %{next_fulfillment_date: days_from_today(2)})
+
+    assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
+    assert :ok = perform_job(Edenflowers.Orders.Schedulers.CreateOccurrence, %{})
+    assert all_enqueued(worker: Edenflowers.Orders.Workers.CreateOccurrence) == []
+  end
+
+  test "a stale active subscription cannot pause after cancellation", context do
+    stale_subscription = subscription(context)
+
+    assert Orders.cancel_subscription!(stale_subscription, actor: context.customer).state == :cancelled
+    assert {:error, _} = Orders.pause_subscription(stale_subscription, actor: context.customer)
+    assert Ash.get!(Subscription, stale_subscription.id, actor: context.customer).state == :cancelled
   end
 
   test "a held subscription can be cancelled but not paused", context do
@@ -122,20 +151,17 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
                Ash.load!(subscription(context, %{next_fulfillment_date: days_from_today(4)}), :changes_closed?)
     end
 
-    test "refuses a customer's skip, unskip, pause and cancel", context do
+    test "refuses a customer's pause but still lets them end subsequent deliveries", context do
       subscription = subscription(context, %{next_fulfillment_date: days_from_today(4)})
 
-      for action <- [:skip_subscription, :unskip_subscription, :pause_subscription, :cancel_subscription] do
-        assert {:error, %Ash.Error.Invalid{errors: [%{message: "It's too late to change your next delivery."}]}} =
-                 apply(Orders, action, [subscription, [actor: context.customer]])
-      end
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "It's too late to change your next delivery."}]}} =
+               Orders.pause_subscription(subscription, actor: context.customer)
+
+      assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
     end
 
     test "doesn't apply to Jennie", context do
       subscription = subscription(context, %{next_fulfillment_date: days_from_today(4)})
-
-      assert Orders.skip_subscription!(subscription, actor: context.admin).skipped_dates ==
-               [subscription.next_fulfillment_date]
 
       assert Orders.pause_subscription!(subscription, actor: context.admin).state == :paused
     end
