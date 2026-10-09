@@ -573,7 +573,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
           </.form_section>
 
-          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"}>
+          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
             {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
           </.button>
         </.form>

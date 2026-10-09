@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                   <div class="flex items-center gap-2">
                     <.live_file_input
                       upload={@uploads.avatar}
-                      class="file-input file-input-sm min-w-0 flex-1 max-sm:h-11 sm:max-w-xs"
+                      class="file-input file-input-sm min-w-0 flex-1 sm:max-w-xs"
                       aria-labelledby="avatar-label"
                       aria-describedby="avatar-help"
                       aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
@@ -107,7 +107,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                       phx-click="remove_avatar"
                       variant="ghost"
                       size="sm"
-                      class="max-sm:h-11"
                     >
                       {~t"Remove"}
                     </.button>
@@ -136,7 +135,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           </dl>
 
           <div class="border-base-content/12 mt-5 border-t pt-5">
-            <.button href={~p"/sign-out"} method="delete" variant="neutral" size="sm" class="max-sm:h-11">
+            <.button href={~p"/sign-out"} method="delete" variant="neutral" size="sm">
               <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
               {~t"Sign out"}
             </.button>

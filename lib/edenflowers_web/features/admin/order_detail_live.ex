@@ -880,7 +880,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
 
     ~H"""
-    <div class="dropdown dropdown-end">
+    <div class="dropdown sm:dropdown-end">
       <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
         <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
       </.icon_button>
