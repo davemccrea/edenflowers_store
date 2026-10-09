@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
 
-    assert has_element?(view, "[data-item-id] .admin-badge-error", "Payment failed")
+    assert has_element?(view, "[data-item-id]", "Payment failed")
   end
 
   test "a row opens the subscription's page", %{conn: conn} do

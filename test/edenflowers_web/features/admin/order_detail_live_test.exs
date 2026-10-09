@@ -91,9 +91,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     assert has_element?(view, ~s|button[aria-label="More actions"]|)
-    assert has_element?(view, ".menu-disabled", "No email address")
-    assert has_element?(view, ".menu-disabled", "Not paid")
-    assert has_element?(view, ".menu-disabled", "Already fulfilled")
+    assert has_element?(view, "[aria-disabled=true]", "No email address")
+    assert has_element?(view, "[aria-disabled=true]", "Not paid")
+    assert has_element?(view, "[aria-disabled=true]", "Already fulfilled")
     refute has_element?(view, ~s|button[phx-click="cancel_order"]|)
     refute has_element?(view, ~s|button[phx-click="fetch_stripe_refunds"]|)
   end
@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, ".admin-badge-success", "Today")
+    assert has_element?(view, "#order-fulfillment-summary", "Today")
   end
 
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     |> render_click()
 
     refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
-    assert has_element?(view, ".admin-badge-success", "Fulfilled")
+    assert has_element?(view, "#order-status", "Fulfilled")
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
