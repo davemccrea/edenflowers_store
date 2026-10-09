@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   @tag :typst
   test "opens the receipt of another customer's order", %{conn: conn} do
-    order = placed_order(payment_status: :paid)
+    order = placed_order(paid: true)
 
     assert "%PDF" <> _ = conn |> get(~p"/order/#{order.id}/receipt") |> response(200)
   end
@@ -184,7 +184,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "header shows a refunded payment", %{conn: conn} do
-    order = placed_order(payment_status: :refunded)
+    order = placed_order(refunded: true)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -376,7 +376,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do
-    order = placed_order(recipient_phone_number: "040 123 4567", locale: "sv-FI")
+    order = placed_order(order_reference: "DETAIL", recipient_phone_number: "040 123 4567", locale: "sv-FI")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -481,48 +481,5 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert {:error, {:live_redirect, %{to: to}}} = live(conn, ~p"/admin/orders/#{missing_id}")
     assert to == ~p"/admin/orders"
-  end
-
-  defp placed_order(overrides \\ []) do
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    variant = generate(product_variant(product_id: product.id, price: "42.00"))
-    fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-
-    {payment_status, overrides} = Keyword.pop(overrides, :payment_status, :pending)
-
-    attrs =
-      Keyword.merge(
-        [
-          state: :placed,
-          order_reference: "DETAIL",
-          customer_name: "Ada Lovelace",
-          customer_email: "ada@example.com",
-          fulfillment_option_id: fulfillment.id,
-          fulfillment_option_name: "Pickup",
-          fulfillment_method: :pickup,
-          fulfillment_date: ~D[2026-06-10],
-          quoted_fulfillment_fee: "4.50",
-          fulfillment_tax_rate: tax_rate.percentage,
-          fulfillment_status: :pending,
-          payment_intent_id: "pi_test_order_detail",
-          ordered_at: DateTime.utc_now(),
-          locale: "en-GB"
-        ],
-        overrides
-      )
-
-    order = generate(order(attrs))
-
-    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
-    order = Ash.load!(order, :grand_total, authorize?: false)
-
-    if payment_status in [:paid, :refunded],
-      do: generate(payment(order_id: order.id, amount: order.grand_total))
-
-    if payment_status == :refunded,
-      do: generate(payment(order_id: order.id, amount: Decimal.negate(order.grand_total)))
-
-    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
   end
 end

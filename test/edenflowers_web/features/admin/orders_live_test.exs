@@ -33,10 +33,10 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   end
 
   test "lists every placed order unfiltered", %{conn: conn} do
-    placed_order(customer_name: "To Make", payment_status: :paid, fulfillment_status: :pending)
-    placed_order(customer_name: "Already Done", payment_status: :paid, fulfillment_status: :fulfilled)
-    placed_order(customer_name: "Pays Later", payment_status: :pending, fulfillment_status: :pending)
-    placed_order(customer_name: "Called Off", payment_status: :pending, fulfillment_status: :cancelled)
+    placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
+    placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)
+    placed_order(customer_name: "Pays Later", fulfillment_status: :pending)
+    placed_order(customer_name: "Called Off", fulfillment_status: :cancelled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
@@ -48,14 +48,9 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   end
 
   test "filtering by unpaid lists orders still owed for, fulfilled or not", %{conn: conn} do
-    placed_order(customer_name: "Paid Up", payment_status: :paid, fulfillment_status: :pending)
+    placed_order(customer_name: "Paid Up", paid: true, fulfillment_status: :pending)
 
-    placed_order(
-      customer_name: "Delivered Unpaid",
-      payment_status: :pending,
-      fulfillment_status: :fulfilled,
-      quoted_fulfillment_fee: Decimal.new("10.00")
-    )
+    placed_order(customer_name: "Delivered Unpaid", fulfillment_status: :fulfilled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders?payment_status=pending")
 
@@ -75,11 +70,8 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   end
 
   test "flags orders with money still to collect", %{conn: conn} do
-    mismatched = placed_order(customer_name: "Mismatched")
-    generate(payment(order_id: mismatched.id, amount: Decimal.new("0.01")))
-    matching = placed_order(customer_name: "Matching")
-    variant = generate(product_variant(product_id: generate(product()).id))
-    generate(line_item(order_id: mismatched.id, product_variant_id: variant.id))
+    mismatched = placed_order(customer_name: "Mismatched", paid: "0.01")
+    matching = placed_order(customer_name: "Matching", paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
@@ -95,18 +87,5 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
     assert has_element?(view, ~s([data-item-id="#{occurrence.id}"]), "Subscription")
     refute has_element?(view, ~s([data-item-id="#{online.id}"]), "Subscription")
-  end
-
-  defp placed_order(attrs) do
-    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
-    order = generate(order([state: :placed, ordered_at: DateTime.utc_now(), locale: "en-GB"] ++ attrs))
-
-    if payment_status in [:paid, :refunded],
-      do: generate(payment(order_id: order.id, amount: Decimal.new("0.01")))
-
-    if payment_status == :refunded,
-      do: generate(payment(order_id: order.id, amount: Decimal.new("-0.01")))
-
-    order
   end
 end

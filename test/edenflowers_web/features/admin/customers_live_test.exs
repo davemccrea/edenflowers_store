@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   describe "customer list" do
     test "lists only users with a placed order", %{conn: conn} do
       ada = customer("Ada Lovelace", "ada@example.com")
-      placed_order(ada)
+      placed_order(user_id: ada.id)
       grace = customer("Grace Hopper", "grace@example.com")
       generate(order(user_id: grace.id, state: :payment))
       customer("Newsletter Only", "news@example.com")
@@ -34,8 +34,8 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
     end
 
     test "searches by email as well as name", %{conn: conn} do
-      placed_order(customer("Ada Lovelace", "ada@example.com"))
-      placed_order(customer("Grace Hopper", "admiral@example.com"))
+      placed_order(user_id: customer("Ada Lovelace", "ada@example.com").id)
+      placed_order(user_id: customer("Grace Hopper", "admiral@example.com").id)
 
       {:ok, view, _html} = live(conn, ~p"/admin/customers?search=admiral")
 
@@ -47,10 +47,10 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   describe "customer detail" do
     test "shows the customer's placed orders and nobody else's", %{conn: conn} do
       ada = customer("Ada Lovelace", "ada@example.com")
-      first = placed_order(ada, order_reference: "ADA001", payment_status: :paid, amount_paid: Decimal.new("40.00"))
-      second = placed_order(ada, order_reference: "ADA002", payment_status: :paid, amount_paid: Decimal.new("25.50"))
+      first = placed_order(user_id: ada.id, order_reference: "ADA001", paid: "40.00")
+      second = placed_order(user_id: ada.id, order_reference: "ADA002", paid: "25.50")
       generate(order(user_id: ada.id, state: :payment, order_reference: "ADACART"))
-      placed_order(customer("Grace Hopper", "grace@example.com"), order_reference: "GRACE01")
+      placed_order(user_id: customer("Grace Hopper", "grace@example.com").id, order_reference: "GRACE01")
 
       {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
 
@@ -64,8 +64,8 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
     test "counts only paid orders towards the total spent", %{conn: conn} do
       ada = customer("Ada Lovelace", "ada@example.com")
-      placed_order(ada, payment_status: :paid, amount_paid: Decimal.new("40.00"))
-      placed_order(ada, payment_status: :refunded, amount_paid: Decimal.new("99.00"))
+      placed_order(user_id: ada.id, paid: "40.00")
+      placed_order(user_id: ada.id, paid: "99.00", refunded: true)
 
       {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
 
@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
     test "does not show cancelled unpaid orders as unpaid", %{conn: conn} do
       ada = customer("Ada Lovelace", "ada@example.com")
-      order = placed_order(ada, payment_status: :pending, fulfillment_status: :cancelled)
+      order = placed_order(user_id: ada.id, fulfillment_status: :cancelled)
 
       {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
 
@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
   test "an order links through to its customer", %{conn: conn} do
     ada = customer("Ada Lovelace", "ada@example.com")
-    order = placed_order(ada, fulfillment_date: Date.utc_today())
+    order = placed_order(user_id: ada.id, fulfillment_date: Date.utc_today())
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -101,32 +101,5 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
   defp customer(name, email) do
     Ash.Seed.seed!(Edenflowers.Accounts.User, %{name: name, email: email})
-  end
-
-  # `amount_paid:` records that payment; a refunded order also gets it back.
-  defp placed_order(user, attrs \\ []) do
-    {amount_paid, attrs} = Keyword.pop(attrs, :amount_paid)
-    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
-
-    order =
-      generate(
-        order(
-          [
-            user_id: user.id,
-            customer_name: user.name,
-            customer_email: to_string(user.email),
-            state: :placed,
-            ordered_at: DateTime.utc_now(),
-            locale: "en-GB"
-          ] ++ attrs
-        )
-      )
-
-    if amount_paid, do: generate(payment(order_id: order.id, amount: amount_paid))
-
-    if amount_paid && payment_status == :refunded,
-      do: generate(payment(order_id: order.id, amount: Decimal.negate(amount_paid)))
-
-    order
   end
 end

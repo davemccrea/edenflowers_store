@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   describe "orders" do
     test "lists the customer's own orders with a receipt link", %{conn: conn, user: user} do
-      order = placed_order(user_id: user.id)
+      order = placed_order(user_id: user.id, paid: true)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "hides the receipt link for an order that isn't paid", %{conn: conn, user: user} do
-      order = placed_order(user_id: user.id, payment_status: :refunded)
+      order = placed_order(user_id: user.id, refunded: true)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "offers to pay an unpaid custom order through its payment link", %{conn: conn, user: user} do
-      order = placed_order(user_id: user.id, origin: :custom, payment_status: :pending, payment_link_token: "tok123")
+      order = placed_order(user_id: user.id, origin: :custom, payment_link_token: "tok123")
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -108,13 +108,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     # Tagged :typst because without the binary every receipt 404s, so the test would pass for the wrong reason.
     @tag :typst
     test "no receipt for an unpaid custom order", %{conn: conn, user: user} do
-      order = placed_order(user_id: user.id, origin: :custom, payment_status: :pending)
+      order = placed_order(user_id: user.id, origin: :custom)
 
       assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     end
 
     test "tells a customer paying in person when to pay", %{conn: conn, user: user} do
-      placed_order(user_id: user.id, origin: :custom, payment_status: :pending)
+      placed_order(user_id: user.id, origin: :custom)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "shows a cancelled order as cancelled", %{conn: conn, user: user} do
-      placed_order(user_id: user.id, origin: :custom, payment_status: :pending, fulfillment_status: :cancelled)
+      placed_order(user_id: user.id, origin: :custom, fulfillment_status: :cancelled)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -132,7 +132,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "does not list another customer's orders", %{conn: conn} do
       other = generate(admin_user(admin: false))
-      order = placed_order(user_id: other.id)
+      order = placed_order(user_id: other.id, paid: true)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -145,7 +145,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       # so only the action's own filter keeps Jennie's account page to her orders.
       admin = generate(admin_user(admin: true)) |> with_token()
       other = generate(admin_user(admin: false))
-      order = placed_order(user_id: other.id)
+      order = placed_order(user_id: other.id, paid: true)
 
       conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
 
@@ -351,7 +351,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "shows a delivery that's already booked as the next one", %{conn: conn, user: user} do
       subscription = subscription(user, %{next_fulfillment_date: days_from_today(30)})
-      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2))
+      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2), paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
@@ -410,7 +410,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "marks subscription deliveries in the orders", %{conn: conn, user: user} do
       subscription = subscription(user, %{})
-      placed_order(user_id: user.id, subscription_id: subscription.id)
+      placed_order(user_id: user.id, subscription_id: subscription.id, paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=orders-table] [data-testid=order-subscription]", "Subscription")
@@ -456,7 +456,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           origin: :subscription,
           subscription_id: subscription.id,
           subscription_date: days_from_today(4),
-          fulfillment_date: days_from_today(4)
+          fulfillment_date: days_from_today(4),
+          paid: true
         )
 
       {:ok, view, _html} = live(conn, ~p"/account")
@@ -507,7 +508,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         placed_order(
           user_id: user.id,
           subscription_id: subscription.id,
-          payment_status: :pending,
           payment_link_token: "tok_held"
         )
 
@@ -541,7 +541,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       placed_order(
         user_id: user.id,
         subscription_id: subscription.id,
-        payment_status: :pending,
         payment_link_token: "tok_held"
       )
 
@@ -705,43 +704,4 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   defp store_today, do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
-
-  defp placed_order(overrides) do
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    variant = generate(product_variant(product_id: product.id, price: "42.00"))
-    fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id, name: "Pickup"))
-
-    attrs =
-      Keyword.merge(
-        [
-          state: :placed,
-          customer_name: "Ada Lovelace",
-          customer_email: "ada@example.com",
-          fulfillment_option_id: fulfillment.id,
-          fulfillment_option_name: "Pickup",
-          fulfillment_method: :pickup,
-          fulfillment_date: ~D[2026-06-10],
-          quoted_fulfillment_fee: "4.50",
-          fulfillment_tax_rate: tax_rate.percentage,
-          payment_status: :paid,
-          ordered_at: DateTime.utc_now(),
-          locale: "en-GB"
-        ],
-        overrides
-      )
-
-    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
-    order = generate(order(attrs))
-    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
-    order = Ash.load!(order, :grand_total, authorize?: false)
-
-    if payment_status in [:paid, :refunded],
-      do: generate(payment(order_id: order.id, amount: order.grand_total))
-
-    if payment_status == :refunded,
-      do: generate(payment(order_id: order.id, amount: Decimal.negate(order.grand_total)))
-
-    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
-  end
 end
