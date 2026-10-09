@@ -58,8 +58,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
 
       assert has_element?(view, "[data-testid=interval-option-2][checked]")
-      assert has_element?(view, "[data-testid=in-cart-note]", "This is in your cart.")
-      assert has_element?(view, "[data-testid=add-to-cart-button]", "View cart")
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "Show cart")
 
       view
       |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "false"})

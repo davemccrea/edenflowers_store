@@ -53,23 +53,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
                     <span>{line_item.product_name}</span>
                   <% end %>
                   <span
-                    :if={line_item.variant_size || line_item.interval_weeks}
+                    :if={line_item.variant_size}
                     class="font-serif text-base-content/65 text-sm italic"
                     data-testid="line-item-meta"
                   >
-                    {[
-                      line_item.variant_size && AdminComponents.variant_size_label(line_item.variant_size),
-                      line_item.interval_weeks && Fields.interval_label(line_item.interval_weeks)
-                    ]
-                    |> Enum.reject(&is_nil/1)
-                    |> Enum.join(" · ")}
-                  </span>
-                  <span
-                    :if={line_item.interval_weeks}
-                    class="border-base-content/30 text-base-content/70 mt-1 inline-flex items-center gap-1 self-start border px-2 py-0.5 text-xs"
-                  >
-                    <.icon name="hero-arrow-path" class="h-3 w-3" />
-                    {~t"Subscription"}
+                    {AdminComponents.variant_size_label(line_item.variant_size)}
                   </span>
                 </div>
                 <span class="shrink-0 text-right tabular-nums">
@@ -83,6 +71,14 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <%!-- gap-2 and the 4rem mobile thumbnail are load-bearing: three 3rem
               buttons only fit on one line down to 320px with this budget. --%>
               <div :if={not line_item.is_card} class="text-base-content/70 flex flex-row items-center justify-between gap-2">
+                <span
+                  :if={line_item.interval_weeks}
+                  class="inline-flex items-center gap-1.5 text-sm"
+                  data-testid="line-item-interval"
+                >
+                  <.icon name="hero-arrow-path" class="h-4 w-4" />
+                  {Fields.interval_label(line_item.interval_weeks)}
+                </span>
                 <div :if={is_nil(line_item.interval_weeks)} class="flex flex-row items-center gap-2">
                   <.icon_button
                     size="lg"
