@@ -1,6 +1,6 @@
 # /checkout/complete/:id with a failed redirect flashes and returns to checkout
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -18,3 +18,8 @@ Test `CheckoutCompleteController` when Stripe redirects back with `redirect_stat
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+The flash-and-redirect test already existed (`order_live_test.exs`, "goes back to checkout, keeping their cart, when a redirect payment fails"); it now also asserts the order is still in `:payment`.
+Confirmed caught: making the `redirect_status=failed` clause unreachable sends the customer to `/order/:id` and fails the test.

@@ -177,6 +177,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert redirected_to(conn) == ~p"/checkout"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "didn't go through"
       assert get_session(conn, :order_id) == order.id
+      assert Ash.reload!(order, authorize?: false).state == :payment
     end
 
     test "is sent to sign in for an order that wasn't their cart, keeping their cart", %{conn: conn} do
