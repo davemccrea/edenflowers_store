@@ -158,8 +158,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     )
   end
 
-  # Reuse the enum's own values and the shared method labels so the filter options
-  # can't drift from the type definition or the cell rendering.
   defp fulfillment_method_options do
     Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod.values()
     |> Enum.map(fn value -> {fulfillment_method_label(value), value} end)

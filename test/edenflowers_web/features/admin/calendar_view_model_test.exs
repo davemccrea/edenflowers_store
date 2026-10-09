@@ -148,9 +148,7 @@ defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
     end
 
     test ":all returns :on for an empty options list" do
-      # Regression: with no options, the page renders a default `:on` header.
-      # Returning :mixed here previously made empty pages render with a "varies"
-      # treatment despite there being nothing to vary.
+      # Nothing to vary, so no "varies" treatment.
       assert :on == CalendarViewModel.weekday_state(:all, [], :sunday)
     end
 

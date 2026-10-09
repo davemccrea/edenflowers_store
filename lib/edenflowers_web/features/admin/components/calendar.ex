@@ -18,10 +18,6 @@ defmodule EdenflowersWeb.Admin.Calendar do
   # @utility in admin.css. Used by cells, the weekday header, and the legend.
   @mixed_tile_class "calendar-mixed"
 
-  # Base box for the legend swatch — sized and positioned so the strike and
-  # corner fragments can be reused unchanged. `shrink-0` stops the flex row from
-  # compressing the square when the label wraps; `mt-0.5` aligns it to the first
-  # text line (the row is `items-start`, not centred across wrapped lines).
   @swatch_base "relative inline-block w-4 h-4 mr-2 mt-0.5 shrink-0"
 
   attr :id, :string, required: true
@@ -163,8 +159,6 @@ defmodule EdenflowersWeb.Admin.Calendar do
     state_class =
       case state do
         :on ->
-          # On hover the text shifts from /65 → /85 so a "live" header signals
-          # interactivity even before the background fills in.
           "cursor-pointer text-base-content/65 hover:text-base-content/85 hover:bg-primary/10"
 
         :off ->

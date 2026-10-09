@@ -43,11 +43,9 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
     current_user = socket.assigns[:current_user]
 
     if current_user do
-      # A page whose LiveView socket reconnects with a stale session (e.g. its token was
-      # revoked, or the user signed in again in another tab) bounces here via
-      # `bounce_to_sign_in/1`. Blank that "You must sign in" error so it doesn't follow a
-      # signed-in user to the home page. `clear_flash/2` wouldn't do: on the HTTP render the
-      # conn's flash is merged over, not replaced, so only overwriting the key removes it.
+      # A stale LiveView session bounces here with "You must sign in"; blank it so
+      # it doesn't follow a signed-in user home. `clear_flash/2` wouldn't do: the
+      # HTTP render merges the conn's flash over it.
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, nil)
@@ -59,10 +57,7 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
     end
   end
 
-  # The protected page the user was trying to reach is the URL stored in
-  # `connect_info[:uri]` (declared in the endpoint). Pass it as a query string
-  # so `EdenflowersWeb.Plugs.CaptureReturnTo` can lift it into the session
-  # when the browser follows the redirect to /sign-in.
+  # CaptureReturnTo lifts the `connect_info[:uri]` query param into the session.
   defp bounce_to_sign_in(socket) do
     socket
     |> Phoenix.LiveView.put_flash(:error, ~t"You must sign in to access this page.")

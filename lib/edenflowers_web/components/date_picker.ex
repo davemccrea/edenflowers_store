@@ -36,9 +36,6 @@ defmodule EdenflowersWeb.DatePicker do
       |> assign(assigns)
       |> assign(selected_date: selected_date)
 
-    # If the parent passes a selected_date outside the current view month
-    # (e.g. form pre-populated on remount), advance the view so the selected
-    # pill is visible. No-op when the selected date is already in view.
     socket =
       if selected_date && not same_month?(selected_date, socket.assigns.view_date) do
         update_calendar_view(socket, selected_date)
@@ -335,9 +332,8 @@ defmodule EdenflowersWeb.DatePicker do
   end
 
   @doc false
-  # Default per-state styling. All non-`:open` states collapse to a single closed style
-  # so customers see one "unavailable" look. The admin editor passes its own `cell_class`
-  # to distinguish `:weekday_disabled`, `:date_disabled`, and `:past`.
+  # Customers see one "unavailable" look; the admin editor passes its own
+  # `cell_class` to tell the closed states apart.
   def default_cell_class(_day, state, opts) do
     selected? = Keyword.get(opts, :selected?, false)
     today? = Keyword.get(opts, :today?, false)

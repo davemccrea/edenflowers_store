@@ -122,8 +122,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     order: order,
     fulfillment_option: fulfillment_option
   } do
-    # Seed a cards category + card product/variant so the card drawer has
-    # something to pick.
     cards_category = generate(product_category(slug: "cards", visibility: :public))
     card_tax_rate = generate(tax_rate())
 
@@ -315,9 +313,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
-    # Apply promo from the cart drawer (available at any step). The promo
-    # input is collapsed behind a "Have a promo code?" toggle by default,
-    # so click that first to reveal the form.
+    # The promo form is collapsed behind a toggle.
     view
     |> element("#cart-drawer-promo [data-testid='promo-toggle']")
     |> render_click()
@@ -399,9 +395,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     })
     |> render_change()
 
-    # Apply the promo from the cart drawer. The promo input is collapsed
-    # behind a "Have a promo code?" toggle by default, so click that first
-    # to reveal the form.
+    # The promo form is collapsed behind a toggle.
     view
     |> element("#cart-drawer-promo [data-testid='promo-toggle']")
     |> render_click()

@@ -65,10 +65,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> maybe_scroll_to_current_step()}
     else
       {:error, :empty_cart} ->
-        # Mounting with an effectively-empty cart means the customer either
-        # navigated here directly or returned after another tab emptied the
-        # cart. Reset before bouncing so a stale step/card/contact details
-        # don't survive into the next checkout.
+        # Reset so a stale step or details don't survive into the next checkout.
         Orders.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
 
@@ -394,9 +391,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     """
   end
 
-  # Renders field errors only after the user has interacted with the input,
-  # matching Phoenix's `used_input?` convention so we don't flash errors at
-  # untouched fields on first render.
   attr :field, Phoenix.HTML.FormField, required: true
 
   defp field_errors(assigns) do
@@ -670,9 +664,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # Checkout.AddressInput owns the address field's lifecycle independently
-  # of the parent form, so submit is the only moment the parent learns the
-  # typed value — bridge it into the form params here.
+  # AddressInput keeps its own state, so the parent only learns the typed
+  # address on submit.
   def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
     params =
       case all_params do
@@ -691,9 +684,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
       {:error, form} ->
         forward_delivery_address_error(form)
-        # If `submit_delivery` rejected the date, an admin may have just closed
-        # it. Reload the order so the calendar re-paints with fresh availability,
-        # then re-assign the failed form so the customer still sees the error.
+        # A rejected date may have just been closed, so refresh the calendar.
         {:noreply, socket |> reload_order() |> assign(form: form)}
     end
   end
@@ -729,11 +720,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    # Delivery and pickup are served by different fulfillment calendars, so a
-    # date that was valid for the previous option may not be valid for the
-    # new one. The action clears `:fulfillment_date` on the order; drop the
-    # stale form param so the rebuilt form doesn't shadow that nil with the
-    # date the customer had typed in.
+    # The action clears the date, as each option has its own calendar; drop
+    # the typed one so it doesn't shadow that.
     socket = reload_order(socket, drop: ["fulfillment_date"])
 
     # Switching to pickup unmounts the address field, which comes back empty.
@@ -766,10 +754,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
      )}
   end
 
-  # No PaymentIntent amount sync here: the `pay` handler updates it
-  # synchronously before pushing `stripe:process_payment`, so Stripe always
-  # charges the cart total at the moment of click. A one-off/subscription
-  # switch does replace the intent because its card-saving mode also changes.
+  # The `pay` handler syncs the PaymentIntent amount, so only a switch between
+  # one-off and subscription, which changes card saving, replaces it here.
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
@@ -949,9 +935,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp prefill_contact_details(_order, _user), do: %{}
 
-  # Builds the submit-form for the order's current state. Returns nil on the
-  # payment state because the payment screen is driven by Stripe Elements
-  # (not an Ash form submission).
+  # Nil on the payment step, which Stripe Elements drives.
   defp build_submit_form(order, params) do
     case submit_action_for(order.state) do
       nil -> nil
@@ -959,16 +943,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # Rebuilds the submit form against the latest order while preserving any
-  # unsaved input the customer has typed. The data side has to refresh because
-  # some validations read off the order's loaded relationships (e.g. line_items);
-  # the params side has to be preserved so selecting a card doesn't wipe values
-  # the customer is still editing.
-  #
-  # Pass `drop: ["field_name", ...]` to discard specific params that the
-  # action just invalidated (e.g. clearing `card_message` when the card is
-  # removed) — otherwise the stale typed value would shadow the now-nil
-  # attribute on the rebuilt form.
+  # Keeps unsaved input across a reload. `drop` discards params the action just
+  # cleared, which would otherwise shadow the cleared attribute.
   defp assign_forms(socket, order, opts) do
     drop = Keyword.get(opts, :drop, [])
 
@@ -998,9 +974,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # When `submit_delivery` fails on the delivery_address field, surface
-  # the error inside the address input component so the user sees it next
-  # to the field instead of at the form root.
   defp forward_delivery_address_error(form) do
     case form[:delivery_address].errors do
       [error | _] ->
@@ -1074,9 +1047,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # We only touch Stripe once the customer is on the payment state. Earlier
-  # mounts (or mounts where the LiveView reconnects on a non-payment state)
-  # skip the round trip entirely.
   defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
     case Payments.setup(order, actor) do
       {:ok, order, client_secret} ->

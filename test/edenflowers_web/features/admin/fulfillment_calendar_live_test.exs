@@ -65,10 +65,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   end
 
   describe "rendered styling" do
-    # Guardrail: the strike lives on ::after so ::before stays free for the
-    # override corner, and cells and legend swatches share the one utility.
-    # Drift in the visual is impossible at the CSS layer — this catches
-    # accidental removal of the class from either element.
+    # The strike lives on ::after so ::before stays free for the override corner.
     test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 

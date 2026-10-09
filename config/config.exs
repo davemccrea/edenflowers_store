@@ -1,10 +1,3 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
-
-# General application configuration
 import Config
 
 config :ash_oban, pro?: false
@@ -16,9 +9,6 @@ config :edenflowers, Oban,
   queues: [default: 10, chat_responses: [limit: 10], conversations: [limit: 10]],
   repo: Edenflowers.Repo,
   plugins: [
-    # {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(30)},
-    # TODO: maybe enable reindexer at some point
-    # Oban.Plugins.Reindexer
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
     {Oban.Plugins.Cron, crontab: []}
   ]
@@ -83,7 +73,6 @@ config :edenflowers, :uploads_dir, "images/uploads"
 
 config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 
-# Configure the endpoint
 config :edenflowers, EdenflowersWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -94,19 +83,11 @@ config :edenflowers, EdenflowersWeb.Endpoint,
   pubsub_server: Edenflowers.PubSub,
   live_view: [signing_salt: "fZLlI7wP"]
 
-# Configure the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
 config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Local
 
 # Default sender identity. Overridden in runtime.exs from MAILER_FROM_NAME / MAILER_FROM_EMAIL.
 config :edenflowers, :mailer_from_address, {"Jennie", "info@edenflowers.fi"}
 
-# Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
   edenflowers: [
@@ -116,7 +97,6 @@ config :esbuild,
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
-# Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
   edenflowers: [
@@ -133,16 +113,12 @@ config :error_tracker,
   otp_app: :edenflowers,
   enabled: true
 
-# Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase

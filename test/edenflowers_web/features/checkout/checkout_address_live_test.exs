@@ -330,10 +330,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
     end
 
-    # Regression: Checkout.AddressInput renders <input name="delivery_address">
-    # (no form[...] prefix), so the browser submits the address at the top
-    # level of the params, not under "form". save_form_3 must bridge it back
-    # in or save_step_3 fails with "This field is required".
+    # AddressInput's input has no form[...] prefix, so save_form must bridge it
+    # into the form params.
     test "submit succeeds when delivery_address arrives at the top level of params", %{
       conn: conn,
       order: order,

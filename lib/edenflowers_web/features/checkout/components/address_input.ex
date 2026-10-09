@@ -157,10 +157,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
     not loading and not is_nil(quote) and typed == quote.address
   end
 
-  # Matches Phoenix's used_input? semantics: an untouched field shows no
-  # error even if it's invalid. {:required, _} only shows after the user
-  # has interacted; {:api, _} always shows (the user just triggered the
-  # API call, so the field is implicitly touched).
+  # An API error shows untouched: the user's own typing triggered the lookup.
   defp errors({:required, _}, false), do: []
   defp errors({_kind, message}, _touched), do: [message]
   defp errors(nil, _touched), do: []

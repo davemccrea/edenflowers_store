@@ -43,18 +43,11 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :filter_select_input_class, "select select-bordered select-sm w-full min-w-0 sm:min-w-44"
   set :filter_range_container_class, "flex flex-col gap-2 sm:flex-row sm:items-center"
 
-  # Stock daisy_ui clears with a `btn-ghost` button — transparent until hover, so
-  # a lone "×" is easy to miss when a filter is active. Swap to an outlined chip
-  # that carries a visible border at rest (matching the bordered inputs beside
-  # it), then warms to error-red on hover so its purpose reads. `btn-sm btn-square`
-  # keeps the glyph centred and the target above the 24px WCAG 2.2 minimum.
+  # Outlined rather than the stock `btn-ghost`, which hides a lone "×" until hover.
   set :filter_clear_button_class,
       "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/65 hover:border-error hover:bg-error/10 hover:text-error"
 
-  # Match the search box to the `sm` density of the filter inputs above; the
-  # stock daisy_ui theme leaves it at the default (taller) input height, which
-  # makes it tower over the selects it sits beside. `pl-10` preserves room for
-  # the search icon the renderer overlays.
+  # `pl-10` leaves room for the search icon the renderer overlays.
   set :search_input_class, "input input-bordered input-sm w-full pl-10"
 
   set :pagination_container_class, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"

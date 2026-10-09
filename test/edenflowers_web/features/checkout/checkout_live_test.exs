@@ -192,10 +192,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       refute_enqueued(worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail)
     end
 
-    # Reproduces the reported bug: a guest who opted in and advanced past step 1
-    # must not see an empty checkbox on returning — the order carries the
-    # hide decision so it survives a refresh and the actor's inability to read
-    # the subscribed user's record.
+    # The order carries the hide decision, as a guest can't read the subscribed user.
     test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
@@ -351,7 +348,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
   describe "Card selection" do
     setup %{order: order} do
-      # Create a "cards" category with a card product (with a variant)
       cards_category = generate(product_category(slug: "cards", visibility: :public))
       tax_rate_ = generate(tax_rate())
 

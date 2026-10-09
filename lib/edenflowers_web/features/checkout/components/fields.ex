@@ -111,7 +111,6 @@ defmodule EdenflowersWeb.Checkout.Fields do
     cond do
       past? -> [base, "text-base-content/70"]
       future? -> [base, "text-base-content/40"]
-      # :current uses the default text color — no class needed.
       true -> [base]
     end
   end

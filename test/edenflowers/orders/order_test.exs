@@ -311,8 +311,7 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   # InitStore opens a cart per browser session, so the reference is minted at
-  # placement rather than at creation. The database used to guarantee a placed
-  # order had one via NOT NULL; these two tests guarantee it now.
+  # placement rather than at creation.
   test "a cart created for checkout carries no order reference" do
     assert {:ok, cart} = Orders.create_for_checkout(authorize?: false)
     refute cart.order_reference
@@ -1189,8 +1188,6 @@ defmodule Edenflowers.Orders.OrderTest do
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
-      # Note: In real flow, delivery_address would trigger HereAPI calls
-      # For pickup, we don't need delivery address
       assert {:ok, order} =
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{

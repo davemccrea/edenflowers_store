@@ -57,9 +57,6 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  # Builds a sign-in href, attaching the current path as a `return_to` so the
-  # user lands back where they started. Filters out paths that aren't worth
-  # capturing (the sign-in page itself, the home page, anything not safe).
   defp sign_in_href(current_path) do
     case EdenflowersWeb.Auth.ReturnTo.safe_path(current_path) do
       nil -> ~p"/sign-in"
@@ -552,12 +549,10 @@ defmodule EdenflowersWeb.Layouts do
       data-show={JS.remove_class("shy-header--hidden")}
     >
       <header class="w-full">
-        <%!-- Main header --%>
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="flex items-center">
             <%!-- Left --%>
             <div class="flex flex-1 justify-start">
-              <%!-- Mobile hamburger menu --%>
               <div class="block xl:hidden">
                 <.disclosure_trigger
                   aria_label={~t"Open navigation menu"}
@@ -568,7 +563,6 @@ defmodule EdenflowersWeb.Layouts do
                 </.disclosure_trigger>
               </div>
 
-              <%!-- Desktop navigation --%>
               <nav class="hidden xl:block">
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
@@ -585,7 +579,6 @@ defmodule EdenflowersWeb.Layouts do
 
             <%!-- Centre --%>
             <div class="flex flex-1 items-center justify-center">
-              <%!-- Logo --%>
               <.link
                 navigate={~p"/"}
                 class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
@@ -626,7 +619,6 @@ defmodule EdenflowersWeb.Layouts do
                 </span>
               </.locale_picker>
 
-              <%!-- Cart button --%>
               <.cart_count_badge
                 count={@order.total_items_in_cart}
                 phx-click={JS.exec("phx-show", to: "#cart-drawer")}
