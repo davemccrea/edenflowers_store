@@ -164,7 +164,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       <.admin_page width="narrow">
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:actions :if={@form.source.type == :update}>
-            <div class="dropdown dropdown-end">
+            <div class="dropdown sm:dropdown-end">
               <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
                 <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
               </.icon_button>
@@ -252,7 +252,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
             </div>
           </.form_section>
 
-          <.button type="submit" variant="primary">{~t"Save promotion"}</.button>
+          <.button type="submit" variant="primary" class="w-full sm:w-auto">{~t"Save promotion"}</.button>
         </.form>
 
         <.form_section :if={@history != []} title={~t"History"} class="mt-10">
