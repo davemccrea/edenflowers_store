@@ -880,79 +880,95 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
 
     ~H"""
-    <div class="dropdown sm:dropdown-end">
-      <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
-        <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
-      </.icon_button>
-      <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-56 border p-1 shadow">
-        <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
-        <%= if @paid? do %>
-          <li :if={!@no_email}>
-            <button
-              type="button"
-              phx-click="email_receipt"
-              data-confirm={
-                confirm_send(
-                  ~t"Email the receipt to #{email = @order.customer_email}?",
-                  @order.receipt_emailed_at,
-                  @locale
-                )
-              }
-            >
-              {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
-            </button>
-          </li>
-          <.unavailable_menu_item :if={@no_email} reason={@no_email}>
-            {~t"Email receipt"}
-          </.unavailable_menu_item>
-        <% else %>
-          <li :if={!@email_details_unavailable}>
-            <button
-              type="button"
-              phx-click="send_order_details"
-              data-confirm={
-                confirm_send(
-                  ~t"Email the order details to #{email = @order.customer_email}?",
-                  @order.details_emailed_at,
-                  @locale
-                )
-              }
-            >
-              {if @order.details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
-            </button>
-          </li>
-          <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
-            {~t"Email order details"}
-          </.unavailable_menu_item>
-        <% end %>
-
-        <li :if={!@receipt_unavailable}>
-          <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
-            {~t"View receipt"}
-            <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
-          </.link>
+    <%!-- A popover anchored to the trigger, because on phones the header actions wrap and
+         the trigger can land anywhere along the row; flip-inline opens it towards the side with room. --%>
+    <.icon_button popovertarget="order-actions" style="anchor-name: --order-actions" size="sm" aria_label={~t"More actions"}>
+      <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+    </.icon_button>
+    <ul
+      id="order-actions"
+      popover
+      style="position-anchor: --order-actions"
+      class="dropdown dropdown-end menu bg-base-100 border-base-300 [position-try-fallbacks:flip-inline] mt-2 w-56 border p-1 shadow"
+    >
+      <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
+      <%= if @paid? do %>
+        <li :if={!@no_email}>
+          <button
+            type="button"
+            popovertarget="order-actions"
+            popovertargetaction="hide"
+            phx-click="email_receipt"
+            data-confirm={
+              confirm_send(
+                ~t"Email the receipt to #{email = @order.customer_email}?",
+                @order.receipt_emailed_at,
+                @locale
+              )
+            }
+          >
+            {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
+          </button>
         </li>
-        <.unavailable_menu_item :if={@receipt_unavailable} reason={@receipt_unavailable}>
+        <.unavailable_menu_item :if={@no_email} reason={@no_email}>
+          {~t"Email receipt"}
+        </.unavailable_menu_item>
+      <% else %>
+        <li :if={!@email_details_unavailable}>
+          <button
+            type="button"
+            popovertarget="order-actions"
+            popovertargetaction="hide"
+            phx-click="send_order_details"
+            data-confirm={
+              confirm_send(
+                ~t"Email the order details to #{email = @order.customer_email}?",
+                @order.details_emailed_at,
+                @locale
+              )
+            }
+          >
+            {if @order.details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
+          </button>
+        </li>
+        <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
+          {~t"Email order details"}
+        </.unavailable_menu_item>
+      <% end %>
+
+      <li :if={!@receipt_unavailable}>
+        <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
           {~t"View receipt"}
-        </.unavailable_menu_item>
+          <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+        </.link>
+      </li>
+      <.unavailable_menu_item :if={@receipt_unavailable} reason={@receipt_unavailable}>
+        {~t"View receipt"}
+      </.unavailable_menu_item>
 
-        <%!-- Refunds arrive by webhook; this catches one that never did. --%>
-        <li :if={@paid_through_stripe?}>
-          <button type="button" phx-click="fetch_stripe_refunds">
-            {~t"Fetch refunds from Stripe"}
-          </button>
-        </li>
+      <%!-- Refunds arrive by webhook; this catches one that never did. --%>
+      <li :if={@paid_through_stripe?}>
+        <button type="button" popovertarget="order-actions" popovertargetaction="hide" phx-click="fetch_stripe_refunds">
+          {~t"Fetch refunds from Stripe"}
+        </button>
+      </li>
 
-        <li :if={!@cancel_unavailable}>
-          <button type="button" phx-click="cancel_order" data-confirm={cancel_confirmation(@order)} class="text-error">
-            {~t"Cancel order"}
-          </button>
-        </li>
-        <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
+      <li :if={!@cancel_unavailable}>
+        <button
+          type="button"
+          popovertarget="order-actions"
+          popovertargetaction="hide"
+          phx-click="cancel_order"
+          data-confirm={cancel_confirmation(@order)}
+          class="text-error"
+        >
           {~t"Cancel order"}
-        </.unavailable_menu_item>
-      </ul>
-    </div>
+        </button>
+      </li>
+      <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
+        {~t"Cancel order"}
+      </.unavailable_menu_item>
+    </ul>
     """
   end
 

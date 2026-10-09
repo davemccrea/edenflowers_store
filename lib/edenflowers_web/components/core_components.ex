@@ -970,7 +970,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :aria_label, :string, required: true
   attr :class, :any, default: nil
   attr :size, :string, default: "md", values: ~w(sm md lg)
-  attr :rest, :global, include: ~w(type disabled name value form)
+  attr :rest, :global, include: ~w(type disabled name value form popovertarget)
   slot :inner_block, required: true
 
   def icon_button(assigns) do
