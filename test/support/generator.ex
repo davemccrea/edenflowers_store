@@ -199,6 +199,46 @@ defmodule Generator do
     Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
   end
 
+  @doc """
+  John Smith's order waiting on its Stripe PaymentIntent: one item and a
+  fulfillment fee, loaded with its grand total.
+
+  `product_variant_id:` picks the item; any other option overrides the
+  order's attributes.
+  """
+  def order_in_payment(opts \\ []) do
+    tax_rate = generate(tax_rate())
+
+    {product_variant_id, opts} =
+      Keyword.pop_lazy(opts, :product_variant_id, fn ->
+        generate(product_variant(product_id: generate(product(tax_rate_id: tax_rate.id)).id)).id
+      end)
+
+    fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
+    %{fulfillment_fee: fulfillment_fee} = Edenflowers.Fulfillment.Fee.calculate(fulfillment_option, 0)
+
+    {:ok, user} = Edenflowers.Accounts.upsert_user("john.smith@example.com", "John Smith", authorize?: false)
+
+    attrs =
+      Keyword.merge(
+        [
+          state: :payment,
+          customer_name: "John Smith",
+          customer_email: "john.smith@example.com",
+          user_id: user.id,
+          fulfillment_option_id: fulfillment_option.id,
+          fulfillment_date: Date.utc_today(),
+          quoted_fulfillment_fee: fulfillment_fee,
+          payment_intent_id: "pi_test_#{System.unique_integer([:positive])}"
+        ],
+        opts
+      )
+
+    order = generate(order(attrs))
+    generate(line_item(order_id: order.id, product_variant_id: product_variant_id, quantity: 1))
+    Ash.load!(order, :grand_total, authorize?: false)
+  end
+
   # seed_generator because a Subscription is only ever created by checkout.
   def subscription(opts \\ []) do
     opts =

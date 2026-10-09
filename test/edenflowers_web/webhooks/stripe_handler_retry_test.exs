@@ -8,34 +8,10 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerRetryTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Order
   alias EdenflowersWeb.Webhooks.StripeHandler
 
   setup do
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    product_variant = generate(product_variant(product_id: product.id))
-    fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-    %{fulfillment_fee: fulfillment_fee} = Edenflowers.Fulfillment.Fee.calculate(fulfillment_option, 0)
-
-    {:ok, user} = Edenflowers.Accounts.upsert_user("john.smith@example.com", "John Smith", authorize?: false)
-
-    seeded =
-      Ash.Seed.seed!(Order, %{
-        order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
-        state: :payment,
-        customer_name: "John Smith",
-        customer_email: "john.smith@example.com",
-        user_id: user.id,
-        fulfillment_option_id: fulfillment_option.id,
-        fulfillment_date: Date.utc_today(),
-        quoted_fulfillment_fee: fulfillment_fee,
-        payment_intent_id: "pi_order_#{System.unique_integer([:positive])}"
-      })
-
-    generate(line_item(order_id: seeded.id, product_variant_id: product_variant.id, quantity: 1))
-
-    %{order: Ash.get!(Order, seeded.id, load: [:grand_total], authorize?: false)}
+    %{order: order_in_payment()}
   end
 
   defp payment_intent_succeeded(order) do

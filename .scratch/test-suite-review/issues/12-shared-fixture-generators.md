@@ -1,6 +1,6 @@
 # Move the shared fixtures into generators
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,10 @@ Add `placed_order` (with `paid:` and `refunded:` options), `subscription` and `o
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- `Generator.placed_order/1` builds Ada Lovelace's 88.50 pickup order, unpaid unless `paid: true` / `paid: "40.00"` / `refunded: true`; the six admin and account LiveView tests use it instead of their own helpers.
+- `Generator.subscription/1` replaces every copied `Ash.Seed.seed!(Subscription, …)`. The change, manage and create-occurrence tests keep a small `subscription_for(context, …)` that only passes their setup's customer, variant and fulfillment option (create-occurrence also its gift recipient details).
+- `Generator.order_in_payment/1` replaces the John Smith order + line item + PaymentIntent setup in the payments, reconcile and both Stripe handler tests.
+- `order_for/1` in `account_live_test.exs` stays: it builds an unsaved map for `status_label/2`, not a seeded order.

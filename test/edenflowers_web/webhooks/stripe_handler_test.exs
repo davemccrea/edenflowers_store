@@ -5,47 +5,15 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Orders.Order
-
   alias Edenflowers.Orders
 
   setup do
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    product_variant = generate(product_variant(product_id: product.id))
-    fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-
-    %{fulfillment_fee: fulfillment_fee} = Edenflowers.Fulfillment.Fee.calculate(fulfillment_option, 0)
-
-    {:ok, user} =
-      Edenflowers.Accounts.upsert_user("john.smith@example.com", "John Smith", authorize?: false)
-
-    order =
-      Ash.Seed.seed!(Order, %{
-        order_reference: :crypto.strong_rand_bytes(6) |> Base.encode16(),
-        state: :payment,
-        customer_name: "John Smith",
-        customer_email: "john.smith@example.com",
-        user_id: user.id,
-        fulfillment_option_id: fulfillment_option.id,
-        fulfillment_date: Date.utc_today(),
-        quoted_fulfillment_fee: fulfillment_fee,
-        payment_intent_id: "pi_test_#{:rand.uniform(1_000_000)}"
-      })
-
-    generate(
-      line_item(
-        order_id: order.id,
-        product_variant_id: product_variant.id,
-        quantity: 1
-      )
-    )
+    order = order_in_payment()
 
     # Derive the expected Stripe amount from the order's real grand_total via the
     # same conversion the handler uses, so the fixture can't silently diverge from
     # production's rounding.
-    %{grand_total: grand_total} = Ash.get!(Order, order.id, load: [:grand_total], authorize?: false)
-    expected_amount = Edenflowers.External.StripeAPI.to_stripe_amount(grand_total)
+    expected_amount = Edenflowers.External.StripeAPI.to_stripe_amount(order.grand_total)
 
     %{order: order, expected_amount: expected_amount}
   end
