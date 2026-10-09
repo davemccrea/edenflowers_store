@@ -1,6 +1,6 @@
 # Tests use the Helsinki date
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,9 @@ The date picker tests take the expected month from `Date.utc_today()`, but the c
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- The date picker tests take today's month from `HelsinkiToday.today()`, as the component does.
+- The subscription list and detail tests seed `next_fulfillment_date` two weeks after the Helsinki today instead of `2026-11-03`.
+- The calendar reset test seeds its overrides 30 and 31 days after the Helsinki today instead of `2026-12-25`/`2026-12-26`.

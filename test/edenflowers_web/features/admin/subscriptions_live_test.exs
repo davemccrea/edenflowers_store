@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
   import Phoenix.LiveViewTest
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Expressions.HelsinkiToday
 
   test "lists subscriptions with their customer, size, interval and next date", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
@@ -18,7 +19,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
       product_variant_id: variant.id,
       fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
       interval_weeks: 2,
-      next_fulfillment_date: ~D[2026-11-03],
+      next_fulfillment_date: Date.add(HelsinkiToday.today(), 14),
       locale: "en",
       stripe_customer_id: "cus_ada",
       stripe_payment_method_id: "pm_card"
@@ -47,7 +48,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
       product_variant_id: generate(product_variant(product_id: generate(product()).id, size: :large)).id,
       fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
       interval_weeks: 2,
-      next_fulfillment_date: ~D[2026-11-03],
+      next_fulfillment_date: Date.add(HelsinkiToday.today(), 14),
       locale: "en",
       stripe_customer_id: "cus_ada",
       stripe_payment_method_id: "pm_card"
@@ -70,7 +71,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
       product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
       fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
       interval_weeks: 1,
-      next_fulfillment_date: ~D[2026-11-03],
+      next_fulfillment_date: Date.add(HelsinkiToday.today(), 14),
       locale: "en",
       stripe_customer_id: "cus_ada",
       stripe_payment_method_id: "pm_card"
@@ -93,7 +94,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
         product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
         fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
         interval_weeks: 1,
-        next_fulfillment_date: ~D[2026-11-03],
+        next_fulfillment_date: Date.add(HelsinkiToday.today(), 14),
         locale: "en",
         stripe_customer_id: "cus_ada",
         stripe_payment_method_id: "pm_card"
@@ -149,7 +150,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
           product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
           fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
           interval_weeks: 1,
-          next_fulfillment_date: ~D[2026-11-03],
+          next_fulfillment_date: Date.add(HelsinkiToday.today(), 14),
           locale: "en",
           stripe_customer_id: "cus_ada",
           stripe_payment_method_id: "pm_card"

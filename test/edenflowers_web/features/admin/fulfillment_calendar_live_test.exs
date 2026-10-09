@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
   import Generator
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Weekday
 
@@ -237,8 +238,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
           delivery,
           %{
             available_days: [:monday],
-            enabled_dates: [~D[2026-12-25]],
-            disabled_dates: [~D[2026-12-26]]
+            enabled_dates: [Date.add(HelsinkiToday.today(), 30)],
+            disabled_dates: [Date.add(HelsinkiToday.today(), 31)]
           },
           authorize?: false
         )
