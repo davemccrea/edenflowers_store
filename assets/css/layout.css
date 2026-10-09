@@ -38,7 +38,9 @@ html:has(dialog.slide-drawer:modal) {
 .slide-drawer {
   inset-block: 0;
   height: auto;
-  max-height: none;
+  /* iOS Safari sizes the insets to the screen behind its toolbar; capping at the
+     visible height keeps the drawer's bottom in view and lets its contents scroll. */
+  max-height: 100dvh;
   max-width: none;
   margin: 0;
   border: 0;
