@@ -1,6 +1,6 @@
 # Course booking is open on register_before and closed the day after
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,8 @@ Test the booking cutoff at its boundary, using the Helsinki today. The current t
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+Replaced the `today - 2` cutoff test with "booking is open on register_before itself and closed the day after", using `HelsinkiToday.today()`.
+Confirmed caught both ways: closing a day late (`Date.before?(register_before, today - 1)`) and a day early (`not Date.after?(register_before, today)`).
