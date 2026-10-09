@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.DatePickerTest do
 
   import Phoenix.LiveViewTest
 
+  alias Edenflowers.Expressions.HelsinkiToday
   alias EdenflowersWeb.DatePicker
 
   describe "update/2 — view_date sync with selected_date" do
@@ -10,7 +11,7 @@ defmodule EdenflowersWeb.DatePickerTest do
       # selected_date is two months from today; with no sync, the calendar
       # would render today's month and the selected pill would be invisible
       # (cells outside the view month render with opacity-0).
-      future_date = Date.utc_today() |> Date.shift(month: 2) |> Date.to_iso8601()
+      future_date = HelsinkiToday.today() |> Date.shift(month: 2) |> Date.to_iso8601()
 
       html =
         render_component(DatePicker,
@@ -29,7 +30,7 @@ defmodule EdenflowersWeb.DatePickerTest do
     end
 
     test "leaves view_date alone when selected_date is already in the current view month" do
-      today_iso = Date.utc_today() |> Date.to_iso8601()
+      today_iso = HelsinkiToday.today() |> Date.to_iso8601()
 
       html =
         render_component(DatePicker,
@@ -39,7 +40,7 @@ defmodule EdenflowersWeb.DatePickerTest do
         )
 
       expected_header =
-        Date.utc_today()
+        HelsinkiToday.today()
         |> Localize.DateTime.to_string!(format: "MMMM y")
 
       assert html =~ expected_header
@@ -54,7 +55,7 @@ defmodule EdenflowersWeb.DatePickerTest do
         )
 
       expected_header =
-        Date.utc_today()
+        HelsinkiToday.today()
         |> Localize.DateTime.to_string!(format: "MMMM y")
 
       assert html =~ expected_header
