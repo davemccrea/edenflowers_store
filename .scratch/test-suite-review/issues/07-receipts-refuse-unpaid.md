@@ -1,6 +1,6 @@
 # No receipt for unpaid orders or unconfirmed course bookings
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,8 @@ The order receipt must 404 unless the order is placed and paid. The course recei
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+Added "no receipt for an unpaid custom order" and "no course receipt for a pending booking" to `account_live_test.exs`, both tagged `:typst` so a missing binary can't make them pass by 404ing for the wrong reason.
+Confirmed caught: dropping `state: :placed, payment_status: :paid` in `ReceiptController`, and dropping `status: :confirmed` in `CourseReceiptController`.

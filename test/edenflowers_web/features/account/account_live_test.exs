@@ -105,6 +105,14 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
+    # Tagged :typst because without the binary every receipt 404s, so the test would pass for the wrong reason.
+    @tag :typst
+    test "no receipt for an unpaid custom order", %{conn: conn, user: user} do
+      order = placed_order(user_id: user.id, origin: :custom, payment_status: :pending)
+
+      assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
+    end
+
     test "tells a customer paying in person when to pay", %{conn: conn, user: user} do
       placed_order(user_id: user.id, origin: :custom, payment_status: :pending)
 
@@ -228,6 +236,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "hides another customer's booking receipt", %{conn: conn} do
       other = generate(admin_user(admin: false))
       registration = generate(course_registration(user_id: other.id, status: :confirmed))
+
+      assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
+    end
+
+    @tag :typst
+    test "no course receipt for a pending booking", %{conn: conn, user: user} do
+      registration = generate(course_registration(user_id: user.id, status: :pending))
 
       assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
     end
