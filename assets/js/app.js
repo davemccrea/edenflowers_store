@@ -104,15 +104,45 @@ window.addEventListener("phx:js-exec", ({ detail }) => {
     .forEach((el) => liveSocket.execJS(el, el.getAttribute(detail.attr)));
 });
 
+// Slides a drawer out before closing it. Closing first and animating the exit
+// needs `overlay` transitions, which WebKit lacks: Safari pulls the dialog out
+// of the top layer at once and it vanishes instead of sliding.
+async function closeDrawer(dialog) {
+  if (!dialog.open) return;
+
+  dialog.dataset.closing = "";
+  await Promise.allSettled(dialog.getAnimations().map((a) => a.finished));
+
+  // A reopen during the slide-out clears the flag and keeps it open.
+  if (!("closing" in dialog.dataset)) return;
+  delete dialog.dataset.closing;
+  dialog.close();
+}
+
+function openDrawer(dialog) {
+  delete dialog.dataset.closing;
+  if (!dialog.open) dialog.showModal();
+}
+
 // The drawer component's phx-show/phx-hide dispatch these to its <dialog>.
-window.addEventListener("drawer:open", (event) => event.target.showModal());
-window.addEventListener("drawer:close", (event) => event.target.close());
+window.addEventListener("drawer:open", (event) => openDrawer(event.target));
+window.addEventListener("drawer:close", (event) => closeDrawer(event.target));
+
+document.addEventListener(
+  "cancel",
+  (event) => {
+    if (!event.target.matches("dialog.slide-drawer")) return;
+    event.preventDefault();
+    closeDrawer(event.target);
+  },
+  true,
+);
 
 // A tap on a drawer's ::backdrop reports the <dialog> itself as the target,
 // since its content fills the rest of the box. closedby="any" would replace
 // this once Safari supports it.
 document.addEventListener("click", (event) => {
-  if (event.target.matches?.("dialog.slide-drawer")) event.target.close();
+  if (event.target.matches?.("dialog.slide-drawer")) closeDrawer(event.target);
 });
 
 topbar.config({
