@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "li", "+2")
     assert has_element?(view, ~s|a[href="https://app.fastmail.com/mail/compose?bcc=anna%40example.com"]|)
     refute html =~ "Pending Pete"
-    assert has_element?(view, ".line-through", "Cancelled Carl")
+    assert has_element?(view, "[data-status=cancelled]", "Cancelled Carl")
   end
 
   test "cancelling a booking moves it to the cancelled list", %{conn: conn} do
@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
 
-    assert has_element?(view, ".line-through", "Anna")
+    assert has_element?(view, "[data-status=cancelled]", "Anna")
     refute has_element?(view, ~s|button[phx-value-id="#{registration.id}"]|)
     assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :cancelled
   end

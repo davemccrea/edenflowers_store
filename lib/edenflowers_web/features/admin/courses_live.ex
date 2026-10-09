@@ -318,7 +318,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               </.button>
             </div>
           </li>
-          <li :for={registration <- @cancelled} class="text-base-content/50 py-2.5">
+          <li :for={registration <- @cancelled} data-status="cancelled" class="text-base-content/50 py-2.5">
             <p class="truncate line-through">
               {registration.name}
               <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>

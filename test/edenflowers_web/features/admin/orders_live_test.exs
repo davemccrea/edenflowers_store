@@ -70,8 +70,8 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
-    assert has_element?(view, ~s([data-item-id="#{late.id}"] .admin-badge-error), "Overdue")
-    refute has_element?(view, ~s([data-item-id="#{done.id}"] .admin-badge-error))
+    assert has_element?(view, ~s([data-item-id="#{late.id}"]), "Overdue")
+    refute has_element?(view, ~s([data-item-id="#{done.id}"]), "Overdue")
   end
 
   test "flags orders with money still to collect", %{conn: conn} do
@@ -83,8 +83,8 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
-    assert has_element?(view, ~s([data-item-id="#{mismatched.id}"] .admin-badge-warning), "To collect")
-    refute has_element?(view, ~s([data-item-id="#{matching.id}"] .admin-badge-warning), "To collect")
+    assert has_element?(view, ~s([data-item-id="#{mismatched.id}"]), "To collect")
+    refute has_element?(view, ~s([data-item-id="#{matching.id}"]), "To collect")
   end
 
   test "marks orders a subscription created", %{conn: conn} do

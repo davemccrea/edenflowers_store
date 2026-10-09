@@ -1,6 +1,6 @@
 # Replace CSS-class selectors with aria/data/visible-text checks
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -18,3 +18,10 @@ Assertions on `.line-through`, `.menu-disabled`, `.admin-badge-success` and `.ad
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- The admin badge assertions match on visible text in their row or section (`[data-item-id]`, `#order-status`, `#order-fulfillment-summary`); the orders list ones in `orders_live_test.exs` were changed too.
+- The unavailable menu items are matched by their existing `aria-disabled="true"`.
+- The cancelled course bookings had nothing but the strikethrough to mark them, so their `<li>` now carries `data-status="cancelled"`.
+- Each replaced assertion was checked to fail when its behaviour is broken.
