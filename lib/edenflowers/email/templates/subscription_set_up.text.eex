@@ -4,16 +4,16 @@
 
 <%= gettext("Size") %>: <%= @size %>
 <%= gettext("How often") %>: <%= @interval %>
-<%= if @subscription.delivery_address do %><%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
-<% end %><%= gettext("First delivery") %>: <%= @format_date.(@subscription.first_delivery_date) %>
+<%= if @pickup? do %><%= gettext("First pickup") %><% else %><%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
+<%= gettext("First delivery") %><% end %>: <%= @format_date.(@subscription.first_delivery_date) %>
 <%= gettext("Then") %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
 <%= if @subscription.first_order_discounted? do %>
-<%= gettext("The discount applies to your first delivery.") %>
+<%= gettext("The discount applies to your first order.") %>
 <% end %>
 <%= if @subscription.card_message do %>
-<%= gettext("Your card message comes with the first delivery.") %>
+<%= gettext("Your card message comes with the first order.") %>
 <% end %>
-<%= gettext("The first delivery's receipt is in a separate email. After that, I charge your saved card a few days before each delivery.") %>
+<%= if @pickup? do %><%= gettext("The first order's receipt is in a separate email. After that, I charge your saved card a few days before each pickup.") %><% else %><%= gettext("The first order's receipt is in a separate email. After that, I charge your saved card a few days before each delivery.") %><% end %>
 
 <%= gettext("You can pause, change the size or how often, update your payment card or cancel from your account:") %>
 <%= @account_url %>

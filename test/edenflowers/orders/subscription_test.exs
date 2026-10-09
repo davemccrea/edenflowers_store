@@ -243,9 +243,9 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        refute email.text_body =~ "Alennus koskee ensimmäistä toimitustasi."
+        refute email.text_body =~ "Alennus koskee ensimmäistä tilaustasi."
         assert email.text_body =~ "Hovrättsesplanaden 1, Vasa"
-        assert email.text_body =~ "Korttiviestisi tulee ensimmäisen toimituksen mukana."
+        assert email.text_body =~ "Korttiviestisi tulee ensimmäisen tilauksen mukana."
       end)
 
       assert {:cancel, _} = perform_job(SendSubscriptionSetupEmail, job.args)
@@ -265,7 +265,29 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ "Alennus koskee ensimmäistä toimitustasi."
+        assert email.text_body =~ "Alennus koskee ensimmäistä tilaustasi."
+      end)
+    end
+
+    test "the set-up email for a pickup subscription talks about pickups", ctx do
+      order =
+        subscription_cart(ctx,
+          state: :payment,
+          fulfillment_option_id: ctx.pickup.id,
+          fulfillment_method: :pickup,
+          delivery_address: nil
+        )
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
+
+      assert [job] = all_enqueued(worker: SendSubscriptionSetupEmail)
+      assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "Toimitusosoite"
+        assert email.text_body =~ "Ensimmäinen nouto"
+        assert email.text_body =~ "ennen jokaista noutoa"
       end)
     end
 

@@ -388,12 +388,12 @@ msgstr ""
 msgid "Small"
 msgstr ""
 
-#: lib/edenflowers/email.ex:151
+#: lib/edenflowers/email.ex:153
 #, elixir-autogen, elixir-format
 msgid "Welcome back to the Eden Flowers newsletter"
 msgstr ""
 
-#: lib/edenflowers/email.ex:135
+#: lib/edenflowers/email.ex:137
 #, elixir-autogen, elixir-format
 msgid "Welcome to Eden Flowers: your 15% off code inside"
 msgstr ""
@@ -413,7 +413,7 @@ msgstr ""
 msgid "You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
 msgstr ""
 
-#: lib/edenflowers/email.ex:143
+#: lib/edenflowers/email.ex:145
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers promo code"
 msgstr ""
@@ -765,7 +765,7 @@ msgstr ""
 msgid "We've sent you a new code."
 msgstr ""
 
-#: lib/edenflowers/email.ex:175
+#: lib/edenflowers/email.ex:177
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers sign-in code"
 msgstr ""
@@ -2124,7 +2124,7 @@ msgstr ""
 msgid "Change booking"
 msgstr ""
 
-#: lib/edenflowers/email.ex:118
+#: lib/edenflowers/email.ex:120
 #, elixir-autogen, elixir-format
 msgid "You're booked: %{course}"
 msgstr ""
@@ -3492,7 +3492,7 @@ msgstr "View customer's orders"
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr ""
 
-#: lib/edenflowers/email.ex:107
+#: lib/edenflowers/email.ex:109
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order %{order_order_reference} has been delivered"
 msgstr ""
@@ -4437,7 +4437,7 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
-#: lib/edenflowers/email.ex:183
+#: lib/edenflowers/email.ex:185
 #, elixir-autogen, elixir-format
 msgid "Confirm your new Eden Flowers email"
 msgstr ""
@@ -4709,7 +4709,7 @@ msgstr ""
 msgid "Update your card"
 msgstr ""
 
-#: lib/edenflowers/email.ex:89
+#: lib/edenflowers/email.ex:90
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers subscription is set up"
 msgstr ""
@@ -4752,7 +4752,6 @@ msgstr ""
 msgid "This product can't be subscribed to"
 msgstr ""
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:11
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "The discount applies to your first delivery."
@@ -5336,24 +5335,9 @@ msgstr "Amount"
 msgid "First delivery"
 msgstr ""
 
-#: lib/edenflowers/email/templates/payment_failed.text.eex:3
-#, elixir-autogen, elixir-format, fuzzy
-msgid "I tried to charge your saved card for your next subscription delivery, but the payment didn't go through."
-msgstr ""
-
-#: lib/edenflowers/email.ex:66
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Payment needed for your subscription delivery %{order_order_reference}"
-msgstr ""
-
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Thank you for subscribing!"
-msgstr ""
-
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
-#, elixir-autogen, elixir-format, fuzzy
-msgid "The first delivery's receipt is in a separate email. After that, I charge your saved card a few days before each delivery."
 msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:9
@@ -5366,7 +5350,37 @@ msgstr ""
 msgid "You can pause, change the size or how often, update your payment card or cancel from your account:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:14
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:7
 #, elixir-autogen, elixir-format
-msgid "Your card message comes with the first delivery."
+msgid "First pickup"
+msgstr ""
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:3
+#, elixir-autogen, elixir-format, fuzzy
+msgid "I tried to charge your saved card for your next subscription order, but the payment didn't go through."
+msgstr ""
+
+#: lib/edenflowers/email.ex:66
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Payment needed for your subscription order %{order_order_reference}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:11
+#, elixir-autogen, elixir-format, fuzzy
+msgid "The discount applies to your first order."
+msgstr ""
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
+#, elixir-autogen, elixir-format, fuzzy
+msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each delivery."
+msgstr ""
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
+#, elixir-autogen, elixir-format, fuzzy
+msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each pickup."
+msgstr ""
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:14
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Your card message comes with the first order."
 msgstr ""
