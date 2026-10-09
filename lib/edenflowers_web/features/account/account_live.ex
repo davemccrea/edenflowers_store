@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
@@ -407,15 +408,15 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   def handle_event("pause_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused")}
+    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, fn _ -> ~t"Subscription paused" end)}
   end
 
   def handle_event("resume_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed")}
+    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, fn _ -> ~t"Subscription resumed" end)}
   end
 
   def handle_event("cancel_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled")}
+    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)}
   end
 
   def handle_event("edit_subscription", %{"subscription_id" => id} = params, socket) do
@@ -491,8 +492,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         {:ok, subscription} ->
           case action.(subscription, actor: user) do
             {:ok, subscription} ->
-              message = if is_function(success_message), do: success_message.(subscription), else: success_message
-              assign(socket, subscription_notice: {id, :info, message})
+              assign(socket, subscription_notice: {id, :info, success_message.(subscription)})
 
             {:error, error} ->
               Logger.info("Subscription change refused: #{inspect(error)}")
@@ -674,17 +674,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp notice_for({id, kind, message}, %{id: id}), do: {kind, message}
   defp notice_for(_notice, _subscription), do: nil
 
-  defp unpaid_occurrence(orders, subscription) do
-    Enum.find(orders, &(&1.subscription_id == subscription.id and &1.payment_link_open?))
-  end
-
   # The occurrence job books each delivery ahead of its date, after which
   # `next_fulfillment_date` has already moved on to the one after.
   defp booked_delivery(orders, subscription) do
     orders
     |> Enum.filter(fn order ->
       order.subscription_id == subscription.id and order.fulfillment_status != :cancelled and
-        not Date.before?(order.fulfillment_date, store_today())
+        not Date.before?(order.fulfillment_date, HelsinkiToday.today())
     end)
     |> Enum.min_by(& &1.fulfillment_date, Date, fn -> nil end)
   end
@@ -719,7 +715,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   # The table's short form: the date, then one line on what's happening.
   defp next_delivery(%{subscription: %{state: :payment_failed}} = assigns) do
-    assigns = assign(assigns, unpaid: unpaid_occurrence(assigns.orders, assigns.subscription))
+    assigns = assign(assigns, unpaid: Subscription.unpaid_occurrence(assigns.orders, assigns.subscription))
 
     ~H"""
     <span class="font-medium">{~t"Payment failed"}</span>
@@ -779,7 +775,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     assigns =
       assign(assigns,
         booked: booked_delivery(orders, subscription),
-        unpaid: unpaid_occurrence(orders, subscription),
+        unpaid: Subscription.unpaid_occurrence(orders, subscription),
         next: subscription.next_fulfillment_date
       )
 
@@ -815,7 +811,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     assigns =
       assign(assigns,
         id: subscription.id,
-        unpaid: unpaid_occurrence(orders, subscription),
+        unpaid: Subscription.unpaid_occurrence(orders, subscription),
         booked: booked_delivery(orders, subscription),
         open?: subscription.state != :cancelled and not subscription.changes_closed?
       )
@@ -1198,7 +1194,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   def status_label(order, locale) do
     date = Format.day_month(order.fulfillment_date, locale)
 
-    case {Date.compare(order.fulfillment_date, store_today()), order.fulfillment_method} do
+    case {Date.compare(order.fulfillment_date, HelsinkiToday.today()), order.fulfillment_method} do
       {:eq, :pickup} -> ~t"Ready to collect today"
       {:eq, _} -> ~t"Arriving today"
       {:gt, :pickup} -> ~t"Ready to collect #{date}"
@@ -1217,6 +1213,4 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp ordered_on(order), do: helsinki_date(order.ordered_at || order.inserted_at)
 
   defp helsinki_date(datetime), do: datetime |> DateTime.shift_zone!(@timezone) |> DateTime.to_date()
-
-  defp store_today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 end

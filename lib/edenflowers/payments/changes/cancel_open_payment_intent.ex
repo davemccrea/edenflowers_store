@@ -13,7 +13,7 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
     |> Ash.Changeset.force_change_attribute(:payment_intent_id, nil)
     |> Ash.Changeset.after_transaction(fn
       _changeset, {:ok, record} ->
-        case stripe_api().cancel_payment_intent(%{id: payment_intent_id}) do
+        case Edenflowers.External.StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
           {:ok, _payment_intent} ->
             :ok
 
@@ -29,6 +29,4 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
         error
     end)
   end
-
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.External.StripeAPI)
 end
