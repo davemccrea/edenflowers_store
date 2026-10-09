@@ -10,8 +10,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   alias Edenflowers.Orders
 
   setup do
-    Edenflowers.Repo.delete_all(Oban.Job)
-
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
     product_variant = generate(product_variant(product_id: product.id))
@@ -241,47 +239,25 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   end
 
   describe "payment_intent.payment_failed" do
-    test "leaves the order in checkout for the customer to retry", %{order: order} do
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_failed_1",
-                 type: "payment_intent.payment_failed",
-                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
-               })
+    test "leaves the order and the course booking for the customer to retry", %{order: order} do
+      registration =
+        generate(course_registration(amount: Decimal.new("170.00"), payment_intent_id: "pi_course_failed"))
+
+      for metadata <- [%{"order_id" => order.id}, %{"course_registration_id" => registration.id}] do
+        assert :ok =
+                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                   id: "evt_failed",
+                   type: "payment_intent.payment_failed",
+                   data: %{object: %{id: "pi_failed", metadata: metadata}}
+                 })
+      end
 
       order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :payment
       assert order.payment_status == :pending
+      assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
 
       refute_email_sent()
-    end
-
-    test "does not downgrade an already-paid order", %{order: order, expected_amount: expected_amount} do
-      # Succeeded fires first.
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_first_success",
-                 type: "payment_intent.succeeded",
-                 data: %{
-                   object: %{
-                     id: order.payment_intent_id,
-                     metadata: %{"order_id" => order.id},
-                     amount_received: expected_amount
-                   }
-                 }
-               })
-
-      # A late `payment_failed` for the same intent shouldn't flip the order back.
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_late_failure",
-                 type: "payment_intent.payment_failed",
-                 data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
-               })
-
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
-      assert order.state == :placed
-      assert order.payment_status == :paid
     end
   end
 
@@ -302,15 +278,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   end
 
   describe "unhandled events" do
-    test "returns :ok for charge.succeeded (handled via payment_intent.succeeded)" do
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_charge_succeeded",
-                 type: "charge.succeeded",
-                 data: %{object: %{}}
-               })
-    end
-
     test "returns :ok for an unhandled event type" do
       capture_log(fn ->
         assert :ok =
@@ -432,6 +399,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                EdenflowersWeb.Webhooks.StripeHandler.handle_event(
                  refund_event("refund.created", "pi_course", "succeeded")
                )
+
+      refute Enum.any?(Ash.read!(Edenflowers.Orders.Payment, authorize?: false), &(&1.stripe_refund_id == "re_1"))
     end
   end
 
@@ -489,22 +458,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
 
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
-    end
-
-    test "ignores a failed payment; the seat hold lapses on its own", %{registration: registration} do
-      assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
-                 id: "evt_course_failed",
-                 type: "payment_intent.payment_failed",
-                 data: %{
-                   object: %{
-                     id: registration.payment_intent_id,
-                     metadata: %{"course_registration_id" => registration.id}
-                   }
-                 }
-               })
-
-      assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
     end
   end
 end

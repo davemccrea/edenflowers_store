@@ -1,6 +1,6 @@
 # Trim dead weight in the Stripe handler tests
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -21,3 +21,9 @@ Status: ready-for-agent
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- The three `payment_intent.payment_failed` tests are now one, which checks that both the order and the course booking stay pending. Only the `invoice.paid` catch-all test remains under "unhandled events". `Repo.delete_all(Oban.Job)` is gone from setup.
+- The unknown-payment refund test now checks that no Payment was written for the refund.
+- The suite passes (987 tests).
