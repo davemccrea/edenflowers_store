@@ -1,6 +1,6 @@
 # Stripe webhook returns :error so Stripe retries when recording fails
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -20,3 +20,9 @@ When the handler can't record a `payment_intent.succeeded`, `refund.*` or `setup
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- New sync `stripe_handler_retry_test.exs`: a CHECK (false) on `oban_jobs` makes `payment_intent.succeeded` return `:error`, and dropping it lets a redelivery place the order. The same trick on `payments` makes a succeeded refund return `:error`.
+- `stripe_handler_test.exs`: `setup_intent.succeeded` for an unknown subscription returns `:error`.
+- Mutations confirmed caught: each of the three `:error` returns in `StripeHandler` (card save, refund, `payment_update_failed`) flipped to `:ok` fails one test.
