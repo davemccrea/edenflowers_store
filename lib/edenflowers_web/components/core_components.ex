@@ -1038,13 +1038,13 @@ defmodule EdenflowersWeb.CoreComponents do
       phx-show={JS.dispatch("drawer:open", to: "##{@id}-dialog")}
       phx-hide={JS.dispatch("drawer:close", to: "##{@id}-dialog")}
     >
-      <%!-- The browser toggles `open`; ignoring it stops a LiveView patch from closing the drawer. --%>
+      <%!-- The browser toggles `open` and app.js sets `data-closing`; ignoring them stops a LiveView patch from undoing either. --%>
       <dialog
         id={"#{@id}-dialog"}
         aria-label={@label}
         autofocus
         class={"slide-drawer--#{@placement} slide-drawer outline-hidden"}
-        phx-mounted={JS.ignore_attributes(["open"])}
+        phx-mounted={JS.ignore_attributes(["open", "data-closing"])}
       >
         <div id={"#{@id}-content"} class={@class}>
           {render_slot(@inner_block)}

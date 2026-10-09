@@ -34,13 +34,8 @@ html:has(dialog.slide-drawer:modal) {
 }
 
 /* Undo the UA's centred dialog box so the drawer runs full height against
-   one edge. The inner div owns the width and background.
-   WebKit has no `overlay` transition, so a closing dialog leaves the top
-   layer at once and loses the UA's `dialog:modal` positioning. Pinning it
-   here keeps it on screen while it slides out. */
+   one edge. The inner div owns the width and background. */
 .slide-drawer {
-  position: fixed;
-  z-index: 100;
   inset-block: 0;
   height: auto;
   max-height: none;
@@ -49,8 +44,6 @@ html:has(dialog.slide-drawer:modal) {
   border: 0;
   background: none;
   color: inherit;
-  translate: var(--slide-drawer-offscreen);
-  opacity: 0.3;
 }
 
 .slide-drawer--left {
@@ -74,43 +67,29 @@ html:has(dialog.slide-drawer:modal) {
   margin-inline-start: auto;
 }
 
-.slide-drawer[open] {
-  translate: 0 0;
-  opacity: 1;
+/* drawer.js sets data-closing and waits for the slide-out before close(). */
+.slide-drawer[data-closing] {
+  translate: var(--slide-drawer-offscreen);
+  opacity: 0.3;
 }
 
 .slide-drawer::backdrop {
   background: rgb(0 0 0 / 0.3);
+}
+
+.slide-drawer[data-closing]::backdrop {
   opacity: 0;
 }
 
-.slide-drawer[open]::backdrop {
-  opacity: 1;
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  /* Unlock after the exit animation; opening locks immediately. */
-  html {
-    transition: overflow 0s var(--drawer-duration) allow-discrete;
-  }
-
-  html:has(dialog.slide-drawer:modal) {
-    transition: none;
-  }
-
   .slide-drawer {
     transition:
       translate var(--drawer-duration) var(--ease-in-out),
-      opacity var(--drawer-duration) var(--ease-in-out),
-      display var(--drawer-duration) allow-discrete,
-      overlay var(--drawer-duration) allow-discrete;
+      opacity var(--drawer-duration) var(--ease-in-out);
   }
 
   .slide-drawer::backdrop {
-    transition:
-      opacity var(--drawer-duration) var(--ease-in-out),
-      display var(--drawer-duration) allow-discrete,
-      overlay var(--drawer-duration) allow-discrete;
+    transition: opacity var(--drawer-duration) var(--ease-in-out);
   }
 
   @starting-style {
