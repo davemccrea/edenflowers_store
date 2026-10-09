@@ -6,13 +6,14 @@ defmodule Edenflowers.PoliciesTest do
   """
   use Edenflowers.DataCase, async: true
   import Generator
+  require Ash.Query
 
   alias Edenflowers.Courses.Course
 
   alias Edenflowers.Orders
 
   alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
-  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.{LineItem, Payment}
   alias Edenflowers.Fulfillment.{FulfillmentOption}
   alias Edenflowers.Pricing.{Promotion, TaxRate}
 
@@ -509,6 +510,25 @@ defmodule Edenflowers.PoliciesTest do
 
     test "open a payment link", %{order: order, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} = Orders.open_payment_link(order, actor: customer)
+    end
+  end
+
+  describe "Payment reads" do
+    setup %{customer: owner} do
+      order = generate(order(state: :placed, user_id: owner.id, ordered_at: DateTime.utc_now()))
+      payment = generate(payment(order_id: order.id))
+      {:ok, order: order, payment: payment}
+    end
+
+    test "the owner sees the payments on their order", %{order: order, payment: payment, customer: owner} do
+      assert [%{id: id}] = Payment |> Ash.Query.filter(order_id == ^order.id) |> Ash.read!(actor: owner)
+      assert id == payment.id
+    end
+
+    test "another customer sees none of them", %{order: order} do
+      other_customer = generate(admin_user(admin: false))
+
+      assert [] = Payment |> Ash.Query.filter(order_id == ^order.id) |> Ash.read!(actor: other_customer)
     end
   end
 
