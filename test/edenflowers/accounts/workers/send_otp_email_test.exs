@@ -1,5 +1,5 @@
 defmodule Edenflowers.Accounts.Workers.SendOtpEmailTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Swoosh.TestAssertions
 
   alias Edenflowers.Accounts.Workers.SendOtpEmail

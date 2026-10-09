@@ -1,5 +1,5 @@
 defmodule Edenflowers.Expenses.ExpenseImportTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
 
   import ExUnit.CaptureLog
   import Mox

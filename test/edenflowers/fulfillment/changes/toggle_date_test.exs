@@ -1,5 +1,5 @@
 defmodule Edenflowers.Fulfillment.Changes.ToggleDateTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Generator
   alias Edenflowers.Fulfillment.Changes.ToggleDate
 

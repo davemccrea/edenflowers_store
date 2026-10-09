@@ -1,4 +1,5 @@
 defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmailTest do
+  # Sync because the tests toggle the global :error_tracker, :enabled env
   use Edenflowers.DataCase, async: false
 
   alias Edenflowers.Repo
