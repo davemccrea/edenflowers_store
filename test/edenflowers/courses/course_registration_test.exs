@@ -4,6 +4,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
   import Generator
 
   alias Edenflowers.Courses
+  alias Edenflowers.Expressions.HelsinkiToday
 
   defp register(course, seats) do
     Courses.register_for_course(
@@ -89,10 +90,12 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     assert seats_left(course) == 4
   end
 
-  test "refuses a booking after register_before" do
-    course = generate(course(register_before: Date.add(Date.utc_today(), -2)))
+  test "booking is open on register_before itself and closed the day after" do
+    today = HelsinkiToday.today()
 
-    assert {:error, error} = register(course, 1)
+    assert {:ok, _} = register(generate(course(register_before: today)), 1)
+
+    assert {:error, error} = register(generate(course(register_before: Date.add(today, -1))), 1)
     assert Exception.message(error) =~ "booking has closed"
   end
 
