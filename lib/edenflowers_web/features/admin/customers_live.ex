@@ -51,8 +51,14 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
               {customer.name || ~t"Unnamed customer"}
             </.link>
             <div class="text-base-content/65 mt-0.5 break-all text-sm">{customer.email}</div>
+            <div class="text-base-content/65 mt-0.5 flex flex-wrap gap-x-2 text-sm tabular-nums sm:hidden">
+              <span class="whitespace-nowrap">{Format.currency(customer.total_spent, @locale)}</span>
+              <span :if={customer.last_ordered_at} class="whitespace-nowrap">
+                {Format.date(customer.last_ordered_at, @locale)}
+              </span>
+            </div>
           </:col>
-          <:col :let={customer} field="placed_order_count" sort label={~t"Orders"}>
+          <:col :let={customer} field="placed_order_count" sort label={~t"Orders"} class="text-right">
             <span class="tabular-nums">{customer.placed_order_count}</span>
           </:col>
           <:col :let={customer} field="total_spent" sort label={~t"Total spent"} class="text-right max-sm:hidden">

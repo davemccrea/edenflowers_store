@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Checkout.Fields
-  alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Format
 
@@ -37,64 +36,41 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           resource={Subscription}
           action={:admin_list}
           actor={@current_user}
+          search={[
+            label: ~t"Subscription",
+            placeholder: ~t"Search name or email…",
+            fn: &search_subscriptions/3
+          ]}
           url_state={@url_state}
+          show_filters={:toggle}
           sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
+          click={fn subscription -> JS.navigate(~p"/admin/subscriptions/#{subscription.id}") end}
         >
-          <:col :let={subscription} label={~t"Customer"}>
-            <.link navigate={~p"/admin/customers/#{subscription.user_id}"} class="font-medium hover:underline">
+          <:col :let={subscription} field="user.name" search sort label={~t"Customer"}>
+            <.link navigate={~p"/admin/subscriptions/#{subscription.id}"} class="font-medium hover:underline">
               {subscription.user.name || ~t"Unnamed customer"}
             </.link>
             <div class="text-base-content/65 mt-0.5 break-all text-sm">{subscription.user.email}</div>
           </:col>
-          <:col :let={subscription} label={~t"Size"}>
+          <:col :let={subscription} field="product_variant.size" sort label={~t"Size"}>
             {variant_size_label(subscription.product_variant.size)}
           </:col>
           <:col :let={subscription} field="interval_weeks" sort label={~t"Interval"}>
             {Fields.interval_label(subscription.interval_weeks)}
           </:col>
-          <:col :let={subscription} field="next_fulfillment_date" sort label={~t"Next delivery"}>
+          <:col :let={subscription} field="next_fulfillment_date" sort={[cycle: [:asc, :desc]]} label={~t"Next delivery"}>
             <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
           </:col>
-          <:col :let={subscription} field="state" sort label={~t"Status"}>
-            <.badge tone={state_tone(subscription.state)}>{state_label(subscription.state)}</.badge>
-          </:col>
-          <:col :let={subscription} label={~t"Actions"}>
-            <div class="flex flex-wrap gap-1">
-              <.button
-                :if={subscription.state == :active}
-                type="button"
-                phx-click="pause"
-                phx-value-id={subscription.id}
-                variant="ghost"
-                size="sm"
-              >
-                {~t"Pause"}
-              </.button>
-              <.button
-                :if={subscription.state == :paused}
-                type="button"
-                phx-click="resume"
-                phx-value-id={subscription.id}
-                variant="ghost"
-                size="sm"
-              >
-                {~t"Resume"}
-              </.button>
-              <.button
-                :if={subscription.state != :cancelled}
-                type="button"
-                phx-click="cancel"
-                phx-value-id={subscription.id}
-                data-confirm={~t"Cancel this subscription? This can't be undone."}
-                variant="ghost"
-                size="sm"
-                class="text-error"
-              >
-                {~t"Cancel"}
-              </.button>
-            </div>
+          <:col
+            :let={subscription}
+            field="state"
+            sort
+            filter={[type: :select, label: ~t"Status", prompt: ~t"All", options: state_options()]}
+            label={~t"Status"}
+          >
+            <.subscription_state_badge state={subscription.state} />
           </:col>
         </Cinder.collection>
       </.admin_page>
@@ -102,39 +78,19 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
     """
   end
 
-  @impl true
-  def handle_event("pause", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, ~t"Subscription paused.")}
+  defp state_options do
+    Enum.map([:active, :paused, :payment_failed, :cancelled], &{subscription_state_label(&1), &1})
   end
 
-  def handle_event("resume", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, ~t"Subscription resumed.")}
+  defp search_subscriptions(query, _searchable_columns, search_term) do
+    require Ash.Query
+    import Ash.Expr
+
+    case_insensitive_term = Ash.CiString.new(search_term)
+
+    Ash.Query.filter(
+      query,
+      expr(contains(user.name, ^case_insensitive_term) or contains(user.email, ^case_insensitive_term))
+    )
   end
-
-  def handle_event("cancel", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, ~t"Subscription cancelled.")}
-  end
-
-  defp change_subscription(socket, id, action, success_message) do
-    actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, subscription} <- Orders.get_subscription(id, actor: actor),
-           {:ok, _} <- action.(subscription, actor: actor) do
-        put_flash(socket, :info, success_message)
-      else
-        _ -> put_flash(socket, :error, ~t"Could not change the subscription.")
-      end
-
-    Cinder.refresh_table(socket, "subscriptions-table")
-  end
-
-  defp state_label(:active), do: ~t"Active"
-  defp state_label(:paused), do: ~t"Paused"
-  defp state_label(:payment_failed), do: ~t"Payment failed"
-  defp state_label(:cancelled), do: ~t"Cancelled"
-
-  defp state_tone(:active), do: :success
-  defp state_tone(:payment_failed), do: :error
-  defp state_tone(_), do: :neutral
 end

@@ -54,6 +54,16 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
+          <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
+            <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
+              {order.customer_name || ~t"Unnamed customer"}
+            </.link>
+            <.subscription_badge :if={order.origin == :subscription} />
+            <div class="text-base-content/65 mt-1 flex flex-wrap items-center gap-2 text-sm sm:hidden">
+              <.payment_status_badge status={order.payment_status} />
+              <.fulfillment_method method={order.fulfillment_method} />
+            </div>
+          </:col>
           <:col
             :let={order}
             field="fulfillment_date"
@@ -64,12 +74,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               {Format.date(order.fulfillment_date, @locale)}
             </span>
             <.badge :if={overdue?(order, @today)} tone={:error} class="ml-1.5 align-middle">{~t"Overdue"}</.badge>
-          </:col>
-          <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
-            <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
-              {order.customer_name || ~t"Unnamed customer"}
-            </.link>
-            <.subscription_badge :if={order.origin == :subscription} />
           </:col>
           <:col
             :let={order}
@@ -100,7 +104,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           >
             <.payment_status_badge status={order.payment_status} />
           </:col>
-          <:col :let={order} field="grand_total" label={~t"Total"} class="text-right">
+          <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
             <div class="whitespace-nowrap tabular-nums">
               {Format.currency(order.grand_total, @locale)}
             </div>

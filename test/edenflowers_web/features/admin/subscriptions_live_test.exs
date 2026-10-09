@@ -81,12 +81,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
     assert has_element?(view, "[data-item-id] .admin-badge-error", "Payment failed")
   end
 
-  test "Jennie can pause, resume and cancel, even inside the customer's cutoff", %{conn: conn} do
+  test "a row opens the subscription's page", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
 
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
-    next_date = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(4)
 
     subscription =
       Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
@@ -94,7 +93,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
         product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
         fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
         interval_weeks: 1,
-        next_fulfillment_date: next_date,
+        next_fulfillment_date: ~D[2026-11-03],
         locale: "en",
         stripe_customer_id: "cus_ada",
         stripe_payment_method_id: "pm_card"
@@ -102,15 +101,61 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions")
 
-    view |> element("[data-item-id] button", "Pause") |> render_click()
-    assert reload(subscription).state == :paused
+    refute has_element?(view, "[data-item-id] button")
 
-    view |> element("[data-item-id] button", "Resume") |> render_click()
-    assert reload(subscription).state == :active
-
-    view |> element("[data-item-id] button", "Cancel") |> render_click()
-    assert reload(subscription).state == :cancelled
+    view |> element("[data-item-id] a", "Ada Lovelace") |> render_click()
+    assert_redirect(view, ~p"/admin/subscriptions/#{subscription.id}")
   end
 
-  defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)
+  test "searches subscriptions by customer name or email", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+
+    {:ok, ada} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
+    {:ok, grace} = Edenflowers.Accounts.upsert_user("admiral@example.com", "Grace Hopper", authorize?: false)
+    seed_subscription(ada)
+    seed_subscription(grace)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions?search=lovelace")
+    assert has_element?(view, "[data-item-id]", "Ada Lovelace")
+    refute has_element?(view, "[data-item-id]", "Grace Hopper")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions?search=admiral")
+    assert has_element?(view, "[data-item-id]", "Grace Hopper")
+    refute has_element?(view, "[data-item-id]", "Ada Lovelace")
+  end
+
+  test "filters subscriptions by state", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+
+    {:ok, ada} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
+    {:ok, grace} = Edenflowers.Accounts.upsert_user("grace@example.com", "Grace Hopper", authorize?: false)
+    seed_subscription(ada)
+    seed_subscription(grace, state: :paused)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions?state=paused")
+
+    assert has_element?(view, "[data-item-id]", "Grace Hopper")
+    refute has_element?(view, "[data-item-id]", "Ada Lovelace")
+  end
+
+  defp seed_subscription(customer, attrs \\ []) do
+    Ash.Seed.seed!(
+      Edenflowers.Orders.Subscription,
+      Map.merge(
+        %{
+          user_id: customer.id,
+          product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
+          fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
+          interval_weeks: 1,
+          next_fulfillment_date: ~D[2026-11-03],
+          locale: "en",
+          stripe_customer_id: "cus_ada",
+          stripe_payment_method_id: "pm_card"
+        },
+        Map.new(attrs)
+      )
+    )
+  end
 end

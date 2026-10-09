@@ -44,6 +44,11 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
           resource={Promotion}
           actor={@current_user}
           query_opts={[load: [:usage]]}
+          search={[
+            label: ~t"Promotion",
+            placeholder: ~t"Search name or code…",
+            fn: &search_promotions/3
+          ]}
           url_state={@url_state}
           show_filters={:toggle}
           sort_mode="exclusive"
@@ -60,6 +65,20 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
             <.link navigate={~p"/admin/promotions/#{promotion.id}"} class="font-medium hover:underline">
               {promotion.name}
             </.link>
+            <div class="text-base-content/65 mt-0.5 flex flex-wrap gap-x-2 text-sm tabular-nums sm:hidden">
+              <span class="whitespace-nowrap">
+                {~t"Min. #{amount = Format.currency(promotion.minimum_cart_total, @locale)}"}
+              </span>
+              <span :if={promotion.start_date} class="whitespace-nowrap">
+                {~t"Starts #{date = Format.date(promotion.start_date, @locale)}"}
+              </span>
+              <span :if={promotion.expiration_date} class="whitespace-nowrap">
+                {~t"Expires #{date = Format.date(promotion.expiration_date, @locale)}"}
+              </span>
+              <span class="whitespace-nowrap">
+                {~t"Used #{usage = usage_label(promotion)}"}
+              </span>
+            </div>
           </:col>
           <:col :let={promotion} field="code" search sort label={~t"Code"}>
             <span class="inline-flex items-center gap-1">
@@ -72,32 +91,54 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
               />
             </span>
           </:col>
-          <:col :let={promotion} field="discount_rate" sort label={~t"Discount"}>
+          <:col :let={promotion} field="discount_rate" sort label={~t"Discount"} class="text-right">
             <span class="tabular-nums">{Format.percentage(promotion.discount_rate, @locale)}</span>
           </:col>
           <:col :let={promotion} field="minimum_cart_total" sort label={~t"Minimum"} class="text-right max-sm:hidden">
             <span class="whitespace-nowrap tabular-nums">{Format.currency(promotion.minimum_cart_total, @locale)}</span>
           </:col>
-          <:col :let={promotion} field="start_date" sort label={~t"Starts"} class="max-sm:hidden">
+          <:col
+            :let={promotion}
+            field="start_date"
+            sort={[cycle: [nil, :desc, :asc]]}
+            label={~t"Starts"}
+            class="max-sm:hidden"
+          >
             <span :if={promotion.start_date} class="whitespace-nowrap tabular-nums">
               {Format.date(promotion.start_date, @locale)}
             </span>
             <.blank :if={is_nil(promotion.start_date)} />
           </:col>
-          <:col :let={promotion} field="expiration_date" sort label={~t"Expires"} class="max-sm:hidden">
+          <:col
+            :let={promotion}
+            field="expiration_date"
+            sort={[cycle: [nil, :desc, :asc]]}
+            label={~t"Expires"}
+            class="max-sm:hidden"
+          >
             <span :if={promotion.expiration_date} class="whitespace-nowrap tabular-nums">
               {Format.date(promotion.expiration_date, @locale)}
             </span>
             <.blank :if={is_nil(promotion.expiration_date)} />
           </:col>
-          <:col :let={promotion} field="usage" sort label={~t"Used"} class="max-sm:hidden">
-            <span class="tabular-nums">
-              {promotion.usage}<span :if={promotion.usage_limit}> / {promotion.usage_limit}</span>
-            </span>
+          <:col :let={promotion} field="usage" sort label={~t"Used"} class="text-right max-sm:hidden">
+            <span class="tabular-nums">{usage_label(promotion)}</span>
           </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp usage_label(%{usage_limit: nil, usage: usage}), do: to_string(usage)
+  defp usage_label(%{usage_limit: limit, usage: usage}), do: "#{usage} / #{limit}"
+
+  defp search_promotions(query, _searchable_columns, search_term) do
+    require Ash.Query
+    import Ash.Expr
+
+    case_insensitive_term = Ash.CiString.new(search_term)
+
+    Ash.Query.filter(query, expr(contains(name, ^case_insensitive_term) or contains(code, ^case_insensitive_term)))
   end
 end

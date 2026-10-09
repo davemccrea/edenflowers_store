@@ -46,6 +46,11 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           resource={Product}
           actor={@current_user}
           query_opts={[load: [:cheapest_price, :product_category]]}
+          search={[
+            label: ~t"Product",
+            placeholder: ~t"Search name…",
+            fn: &search_products/3
+          ]}
           url_state={@url_state}
           show_filters={:toggle}
           sort_mode="exclusive"
@@ -57,6 +62,17 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             <.link navigate={~p"/admin/products/#{product.id}"} class="font-medium hover:underline">
               {product.name}
             </.link>
+            <div class="text-base-content/65 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm sm:hidden">
+              <span>{product.product_category.name}</span>
+              <span :if={product.featured} class="inline-flex items-center gap-1">
+                <.icon name="hero-star-solid" class="text-primary h-4 w-4" />
+                <span class="sr-only">{~t"Featured on the home page"}</span>
+              </span>
+              <span :if={product.subscribable} class="inline-flex items-center gap-1">
+                <.icon name="hero-arrow-path" class="text-primary h-4 w-4" />
+                <span class="sr-only">{~t"Can be bought as a subscription"}</span>
+              </span>
+            </div>
           </:col>
           <:col
             :let={product}
@@ -94,16 +110,27 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
               <.icon name="hero-star-solid" class="text-primary h-4 w-4" />
               <span class="sr-only">{~t"Featured on the home page"}</span>
             </span>
+            <.blank :if={!product.featured} />
           </:col>
           <:col :let={product} field="subscribable" sort label={~t"Subscription"} class="max-sm:hidden">
             <span :if={product.subscribable}>
               <.icon name="hero-arrow-path" class="text-primary h-4 w-4" />
               <span class="sr-only">{~t"Can be bought as a subscription"}</span>
             </span>
+            <.blank :if={!product.subscribable} />
           </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search_products(query, _searchable_columns, search_term) do
+    require Ash.Query
+    import Ash.Expr
+
+    case_insensitive_term = Ash.CiString.new(search_term)
+
+    Ash.Query.filter(query, expr(contains(name, ^case_insensitive_term)))
   end
 end
