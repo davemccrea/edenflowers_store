@@ -303,5 +303,9 @@ defmodule Edenflowers.Orders.Subscription do
     max :last_delivery_date, :orders, :fulfillment_date do
       filter expr(state == :placed and fulfillment_status != :cancelled)
     end
+
+    min :first_delivery_date, :orders, :fulfillment_date do
+      filter expr(origin == :online)
+    end
   end
 end

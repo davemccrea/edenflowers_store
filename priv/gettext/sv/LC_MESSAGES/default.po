@@ -105,7 +105,6 @@ msgid "Store"
 msgstr "Butik"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:7
-#: lib/edenflowers/email/templates/payment_failed.text.eex:6
 #: lib/edenflowers_web/features/account/account_live.ex:125
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:112
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:260
@@ -1938,8 +1937,8 @@ msgstr "Använd den en gång i kassan inom 30 dagar."
 #: lib/edenflowers/email/templates/order_confirmation.text.eex:7
 #: lib/edenflowers/email/templates/order_delivered.text.eex:7
 #: lib/edenflowers/email/templates/order_details.text.eex:19
-#: lib/edenflowers/email/templates/payment_failed.text.eex:15
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:22
+#: lib/edenflowers/email/templates/payment_failed.text.eex:14
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:23
 #, elixir-autogen, elixir-format
 msgid "Warm wishes,"
 msgstr "Varma hälsningar,"
@@ -3686,8 +3685,8 @@ msgid "How"
 msgstr "Hur"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:17
-#: lib/edenflowers/email/templates/payment_failed.text.eex:13
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:20
+#: lib/edenflowers/email/templates/payment_failed.text.eex:12
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:21
 #, elixir-autogen, elixir-format
 msgid "If anything needs changing, just reply and I'll take care of it."
 msgstr "Om något behöver ändras, svara bara så ordnar jag det."
@@ -3970,7 +3969,7 @@ msgid "Unpaid"
 msgstr "Obetald"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:14
-#: lib/edenflowers/email/templates/payment_failed.text.eex:8
+#: lib/edenflowers/email/templates/payment_failed.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "You can pay online here, by card or MobilePay:"
 msgstr "Du kan betala online här, med kort eller MobilePay:"
@@ -4550,7 +4549,6 @@ msgstr "Varje vecka"
 msgid "Interval"
 msgstr "Intervall"
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:8
 #: lib/edenflowers_web/features/account/account_live.ex:195
 #: lib/edenflowers_web/features/account/account_live.ex:850
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:96
@@ -4598,27 +4596,17 @@ msgstr "Prenumeration"
 msgid "Payment link emailed"
 msgstr "Betalningslänken mejlad"
 
-#: lib/edenflowers/email.ex:66
-#, elixir-autogen, elixir-format
-msgid "Payment needed for your Eden Flowers order %{order_order_reference}"
-msgstr "Betalning behövs för din Eden Flowers-beställning %{order_order_reference}"
-
 #: lib/edenflowers_web/features/admin/order_log.ex:68
 #, elixir-autogen, elixir-format
 msgid "Placed, but the saved card was refused"
 msgstr "Lagd, men det sparade kortet nekades"
-
-#: lib/edenflowers/email/templates/payment_failed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "We tried to charge your saved card for your next subscription delivery, but the payment didn't go through."
-msgstr "Vi försökte debitera ditt sparade kort för nästa leverans i din prenumeration, men betalningen gick inte igenom."
 
 #: lib/edenflowers/email/templates/payment_failed.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Your flowers are still coming: delivery on %{date} to %{address}."
 msgstr "Dina blommor kommer ändå: leverans %{date} till %{address}."
 
-#: lib/edenflowers/email/templates/payment_failed.text.eex:11
+#: lib/edenflowers/email/templates/payment_failed.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Your subscription is on hold until this is paid, and then carries on as before."
 msgstr "Din prenumeration vilar tills detta är betalt och fortsätter sedan som tidigare."
@@ -4707,11 +4695,6 @@ msgstr "Hur ofta"
 msgid "Save card"
 msgstr "Spara kortet"
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for subscribing! Your subscription is set up, and I'll choose the flowers for each bouquet myself."
-msgstr "Tack för din prenumeration! Den är nu klar, och jag väljer själv blommorna till varje bukett."
-
 #: lib/edenflowers_web/features/account/account_live.ex:654
 #: lib/edenflowers_web/features/account/account_live.ex:738
 #: lib/edenflowers_web/features/account/account_live.ex:977
@@ -4742,11 +4725,6 @@ msgstr "Kortet kunde inte sparas. Försök igen eller använd ett annat kort."
 msgid "Your card has been updated."
 msgstr "Ditt kort har uppdaterats."
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:15
-#, elixir-autogen, elixir-format
-msgid "Your first delivery comes as ordered, and its receipt is in a separate email. I charge your saved card a few days before each delivery."
-msgstr "Din första leverans kommer som beställt, och kvittot för den finns i ett separat mejl. Jag debiterar ditt sparade kort några dagar före varje leverans."
-
 #: lib/edenflowers_web/features/store/product_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "Buy once"
@@ -4774,13 +4752,12 @@ msgstr "Hur vill du köpa"
 msgid "This product can't be subscribed to"
 msgstr "Den här produkten kan inte prenumereras på"
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:10
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:11
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "The discount applies to your first delivery."
 msgstr "Rabatten gäller din första leverans."
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:13
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "The card comes with your first delivery."
@@ -5172,11 +5149,6 @@ msgstr "används av en aktiv prenumeration"
 msgid "We'll set up an account with this email so you can pause or cancel."
 msgstr "Vi skapar ett konto med den här e-postadressen så att du kan pausa eller avsluta."
 
-#: lib/edenflowers/email/templates/subscription_set_up.text.eex:17
-#, elixir-autogen, elixir-format
-msgid "You can pause, change the size or how often, update your card or cancel from your account:"
-msgstr "Du kan pausa, ändra storlek eller hur ofta, byta kort eller avsluta från ditt konto:"
-
 #: lib/edenflowers_web/features/checkout/order_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "to pause or cancel."
@@ -5353,3 +5325,48 @@ msgstr "Börjar %{date}"
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Used %{usage}"
 msgstr "Använd %{usage}"
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "Amount due"
+msgstr "Att betala"
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "First delivery"
+msgstr "Första leveransen"
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "I tried to charge your saved card for your next subscription delivery, but the payment didn't go through."
+msgstr "Jag försökte debitera ditt sparade kort för nästa leverans i din prenumeration, men betalningen gick inte igenom."
+
+#: lib/edenflowers/email.ex:66
+#, elixir-autogen, elixir-format
+msgid "Payment needed for your subscription delivery %{order_order_reference}"
+msgstr "Betalning behövs för leveransen %{order_order_reference} i din prenumeration"
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for subscribing!"
+msgstr "Tack för din prenumeration!"
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
+#, elixir-autogen, elixir-format
+msgid "The first delivery's receipt is in a separate email. After that, I charge your saved card a few days before each delivery."
+msgstr "Kvittot för den första leveransen finns i ett separat mejl. Därefter debiterar jag ditt sparade kort några dagar före varje leverans."
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "Then"
+msgstr "Därefter"
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:18
+#, elixir-autogen, elixir-format
+msgid "You can pause, change the size or how often, update your payment card or cancel from your account:"
+msgstr "Du kan pausa, ändra storlek eller hur ofta, byta betalkort eller avsluta från ditt konto:"
+
+#: lib/edenflowers/email/templates/subscription_set_up.text.eex:14
+#, elixir-autogen, elixir-format
+msgid "Your card message comes with the first delivery."
+msgstr "Ditt kortmeddelande kommer med den första leveransen."
