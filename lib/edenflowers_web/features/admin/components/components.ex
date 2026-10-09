@@ -69,10 +69,13 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc """
   A page's ⋯ "More actions" menu.
 
-  A popover anchored to its trigger rather than a focus dropdown: on phones the
-  header actions wrap, so the trigger can land anywhere along the row, and
-  `flip-inline` opens the menu towards whichever side has room. The popover
-  sits in the top layer and closes on Esc or a click outside.
+  A popover anchored to its trigger rather than a focus dropdown, so it sits in
+  the top layer and closes on Esc or a click outside.
+
+  On phones the header actions wrap, so the trigger can land anywhere along the
+  row. Rather than letting the browser flip the menu to the side with room
+  (`position-try-fallbacks`), which iOS Safari 26 draws without its border and
+  shadow, the menu spans the row below the trigger and starts at the page gutter.
   """
   def actions_menu(assigns) do
     ~H"""
@@ -83,7 +86,7 @@ defmodule EdenflowersWeb.Admin.Components do
       id={@id}
       popover
       style={"position-anchor: --#{@id}"}
-      class={["dropdown dropdown-end menu bg-base-100 border-base-300 [position-try-fallbacks:flip-inline] mt-2 border p-1 shadow", @class]}
+      class={["dropdown menu bg-base-100 border-base-300 mt-2 border p-1 shadow max-sm:[--anchor-h:span-all] max-sm:ml-4 max-sm:justify-self-start sm:dropdown-end", @class]}
     >
       {render_slot(@inner_block)}
     </ul>
