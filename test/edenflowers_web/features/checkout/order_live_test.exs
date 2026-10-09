@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "shows a placed order to its owner", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id)
+    order = placed_order(user_id: user.id, paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 
@@ -30,7 +30,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "says a text will follow when a pickup order has a phone number", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, recipient_phone_number: "045 1505141")
+    order = placed_order(user_id: user.id, recipient_phone_number: "045 1505141", paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 
@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id)
+    order = placed_order(user_id: user.id, paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 
@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
   test "hides another customer's order", %{conn: conn} do
     other = generate(admin_user(admin: false))
-    order = placed_order(user_id: other.id)
+    order = placed_order(user_id: other.id, paid: true)
 
     assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
     assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, state: :payment, payment_status: :pending, ordered_at: nil)
+    order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, "h1", "Thank you, Ada.")
@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
   @tag :typst
   test "opens the receipt PDF inline", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id)
+    order = placed_order(user_id: user.id, order_reference: "CONFIRM", paid: true)
 
     conn = get(conn, ~p"/order/#{order.id}/receipt")
 
@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "offers a calendar event for a pickup", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id)
+    order = placed_order(user_id: user.id, paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/pickup.ics"]|)
@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "offers no calendar event for a delivery", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, fulfillment_method: :delivery)
+    order = placed_order(user_id: user.id, fulfillment_method: :delivery, paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     refute has_element?(view, "[data-testid=add-to-calendar]")
@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "sees their order when the webhook placed it before Stripe's redirect", %{conn: conn} do
-      order = placed_order([])
+      order = placed_order(paid: true)
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       assert redirected_to(conn) == ~p"/order/#{order.id}"
@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "waits for the webhook when Stripe's redirect arrives first", %{conn: conn} do
-      order = placed_order(state: :payment, payment_status: :pending, ordered_at: nil)
+      order = placed_order(state: :payment, ordered_at: nil)
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       refute get_session(conn, :order_id) == order.id
@@ -167,7 +167,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "goes back to checkout, keeping their cart, when a redirect payment fails", %{conn: conn} do
-      order = placed_order(state: :payment, payment_status: :pending, ordered_at: nil)
+      order = placed_order(state: :payment, ordered_at: nil)
 
       conn =
         conn
@@ -181,7 +181,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     end
 
     test "is sent to sign in for an order that wasn't their cart, keeping their cart", %{conn: conn} do
-      order = placed_order([])
+      order = placed_order(paid: true)
       cart = generate(order())
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: cart.id}) |> get(~p"/checkout/complete/#{order.id}")
@@ -191,46 +191,5 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert to =~ "/sign-in?return_to="
       assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     end
-  end
-
-  defp placed_order(overrides) do
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    variant = generate(product_variant(product_id: product.id, price: "42.00"))
-    fulfillment = generate(fulfillment_option(tax_rate_id: tax_rate.id, name: "Pickup"))
-
-    attrs =
-      Keyword.merge(
-        [
-          state: :placed,
-          order_reference: "CONFIRM",
-          customer_name: "Ada Lovelace",
-          customer_email: "ada@example.com",
-          fulfillment_option_id: fulfillment.id,
-          fulfillment_option_name: "Pickup",
-          fulfillment_method: :pickup,
-          fulfillment_date: ~D[2026-06-10],
-          quoted_fulfillment_fee: "4.50",
-          fulfillment_tax_rate: tax_rate.percentage,
-          payment_status: :paid,
-          payment_intent_id: "pi_test_confirm",
-          ordered_at: DateTime.utc_now(),
-          locale: "en-GB"
-        ],
-        overrides
-      )
-
-    {payment_status, attrs} = Keyword.pop(attrs, :payment_status, :pending)
-    order = generate(order(attrs))
-    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
-    order = Ash.load!(order, :grand_total, authorize?: false)
-
-    if payment_status in [:paid, :refunded],
-      do: generate(payment(order_id: order.id, amount: order.grand_total))
-
-    if payment_status == :refunded,
-      do: generate(payment(order_id: order.id, amount: Decimal.negate(order.grand_total)))
-
-    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
   end
 end

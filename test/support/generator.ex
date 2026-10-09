@@ -141,6 +141,64 @@ defmodule Generator do
     )
   end
 
+  @doc """
+  A placed order from Ada Lovelace for two items at 42.00, picked up for 4.50:
+  88.50 in all, and nothing paid yet.
+
+  `paid: true` pays the grand total when the order was placed, and
+  `paid: "40.00"` pays that amount instead. `refunded: true` pays it and then
+  returns it. Any other option overrides the order's attributes.
+  """
+  def placed_order(opts \\ []) do
+    {refunded?, opts} = Keyword.pop(opts, :refunded, false)
+    {paid, opts} = Keyword.pop(opts, :paid, refunded?)
+
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "42.00"))
+    fulfillment_option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
+
+    attrs =
+      Keyword.merge(
+        [
+          state: :placed,
+          customer_name: "Ada Lovelace",
+          customer_email: "ada@example.com",
+          fulfillment_option_id: fulfillment_option.id,
+          fulfillment_option_name: "Pickup",
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-06-10],
+          quoted_fulfillment_fee: "4.50",
+          fulfillment_tax_rate: tax_rate.percentage,
+          payment_intent_id: "pi_test_#{System.unique_integer([:positive])}",
+          ordered_at: DateTime.utc_now(),
+          locale: "en-GB"
+        ],
+        opts
+      )
+
+    order = generate(order(attrs))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
+    order = Ash.load!(order, :grand_total, authorize?: false)
+
+    amount_paid =
+      case paid do
+        true -> order.grand_total
+        false -> nil
+        amount -> Decimal.new(amount)
+      end
+
+    paid_at = order.ordered_at || DateTime.utc_now()
+
+    if amount_paid,
+      do: generate(payment(order_id: order.id, amount: amount_paid, paid_at: paid_at))
+
+    if amount_paid && refunded?,
+      do: generate(payment(order_id: order.id, amount: Decimal.negate(amount_paid), paid_at: paid_at))
+
+    Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
+  end
+
   @doc "Counts towards a promotion's usage by placing `times` orders with it."
   def use_promotion(promotion, times \\ 1) do
     for _ <- 1..times do

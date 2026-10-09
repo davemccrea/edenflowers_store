@@ -57,33 +57,11 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
       |> Plug.Test.init_test_session(%{})
       |> Helpers.store_in_session(admin)
 
-    tax_rate = generate(tax_rate())
-    product = generate(product(tax_rate_id: tax_rate.id))
-    variant = generate(product_variant(product_id: product.id, price: "40.00"))
-
-    placed = fn ordered_at, payment_status, amount_paid ->
-      order_attrs = [
-        state: :placed,
-        fulfillment_status: :fulfilled,
-        quoted_fulfillment_fee: "5.00",
-        ordered_at: ordered_at
-      ]
-
-      order =
-        generate(order(order_attrs))
-
-      generate(line_item(order_id: order.id, product_variant_id: variant.id))
-      generate(payment(order_id: order.id, amount: Decimal.new(amount_paid), paid_at: ordered_at))
-
-      if payment_status == :refunded,
-        do: generate(payment(order_id: order.id, amount: Decimal.negate(Decimal.new(amount_paid)), paid_at: ordered_at))
-    end
-
     now = DateTime.utc_now()
-    placed.(now, :paid, "45.00")
-    placed.(now, :paid, "45.00")
-    placed.(now, :refunded, "45.00")
-    placed.(DateTime.add(now, -40, :day), :paid, "45.00")
+    placed_order(ordered_at: now, paid: "45.00")
+    placed_order(ordered_at: now, paid: "45.00")
+    placed_order(ordered_at: now, paid: "45.00", refunded: true)
+    placed_order(ordered_at: DateTime.add(now, -40, :day), paid: "45.00")
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
