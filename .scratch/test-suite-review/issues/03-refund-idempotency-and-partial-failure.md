@@ -1,6 +1,6 @@
 # Refund idempotency key is stable; partial Stripe failure in refund_balance
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -20,3 +20,9 @@ The idempotency key is the only thing that stops two "Refund with Stripe" clicks
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- The `create_refund` mock in the "newest payment first" test now asserts the key `refund-<order id>-2-<payment intent>`. New tests in `order_detail_live_test.exs`: two `refund_balance/1` calls with Stripe not yet listing the first (pending) refund send the same key; a `create_refund` error on the second payment keeps the first refund in the order log and flashes the error.
+- Mutations confirmed caught: key replaced with `System.unique_integer()` (2 tests fail); dropping `record_refund/1` from `refund_from/4` (partial-failure test fails).
+- No app-code bug: `refund_from/4` already records each refund before moving to the next payment.

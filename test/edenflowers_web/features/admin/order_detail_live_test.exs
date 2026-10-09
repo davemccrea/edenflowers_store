@@ -249,7 +249,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       "pi_new" -> {:ok, [%{id: "re_pending", amount: 1000, status: "pending"}]}
       "pi_old" -> {:ok, []}
     end)
-    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, _key ->
+    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, key ->
+      assert key == "refund-#{order.id}-2-#{payment_intent_id}"
       send(test_pid, {:refunded, payment_intent_id, cents})
       {:ok, %{id: "re_#{payment_intent_id}", payment_intent: payment_intent_id, amount: cents, status: "succeeded"}}
     end)
@@ -261,6 +262,72 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     # The pending €10 on pi_new is already on its way, so it comes off what's owed.
     assert_received {:refunded, "pi_new", 2000}
     assert_received {:refunded, "pi_old", rest} when rest == to_refund - 1000 - 2000
+  end
+
+  test "two refund clicks send the same idempotency key" do
+    order = placed_order()
+    generate(payment(order_id: order.id, amount: Decimal.new("200.00"), payment_intent_id: "pi_paid"))
+    test_pid = self()
+
+    # Stripe hasn't listed the first refund yet when the second click arrives.
+    Edenflowers.External.StripeAPI.Mock
+    |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
+    |> Mox.expect(:create_refund, 2, fn "pi_paid", cents, key ->
+      send(test_pid, {:refund_key, key})
+      {:ok, %{id: "re_pending", payment_intent: "pi_paid", amount: cents, status: "pending"}}
+    end)
+
+    assert {:ok, [_pending]} = Edenflowers.Payments.refund_balance(order)
+    assert {:ok, [_pending]} = Edenflowers.Payments.refund_balance(order)
+
+    assert_received {:refund_key, first_key}
+    assert_received {:refund_key, second_key}
+    assert first_key == "refund-#{order.id}-1-pi_paid"
+    assert second_key == first_key
+  end
+
+  test "a create_refund error on the second payment keeps the first refund recorded and reports the error", %{
+    conn: conn
+  } do
+    order = placed_order()
+
+    generate(
+      payment(
+        order_id: order.id,
+        amount: Decimal.new("200.00"),
+        payment_intent_id: "pi_old",
+        paid_at: ~U[2026-06-01 10:00:00Z]
+      )
+    )
+
+    generate(
+      payment(
+        order_id: order.id,
+        amount: Decimal.new("30.00"),
+        payment_intent_id: "pi_new",
+        paid_at: ~U[2026-06-02 10:00:00Z]
+      )
+    )
+
+    Edenflowers.External.StripeAPI.Mock
+    |> Mox.stub(:list_refunds, fn _payment_intent_id -> {:ok, []} end)
+    |> Mox.expect(:create_refund, fn "pi_new", cents, _key ->
+      {:ok, %{id: "re_pi_new", payment_intent: "pi_new", amount: cents, status: "succeeded"}}
+    end)
+    |> Mox.expect(:create_refund, fn "pi_old", _cents, _key -> {:error, :card_declined} end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    {html, log} =
+      ExUnit.CaptureLog.with_log(fn ->
+        view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click()
+      end)
+
+    assert html =~ "Could not refund through Stripe."
+    assert log =~ ":card_declined"
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert has_element?(view, "#order-log", "Refunded €30.00 · Online (Stripe)")
   end
 
   test "doesn't refund again what Stripe already has refunds for", %{conn: conn} do
