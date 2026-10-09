@@ -4768,7 +4768,7 @@ msgstr "Rabatten gäller din första leverans."
 msgid "The card comes with your first delivery."
 msgstr "Kortet kommer med din första leverans."
 
-#: lib/edenflowers_web/features/store/product_live.ex:365
+#: lib/edenflowers_web/features/store/product_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Det gick inte att lägga till i varukorgen."
@@ -4852,11 +4852,6 @@ msgstr "%{brand} •••• %{last4}, giltigt till %{expiry}"
 msgid "%{price} per delivery"
 msgstr "%{price} per leverans"
 
-#: lib/edenflowers_web/features/store/product_live.ex:350
-#, elixir-autogen, elixir-format
-msgid "%{size}, bought once"
-msgstr "%{size}, köpt en gång"
-
 #: lib/edenflowers_web/features/account/account_live.ex:1025
 #, elixir-autogen, elixir-format
 msgid "Already booked and being prepared."
@@ -4876,11 +4871,6 @@ msgstr "Avslutad %{date}."
 #, elixir-autogen, elixir-format
 msgid "Change"
 msgstr "Ändra"
-
-#: lib/edenflowers_web/features/store/product_live.ex:340
-#, elixir-autogen, elixir-format
-msgid "Changes your cart from %{from} to %{to}."
-msgstr "Ändrar din varukorg från %{from} till %{to}."
 
 #: lib/edenflowers_web/features/account/account_live.ex:796
 #, elixir-autogen, elixir-format
@@ -4974,7 +4964,7 @@ msgstr "Pausa den"
 msgid "Plan"
 msgstr "Plan"
 
-#: lib/edenflowers_web/features/store/product_live.ex:347
+#: lib/edenflowers_web/features/store/product_live.ex:346
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Ersätter de %{count} buketterna (%{amount}) i din varukorg."

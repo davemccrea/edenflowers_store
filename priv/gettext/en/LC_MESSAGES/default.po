@@ -4768,7 +4768,7 @@ msgstr ""
 msgid "The card comes with your first delivery."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:365
+#: lib/edenflowers_web/features/store/product_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr ""
@@ -4852,11 +4852,6 @@ msgstr ""
 msgid "%{price} per delivery"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:350
-#, elixir-autogen, elixir-format
-msgid "%{size}, bought once"
-msgstr ""
-
 #: lib/edenflowers_web/features/account/account_live.ex:1025
 #, elixir-autogen, elixir-format
 msgid "Already booked and being prepared."
@@ -4875,11 +4870,6 @@ msgstr ""
 #: lib/edenflowers_web/features/account/account_live.ex:909
 #, elixir-autogen, elixir-format
 msgid "Change"
-msgstr ""
-
-#: lib/edenflowers_web/features/store/product_live.ex:340
-#, elixir-autogen, elixir-format
-msgid "Changes your cart from %{from} to %{to}."
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:796
@@ -4974,7 +4964,7 @@ msgstr ""
 msgid "Plan"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:347
+#: lib/edenflowers_web/features/store/product_live.ex:346
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr ""

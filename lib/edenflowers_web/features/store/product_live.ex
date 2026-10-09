@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
       assign(assigns,
         in_cart?: in_cart?(assigns),
         replaces_cart?: replaces_cart?,
-        cart_note: replaces_cart? && replace_note(lines, assigns),
+        cart_note: replaces_cart? && replace_note(lines),
         blocked?: lines != [] and not replaces_cart? and (subscribe? or Enum.any?(lines, & &1.interval_weeks))
       )
 
@@ -335,23 +335,16 @@ defmodule EdenflowersWeb.Store.ProductLive do
     end
   end
 
-  # Says what the add takes out of the cart, so nothing goes silently.
-  defp replace_note([%{quantity: 1} = line], assigns) do
-    ~t"Changes your cart from #{from = line_label(line.variant_size, line.interval_weeks)} to #{to = line_label(assigns.selected_variant.size, assigns.subscribe? && String.to_integer(assigns.interval_weeks))}."
-  end
+  # Swapping a single bouquet is plain from the "Update cart" button; replacing
+  # several is spelled out so nothing goes silently.
+  defp replace_note([%{quantity: 1}]), do: nil
 
-  defp replace_note(lines, _assigns) do
+  defp replace_note(lines) do
     count = Enum.sum_by(lines, & &1.quantity)
     amount = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&2, &1.subtotal))
 
     ~t"Replaces the #{count = count} bouquets (#{amount = Edenflowers.Format.currency(amount, Edenflowers.Format.locale())}) in your cart."
   end
-
-  defp line_label(size, nil), do: ~t"#{size = AdminComponents.variant_size_label(size)}, bought once"
-  defp line_label(size, false), do: line_label(size, nil)
-
-  defp line_label(size, weeks),
-    do: "#{AdminComponents.variant_size_label(size)}, #{String.downcase(Fields.interval_label(weeks))}"
 
   defp has_subscription?(nil), do: false
 

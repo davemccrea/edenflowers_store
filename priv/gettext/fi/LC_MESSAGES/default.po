@@ -4768,7 +4768,7 @@ msgstr "Alennus koskee ensimmäistä toimitustasi."
 msgid "The card comes with your first delivery."
 msgstr "Kortti tulee ensimmäisen toimituksesi mukana."
 
-#: lib/edenflowers_web/features/store/product_live.ex:365
+#: lib/edenflowers_web/features/store/product_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Tätä ei voitu lisätä ostoskoriin."
@@ -4852,11 +4852,6 @@ msgstr "%{brand} •••• %{last4}, voimassa %{expiry}"
 msgid "%{price} per delivery"
 msgstr "%{price} per toimitus"
 
-#: lib/edenflowers_web/features/store/product_live.ex:350
-#, elixir-autogen, elixir-format
-msgid "%{size}, bought once"
-msgstr "%{size}, kertaostos"
-
 #: lib/edenflowers_web/features/account/account_live.ex:1025
 #, elixir-autogen, elixir-format
 msgid "Already booked and being prepared."
@@ -4876,11 +4871,6 @@ msgstr "Peruttu %{date}."
 #, elixir-autogen, elixir-format
 msgid "Change"
 msgstr "Muuta"
-
-#: lib/edenflowers_web/features/store/product_live.ex:340
-#, elixir-autogen, elixir-format
-msgid "Changes your cart from %{from} to %{to}."
-msgstr "Muuttaa ostoskorisi: %{from} → %{to}."
 
 #: lib/edenflowers_web/features/account/account_live.ex:796
 #, elixir-autogen, elixir-format
@@ -4974,7 +4964,7 @@ msgstr "Keskeytä se"
 msgid "Plan"
 msgstr "Tilaus"
 
-#: lib/edenflowers_web/features/store/product_live.ex:347
+#: lib/edenflowers_web/features/store/product_live.ex:346
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Korvaa ostoskorisi %{count} kimppua (%{amount})."
