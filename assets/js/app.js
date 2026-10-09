@@ -145,6 +145,44 @@ document.addEventListener("click", (event) => {
   if (event.target.matches?.("dialog.slide-drawer")) closeDrawer(event.target);
 });
 
+// Dragging a drawer back toward its edge closes it once it passes a third of
+// its width or is flicked. Vertical drags stay scrolls (touch-action: pan-y).
+document.addEventListener("pointerdown", (down) => {
+  if (down.pointerType === "mouse") return;
+  const dialog = down.target.closest?.("dialog.slide-drawer");
+  if (!dialog?.open) return;
+
+  const direction = dialog.classList.contains("slide-drawer--left") ? -1 : 1;
+  let offset = 0;
+  const listening = new AbortController();
+
+  const move = (event) => {
+    if (event.pointerId !== down.pointerId) return;
+    offset = Math.max(0, (event.clientX - down.clientX) * direction);
+    dialog.style.transition = "none";
+    dialog.style.translate = `${offset * direction}px 0`;
+  };
+
+  const end = (event) => {
+    if (event.pointerId !== down.pointerId) return;
+    listening.abort();
+
+    const velocity = offset / (event.timeStamp - down.timeStamp);
+    const swiped = offset > dialog.offsetWidth / 3 || velocity > 0.5;
+
+    // Clearing both in one go lets the CSS transition carry the drawer from
+    // where the finger left it, either out or back into place.
+    dialog.style.removeProperty("transition");
+    dialog.style.removeProperty("translate");
+    if (event.type === "pointerup" && swiped) closeDrawer(dialog);
+  };
+
+  const options = { signal: listening.signal };
+  window.addEventListener("pointermove", move, options);
+  window.addEventListener("pointerup", end, options);
+  window.addEventListener("pointercancel", end, options);
+});
+
 topbar.config({
   barColors: { 0: "oklch(36.84% 0.0478 156.76)" },
   shadowColor: "rgba(0, 0, 0, .3)",
