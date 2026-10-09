@@ -9,51 +9,45 @@ defmodule EdenflowersWeb.Layouts do
 
   attr :id, :string, required: true
   attr :current_path, :string, required: true
-  attr :placement, :string, default: "top", values: ~w(top bottom)
   attr :class, :any, default: nil
   slot :inner_block, required: true
 
   def locale_picker(assigns) do
+    current_language = Localize.get_locale().language |> to_string()
+
     locales =
       for code <- Edenflowers.Locales.all() do
         language_code = code |> String.split("-") |> hd()
         name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
-        {code, String.capitalize(name)}
+        {code, String.capitalize(name), language_code == current_language}
       end
 
-    position_area =
-      case assigns.placement do
-        "bottom" -> "bottom span-left"
-        "top" -> "top span-left"
-      end
+    assigns = assign(assigns, :locales, locales)
 
-    assigns =
-      assigns
-      |> assign(:locales, locales)
-      |> assign(:anchor_name, "--#{assigns.id}")
-      |> assign(:position_area, position_area)
-
+    # A transparent native <select> laid over the slot, so the slot is what
+    # shows and the browser's own picker is what opens. The focus outline is
+    # in layout.css (.locale-picker).
     ~H"""
-    <button
-      type="button"
-      popovertarget={@id}
-      style={"anchor-name: #{@anchor_name}"}
-      class={["bg-transparent p-0", @class]}
-    >
-      {render_slot(@inner_block)}
-    </button>
-    <ul
-      id={@id}
-      popover
-      style={"position-anchor: #{@anchor_name}; position-area: #{@position_area};"}
-      class="dropdown menu bg-base-100 border-base-300 border p-1 shadow"
-    >
-      <li :for={{code, name} <- @locales}>
-        <.link href={~p"/locale/#{code}?redirect_to=#{@current_path}"}>
+    <span class={["locale-picker group relative inline-block", @class]}>
+      <span aria-hidden="true">{render_slot(@inner_block)}</span>
+      <select
+        id={@id}
+        aria-label={~t"Language"}
+        onpointerdown="this.dataset.pointer = ''"
+        onkeydown="delete this.dataset.pointer"
+        onblur="delete this.dataset.pointer"
+        onchange="this.blur(); window.location.href = this.value"
+        class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      >
+        <option
+          :for={{code, name, current?} <- @locales}
+          value={~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          selected={current?}
+        >
           {name}
-        </.link>
-      </li>
-    </ul>
+        </option>
+      </select>
+    </span>
     """
   end
 
@@ -607,7 +601,7 @@ defmodule EdenflowersWeb.Layouts do
               </.link>
 
               <%!-- Below xl the full language name crowds the logo, so show the short code instead --%>
-              <.locale_picker id="locale-picker-header" placement="bottom" current_path={@current_path}>
+              <.locale_picker id="locale-picker-header" current_path={@current_path}>
                 <span class="group flex h-10 cursor-pointer items-center gap-1 px-1 xl:gap-2 xl:px-0">
                   <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
                   <span

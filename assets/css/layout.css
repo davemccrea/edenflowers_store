@@ -213,3 +213,11 @@ html:has(dialog.slide-drawer:modal) {
     }
   }
 }
+
+/* Chrome counts a mouse click on a <select> as :focus-visible, so the
+   locale picker's select sets data-pointer on click (cleared on any key
+   press or blur) and only keyboard focus outlines the visible trigger. */
+.locale-picker:has(select:focus:not([data-pointer])) {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
