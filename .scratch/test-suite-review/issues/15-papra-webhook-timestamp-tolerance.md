@@ -1,6 +1,6 @@
 # Papra webhook rejects stale timestamps
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,8 @@ Status: ready-for-agent
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- `PapraWebhook` now rejects deliveries whose `webhook-timestamp` is more than 5 minutes from now in either direction, or not an integer, with the same 401 as a bad signature.
+- Tests cover a stale, a future and a fresh (4 minutes old) delivery; the test helper now signs with the current time by default.
