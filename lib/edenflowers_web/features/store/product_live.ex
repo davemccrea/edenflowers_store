@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
-     |> assign(subscribe?: if(cart_line, do: cart_line.interval_weeks != nil, else: product.subscribable))
+     |> assign(subscribe?: if(cart_line, do: cart_line.interval_weeks != nil, else: false))
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
