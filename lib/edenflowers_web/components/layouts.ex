@@ -51,6 +51,22 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
+  attr :current_path, :string, required: true
+  attr :current_locale, :string, required: true
+
+  defp footer_locale_picker(assigns) do
+    ~H"""
+    <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+      <span class="group inline-flex cursor-pointer items-center gap-1">
+        <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+        <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+          {@current_locale}
+        </span>
+      </span>
+    </.locale_picker>
+    """
+  end
+
   defp sign_in_href(current_path) do
     case EdenflowersWeb.Auth.ReturnTo.safe_path(current_path) do
       nil -> ~p"/sign-in"
@@ -135,14 +151,7 @@ defmodule EdenflowersWeb.Layouts do
       </main>
 
       <footer class="py-8 text-center">
-        <.locale_picker id="locale-picker-footer" current_path={@current_path}>
-          <span class="group inline-flex cursor-pointer items-center gap-1">
-            <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-              {@current_locale}
-            </span>
-          </span>
-        </.locale_picker>
+        <.footer_locale_picker current_path={@current_path} current_locale={@current_locale} />
       </footer>
     </div>
     """
@@ -731,14 +740,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <div class="container">
         <div class="flex flex-col items-center gap-3 py-6">
-          <.locale_picker id="locale-picker-footer" current_path={@current_path}>
-            <span class="group inline-flex cursor-pointer items-center gap-1">
-              <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-              <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
-                {@current_locale}
-              </span>
-            </span>
-          </.locale_picker>
+          <.footer_locale_picker current_path={@current_path} current_locale={@current_locale} />
 
           <span class="text-xs">
             © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • {~t"Business ID:"}
