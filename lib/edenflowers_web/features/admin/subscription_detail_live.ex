@@ -71,23 +71,16 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             >
               {~t"Resume"}
             </.button>
-            <div :if={@subscription.state != :cancelled} class="dropdown sm:dropdown-end">
-              <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
-                <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
-              </.icon_button>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-44 border p-1 shadow">
-                <li>
-                  <button
-                    type="button"
-                    phx-click="cancel"
-                    data-confirm={~t"Cancel this subscription? This can't be undone."}
-                    class="text-error"
-                  >
-                    {~t"Cancel subscription"}
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <.actions_menu :if={@subscription.state != :cancelled} id="subscription-actions">
+              <.actions_menu_button
+                menu="subscription-actions"
+                phx-click="cancel"
+                data-confirm={~t"Cancel this subscription? This can't be undone."}
+                class="text-error"
+              >
+                {~t"Cancel subscription"}
+              </.actions_menu_button>
+            </.actions_menu>
           </:actions>
         </.admin_page_header>
 

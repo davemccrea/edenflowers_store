@@ -164,23 +164,16 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       <.admin_page width="narrow">
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:actions :if={@form.source.type == :update}>
-            <div class="dropdown sm:dropdown-end">
-              <.icon_button tabindex="0" size="sm" aria_label={~t"More actions"}>
-                <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
-              </.icon_button>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 border-base-300 z-10 mt-2 w-44 border p-1 shadow">
-                <li>
-                  <button
-                    type="button"
-                    phx-click="delete"
-                    data-confirm={~t"Delete this promotion? This can't be undone."}
-                    class="text-error"
-                  >
-                    {~t"Delete"}
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <.actions_menu id="promotion-actions">
+              <.actions_menu_button
+                menu="promotion-actions"
+                phx-click="delete"
+                data-confirm={~t"Delete this promotion? This can't be undone."}
+                class="text-error"
+              >
+                {~t"Delete"}
+              </.actions_menu_button>
+            </.actions_menu>
           </:actions>
         </.admin_page_header>
 

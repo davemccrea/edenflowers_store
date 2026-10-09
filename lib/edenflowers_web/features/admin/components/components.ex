@@ -62,6 +62,53 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :id, :string, required: true, doc: "the menu's id, which its items name to close it"
+  attr :class, :any, default: "w-44", doc: "the menu's width"
+  slot :inner_block, required: true, doc: "`actions_menu_button`s, links or other `<li>` items"
+
+  @doc """
+  A page's ⋯ "More actions" menu.
+
+  A popover anchored to its trigger rather than a focus dropdown: on phones the
+  header actions wrap, so the trigger can land anywhere along the row, and
+  `flip-inline` opens the menu towards whichever side has room. The popover
+  sits in the top layer and closes on Esc or a click outside.
+  """
+  def actions_menu(assigns) do
+    ~H"""
+    <.icon_button popovertarget={@id} style={"anchor-name: --#{@id}"} size="sm" aria_label={~t"More actions"}>
+      <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+    </.icon_button>
+    <ul
+      id={@id}
+      popover
+      style={"position-anchor: --#{@id}"}
+      class={["dropdown dropdown-end menu bg-base-100 border-base-300 [position-try-fallbacks:flip-inline] mt-2 border p-1 shadow", @class]}
+    >
+      {render_slot(@inner_block)}
+    </ul>
+    """
+  end
+
+  attr :menu, :string, required: true, doc: "id of the `actions_menu` it closes"
+  attr :class, :any, default: nil
+  attr :rest, :global
+  slot :inner_block, required: true
+
+  @doc """
+  An item in an `actions_menu` that closes the menu when chosen. A declined
+  `data-confirm` cancels the click, so the menu stays open.
+  """
+  def actions_menu_button(assigns) do
+    ~H"""
+    <li>
+      <button type="button" popovertarget={@menu} popovertargetaction="hide" class={@class} {@rest}>
+        {render_slot(@inner_block)}
+      </button>
+    </li>
+    """
+  end
+
   attr :id, :string, required: true
   attr :target, :string, required: true, doc: "selector of the element whose text or value is copied"
   attr :label, :string, required: true
