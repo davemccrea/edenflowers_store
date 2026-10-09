@@ -1,6 +1,6 @@
 # Signed-in customers are refused on catalogue/pricing writes and admin-only Order actions
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,9 @@ The policy tests only try `actor: nil`. Add a signed-in non-admin actor (`genera
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- `policies_test.exs` now tries a signed-in customer (`admin_user(admin: false)`) on create, update and destroy for Product, ProductVariant, ProductCategory, Promotion, TaxRate, FulfillmentOption and Course. It also tries edit, cancel, in-person payment and payment link on the customer's own placed Order. All were already refused, so no policy changed.
+- Confirmed: changing Product's `forbid_if always()` to `authorize_if actor_present()` fails the three new Product tests.
+- The edit test sends valid params, because `:edit` validations otherwise fail with Invalid before the policy runs.
