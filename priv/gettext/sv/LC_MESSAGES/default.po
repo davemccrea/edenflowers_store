@@ -3972,7 +3972,7 @@ msgstr "Obetald"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "You can pay online here, by card or MobilePay:"
-msgstr "Du kan betala online här, med kort eller MobilePay:"
+msgstr "Du kan betala via länken med kort eller MobilePay:"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:15
 #, elixir-autogen, elixir-format
@@ -4604,12 +4604,12 @@ msgstr "Lagd, men det sparade kortet nekades"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Your flowers are still coming: delivery on %{date} to %{address}."
-msgstr "Dina blommor kommer ändå: leverans %{date} till %{address}."
+msgstr "Jag levererar ändå dina blommor %{date} till %{address}."
 
 #: lib/edenflowers/email/templates/payment_failed.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Your subscription is on hold until this is paid, and then carries on as before."
-msgstr "Din prenumeration vilar tills detta är betalt och fortsätter sedan som tidigare."
+msgstr "Din prenumeration är vilande tills detta är betalt och fortsätter sedan som vanligt."
 
 #: lib/edenflowers_web/features/account/account_live.ex:990
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:85
@@ -5348,7 +5348,7 @@ msgstr "Därefter"
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:18
 #, elixir-autogen, elixir-format
 msgid "You can pause, change the size or how often, update your payment card or cancel from your account:"
-msgstr "Du kan pausa, ändra storlek eller hur ofta, byta betalkort eller avsluta från ditt konto:"
+msgstr "På ditt konto kan du pausa, ändra storlek eller intervall, byta betalkort eller avsluta prenumerationen:"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:7
 #, elixir-autogen, elixir-format
@@ -5358,12 +5358,12 @@ msgstr "Första avhämtningen"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "I tried to charge your saved card for your next subscription order, but the payment didn't go through."
-msgstr "Jag försökte debitera ditt sparade kort för nästa beställning i din prenumeration, men betalningen gick inte igenom."
+msgstr "Jag försökte ta betalt för nästa beställning i din prenumeration med ditt sparade kort, men betalningen gick inte igenom."
 
 #: lib/edenflowers/email.ex:66
 #, elixir-autogen, elixir-format
 msgid "Payment needed for your subscription order %{order_order_reference}"
-msgstr "Betalning behövs för beställningen %{order_order_reference} i din prenumeration"
+msgstr "Beställning %{order_order_reference} i din prenumeration väntar på betalning"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:11
 #, elixir-autogen, elixir-format
@@ -5373,14 +5373,14 @@ msgstr "Rabatten gäller din första beställning."
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
 #, elixir-autogen, elixir-format
 msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each delivery."
-msgstr "Kvittot för den första beställningen finns i ett separat mejl. Därefter debiterar jag ditt sparade kort några dagar före varje leverans."
+msgstr "Kvittot för den första beställningen kommer i ett separat mejl. Framöver drar jag betalningen från ditt sparade kort några dagar före varje leverans."
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
 #, elixir-autogen, elixir-format
 msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each pickup."
-msgstr "Kvittot för den första beställningen finns i ett separat mejl. Därefter debiterar jag ditt sparade kort några dagar före varje avhämtning."
+msgstr "Kvittot för den första beställningen kommer i ett separat mejl. Framöver drar jag betalningen från ditt sparade kort några dagar före varje avhämtning."
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:14
 #, elixir-autogen, elixir-format
 msgid "Your card message comes with the first order."
-msgstr "Ditt kortmeddelande kommer med den första beställningen."
+msgstr "Kortet med ditt meddelande följer med den första beställningen."
