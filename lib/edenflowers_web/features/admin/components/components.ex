@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
 
-  def count_badge(assigns) do
+  defp count_badge(assigns) do
     ~H"""
     <span class={["rounded-full px-2 py-0.5 text-sm font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
       {@count}
@@ -200,6 +200,24 @@ defmodule EdenflowersWeb.Admin.Components do
   def subscription_badge(assigns) do
     ~H"""
     <.badge tone={:tag} icon="hero-arrow-path">{~t"Subscription"}</.badge>
+    """
+  end
+
+  attr :email, :string, required: true
+
+  @doc "A customer's email address, linked to a Fastmail search for their correspondence."
+  def email_link(assigns) do
+    ~H"""
+    <a
+      href={"https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}
+      target="_blank"
+      rel="noopener"
+      class="link link-primary inline-flex items-center gap-1.5"
+      title={~t"Search Fastmail for this address"}
+    >
+      <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
+      <span class="break-all">{@email}</span>
+    </a>
     """
   end
 

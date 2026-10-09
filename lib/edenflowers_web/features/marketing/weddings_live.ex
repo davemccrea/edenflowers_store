@@ -3,8 +3,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
-  @thumb_width 480
-
   # Photographers without a known website are credited by name only.
   @photographer_sites %{
     "Björn Yrjans" => "https://www.bjornyrjans.com/",
@@ -25,7 +23,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
          ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings.",
        og_image: image_url("local:///wedding/daniela_streng_3.jpg", 1200, 630)
      )
-     |> assign(gallery: gallery(), thumb_width: @thumb_width, enquiry_mailto: enquiry_mailto())
+     |> assign(gallery: gallery(), enquiry_mailto: enquiry_mailto())
      |> assign(
        personal_flowers: personal_flowers(),
        decorations: decorations(),
@@ -78,25 +76,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             class="columns-2 gap-3 md:columns-3 xl:columns-4"
           >
             <figure :for={photo <- @gallery} class="mb-6 break-inside-avoid">
-              <a
-                href={image_url(photo.src, photo.width, photo.height)}
-                data-pswp-width={photo.width}
-                data-pswp-height={photo.height}
-                target="_blank"
-                rel="noreferrer"
-                class="block"
-              >
-                <.image
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={@thumb_width}
-                  height={thumb_height(photo)}
-                  quality={80}
-                  sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
-                  class="w-full"
-                />
-                <span class="sr-only">{~t"(opens a larger view)"}</span>
-              </a>
+              <.gallery_photo photo={photo} />
               <figcaption class="text-cream-content/80 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
             </figure>
           </div>
@@ -507,6 +487,4 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     <span :if={!@url}>{@name}</span>
     """
   end
-
-  defp thumb_height(photo), do: round(@thumb_width * photo.height / photo.width)
 end

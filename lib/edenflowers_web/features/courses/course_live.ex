@@ -12,8 +12,6 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
-  defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
-
   def mount(%{"id" => id}, _session, socket) do
     case load_course(id) do
       {:ok, course} ->
@@ -160,27 +158,17 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 {~t"Change booking"}
               </button>
 
-              <form
+              <.stripe_form
                 :if={@client_secret}
                 id="course-payment-form"
-                phx-hook="Stripe"
                 phx-submit="pay"
-                data-client-secret={@client_secret}
-                data-publishable-key={stripe_publishable_key()}
-                data-return-url={url(~p"/courses/bookings/#{@registration.id}")}
-                data-billing-name={@registration.name}
-                data-billing-email={@registration.email}
-                data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
-                data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
-                class="flex flex-col gap-4"
+                client_secret={@client_secret}
+                return_url={url(~p"/courses/bookings/#{@registration.id}")}
+                billing_name={@registration.name}
+                billing_email={@registration.email}
               >
-                <div phx-update="ignore" id="payment-element"></div>
-                <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
-
-                <.form_button disabled={true} id="payment-button">
-                  {~t"Pay"} {Format.currency(@registration.amount, @locale)}
-                </.form_button>
-              </form>
+                {~t"Pay"} {Format.currency(@registration.amount, @locale)}
+              </.stripe_form>
             </section>
           </div>
         </div>

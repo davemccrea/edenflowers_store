@@ -18,8 +18,6 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
-  defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
-
   # `@order` is taken by the PutOrder hook (the cart), hence `@shown_order`.
   def mount(%{"token" => token} = params, _session, socket) do
     case Orders.get_order_by_payment_link_token(token, authorize?: false) do
@@ -168,28 +166,18 @@ defmodule EdenflowersWeb.Checkout.PayLive do
           </section>
 
           <section :if={@shown_order.payable? and not @returned_from_stripe?} class="mt-10" aria-label={~t"Payment"}>
-            <form
+            <.stripe_form
               :if={@client_secret}
               id="pay-form"
-              phx-hook="Stripe"
               phx-submit="pay"
-              data-client-secret={@client_secret}
-              data-publishable-key={stripe_publishable_key()}
-              data-return-url={url(~p"/pay/#{@token}")}
-              data-billing-name={@shown_order.customer_name}
-              data-billing-email={@shown_order.customer_email}
-              data-billing-phone={@shown_order.customer_phone_number}
-              data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
-              data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
-              class="flex flex-col gap-4"
+              client_secret={@client_secret}
+              return_url={url(~p"/pay/#{@token}")}
+              billing_name={@shown_order.customer_name}
+              billing_email={@shown_order.customer_email}
+              billing_phone={@shown_order.customer_phone_number}
             >
-              <div phx-update="ignore" id="payment-element"></div>
-              <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
-
-              <.form_button disabled={true} id="payment-button">
-                {~t"Pay"} {Format.currency(@shown_order.balance, @locale)}
-              </.form_button>
-            </form>
+              {~t"Pay"} {Format.currency(@shown_order.balance, @locale)}
+            </.stripe_form>
 
             <p :if={@payment_unavailable?} class="text-error" data-testid="stripe-unavailable">
               {~t"Payment is temporarily unavailable. Please try again in a moment."}

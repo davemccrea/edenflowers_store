@@ -16,8 +16,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
-  defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
-
   def mount(%{"id" => id} = params, _session, socket) do
     user = socket.assigns.current_user
 
@@ -77,26 +75,18 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
         </p>
 
         <section class="mt-10" aria-label={~t"Card"}>
-          <form
+          <.stripe_form
             :if={@client_secret}
             id="card-form"
-            phx-hook="Stripe"
             phx-submit="save_card"
-            data-intent="setup"
-            data-client-secret={@client_secret}
-            data-publishable-key={stripe_publishable_key()}
-            data-return-url={url(~p"/account/subscriptions/#{@subscription.id}/card")}
-            data-billing-name={@current_user.name}
-            data-billing-email={to_string(@current_user.email)}
-            data-stripe-loading={JS.set_attribute({"disabled", "true"}, to: "#payment-button")}
-            data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button")}
-            class="flex flex-col gap-4"
+            intent="setup"
+            client_secret={@client_secret}
+            return_url={url(~p"/account/subscriptions/#{@subscription.id}/card")}
+            billing_name={@current_user.name}
+            billing_email={to_string(@current_user.email)}
           >
-            <div phx-update="ignore" id="payment-element"></div>
-            <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
-
-            <.form_button disabled={true} id="payment-button">{~t"Save card"}</.form_button>
-          </form>
+            {~t"Save card"}
+          </.stripe_form>
 
           <div :if={@payment_unavailable?} data-testid="stripe-unavailable">
             <p class="text-error">{~t"Payment is temporarily unavailable. Please try again in a moment."}</p>
