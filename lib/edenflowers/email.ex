@@ -63,7 +63,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Payment needed for your subscription delivery #{order.order_reference}")
+      |> subject(~t"Payment needed for your subscription order #{order.order_reference}")
       |> text_body(
         Templates.payment_failed(%{
           order: order,
@@ -77,8 +77,9 @@ defmodule Edenflowers.Email do
 
   @doc """
   What a customer is sent once their Subscription is started: what comes and
-  how often, the next date, and where to change it. The first delivery's
-  receipt goes separately. Expects `:product_variant` and `user: [:first_name]` loaded.
+  how often, the first two dates, and where to change it. The first order's
+  receipt goes separately. Expects `:product_variant`, `:fulfillment_option`,
+  `:first_delivery_date` and `user: [:first_name]` loaded.
   """
   def subscription_set_up(subscription) do
     EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
@@ -90,6 +91,7 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.subscription_set_up(%{
           subscription: subscription,
+          pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
           size: EdenflowersWeb.Admin.Components.variant_size_label(subscription.product_variant.size),
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
           account_url: EdenflowersWeb.Endpoint.url() <> "/account",
