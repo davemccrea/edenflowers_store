@@ -1,6 +1,6 @@
 # Review the test suite
 
-Status: ready-for-agent
+Status: resolved
 
 Review only. Don't edit any files. Write the report under `## Comments` below.
 
@@ -132,3 +132,7 @@ Aside (code, not tests): `PapraWebhook` (`lib/edenflowers_web/plugs/papra_webhoo
 - **Drop:** `Edenflowers.Repo.delete_all(Oban.Job)` in the setup of `stripe_handler_test.exs:13`. The test is async with a sandbox, so there is nothing to clear.
 - **Strengthen, or delete as redundant:** `stripe_handler_test.exs:406` ("of a payment the shop doesn't know is ignored") only asserts `:ok`. Assert that no Payment row was written.
 - **Already gone:** the stray `test/drawer_browser_check.html` no longer exists.
+
+### Follow-up — 2026-10-09 (agent)
+
+All findings split into tickets 02–15 and resolved. No app-code bugs turned up; the gaps were in the tests. Suite: 1021 tests, 0 failures.
