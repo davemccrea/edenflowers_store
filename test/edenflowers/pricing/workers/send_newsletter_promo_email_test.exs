@@ -1,5 +1,5 @@
 defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Swoosh.TestAssertions
   import Edenflowers.Actors
 

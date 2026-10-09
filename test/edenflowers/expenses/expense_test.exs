@@ -1,5 +1,5 @@
 defmodule Edenflowers.Expenses.ExpenseTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
 
   alias Edenflowers.Expenses.Expense
 

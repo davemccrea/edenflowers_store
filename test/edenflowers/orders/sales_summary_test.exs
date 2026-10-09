@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.SalesSummaryTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
 
   import Generator
 

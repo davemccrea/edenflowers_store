@@ -1,6 +1,6 @@
 # Run the needlessly synchronous test files async
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,9 @@ About 16 test files run synchronously even though they use no DDL and no global 
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- Made 17 test files `async: true`, including `papra_handler_test`: its Oban jobs live in the per-test sandbox, so it had no real reason to stay sync.
+- Four files stay sync, each with a one-line reason: `payments_test` and `stripe_handler_retry_test` (ALTER TABLE), and the two error-tracker tests (`Application.put_env`).
+- The suite passes on seeds 1, 4242, 98765 and 31337. The sync part of the run went from 5.2s to about 1.5s.

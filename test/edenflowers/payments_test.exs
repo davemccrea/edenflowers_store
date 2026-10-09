@@ -1,4 +1,5 @@
 defmodule Edenflowers.PaymentsTest do
+  # Sync because a test adds a CHECK (false) constraint to oban_jobs, and ALTER TABLE locks it for every test
   use Edenflowers.DataCase
 
   import ExUnit.CaptureLog

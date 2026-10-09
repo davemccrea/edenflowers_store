@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Generator
   alias EdenflowersWeb.Admin.CalendarViewModel
   alias Edenflowers.Fulfillment.Weekday

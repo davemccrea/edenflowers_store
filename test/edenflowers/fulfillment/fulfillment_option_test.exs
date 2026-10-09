@@ -1,5 +1,5 @@
 defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: true
   import Generator
   import Mox
   alias Edenflowers.Fulfillment
