@@ -392,15 +392,32 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       }
     end
 
+    defp refunds(order) do
+      Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+      |> Enum.filter(&Decimal.negative?(&1.amount))
+    end
+
     test "is recorded against the order once it succeeds, only once", %{order: order, payment_intent_id: pi} do
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
+      assert [] = refunds(order)
+
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
 
-      payments = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
-      assert [refund] = Enum.filter(payments, &Decimal.negative?(&1.amount))
+      assert [refund] = refunds(order)
       assert Decimal.equal?(refund.amount, "-5.00")
       assert refund.stripe_refund_id == "re_1"
+    end
+
+    test "is never recorded when a pending refund fails", %{order: order, payment_intent_id: pi} do
+      balance_before = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance]).balance
+
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
+      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "failed"))
+
+      assert [] = refunds(order)
+      balance_after = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance]).balance
+      assert Decimal.equal?(balance_after, balance_before)
     end
 
     test "of a payment the shop doesn't know is ignored" do
