@@ -351,9 +351,8 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
-    # Read-only table feed for the /admin/orders Cinder collection. Deliberately
-    # separate from :open/:completed so table-shaped loads and sorting don't leak
-    # into the dashboard/domain split.
+    # Table feed for /admin/orders, kept apart from :open so the table's loads
+    # and sorting stay out of the dashboard's read.
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
@@ -979,8 +978,6 @@ defmodule Edenflowers.Orders.Order do
     # The card a subscription cart saved, which its Subscription is started with.
     attribute :stripe_customer_id, :string
     attribute :stripe_payment_method_id, :string
-    # What Stripe actually charged. Differs from grand_total when the cart
-    # changed while payment was in flight.
     # The secret in a custom order's payment link URL. Nil when the customer
     # pays in person.
     attribute :payment_link_token, :string, sensitive?: true
@@ -994,9 +991,9 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
-    # The SHA proves what was sent without persisting the PDF — the renderer is deterministic
-    # over the placed order's snapshot columns, so a re-render should reproduce these bytes.
     attribute :receipt_emailed_at, :utc_datetime
+    # Proves what was sent without keeping the PDF: re-rendering the placed
+    # order reproduces the same bytes.
     attribute :receipt_sha256, :string
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
     attribute :delivered_emailed_at, :utc_datetime
@@ -1095,10 +1092,7 @@ defmodule Edenflowers.Orders.Order do
     # cover a nil `user_id`, hence the `if`.
     calculate :newsletter_offer_hidden?, :boolean, expr(if(customer_newsletter_offer_hidden?, true, false))
 
-    # A cart with only a card line item is presented as empty in the UI
-    # (card controls are hidden in the cart sidebar) and shouldn't keep
-    # checkout alive on its own. Treat it as effectively empty so reset
-    # logic and the mount guard agree with what the customer sees.
+    # The cart hides a lone card, so checkout treats it as empty too.
     calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0)
   end
 

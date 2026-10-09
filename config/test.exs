@@ -2,11 +2,6 @@ import Config
 config :edenflowers, token_signing_secret: "Ru1t3J1eZMoIIz6LEIYtCN9CK7SlGbKg"
 config :edenflowers, :uploads_dir, Path.join(System.tmp_dir!(), "edenflowers_test_uploads")
 
-# Configure your database
-#
-# The MIX_TEST_PARTITION environment variable can be used
-# to provide built-in test partitioning in CI environment.
-# Run `mix help test` for more information.
 if url = System.get_env("DATABASE_URL") do
   config :edenflowers, Edenflowers.Repo,
     url: url,
@@ -22,17 +17,13 @@ else
     pool_size: System.schedulers_online() * 2
 end
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
 config :edenflowers, EdenflowersWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "3Rkkz6a0U24wSHjB0e8Mp3bmn+MiJVwFQHAWQEEGBPQjw41JoepIpLj+MOgJ9t1B",
   server: false
 
-# In test we don't send emails
 config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Test
 
-# Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
 config :logger, level: :warning
@@ -41,14 +32,11 @@ config :error_tracker, enabled: false
 
 config :edenflowers, :error_alert_email, "alerts@example.com"
 
-# Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
-# Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
-# Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
 
@@ -58,14 +46,11 @@ config :ash, disable_async?: true
 
 config :phoenix_test, :endpoint, EdenflowersWeb.Endpoint
 
-# Use mock StripeAPI in tests
 config :edenflowers, :stripe_api, Edenflowers.External.StripeAPI.Mock
 config :edenflowers, :stripe_publishable_key, "pk_test_dummy"
 
-# Use mock HereAPI in tests
 config :edenflowers, :here_api, Edenflowers.External.HereAPI.Mock
 
-# Use mocks for expense capture in tests
 config :edenflowers, :papra_api, Edenflowers.External.PapraAPI.Mock
 config :edenflowers, :claude_api, Edenflowers.External.ClaudeAPI.Mock
 config :edenflowers, :papra_webhook_secret, "test-webhook-secret"

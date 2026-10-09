@@ -193,7 +193,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       authorize_if always()
     end
 
-    # Anyone can register (for the guest registration flow).
     policy action(:register) do
       authorize_if always()
     end

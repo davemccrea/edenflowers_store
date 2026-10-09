@@ -4,9 +4,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   alias AshAuthentication.Info
   alias Edenflowers.Accounts.User
 
-  # Seconds the user must wait between resend attempts. Server-side
-  # AshRateLimiter on :request_otp is the safety net (5 / 15 min); this is
-  # purely a UX brake so users don't burn through their quota.
+  # A UX brake only; AshRateLimiter on :request_otp enforces the real limit.
   @resend_cooldown_seconds 30
 
   def mount(_params, _session, socket) do
@@ -138,9 +136,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     {:noreply, socket}
   end
 
-  # The OTP itself can only be validated server-side by the sign-in action's
-  # preparation, so we always hand off to Auth.AuthController and let it flash any
-  # failure. Client-side `pattern`/`maxlength` cover the empty/short-code case.
+  # Only the sign-in action can check the code, so AuthController flashes any failure.
   def handle_event("verify", params, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.sign_in_form, params["user"] || %{})
     {:noreply, assign(socket, sign_in_form: form, trigger_action: true)}

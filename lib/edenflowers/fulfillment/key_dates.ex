@@ -17,11 +17,8 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   @typedoc "The visual decoration for a key date, returned by `lookup_for/1`."
   @type decoration :: %{icon: String.t(), colour_class: String.t()}
 
-  # `colour_class` is the Tailwind text colour applied to the heart in the
-  # calendar watermark. Each date gets its own colour so the four key dates
-  # remain distinguishable when only the heart shape is shared.
-  # Valentine's Day reads as "Friend's Day" (Ystävänpäivä) in Finland — hence
-  # the friendly green rather than the romantic red.
+  # Valentine's Day is Friend's Day (Ystävänpäivä) in Finland, hence green
+  # rather than red.
   @key_dates [
     %{name: "Valentine's Day", icon: "hero-heart", colour_class: "text-emerald-500", rule: {:fixed, 2, 14}},
     %{name: "Women's Day", icon: "hero-heart", colour_class: "text-violet-500", rule: {:fixed, 3, 8}},

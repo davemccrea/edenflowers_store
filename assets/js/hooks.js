@@ -238,10 +238,8 @@ const NAV_KEYS = [
 
 Hooks.CalendarHook = {
   mounted() {
-    // Validate required elements and attributes
     if (!this.validateRequirements()) return;
 
-    // Set initial tab index
     this.setTabIndex(this.viewDate);
 
     this.calendarGrid.addEventListener("keydown", (event) => {
@@ -308,8 +306,7 @@ Hooks.CalendarHook = {
       return;
     }
 
-    // This part is important - check if the next date is focusable by the client.
-    // If not focusable the keydown event is forwarded to and handled on the server.
+    // A date not in data-focusable-dates is the server's to move to.
     if (!this.isClientFocusable(nextDate)) {
       return this.serverFocus(key);
     }
@@ -387,13 +384,11 @@ Hooks.CalendarHook = {
    * @returns {void}
    */
   setTabIndex(nextDate = null) {
-    // Remove focus from view date
     const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
     if (viewDateEl) {
       viewDateEl.setAttribute("tabindex", "-1");
     }
 
-    // Set focus on next date
     if (nextDate) {
       const nextDateEl = this.getElement(`${this.id}-day-${nextDate}`);
       if (nextDateEl) {
@@ -407,21 +402,18 @@ Hooks.CalendarHook = {
    * @returns {Boolean} Whether all requirements are met
    */
   validateRequirements() {
-    // Check for ID
     this.id = this.el.getAttribute("id");
     if (!this.id) {
       this.error("Element must have an 'id' attribute.");
       return false;
     }
 
-    // Check for view date
     this.viewDate = this.getViewDate();
     if (!this.viewDate) {
       this.error(`Attribute 'data-view-date' is required.`);
       return false;
     }
 
-    // Check for focusable dates
     this.focusableDates = this.getFocusableDates();
     if (this.focusableDates === null) {
       this.error("Attribute 'data-focusable-dates' is required.");
@@ -432,7 +424,6 @@ Hooks.CalendarHook = {
       return false;
     }
 
-    // Check for calendar grid
     this.calendarGrid = this.el.querySelector(`#${this.id}-grid`);
     if (!this.calendarGrid) {
       this.error(`Calendar grid with id '${this.id}-grid' not found.`);
@@ -617,7 +608,7 @@ Hooks.Stripe = {
           this.stripeReady(); // Re-enable button after payment error
         }
 
-        // No 'else' needed, success is handled by Stripe redirecting to return_url
+        // On success Stripe redirects to return_url.
       });
     } catch (error) {
       const message =

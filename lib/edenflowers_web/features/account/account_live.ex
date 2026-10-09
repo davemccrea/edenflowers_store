@@ -462,10 +462,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
       {:error, error} ->
         Logger.error(inspect(error))
 
-        # The save failed, so `current_user` is unchanged and nothing inside the
-        # form would appear in the diff — LiveView would leave the browser showing
-        # the box the customer just ticked. A new form id replaces the subtree,
-        # which puts the checkbox back to what the server actually holds.
+        # Nothing in the form changed server-side, so LiveView would leave the
+        # box ticked. A new form id re-renders it from what was saved.
         {:noreply,
          socket
          |> assign(newsletter_form_id: "#{@newsletter_form_id}-#{System.unique_integer([:positive])}")

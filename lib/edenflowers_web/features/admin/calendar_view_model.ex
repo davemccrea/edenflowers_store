@@ -136,8 +136,6 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
     end
   end
 
-  # Collapse per-option states: the shared value when every option agrees,
-  # otherwise `:mixed`.
   defp single_or_mixed([_ | _] = states) do
     case Enum.uniq(states) do
       [single] -> single

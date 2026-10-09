@@ -73,9 +73,6 @@ defmodule Edenflowers.Chat.Message do
       argument :tool_calls, {:array, :map}
       argument :tool_results, {:array, :map}
 
-      # if updating
-      #   if complete, set the text to the provided text
-      #   if streaming still, add the text to the provided text
       change atomic_update(
                :text,
                {:atomic,
@@ -126,14 +123,12 @@ defmodule Edenflowers.Chat.Message do
                 )}
              )
 
-      # if creating, set the text attribute to the provided text
       change set_attribute(:text, arg(:text))
       change set_attribute(:complete, arg(:complete))
       change set_attribute(:source, :agent)
       change set_attribute(:tool_results, arg(:tool_results))
       change set_attribute(:tool_calls, arg(:tool_calls))
 
-      # on update, only set complete to its new value
       upsert_fields [:complete]
     end
   end
