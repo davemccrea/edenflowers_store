@@ -70,6 +70,13 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert %{state: :cancelled, stripe_payment_method_id: "pm_old"} = Ash.reload!(subscription, authorize?: false)
     end
 
+    @tag capture_log: true
+    test "asks Stripe to retry when the card can't be saved for another reason" do
+      missing_subscription = %{id: Ecto.UUID.generate()}
+
+      assert :error = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(missing_subscription))
+    end
+
     defp subscription(order, state) do
       Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
         user_id: order.user_id,
