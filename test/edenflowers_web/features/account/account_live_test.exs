@@ -286,25 +286,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "subscriptions" do
-    defp subscription(user, attrs) do
-      Ash.Seed.seed!(
-        Edenflowers.Orders.Subscription,
-        Map.merge(
-          %{
-            user_id: user.id,
-            product_variant_id: generate(product_variant(product_id: generate(product()).id, size: :medium)).id,
-            fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
-            interval_weeks: 2,
-            next_fulfillment_date: days_from_today(14),
-            locale: "en",
-            stripe_customer_id: "cus_ada",
-            stripe_payment_method_id: "pm_card"
-          },
-          attrs
-        )
-      )
-    end
-
     defp days_from_today(days), do: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), days)
 
     defp weekday_date(date), do: Edenflowers.Format.weekday_date(date, @locale)
@@ -315,8 +296,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     defp drawer(subscription), do: "#manage-subscription-#{subscription.id}"
 
     test "lists the customer's subscriptions, not anyone else's", %{conn: conn, user: user} do
-      mine = subscription(user, %{})
-      theirs = subscription(generate(admin_user(admin: false)), %{})
+      mine = generate(subscription(user_id: user.id))
+      theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -350,7 +331,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "shows a delivery that's already booked as the next one", %{conn: conn, user: user} do
-      subscription = subscription(user, %{next_fulfillment_date: days_from_today(30)})
+      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(30)))
       placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2), paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -368,9 +349,14 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "lists cancelled subscriptions last, and drops them after a month", %{conn: conn, user: user} do
-      cancelled = subscription(user, %{state: :cancelled})
-      active = subscription(user, %{})
-      long_gone = subscription(user, %{state: :cancelled, updated_at: DateTime.add(DateTime.utc_now(), -31, :day)})
+      cancelled = generate(subscription(user_id: user.id, state: :cancelled))
+      active = generate(subscription(user_id: user.id))
+
+      long_gone =
+        generate(
+          subscription(user_id: user.id, state: :cancelled, updated_at: DateTime.add(DateTime.utc_now(), -31, :day))
+        )
+
       {:ok, _view, html} = live(conn, ~p"/account")
 
       ids = Regex.scan(~r/<tr[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
@@ -392,8 +378,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "shows who a subscription delivers to, and offers a fresh start once cancelled", %{conn: conn, user: user} do
-      gift = subscription(user, %{recipient_name: "Ingrid Nyman", delivery_address: "Gerbyntie 16, Vaasa"})
-      cancelled = subscription(user, %{state: :cancelled})
+      gift =
+        generate(
+          subscription(user_id: user.id, recipient_name: "Ingrid Nyman", delivery_address: "Gerbyntie 16, Vaasa")
+        )
+
+      cancelled = generate(subscription(user_id: user.id, state: :cancelled))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Ingrid Nyman")
@@ -409,7 +399,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "marks subscription deliveries in the orders", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       placed_order(user_id: user.id, subscription_id: subscription.id, paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -417,7 +407,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "pauses and resumes", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
@@ -435,7 +425,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "cancels", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#cancel-subscription-#{subscription.id}", "Want a break instead?")
@@ -448,7 +438,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "shows the final booked delivery when cancelling after its deadline", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
 
       occurrence =
         placed_order(
@@ -477,7 +467,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "pauses from the cancel dialog instead", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       view |> element("#cancel-subscription-#{subscription.id} button", "Pause it") |> render_click()
@@ -486,7 +476,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "offers only cancellation inside the cutoff", %{conn: conn, user: user} do
-      subscription = subscription(user, %{next_fulfillment_date: days_from_today(4)})
+      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
@@ -502,7 +492,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "asks a held subscription for a new card and the unpaid delivery", %{conn: conn, user: user} do
-      subscription = subscription(user, %{state: :payment_failed})
+      subscription = generate(subscription(user_id: user.id, state: :payment_failed))
 
       unpaid =
         placed_order(
@@ -536,7 +526,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       conn: conn,
       user: user
     } do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
 
       placed_order(
         user_id: user.id,
@@ -553,7 +543,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "changes the size and how often", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       variant = Ash.get!(Edenflowers.Catalog.ProductVariant, subscription.product_variant_id)
       large = generate(product_variant(product_id: variant.product_id, size: :large, draft: false))
       {:ok, view, _html} = live(conn, ~p"/account")
@@ -578,7 +568,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "moves deliveries to another day", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       next = subscription.next_fulfillment_date
       day = Edenflowers.Fulfillment.Weekday.from_date(Date.add(next, 1))
       {:ok, view, _html} = live(conn, ~p"/account")
@@ -598,7 +588,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "shows the card deliveries are charged to", %{conn: conn, user: user} do
       subscription =
-        subscription(user, %{card_brand: "visa", card_last4: "4242", card_exp_month: 8, card_exp_year: 2027})
+        generate(
+          subscription(user_id: user.id, card_brand: "visa", card_last4: "4242", card_exp_month: 8, card_exp_year: 2027)
+        )
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -610,7 +602,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do
-      subscription = subscription(user, %{next_fulfillment_date: days_from_today(4)})
+      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       refute has_element?(view, "#change-subscription-#{subscription.id}")
@@ -618,8 +610,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "refuses a change to a subscription that isn't the customer's", %{conn: conn, user: user} do
-      subscription(user, %{})
-      theirs = subscription(generate(admin_user(admin: false)), %{})
+      generate(subscription(user_id: user.id))
+      theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       render_click(view, "pause_subscription", %{"id" => theirs.id})
@@ -629,7 +621,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "says why a change is refused once the cutoff passes with the page open", %{conn: conn, user: user} do
-      subscription = subscription(user, %{})
+      subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(4)})

@@ -5,7 +5,7 @@ defmodule Generator do
 
   alias Edenflowers.Pricing.{TaxRate, Promotion}
   alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
-  alias Edenflowers.Orders.{Order, LineItem}
+  alias Edenflowers.Orders.{Order, LineItem, Subscription}
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Courses.{Course, CourseRegistration}
 
@@ -197,6 +197,31 @@ defmodule Generator do
       do: generate(payment(order_id: order.id, amount: Decimal.negate(amount_paid), paid_at: paid_at))
 
     Ash.load!(order, :payment_status, authorize?: false, reuse_values?: false)
+  end
+
+  # seed_generator because a Subscription is only ever created by checkout.
+  def subscription(opts \\ []) do
+    opts =
+      opts
+      |> Keyword.put_new_lazy(:user_id, fn -> generate(admin_user(admin: false)).id end)
+      |> Keyword.put_new_lazy(:product_variant_id, fn ->
+        generate(product_variant(product_id: generate(product()).id)).id
+      end)
+      |> Keyword.put_new_lazy(:fulfillment_option_id, fn ->
+        generate(fulfillment_option(fulfillment_method: :delivery)).id
+      end)
+
+    seed_generator(
+      %Subscription{
+        interval_weeks: 2,
+        next_fulfillment_date: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), 14),
+        locale: "en",
+        stripe_customer_id: "cus_ada",
+        stripe_payment_method_id: "pm_card"
+      },
+      overrides: opts,
+      authorize?: false
+    )
   end
 
   @doc "Counts towards a promotion's usage by placing `times` orders with it."

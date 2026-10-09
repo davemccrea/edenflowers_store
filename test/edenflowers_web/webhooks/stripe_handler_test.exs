@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
   describe "setup_intent.succeeded" do
     test "stores the new card and returns a held subscription to active", %{order: order} do
-      subscription = subscription(order, :payment_failed)
+      subscription = generate(subscription(user_id: order.user_id, state: :payment_failed))
 
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(subscription))
 
@@ -61,11 +61,11 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
     @tag capture_log: true
     test "acknowledges a card saved to a cancelled subscription, so Stripe stops retrying", %{order: order} do
-      subscription = subscription(order, :cancelled)
+      subscription = generate(subscription(user_id: order.user_id, state: :cancelled))
 
       assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(subscription))
 
-      assert %{state: :cancelled, stripe_payment_method_id: "pm_old"} = Ash.reload!(subscription, authorize?: false)
+      assert %{state: :cancelled, stripe_payment_method_id: "pm_card"} = Ash.reload!(subscription, authorize?: false)
     end
 
     @tag capture_log: true
@@ -73,21 +73,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       missing_subscription = %{id: Ecto.UUID.generate()}
 
       assert :error = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(missing_subscription))
-    end
-
-    defp subscription(order, state) do
-      Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
-        user_id: order.user_id,
-        product_variant_id:
-          Ash.load!(order, :line_items, authorize?: false).line_items |> hd() |> Map.get(:product_variant_id),
-        fulfillment_option_id: order.fulfillment_option_id,
-        interval_weeks: 2,
-        next_fulfillment_date: Date.add(Date.utc_today(), 10),
-        locale: "en",
-        state: state,
-        stripe_customer_id: "cus_1",
-        stripe_payment_method_id: "pm_old"
-      })
     end
 
     defp setup_intent_succeeded(subscription) do

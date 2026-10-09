@@ -3,25 +3,10 @@ defmodule Edenflowers.Orders.SubscriptionReferenceGuardsTest do
 
   import Generator
 
-  alias Edenflowers.Orders.Subscription
-
   setup do
     product = generate(product(subscribable: true, free_delivery: true))
     variant = generate(product_variant(product_id: product.id))
-    fulfillment_option = generate(fulfillment_option(fulfillment_method: :delivery))
-
-    subscription =
-      Ash.Seed.seed!(Subscription, %{
-        user_id: generate(admin_user(admin: false)).id,
-        product_variant_id: variant.id,
-        fulfillment_option_id: fulfillment_option.id,
-        state: :active,
-        interval_weeks: 2,
-        next_fulfillment_date: Date.add(Date.utc_today(), 14),
-        locale: "en",
-        stripe_customer_id: "cus_1",
-        stripe_payment_method_id: "pm_1"
-      })
+    subscription = generate(subscription(product_variant_id: variant.id))
 
     %{product: product, variant: variant, subscription: subscription}
   end
