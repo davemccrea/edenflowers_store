@@ -567,7 +567,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <dialog
       id={"cancel-subscription-#{@subscription.id}"}
-      class="modal"
+      autofocus
+      class="modal outline-hidden"
       aria-labelledby={"cancel-subscription-#{@subscription.id}-title"}
       phx-mounted={JS.ignore_attributes(["open"])}
     >

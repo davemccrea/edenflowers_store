@@ -986,7 +986,9 @@ defmodule EdenflowersWeb.CoreComponents do
 
   @doc """
   Slide-in drawer built on a native modal `<dialog>`, so the browser provides
-  the backdrop, focus trapping, Escape and focus return. Open and close it with
+  the backdrop, focus trapping, Escape and focus return. `autofocus` on the
+  dialog lands initial focus on the dialog rather than its first button, which
+  iOS Safari would otherwise draw a focus ring around. Open and close it with
   `JS.exec("phx-show" | "phx-hide", to: "#id")`; `app.js` turns those into
   `showModal()` and `close()`, and `layout.css` animates the slide.
   """
@@ -1007,7 +1009,8 @@ defmodule EdenflowersWeb.CoreComponents do
       <dialog
         id={"#{@id}-dialog"}
         aria-label={@label}
-        class={"slide-drawer--#{@placement} slide-drawer"}
+        autofocus
+        class={"slide-drawer--#{@placement} slide-drawer outline-hidden"}
         phx-mounted={JS.ignore_attributes(["open"])}
       >
         <div id={"#{@id}-content"} class={@class}>
