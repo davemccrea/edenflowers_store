@@ -7,7 +7,6 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
   alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments
 
   setup :verify_on_exit!
@@ -24,23 +23,14 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     }
   end
 
-  defp subscription(context, attrs \\ %{}) do
-    Ash.Seed.seed!(
-      Subscription,
-      Map.merge(
-        %{
-          user_id: context.customer.id,
-          product_variant_id: context.medium.id,
-          fulfillment_option_id: context.fulfillment_option_id,
-          interval_weeks: 2,
-          next_fulfillment_date: days_from_today(14),
-          locale: "en",
-          stripe_customer_id: "cus_1",
-          stripe_payment_method_id: "pm_old"
-        },
-        attrs
-      )
-    )
+  defp subscription_for(context, attrs \\ []) do
+    defaults = [
+      user_id: context.customer.id,
+      product_variant_id: context.medium.id,
+      fulfillment_option_id: context.fulfillment_option_id
+    ]
+
+    generate(subscription(Keyword.merge(defaults, attrs)))
   end
 
   defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
@@ -50,7 +40,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
   describe "changing size and how often" do
     test "keeps the next date when only the size changes", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
 
       changed =
         Orders.change_subscription!(subscription, %{product_variant_id: context.large.id}, actor: context.customer)
@@ -61,7 +51,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "counts a new interval from the last delivery, so more often starts sooner", context do
       # Every 4 weeks, last delivered yesterday.
-      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: days_from_today(27)})
+      subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: days_from_today(27))
 
       weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
 
@@ -69,7 +59,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "counts a new interval from the last delivery, so less often starts later", context do
-      subscription = subscription(context, %{interval_weeks: 1, next_fulfillment_date: days_from_today(6)})
+      subscription = subscription_for(context, interval_weeks: 1, next_fulfillment_date: days_from_today(6))
 
       monthly = Orders.change_subscription!(subscription, %{interval_weeks: 4}, actor: context.customer)
 
@@ -78,7 +68,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "counts from the latest delivery even when the next date is off the schedule", context do
       # Weekly, but its next date was left four weeks after the last delivery.
-      subscription = subscription(context, %{interval_weeks: 1, next_fulfillment_date: days_from_today(29)})
+      subscription = subscription_for(context, interval_weeks: 1, next_fulfillment_date: days_from_today(29))
 
       Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: days_from_today(1))), %{
         subscription_id: subscription.id
@@ -91,7 +81,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "moves a new date that falls inside the charge window on along the new schedule", context do
       # Every 4 weeks, last delivered 5 days ago: weekly would make it 2 days away.
-      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: days_from_today(23)})
+      subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: days_from_today(23))
 
       weekly = Orders.change_subscription!(subscription, %{interval_weeks: 1}, actor: context.customer)
 
@@ -100,7 +90,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "moves to the nearest date on a new delivery day", context do
       friday = first_on_or_after(days_from_today(14), 5)
-      subscription = subscription(context, %{next_fulfillment_date: friday})
+      subscription = subscription_for(context, next_fulfillment_date: friday)
 
       tuesday = Orders.change_subscription!(subscription, %{delivery_day: :tuesday}, actor: context.customer)
       assert tuesday.next_fulfillment_date == Date.add(friday, -3)
@@ -111,7 +101,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "changes how often and the day together, counting from the latest delivery", context do
       friday = first_on_or_after(days_from_today(14), 5)
-      subscription = subscription(context, %{interval_weeks: 4, next_fulfillment_date: Date.add(friday, 14)})
+      subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: Date.add(friday, 14))
 
       Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: Date.add(friday, -14))), %{
         subscription_id: subscription.id
@@ -127,14 +117,14 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "only to a day the delivery option runs on", context do
       fridays_only = generate(fulfillment_option(fulfillment_method: :delivery, available_days: [:friday]))
-      subscription = subscription(context, %{fulfillment_option_id: fridays_only.id})
+      subscription = subscription_for(context, fulfillment_option_id: fridays_only.id)
 
       assert {:error, %Ash.Error.Invalid{errors: [%{field: :delivery_day}]}} =
                Orders.change_subscription(subscription, %{delivery_day: :monday}, actor: context.customer)
     end
 
     test "only to another size of the same product", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
       bouquet = generate(product_variant(product_id: generate(product()).id, draft: false))
       draft = generate(product_variant(product_id: context.medium.product_id, size: :small, draft: true))
 
@@ -146,11 +136,11 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
     test "only to an interval on offer", context do
       assert {:error, %Ash.Error.Invalid{}} =
-               Orders.change_subscription(subscription(context), %{interval_weeks: 3}, actor: context.customer)
+               Orders.change_subscription(subscription_for(context), %{interval_weeks: 3}, actor: context.customer)
     end
 
     test "respects the cutoff, except for Jennie", context do
-      subscription = subscription(context, %{next_fulfillment_date: days_from_today(4)})
+      subscription = subscription_for(context, next_fulfillment_date: days_from_today(4))
 
       assert {:error, %Ash.Error.Invalid{errors: [%{message: "It's too late to change your next delivery."}]}} =
                Orders.change_subscription(subscription, %{interval_weeks: 4}, actor: context.customer)
@@ -159,8 +149,8 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "not once cancelled, nor on someone else's", context do
-      cancelled = subscription(context, %{state: :cancelled})
-      theirs = subscription(context, %{user_id: generate(admin_user(admin: false)).id})
+      cancelled = subscription_for(context, state: :cancelled)
+      theirs = subscription_for(context, user_id: generate(admin_user(admin: false)).id)
 
       assert {:error, %Ash.Error.Invalid{}} =
                Orders.change_subscription(cancelled, %{interval_weeks: 4}, actor: context.customer)
@@ -172,10 +162,10 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
 
   describe "replacing the card" do
     test "opens a SetupIntent on the subscription's Stripe Customer", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
       subscription_id = subscription.id
 
-      expect(StripeAPI.Mock, :create_setup_intent, fn "cus_1", %{"subscription_id" => ^subscription_id} ->
+      expect(StripeAPI.Mock, :create_setup_intent, fn "cus_ada", %{"subscription_id" => ^subscription_id} ->
         {:ok, %{id: "seti_1", client_secret: "seti_1_secret"}}
       end)
 
@@ -183,7 +173,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "stores the card the SetupIntent saved", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
       expect_setup_intent("seti_1", subscription)
 
       assert {:ok, _} = Payments.save_subscription_card("seti_1", context.customer)
@@ -192,7 +182,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "keeps the new card's brand, last digits and expiry to show the customer", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
       expect_setup_intent("seti_1", subscription)
 
       expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_new" ->
@@ -206,7 +196,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "returns a held subscription to active from the first date not past", context do
-      subscription = subscription(context, %{state: :payment_failed, next_fulfillment_date: days_from_today(-3)})
+      subscription = subscription_for(context, state: :payment_failed, next_fulfillment_date: days_from_today(-3))
       expect_setup_intent("seti_1", subscription)
 
       assert {:ok, _} = Payments.save_subscription_card("seti_1", context.customer)
@@ -218,7 +208,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "saving the same card again changes nothing", context do
-      subscription = subscription(context, %{state: :payment_failed, next_fulfillment_date: days_from_today(10)})
+      subscription = subscription_for(context, state: :payment_failed, next_fulfillment_date: days_from_today(10))
       setup_intent = setup_intent("seti_1", subscription)
 
       assert {:ok, _} = Payments.save_subscription_card(setup_intent, Edenflowers.Actors.system_actor())
@@ -231,26 +221,26 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "not once cancelled", context do
-      cancelled = subscription(context, %{state: :cancelled})
+      cancelled = subscription_for(context, state: :cancelled)
       expect_setup_intent("seti_1", cancelled)
 
       assert {:error, %Ash.Error.Invalid{errors: [%{field: :state}]}} =
                Payments.save_subscription_card("seti_1", context.customer)
 
-      assert Ash.reload!(cancelled, authorize?: false).stripe_payment_method_id == "pm_old"
+      assert Ash.reload!(cancelled, authorize?: false).stripe_payment_method_id == cancelled.stripe_payment_method_id
     end
 
     test "a customer can't save a card to someone else's subscription", context do
-      theirs = subscription(context, %{user_id: generate(admin_user(admin: false)).id})
+      theirs = subscription_for(context, user_id: generate(admin_user(admin: false)).id)
       expect_setup_intent("seti_theirs", theirs)
 
       assert {:error, _} = Payments.save_subscription_card("seti_theirs", context.customer)
 
-      assert Ash.reload!(theirs, authorize?: false).stripe_payment_method_id == "pm_old"
+      assert Ash.reload!(theirs, authorize?: false).stripe_payment_method_id == theirs.stripe_payment_method_id
     end
 
     test "ignores a SetupIntent that hasn't succeeded", context do
-      subscription = subscription(context)
+      subscription = subscription_for(context)
 
       assert {:error, :not_a_saved_subscription_card} =
                Payments.save_subscription_card(

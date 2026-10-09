@@ -7,7 +7,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
-  alias Edenflowers.Orders.Subscription
 
   setup :verify_on_exit!
 
@@ -15,26 +14,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
     user = generate(admin_user(admin: false, name: "Ada Lovelace")) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
 
-    %{conn: conn, user: user, subscription: subscription(user, %{})}
-  end
-
-  defp subscription(user, attrs) do
-    Ash.Seed.seed!(
-      Subscription,
-      Map.merge(
-        %{
-          user_id: user.id,
-          product_variant_id: generate(product_variant(product_id: generate(product()).id)).id,
-          fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
-          interval_weeks: 2,
-          next_fulfillment_date: Date.add(Date.utc_today(), 14),
-          locale: "en",
-          stripe_customer_id: "cus_ada",
-          stripe_payment_method_id: "pm_old"
-        },
-        attrs
-      )
-    )
+    %{conn: conn, user: user, subscription: generate(subscription(user_id: user.id))}
   end
 
   test "shows the card form for a SetupIntent on the subscription's customer", %{conn: conn, subscription: subscription} do
@@ -52,7 +32,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
   # A new card restarts a held subscription but leaves the delivery owed.
   for state <- [:payment_failed, :active] do
     test "says a new card doesn't pay the delivery still owed, when #{state}", %{conn: conn, user: user} do
-      subscription = subscription(user, %{state: unquote(state)})
+      subscription = generate(subscription(user_id: user.id, state: unquote(state)))
 
       stub(StripeAPI.Mock, :create_setup_intent, fn _customer, _metadata ->
         {:ok, %{id: "seti_1", client_secret: "s"}}
@@ -115,7 +95,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
   end
 
   test "won't open someone else's subscription", %{conn: conn} do
-    theirs = subscription(generate(admin_user(admin: false)), %{})
+    theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
 
     assert {:error, {:live_redirect, %{to: "/account"}}} =
              live(conn, ~p"/account/subscriptions/#{theirs.id}/card")

@@ -46,30 +46,6 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     %{variant: variant, delivery: delivery, user: user, date: date}
   end
 
-  defp subscription(ctx, attrs \\ %{}) do
-    Ash.Seed.seed!(
-      Subscription,
-      Map.merge(
-        %{
-          user_id: ctx.user.id,
-          product_variant_id: ctx.variant.id,
-          fulfillment_option_id: ctx.delivery.id,
-          interval_weeks: 2,
-          next_fulfillment_date: ctx.date,
-          recipient_name: "Grace Hopper",
-          recipient_phone_number: "+358401234567",
-          delivery_address: "Hovrättsesplanaden 1, Vasa",
-          delivery_instructions: "Door code 1234",
-          card_message: "Enjoy",
-          locale: "fi",
-          stripe_customer_id: "cus_ada",
-          stripe_payment_method_id: "pm_card"
-        },
-        attrs
-      )
-    )
-  end
-
   defp stub_geocoding do
     stub(HereAPI.Mock, :geocode, fn _query -> {:ok, {"Hovrättsesplanaden 1, Vasa", "63.09,21.61", "here:1"}} end)
     stub(HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
@@ -77,6 +53,24 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
   defp succeeded(cents, %{metadata: metadata}) do
     {:ok, %{id: "pi_occurrence", status: "succeeded", amount_received: cents, metadata: metadata}}
+  end
+
+  # A gift delivery, so each Occurrence has the recipient's details to copy.
+  defp subscription_for(ctx, attrs \\ []) do
+    defaults = [
+      user_id: ctx.user.id,
+      product_variant_id: ctx.variant.id,
+      fulfillment_option_id: ctx.delivery.id,
+      next_fulfillment_date: ctx.date,
+      recipient_name: "Grace Hopper",
+      recipient_phone_number: "+358401234567",
+      delivery_address: "Hovrättsesplanaden 1, Vasa",
+      delivery_instructions: "Door code 1234",
+      card_message: "Enjoy",
+      locale: "fi"
+    ]
+
+    generate(subscription(Keyword.merge(defaults, attrs)))
   end
 
   defp run(subscription) do
@@ -97,7 +91,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   defp reload(subscription), do: Ash.get!(Subscription, subscription.id, authorize?: false)
 
   test "creates, charges and places the order a few days before delivery, then moves on", ctx do
-    subscription = subscription(ctx)
+    subscription = subscription_for(ctx)
     stub_geocoding()
     {:ok, _user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada King", authorize?: false)
     expected_key = "sub-#{subscription.id}-#{ctx.date}"
@@ -136,7 +130,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "keeps a change Jennie makes while the card is being charged", ctx do
-    subscription = subscription(ctx)
+    subscription = subscription_for(ctx)
     stub_geocoding()
 
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key ->
@@ -151,7 +145,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "is not picked up before its lead time", ctx do
-    subscription(ctx, %{next_fulfillment_date: Date.add(ctx.date, 1)})
+    subscription_for(ctx, next_fulfillment_date: Date.add(ctx.date, 1))
 
     assert :ok = perform_job(ScheduleOccurrences, %{})
     assert all_enqueued(worker: CreateOccurrence) == []
@@ -159,7 +153,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
   test "a closed day moves delivery to the next open day, but the schedule keeps its own date", ctx do
     closed = generate(fulfillment_option(fulfillment_method: :delivery, disabled_dates: [ctx.date]))
-    subscription = subscription(ctx, %{fulfillment_option_id: closed.id})
+    subscription = subscription_for(ctx, fulfillment_option_id: closed.id)
     stub_geocoding()
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
@@ -174,7 +168,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   test "a closed schedule window is skipped instead of colliding with the next occurrence", ctx do
     disabled_dates = Enum.map(0..6, &Date.add(ctx.date, &1))
     closed = generate(fulfillment_option(fulfillment_method: :delivery, disabled_dates: disabled_dates))
-    subscription = subscription(ctx, %{fulfillment_option_id: closed.id, interval_weeks: 1})
+    subscription = subscription_for(ctx, fulfillment_option_id: closed.id, interval_weeks: 1)
     stub_geocoding()
     stub(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
@@ -186,7 +180,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
   test "a date missed while the job was down creates no order and is reported", ctx do
     missed = Date.add(HelsinkiToday.today(), -15)
-    subscription = subscription(ctx, %{next_fulfillment_date: missed})
+    subscription = subscription_for(ctx, next_fulfillment_date: missed)
 
     log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
 
@@ -208,7 +202,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       )
 
     subscription =
-      subscription(ctx, %{fulfillment_option_id: delivery.id, next_fulfillment_date: Date.add(today, -1)})
+      subscription_for(ctx, fulfillment_option_id: delivery.id, next_fulfillment_date: Date.add(today, -1))
 
     stub_geocoding()
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
@@ -219,7 +213,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
   describe "run again" do
     test "after the order was placed, only moves the subscription on", ctx do
-      subscription = subscription(ctx)
+      subscription = subscription_for(ctx)
       stub_geocoding()
       expect(StripeAPI.Mock, :charge_off_session, 1, fn cents, params, _key -> succeeded(cents, params) end)
 
@@ -238,7 +232,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     end
 
     test "after a failed geocode, makes the order once it can", ctx do
-      subscription = subscription(ctx)
+      subscription = subscription_for(ctx)
       expect(HereAPI.Mock, :geocode, fn _query -> {:error, :timeout} end)
 
       run_failing(subscription)
@@ -253,7 +247,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     end
 
     test "after a Stripe network error, charges the same order with the same key", ctx do
-      subscription = subscription(ctx)
+      subscription = subscription_for(ctx)
       stub_geocoding()
       network_error = %Stripe.Error{source: :network, code: :network_error, message: "timeout"}
       key = "sub-#{subscription.id}-#{ctx.date}"
@@ -271,7 +265,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     end
 
     test "after a charge that hadn't succeeded yet, asks Stripe instead of charging again", ctx do
-      subscription = subscription(ctx)
+      subscription = subscription_for(ctx)
       stub_geocoding()
 
       expect(StripeAPI.Mock, :charge_off_session, 1, fn _cents, params, _key ->
@@ -290,7 +284,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     end
 
     test "a persisted authentication-required intent places the occurrence unpaid", ctx do
-      subscription = subscription(ctx)
+      subscription = subscription_for(ctx)
       stub_geocoding()
 
       expect(StripeAPI.Mock, :charge_off_session, fn _cents, params, _key ->
@@ -316,7 +310,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   describe "a refused card" do
     setup ctx do
       stub_geocoding()
-      %{subscription: subscription(ctx)}
+      %{subscription: subscription_for(ctx)}
     end
 
     defp refuse(card_code) do

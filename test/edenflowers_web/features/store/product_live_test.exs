@@ -86,16 +86,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     test "tells a subscriber they already have one", %{conn: conn, product: product, variant: variant} do
       user = generate(admin_user(admin: false)) |> with_token()
 
-      Ash.Seed.seed!(Edenflowers.Orders.Subscription, %{
-        user_id: user.id,
-        product_variant_id: variant.id,
-        fulfillment_option_id: generate(fulfillment_option(fulfillment_method: :delivery)).id,
-        interval_weeks: 2,
-        next_fulfillment_date: Date.add(Date.utc_today(), 14),
-        locale: "en",
-        stripe_customer_id: "cus_1",
-        stripe_payment_method_id: "pm_1"
-      })
+      generate(subscription(user_id: user.id, product_variant_id: variant.id))
 
       conn = AshAuthentication.Plug.Helpers.store_in_session(conn, user)
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
