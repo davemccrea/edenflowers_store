@@ -13,9 +13,13 @@ defmodule EdenflowersWeb.Plugs.PapraWebhook do
   `"<webhook-id>.<webhook-timestamp>.<raw-body>"` and the HMAC-SHA256 digest
   is base64-encoded, sent in the `webhook-signature` header as `"v1,<digest>"`.
   The secret being unset (`nil`) fails closed — every delivery is rejected.
+  Deliveries whose `webhook-timestamp` is more than five minutes from now, in
+  either direction, are rejected to stop captured deliveries being replayed.
   """
   import Plug.Conn
   require Logger
+
+  @timestamp_tolerance_seconds 5 * 60
 
   def init(opts) do
     %{
@@ -65,11 +69,18 @@ defmodule EdenflowersWeb.Plugs.PapraWebhook do
       signed = "#{msg_id}.#{timestamp}.#{raw_body}"
       expected = "v1," <> (:crypto.mac(:hmac, :sha256, secret, signed) |> Base.encode64())
 
-      if Plug.Crypto.secure_compare(expected, sig_header),
+      if Plug.Crypto.secure_compare(expected, sig_header) and fresh?(timestamp),
         do: :ok,
         else: {:error, :invalid_signature}
     else
       _ -> {:error, :invalid_signature}
+    end
+  end
+
+  defp fresh?(timestamp) do
+    case Integer.parse(timestamp) do
+      {seconds, ""} -> abs(System.system_time(:second) - seconds) <= @timestamp_tolerance_seconds
+      _ -> false
     end
   end
 

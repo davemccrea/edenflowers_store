@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
     PapraWebhook.init(at: @path, handler: StubHandler, secret: @secret)
   end
 
-  defp signed_conn(body, secret \\ @secret, msg_id \\ "msg_123", timestamp \\ "1234567890") do
+  defp signed_conn(body, secret \\ @secret, msg_id \\ "msg_123", timestamp \\ seconds_from_now(0)) do
     signed = "#{msg_id}.#{timestamp}.#{body}"
     sig = "v1," <> (:crypto.mac(:hmac, :sha256, secret, signed) |> Base.encode64())
 
@@ -27,6 +27,10 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
     |> put_req_header("webhook-id", msg_id)
     |> put_req_header("webhook-timestamp", timestamp)
     |> put_req_header("webhook-signature", sig)
+  end
+
+  defp seconds_from_now(offset) do
+    Integer.to_string(System.system_time(:second) + offset)
   end
 
   describe "signature verification" do
@@ -77,6 +81,29 @@ defmodule EdenflowersWeb.Plugs.PapraWebhookTest do
 
       capture_log(fn ->
         conn = signed_conn(body) |> PapraWebhook.call(nil_opts)
+        assert conn.status == 401
+      end)
+    end
+  end
+
+  describe "timestamp tolerance" do
+    @body ~s({"type":"document:created","data":{"documentId":"d1","organizationId":"o1"}})
+
+    test "accepts a delivery signed a few minutes ago" do
+      conn = signed_conn(@body, @secret, "msg_123", seconds_from_now(-4 * 60)) |> PapraWebhook.call(opts())
+      assert conn.status == 200
+    end
+
+    test "rejects a delivery older than five minutes" do
+      capture_log(fn ->
+        conn = signed_conn(@body, @secret, "msg_123", seconds_from_now(-6 * 60)) |> PapraWebhook.call(opts())
+        assert conn.status == 401
+      end)
+    end
+
+    test "rejects a delivery more than five minutes in the future" do
+      capture_log(fn ->
+        conn = signed_conn(@body, @secret, "msg_123", seconds_from_now(6 * 60)) |> PapraWebhook.call(opts())
         assert conn.status == 401
       end)
     end
