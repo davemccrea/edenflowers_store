@@ -140,10 +140,16 @@ defmodule EdenflowersWeb.Layouts do
     <.flash_group flash={@flash} />
 
     <div class="bg-base-200 flex min-h-screen flex-col">
-      <header class="py-8 text-center">
-        <.link navigate={~p"/"} class="text-primary logo-wordmark text-xl sm:text-2xl">
-          Eden Flowers
-        </.link>
+      <%!-- Mirrors the storefront header's padding and row height so the wordmark doesn't shift between pages --%>
+      <header class="px-3 py-2 sm:px-6 sm:py-4">
+        <div class="flex h-12 items-center justify-center xl:h-10">
+          <.link
+            navigate={~p"/"}
+            class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
+          >
+            Eden Flowers
+          </.link>
+        </div>
       </header>
 
       <main id="main-content" tabindex="-1" class="flex flex-grow items-center justify-center outline-hidden">
@@ -553,9 +559,9 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="w-full">
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
-          <div class="flex items-center">
+          <div class="grid-cols-[1fr_auto_1fr] grid items-center xl:gap-x-8">
             <%!-- Left --%>
-            <div class="flex flex-1 justify-start">
+            <div class="flex justify-start">
               <div class="block xl:hidden">
                 <button
                   type="button"
@@ -584,7 +590,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <%!-- Centre --%>
-            <div class="flex flex-1 items-center justify-center">
+            <div class="flex items-center justify-center">
               <.link
                 navigate={~p"/"}
                 class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
@@ -594,7 +600,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <%!-- Right --%>
-            <div class="flex flex-1 items-center justify-end lg:gap-4">
+            <div class="flex items-center justify-end lg:gap-4">
               <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account"}
