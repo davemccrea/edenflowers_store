@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.SubscriptionLog
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
 
@@ -22,7 +23,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
          socket
          |> assign(:page_title, subscription.user.name || to_string(subscription.user.email))
          |> assign(:locale, Localize.get_locale())
-         |> assign(:subscription, subscription)
+         |> assign_subscription(subscription)
          |> assign(:orders_query, Ash.Query.filter(Order, subscription_id == ^subscription.id))}
 
       _ ->
@@ -163,6 +164,28 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               <p :if={Fields.card_label(@subscription)} class="text-sm">{Fields.card_label(@subscription)}</p>
               <.blank :if={is_nil(Fields.card_label(@subscription))} />
             </.widget>
+
+            <.widget id="subscription-log" title={~t"History"}>
+              <ol :if={@log != []} class="divide-base-content/8 divide-y text-sm">
+                <.history_entry
+                  :for={{entry, index} <- Enum.with_index(@log)}
+                  id={"subscription-log-entry-#{index}"}
+                  title={entry.title}
+                  at={entry.at}
+                  locale={@locale}
+                >
+                  <:details :if={entry.details != []}>
+                    <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+                      <div :for={{label, value} <- entry.details}>
+                        <dt class="text-base-content/65 text-xs">{label}</dt>
+                        <dd class="text-base-content/85 break-words">{value}</dd>
+                      </div>
+                    </dl>
+                  </:details>
+                </.history_entry>
+              </ol>
+              <.blank :if={@log == []} />
+            </.widget>
           </aside>
         </div>
 
@@ -223,7 +246,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     with {:ok, _} <- action.(socket.assigns.subscription, actor: actor),
          {:ok, subscription} <- get_subscription(socket.assigns.subscription.id, actor) do
       socket
-      |> assign(:subscription, subscription)
+      |> assign_subscription(subscription)
       |> put_flash(:info, success_message)
       |> Cinder.refresh_table("subscription-orders-table")
     else
@@ -234,8 +257,21 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   defp get_subscription(id, actor) do
     Orders.get_subscription(id,
       actor: actor,
-      load: [:user, :fulfillment_option, product_variant: :product]
+      load: [
+        :user,
+        :fulfillment_option,
+        paper_trail_versions: [:user],
+        product_variant: [product: :product_variants]
+      ]
     )
+  end
+
+  defp assign_subscription(socket, subscription) do
+    sizes = Map.new(subscription.product_variant.product.product_variants, &{&1.id, &1.size})
+
+    socket
+    |> assign(:subscription, subscription)
+    |> assign(:log, SubscriptionLog.entries(subscription.paper_trail_versions, sizes, socket.assigns.locale))
   end
 
   defp product_name(subscription), do: Translations.translate(subscription.product_variant.product).name
