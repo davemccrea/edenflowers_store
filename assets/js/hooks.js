@@ -774,6 +774,21 @@ Hooks.Stripe = {
           boxShadow: "none",
           color: baseContent,
         },
+        // The flat theme fills a selected tab with colorPrimary and lightens its
+        // label and icon to match; our tint is light, so they stay dark.
+        ".TabLabel--selected": {
+          color: baseContent,
+        },
+        ".TabIcon--selected": {
+          fill: baseContent,
+        },
+        // Matches the recurring-charge note below it (`text-sm leading-relaxed text-base-content/80`).
+        ".TermsText": {
+          color: `color-mix(in oklab, ${baseContent} 80%, transparent)`,
+          fontSize: "14px",
+          fontWeight: "400",
+          lineHeight: "22.75px",
+        },
         ".CheckboxInput": {
           backgroundColor: base100,
           border: `1px solid ${checkboxBorder}`,
