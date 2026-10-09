@@ -126,6 +126,7 @@ defmodule EdenflowersWeb.Router do
       live "/customers", EdenflowersWeb.Admin.CustomersLive
       live "/customers/:id", EdenflowersWeb.Admin.CustomerDetailLive
       live "/subscriptions", EdenflowersWeb.Admin.SubscriptionsLive
+      live "/subscriptions/:id", EdenflowersWeb.Admin.SubscriptionDetailLive
       live "/fulfillments", EdenflowersWeb.Admin.FulfillmentCalendarLive
       live "/courses", EdenflowersWeb.Admin.CoursesLive
       live "/courses/new", EdenflowersWeb.Admin.CourseFormLive

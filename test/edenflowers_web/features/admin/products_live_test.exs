@@ -11,6 +11,17 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
   end
 
+  test "searches products by name", %{conn: conn} do
+    generate(product(name: "Rose bouquet"))
+    generate(product(name: "Tulip bouquet"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products?search=rose")
+    html = render_async(view, 500)
+
+    assert html =~ "Rose bouquet"
+    refute html =~ "Tulip bouquet"
+  end
+
   test "lists drafts and flags products without sizes", %{conn: conn} do
     category = generate(product_category(name: "Bouquets"))
     sized = generate(product(name: "Rose bouquet", product_category_id: category.id, draft: false))

@@ -196,6 +196,23 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :state, :atom, required: true
+
+  def subscription_state_badge(assigns) do
+    ~H"""
+    <.badge tone={subscription_state_tone(@state)}>{subscription_state_label(@state)}</.badge>
+    """
+  end
+
+  def subscription_state_label(:active), do: ~t"Active"
+  def subscription_state_label(:paused), do: ~t"Paused"
+  def subscription_state_label(:payment_failed), do: ~t"Payment failed"
+  def subscription_state_label(:cancelled), do: ~t"Cancelled"
+
+  defp subscription_state_tone(:active), do: :success
+  defp subscription_state_tone(:payment_failed), do: :error
+  defp subscription_state_tone(_), do: :neutral
+
   @doc "Marks an Occurrence: an order a Subscription created, not one the customer placed at checkout."
   def subscription_badge(assigns) do
     ~H"""
