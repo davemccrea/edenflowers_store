@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
-  test "lists every placed order unfiltered", %{conn: conn} do
+  test "opens on the orders still to make, paid or not", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)
     placed_order(customer_name: "Pays Later", fulfillment_status: :pending)
@@ -42,9 +42,20 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
     assert has_element?(view, "[data-item-id]", "To Make")
     assert has_element?(view, "[data-item-id]", "Pays Later")
-    assert has_element?(view, "[data-item-id]", "Already Done")
-    assert has_element?(view, "[data-item-id]", "Called Off")
+    refute has_element?(view, "[data-item-id]", "Already Done")
+    refute has_element?(view, "[data-item-id]", "Called Off")
     assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
+  end
+
+  test "lists every placed order once the default filter is cleared", %{conn: conn} do
+    placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
+    placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+    render_patch(view, ~p"/admin/orders")
+
+    assert has_element?(view, "[data-item-id]", "To Make")
+    assert has_element?(view, "[data-item-id]", "Already Done")
   end
 
   test "filtering by unpaid lists orders still owed for, fulfilled or not", %{conn: conn} do

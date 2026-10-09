@@ -213,10 +213,12 @@ defmodule EdenflowersWeb.Admin.Components do
   defp subscription_state_tone(:payment_failed), do: :error
   defp subscription_state_tone(_), do: :neutral
 
+  attr :class, :any, default: nil
+
   @doc "Marks an Occurrence: an order a Subscription created, not one the customer placed at checkout."
   def subscription_badge(assigns) do
     ~H"""
-    <.badge tone={:tag} icon="hero-arrow-path">{~t"Subscription"}</.badge>
+    <.badge tone={:tag} icon="hero-arrow-path" class={@class}>{~t"Subscription"}</.badge>
     """
   end
 

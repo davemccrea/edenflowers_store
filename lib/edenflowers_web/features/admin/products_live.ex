@@ -59,20 +59,12 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           click={fn product -> JS.navigate(~p"/admin/products/#{product.id}") end}
         >
           <:col :let={product} field="name" search sort={[cycle: [:asc, :desc]]} label={~t"Name"}>
-            <.link navigate={~p"/admin/products/#{product.id}"} class="font-medium hover:underline">
+            <.link
+              navigate={~p"/admin/products/#{product.id}"}
+              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+            >
               {product.name}
             </.link>
-            <div class="text-base-content/65 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm sm:hidden">
-              <span>{product.product_category.name}</span>
-              <span :if={product.featured} class="inline-flex items-center gap-1">
-                <.icon name="hero-star-solid" class="text-primary h-4 w-4" />
-                <span class="sr-only">{~t"Featured on the home page"}</span>
-              </span>
-              <span :if={product.subscribable} class="inline-flex items-center gap-1">
-                <.icon name="hero-arrow-path" class="text-primary h-4 w-4" />
-                <span class="sr-only">{~t"Can be bought as a subscription"}</span>
-              </span>
-            </div>
           </:col>
           <:col
             :let={product}

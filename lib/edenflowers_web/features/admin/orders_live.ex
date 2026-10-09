@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Layouts
+  alias EdenflowersWeb.Admin.DefaultTableView
   alias Edenflowers.Orders.Order
   alias Edenflowers.Format
 
@@ -19,9 +20,12 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
   end
 
+  # Unfulfilled orders, soonest first, so overdue ones lead.
+  @default_view %{"fulfillment_status" => "pending", "sort" => "fulfillment_date"}
+
   @impl true
   def handle_params(params, uri, socket) do
-    {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
+    {:noreply, DefaultTableView.handle_params(params, uri, socket, @default_view)}
   end
 
   @impl true
@@ -55,14 +59,13 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
-            <.link navigate={~p"/admin/orders/#{order.id}"} class="font-medium hover:underline">
+            <.link
+              navigate={~p"/admin/orders/#{order.id}"}
+              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+            >
               {order.customer_name || ~t"Unnamed customer"}
             </.link>
-            <.subscription_badge :if={order.origin == :subscription} />
-            <div class="text-base-content/65 mt-1 flex flex-wrap items-center gap-2 text-sm sm:hidden">
-              <.payment_status_badge status={order.payment_status} />
-              <.fulfillment_method method={order.fulfillment_method} />
-            </div>
+            <.subscription_badge :if={order.origin == :subscription} class="ml-1.5 max-sm:hidden" />
           </:col>
           <:col
             :let={order}
@@ -70,10 +73,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort={[cycle: [:asc, :desc]]}
             label={~t"Fulfillment date"}
           >
-            <span class="whitespace-nowrap tabular-nums">
-              {Format.date(order.fulfillment_date, @locale)}
+            <span class={["tabular-nums", overdue?(order, @today) && "max-sm:text-error max-sm:font-semibold"]}>
+              <span class="max-sm:hidden">{Format.date(order.fulfillment_date, @locale)}</span>
+              <span class="sm:hidden">{Format.day_month(order.fulfillment_date, @locale)}</span>
+              <span :if={overdue?(order, @today)} class="sr-only sm:hidden">{~t"Overdue"}</span>
             </span>
-            <.badge :if={overdue?(order, @today)} tone={:error} class="ml-1.5 align-middle">{~t"Overdue"}</.badge>
+            <.badge :if={overdue?(order, @today)} tone={:error} class="ml-1.5 align-middle max-sm:hidden">
+              {~t"Overdue"}
+            </.badge>
           </:col>
           <:col
             :let={order}
@@ -104,14 +111,11 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           >
             <.payment_status_badge status={order.payment_status} />
           </:col>
-          <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
-            <div class="whitespace-nowrap tabular-nums">
-              {Format.currency(order.grand_total, @locale)}
-            </div>
+          <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right max-sm:hidden">
             <.badge
               :if={order.amount_mismatch? && order.fulfillment_status != :cancelled}
               tone={if Decimal.positive?(order.balance), do: :warning, else: :error}
-              class="mt-1"
+              class="mr-1.5"
             >
               <%= if Decimal.positive?(order.balance) do %>
                 {~t"To collect #{amount = Format.currency(order.balance, @locale)}"}
@@ -119,6 +123,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
                 {~t"To refund #{amount = Format.currency(Decimal.abs(order.balance), @locale)}"}
               <% end %>
             </.badge>
+            <span class="tabular-nums">{Format.currency(order.grand_total, @locale)}</span>
           </:col>
           <:col
             :let={order}

@@ -61,19 +61,12 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
           <:col :let={expense} field="vendor_name" search sort label={~t"Vendor"}>
-            <.link navigate={~p"/admin/expenses/#{expense.id}"} class="font-medium hover:underline">
+            <.link
+              navigate={~p"/admin/expenses/#{expense.id}"}
+              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+            >
               {expense.vendor_name || ~t"Unknown vendor"}
             </.link>
-            <div class="text-base-content/65 mt-1 flex items-center gap-2 text-sm sm:hidden">
-              <span :if={expense.date} class="whitespace-nowrap tabular-nums">
-                {Format.date(expense.date, @locale)}
-              </span>
-              <.confidence_badge confidence={expense.confidence} />
-              <span :if={expense.reviewed_at}>
-                <.icon name="hero-check" class="h-4 w-4" />
-                <span class="sr-only">{~t"Reviewed"}</span>
-              </span>
-            </div>
           </:col>
           <:col :let={expense} field="date" sort={[cycle: [nil, :desc, :asc]]} label={~t"Date"} class="max-sm:hidden">
             <span :if={expense.date} class="whitespace-nowrap tabular-nums">
@@ -107,7 +100,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               labels: %{true: ~t"Reviewed", false: ~t"Not reviewed"}
             ]}
             label={~t"Reviewed"}
-            class="max-sm:hidden"
           >
             <span :if={expense.reviewed_at}>
               <.icon name="hero-check" class="h-4 w-4" />

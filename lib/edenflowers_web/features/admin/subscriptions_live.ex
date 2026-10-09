@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Layouts
+  alias EdenflowersWeb.Admin.DefaultTableView
   alias EdenflowersWeb.Checkout.Fields
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Format
@@ -19,9 +20,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
      |> assign(:locale, Localize.get_locale())}
   end
 
+  # The subscriptions still being delivered, or about to be once their payment is fixed.
+  @default_view %{"state" => "active,payment_failed"}
+
   @impl true
   def handle_params(params, uri, socket) do
-    {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
+    {:noreply, DefaultTableView.handle_params(params, uri, socket, @default_view)}
   end
 
   @impl true
@@ -49,25 +53,31 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           click={fn subscription -> JS.navigate(~p"/admin/subscriptions/#{subscription.id}") end}
         >
           <:col :let={subscription} field="user.name" search sort label={~t"Customer"}>
-            <.link navigate={~p"/admin/subscriptions/#{subscription.id}"} class="font-medium hover:underline">
+            <.link
+              navigate={~p"/admin/subscriptions/#{subscription.id}"}
+              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+            >
               {subscription.user.name || ~t"Unnamed customer"}
             </.link>
-            <div class="text-base-content/65 mt-0.5 break-all text-sm">{subscription.user.email}</div>
           </:col>
-          <:col :let={subscription} field="product_variant.size" sort label={~t"Size"}>
+          <:col :let={subscription} field="user.email" label={~t"Email"} class="max-sm:hidden">
+            <span class="text-base-content/65">{subscription.user.email}</span>
+          </:col>
+          <:col :let={subscription} field="product_variant.size" sort label={~t"Size"} class="max-sm:hidden">
             {variant_size_label(subscription.product_variant.size)}
           </:col>
-          <:col :let={subscription} field="interval_weeks" sort label={~t"Interval"}>
+          <:col :let={subscription} field="interval_weeks" sort label={~t"Interval"} class="max-sm:hidden">
             {Fields.interval_label(subscription.interval_weeks)}
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort={[cycle: [:asc, :desc]]} label={~t"Next delivery"}>
-            <span class="whitespace-nowrap tabular-nums">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
+            <span class="tabular-nums max-sm:hidden">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
+            <span class="sm:hidden">{Format.day_month(subscription.next_fulfillment_date, @locale)}</span>
           </:col>
           <:col
             :let={subscription}
             field="state"
             sort
-            filter={[type: :select, label: ~t"Status", prompt: ~t"All", options: state_options()]}
+            filter={[type: :multi_select, label: ~t"Status", prompt: ~t"All", options: state_options()]}
             label={~t"Status"}
           >
             <.subscription_state_badge state={subscription.state} />

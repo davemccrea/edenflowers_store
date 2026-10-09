@@ -47,16 +47,15 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
           click={fn customer -> JS.navigate(~p"/admin/customers/#{customer.id}") end}
         >
           <:col :let={customer} field="name" search sort label={~t"Customer"}>
-            <.link navigate={~p"/admin/customers/#{customer.id}"} class="font-medium hover:underline">
+            <.link
+              navigate={~p"/admin/customers/#{customer.id}"}
+              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+            >
               {customer.name || ~t"Unnamed customer"}
             </.link>
-            <div class="text-base-content/65 mt-0.5 break-all text-sm">{customer.email}</div>
-            <div class="text-base-content/65 mt-0.5 flex flex-wrap gap-x-2 text-sm tabular-nums sm:hidden">
-              <span class="whitespace-nowrap">{Format.currency(customer.total_spent, @locale)}</span>
-              <span :if={customer.last_ordered_at} class="whitespace-nowrap">
-                {Format.date(customer.last_ordered_at, @locale)}
-              </span>
-            </div>
+          </:col>
+          <:col :let={customer} field="email" label={~t"Email"} class="max-sm:hidden">
+            <span class="text-base-content/65">{customer.email}</span>
           </:col>
           <:col :let={customer} field="placed_order_count" sort label={~t"Orders"} class="text-right">
             <span class="tabular-nums">{customer.placed_order_count}</span>

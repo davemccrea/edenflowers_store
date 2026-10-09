@@ -23,8 +23,13 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :table_wrapper_class,
       "admin-table-scroll card card-border border-base-content/12 bg-base-100 overflow-x-auto max-w-full"
 
-  set :table_class, "table table-zebra w-full min-w-max"
-  set :td_class, "align-top"
+  set :table_class, "table table-zebra w-full"
+  # One line per row at a fixed height, so every admin table reads at the same rhythm
+  # whether a cell holds plain text, a badge or an icon button. The vertical padding
+  # is trimmed so the tallest of those still fits inside the row height.
+  set :row_class, "h-12"
+  set :th_class, "text-left font-semibold whitespace-nowrap max-sm:whitespace-normal max-sm:px-2"
+  set :td_class, "py-2 align-middle whitespace-nowrap max-sm:px-2"
 
   set :filter_count_class, "badge badge-primary badge-sm tabular-nums"
   set :filter_container_class, "card-body p-4 sm:p-5"

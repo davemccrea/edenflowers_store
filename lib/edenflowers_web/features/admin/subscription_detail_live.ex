@@ -185,10 +185,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             >
               {Format.date(order.fulfillment_date, @locale)}
             </.link>
-            <div class="text-base-content/65 mt-0.5 text-sm tabular-nums">{order.order_reference}</div>
-            <div class="mt-1 sm:hidden">
-              <.payment_status_badge status={order.payment_status} />
-            </div>
+          </:col>
+          <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
+            <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
           </:col>
           <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
             <.fulfillment_status_badge status={order.fulfillment_status} />
