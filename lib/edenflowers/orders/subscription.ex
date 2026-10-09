@@ -110,6 +110,10 @@ defmodule Edenflowers.Orders.Subscription do
     change_tracking_mode :changes_only
     store_action_name? true
     ignore_attributes [:inserted_at, :updated_at]
+
+    # Customers change their own subscriptions, so the log says whose change it
+    # was. The system actor isn't a user, so automatic changes are left unnamed.
+    belongs_to_actor :user, Edenflowers.Accounts.User, domain: Edenflowers.Accounts
   end
 
   actions do

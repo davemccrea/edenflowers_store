@@ -64,5 +64,29 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     refute has_element?(view, "button", "Cancel")
   end
 
+  test "logs who changed the subscription, naming no one for automatic changes", %{conn: conn, customer: customer} do
+    product = generate(product())
+    medium = generate(product_variant(product_id: product.id, size: :medium, draft: false))
+    large = generate(product_variant(product_id: product.id, size: :large, draft: false))
+
+    subscription =
+      generate(subscription(user_id: customer.id, product_variant_id: medium.id, state: :payment_failed))
+
+    {:ok, subscription} =
+      Edenflowers.Orders.reactivate_subscription(subscription, actor: Edenflowers.Actors.system_actor())
+
+    {:ok, _subscription} =
+      Edenflowers.Orders.change_subscription(subscription, %{product_variant_id: large.id}, actor: customer)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    view |> element("button", "Pause") |> render_click()
+
+    assert has_element?(view, "#subscription-log li:nth-child(1)", "Paused · Admin")
+    assert has_element?(view, "#subscription-log li:nth-child(2)", "Changed · Ada Lovelace")
+    assert has_element?(view, "#subscription-log li:nth-child(2)", "Large")
+    assert has_element?(view, "#subscription-log li:nth-child(3)", "Payment received, deliveries restarted")
+    refute has_element?(view, "#subscription-log li:nth-child(3)", "·")
+  end
+
   defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)
 end
