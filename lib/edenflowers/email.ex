@@ -63,7 +63,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Payment needed for your Eden Flowers order #{order.order_reference}")
+      |> subject(~t"Payment needed for your subscription delivery #{order.order_reference}")
       |> text_body(
         Templates.payment_failed(%{
           order: order,

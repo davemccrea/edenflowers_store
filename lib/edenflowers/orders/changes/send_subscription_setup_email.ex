@@ -12,7 +12,7 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
       subscription =
         Ash.load!(
           changeset.data,
-          [:product_variant, :first_order_discounted?, user: [:first_name]],
+          [:product_variant, :first_order_discounted?, :first_delivery_date, user: [:first_name]],
           Ash.Context.to_opts(context)
         )
 
