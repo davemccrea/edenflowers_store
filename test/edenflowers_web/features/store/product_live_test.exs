@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert [%LineItem{interval_weeks: 2, quantity: 1}] = line_items(order)
     end
 
-    test "starts from what's in the cart, and says what a change replaces", %{
+    test "starts from what's in the cart, and offers to update it", %{
       conn: conn,
       product: product,
       variant: variant,
@@ -64,8 +64,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "false"})
       |> render_change()
 
-      assert has_element?(view, "[data-testid=replaces-cart-note]", "every 2 weeks to")
-      assert has_element?(view, "[data-testid=replaces-cart-note]", "bought once.")
+      refute has_element?(view, "[data-testid=replaces-cart-note]")
       assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
 
       view |> form("[data-testid=product-form]") |> render_submit()
