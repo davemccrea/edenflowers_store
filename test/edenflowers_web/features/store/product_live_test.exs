@@ -18,15 +18,11 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       %{product: product, variant: generate(product_variant(product_id: product.id))}
     end
 
-    test "starts as a subscription, and can be bought once instead", %{conn: conn, product: product, order: order} do
+    test "starts as a one-time purchase", %{conn: conn, product: product, order: order} do
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
 
-      assert has_element?(view, "[data-testid=subscribe-option][checked]")
-      assert has_element?(view, "[data-testid=subscription-explainer]", "charged 3 days before each one")
+      refute has_element?(view, "[data-testid=subscribe-option][checked]")
       assert has_element?(view, "[data-testid=subscription-faq] summary", "When do I pay?")
-
-      view |> form("[data-testid=product-form]", %{subscribe: "false"}) |> render_change()
-
       refute has_element?(view, "[data-testid=interval-options]")
       refute has_element?(view, "[data-testid=per-delivery]")
 
@@ -37,8 +33,10 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     test "can be subscribed to every few weeks", %{conn: conn, product: product, variant: variant, order: order} do
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, "[data-testid=interval-option-4]")
+      assert has_element?(view, "[data-testid=subscription-explainer]", "charged 3 days before each one")
       assert has_element?(view, "[data-testid=per-delivery]", "per delivery")
 
       view
@@ -103,6 +101,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
       conn = AshAuthentication.Plug.Helpers.store_in_session(conn, user)
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/account"]|)
     end
@@ -116,6 +115,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       other_variant = generate(product_variant(product_id: other.id))
       Orders.add_line_item!(order.id, other_variant.id, 1, authorize?: false)
       {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, "[data-testid=blocked-note]", "checked out on its own")
       refute has_element?(view, "[data-testid=add-to-cart-button][type=submit]")
