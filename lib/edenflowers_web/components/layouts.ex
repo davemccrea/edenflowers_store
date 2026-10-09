@@ -554,13 +554,16 @@ defmodule EdenflowersWeb.Layouts do
             <%!-- Left --%>
             <div class="flex flex-1 justify-start">
               <div class="block xl:hidden">
-                <.disclosure_trigger
-                  aria_label={~t"Open navigation menu"}
-                  controls="nav-drawer"
+                <button
+                  type="button"
+                  class="h-12 w-12"
+                  aria-label={~t"Open navigation menu"}
+                  aria-controls="nav-drawer"
+                  aria-expanded="false"
                   phx-click={JS.exec("phx-show", to: "#nav-drawer")}
                 >
                   <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
-                </.disclosure_trigger>
+                </button>
               </div>
 
               <nav class="hidden xl:block">
