@@ -85,12 +85,9 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             >
               {Format.date(order.ordered_at, @locale)}
             </.link>
-            <div class="text-base-content/65 mt-0.5 text-sm tabular-nums">{order.order_reference}</div>
-            <div class="text-base-content/65 mt-1 flex flex-wrap items-center gap-2 text-sm sm:hidden">
-              <span class="whitespace-nowrap tabular-nums">{Format.date(order.fulfillment_date, @locale)}</span>
-              <.payment_status_badge status={order.payment_status} />
-              <.fulfillment_method method={order.fulfillment_method} />
-            </div>
+          </:col>
+          <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
+            <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
           </:col>
           <:col
             :let={order}
