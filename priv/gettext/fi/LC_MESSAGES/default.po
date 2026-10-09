@@ -3972,7 +3972,7 @@ msgstr "Maksamatta"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "You can pay online here, by card or MobilePay:"
-msgstr "Voit maksaa verkossa täällä kortilla tai MobilePaylla:"
+msgstr "Voit maksaa tästä linkistä kortilla tai MobilePaylla:"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:15
 #, elixir-autogen, elixir-format
@@ -4604,12 +4604,12 @@ msgstr "Tehty, mutta tallennettu kortti hylättiin"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Your flowers are still coming: delivery on %{date} to %{address}."
-msgstr "Kukkasi tulevat silti: toimitus %{date} osoitteeseen %{address}."
+msgstr "Toimitan kukat silti %{date} osoitteeseen %{address}."
 
 #: lib/edenflowers/email/templates/payment_failed.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Your subscription is on hold until this is paid, and then carries on as before."
-msgstr "Kestotilauksesi odottaa, kunnes tämä on maksettu, ja jatkuu sitten kuten ennenkin."
+msgstr "Kestotilauksesi on pysäytetty, kunnes tämä on maksettu. Sen jälkeen se jatkuu ennallaan."
 
 #: lib/edenflowers_web/features/account/account_live.ex:990
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:85
@@ -5328,7 +5328,7 @@ msgstr "Käytetty %{usage}"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "Amount due"
-msgstr "Maksettavaa"
+msgstr "Maksettava summa"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:8
 #, elixir-autogen, elixir-format
@@ -5348,7 +5348,7 @@ msgstr "Sen jälkeen"
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:18
 #, elixir-autogen, elixir-format
 msgid "You can pause, change the size or how often, update your payment card or cancel from your account:"
-msgstr "Voit keskeyttää tilauksen, vaihtaa kokoa tai toimitusväliä, päivittää maksukorttisi tai perua tilauksen tililtäsi:"
+msgstr "Tililläsi voit keskeyttää tilauksen, vaihtaa kokoa tai toimitusväliä, päivittää maksukortin tai perua tilauksen:"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:7
 #, elixir-autogen, elixir-format
@@ -5358,12 +5358,12 @@ msgstr "Ensimmäinen nouto"
 #: lib/edenflowers/email/templates/payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "I tried to charge your saved card for your next subscription order, but the payment didn't go through."
-msgstr "Yritin veloittaa tallennettua korttiasi kestotilauksesi seuraavasta tilauksesta, mutta maksu ei mennyt läpi."
+msgstr "Yritin veloittaa kestotilauksesi seuraavan erän tallennetulta kortiltasi, mutta maksu ei mennyt läpi."
 
 #: lib/edenflowers/email.ex:66
 #, elixir-autogen, elixir-format
 msgid "Payment needed for your subscription order %{order_order_reference}"
-msgstr "Kestotilauksesi tilaus %{order_order_reference} odottaa maksua"
+msgstr "Kestotilauksesi erä %{order_order_reference} odottaa maksua"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:11
 #, elixir-autogen, elixir-format
@@ -5373,12 +5373,12 @@ msgstr "Alennus koskee ensimmäistä tilaustasi."
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
 #, elixir-autogen, elixir-format
 msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each delivery."
-msgstr "Ensimmäisen tilauksen kuitti on erillisessä sähköpostissa. Sen jälkeen veloitan tallennettua korttiasi muutamaa päivää ennen jokaista toimitusta."
+msgstr "Ensimmäisen tilauksen kuitti tulee erillisessä sähköpostissa. Jatkossa veloitan tallennettua korttiasi muutamaa päivää ennen jokaista toimitusta."
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:16
 #, elixir-autogen, elixir-format
 msgid "The first order's receipt is in a separate email. After that, I charge your saved card a few days before each pickup."
-msgstr "Ensimmäisen tilauksen kuitti on erillisessä sähköpostissa. Sen jälkeen veloitan tallennettua korttiasi muutamaa päivää ennen jokaista noutoa."
+msgstr "Ensimmäisen tilauksen kuitti tulee erillisessä sähköpostissa. Jatkossa veloitan tallennettua korttiasi muutamaa päivää ennen jokaista noutoa."
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:14
 #, elixir-autogen, elixir-format
