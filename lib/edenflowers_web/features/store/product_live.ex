@@ -233,16 +233,15 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
               <%= cond do %>
                 <% @in_cart? -> %>
-                  <p class="text-base-content/75 text-base" data-testid="in-cart-note">{~t"This is in your cart."}</p>
                   <.button
                     type="button"
-                    variant="secondary"
+                    variant="primary"
                     size="lg"
                     phx-click={JS.exec("phx-show", to: "#cart-drawer")}
                     data-testid="add-to-cart-button"
                     class="w-full"
                   >
-                    {~t"View cart"}
+                    {~t"Show cart"}
                   </.button>
                 <% @blocked? -> %>
                   <p class="text-base-content/75 text-base" data-testid="blocked-note">
