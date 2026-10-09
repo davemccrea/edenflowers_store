@@ -1,6 +1,6 @@
 # A pending refund is recorded only once it succeeds
 
-Status: ready-for-agent
+Status: resolved
 
 ## Parent
 
@@ -19,3 +19,9 @@ When a Stripe refund webhook arrives with `pending` status, nothing is written. 
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+- The existing refund test now asserts that no refund Payment exists after the pending `refund.created`.
+- New test: a pending refund followed by a failed `refund.updated` records nothing and leaves the Balance unchanged.
+- Mutation confirmed caught: removing `status: "succeeded"` from `record_refund/1` fails both tests.
