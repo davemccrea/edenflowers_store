@@ -13,17 +13,9 @@ defmodule Edenflowers.Orders.Changes.ReactivateSubscription do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
-      case Orders.get_subscription(order.subscription_id, actor: system_actor()) do
-        {:ok, %Subscription{state: :payment_failed} = subscription} ->
-          with {:ok, _subscription} <- Orders.reactivate_subscription(subscription, actor: system_actor()) do
-            {:ok, order}
-          end
-
-        {:ok, _not_held} ->
-          {:ok, order}
-
-        {:error, error} ->
-          {:error, error}
+      with {:ok, subscription} <- Orders.get_subscription(order.subscription_id, actor: system_actor()),
+           {:ok, _subscription} <- Subscription.reactivate_if_held(subscription) do
+        {:ok, order}
       end
     end)
   end

@@ -140,7 +140,6 @@ defmodule Edenflowers.Orders do
       define :cancel_subscription, action: :cancel
       define :change_subscription, action: :change
       define :replace_subscription_card, action: :replace_card, args: [:stripe_payment_method_id]
-      define :snapshot_subscription_card, action: :snapshot_card
     end
 
     resource Edenflowers.Orders.Subscription.Version

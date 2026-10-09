@@ -154,7 +154,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
   # An earlier attempt charged the card but stopped before placing the order.
   defp pay(order, subscription) do
-    with {:ok, payment_intent} <- stripe_api().retrieve_payment_intent(order) do
+    with {:ok, payment_intent} <- StripeAPI.impl().retrieve_payment_intent(order) do
       place(order, payment_intent, subscription)
     end
   end
@@ -168,7 +168,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
     key = "sub-#{subscription.id}-#{order.subscription_date}"
 
-    stripe_api().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key)
+    StripeAPI.impl().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key)
   end
 
   defp place_unpaid(order, subscription, message) do
@@ -217,6 +217,4 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
 
     {:error, error}
   end
-
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, StripeAPI)
 end

@@ -14,7 +14,7 @@ defmodule Edenflowers.Orders.Changes.SnapshotCard do
     Ash.Changeset.before_action(changeset, fn changeset ->
       payment_method_id = Ash.Changeset.get_attribute(changeset, :stripe_payment_method_id)
 
-      case stripe_api().retrieve_payment_method(payment_method_id) do
+      case Edenflowers.External.StripeAPI.impl().retrieve_payment_method(payment_method_id) do
         {:ok, %{card: %{brand: brand, last4: last4, exp_month: exp_month, exp_year: exp_year}}} ->
           Ash.Changeset.force_change_attributes(changeset, %{
             card_brand: brand,
@@ -41,6 +41,4 @@ defmodule Edenflowers.Orders.Changes.SnapshotCard do
       card_exp_year: nil
     })
   end
-
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, Edenflowers.External.StripeAPI)
 end

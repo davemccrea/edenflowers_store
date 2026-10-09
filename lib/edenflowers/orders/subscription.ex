@@ -15,6 +15,9 @@ defmodule Edenflowers.Orders.Subscription do
   # Notice Jennie gets to buy the flowers before an Occurrence is delivered.
   @lead_days 3
 
+  # A customer's changes close a day before the occurrence job charges the card.
+  @cutoff_days @lead_days + 1
+
   def intervals, do: @intervals
 
   @doc """
@@ -28,15 +31,29 @@ defmodule Edenflowers.Orders.Subscription do
 
   @doc "Whether a customer can still change an occurrence scheduled for `date`."
   def changes_open_for?(date) do
-    Date.after?(date, Date.add(Edenflowers.Expressions.HelsinkiToday.today(), @lead_days + 1))
+    Date.after?(date, Date.add(Edenflowers.Expressions.HelsinkiToday.today(), @cutoff_days))
   end
 
   @doc "The next delivery date a paused subscription would get if it resumed today."
   def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
-    Edenflowers.Orders.Changes.StepToScheduledDate.scheduled_date(date, weeks, @lead_days + 1)
+    Edenflowers.Orders.Changes.StepToScheduledDate.scheduled_date(date, weeks, @cutoff_days)
   end
 
   def lead_days, do: @lead_days
+
+  def cutoff_days, do: @cutoff_days
+
+  @doc "The subscription's Occurrence still waiting on its payment link, among `orders`."
+  def unpaid_occurrence(orders, %{id: id}) do
+    Enum.find(orders, &(&1.subscription_id == id and &1.payment_link_open?))
+  end
+
+  @doc "Starts a subscription held at `:payment_failed` making Occurrences again."
+  def reactivate_if_held(%{state: :payment_failed} = subscription) do
+    Edenflowers.Orders.reactivate_subscription(subscription, actor: Edenflowers.Actors.system_actor())
+  end
+
+  def reactivate_if_held(subscription), do: {:ok, subscription}
 
   postgres do
     repo Edenflowers.Repo
@@ -170,7 +187,7 @@ defmodule Edenflowers.Orders.Subscription do
     # already passed, so resuming never creates an Occurrence at short notice.
     update :resume do
       change transition_state(:active)
-      change {Edenflowers.Orders.Changes.StepToScheduledDate, days_from_today: @lead_days + 1}
+      change {Edenflowers.Orders.Changes.StepToScheduledDate, days_from_today: @cutoff_days}
       require_atomic? false
     end
 
@@ -197,24 +214,8 @@ defmodule Edenflowers.Orders.Subscription do
       change set_attribute(:stripe_payment_method_id, arg(:stripe_payment_method_id))
       change Edenflowers.Orders.Changes.SnapshotCard
 
-      change fn changeset, _context ->
-        Ash.Changeset.after_action(changeset, fn
-          _changeset, %{state: :payment_failed} = subscription ->
-            Edenflowers.Orders.reactivate_subscription(subscription, actor: Edenflowers.Actors.system_actor())
+      change after_action(fn _changeset, subscription, _context -> reactivate_if_held(subscription) end)
 
-          _changeset, subscription ->
-            {:ok, subscription}
-        end)
-      end
-
-      require_atomic? false
-    end
-
-    # For subscriptions saved before the card was kept: see
-    # `Edenflowers.Release.backfill_subscription_cards/0`.
-    update :snapshot_card do
-      accept []
-      change Edenflowers.Orders.Changes.SnapshotCard
       require_atomic? false
     end
 
@@ -232,8 +233,7 @@ defmodule Edenflowers.Orders.Subscription do
                      :create_occurrence,
                      :reactivate,
                      :send_setup_email,
-                     :replace_card,
-                     :snapshot_card
+                     :replace_card
                    ])
 
       authorize_if action_type(:read)
@@ -291,7 +291,7 @@ defmodule Edenflowers.Orders.Subscription do
     # Only an active subscription has an Occurrence coming.
     calculate :changes_closed?,
               :boolean,
-              expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^(@lead_days + 1), :day))
+              expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@cutoff_days, :day))
 
     # Occurrences carry no promotion, so only the order that started the
     # subscription can have been discounted.

@@ -29,6 +29,9 @@ defmodule Edenflowers.External.StripeAPI do
 
   @behaviour Edenflowers.External.StripeAPI.Behaviour
 
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :stripe_api, __MODULE__)
+
   @doc """
   Converts a decimal monetary value into the integer minor units (cents) Stripe
   expects.

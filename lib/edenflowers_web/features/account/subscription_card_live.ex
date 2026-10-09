@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   require Logger
 
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments
   alias EdenflowersWeb.Checkout.Fields
 
@@ -22,11 +23,15 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
     case Orders.get_subscription(id, actor: user) do
       {:ok, %{state: state} = subscription} when state != :cancelled ->
+        # `replace_card` settles nothing already owed, so the unpaid Occurrence
+        # still needs its payment link, even once the new card restarts it.
+        unpaid = Subscription.unpaid_occurrence(Orders.list_my_orders!(actor: user), subscription)
+
         socket =
           socket
           |> assign(:page_title, ~t"Update your card")
           |> assign(:subscription, subscription)
-          |> assign(:unpaid, unpaid_occurrence(subscription, user))
+          |> assign(:unpaid, unpaid)
 
         # Stripe is only touched once the page is live, so a link preview or
         # the static first render never calls it.
@@ -106,12 +111,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
       </.container>
     </Layouts.app>
     """
-  end
-
-  # `replace_card` settles nothing already owed, so the unpaid Occurrence
-  # still needs its payment link, even once the new card restarts it.
-  defp unpaid_occurrence(%{id: id}, user) do
-    Enum.find(Orders.list_my_orders!(actor: user), &(&1.subscription_id == id and &1.payment_link_open?))
   end
 
   defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do

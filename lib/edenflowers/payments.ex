@@ -60,7 +60,7 @@ defmodule Edenflowers.Payments do
   end
 
   defp retrieve_payment_intent(payable) do
-    case stripe_api().retrieve_payment_intent(payable) do
+    case StripeAPI.impl().retrieve_payment_intent(payable) do
       {:ok, payment_intent} ->
         {:ok, payment_intent}
 
@@ -71,7 +71,7 @@ defmodule Edenflowers.Payments do
   end
 
   defp replace_payment_intent(order, payment_intent, actor) do
-    with {:ok, _cancelled} <- stripe_api().cancel_payment_intent(payment_intent),
+    with {:ok, _cancelled} <- StripeAPI.impl().cancel_payment_intent(payment_intent),
          {:ok, _order} <-
            Orders.mark_payment_cancelled(order, payment_intent.id, actor: system_actor()),
          {:ok, order} <- Orders.get_order_for_checkout(order.id, actor: actor) do
@@ -92,24 +92,24 @@ defmodule Edenflowers.Payments do
     with {:ok, order} <- Ash.load(order, :subscription?, actor: system_actor()) do
       if order.subscription? do
         with {:ok, customer} <-
-               stripe_api().create_customer(%{email: order.customer_email, name: order.customer_name}) do
-          stripe_api().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
+               StripeAPI.impl().create_customer(%{email: order.customer_email, name: order.customer_name}) do
+          StripeAPI.impl().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
         end
       else
-        stripe_api().create_payment_intent(amount_cents, metadata)
+        StripeAPI.impl().create_payment_intent(amount_cents, metadata)
       end
     end
   end
 
   defp create_payment_intent(payable) do
-    stripe_api().create_payment_intent(StripeAPI.to_stripe_amount(expected_amount(payable)), %{
+    StripeAPI.impl().create_payment_intent(StripeAPI.to_stripe_amount(expected_amount(payable)), %{
       metadata_key(payable) => payable.id
     })
   end
 
   @doc "Brings the order's PaymentIntent amount in line with what it still owes."
   def update_amount(%Order{} = order) do
-    stripe_api().update_payment_intent(order.payment_intent_id, StripeAPI.to_stripe_amount(expected_amount(order)))
+    StripeAPI.impl().update_payment_intent(order.payment_intent_id, StripeAPI.to_stripe_amount(expected_amount(order)))
   end
 
   @doc """
@@ -224,7 +224,7 @@ defmodule Edenflowers.Payments do
     |> Ash.Query.filter(order_id == ^order_id and not is_nil(payment_intent_id) and amount > 0)
     |> Ash.read!(authorize?: false)
     |> Enum.reduce_while({:ok, []}, fn payment, {:ok, acc} ->
-      case stripe_api().list_refunds(payment.payment_intent_id) do
+      case StripeAPI.impl().list_refunds(payment.payment_intent_id) do
         {:ok, refunds} -> {:cont, {:ok, [{payment, refunds} | acc]}}
         error -> {:halt, error}
       end
@@ -294,7 +294,7 @@ defmodule Edenflowers.Payments do
 
       cents ->
         with {:ok, refund} <-
-               stripe_api().create_refund(
+               StripeAPI.impl().create_refund(
                  payment.payment_intent_id,
                  cents,
                  "refund-#{key}-#{payment.payment_intent_id}"
@@ -336,7 +336,7 @@ defmodule Edenflowers.Payments do
   missed, and completes it if its PaymentIntent succeeded.
   """
   def reconcile(payable) do
-    case stripe_api().retrieve_payment_intent(payable) do
+    case StripeAPI.impl().retrieve_payment_intent(payable) do
       {:ok, %{status: "succeeded"} = payment_intent} -> complete(payment_intent)
       {:ok, _not_succeeded} -> {:ok, :not_succeeded}
       {:error, reason} -> {:error, {:payment_intent_retrieve_failed, payable.id, reason}}
@@ -353,7 +353,7 @@ defmodule Edenflowers.Payments do
         {:ok, payable, payment_intent.client_secret}
 
       {:error, reason} ->
-        stripe_api().cancel_payment_intent(payment_intent)
+        StripeAPI.impl().cancel_payment_intent(payment_intent)
         Logger.error("Failed to persist payment_intent_id for #{describe(payable)}: #{inspect(reason)}")
         {:error, :payment_intent_persist_failed}
     end
@@ -413,7 +413,7 @@ defmodule Edenflowers.Payments do
   """
   def setup_card_replacement(subscription) do
     with {:ok, setup_intent} <-
-           stripe_api().create_setup_intent(subscription.stripe_customer_id, %{"subscription_id" => subscription.id}) do
+           StripeAPI.impl().create_setup_intent(subscription.stripe_customer_id, %{"subscription_id" => subscription.id}) do
       {:ok, setup_intent.client_secret}
     end
   end
@@ -427,7 +427,7 @@ defmodule Edenflowers.Payments do
   someone else's from an id in a URL.
   """
   def save_subscription_card(setup_intent_id, actor) when is_binary(setup_intent_id) do
-    with {:ok, setup_intent} <- stripe_api().retrieve_setup_intent(setup_intent_id) do
+    with {:ok, setup_intent} <- StripeAPI.impl().retrieve_setup_intent(setup_intent_id) do
       save_subscription_card(setup_intent, actor)
     end
   end
@@ -470,6 +470,4 @@ defmodule Edenflowers.Payments do
 
   defp describe({key, id}), do: "#{key} #{id}"
   defp describe(payable), do: describe({metadata_key(payable), payable.id})
-
-  defp stripe_api, do: Application.get_env(:edenflowers, :stripe_api, StripeAPI)
 end

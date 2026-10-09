@@ -40,7 +40,7 @@ defmodule Edenflowers.Orders.Changes.Reschedule do
         next_date =
           base
           |> on_weekday(new_day(changeset))
-          |> StepToScheduledDate.scheduled_date(weeks, Subscription.lead_days() + 1)
+          |> StepToScheduledDate.scheduled_date(weeks, Subscription.cutoff_days())
 
         Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
 
