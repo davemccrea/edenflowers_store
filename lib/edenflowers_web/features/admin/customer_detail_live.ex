@@ -43,16 +43,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           back_label={~t"Customers"}
         >
           <:subtitle>
-            <a
-              href={fastmail_search_url(@customer.email)}
-              target="_blank"
-              rel="noopener"
-              class="link link-primary inline-flex items-center gap-1.5"
-              title={~t"Search Fastmail for this address"}
-            >
-              <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
-              <span class="break-all">{@customer.email}</span>
-            </a>
+            <.email_link email={@customer.email} />
           </:subtitle>
         </.admin_page_header>
 
@@ -119,9 +110,5 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
       </.admin_page>
     </Layouts.admin>
     """
-  end
-
-  defp fastmail_search_url(email) do
-    "https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(email))}"
   end
 end

@@ -277,16 +277,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.widget id="order-customer" title={~t"Customer"}>
               <.person_block>
                 <:contact :if={@order.customer_email}>
-                  <a
-                    href={fastmail_search_url(@order.customer_email)}
-                    target="_blank"
-                    rel="noopener"
-                    class="link link-primary inline-flex items-center gap-1.5"
-                    title={~t"Search Fastmail for this address"}
-                  >
-                    <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
-                    <span class="break-all">{@order.customer_email}</span>
-                  </a>
+                  <.email_link email={@order.customer_email} />
                 </:contact>
                 <:contact :if={present?(@order.customer_phone_number)}>
                   <.phone_link phone_number={@order.customer_phone_number} />
@@ -1172,9 +1163,5 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       "&origin=#{URI.encode_www_form(Edenflowers.Fulfillment.shop_address())}" <>
       "&destination=#{URI.encode_www_form(destination)}" <>
       "&travelmode=driving"
-  end
-
-  defp fastmail_search_url(email) do
-    "https://app.fastmail.com/mail/search:#{URI.encode_www_form(email)}"
   end
 end

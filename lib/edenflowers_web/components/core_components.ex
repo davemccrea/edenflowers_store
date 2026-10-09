@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.CoreComponents do
   @image_quality 80
   @image_widths [320, 480, 640, 960, 1280, 1920, 2560, 3840]
   @max_image_dimension 3840
+  @gallery_thumb_width 480
 
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
@@ -191,6 +192,55 @@ defmodule EdenflowersWeb.CoreComponents do
       ></span>
       <span class="form-button-processing col-start-1 row-start-1">{@busy_label || ~t"Processing…"}</span>
     </.button>
+    """
+  end
+
+  @doc """
+  Renders the form the `Stripe` hook mounts its payment element into.
+
+  The hook finds the element, error message and button by id, so a page
+  holds at most one. `intent="setup"` saves a card without charging it.
+  """
+  attr :id, :string, required: true
+  attr :client_secret, :string, required: true
+  attr :return_url, :string, required: true
+  attr :billing_name, :string, default: nil
+  attr :billing_email, :string, default: nil
+  attr :billing_phone, :string, default: nil
+  attr :intent, :string, default: nil, values: [nil, "setup"]
+  attr :on_loading, JS, default: %JS{}, doc: "runs as Stripe starts working, alongside disabling the button"
+  attr :on_ready, JS, default: %JS{}, doc: "runs as Stripe settles, alongside re-enabling the button"
+  attr :busy_label, :string, default: nil
+  attr :rest, :global
+  slot :before_button
+  slot :inner_block, required: true, doc: "the button label"
+
+  def stripe_form(assigns) do
+    ~H"""
+    <form
+      id={@id}
+      phx-hook="Stripe"
+      data-intent={@intent}
+      data-client-secret={@client_secret}
+      data-publishable-key={Application.get_env(:edenflowers, :stripe_publishable_key)}
+      data-return-url={@return_url}
+      data-billing-name={@billing_name}
+      data-billing-email={@billing_email}
+      data-billing-phone={@billing_phone}
+      data-stripe-loading={JS.set_attribute(@on_loading, {"disabled", "true"}, to: "#payment-button")}
+      data-stripe-ready={JS.remove_attribute(@on_ready, "disabled", to: "#payment-button")}
+      class="flex flex-col gap-4"
+      {@rest}
+    >
+      <div phx-update="ignore" id="payment-element"></div>
+      <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
+
+      {render_slot(@before_button)}
+
+      <.form_button disabled={true} id="payment-button" busy_label={@busy_label}>
+        {render_slot(@inner_block)}
+      </.form_button>
+    </form>
     """
   end
 
@@ -620,7 +670,6 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :height, :integer, required: true
   attr :sizes, :string, default: "100vw"
   attr :priority, :boolean, default: false
-  attr :quality, :integer, default: @image_quality, values: 1..100
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
   attr :crop, :string, default: nil
   attr :sources, :list, default: []
@@ -633,15 +682,7 @@ defmodule EdenflowersWeb.CoreComponents do
         Enum.map(assigns.sources, fn source ->
           %{
             media: Map.fetch!(source, :media),
-            srcset:
-              image_srcset(
-                assigns.src,
-                source.width,
-                source.height,
-                Map.get(source, :crop_type, assigns.crop_type),
-                assigns.crop,
-                assigns.quality
-              )
+            srcset: image_srcset(assigns.src, source.width, source.height, assigns.crop_type, assigns.crop)
           }
         end)
       else
@@ -650,17 +691,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
     assigns =
       assign(assigns,
-        resolved_src:
-          resolve_image_url(
-            assigns.src,
-            assigns.width,
-            assigns.height,
-            assigns.crop_type,
-            assigns.crop,
-            assigns.quality
-          ),
-        srcset:
-          image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop, assigns.quality),
+        resolved_src: resolve_image_url(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop),
+        srcset: image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop),
         resolved_sources: sources
       )
 
@@ -704,7 +736,7 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  defp image_srcset(src, width, height, crop_type, crop, quality) do
+  defp image_srcset(src, width, height, crop_type, crop) do
     if raster_src?(src) do
       {max_width, _} = capped_dimensions(width * 2, height * 2)
 
@@ -714,7 +746,7 @@ defmodule EdenflowersWeb.CoreComponents do
       |> Enum.sort()
       |> Enum.map_join(", ", fn candidate_width ->
         candidate_height = max(1, round(height * candidate_width / width))
-        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, crop, quality)
+        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, crop)
         "#{url} #{candidate_width}w"
       end)
     end
@@ -730,10 +762,10 @@ defmodule EdenflowersWeb.CoreComponents do
   without resizing or format conversion.
   """
   def image_url(src, width, height) do
-    resolve_image_url(src, width, height, "fill", nil, @image_quality)
+    resolve_image_url(src, width, height, "fill", nil)
   end
 
-  defp resolve_image_url(src, width, height, crop_type, crop, quality) do
+  defp resolve_image_url(src, width, height, crop_type, crop) do
     cond do
       external_src?(src) ->
         src
@@ -748,7 +780,7 @@ defmodule EdenflowersWeb.CoreComponents do
         |> Imgproxy.new()
         |> maybe_crop(crop)
         |> Imgproxy.resize(width, height, type: crop_type)
-        |> Imgproxy.add_option(:q, [quality])
+        |> Imgproxy.add_option(:q, [@image_quality])
         |> Imgproxy.set_extension("webp")
         |> to_string()
     end
@@ -763,14 +795,48 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  Renders a thumbnail in a `PhotoGallery` hook's masonry columns, linked to
+  the full-size photo it opens. `sizes` assumes the 2/3/4-column layout both
+  galleries use.
+  """
+  attr :photo, :map, required: true, doc: "must respond to :src, :alt, :width, :height"
+  attr :class, :any, default: nil
+
+  def gallery_photo(assigns) do
+    assigns =
+      assign(assigns,
+        thumb_width: @gallery_thumb_width,
+        thumb_height: round(@gallery_thumb_width * assigns.photo.height / assigns.photo.width)
+      )
+
+    ~H"""
+    <a
+      href={image_url(@photo.src, @photo.width, @photo.height)}
+      data-pswp-width={@photo.width}
+      data-pswp-height={@photo.height}
+      target="_blank"
+      rel="noreferrer"
+      class={["block", @class]}
+    >
+      <.image
+        src={@photo.src}
+        alt={@photo.alt}
+        width={@thumb_width}
+        height={@thumb_height}
+        sizes="(min-width: 96rem) calc(90.5rem / 4), (min-width: 80rem) calc(74.5rem / 4), (min-width: 64rem) calc(59rem / 3), (min-width: 48rem) calc(43rem / 3), (min-width: 40rem) 17.75rem, calc((100vw - 2.5rem) / 2)"
+        class="w-full"
+      />
+      <span class="sr-only">{~t"(opens a larger view)"}</span>
+    </a>
+    """
+  end
+
+  @doc """
   Renders a product card used by both the Featured Blooms carousel (home)
   and the Store grid. One editorial treatment, no surface chrome — the
   photograph is the card; the only interactive accent is the brand
   honey underline on hover. Mobile uses a 4:5 portrait crop for an
   immersive feel; desktop uses a 1:1 square so cards line up cleanly.
-
-  `from_price?: true` prefixes the price with the "From" preposition,
-  appropriate when the value comes from `cheapest_price` across variants.
   """
   attr :product, :map,
     required: true,
@@ -778,14 +844,12 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
-  attr :from_price?, :boolean, default: true
-  attr :class, :any, default: nil
 
   def product_card(assigns) do
     ~H"""
     <.link
       navigate={@navigate}
-      class={["group relative isolate block after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-10 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2", @class]}
+      class="group relative isolate block after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-10 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2"
     >
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
         <.image
@@ -804,10 +868,7 @@ defmodule EdenflowersWeb.CoreComponents do
           {@product.name}
         </h3>
         <p class="font-serif text-base-content text-lg leading-none">
-          <span
-            :if={@from_price?}
-            class="text-base-content/60 font-sans tracking-[0.18em] mr-1 text-xs uppercase"
-          >
+          <span class="text-base-content/60 font-sans tracking-[0.18em] mr-1 text-xs uppercase">
             {~t"From"}
           </span>
           {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
@@ -919,34 +980,6 @@ defmodule EdenflowersWeb.CoreComponents do
     <.button type={@type} variant="ghost" size={@size} class={["btn-square", @class]} aria-label={@aria_label} {@rest}>
       {render_slot(@inner_block)}
     </.button>
-    """
-  end
-
-  @doc """
-  Disclosure trigger — a button that controls a collapsible region (drawer,
-  menu, dialog). Sets `aria-expanded` and `aria-controls` so AT users know
-  the relationship. State must be tracked outside this component (LV
-  doesn't know if the drawer is open).
-  """
-  attr :aria_label, :string, required: true
-  attr :controls, :string, required: true, doc: "id of the controlled element"
-  attr :expanded, :boolean, default: false
-  attr :class, :any, default: "h-12 w-12"
-  attr :rest, :global, include: ~w(phx-click phx-target type)
-  slot :inner_block, required: true
-
-  def disclosure_trigger(assigns) do
-    ~H"""
-    <button
-      type="button"
-      class={@class}
-      aria-label={@aria_label}
-      aria-controls={@controls}
-      aria-expanded={to_string(@expanded)}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
-    </button>
     """
   end
 

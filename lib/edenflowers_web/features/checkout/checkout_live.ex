@@ -25,8 +25,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   @checkout_states Order.checkout_states()
 
-  defp stripe_publishable_key, do: Application.get_env(:edenflowers, :stripe_publishable_key)
-
   @edit_steps %{
     "contact_details" => {:contact_details, &Orders.return_to_contact_details!/2},
     "gift_options" => {:gift_options, &Orders.return_to_gift_options!/2},
@@ -255,32 +253,24 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 </.checkout_step>
 
                 <.checkout_step order={@order} id={@id} state={:payment}>
-                  <form
+                  <.stripe_form
                     :if={@client_secret}
                     id={"#{@id}-form-4"}
-                    phx-hook="Stripe"
                     phx-submit={lock_while_paying() |> JS.push("pay")}
-                    data-client-secret={@client_secret}
-                    data-publishable-key={stripe_publishable_key()}
-                    data-return-url={url(~p"/checkout/complete/#{@order.id}")}
-                    data-billing-name={@order.customer_name}
-                    data-billing-email={@order.customer_email}
-                    data-billing-phone={buyer_phone_number(@order)}
-                    data-stripe-loading={
-                      JS.set_attribute({"disabled", "true"}, to: "#payment-button") |> lock_while_paying()
-                    }
-                    data-stripe-ready={JS.remove_attribute("disabled", to: "#payment-button") |> unlock_after_paying()}
-                    class="flex flex-col gap-4"
+                    client_secret={@client_secret}
+                    return_url={url(~p"/checkout/complete/#{@order.id}")}
+                    billing_name={@order.customer_name}
+                    billing_email={@order.customer_email}
+                    billing_phone={buyer_phone_number(@order)}
+                    on_loading={lock_while_paying()}
+                    on_ready={unlock_after_paying(%JS{})}
+                    busy_label={~t"Tying the ribbon…"}
                   >
-                    <div phx-update="ignore" id="payment-element"></div>
-                    <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
-
-                    <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />
-
-                    <.form_button disabled={true} id="payment-button" busy_label={~t"Tying the ribbon…"}>
-                      {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
-                    </.form_button>
-                  </form>
+                    <:before_button>
+                      <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />
+                    </:before_button>
+                    {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
+                  </.stripe_form>
 
                   <p :if={!@client_secret} class="text-error" data-testid="stripe-unavailable">
                     {~t"Payment is temporarily unavailable. Please try again in a moment."}

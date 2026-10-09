@@ -64,9 +64,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
           </.button>
         </div>
 
-        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="details-heading">
-          <h2 id="details-heading" class="section-title">{~t"Your details"}</h2>
-
+        <.account_section id="details" title={~t"Your details"}>
           <.form
             :if={!@pending_email}
             for={@details_form}
@@ -105,11 +103,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
               <.button type="button" variant="text" phx-click="cancel_email_change">{~t"Cancel"}</.button>
             </div>
           </.form>
-        </section>
+        </.account_section>
 
-        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="orders-heading">
-          <h2 id="orders-heading" class="section-title">{~t"Orders"}</h2>
-
+        <.account_section id="orders" title={~t"Orders"}>
           <div :if={@orders == []} class="mt-6">
             <p class="text-base-content/80">{~t"You haven't ordered anything yet."}</p>
             <.button navigate={~p"/store"} variant="text" class="mt-4">{~t"Visit the shop"}</.button>
@@ -170,11 +166,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
               </tr>
             </tbody>
           </table>
-        </section>
+        </.account_section>
 
-        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="subscriptions-heading">
-          <h2 id="subscriptions-heading" class="section-title">{~t"Subscriptions"}</h2>
-
+        <.account_section id="subscriptions" title={~t"Subscriptions"}>
           <div :if={@subscriptions == []} class="mt-6" data-testid="no-subscriptions">
             <p class="text-base-content/80">
               {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."}
@@ -242,11 +236,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
             edited?={subscription.id in @edited_subscriptions}
             notice={notice_for(@subscription_notice, subscription)}
           />
-        </section>
+        </.account_section>
 
-        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="courses-heading">
-          <h2 id="courses-heading" class="section-title">{~t"Courses"}</h2>
-
+        <.account_section id="courses" title={~t"Courses"}>
           <div :if={@registrations == []} class="mt-6">
             <p class="text-base-content/80">{~t"You haven't booked a course yet."}</p>
             <.button navigate={~p"/courses"} variant="text" class="mt-4">{~t"See what's coming up"}</.button>
@@ -295,11 +287,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
               </tr>
             </tbody>
           </table>
-        </section>
+        </.account_section>
 
-        <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby="newsletter-heading">
-          <h2 id="newsletter-heading" class="section-title">{~t"Newsletter"}</h2>
-
+        <.account_section id="newsletter" title={~t"Newsletter"}>
           <.form for={%{}} id={@newsletter_form_id} phx-change="toggle_newsletter" class="mt-6">
             <label class="flex max-w-prose items-start gap-3">
               <input type="hidden" name="newsletter_opt_in" value="false" />
@@ -323,9 +313,22 @@ defmodule EdenflowersWeb.Account.AccountLive do
           <p role="status" class="text-base-content/70 mt-3 h-5 text-sm">
             <span :if={@newsletter_saved?}>{~t"Saved"}</span>
           </p>
-        </section>
+        </.account_section>
       </.container>
     </Layouts.app>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  slot :inner_block, required: true
+
+  defp account_section(assigns) do
+    ~H"""
+    <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby={"#{@id}-heading"}>
+      <h2 id={"#{@id}-heading"} class="section-title">{@title}</h2>
+      {render_slot(@inner_block)}
+    </section>
     """
   end
 
