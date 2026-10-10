@@ -59,9 +59,12 @@ defmodule EdenflowersWeb.Admin.Calendar do
         end
       }
     >
-      <:day_decoration :let={%{date: day, state: state}}>
-        <.key_date_icon date={day} muted?={state == :past} />
+      <:day_decoration :let={%{date: day, state: state, selected?: selected?}}>
+        <.key_date_icon date={day} selected?={selected?} muted?={state == :past} />
       </:day_decoration>
+      <:footer :let={%{view_date: month}}>
+        <.key_date_caption month={month} />
+      </:footer>
     </.live_component>
     """
   end

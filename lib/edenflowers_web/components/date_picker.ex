@@ -124,6 +124,10 @@ defmodule EdenflowersWeb.DatePicker do
         "and `:selected?`. Decoration components can use those to adapt their " <>
         "visual to the cell's state — e.g. hide on a selected cell."
 
+  slot :footer,
+    required: false,
+    doc: "Optional content below the grid. Receives `%{view_date: Date.t()}` via `:let` — the month on screen."
+
   def render(assigns) do
     ~H"""
     <div
@@ -244,6 +248,8 @@ defmodule EdenflowersWeb.DatePicker do
           <% end %>
         </div>
       </div>
+
+      {render_slot(@footer, %{view_date: @view_date})}
     </div>
     """
   end
