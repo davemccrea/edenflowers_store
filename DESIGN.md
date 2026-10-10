@@ -223,7 +223,7 @@ Square is the system. Buttons are explicitly `rounded-none` against daisyUI's de
 - **Badges:** daisyUI rounds `.badge` with `--radius-selector`, so the admin status badges (confidence, payment, fulfillment, category) are soft pills. That is intended: a status reads as a tag, not as a field.
 - **Pills:** `9999px` on the cart count badge, avatar initials, carousel dots, the calendar strike and the admin scrollbar thumb, where the shape *is* the meaning. These are the only curves left in the system.
 - **Borders:** one pixel, in ink or `base-content/12` (see The Hairline Rule), used as separation rather than as containment.
-- **Decoration:** line-drawn flower SVGs (`priv/svg/`, inlined at compile time, `fill: currentColor`) are the only ornament. They appear at low opacity (`/15`, `/70`) as watermarks in quiet corners — the footer's top-right, reverse-out sections. They are always `aria-hidden`.
+- **Decoration:** line-drawn flower SVGs (`priv/svg/`, inlined at compile time, `fill: currentColor`) are the only ornament. They appear at low opacity (`/15`, `/70`) as watermarks in quiet corners — the footer's top-right, reverse-out sections. They are always `aria-hidden`. The one in-content use is the calendar key date (Mother's Day, Father's Day, etc.): `flower-30` as a `/25` primary watermark behind the digit, named by a Crimson italic caption under the grid, because a mark alone can't say which day it is.
 - **Calendar primitives:** the admin fulfillment calendar has its own tiny shape vocabulary — a 45° strike through a closed cell (`::after`), a top-right triangle for a rule override (`::before`), and 45° repeating stripes for a mixed state. Two of them layer, which is why they use different pseudo-elements.
 
 ### Named Rules

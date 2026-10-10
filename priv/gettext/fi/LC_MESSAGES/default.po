@@ -5457,3 +5457,23 @@ msgstr "Saman päivän tilausten takaraja"
 #, elixir-autogen, elixir-format
 msgid "Save prices"
 msgstr "Tallenna hinnat"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:56
+#, elixir-autogen, elixir-format
+msgid "Father's Day"
+msgstr "Isänpäivä"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:55
+#, elixir-autogen, elixir-format
+msgid "Mother's Day"
+msgstr "Äitienpäivä"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:53
+#, elixir-autogen, elixir-format
+msgid "Valentine's Day"
+msgstr "Ystävänpäivä"
+
+#: lib/edenflowers_web/components/key_date_icon.ex:54
+#, elixir-autogen, elixir-format
+msgid "Women's Day"
+msgstr "Naistenpäivä"

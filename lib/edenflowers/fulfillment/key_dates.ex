@@ -12,38 +12,35 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   alias Edenflowers.Fulfillment.Weekday
 
   @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
-  @type key_date :: %{date: Date.t(), name: String.t(), icon: String.t(), colour_class: String.t()}
+  @type key_date :: %{date: Date.t(), key: atom()}
 
-  @typedoc "The visual decoration for a key date, returned by `lookup_for/1`."
-  @type decoration :: %{icon: String.t(), colour_class: String.t()}
-
-  # Valentine's Day is Friend's Day (Ystävänpäivä) in Finland, hence green
-  # rather than red.
+  # Presentation (labels, artwork) lives in `EdenflowersWeb.KeyDateIcon`.
   @key_dates [
-    %{name: "Valentine's Day", icon: "hero-heart", colour_class: "text-emerald-500", rule: {:fixed, 2, 14}},
-    %{name: "Women's Day", icon: "hero-heart", colour_class: "text-violet-500", rule: {:fixed, 3, 8}},
-    %{name: "Mother's Day", icon: "hero-heart", colour_class: "text-rose-500", rule: {:nth_weekday, 5, :sunday, 2}},
-    %{name: "Father's Day", icon: "hero-heart", colour_class: "text-sky-500", rule: {:nth_weekday, 11, :sunday, 2}}
+    %{key: :valentines_day, rule: {:fixed, 2, 14}},
+    %{key: :womens_day, rule: {:fixed, 3, 8}},
+    %{key: :mothers_day, rule: {:nth_weekday, 5, :sunday, 2}},
+    %{key: :fathers_day, rule: {:nth_weekday, 11, :sunday, 2}}
   ]
 
   @spec for_year(integer()) :: [key_date()]
   def for_year(year) do
-    Enum.map(@key_dates, fn %{rule: rule} = key_date ->
-      key_date
-      |> Map.delete(:rule)
-      |> Map.put(:date, materialise(rule, year))
-    end)
+    Enum.map(@key_dates, fn %{key: key, rule: rule} -> %{key: key, date: materialise(rule, year)} end)
   end
 
-  @doc """
-  Combined icon + colour lookup for a date. Returns `nil` for non-key dates.
-  One traversal serves both pieces of the decoration so per-cell rendering
-  doesn't scan the key-date list twice.
-  """
-  @spec lookup_for(Date.t()) :: decoration() | nil
+  @doc "Key dates falling in the same month as `date`, in date order."
+  @spec for_month(Date.t()) :: [key_date()]
+  def for_month(%Date{year: year, month: month}) do
+    year
+    |> for_year()
+    |> Enum.filter(&(&1.date.month == month))
+    |> Enum.sort_by(& &1.date, Date)
+  end
+
+  @doc "The key for `date`, or `nil` when it isn't a key date."
+  @spec lookup_for(Date.t()) :: atom() | nil
   def lookup_for(%Date{} = date) do
-    Enum.find_value(@key_dates, fn %{rule: rule, icon: icon, colour_class: colour_class} ->
-      if materialise(rule, date.year) == date, do: %{icon: icon, colour_class: colour_class}
+    Enum.find_value(@key_dates, fn %{key: key, rule: rule} ->
+      if materialise(rule, date.year) == date, do: key
     end)
   end
 
