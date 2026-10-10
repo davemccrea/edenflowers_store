@@ -14,7 +14,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
-    {:ok, product} = Catalog.get_product_by_id(id, load: [:product_category, :product_variants, :tax_rate])
+    product =
+      case Catalog.get_product_by_id(id, load: [:product_category, :product_variants, :tax_rate]) do
+        {:ok, product} -> product
+        # A malformed id is an invalid-filter error rather than NotFound; both should 404.
+        {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
+      end
+
     product_variants = product.product_variants
     product_category = Translations.translate(product.product_category)
     product = Translations.translate(product)

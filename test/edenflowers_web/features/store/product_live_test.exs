@@ -111,6 +111,11 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     end
   end
 
+  test "an unknown product is a 404", %{conn: conn} do
+    assert_error_sent 404, fn -> get(conn, ~p"/product/#{Ash.UUID.generate()}") end
+    assert_error_sent 404, fn -> get(conn, ~p"/product/not-a-uuid") end
+  end
+
   test "an ordinary product offers no subscription", %{conn: conn} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id))
