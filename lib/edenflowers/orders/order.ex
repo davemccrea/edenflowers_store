@@ -541,6 +541,7 @@ defmodule Edenflowers.Orders.Order do
     update :finalize_checkout do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+      argument :paid_with, :map, default: %{}
       accept [:stripe_customer_id, :stripe_payment_method_id]
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
 
@@ -666,6 +667,7 @@ defmodule Edenflowers.Orders.Order do
     update :record_link_payment do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+      argument :paid_with, :map, default: %{}
       # No check that this is the order's current PaymentIntent: one Jennie
       # dropped can still be paid, and that money has arrived all the same.
       # Only the PaymentIntent that was paid stops being open.

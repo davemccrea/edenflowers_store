@@ -124,7 +124,7 @@ defmodule Edenflowers.Payments do
     with {:ok, {_key, id} = ref} <- find_payable(payment_intent) do
       amount_paid = StripeAPI.from_stripe_amount(payment_intent.amount_received)
 
-      case complete_payable(ref, payment_intent, amount_paid) do
+      case complete_payable(ref, payment_intent, amount_paid, paid_with(payment_intent)) do
         :already_recorded ->
           {:ok, :already_completed}
 
@@ -379,14 +379,16 @@ defmodule Edenflowers.Payments do
   # A recorded PaymentIntent is a redelivery. Otherwise a checkout payment
   # places the order, and a payment link payment, on an order already placed,
   # only records the money.
-  defp complete_payable({"order_id", id}, payment_intent, amount_paid) do
+  defp complete_payable({"order_id", id}, payment_intent, amount_paid, paid_with) do
     with {:ok, order} <- Orders.get_order_by_id(id, actor: system_actor()) do
       cond do
         recorded?(payment_intent.id) ->
           :already_recorded
 
         order.state == :placed ->
-          Orders.record_link_payment(order, payment_intent.id, %{amount_paid: amount_paid}, actor: system_actor())
+          Orders.record_link_payment(order, payment_intent.id, %{amount_paid: amount_paid, paid_with: paid_with},
+            actor: system_actor()
+          )
 
         true ->
           Orders.finalize_checkout(
@@ -394,6 +396,7 @@ defmodule Edenflowers.Payments do
             payment_intent.id,
             %{
               amount_paid: amount_paid,
+              paid_with: paid_with,
               stripe_customer_id: Map.get(payment_intent, :customer),
               stripe_payment_method_id: Map.get(payment_intent, :payment_method)
             },
@@ -403,9 +406,35 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid) do
-    Courses.confirm_registration_payment(id, payment_intent.id, %{amount_paid: amount_paid}, actor: system_actor())
+  defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid, paid_with) do
+    Courses.confirm_registration_payment(id, payment_intent.id, Map.put(paid_with, :amount_paid, amount_paid),
+      actor: system_actor()
+    )
   end
+
+  @doc """
+  What paid a PaymentIntent, as `payment_method_type`, `card_brand` and
+  `card_last4`, for the receipt. Only shown, so a failed lookup gives an
+  empty map rather than holding up the payment.
+  """
+  def paid_with(%{payment_method: payment_method_id}) when is_binary(payment_method_id) do
+    case StripeAPI.impl().retrieve_payment_method(payment_method_id) do
+      {:ok, %{type: "card", card: %{brand: brand, last4: last4}}} ->
+        %{payment_method_type: "card", card_brand: brand, card_last4: last4}
+
+      {:ok, %{type: type}} when is_binary(type) ->
+        %{payment_method_type: type}
+
+      {:ok, _unknown} ->
+        %{}
+
+      {:error, reason} ->
+        Logger.warning("Couldn't look up payment method #{payment_method_id}: #{inspect(reason)}")
+        %{}
+    end
+  end
+
+  def paid_with(_payment_intent), do: %{}
 
   @doc """
   Returns the client secret of a new SetupIntent that saves a replacement card

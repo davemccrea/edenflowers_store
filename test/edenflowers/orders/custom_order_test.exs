@@ -309,6 +309,14 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "0.00")
     end
 
+    test "records how an in-person payment was made, for the receipt", ctx do
+      {:ok, order} = place(ctx)
+      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
+
+      assert [%{payment_method_type: "zettle", card_brand: nil}] =
+               Ash.load!(order, :payments, authorize?: false).payments
+    end
+
     test "a new delivery address is priced again", ctx do
       stub_geocoding(8_000)
 

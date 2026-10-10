@@ -600,7 +600,10 @@ today = Date.utc_today()
     payment_intent_id:
       if(paid_via == :stripe and status != :pending,
         do: "pi_seed_#{System.unique_integer([:positive])}"
-      )
+      ),
+    payment_method_type: if(paid_via == :stripe and status != :pending, do: "card"),
+    card_brand: if(paid_via == :stripe and status != :pending, do: "mastercard"),
+    card_last4: if(paid_via == :stripe and status != :pending, do: "4444")
   })
 end)
 
@@ -917,12 +920,18 @@ for order_attrs <- orders do
     payment_intent_id: nil
   })
 
+  {card_brand, card_last4} =
+    Enum.at([{"visa", "4242"}, {"mastercard", "4444"}, {"amex", "0005"}], :erlang.phash2(order.id, 3))
+
   Ash.Seed.seed!(Payment, %{
     order_id: order.id,
     amount: order.grand_total,
     method: :stripe,
     payment_intent_id: order.payment_intent_id,
-    paid_at: order.ordered_at
+    paid_at: order.ordered_at,
+    payment_method_type: "card",
+    card_brand: card_brand,
+    card_last4: card_last4
   })
 end
 
@@ -1007,7 +1016,10 @@ seed_subscription_order = fn subscription, user, attrs ->
       amount: order.grand_total,
       method: :stripe,
       payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
-      paid_at: order.ordered_at
+      paid_at: order.ordered_at,
+      payment_method_type: "card",
+      card_brand: subscription.card_brand,
+      card_last4: subscription.card_last4
     })
   end
 
@@ -1183,6 +1195,13 @@ pay_by_link = fn order, payment_intent_id ->
       metadata: %{"order_id" => order.id},
       amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(order.balance)
     })
+
+  # complete/1 looks the method up in Stripe from a real payment_method id,
+  # which a seed can't have, so the payment is named here instead.
+  Payment
+  |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+  |> Ash.read_one!(authorize?: false)
+  |> Ash.Seed.update!(%{payment_method_type: "mobilepay"})
 
   mark_emailed.(Orders.get_order_for_admin!(order.id, actor: jennie))
 end

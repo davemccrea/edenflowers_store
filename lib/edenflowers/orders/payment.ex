@@ -7,6 +7,11 @@ defmodule Edenflowers.Orders.Payment do
   for the customer lives on the order as `payment_intent_id` until it
   succeeds. The unique Stripe ids are what make a redelivered webhook
   harmless: the same PaymentIntent or refund can't be recorded twice.
+
+  `payment_method_type` says what paid, for the receipt: Stripe's payment
+  method type ("card", "mobilepay", …) with the card's brand and last four, or
+  the in-person method. It's blank on payments recorded before it existed, so
+  their receipts stay as they were sent.
   """
   use Ash.Resource,
     domain: Edenflowers.Orders,
@@ -34,7 +39,16 @@ defmodule Edenflowers.Orders.Payment do
 
     # Created by the order actions that take or return money, never on its own.
     create :record do
-      accept [:order_id, :amount, :method, :payment_intent_id, :stripe_refund_id]
+      accept [
+        :order_id,
+        :amount,
+        :method,
+        :payment_intent_id,
+        :stripe_refund_id,
+        :payment_method_type,
+        :card_brand,
+        :card_last4
+      ]
     end
   end
 
@@ -58,6 +72,9 @@ defmodule Edenflowers.Orders.Payment do
     attribute :method, Edenflowers.Orders.Order.PaymentMethod, allow_nil?: false
     attribute :payment_intent_id, :string
     attribute :stripe_refund_id, :string
+    attribute :payment_method_type, :string
+    attribute :card_brand, :string
+    attribute :card_last4, :string
     attribute :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
     timestamps()
   end

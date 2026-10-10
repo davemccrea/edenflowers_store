@@ -21,6 +21,7 @@ defmodule Edenflowers.Orders.Receipt do
     :discount,
     :promotion_applied?,
     :grand_total,
+    :payments,
     line_items: [:subtotal, :total, :unit_price_ex_tax]
   ]
 
@@ -69,7 +70,8 @@ defmodule Edenflowers.Orders.Receipt do
       fulfillment_fee: fulfillment_fee_payload(order, locale),
       discount: discount_payload(order, locale),
       vat_breakdown: vat_breakdown(order, locale),
-      grand_total: Format.currency(order.grand_total, locale)
+      grand_total: Format.currency(order.grand_total, locale),
+      payments: payments_payload(order.payments, locale)
     }
   end
 
@@ -123,7 +125,35 @@ defmodule Edenflowers.Orders.Receipt do
           gross: amount
         }
       ],
-      grand_total: amount
+      grand_total: amount,
+      payments:
+        if(registration.payment_method_type,
+          do: [payment_payload(registration, registration.amount, registration.confirmed_at, locale)],
+          else: []
+        )
+    }
+  end
+
+  # Refunds aren't something the customer paid with, and payments recorded
+  # before `payment_method_type` existed are left off so their receipts stay
+  # as they were sent.
+  defp payments_payload(payments, locale) do
+    for payment <- Enum.sort_by(payments, & &1.paid_at, DateTime),
+        payment.payment_method_type,
+        Decimal.compare(payment.amount, 0) == :gt do
+      payment_payload(payment, payment.amount, payment.paid_at, locale)
+    end
+  end
+
+  # Dated, since money paid after the order (a payment link, cash at pickup)
+  # would otherwise carry only the order date.
+  defp payment_payload(paid_with, amount, paid_at, locale) do
+    %{
+      method: paid_with.payment_method_type,
+      card_brand: paid_with.card_brand,
+      card_last4: paid_with.card_last4,
+      paid_on: Format.date(paid_at, locale),
+      amount: Format.currency(amount, locale)
     }
   end
 
@@ -149,9 +179,11 @@ defmodule Edenflowers.Orders.Receipt do
     end
   end
 
-  # Finnish law wants the VAT stated per rate — kuittipakkolaki 658/2013 § 4,
-  # and AVL § 209 f for the simplified invoice every order under €400 falls
-  # under. Prices are tax-inclusive, so each rate's gross is split into the
+  # The VAT is stated per rate, as AVL § 209 f asks of a business buyer's
+  # invoice and kuittipakkolaki 658/2013 § 4 of a receipt for an in-person
+  # payment. (That act leaves out online sales, and a consumer needs no
+  # invoice, so for most orders this is a courtesy.) Prices are tax-inclusive,
+  # so each rate's gross is split into the
   # taxable base and the VAT contained in it. Rounding the base first and
   # taking the VAT as the remainder keeps the printed row adding up.
   defp vat_breakdown(order, locale) do

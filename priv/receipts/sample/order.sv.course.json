@@ -34,5 +34,14 @@
   "delivery_address": null,
   "delivery_instructions": null,
   "fulfillment_fee": null,
-  "discount": null
+  "discount": null,
+  "payments": [
+    {
+      "method": "card",
+      "card_brand": "amex",
+      "card_last4": "0005",
+      "paid_on": "22.9.2026",
+      "amount": "255,00 €"
+    }
+  ]
 }

@@ -50,5 +50,14 @@
     }
   ],
   "venue_name": null,
-  "venue_address": null
+  "venue_address": null,
+  "payments": [
+    {
+      "method": "card",
+      "card_brand": "visa",
+      "card_last4": "4242",
+      "paid_on": "13.5.2026",
+      "amount": "64,26 €"
+    }
+  ]
 }
