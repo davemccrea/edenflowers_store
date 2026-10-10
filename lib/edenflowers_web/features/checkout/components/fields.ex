@@ -151,10 +151,30 @@ defmodule EdenflowersWeb.Checkout.Fields do
   @doc "The subscription's saved card, e.g. \"Visa •••• 4242, expires 08/27\", or nil before it's known."
   def card_label(%{card_brand: nil}), do: nil
 
-  def card_label(%{card_brand: brand, card_last4: last4, card_exp_month: month, card_exp_year: year}) do
-    expiry =
-      "#{String.pad_leading(to_string(month), 2, "0")}/#{rem(year, 100) |> to_string() |> String.pad_leading(2, "0")}"
+  def card_label(%{card_brand: brand, card_last4: last4} = card) do
+    ~t"#{brand = String.capitalize(brand)} •••• #{last4 = last4}, expires #{expiry = card_expiry(card)}"
+  end
 
-    ~t"#{brand = String.capitalize(brand)} •••• #{last4 = last4}, expires #{expiry = expiry}"
+  # Stripe's `card.brand` values we have a logo for in priv/static/images/cards.
+  @card_logos %{"visa" => "Visa", "mastercard" => "Mastercard", "amex" => "American Express"}
+
+  @doc "The saved card with its network's logo, or `card_label/1` for a brand without one."
+  attr :card, :map, required: true
+
+  def saved_card(%{card: %{card_brand: brand}} = assigns) when is_map_key(@card_logos, brand) do
+    assigns = assign(assigns, brand: brand, brand_name: @card_logos[brand])
+
+    ~H"""
+    <span class="inline-flex items-center gap-2">
+      <img src={"/images/cards/#{@brand}.svg"} alt={@brand_name} width="38" height="24" class="h-6 w-auto shrink-0" />
+      {~t"•••• #{last4 = @card.card_last4}, expires #{expiry = card_expiry(@card)}"}
+    </span>
+    """
+  end
+
+  def saved_card(assigns), do: ~H"{card_label(@card)}"
+
+  defp card_expiry(%{card_exp_month: month, card_exp_year: year}) do
+    "#{String.pad_leading(to_string(month), 2, "0")}/#{rem(year, 100) |> to_string() |> String.pad_leading(2, "0")}"
   end
 end

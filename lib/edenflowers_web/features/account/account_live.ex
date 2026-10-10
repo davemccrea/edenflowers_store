@@ -27,6 +27,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @email_code_attempts 5
   @email_codes_per_window 5
   @email_code_window_ms :timer.minutes(15)
+  @past_visible 5
 
   def mount(_params, _session, socket) do
     user = Ash.load!(socket.assigns.current_user, :first_name, actor: socket.assigns.current_user)
@@ -40,12 +41,14 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(pending_email: nil)
      |> assign(code_form: to_form(%{"code" => ""}, as: :confirm))
      |> assign(locale: Format.locale())
-     |> assign(orders: Orders.list_my_orders!(actor: user))
+     |> assign(orders: orders(user))
      |> assign(subscriptions: subscriptions(user))
      |> assign(edited_subscriptions: MapSet.new())
      |> assign(subscription_notice: nil)
      |> assign_subscription_product()
      |> assign(registrations: registrations(user))
+     |> assign(past_visible: @past_visible)
+     |> assign_timeline()
      |> assign(newsletter_form_id: @newsletter_form_id)
      |> assign(newsletter_saved?: false)
      |> assign(newsletter_saved_token: nil)}
@@ -55,14 +58,98 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container class="max-w-3xl">
-        <div class="border-base-content/12 flex flex-col gap-4 pb-10 not-last:border-b sm:flex-row sm:items-baseline sm:justify-between sm:pb-12">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
           <h1 class="page-title">
             {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}", else: ~t"Account"}
           </h1>
-          <.button href={~p"/sign-out"} method="delete" variant="neutral" size="sm" class="w-fit">
+          <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="w-fit">
             {~t"Sign out"}
           </.button>
         </div>
+
+        <.account_section :if={@subscriptions != []} id="subscriptions" title={~t"Subscriptions"}>
+          <ol class="mt-6" data-testid="subscriptions">
+            <li
+              :for={subscription <- @subscriptions}
+              id={"subscription-#{subscription.id}"}
+              class="border-base-content/12 border-t py-6"
+            >
+              <div class="grid-cols-[1fr_auto] grid items-baseline gap-x-4">
+                <h3 id={"subscription-#{subscription.id}-name"} class="card-heading text-balance">
+                  {subscription_name(subscription)}
+                </h3>
+                <p class="font-serif text-xl tabular-nums">
+                  {Format.storefront_price(subscription.product_variant.price, @locale)}
+                </p>
+                <p class="text-base-content/70 mt-1 text-sm">{plan_label(subscription)}</p>
+                <p class="text-base-content/70 text-right text-sm">{~t"per delivery"}</p>
+              </div>
+
+              <div class="mt-5 flex items-end justify-between gap-4">
+                <div data-testid="subscription-status">
+                  <p class="eyebrow text-base-content/70 mb-2">
+                    {if subscription.state == :active, do: ~t"Next delivery", else: ~t"Status"}
+                  </p>
+                  <.next_delivery subscription={subscription} orders={@orders} locale={@locale} />
+                </div>
+                <.manage_button subscription={subscription} />
+              </div>
+            </li>
+          </ol>
+
+          <.manage_drawer
+            :for={subscription <- @subscriptions}
+            subscription={subscription}
+            orders={@orders}
+            locale={@locale}
+            edited?={subscription.id in @edited_subscriptions}
+            notice={notice_for(@subscription_notice, subscription)}
+          />
+        </.account_section>
+
+        <.account_section id="upcoming" title={~t"Coming up"}>
+          <div :if={@upcoming == []} class="mt-6">
+            <p class="text-base-content/80">{~t"Nothing on its way."}</p>
+            <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              <.button navigate={~p"/store"} variant="text">{~t"Visit the shop"}</.button>
+              <.button navigate={~p"/courses"} variant="text">{~t"See what's coming up"}</.button>
+            </div>
+          </div>
+
+          <ol :if={@upcoming != []} class="mt-6" data-testid="upcoming">
+            <.timeline_entry :for={entry <- @upcoming} entry={entry} locale={@locale} />
+          </ol>
+        </.account_section>
+
+        <.account_section :if={@past != []} id="past" title={~t"Past"}>
+          <ol class="mt-6" data-testid="past">
+            <.timeline_entry :for={entry <- Enum.take(@past, @past_visible)} entry={entry} locale={@locale} />
+          </ol>
+          <details :if={length(@past) > @past_visible} class="group">
+            <summary class="link-underline-hover mt-4 inline-block cursor-pointer list-none text-sm group-open:hidden">
+              {~t"Show #{count = length(@past) - @past_visible} more"}
+            </summary>
+            <ol data-testid="past-more">
+              <.timeline_entry :for={entry <- Enum.drop(@past, @past_visible)} entry={entry} locale={@locale} />
+            </ol>
+          </details>
+        </.account_section>
+
+        <.account_section :if={@subscriptions == []} id="subscriptions" title={~t"Subscriptions"}>
+          <div class="mt-6" data-testid="no-subscriptions">
+            <p class="text-base-content/80">
+              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."}
+            </p>
+            <.button
+              :if={@subscription_product}
+              navigate={~p"/product/#{@subscription_product.id}"}
+              variant="text"
+              class="mt-4"
+            >
+              {~t"See the subscription"}
+            </.button>
+          </div>
+        </.account_section>
 
         <.account_section id="details" title={~t"Your details"}>
           <.form
@@ -75,7 +162,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
             <.input field={@details_form[:name]} type="text" label={~t"Name"} autocomplete="name" />
             <.input field={@details_form[:email]} type="email" label={~t"Email"} autocomplete="email" required />
             <div class="flex items-center gap-4">
-              <.button type="submit" phx-disable-with={~t"Saving…"}>{~t"Save"}</.button>
+              <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"}>{~t"Save"}</.button>
               <p role="status" class="text-base-content/70 text-sm">
                 <span :if={@details_saved?}>{~t"Saved"}</span>
               </p>
@@ -99,194 +186,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
               required
             />
             <div class="flex items-center gap-4">
-              <.button type="submit" phx-disable-with={~t"Confirming…"}>{~t"Confirm"}</.button>
+              <.button type="submit" variant="primary" phx-disable-with={~t"Confirming…"}>{~t"Confirm"}</.button>
               <.button type="button" variant="text" phx-click="cancel_email_change">{~t"Cancel"}</.button>
             </div>
           </.form>
-        </.account_section>
-
-        <.account_section id="orders" title={~t"Orders"}>
-          <div :if={@orders == []} class="mt-6">
-            <p class="text-base-content/80">{~t"You haven't ordered anything yet."}</p>
-            <.button navigate={~p"/store"} variant="text" class="mt-4">{~t"Visit the shop"}</.button>
-          </div>
-
-          <%!-- table-fixed, or a long status pushes the whole document wider than a phone. --%>
-          <table
-            :if={@orders != []}
-            class="mt-8 w-full table-fixed text-left text-sm sm:text-base"
-            data-testid="orders-table"
-          >
-            <thead>
-              <tr class="text-base-content/70">
-                <th scope="col" class="eyebrow w-2/5 pr-4 pb-3 sm:w-1/6">{~t"Date"}</th>
-                <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/6">{~t"Reference"}</th>
-                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Status"}</th>
-                <th scope="col" class="eyebrow w-1/5 pb-3 text-right sm:w-1/6 sm:pr-4">{~t"Total"}</th>
-                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
-                  <span class="sr-only">{~t"Receipt"}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr :for={order <- @orders} class="border-base-content/12 border-t align-top">
-                <th scope="row" class="py-4 pr-4 font-normal">
-                  <span class="tabular-nums">{Format.date(ordered_on(order), @locale)}</span>
-                  <%!-- Below sm neither the reference nor the receipt has a column of its
-                       own; both ride under the date. --%>
-                  <span class="text-base-content/70 block text-xs tabular-nums sm:hidden">
-                    {order.order_reference}
-                  </span>
-                  <.receipt_link
-                    :if={order.payment_status == :paid}
-                    href={~p"/order/#{order.id}/receipt"}
-                    class="mt-1 sm:hidden"
-                  />
-                </th>
-                <td class="hidden py-4 pr-4 tabular-nums sm:table-cell">{order.order_reference}</td>
-                <td class="py-4 pr-4">
-                  {status_label(order, @locale)}
-                  <span
-                    :if={order.subscription_id}
-                    class="text-base-content/70 block text-sm"
-                    data-testid="order-subscription"
-                  >
-                    {~t"Subscription"}
-                  </span>
-                  <.unpaid_note :if={order.unpaid?} order={order} />
-                </td>
-                <%!-- Sans, not serif: Crimson Text ships no `tnum`, so a serif total
-                      cannot line up its decimal points down a ledger column. --%>
-                <td class="py-4 text-right tabular-nums sm:pr-4">
-                  {Format.currency(order.grand_total, @locale)}
-                </td>
-                <td class="hidden py-4 text-right sm:table-cell">
-                  <.receipt_link :if={order.payment_status == :paid} href={~p"/order/#{order.id}/receipt"} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </.account_section>
-
-        <.account_section id="subscriptions" title={~t"Subscriptions"}>
-          <div :if={@subscriptions == []} class="mt-6" data-testid="no-subscriptions">
-            <p class="text-base-content/80">
-              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."}
-            </p>
-            <.button
-              :if={@subscription_product}
-              navigate={~p"/product/#{@subscription_product.id}"}
-              variant="text"
-              class="mt-4"
-            >
-              {~t"See the subscription"}
-            </.button>
-          </div>
-
-          <table
-            :if={@subscriptions != []}
-            class="mt-8 w-full table-fixed text-left text-sm sm:text-base"
-            data-testid="subscriptions-table"
-          >
-            <thead>
-              <tr class="text-base-content/70">
-                <%!-- Widths match the Orders table above, so the two read as one ledger. --%>
-                <th scope="col" class="eyebrow w-2/5 pr-4 pb-3 sm:w-1/3">{~t"Plan"}</th>
-                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Next delivery"}</th>
-                <th scope="col" class="eyebrow hidden w-1/6 pb-3 text-right sm:table-cell sm:pr-4">{~t"Price"}</th>
-                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
-                  <span class="sr-only">{~t"Manage"}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                :for={subscription <- @subscriptions}
-                id={"subscription-#{subscription.id}"}
-                class="border-base-content/12 border-t align-top"
-              >
-                <th scope="row" class="py-4 pr-4 font-normal">
-                  <span id={"subscription-#{subscription.id}-name"}>{subscription_name(subscription)}</span>
-                  <span class="text-base-content/70 block text-xs sm:text-sm">{plan_label(subscription)}</span>
-                  <%!-- Below sm neither the price nor Manage has a column of its own;
-                       both ride under the name. --%>
-                  <span class="text-base-content/70 block text-xs tabular-nums sm:hidden">
-                    {~t"#{price = Format.currency(subscription.product_variant.price, @locale)} per delivery"}
-                  </span>
-                  <.manage_button subscription={subscription} class="mt-1 sm:hidden" />
-                </th>
-                <td class="py-4 pr-4" data-testid="subscription-status">
-                  <.next_delivery subscription={subscription} orders={@orders} locale={@locale} />
-                </td>
-                <td class="hidden py-4 text-right tabular-nums sm:table-cell sm:pr-4">
-                  {Format.currency(subscription.product_variant.price, @locale)}
-                </td>
-                <td class="hidden py-4 text-right sm:table-cell">
-                  <.manage_button subscription={subscription} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <.manage_drawer
-            :for={subscription <- @subscriptions}
-            subscription={subscription}
-            orders={@orders}
-            locale={@locale}
-            edited?={subscription.id in @edited_subscriptions}
-            notice={notice_for(@subscription_notice, subscription)}
-          />
-        </.account_section>
-
-        <.account_section id="courses" title={~t"Courses"}>
-          <div :if={@registrations == []} class="mt-6">
-            <p class="text-base-content/80">{~t"You haven't booked a course yet."}</p>
-            <.button navigate={~p"/courses"} variant="text" class="mt-4">{~t"See what's coming up"}</.button>
-          </div>
-
-          <table
-            :if={@registrations != []}
-            class="mt-8 w-full table-fixed text-left text-sm sm:text-base"
-            data-testid="courses-table"
-          >
-            <thead>
-              <tr class="text-base-content/70">
-                <th scope="col" class="eyebrow pr-4 pb-3">{~t"Course"}</th>
-                <th scope="col" class="eyebrow hidden pr-4 pb-3 sm:table-cell sm:w-1/4">{~t"Location"}</th>
-                <th scope="col" class="eyebrow w-1/4 pr-4 pb-3 sm:w-1/6">{~t"When"}</th>
-                <th scope="col" class="eyebrow w-1/5 pb-3 text-right sm:w-[10%] sm:pr-4">{~t"Places"}</th>
-                <th scope="col" class="w-[13%] hidden pb-3 sm:table-cell">
-                  <span class="sr-only">{~t"Receipt"}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr :for={registration <- @registrations} class="border-base-content/12 border-t align-top">
-                <th scope="row" class="py-4 pr-4 font-normal">
-                  <.link navigate={~p"/courses/#{registration.course.id}"} class="link-underline-hover">
-                    {registration.course.name}
-                  </.link>
-                  <%!-- Below sm neither the location nor the receipt has a column of its
-                       own; both ride under the name. --%>
-                  <span class="text-base-content/70 block text-xs sm:hidden">
-                    {registration.course.location_name}
-                  </span>
-                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} class="mt-1 sm:hidden" />
-                </th>
-                <td class="hidden py-4 pr-4 sm:table-cell">{registration.course.location_name}</td>
-                <td class="py-4 pr-4 tabular-nums">
-                  {Format.day_month(registration.course.date, @locale)}
-                  <span class="text-base-content/70 block text-xs tabular-nums sm:text-sm">
-                    {Format.time(registration.course.start_time, @locale)}
-                  </span>
-                </td>
-                <td class="py-4 text-right tabular-nums sm:pr-4">{registration.seats_held}</td>
-                <td class="hidden py-4 text-right sm:table-cell">
-                  <.receipt_link href={~p"/courses/bookings/#{registration.id}/receipt"} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </.account_section>
 
         <.account_section id="newsletter" title={~t"Newsletter"}>
@@ -325,7 +228,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp account_section(assigns) do
     ~H"""
-    <section class="border-base-content/12 py-10 not-last:border-b sm:py-14" aria-labelledby={"#{@id}-heading"}>
+    <section class="pt-12 sm:pt-16" aria-labelledby={"#{@id}-heading"}>
       <h2 id={"#{@id}-heading"} class="section-title">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
@@ -333,23 +236,113 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   attr :href, :string, required: true
-  attr :class, :string, default: nil
 
   defp receipt_link(assigns) do
     ~H"""
-    <.button
+    <a
       href={@href}
       target="_blank"
       rel="noopener"
       aria-label={~t"Receipt (opens in a new tab)"}
-      variant="neutral"
-      size="sm"
-      class={["whitespace-nowrap", @class]}
+      class="link-underline-static-body text-base-content/70 whitespace-nowrap text-sm"
     >
       {~t"Receipt"}
-    </.button>
+    </a>
     """
   end
+
+  attr :entry, :map, required: true
+  attr :locale, :string, required: true
+
+  # The same row as the public courses list: date, what it is, then its price,
+  # which drops under the title below sm.
+  defp timeline_entry(assigns) do
+    ~H"""
+    <li class="border-base-content/12 grid-cols-[5rem_1fr] grid items-baseline gap-x-4 gap-y-2 border-t py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
+      <p class="text-base-content/70 tabular-nums">
+        {Format.day_month(@entry.date, @locale)}
+        <span :if={@entry.date.year != HelsinkiToday.today().year} class="block">{@entry.date.year}</span>
+      </p>
+      <.order_entry :if={@entry.type == :order} order={@entry.item} locale={@locale} />
+      <.course_entry :if={@entry.type == :course} registration={@entry.item} locale={@locale} />
+      <.subscription_entry :if={@entry.type == :subscription} subscription={@entry.item} locale={@locale} />
+    </li>
+    """
+  end
+
+  attr :price, :any, required: true
+  attr :locale, :string, required: true
+  slot :inner_block
+
+  defp entry_price(assigns) do
+    ~H"""
+    <div class="col-start-2 sm:col-start-3 sm:row-start-1 sm:text-right">
+      <p class="font-serif text-xl tabular-nums">{Format.storefront_price(@price, @locale)}</p>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  attr :order, :map, required: true
+  attr :locale, :string, required: true
+
+  defp order_entry(assigns) do
+    ~H"""
+    <div class="min-w-0">
+      <h3 class="card-heading text-balance">{order_title(@order)}</h3>
+      <p class="text-base-content/70 mt-1 text-sm">
+        {status_label(@order)} · #{@order.order_reference}
+        <span :if={@order.subscription_id} data-testid="order-subscription">· {~t"Subscription"}</span>
+      </p>
+      <.unpaid_note :if={@order.unpaid?} order={@order} />
+    </div>
+    <.entry_price price={@order.grand_total} locale={@locale}>
+      <.receipt_link :if={@order.payment_status == :paid} href={~p"/order/#{@order.id}/receipt"} />
+    </.entry_price>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :locale, :string, required: true
+
+  defp course_entry(assigns) do
+    ~H"""
+    <div class="min-w-0">
+      <h3 class="card-heading text-balance">
+        <.link navigate={~p"/courses/#{@registration.course.id}"} class="link-underline-hover">
+          {@registration.course.name}
+        </.link>
+      </h3>
+      <p class="text-base-content/70 mt-1 text-sm tabular-nums">
+        {Format.time(@registration.course.start_time, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
+      </p>
+    </div>
+    <.entry_price price={@registration.amount} locale={@locale}>
+      <.receipt_link href={~p"/courses/bookings/#{@registration.id}/receipt"} />
+    </.entry_price>
+    """
+  end
+
+  attr :subscription, :map, required: true
+  attr :locale, :string, required: true
+
+  defp subscription_entry(assigns) do
+    ~H"""
+    <div class="min-w-0">
+      <h3 class="card-heading text-balance">{subscription_name(@subscription)}</h3>
+      <p class="text-base-content/70 mt-1 text-sm">
+        {~t"Subscription"} · {~t"Charged #{date = Format.day_month(Subscription.charged_on(@subscription.next_fulfillment_date), @locale)}"}
+      </p>
+    </div>
+    <.entry_price price={@subscription.product_variant.price} locale={@locale} />
+    """
+  end
+
+  defp order_title(%{line_items: []}), do: ~t"Order"
+  defp order_title(order), do: Enum.map_join(order.line_items, ", ", &line_item_label/1)
+
+  defp line_item_label(%{quantity: 1} = item), do: item.product_name
+  defp line_item_label(item), do: "#{item.quantity} × #{item.product_name}"
 
   def handle_event("save_details", %{"details" => params}, socket) do
     user = socket.assigns.current_user
@@ -505,7 +498,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
           put_flash(socket, :error, subscription_error_message(error))
       end
 
-    assign(socket, subscriptions: subscriptions(user), orders: Orders.list_my_orders!(actor: user))
+    socket
+    |> assign(subscriptions: subscriptions(user), orders: orders(user))
+    |> assign_timeline()
   end
 
   # Only the empty state links to it, so it's looked up only then.
@@ -562,59 +557,57 @@ defmodule EdenflowersWeb.Account.AccountLive do
   attr :booked, :map, default: nil
   attr :locale, :string, required: true
 
-  defp cancel_dialog(assigns) do
-    assigns = assign(assigns, final_delivery?: final_delivery?(assigns.booked))
+  # Asked in place rather than in a dialog, since the drawer is already a layer
+  # of its own.
+  defp cancel_confirmation(assigns) do
+    assigns = assign(assigns, id: assigns.subscription.id, final_delivery?: final_delivery?(assigns.booked))
 
     ~H"""
-    <dialog
-      id={"cancel-subscription-#{@subscription.id}"}
-      autofocus
-      class="modal outline-hidden"
-      aria-labelledby={"cancel-subscription-#{@subscription.id}-title"}
-      phx-mounted={JS.ignore_attributes(["open"])}
+    <section
+      id={"cancel-subscription-#{@id}"}
+      class="mt-4 hidden"
+      aria-labelledby={"cancel-subscription-#{@id}-title"}
     >
-      <div class="modal-box bg-base-100 rounded-none">
-        <h3 id={"cancel-subscription-#{@subscription.id}-title"} class="font-serif text-2xl">
-          {~t"Stop your subscription?"}
-        </h3>
-        <p :if={@final_delivery?} class="mt-3" data-testid="final-delivery-warning">
-          {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."}
-        </p>
-        <p :if={not @final_delivery?} class="mt-3">{~t"There will be no more deliveries or charges."}</p>
-        <p :if={@subscription.state == :active} class="mt-2">
-          {~t"Want a break instead?"}
-          <.button
-            type="button"
-            variant="text"
-            phx-click={
-              JS.push("pause_subscription", value: %{id: @subscription.id})
-              |> JS.dispatch("drawer:close", to: "#cancel-subscription-#{@subscription.id}")
-            }
-          >
-            {~t"Pause it"}
-          </.button>
-        </p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <form method="dialog">
-            <.button type="submit" variant="primary" autofocus>{~t"Keep it"}</.button>
-          </form>
-          <.button
-            type="button"
-            variant="destructive"
-            phx-click={
-              JS.push("cancel_subscription", value: %{id: @subscription.id})
-              |> JS.dispatch("drawer:close", to: "#cancel-subscription-#{@subscription.id}")
-            }
-          >
-            {~t"Stop subscription"}
-          </.button>
-        </div>
+      <h3 id={"cancel-subscription-#{@id}-title"} tabindex="-1" class="card-heading outline-hidden">
+        {~t"Stop your subscription?"}
+      </h3>
+      <p :if={@final_delivery?} class="mt-2" data-testid="final-delivery-warning">
+        {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."}
+      </p>
+      <p :if={not @final_delivery?} class="mt-2">{~t"There will be no more deliveries or charges."}</p>
+      <p :if={@subscription.state == :active} class="mt-2">
+        {~t"Want a break instead?"}
+        <.button
+          type="button"
+          variant="text"
+          phx-click={JS.push("pause_subscription", value: %{id: @id}) |> hide_cancel_confirmation(@id)}
+        >
+          {~t"Pause it"}
+        </.button>
+      </p>
+      <div class="mt-5 flex flex-wrap gap-3">
+        <.button type="button" variant="primary" phx-click={hide_cancel_confirmation(@id)}>
+          {~t"Keep it"}
+        </.button>
+        <.button type="button" variant="destructive" phx-click={JS.push("cancel_subscription", value: %{id: @id})}>
+          {~t"Stop subscription"}
+        </.button>
       </div>
-      <form method="dialog" class="modal-backdrop">
-        <button type="submit">{~t"Close"}</button>
-      </form>
-    </dialog>
+    </section>
     """
+  end
+
+  defp show_cancel_confirmation(id) do
+    JS.hide(to: "#subscription-#{id}-actions")
+    |> JS.show(to: "#cancel-subscription-#{id}")
+    |> JS.focus(to: "#cancel-subscription-#{id}-title")
+  end
+
+  defp hide_cancel_confirmation(js \\ %JS{}, id) do
+    js
+    |> JS.hide(to: "#cancel-subscription-#{id}")
+    |> JS.show(to: "#subscription-#{id}-actions", display: "flex")
+    |> JS.focus(to: "#cancel-subscription-#{id}-open")
   end
 
   attr :subscription, :map, required: true
@@ -693,15 +686,14 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   attr :subscription, :map, required: true
-  attr :class, :string, default: nil
 
   defp manage_button(assigns) do
     ~H"""
     <.button
       type="button"
-      variant="neutral"
+      variant="secondary"
       size="sm"
-      class={["whitespace-nowrap", @class]}
+      class="whitespace-nowrap"
       aria-label={~t"Manage #{name = subscription_name(@subscription)}"}
       phx-click={JS.exec("phx-show", to: "#manage-subscription-#{@subscription.id}")}
     >
@@ -714,7 +706,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   attr :orders, :list, required: true
   attr :locale, :string, required: true
 
-  # The table's short form: the date, then one line on what's happening.
+  # The list's short form: the date, then one line on what's happening.
   defp next_delivery(%{subscription: %{state: :payment_failed}} = assigns) do
     assigns = assign(assigns, unpaid: Subscription.unpaid_occurrence(assigns.orders, assigns.subscription))
 
@@ -860,13 +852,15 @@ defmodule EdenflowersWeb.Account.AccountLive do
             </p>
 
             <div
-              :if={@open? and @subscription.state in [:active, :paused]}
+              :if={@subscription.state != :cancelled}
+              id={"subscription-#{@id}-actions"}
               role="group"
               aria-label={~t"Deliveries"}
-              class="mt-4 flex flex-wrap gap-3"
+              class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3"
             >
               <%!-- One id for both, so the button is patched in place and keeps focus. --%>
               <.button
+                :if={@open? and @subscription.state in [:active, :paused]}
                 id={"subscription-#{@id}-pause"}
                 type="button"
                 variant={if @subscription.state == :paused, do: "primary", else: "secondary"}
@@ -875,7 +869,24 @@ defmodule EdenflowersWeb.Account.AccountLive do
               >
                 {if @subscription.state == :active, do: ~t"Pause", else: ~t"Resume"}
               </.button>
+              <.button
+                id={"cancel-subscription-#{@id}-open"}
+                type="button"
+                variant="text"
+                class="text-base-content/70 min-h-11"
+                aria-controls={"cancel-subscription-#{@id}"}
+                phx-click={show_cancel_confirmation(@id)}
+              >
+                {~t"Cancel subscription"}
+              </.button>
             </div>
+
+            <.cancel_confirmation
+              :if={@subscription.state != :cancelled}
+              subscription={@subscription}
+              booked={@booked}
+              locale={@locale}
+            />
 
             <.button
               :if={@subscription.state == :cancelled}
@@ -944,7 +955,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
               />
               <.button
                 type="submit"
-                variant="secondary"
+                variant="primary"
                 class="self-start"
                 disabled={not @edited?}
                 phx-disable-with={~t"Saving…"}
@@ -969,7 +980,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
           <.detail_row :if={@subscription.state not in [:cancelled, :payment_failed]} label={~t"Card"}>
             <div class="flex items-baseline justify-between gap-4">
-              <p data-testid="subscription-card">{Fields.card_label(@subscription) || ~t"Saved card"}</p>
+              <p data-testid="subscription-card">
+                <Fields.saved_card :if={@subscription.card_brand} card={@subscription} />
+                <span :if={!@subscription.card_brand}>{~t"Saved card"}</span>
+              </p>
               <.link
                 navigate={~p"/account/subscriptions/#{@id}/card"}
                 class="link-underline-static-body min-h-11 inline-flex shrink-0 items-center"
@@ -979,23 +993,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
             </div>
           </.detail_row>
         </dl>
-
-        <.button
-          :if={@subscription.state != :cancelled}
-          type="button"
-          variant="text"
-          class="text-base-content/70 min-h-11 mt-auto self-start"
-          phx-click={JS.dispatch("drawer:open", to: "#cancel-subscription-#{@id}")}
-        >
-          {~t"Cancel subscription"}
-        </.button>
-
-        <.cancel_dialog
-          :if={@subscription.state != :cancelled}
-          subscription={@subscription}
-          booked={@booked}
-          locale={@locale}
-        />
       </div>
     </.drawer>
     """
@@ -1169,46 +1166,74 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   @doc """
-  Plain-language order status for the customer.
+  Plain-language order status for the customer. The date sits beside it.
 
   Never claims an outcome the data doesn't support: an order whose fulfillment
-  date has passed but which Jennie hasn't marked fulfilled shows the date it was
-  scheduled for, not "Delivered".
+  date has passed but which Jennie hasn't marked fulfilled reads as scheduled,
+  not "Delivered".
   """
-  def status_label(order, locale)
+  def status_label(order)
 
-  def status_label(%{payment_status: :refunded}, _locale), do: ~t"Refunded"
+  def status_label(%{payment_status: :refunded}), do: ~t"Refunded"
 
-  def status_label(%{fulfillment_status: :cancelled}, _locale), do: ~t"Cancelled"
+  def status_label(%{fulfillment_status: :cancelled}), do: ~t"Cancelled"
 
-  def status_label(%{fulfillment_date: nil}, _locale), do: ~t"Confirmed"
+  def status_label(%{fulfillment_date: nil}), do: ~t"Confirmed"
 
-  def status_label(%{fulfillment_status: :fulfilled} = order, locale) do
-    date = Format.day_month(order.fulfillment_date, locale)
+  def status_label(%{fulfillment_status: :fulfilled, fulfillment_method: :pickup}), do: ~t"Collected"
 
-    case order.fulfillment_method do
-      :pickup -> ~t"Collected #{date}"
-      _ -> ~t"Delivered #{date}"
-    end
-  end
+  def status_label(%{fulfillment_status: :fulfilled}), do: ~t"Delivered"
 
-  def status_label(order, locale) do
-    date = Format.day_month(order.fulfillment_date, locale)
-
+  def status_label(order) do
     case {Date.compare(order.fulfillment_date, HelsinkiToday.today()), order.fulfillment_method} do
       {:eq, :pickup} -> ~t"Ready to collect today"
       {:eq, _} -> ~t"Arriving today"
-      {:gt, :pickup} -> ~t"Ready to collect #{date}"
-      {:gt, _} -> ~t"Arriving #{date}"
-      {:lt, :pickup} -> ~t"Pickup on #{date}"
-      {:lt, _} -> ~t"Delivery on #{date}"
+      {:gt, :pickup} -> ~t"For pickup"
+      {:gt, _} -> ~t"Arriving"
+      {:lt, :pickup} -> ~t"Scheduled pickup"
+      {:lt, _} -> ~t"Scheduled delivery"
     end
   end
+
+  defp orders(user), do: Orders.list_my_orders!(actor: user, load: [:line_items])
+
+  defp assign_timeline(socket) do
+    %{orders: orders, registrations: registrations, subscriptions: subscriptions} = socket.assigns
+    today = HelsinkiToday.today()
+
+    order_entries =
+      Enum.map(orders, &%{type: :order, item: &1, date: order_date(&1), upcoming?: upcoming_order?(&1, today)})
+
+    course_entries =
+      Enum.map(registrations, fn registration ->
+        date = registration.course.date
+        %{type: :course, item: registration, date: date, upcoming?: not Date.before?(date, today)}
+      end)
+
+    # A delivery already booked is an order above; this is the one after it.
+    subscription_entries =
+      for subscription <- subscriptions, subscription.state == :active do
+        %{type: :subscription, item: subscription, date: subscription.next_fulfillment_date, upcoming?: true}
+      end
+
+    {upcoming, past} = Enum.split_with(order_entries ++ course_entries ++ subscription_entries, & &1.upcoming?)
+
+    assign(socket,
+      upcoming: Enum.sort_by(upcoming, & &1.date, Date),
+      past: Enum.sort_by(past, & &1.date, {:desc, Date})
+    )
+  end
+
+  defp order_date(order), do: order.fulfillment_date || ordered_on(order)
+
+  defp upcoming_order?(%{payment_status: :refunded}, _today), do: false
+  defp upcoming_order?(%{fulfillment_status: status}, _today) when status in [:cancelled, :fulfilled], do: false
+  defp upcoming_order?(%{fulfillment_date: nil}, _today), do: true
+  defp upcoming_order?(order, today), do: not Date.before?(order.fulfillment_date, today)
 
   defp registrations(user) do
     Courses.list_my_registrations!(actor: user, load: [:course, :seats_held])
     |> Translations.translate_assoc(:course)
-    |> Enum.sort_by(& &1.course.date, Date)
   end
 
   defp ordered_on(order), do: helsinki_date(order.ordered_at || order.inserted_at)

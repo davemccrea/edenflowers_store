@@ -44,7 +44,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert has_element?(view, "#subscription-fulfillment", "Ring the bell twice")
     assert has_element?(view, "#subscription-fulfillment", "Happy Mondays")
     assert has_element?(view, "#subscription-recipient", "Grace Hopper")
-    assert has_element?(view, "#subscription-card", "Visa •••• 4242, expires 08/27")
+    assert has_element?(view, ~s|#subscription-card img[alt="Visa"]|)
+    assert has_element?(view, "#subscription-card", "•••• 4242, expires 08/27")
   end
 
   test "Jennie can pause, resume and cancel, even inside the customer's cutoff", %{conn: conn, customer: customer} do
