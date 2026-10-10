@@ -768,8 +768,8 @@ msgstr "Lähetimme sinulle uuden koodin."
 
 #: lib/edenflowers/email.ex:177
 #, elixir-autogen, elixir-format
-msgid "Your Eden Flowers sign-in code"
-msgstr "Eden Flowers -kirjautumiskoodisi"
+msgid "%{otp_code} is your Eden Flowers sign-in code"
+msgstr "%{otp_code} on Eden Flowers -kirjautumiskoodisi"
 
 #: lib/edenflowers_web/components/date_picker.ex:159
 #, elixir-autogen, elixir-format
@@ -4378,8 +4378,8 @@ msgstr "Vahvista"
 
 #: lib/edenflowers/email.ex:185
 #, elixir-autogen, elixir-format
-msgid "Confirm your new Eden Flowers email"
-msgstr "Vahvista uusi sähköpostiosoitteesi Eden Flowersissa"
+msgid "%{code} is your code to confirm your new Eden Flowers email"
+msgstr "%{code} on koodisi uuden sähköpostiosoitteesi vahvistamiseen Eden Flowersissa"
 
 #: lib/edenflowers_web/features/account/account_live.ex:189
 #, elixir-autogen, elixir-format
