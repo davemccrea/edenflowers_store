@@ -1,0 +1,35 @@
+<div class="bg-base-200 flex min-h-screen flex-col">
+  <header class="flex justify-center py-8">
+    <a href={~p"/"}>
+      <.image
+        src="local:///Eden_flowers-logo1_green_web.svg"
+        alt="Eden Flowers"
+        width={160}
+        height={80}
+        class="w-40 md:hidden"
+      />
+      <.image
+        src="local:///Eden_flowers-logo2_green_web.svg"
+        alt="Eden Flowers"
+        width={256}
+        height={80}
+        class="hidden w-64 md:block"
+      />
+    </a>
+  </header>
+
+  <main
+    id="main-content"
+    tabindex="-1"
+    class="flex flex-grow items-center justify-center px-6 py-8 outline-hidden md:-mt-24"
+  >
+    <div class="text-base-content flex max-w-xl flex-col items-center gap-6 text-center text-lg">
+      <h1 class="page-title">{~t"Page not found"}</h1>
+      <p>{~t"The page you're looking for doesn't exist or has moved."}</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <.button href={~p"/"} variant="primary">{~t"Go to the home page"}</.button>
+        <.button href={~p"/store"}>{~t"Browse the store"}</.button>
+      </div>
+    </div>
+  </main>
+</div>

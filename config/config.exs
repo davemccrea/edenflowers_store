@@ -78,6 +78,7 @@ config :edenflowers, EdenflowersWeb.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: EdenflowersWeb.ErrorHTML, json: EdenflowersWeb.ErrorJSON],
+    root_layout: [html: {EdenflowersWeb.Layouts, :root}],
     layout: false
   ],
   pubsub_server: Edenflowers.PubSub,

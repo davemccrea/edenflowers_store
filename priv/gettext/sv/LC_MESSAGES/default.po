@@ -5477,3 +5477,18 @@ msgstr "Vändagen"
 #, elixir-autogen, elixir-format
 msgid "Women's Day"
 msgstr "Kvinnodagen"
+
+#: lib/edenflowers_web/controllers/error_html/404.html.heex:30
+#, elixir-autogen, elixir-format
+msgid "Go to the home page"
+msgstr "Gå till startsidan"
+
+#: lib/edenflowers_web/controllers/error_html/404.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "Page not found"
+msgstr "Sidan hittades inte"
+
+#: lib/edenflowers_web/controllers/error_html/404.html.heex:28
+#, elixir-autogen, elixir-format
+msgid "The page you're looking for doesn't exist or has moved."
+msgstr "Sidan du letar efter finns inte eller har flyttats."
