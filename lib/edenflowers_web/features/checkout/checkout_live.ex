@@ -111,7 +111,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       aria-required="true"
                       data-testid="customer-email-input"
                     />
-                    <p :if={@order.subscription?} class="text-base-content/70 -mt-4 text-sm" data-testid="account-note">
+                    <p
+                      :if={@order.subscription? and is_nil(@current_user)}
+                      class="text-base-content/70 -mt-4 text-sm"
+                      data-testid="account-note"
+                    >
                       {~t"We'll set up an account with this email so you can pause or cancel."}
                     </p>
 
