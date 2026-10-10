@@ -3,7 +3,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
   use ExUnit.Case, async: true
 
   alias Edenflowers.Orders.Receipt
-  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Courses.{Course, CourseRegistration}
+  alias Edenflowers.Orders.{LineItem, Order, Payment}
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
   @sample_dir Path.join([:code.priv_dir(:edenflowers), "receipts", "sample"])
@@ -178,6 +179,67 @@ defmodule Edenflowers.Orders.ReceiptTest do
     end
   end
 
+  describe "build_payload/1 payments" do
+    test "lists each payment of an order paid partly by card and partly in cash, on the day it was paid" do
+      order =
+        build_delivery_order(locale: "en-GB")
+        |> Map.put(:payments, [
+          payment("15.00", :cash, ~U[2026-05-14 10:00:00Z], payment_method_type: "cash"),
+          payment("30.00", :stripe, ~U[2026-05-13 14:32:00Z],
+            payment_method_type: "card",
+            card_brand: "visa",
+            card_last4: "4242"
+          )
+        ])
+
+      assert [
+               %{method: "card", card_brand: "visa", card_last4: "4242", paid_on: "13/05/2026", amount: "€30.00"},
+               %{method: "cash", card_brand: nil, card_last4: nil, paid_on: "14/05/2026", amount: "€15.00"}
+             ] = Receipt.build_payload(order).payments
+    end
+
+    test "leaves off refunds, money handed back, and payments recorded before methods were" do
+      order =
+        build_delivery_order(locale: "en-GB")
+        |> Map.put(:payments, [
+          payment("40.00", :stripe, ~U[2026-05-13 14:32:00Z]),
+          payment("-5.00", :stripe, ~U[2026-05-14 09:00:00Z]),
+          payment("-2.00", :cash, ~U[2026-05-14 10:00:00Z], payment_method_type: "cash")
+        ])
+
+      assert Receipt.build_payload(order).payments == []
+    end
+
+    test "names how a course booking was paid" do
+      registration = %CourseRegistration{
+        locale: "en-GB",
+        reference: "C-1",
+        name: "Anna Lindqvist",
+        email: "anna.lindqvist@example.fi",
+        seats: 1,
+        amount: Decimal.new("85.00"),
+        tax_rate: Decimal.new("0.255"),
+        confirmed_at: ~U[2026-09-22 15:40:00Z],
+        payment_method_type: "card",
+        card_brand: "amex",
+        card_last4: "0005",
+        course: %Course{
+          name: "Advent Wreaths",
+          date: ~D[2026-11-14],
+          start_time: ~T[10:00:00],
+          end_time: ~T[14:00:00],
+          location_name: "Minimossen",
+          location_address: "Myrvägen 1, 65230 Vasa"
+        }
+      }
+
+      assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22/09/2026", amount: "€85.00"}] =
+               Receipt.build_payload(registration).payments
+
+      assert Receipt.build_payload(%{registration | payment_method_type: nil}).payments == []
+    end
+  end
+
   describe "generate/1" do
     @describetag :typst
 
@@ -213,6 +275,10 @@ defmodule Edenflowers.Orders.ReceiptTest do
     }
   end
 
+  defp payment(amount, method, paid_at, paid_with \\ []) do
+    struct!(%Payment{amount: Decimal.new(amount), method: method, paid_at: paid_at}, paid_with)
+  end
+
   defp sum(line_items, field) do
     line_items |> Enum.map(&Map.fetch!(&1, field)) |> Enum.reduce(&Decimal.add/2)
   end
@@ -241,7 +307,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
         items_subtotal: items_subtotal,
         items_total: items_total,
         grand_total: Decimal.add(items_total, fee),
-        line_items: line_items
+        line_items: line_items,
+        payments: []
       },
       attrs
     )

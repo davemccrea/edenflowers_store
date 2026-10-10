@@ -18,6 +18,7 @@
     "fulfillment_method", "fulfillment_date",
     "line_items", "vat_breakdown",
     "items_subtotal", "grand_total",
+    "payments",
   )
   let optional = (
     "card_message",
@@ -44,6 +45,11 @@
   for row in order.vat_breakdown {
     for key in ("rate", "base", "tax", "gross") {
       assert(key in row, message: "receipt: VAT breakdown row missing `" + key + "`")
+    }
+  }
+  for payment in order.payments {
+    for key in ("method", "card_brand", "card_last4", "paid_on", "amount") {
+      assert(key in payment, message: "receipt: payment missing `" + key + "`")
     }
   }
 
@@ -262,6 +268,24 @@
     text(features: ("tnum",))[#value],
   )
 
+  // `method` is Stripe's payment method type or the in-person method. Stripe
+  // can offer methods we have no label for, so those print as they come.
+  let card-logos = ("visa", "mastercard", "amex")
+  let method-labels = ("card", "zettle", "mobilepay", "klarna", "cash", "zervant")
+  let capitalized(name) = upper(name.first()) + name.slice(1).replace("_", " ")
+  // The logo is sized to the cap height so a card row is no taller than the rest.
+  let paid-with(payment) = if payment.card_brand in card-logos {
+    box(baseline: 12%, image("assets/cards/" + payment.card_brand + ".svg", height: 8.5pt))
+    h(5pt)
+    text(features: ("tnum",))[•••• #payment.card_last4]
+  } else if payment.card_brand != none [
+    #capitalized(payment.card_brand) •••• #payment.card_last4
+  ] else if payment.method in method-labels {
+    t("method-" + payment.method)
+  } else {
+    capitalized(payment.method)
+  }
+
   align(right)[
     #block(width: 60%)[
       #grid(
@@ -277,14 +301,25 @@
         text(weight: "bold")[#t("total-paid")],
         [],
         text(features: ("tnum",), weight: "bold")[#order.grand_total],
+        // How it was paid, dated, under the total it pays, as on a till
+        // receipt. Payments from before methods were recorded arrive empty
+        // and aren't listed.
+        ..if order.payments.len() > 0 { (grid.cell(colspan: 3)[#v(2pt)],) },
+        ..order.payments.map(payment => (
+          grid.cell(align: left + horizon, paid-with(payment)),
+          grid.cell(align: right + horizon)[
+            #text(features: ("tnum",), fill: colors.ink-muted)[#payment.paid_on]#h(12pt)
+          ],
+          grid.cell(align: right + horizon, text(features: ("tnum",))[#payment.amount]),
+        )).flatten(),
       )
 
       #v(14pt)
 
       // ── VAT breakdown ─────────────────────────────────────────────────
-      // Finnish receipts must state the VAT per rate — kuittipakkolaki
-      // 658/2013 § 4, and AVL § 209 f for the simplified invoice every order
-      // under €400 falls under. Prices are tax-inclusive, so the VAT is
+      // The VAT is stated per rate, as AVL § 209 f asks of a business buyer's
+      // invoice and kuittipakkolaki 658/2013 § 4 of a receipt for an in-person
+      // payment (online sales fall outside that act). Prices are tax-inclusive, so the VAT is
       // *contained* in the total: this block decomposes the figure above it
       // and must never read as another addend, which is why it sits below
       // the rule rather than in the column.

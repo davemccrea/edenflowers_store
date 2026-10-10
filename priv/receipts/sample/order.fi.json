@@ -50,5 +50,14 @@
     }
   ],
   "venue_name": null,
-  "venue_address": null
+  "venue_address": null,
+  "payments": [
+    {
+      "method": "mobilepay",
+      "card_brand": null,
+      "card_last4": null,
+      "paid_on": "13.5.2026",
+      "amount": "64,26 €"
+    }
+  ]
 }

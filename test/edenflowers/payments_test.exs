@@ -193,6 +193,51 @@ defmodule Edenflowers.PaymentsTest do
       assert [_job] = all_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
+    test "records the card that paid, for the receipt", %{order: order} do
+      expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_card" ->
+        {:ok, %{type: "card", card: %{brand: "visa", last4: "4242"}}}
+      end)
+
+      assert {:ok, :completed} = Payments.complete(Map.put(order_intent(order), :payment_method, "pm_card"))
+
+      assert [%{payment_method_type: "card", card_brand: "visa", card_last4: "4242"}] =
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+    end
+
+    test "records a payment method that isn't a card by its type", %{order: order} do
+      expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_mobilepay" -> {:ok, %{type: "mobilepay"}} end)
+
+      assert {:ok, :completed} = Payments.complete(Map.put(order_intent(order), :payment_method, "pm_mobilepay"))
+
+      assert [%{payment_method_type: "mobilepay", card_brand: nil}] =
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+    end
+
+    test "still completes when the payment method can't be looked up", %{order: order} do
+      expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_gone" -> {:error, :timeout} end)
+
+      log =
+        capture_log(fn ->
+          assert {:ok, :completed} = Payments.complete(Map.put(order_intent(order), :payment_method, "pm_gone"))
+        end)
+
+      assert log =~ "Couldn't look up payment method pm_gone"
+
+      assert [%{payment_method_type: nil}] =
+               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+    end
+
+    test "records the card that paid for a course booking", %{registration: registration} do
+      expect(StripeAPI.Mock, :retrieve_payment_method, fn "pm_card" ->
+        {:ok, %{type: "card", card: %{brand: "amex", last4: "0005"}}}
+      end)
+
+      assert {:ok, :completed} = Payments.complete(Map.put(course_intent(registration), :payment_method, "pm_card"))
+
+      assert %{payment_method_type: "card", card_brand: "amex", card_last4: "0005"} =
+               Courses.get_registration_by_id!(registration.id, authorize?: false)
+    end
+
     test "places an order the customer stepped back from while paying", %{order: order} do
       Orders.return_to_delivery!(order, authorize?: false)
 

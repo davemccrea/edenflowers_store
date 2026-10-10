@@ -118,6 +118,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     update :confirm_payment do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
+      # What paid, for the receipt; see Edenflowers.Payments.paid_with/1.
+      accept [:payment_method_type, :card_brand, :card_last4]
       validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :status, paid: :confirmed}
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       validate Edenflowers.Courses.Validations.MatchesPaymentAmount
@@ -225,6 +227,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string
+    attribute :payment_method_type, :string
+    attribute :card_brand, :string
+    attribute :card_last4, :string
     attribute :confirmed_at, :utc_datetime
     # Only for manual bookings: a Stripe booking is paid when it is confirmed.
     attribute :paid_at, :utc_datetime

@@ -50,5 +50,14 @@
     }
   ],
   "venue_name": null,
-  "venue_address": null
+  "venue_address": null,
+  "payments": [
+    {
+      "method": "card",
+      "card_brand": "mastercard",
+      "card_last4": "4444",
+      "paid_on": "13/05/2026",
+      "amount": "€64.26"
+    }
+  ]
 }
