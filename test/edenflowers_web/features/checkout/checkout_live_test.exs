@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       render_click: 1,
       render_click: 3,
       render_change: 2,
+      render_submit: 2,
       element: 2,
       assert_redirect: 2,
       assert_redirect: 3,
@@ -648,6 +649,21 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
 
       assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
+    end
+  end
+
+  describe "Submitting a step with errors" do
+    test "focuses the first invalid field", %{conn: conn, order: order} do
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> live("/checkout")
+
+      view
+      |> element("[data-testid='checkout-form-1']")
+      |> render_submit(%{"form" => %{"customer_name" => "", "customer_email" => ""}})
+
+      assert_push_event(view, "focus-first-error", %{})
     end
   end
 

@@ -211,6 +211,30 @@ Hooks.FocusElement = {
         }
       });
     });
+
+    this.handleEvent("focus-first-error", () => {
+      requestAnimationFrame(() => {
+        const invalid = this.el.querySelector('[aria-invalid="true"]');
+        if (!invalid) return;
+
+        // The delivery date's invalid input is hidden behind the calendar, so
+        // scroll to the nearest visible ancestor (its fieldset) instead and
+        // focus the calendar's roving tabindex day.
+        let target = invalid;
+        while (target && !target.checkVisibility())
+          target = target.parentElement;
+        const focusTarget = target?.querySelector('[tabindex="0"]') ?? invalid;
+
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        target?.scrollIntoView({
+          block: "center",
+          behavior: reducedMotion ? "auto" : "smooth",
+        });
+        /** @type {HTMLElement} */ (focusTarget).focus({ preventScroll: true });
+      });
+    });
   },
 };
 

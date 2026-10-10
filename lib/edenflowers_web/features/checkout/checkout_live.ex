@@ -678,6 +678,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
       {:error, form} ->
         forward_delivery_address_error(form)
+        focus_first_error()
         # A rejected date may have just been closed, so refresh the calendar.
         {:noreply, socket |> reload_order() |> assign(form: form)}
     end
@@ -770,6 +771,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
     {:noreply, push_navigate(socket, to: ~p"/")}
+  end
+
+  def handle_info(:focus_first_error, socket) do
+    {:noreply, push_event(socket, "focus-first-error", %{})}
   end
 
   def handle_info({:delivery_quoted, quote}, socket) do
@@ -964,9 +969,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
+        focus_first_error()
         {:noreply, assign(socket, form: form)}
     end
   end
+
+  # Sent as a message rather than pushed directly so it lands after any
+  # send_update from forward_delivery_address_error, whose errors render in a
+  # later diff.
+  defp focus_first_error, do: send(self(), :focus_first_error)
 
   defp forward_delivery_address_error(form) do
     case form[:delivery_address].errors do
