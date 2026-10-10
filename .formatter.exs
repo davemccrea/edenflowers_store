@@ -2,7 +2,6 @@
   import_deps: [
     :ash_oban,
     :ash_paper_trail,
-    :ash_ai,
     :cinder,
     :ash_authentication_phoenix,
     :ash_authentication,

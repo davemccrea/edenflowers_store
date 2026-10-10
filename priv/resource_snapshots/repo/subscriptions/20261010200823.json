@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
-      "type": "text"
+      "source": "interval_weeks",
+      "type": "bigint"
     },
     {
       "allow_nil?": false,
@@ -33,36 +33,72 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "next_fulfillment_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "recipient_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "recipient_phone_number",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "delivery_address",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "delivery_instructions",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "card_message",
       "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "1",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "seats",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
-      "default": "0",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "removed_seats",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"sv-FI\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -74,14 +110,14 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"pending\"",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "status",
+      "source": "stripe_customer_id",
       "type": "text"
     },
     {
@@ -93,43 +129,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "reference",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "tax_rate",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "amount",
-      "type": "decimal"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "payment_intent_id",
+      "source": "stripe_payment_method_id",
       "type": "text"
     },
     {
@@ -141,56 +141,56 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "confirmed_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "paid_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "confirmation_emailed_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "receipt_emailed_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "receipt_sha256",
+      "source": "card_brand",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "card_last4",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "card_exp_month",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "card_exp_year",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "setup_emailed_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
@@ -217,7 +217,19 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
+      "default": "\"active\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "state",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -237,7 +249,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_user_id_fkey",
+        "name": "subscriptions_user_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
@@ -270,51 +282,60 @@
           "global": null,
           "strategy": null
         },
-        "name": "course_registrations_course_id_fkey",
+        "name": "subscriptions_product_variant_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "courses"
+        "table": "product_variants"
       },
       "scale": null,
       "size": null,
-      "source": "course_id",
+      "source": "product_variant_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "subscriptions_fulfillment_option_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "fulfillment_options"
+      },
+      "scale": null,
+      "size": null,
+      "source": "fulfillment_option_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
-  "check_constraints": [
-    {
-      "attribute": [
-        "amount"
-      ],
-      "base_filter": null,
-      "check": "amount >= 0 AND amount = round(amount, 2)",
-      "name": "course_registrations_valid_amount"
-    }
-  ],
+  "check_constraints": [],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "E5A5F6424F6F2AC28FCC1AAB4AE3628DB8EEAC1AA9E4171F193542C93696A02F",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "course_registrations_unique_reference_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "reference"
-        }
-      ],
-      "name": "unique_reference",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "D4EA783CDAD152FC3F7EB11EA1E16192896F6041640785D5B3D9CF6C9D03EAFC",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -322,5 +343,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "course_registrations"
+  "table": "subscriptions"
 }

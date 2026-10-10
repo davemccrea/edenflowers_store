@@ -1,18 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -33,23 +21,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "document_id",
       "type": "text"
     },
     {
-      "allow_nil?": false,
-      "default": "0",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "sort_key",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -57,11 +33,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "fulfillment_method",
+      "source": "vendor_name",
       "type": "text"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -69,11 +45,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "rate_type",
+      "source": "vendor_vat_number",
       "type": "text"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -81,7 +57,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "base_price",
+      "source": "date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "total_amount",
       "type": "decimal"
     },
     {
@@ -93,7 +81,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "price_per_km",
+      "source": "vat_amount",
       "type": "decimal"
     },
     {
@@ -105,8 +93,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "free_dist_km",
-      "type": "bigint"
+      "source": "currency",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -117,20 +105,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "max_dist_km",
-      "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "same_day",
-      "type": "boolean"
+      "source": "category",
+      "type": "text"
     },
     {
       "allow_nil?": true,
@@ -141,8 +117,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "order_deadline",
-      "type": "time"
+      "source": "description",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -153,41 +129,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "available_days",
-      "type": [
-        "array",
-        "text"
-      ]
-    },
-    {
-      "allow_nil?": false,
-      "default": "[]",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "enabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
-    },
-    {
-      "allow_nil?": false,
-      "default": "[]",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "disabled_dates",
-      "type": [
-        "array",
-        "date"
-      ]
+      "source": "confidence",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -195,70 +138,85 @@
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "fulfillment_options_tax_rate_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "tax_rates"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "tax_rate_id",
-      "type": "uuid"
+      "source": "processed_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reviewed_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
   "check_constraints": [
     {
       "attribute": [
-        "base_price"
+        "total_amount"
       ],
       "base_filter": null,
-      "check": "base_price >= 0 AND base_price = round(base_price, 2)",
-      "name": "fulfillment_options_valid_base_price"
+      "check": "total_amount = round(total_amount, 2)",
+      "name": "expenses_valid_total_amount"
     },
     {
       "attribute": [
-        "price_per_km"
+        "vat_amount"
       ],
       "base_filter": null,
-      "check": "price_per_km >= 0 AND price_per_km = round(price_per_km, 2)",
-      "name": "fulfillment_options_valid_price_per_km"
+      "check": "vat_amount = round(vat_amount, 2)",
+      "name": "expenses_valid_vat_amount"
     }
   ],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "F244AFA9DDA538D5E53046193674F4E5FB57F8746C0F0B5DDECA7D10DE939B59",
+  "hash": "BBEA98D25EFB7C143FA24E35405698A13940D3028C0D4D22A6219A94C8BF0AA2",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "fulfillment_options_unique_name_index",
+      "index_name": "expenses_unique_document_id_index",
       "keys": [
         {
           "type": "atom",
-          "value": "name"
+          "value": "document_id"
         }
       ],
-      "name": "unique_name",
+      "name": "unique_document_id",
       "nils_distinct?": true,
       "where": null
     }
@@ -270,5 +228,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "fulfillment_options"
+  "table": "expenses"
 }

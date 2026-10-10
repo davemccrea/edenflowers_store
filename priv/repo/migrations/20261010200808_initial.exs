@@ -8,21 +8,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
   use Ecto.Migration
 
   def up do
-    create table(:conversations, primary_key: false) do
-      add :id, :uuid, null: false, default: fragment("uuid_generate_v7()"), primary_key: true
-      add :title, :text
-
-      add :inserted_at, :utc_datetime_usec,
-        null: false,
-        default: fragment("(now() AT TIME ZONE 'utc')")
-
-      add :updated_at, :utc_datetime_usec,
-        null: false,
-        default: fragment("(now() AT TIME ZONE 'utc')")
-
-      add :user_id, :uuid, null: false
-    end
-
     create table(:course_registrations, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
       add :name, :text, null: false
@@ -35,6 +20,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :tax_rate, :decimal, null: false
       add :amount, :decimal, null: false
       add :payment_intent_id, :text
+      add :payment_method_type, :text
+      add :card_brand, :text
+      add :card_last4, :text
       add :confirmed_at, :utc_datetime
       add :paid_at, :utc_datetime
       add :confirmation_emailed_at, :utc_datetime
@@ -204,6 +192,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :product_image_slug, :text
       add :is_card, :boolean, null: false, default: false
       add :free_delivery, :boolean, null: false, default: false
+      add :interval_weeks, :bigint
       add :variant_size, :text
 
       add :inserted_at, :utc_datetime_usec,
@@ -222,42 +211,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     create unique_index(:line_items, [:order_id, :product_variant_id],
              name: "line_items_unique_product_variant_index"
            )
-
-    create table(:messages, primary_key: false) do
-      add :inserted_at, :utc_datetime_usec,
-        null: false,
-        default: fragment("(now() AT TIME ZONE 'utc')")
-
-      add :updated_at, :utc_datetime_usec,
-        null: false,
-        default: fragment("(now() AT TIME ZONE 'utc')")
-
-      add :id, :uuid, null: false, default: fragment("uuid_generate_v7()"), primary_key: true
-      add :text, :text, null: false
-      add :tool_calls, {:array, :map}
-      add :tool_results, {:array, :map}
-      add :source, :text, null: false, default: "user"
-      add :complete, :boolean, null: false, default: true
-
-      add :conversation_id,
-          references(:conversations,
-            column: :id,
-            name: "messages_conversation_id_fkey",
-            type: :uuid,
-            prefix: "public",
-            on_delete: :delete_all
-          ),
-          null: false
-
-      add :response_to_id,
-          references(:messages,
-            column: :id,
-            name: "messages_response_to_id_fkey",
-            type: :uuid,
-            prefix: "public",
-            on_delete: :delete_all
-          )
-    end
 
     create table(:orders, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -290,6 +243,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :delivery_address, :text
       add :delivery_instructions, :text
       add :fulfillment_date, :date
+      add :subscription_date, :date
       add :quoted_fulfillment_fee, :decimal
       add :in_free_delivery_zone, :boolean
       add :fulfillment_fee_override, :decimal
@@ -301,6 +255,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :distance, :bigint
       add :position, :text
       add :payment_intent_id, :text
+      add :stripe_customer_id, :text
+      add :stripe_payment_method_id, :text
       add :payment_link_token, :text
       add :discount_rate, :decimal
       add :promotion_name, :text
@@ -342,7 +298,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
           )
 
       add :promotion_id, :uuid
+      add :subscription_id, :uuid
     end
+
+    create unique_index(:orders, [:subscription_id, :subscription_date],
+             name: "orders_unique_occurrence_index"
+           )
 
     create table(:orders_versions, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
@@ -356,8 +317,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "orders_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -376,6 +336,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :method, :text, null: false
       add :payment_intent_id, :text
       add :stripe_refund_id, :text
+      add :payment_method_type, :text
+      add :card_brand, :text
+      add :card_last4, :text
       add :paid_at, :utc_datetime, null: false, default: fragment("(now() AT TIME ZONE 'utc')")
 
       add :inserted_at, :utc_datetime_usec,
@@ -393,8 +356,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:payments, [:payment_intent_id],
@@ -498,7 +460,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :description, :text, null: false
       add :draft, :boolean, null: false, default: true
       add :featured, :boolean, null: false, default: false
+      add :position, :bigint
       add :free_delivery, :boolean, null: false, default: false
+      add :subscribable, :boolean, null: false, default: false
       add :tax_rate_id, :uuid, null: false
     end
 
@@ -511,8 +475,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -561,6 +524,91 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :version_updated_at, :utc_datetime_usec,
         null: false,
         default: fragment("(now() AT TIME ZONE 'utc')")
+    end
+
+    create table(:subscriptions, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+    end
+
+    alter table(:orders) do
+      modify :subscription_id,
+             references(:subscriptions,
+               column: :id,
+               name: "orders_subscription_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
+    end
+
+    alter table(:subscriptions) do
+      add :interval_weeks, :bigint, null: false
+      add :next_fulfillment_date, :date, null: false
+      add :recipient_name, :text
+      add :recipient_phone_number, :text
+      add :delivery_address, :text
+      add :delivery_instructions, :text
+      add :card_message, :text
+      add :locale, :text, null: false
+      add :stripe_customer_id, :text, null: false
+      add :stripe_payment_method_id, :text, null: false
+      add :card_brand, :text
+      add :card_last4, :text
+      add :card_exp_month, :bigint
+      add :card_exp_year, :bigint
+      add :setup_emailed_at, :utc_datetime
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :state, :text, null: false, default: "active"
+      add :user_id, :uuid, null: false
+
+      add :product_variant_id,
+          references(:product_variants,
+            column: :id,
+            name: "subscriptions_product_variant_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ), null: false
+
+      add :fulfillment_option_id,
+          references(:fulfillment_options,
+            column: :id,
+            name: "subscriptions_fulfillment_option_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ), null: false
+    end
+
+    create table(:subscriptions_versions, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :version_action_type, :text, null: false
+      add :version_action_name, :text, null: false
+
+      add :version_source_id,
+          references(:subscriptions,
+            column: :id,
+            name: "subscriptions_versions_version_source_id_fkey",
+            type: :uuid,
+            prefix: "public"
+          ), null: false
+
+      add :changes, :map
+
+      add :version_inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :version_updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :user_id, :uuid
     end
 
     create table(:tax_rates, primary_key: false) do
@@ -643,16 +691,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
     end
 
-    alter table(:conversations) do
-      modify :user_id,
-             references(:users,
-               column: :id,
-               name: "conversations_user_id_fkey",
-               type: :uuid,
-               prefix: "public"
-             )
-    end
-
     alter table(:course_registrations) do
       modify :user_id,
              references(:users,
@@ -695,6 +733,28 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     CREATE SEQUENCE reference_seq START 1400
     """)
 
+    alter table(:subscriptions) do
+      modify :user_id,
+             references(:users,
+               column: :id,
+               name: "subscriptions_user_id_fkey",
+               type: :uuid,
+               prefix: "public"
+             )
+    end
+
+    alter table(:subscriptions_versions) do
+      modify :user_id,
+             references(:users,
+               column: :id,
+               name: "subscriptions_versions_user_id_fkey",
+               type: :uuid,
+               prefix: "public",
+               on_delete: :nothing,
+               on_update: :update_all
+             )
+    end
+
     alter table(:users) do
       add :name, :text
       add :email, :citext, null: false
@@ -730,6 +790,24 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :name
     end
 
+    drop constraint(:subscriptions_versions, "subscriptions_versions_user_id_fkey")
+
+    drop constraint(:subscriptions_versions, "subscriptions_versions_version_source_id_fkey")
+
+    alter table(:subscriptions_versions) do
+      modify :user_id, :uuid
+    end
+
+    drop constraint(:subscriptions, "subscriptions_fulfillment_option_id_fkey")
+
+    drop constraint(:subscriptions, "subscriptions_product_variant_id_fkey")
+
+    drop constraint(:subscriptions, "subscriptions_user_id_fkey")
+
+    alter table(:subscriptions) do
+      modify :user_id, :uuid
+    end
+
     execute("""
     DROP SEQUENCE reference_seq
     """)
@@ -737,6 +815,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop_if_exists constraint(:orders, :orders_valid_fulfillment_fee_override)
 
     drop_if_exists constraint(:orders, :orders_valid_quoted_fulfillment_fee)
+
+    drop constraint(:orders, "orders_subscription_id_fkey")
 
     drop constraint(:orders, "orders_promotion_id_fkey")
 
@@ -755,12 +835,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop constraint(:course_registrations, "course_registrations_user_id_fkey")
 
     alter table(:course_registrations) do
-      modify :user_id, :uuid
-    end
-
-    drop constraint(:conversations, "conversations_user_id_fkey")
-
-    alter table(:conversations) do
       modify :user_id, :uuid
     end
 
@@ -804,6 +878,38 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:tax_rates)
 
+    drop table(:subscriptions_versions)
+
+    alter table(:subscriptions) do
+      remove :fulfillment_option_id
+      remove :product_variant_id
+      remove :user_id
+      remove :state
+      remove :updated_at
+      remove :inserted_at
+      remove :setup_emailed_at
+      remove :card_exp_year
+      remove :card_exp_month
+      remove :card_last4
+      remove :card_brand
+      remove :stripe_payment_method_id
+      remove :stripe_customer_id
+      remove :locale
+      remove :card_message
+      remove :delivery_instructions
+      remove :delivery_address
+      remove :recipient_phone_number
+      remove :recipient_name
+      remove :next_fulfillment_date
+      remove :interval_weeks
+    end
+
+    alter table(:orders) do
+      modify :subscription_id, :uuid
+    end
+
+    drop table(:subscriptions)
+
     drop table(:promotions_versions)
 
     drop_if_exists constraint(:promotions, :promotions_valid_minimum_cart_total)
@@ -834,7 +940,9 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:products) do
       remove :tax_rate_id
+      remove :subscribable
       remove :free_delivery
+      remove :position
       remove :featured
       remove :draft
       remove :description
@@ -907,7 +1015,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     drop table(:orders_versions)
 
+    drop_if_exists unique_index(:orders, [:subscription_id, :subscription_date],
+                     name: "orders_unique_occurrence_index"
+                   )
+
     alter table(:orders) do
+      remove :subscription_id
       remove :promotion_id
       remove :fulfillment_option_id
     end
@@ -937,6 +1050,8 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :promotion_name
       remove :discount_rate
       remove :payment_link_token
+      remove :stripe_payment_method_id
+      remove :stripe_customer_id
       remove :payment_intent_id
       remove :position
       remove :distance
@@ -948,6 +1063,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :fulfillment_fee_override
       remove :in_free_delivery_zone
       remove :quoted_fulfillment_fee
+      remove :subscription_date
       remove :fulfillment_date
       remove :delivery_instructions
       remove :delivery_address
@@ -970,12 +1086,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     drop table(:orders)
-
-    drop constraint(:messages, "messages_response_to_id_fkey")
-
-    drop constraint(:messages, "messages_conversation_id_fkey")
-
-    drop table(:messages)
 
     drop_if_exists unique_index(:line_items, [:order_id, :product_variant_id],
                      name: "line_items_unique_product_variant_index"
@@ -1060,7 +1170,5 @@ defmodule Edenflowers.Repo.Migrations.Initial do
                    )
 
     drop table(:course_registrations)
-
-    drop table(:conversations)
   end
 end

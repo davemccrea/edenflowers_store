@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -33,32 +33,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
+      "source": "code",
       "type": "citext"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
+      "source": "discount_rate",
+      "type": "decimal"
     },
     {
-      "allow_nil?": true,
-      "default": "false",
+      "allow_nil?": false,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "admin",
-      "type": "boolean"
+      "source": "minimum_cart_total",
+      "type": "decimal"
     },
     {
       "allow_nil?": true,
@@ -69,8 +69,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "avatar",
-      "type": "binary"
+      "source": "start_date",
+      "type": "date"
     },
     {
       "allow_nil?": true,
@@ -81,8 +81,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "avatar_content_type",
-      "type": "text"
+      "source": "expiration_date",
+      "type": "date"
     },
     {
       "allow_nil?": true,
@@ -90,53 +90,41 @@
       "generated?": false,
       "precision": null,
       "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "users_newsletter_promo_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "promotions"
-      },
+      "references": null,
       "scale": null,
       "size": null,
-      "source": "newsletter_promo_id",
-      "type": "uuid"
+      "source": "usage_limit",
+      "type": "bigint"
     }
   ],
   "base_filter": null,
-  "check_constraints": [],
+  "check_constraints": [
+    {
+      "attribute": [
+        "minimum_cart_total"
+      ],
+      "base_filter": null,
+      "check": "minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)",
+      "name": "promotions_valid_minimum_cart_total"
+    }
+  ],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "9CE60E27229C7EBD2FB9BF073698951EF842A5FD89049D047B8DD15C1BCB9444",
+  "hash": "9BFAEAF5E442B4F85463C0088A5AB5F24BFF6DFA209C5B72F3F47413349F9058",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "promotions_unique_code_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "code"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_code",
       "nils_distinct?": true,
       "where": null
     }
@@ -148,5 +136,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "promotions"
 }

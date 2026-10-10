@@ -6,7 +6,7 @@ config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gette
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10, chat_responses: [limit: 10], conversations: [limit: 10]],
+  queues: [default: 10],
   repo: Edenflowers.Repo,
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
@@ -57,7 +57,6 @@ config :edenflowers,
   ecto_repos: [Edenflowers.Repo],
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
-    Edenflowers.Chat,
     Edenflowers.Accounts,
     Edenflowers.Catalog,
     Edenflowers.Orders,

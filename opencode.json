@@ -1,11 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@dietrichgebert/ponytail"],
-  "mcp": {
-    "ash_ai": {
-      "type": "remote",
-      "url": "http://localhost:4000/ash_ai/mcp",
-      "enabled": true
-    }
-  }
+  "plugin": [
+    "@dietrichgebert/ponytail"
+  ]
 }

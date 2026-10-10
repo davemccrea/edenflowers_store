@@ -26,10 +26,6 @@ metadata:
 - [relationships](references/ash/relationships.md)
 - [testing](references/ash/testing.md)
 
-### ash_ai
-
-- [ash_ai](references/ash_ai/ash_ai.md)
-
 ### ash_authentication
 
 - [ash_authentication](references/ash_authentication/ash_authentication.md)
@@ -76,7 +72,7 @@ metadata:
 ## Searching Documentation
 
 ```sh
-mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_ai -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_oban -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
+mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_oban -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
 ```
 
 ## Available Mix Tasks
@@ -108,14 +104,6 @@ mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_ai -p ash_a
 - `mix ash.tear_down` - Runs all tear_down tasks for any extension on any resource/domain in your application.
 - `mix ash_admin.install` - Installs AshAdmin
 - `mix ash_admin.install.docs`
-- `mix ash_ai.gen.chat` - Generates the resources and views for a conversational UI backed by `ash_postgres` and `ash_oban`
-- `mix ash_ai.gen.chat.docs`
-- `mix ash_ai.gen.mcp` - Sets up an MCP server for your application
-- `mix ash_ai.gen.mcp.docs`
-- `mix ash_ai.gen.usage_rules`
-- `mix ash_ai.gen.usage_rules.docs`
-- `mix ash_ai.install` - Installs `AshAi`. Call with `mix igniter.install ash_ai`. Requires igniter to run.
-- `mix ash_ai.install.docs`
 - `mix ash_authentication.add_add_on` - Adds the provided add-on to your user resource
 - `mix ash_authentication.add_add_on.audit_log` - Adds an audit log add-on to your user resource
 - `mix ash_authentication.add_add_on.confirmation` - Adds email confirmation to your user resource

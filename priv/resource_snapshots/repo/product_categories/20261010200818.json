@@ -1,6 +1,18 @@
 {
   "attributes": [
     {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "translations",
+      "type": "map"
+    },
+    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -21,32 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_action_type",
+      "source": "name",
       "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_action_name",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_source_id",
-      "type": "uuid"
     },
     {
       "allow_nil?": true,
@@ -57,32 +45,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "changes",
-      "type": "map"
+      "source": "description",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_inserted_at",
-      "type": "utc_datetime_usec"
+      "source": "slug",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "default": "\"draft\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_updated_at",
-      "type": "utc_datetime_usec"
+      "source": "visibility",
+      "type": "text"
     }
   ],
   "base_filter": null,
@@ -91,8 +79,23 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "5D952B4C137DB9AEC7F1057FDD6323B7D282468241CA7DA6024331A754C71325",
-  "identities": [],
+  "hash": "F5EACE54BC3AEFDFC2C2432749E11508B898C3F094BF2326707FF27F4B9D44D2",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "product_categories_unique_slug_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "slug"
+        }
+      ],
+      "name": "unique_slug",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -100,5 +103,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "promotions_versions"
+  "table": "product_categories"
 }

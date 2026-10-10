@@ -21,8 +21,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "amount",
-      "type": "decimal"
+      "source": "document_id",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -33,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "method",
+      "source": "organization_id",
       "type": "text"
     },
     {
@@ -45,8 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "payment_intent_id",
-      "type": "text"
+      "source": "processed_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": true,
@@ -57,19 +57,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "stripe_refund_id",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "paid_at",
+      "source": "failed_at",
       "type": "utc_datetime"
     },
     {
@@ -97,7 +85,7 @@
       "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -117,61 +105,38 @@
           "global": null,
           "strategy": null
         },
-        "name": "payments_order_id_fkey",
-        "on_delete": "delete",
+        "name": "expense_imports_expense_id_fkey",
+        "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders"
+        "table": "expenses"
       },
       "scale": null,
       "size": null,
-      "source": "order_id",
+      "source": "expense_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
-  "check_constraints": [
-    {
-      "attribute": [
-        "amount"
-      ],
-      "base_filter": null,
-      "check": "amount = round(amount, 2)",
-      "name": "payments_valid_amount"
-    }
-  ],
+  "check_constraints": [],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "0403D3D5DB65616353E19B0BA730949D3554E78E26C36CC0BA5449470BA49220",
+  "hash": "5940D22684FA6F4A0F389FD51108228C14EFF2DB1890D6C89502FDD826235E45",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "payments_unique_payment_intent_index",
+      "index_name": "expense_imports_unique_document_id_index",
       "keys": [
         {
           "type": "atom",
-          "value": "payment_intent_id"
+          "value": "document_id"
         }
       ],
-      "name": "unique_payment_intent",
-      "nils_distinct?": true,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "payments_unique_stripe_refund_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "stripe_refund_id"
-        }
-      ],
-      "name": "unique_stripe_refund",
+      "name": "unique_document_id",
       "nils_distinct?": true,
       "where": null
     }
@@ -183,5 +148,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "payments"
+  "table": "expense_imports"
 }
