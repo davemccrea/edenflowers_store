@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=orders-table]", order.order_reference)
+      assert has_element?(view, "[data-testid=past]", order.order_reference)
       assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|, "Receipt")
     end
 
@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=orders-table]", "Refunded")
+      assert has_element?(view, "[data-testid=past]", "Refunded")
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=orders-table]", "Cancelled")
+      assert has_element?(view, "[data-testid=past]", "Cancelled")
       refute has_element?(view, "[data-testid=order-unpaid]")
     end
 
@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      refute has_element?(view, "[data-testid=orders-table]")
+      refute has_element?(view, "[data-testid=past]")
       refute render(view) =~ order.order_reference
     end
 
@@ -157,52 +157,107 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "points a customer with no orders at the shop", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "#orders-heading")
+      assert has_element?(view, "#upcoming-heading")
       assert has_element?(view, ~s|a[href="/store"]|, "Visit the shop")
     end
   end
 
-  describe "status_label/2" do
-    test "names the outcome once an order is fulfilled" do
-      assert AccountLive.status_label(order_for(fulfillment_status: :fulfilled), @locale) =~ "Delivered"
+  describe "timeline" do
+    test "splits what's still to come from what's done, soonest and latest first", %{conn: conn, user: user} do
+      today = store_today()
+      tomorrow = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 1))
+      next_week = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 7))
+      last_week = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, -7))
+      yesterday = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, -1))
 
-      assert AccountLive.status_label(
-               order_for(fulfillment_status: :fulfilled, fulfillment_method: :pickup),
-               @locale
-             ) =~ "Collected"
+      done_early =
+        placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 2), fulfillment_status: :fulfilled)
+
+      {:ok, _view, html} = live(conn, ~p"/account")
+
+      assert references_in(html, "upcoming") == [tomorrow.order_reference, next_week.order_reference]
+
+      assert references_in(html, "past") == [
+               done_early.order_reference,
+               yesterday.order_reference,
+               last_week.order_reference
+             ]
+    end
+
+    test "names what was ordered", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, paid: true)
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      [line_item] = Ash.read!(Edenflowers.Orders.LineItem, authorize?: false)
+      assert has_element?(view, "[data-testid=past] li", "2 × #{line_item.product_name}")
+    end
+
+    test "tucks older history away behind a toggle", %{conn: conn, user: user} do
+      for days <- 1..7, do: placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(store_today(), -days))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=past-more] li")
+      assert has_element?(view, "summary", "Show 2 more")
+    end
+
+    test "shows an active subscription's next delivery as coming up", %{conn: conn, user: user} do
+      subscription = generate(subscription(user_id: user.id))
+      generate(subscription(user_id: user.id, state: :paused))
+      {:ok, _view, html} = live(conn, ~p"/account")
+
+      assert [entry] = entries_in(html, "upcoming")
+      assert entry =~ Edenflowers.Format.day_month(subscription.next_fulfillment_date, @locale)
+    end
+
+    defp entries_in(html, list) do
+      html
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("[data-testid=#{list}] li")
+      |> Enum.map(&LazyHTML.text/1)
+    end
+
+    defp references_in(html, list) do
+      for entry <- entries_in(html, list), do: Regex.run(~r/#(\S+)/, entry, capture: :all_but_first) |> List.first()
+    end
+  end
+
+  describe "status_label/1" do
+    test "names the outcome once an order is fulfilled" do
+      assert AccountLive.status_label(order_for(fulfillment_status: :fulfilled)) == "Delivered"
+
+      assert AccountLive.status_label(order_for(fulfillment_status: :fulfilled, fulfillment_method: :pickup)) ==
+               "Collected"
     end
 
     test "looks forward to a fulfillment date still to come" do
       order = order_for(fulfillment_date: Date.add(store_today(), 3))
 
-      assert AccountLive.status_label(order, @locale) =~ "Arriving"
-      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}, @locale) =~ "Ready to collect"
+      assert AccountLive.status_label(order) == "Arriving"
+      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "For pickup"
     end
 
-    test "says today without a date when the order lands today" do
+    test "says today when the order lands today" do
       order = order_for(fulfillment_date: store_today())
 
-      assert AccountLive.status_label(order, @locale) == "Arriving today"
-      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}, @locale) == "Ready to collect today"
+      assert AccountLive.status_label(order) == "Arriving today"
+      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Ready to collect today"
     end
 
     test "never claims delivery for a past date Jennie hasn't marked fulfilled" do
       order = order_for(fulfillment_date: Date.add(store_today(), -3))
 
-      label = AccountLive.status_label(order, @locale)
-
-      assert label =~ "Delivery on"
-      refute label =~ "Delivered"
+      assert AccountLive.status_label(order) == "Scheduled delivery"
+      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Scheduled pickup"
     end
 
     test "reports a refund ahead of anything else" do
       order = order_for(payment_status: :refunded, fulfillment_status: :fulfilled)
 
-      assert AccountLive.status_label(order, @locale) == "Refunded"
+      assert AccountLive.status_label(order) == "Refunded"
     end
 
     test "falls back to Confirmed when there is no fulfillment date" do
-      assert AccountLive.status_label(order_for(fulfillment_date: nil), @locale) == "Confirmed"
+      assert AccountLive.status_label(order_for(fulfillment_date: nil)) == "Confirmed"
     end
   end
 
@@ -215,8 +270,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|[data-testid=courses-table] a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
-      assert has_element?(view, "[data-testid=courses-table] td", "2")
+      assert has_element?(view, ~s|li a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
+      assert has_element?(view, "li", "2 places")
       assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
     end
 
@@ -304,9 +359,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       variant = Ash.load!(mine, product_variant: :product).product_variant
       next = mine.next_fulfillment_date
 
-      assert has_element?(view, "#{row(mine)} th", variant.product.name)
-      assert has_element?(view, "#{row(mine)} th", "Medium · Every 2 weeks")
-      assert has_element?(view, row(mine), Edenflowers.Format.currency(variant.price, @locale))
+      assert has_element?(view, "#{row(mine)}", variant.product.name)
+      assert has_element?(view, "#{row(mine)}", "Medium · Every 2 weeks")
+      assert has_element?(view, row(mine), Edenflowers.Format.storefront_price(variant.price, @locale))
 
       assert has_element?(
                view,
@@ -359,7 +414,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, _view, html} = live(conn, ~p"/account")
 
-      ids = Regex.scan(~r/<tr[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
+      ids = Regex.scan(~r/<li[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
       assert ids == [active.id, cancelled.id]
       assert html =~ "Cancelled on #{weekday_date(Edenflowers.Expressions.HelsinkiToday.today())}."
       refute html =~ long_gone.id
@@ -403,7 +458,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       placed_order(user_id: user.id, subscription_id: subscription.id, paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=orders-table] [data-testid=order-subscription]", "Subscription")
+      assert has_element?(view, "[data-testid=past] [data-testid=order-subscription]", "Subscription")
     end
 
     test "pauses and resumes", %{conn: conn, user: user} do
@@ -559,7 +614,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       assert %{product_variant_id: large_id, interval_weeks: 4} = reload(subscription)
       assert large_id == large.id
-      assert has_element?(view, "#{row(subscription)} th", "Large · Every 4 weeks")
+      assert has_element?(view, "#{row(subscription)}", "Large · Every 4 weeks")
 
       price = Edenflowers.Format.storefront_price(large.price, @locale)
 
@@ -594,11 +649,28 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(
-               view,
-               "#{drawer(subscription)} [data-testid=subscription-card]",
-               "Visa •••• 4242, expires 08/27"
-             )
+      card = "#{drawer(subscription)} [data-testid=subscription-card]"
+      assert has_element?(view, ~s|#{card} img[alt="Visa"][src="/images/cards/visa.svg"]|)
+      assert has_element?(view, card, "•••• 4242, expires 08/27")
+    end
+
+    test "names a card brand it has no logo for", %{conn: conn, user: user} do
+      subscription =
+        generate(
+          subscription(
+            user_id: user.id,
+            card_brand: "discover",
+            card_last4: "1117",
+            card_exp_month: 1,
+            card_exp_year: 2030
+          )
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      card = "#{drawer(subscription)} [data-testid=subscription-card]"
+      refute has_element?(view, "#{card} img")
+      assert has_element?(view, card, "Discover •••• 1117, expires 01/30")
     end
 
     test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do

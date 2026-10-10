@@ -154,8 +154,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             </.widget>
 
             <.widget id="subscription-card" title={~t"Card on file"}>
-              <p :if={Fields.card_label(@subscription)} class="text-sm">{Fields.card_label(@subscription)}</p>
-              <.blank :if={is_nil(Fields.card_label(@subscription))} />
+              <p :if={@subscription.card_brand} class="text-sm"><Fields.saved_card card={@subscription} /></p>
+              <.blank :if={is_nil(@subscription.card_brand)} />
             </.widget>
 
             <.widget id="subscription-log" title={~t"History"}>
