@@ -28,6 +28,7 @@ defmodule Edenflowers.Fulfillment do
       define :list_options_for_checkout, action: :list_for_checkout
       define :get_option_by_id, action: :read, get_by: [:id]
       define :update_calendar, action: :update_calendar
+      define :update_pricing, action: :update_pricing
       define :toggle_date, action: :toggle_date, args: [:date]
       define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
       define :set_week, action: :set_week, args: [:week, :today, :direction]
