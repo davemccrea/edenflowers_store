@@ -258,6 +258,21 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
 
+    test "a subscription cart doesn't promise an account to a signed-in user", %{conn: conn} do
+      product = generate(product(subscribable: true, free_delivery: true))
+      variant = generate(product_variant(product_id: product.id))
+      order = generate(order())
+      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
+      user = generate(admin_user(admin: false)) |> with_token()
+
+      conn
+      |> Plug.Test.init_test_session(%{order_id: order.id})
+      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> visit("/checkout")
+      |> assert_has("[data-testid='checkout-step-1']")
+      |> refute_has("[data-testid='account-note']")
+    end
+
     test "newsletter checkbox is hidden on arrival for a signed-in subscriber", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
 
