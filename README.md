@@ -39,6 +39,7 @@ just deploy production [0.3.0]  # tag a release from main (prompts for version i
 just sync-images [staging|production] # sync images/ to servers (both if omitted)
 just logs staging               # tail app logs on a server
 just console production         # remote IEx on a server
+just seed-production            # one-off base seed of an empty production database
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.

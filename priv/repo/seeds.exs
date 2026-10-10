@@ -1,14 +1,6 @@
-# Script for populating the database. You can run it as:
+# Dev and staging fixtures, built on the production base seed. Run it with:
 #
-#     mix run priv/repo/seeds.exs
-#
-# Inside the script, you can read and write to any of your
-# repositories directly:
-#
-#     Edenflowers.Repo.insert!(%Edenflowers.SomeSchema{})
-#
-# We recommend using the bang functions (`insert!`, `update!`
-# and so on) as they will fail if something goes wrong.
+#     just seed local
 
 alias Edenflowers.Accounts
 alias Edenflowers.Accounts.User
@@ -23,148 +15,23 @@ alias Edenflowers.Orders.Calculations.Vat
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
 
+require Ash.Query
+
+Code.eval_file("seeds/production.exs", __DIR__)
+
 # Ash.Seed skips the actions, so draw from the same sequence they use.
 next_reference = fn ->
   %{rows: [[reference]]} = Repo.query!("SELECT nextval('reference_seq')::text")
   reference
 end
 
-require Ash.Query
+tax_rate = Ash.get!(TaxRate, %{name: "Standard 25.5%"}, authorize?: false)
 
-# Admin users. `admin` is writable?: false on the resource so normal Ash actions
-# can't set it — raw SQL is the appropriate escape hatch for seed setup.
-admins = [
-  {"mail@dmccrea.me", "David McCrea"},
-  {"info@edenflowers.fi", "Jennie McCrea"}
-]
-
-for {admin_email, admin_name} <- admins do
-  case Repo.query!("SELECT id FROM users WHERE email = $1", [admin_email]).rows do
-    [] ->
-      Ash.Seed.seed!(User, %{email: admin_email, name: admin_name, admin: true})
-
-    [[_id]] ->
-      Repo.query!("UPDATE users SET admin = true, name = $1 WHERE email = $2", [admin_name, admin_email])
-  end
-end
-
-tax_rate =
-  TaxRate
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Default",
-    percentage: "0.255"
-  })
-  |> Ash.create!(authorize?: false)
-
-FulfillmentOption
-|> Ash.Changeset.for_create(:create, %{
-  name: "Home delivery",
-  sort_key: 0,
-  fulfillment_method: :delivery,
-  rate_type: :dynamic,
-  base_price: "3.00",
-  price_per_km: "1.50",
-  free_dist_km: 5,
-  max_dist_km: 20,
-  tax_rate_id: tax_rate.id,
-  available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
-})
-|> Ash.create!(authorize?: false)
-
-FulfillmentOption
-|> Ash.Changeset.for_create(:create, %{
-  name: "In store pickup",
-  sort_key: 1,
-  fulfillment_method: :pickup,
-  rate_type: :fixed,
-  base_price: "0.00",
-  tax_rate_id: tax_rate.id
-})
-|> Ash.create!(authorize?: false)
-
-# Create product categories
-bouquets_category =
-  ProductCategory
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Bouquets",
-    slug: "bouquets",
-    visibility: :public,
-    description: "Handcrafted floral arrangements featuring seasonal blooms in elegant compositions.",
-    translations: %{
-      "sv-FI": %{
-        name: "Buketter",
-        description: "Handgjorda blomsterarrangemang med säsongens blommor i eleganta kompositioner."
-      },
-      fi: %{
-        name: "Kukkakimput",
-        description: "Käsintehtyjä kukka-asetelmia sesongin kukista eleganteissa sommitelmissa."
-      }
-    }
-  })
-  |> Ash.create!(authorize?: false)
-
-plants_category =
-  ProductCategory
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Plants",
-    slug: "plants",
-    visibility: :public,
-    description: "Potted greenery and houseplants for the home, chosen for their character.",
-    translations: %{
-      "sv-FI": %{
-        name: "Växter",
-        description: "Krukväxter och grönska för hemmet, valda för sin karaktär."
-      },
-      fi: %{
-        name: "Kasvit",
-        description: "Ruukkukasveja ja viherkasveja kotiin, valittuna luonteensa mukaan."
-      }
-    }
-  })
-  |> Ash.create!(authorize?: false)
-
-# Cards are surfaced only at checkout via ProductVariant.for_card_drawer.
-# visibility: :hidden keeps the category out of the store ribbon while still
-# allowing its products to be read by that action.
-cards_category =
-  ProductCategory
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Cards",
-    slug: "cards",
-    visibility: :hidden,
-    description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
-    translations: %{
-      "sv-FI": %{
-        name: "Kort",
-        description: "Omsorgsfullt designade gratulationskort för varje tillfälle och känsla."
-      },
-      fi: %{
-        name: "Kortit",
-        description: "Huolellisesti suunniteltuja onnittelukortteja jokaiseen tilanteeseen."
-      }
-    }
-  })
-  |> Ash.create!(authorize?: false)
-
-pre_loved_category =
-  ProductCategory
-  |> Ash.Changeset.for_create(:create, %{
-    name: "Pre-Loved",
-    slug: "pre-loved",
-    visibility: :public,
-    description: "Curated vintage and gently used items finding new homes and stories.",
-    translations: %{
-      "sv-FI": %{
-        name: "Begagnat",
-        description: "Utvalda vintage- och varsamt använda föremål som hittar nya hem och berättelser."
-      },
-      fi: %{
-        name: "Käytetty",
-        description: "Valittuja vintage- ja hellävaraisesti käytettyjä esineitä uusiin koteihin."
-      }
-    }
-  })
-  |> Ash.create!(authorize?: false)
+category = fn slug -> Ash.get!(ProductCategory, %{slug: slug}, authorize?: false) end
+bouquets_category = category.("bouquets")
+plants_category = category.("plants")
+cards_category = category.("cards")
+pre_loved_category = category.("pre-loved")
 
 # Create Bouquet products
 for n <- 1..6 do

@@ -52,6 +52,12 @@ seed target:
         echo "Unknown target '{{target}}', use local or staging" >&2; exit 1 ;;
     esac
 
+# Seed an empty production database with admins, tax rates, delivery options and categories (fails if already seeded)
+[group('server')]
+[confirm("Seed the PRODUCTION database? [y/N]")]
+seed-production:
+    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'"
+
 # Deploy to staging or production (asks if no target is given)
 [group('deploy')]
 deploy *args:
