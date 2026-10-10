@@ -1712,11 +1712,6 @@ msgstr "Connection lost"
 msgid "Reconnecting…"
 msgstr "Reconnecting…"
 
-#: lib/edenflowers_web/components/layouts.ex:116
-#, elixir-autogen, elixir-format
-msgid "Something went wrong"
-msgstr "Something went wrong"
-
 #: lib/edenflowers_web/components/layouts.ex:196
 #, elixir-autogen, elixir-format
 msgid "Errors"

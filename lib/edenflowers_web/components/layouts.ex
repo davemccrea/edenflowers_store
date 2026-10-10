@@ -103,19 +103,8 @@ defmodule EdenflowersWeb.Layouts do
         id="client-error"
         kind={:error}
         title={~t"Connection lost"}
-        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
+        phx-disconnected={show("#client-error") |> JS.remove_attribute("hidden")}
         phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
-        hidden
-      >
-        {~t"Reconnecting…"}
-        <.icon name="hero-arrow-path" class="size-3 align-[-0.125em] ml-1 motion-safe:animate-spin" />
-      </.flash>
-      <.flash
-        id="server-error"
-        kind={:error}
-        title={~t"Something went wrong"}
-        phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
-        phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {~t"Reconnecting…"}
