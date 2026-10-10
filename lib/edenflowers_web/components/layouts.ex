@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin/customers", ~t"Customers", true, "hero-users"},
       {"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},
       {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
-      {"/admin/fulfillments", ~t"Calendar", true, "hero-calendar-days"},
+      {"/admin/fulfillments", ~t"Fulfillments", true, "hero-calendar-days"},
       {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
       {"/admin/products", ~t"Products", true, "hero-gift"},
       {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},

@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
+defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -42,26 +42,53 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     %{conn: conn, admin: admin, delivery: delivery, pickup: pickup}
   end
 
-  describe "scope" do
-    test "defaults to :all and switches when an option is selected", %{conn: conn, delivery: delivery} do
-      {:ok, view, html} = live(conn, ~p"/admin/fulfillments")
+  describe "options list" do
+    test "links each option to its own page", %{conn: conn, delivery: delivery, pickup: pickup} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      assert html =~ "All options"
-      assert html =~ "Delivery"
-      assert html =~ "Pickup"
+      assert has_element?(view, ~s|#fulfillment-options a[href="/admin/fulfillments/#{delivery.id}"]|, "Delivery")
+      assert has_element?(view, ~s|#fulfillment-options a[href="/admin/fulfillments/#{pickup.id}"]|, "Pickup")
+    end
 
-      assert choose_scope(view, delivery.id) =~ ~r/value="#{delivery.id}"[^>]*selected/
+    test "summarises each option's prices", %{conn: conn} do
+      home_delivery =
+        generate(
+          fulfillment_option(
+            fulfillment_method: :delivery,
+            rate_type: :dynamic,
+            name: "Home delivery",
+            base_price: "3.00",
+            price_per_km: "1.50",
+            free_dist_km: 5,
+            max_dist_km: 20,
+            same_day: false
+          )
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      assert has_element?(
+               view,
+               ~s|a[href="/admin/fulfillments/#{home_delivery.id}"]|,
+               "€3.00 · €1.50/km · free within 5 km · up to 20 km"
+             )
+    end
+
+    test "an unknown option goes back to the list", %{conn: conn} do
+      assert {:error, {:live_redirect, %{to: "/admin/fulfillments"}}} =
+               live(conn, ~p"/admin/fulfillments/#{Ash.UUID.generate()}")
     end
   end
 
   describe "accessible state" do
     test "weekday toggles announce open, closed and mixed", %{conn: conn, delivery: delivery} do
-      {:ok, view, html} = live(conn, ~p"/admin/fulfillments")
+      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
 
       assert html =~ ~s(aria-label="Toggle Monday, open")
       assert html =~ ~s(aria-label="Toggle Saturday, options have different settings")
 
-      assert choose_scope(view, delivery.id) =~ ~s(aria-label="Toggle Sunday, closed")
+      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
+      assert html =~ ~s(aria-label="Toggle Sunday, closed")
     end
   end
 
@@ -128,9 +155,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       delivery: delivery,
       pickup: pickup
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      choose_scope(view, delivery.id)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
 
       view
       |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
@@ -151,9 +176,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       conn: conn,
       delivery: delivery
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      choose_scope(view, delivery.id)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
 
       future = next_weekday(:monday)
       today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
@@ -180,9 +203,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
       conn: conn,
       delivery: delivery
     } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      choose_scope(view, delivery.id)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
 
       # Pick a week payload whose weekday dates are all strictly in the future,
       # so the click actually has something to disable. Navigate to next month
@@ -244,9 +265,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
           authorize?: false
         )
 
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      choose_scope(view, delivery.id)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
 
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
@@ -292,6 +311,82 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
     end
   end
 
+  describe "prices" do
+    setup do
+      home_delivery =
+        generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, name: "Home delivery"))
+
+      %{home_delivery: home_delivery}
+    end
+
+    test "saving updates the option and the free-delivery distance on product pages", %{
+      conn: conn,
+      home_delivery: home_delivery
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+
+      view
+      |> form("#pricing-form", %{
+        "pricing" => %{"base_price" => "6.00", "price_per_km" => "2.50", "free_dist_km" => "9", "max_dist_km" => "30"}
+      })
+      |> render_submit()
+
+      assert render(view) =~ "Prices saved."
+
+      saved = Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false)
+      assert Decimal.equal?(saved.base_price, "6.00")
+      assert Decimal.equal?(saved.price_per_km, "2.50")
+      assert {saved.free_dist_km, saved.max_dist_km} == {9, 30}
+
+      product = generate(product(free_delivery: true, draft: false))
+      generate(product_variant(product_id: product.id))
+      {:ok, _view, html} = live(conn, ~p"/product/#{product.id}")
+      assert html =~ "Free delivery within 9 km"
+    end
+
+    test "shows distance fields only for distance-priced options", %{
+      conn: conn,
+      home_delivery: home_delivery,
+      pickup: pickup
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+      assert has_element?(view, "#pricing-form input[name='pricing[free_dist_km]']")
+
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{pickup.id}")
+      assert has_element?(view, "#pricing-form input[name='pricing[base_price]']")
+      refute has_element?(view, "#pricing-form input[name='pricing[free_dist_km]']")
+    end
+
+    test "a free distance beyond the maximum shows an error and saves nothing", %{
+      conn: conn,
+      home_delivery: home_delivery
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+
+      html =
+        view
+        |> form("#pricing-form", %{"pricing" => %{"free_dist_km" => "50", "max_dist_km" => "20"}})
+        |> render_submit()
+
+      refute html =~ "Prices saved."
+
+      assert Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false).free_dist_km ==
+               home_delivery.free_dist_km
+    end
+
+    test "same-day without a deadline shows an error", %{conn: conn, pickup: pickup} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{pickup.id}")
+
+      html =
+        view
+        |> form("#pricing-form", %{"pricing" => %{"same_day" => "true", "order_deadline" => ""}})
+        |> render_submit()
+
+      assert html =~ "is required"
+      assert Fulfillment.get_option_by_id!(pickup.id, authorize?: false).order_deadline == pickup.order_deadline
+    end
+  end
+
   describe "redirects" do
     test "redirects unauthenticated users to /sign-in" do
       conn = Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})
@@ -319,13 +414,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentCalendarLiveTest do
 
       assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillments"
     end
-  end
-
-  # Switch the calendar scope via the select (name="scope"); "all" or an option id.
-  defp choose_scope(view, scope) do
-    view
-    |> form("#scope-form", %{"scope" => to_string(scope)})
-    |> render_change()
   end
 
   # The component sends results to the parent via send(self(), ...), which

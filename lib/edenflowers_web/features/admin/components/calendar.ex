@@ -72,7 +72,12 @@ defmodule EdenflowersWeb.Admin.Calendar do
   @doc """
   Static legend that matches the admin cell vocabulary. Kept next to the
   cell/weekday class functions so a change to either stays visible.
+
+  Override corners only show for a single option and the mixed hatch only
+  across all options, so each is listed only where it can appear.
   """
+  attr :scope, :any, required: true, doc: "`:all` or a FulfillmentOption id"
+
   def legend(assigns) do
     ~H"""
     <aside class="text-sm md:max-w-xs md:pt-2">
@@ -82,11 +87,11 @@ defmodule EdenflowersWeb.Admin.Calendar do
           <span class={legend_swatch(:closed)}></span>
           <span>{~t"Unavailable to customers"}</span>
         </li>
-        <li class="flex items-start">
+        <li :if={@scope != :all} class="flex items-start">
           <span class={legend_swatch(:override)}></span>
           <span>{~t"Differs from the weekly schedule"}</span>
         </li>
-        <li class="flex items-start">
+        <li :if={@scope == :all} class="flex items-start">
           <span class={legend_swatch(:mixed)}></span>
           <span>{~t"Options have different settings"}</span>
         </li>

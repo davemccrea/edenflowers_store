@@ -151,6 +151,52 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
   end
 
+  describe "update_pricing action" do
+    setup %{tax_rate: tax_rate} do
+      option =
+        generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :delivery, rate_type: :dynamic))
+
+      [option: option, admin: generate(admin_user())]
+    end
+
+    test "updates prices, distances and the same-day cutoff", %{option: option, admin: admin} do
+      assert {:ok, updated} =
+               Fulfillment.update_pricing(
+                 option,
+                 %{
+                   base_price: "5.00",
+                   price_per_km: "2.00",
+                   free_dist_km: 8,
+                   max_dist_km: 25,
+                   same_day: false,
+                   order_deadline: ~T[12:00:00]
+                 },
+                 actor: admin
+               )
+
+      assert Decimal.equal?(updated.base_price, "5.00")
+      assert Decimal.equal?(updated.price_per_km, "2.00")
+      assert {updated.free_dist_km, updated.max_dist_km} == {8, 25}
+      assert {updated.same_day, updated.order_deadline} == {false, ~T[12:00:00]}
+    end
+
+    test "can't change anything outside pricing", %{option: option, admin: admin} do
+      assert {:error, _} = Fulfillment.update_pricing(option, %{rate_type: :fixed}, actor: admin)
+      assert {:error, _} = Fulfillment.update_pricing(option, %{disabled_dates: [Date.utc_today()]}, actor: admin)
+    end
+
+    test "rejects free_dist_km greater than max_dist_km", %{option: option, admin: admin} do
+      assert {:error, _} = Fulfillment.update_pricing(option, %{free_dist_km: 30, max_dist_km: 20}, actor: admin)
+    end
+
+    test "is forbidden to non-admins", %{option: option} do
+      customer = generate(admin_user(admin: false))
+
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Fulfillment.update_pricing(option, %{base_price: "0.00"}, actor: customer)
+    end
+  end
+
   describe "Fee.calculate/2" do
     setup %{tax_rate: tax_rate} do
       option =

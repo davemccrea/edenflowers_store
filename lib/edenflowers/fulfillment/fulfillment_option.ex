@@ -83,6 +83,13 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       accept [:available_days, :enabled_dates, :disabled_dates]
     end
 
+    update :update_pricing do
+      description "Admin-only update narrowed to prices, distances and the same-day cutoff. " <>
+                    "Prevents accidental writes to the fulfillment method, rate type or calendar."
+
+      accept [:base_price, :price_per_km, :free_dist_km, :max_dist_km, :same_day, :order_deadline]
+    end
+
     update :toggle_date do
       description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in Changes.ToggleDate."
       # The change reads the existing option to compute the new override sets,
