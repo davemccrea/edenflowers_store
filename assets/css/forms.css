@@ -67,3 +67,15 @@
   ) {
   color: var(--color-base-100);
 }
+
+/* Touch browsers keep :hover on a tapped button, and daisyUI's ghost reset
+   skips :hover even without a hover-capable pointer. The fill then matches
+   the base-200 drawer and leaves only a faint border. */
+@media (hover: none) {
+  .btn-ghost:hover:not(.btn-active, :active, :focus-visible) {
+    --btn-bg: #0000;
+    --btn-border: #0000;
+    --btn-shadow: "";
+    --btn-noise: none;
+  }
+}
