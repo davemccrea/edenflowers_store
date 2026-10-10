@@ -64,6 +64,8 @@ document.addEventListener("keydown", (event) => {
 
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
+  // Waking a backgrounded tab drops the socket briefly; only toast if reconnecting drags on.
+  disconnectedTimeout: 3000,
   params: { _csrf_token: csrfToken },
   hooks: { ...Hooks, ...colocatedHooks },
   dom: {

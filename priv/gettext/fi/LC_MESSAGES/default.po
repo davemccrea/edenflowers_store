@@ -1712,11 +1712,6 @@ msgstr "Yhteys katkesi"
 msgid "Reconnecting…"
 msgstr "Yhdistetään uudelleen…"
 
-#: lib/edenflowers_web/components/layouts.ex:116
-#, elixir-autogen, elixir-format
-msgid "Something went wrong"
-msgstr "Jokin meni vikaan"
-
 #: lib/edenflowers_web/components/layouts.ex:196
 #, elixir-autogen, elixir-format
 msgid "Errors"
