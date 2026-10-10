@@ -209,7 +209,10 @@ window.addEventListener("edenflowers:copy", async (event) => {
   trigger.copiedTimer = setTimeout(() => delete trigger.dataset.copied, 2000);
 });
 
-window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
+// The first connect happens behind an already-rendered page, so the bar would only flicker.
+window.addEventListener("phx:page-loading-start", ({ detail }) => {
+  if (detail.kind !== "initial") topbar.show(300);
+});
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
 liveSocket.connect();
