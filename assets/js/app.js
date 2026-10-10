@@ -146,7 +146,7 @@ document.addEventListener("click", (event) => {
 });
 
 // Dragging a drawer back toward its edge closes it once it passes a third of
-// its width or is flicked. Vertical drags stay scrolls (touch-action: pan-y).
+// its width or is flicked. Vertical drags stay scrolls (touch-action in layout.css).
 document.addEventListener("pointerdown", (down) => {
   if (down.pointerType === "mouse") return;
   const dialog = down.target.closest?.("dialog.slide-drawer");

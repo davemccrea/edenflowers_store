@@ -46,7 +46,14 @@ html:has(dialog.slide-drawer:modal) {
   border: 0;
   background: none;
   color: inherit;
-  touch-action: pan-y;
+}
+
+/* Sideways drags belong to the swipe-to-close in app.js. touch-action is only
+   read up to the nearest scroll container, so the drawer's scrolling content
+   needs it too, or the browser claims the drag and cancels the swipe. */
+.slide-drawer,
+.slide-drawer * {
+  touch-action: pan-y pinch-zoom;
 }
 
 .slide-drawer--left {
