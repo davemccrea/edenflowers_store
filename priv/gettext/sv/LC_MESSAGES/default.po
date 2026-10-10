@@ -768,8 +768,8 @@ msgstr "Vi har skickat en ny kod till dig."
 
 #: lib/edenflowers/email.ex:177
 #, elixir-autogen, elixir-format
-msgid "Your Eden Flowers sign-in code"
-msgstr "Din inloggningskod till Eden Flowers"
+msgid "%{otp_code} is your Eden Flowers sign-in code"
+msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
 
 #: lib/edenflowers_web/components/date_picker.ex:159
 #, elixir-autogen, elixir-format
@@ -4378,8 +4378,8 @@ msgstr "Bekräfta"
 
 #: lib/edenflowers/email.ex:185
 #, elixir-autogen, elixir-format
-msgid "Confirm your new Eden Flowers email"
-msgstr "Bekräfta din nya e-postadress hos Eden Flowers"
+msgid "%{code} is your code to confirm your new Eden Flowers email"
+msgstr "%{code} är din kod för att bekräfta din nya e-postadress hos Eden Flowers"
 
 #: lib/edenflowers_web/features/account/account_live.ex:189
 #, elixir-autogen, elixir-format

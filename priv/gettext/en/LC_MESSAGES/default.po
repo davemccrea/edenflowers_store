@@ -768,7 +768,7 @@ msgstr ""
 
 #: lib/edenflowers/email.ex:177
 #, elixir-autogen, elixir-format
-msgid "Your Eden Flowers sign-in code"
+msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr ""
 
 #: lib/edenflowers_web/components/date_picker.ex:159
@@ -4378,7 +4378,7 @@ msgstr ""
 
 #: lib/edenflowers/email.ex:185
 #, elixir-autogen, elixir-format
-msgid "Confirm your new Eden Flowers email"
+msgid "%{code} is your code to confirm your new Eden Flowers email"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:189
