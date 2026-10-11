@@ -33,7 +33,7 @@ Most of what Jennie sells is made to order, but a few things come in fixed numbe
 
 7. **Overselling is prevented as early as possible, in two places:**
    - A `LineItem` validation, `quantity <= variant.stock_quantity` when the variant is tracked, which covers `add_to_cart`, `increment_quantity` and `set_quantity`. The error reads "Only N left" or "Sold out".
-   - The checkout payment step won't create a PaymentIntent while any line is over the current stock, and says which line it is. Lines are never changed or removed automatically.
+   - When the customer clicks Pay, checkout refuses to charge while any line is over the current stock, and says which line it is. The PaymentIntent is created earlier, when the payment step opens, so the click is the last point before the charge. Lines are never changed or removed automatically.
 
 8. **What customers see:**
    - Product page: a sold-out size is shown but disabled and labelled "Sold out", and the default selection skips it. If every size is sold out, add-to-cart is disabled.

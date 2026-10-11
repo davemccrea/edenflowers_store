@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Validations.WithinStock
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
@@ -704,17 +705,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
   end
 
+  # Others may have bought the last of a size since it went in the cart.
   def handle_event("pay", _, socket) do
-    case Payments.update_amount(socket.assigns.order) do
-      {:ok, _payment_intent} ->
-        {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    case WithinStock.lines_over_stock(socket.assigns.order) do
+      [] ->
+        pay(socket)
 
-      {:error, error} ->
-        Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
-
+      lines ->
         {:noreply,
          socket
-         |> put_flash(:error, ~t"Payment processing error. Please try again.")
+         |> put_flash(:error, over_stock_message(lines))
          |> push_event("stripe:ready", %{})}
     end
   end
@@ -796,6 +796,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   def handle_info({:date_selected, date}, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
     {:noreply, assign(socket, form: form)}
+  end
+
+  defp pay(socket) do
+    case Payments.update_amount(socket.assigns.order) do
+      {:ok, _payment_intent} ->
+        {:noreply, push_event(socket, "stripe:process_payment", %{})}
+
+      {:error, error} ->
+        Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
+
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"Payment processing error. Please try again.")
+         |> push_event("stripe:ready", %{})}
+    end
+  end
+
+  defp over_stock_message(lines) do
+    shortages =
+      Enum.map_join(lines, " ", fn line_item ->
+        product = line_item.product_name
+        stock = WithinStock.message(line_item.product_variant.stock_quantity)
+        ~t"#{product}: #{stock}."
+      end)
+
+    shortages <> " " <> ~t"Change your cart to continue."
   end
 
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)

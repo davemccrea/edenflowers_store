@@ -30,6 +30,18 @@ defmodule Edenflowers.Orders.Validations.WithinStock do
     end
   end
 
+  @doc "A cart's lines that now ask for more than is in stock, as others bought it meanwhile."
+  def lines_over_stock(order) do
+    %{line_items: line_items} = Ash.load!(order, [line_items: :product_variant], authorize?: false)
+
+    Enum.filter(line_items, fn line_item ->
+      variant = line_item.product_variant
+
+      is_nil(line_item.interval_weeks) && variant && variant.stock_quantity &&
+        line_item.quantity > variant.stock_quantity
+    end)
+  end
+
   def message(0), do: ~t"Sold out"
   def message(stock), do: ~t"Only #{stock} left"
 

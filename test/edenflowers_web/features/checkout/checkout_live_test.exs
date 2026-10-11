@@ -766,4 +766,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert {:error, {:live_redirect, %{to: "/store"}}} = render_click(view, "pay", %{})
     end
   end
+
+  describe "Stock that ran out during checkout" do
+    setup %{conn: conn, product: product} do
+      wreath = generate(product_variant(product_id: product.id, size: :large, stock_quantity: 2))
+      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
+      line_item = Orders.add_line_item!(order.id, wreath.id, 2, authorize?: false)
+
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), "/checkout")
+
+      # Someone else buys one while this customer is checking out.
+      wreath |> Ash.Changeset.for_update(:update, %{stock_quantity: 1}) |> Ash.update!(authorize?: false)
+
+      %{view: view, line_item: line_item}
+    end
+
+    test "paying is refused and names what's short", %{view: view, line_item: line_item} do
+      assert render_click(view, "pay", %{}) =~ "#{line_item.product_name}: Only 1 left."
+      refute_push_event(view, "stripe:process_payment", %{})
+    end
+
+    test "paying goes ahead once the cart fits the stock", %{view: view, line_item: line_item} do
+      Orders.decrement_line_item!(line_item, authorize?: false)
+
+      render_click(view, "pay", %{})
+
+      assert_push_event(view, "stripe:process_payment", %{})
+    end
+  end
 end

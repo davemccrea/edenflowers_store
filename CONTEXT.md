@@ -32,6 +32,10 @@ _Avoid_: Comment, internal note, order notes (and distinct from the Card Message
 A product from an add-on category, like a card or chocolate, that goes with flowers but is never sold on its own: a cart of only add-ons can't be checked out, as a delivery for one alone would cost more than it earns. Custom Orders aren't held to this.
 _Avoid_: Extra, upsell, accessory
 
+**Stock**:
+How many of a size are on the shelf and not yet promised to a placed order. Only some sizes have stock, like a batch of wreaths or bought-in chocolates; the rest are made to order and never run out. A placed order takes its stock, and cancelling puts it back. Subscriptions never take stock, as their bouquets are made fresh.
+_Avoid_: Inventory, quantity on hand
+
 ### Subscriptions
 
 **Subscription**:

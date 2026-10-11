@@ -1,6 +1,6 @@
 # Payment step blocks lines over stock
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 
@@ -12,11 +12,11 @@ A cart can go over stock after it was filled, when someone else buys the last un
 
 ## Acceptance criteria
 
-- [ ] With a line over the current stock, the payment step creates no PaymentIntent and names the line ("Only N left" / "Sold out").
-- [ ] Once the customer fixes the line, payment goes ahead as normal.
-- [ ] Cart lines are never changed or removed automatically.
-- [ ] Carts with only untracked variants behave exactly as before.
-- [ ] New strings are localised (en, fi, sv).
+- [x] With a line over the current stock, clicking Pay charges nothing and names the line ("Only N left" / "Sold out").
+- [x] Once the customer fixes the line, payment goes ahead as normal.
+- [x] Cart lines are never changed or removed automatically.
+- [x] Carts with only untracked variants behave exactly as before.
+- [x] New strings are localised (en, fi, sv).
 
 ## Blocked by
 
