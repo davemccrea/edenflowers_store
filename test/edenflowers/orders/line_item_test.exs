@@ -236,4 +236,36 @@ defmodule Edenflowers.Orders.LineItemTest do
       assert second.quantity == 2
     end
   end
+
+  describe "stock" do
+    setup %{product: product} do
+      %{tracked: generate(product_variant(product_id: product.id, size: :large, stock_quantity: 2))}
+    end
+
+    test "a cart can hold up to what's in stock, and no more", %{order: order, tracked: tracked} do
+      assert {:ok, line_item} = Orders.add_line_item(order.id, tracked.id, 2, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "Only 2 left"}]}} =
+               Orders.add_line_item(order.id, tracked.id, 1, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "Only 2 left"}]}} =
+               Orders.increment_line_item(line_item, authorize?: false)
+    end
+
+    test "a sold-out size can't be added", %{order: order, product: product} do
+      sold_out = generate(product_variant(product_id: product.id, size: :small, stock_quantity: 0))
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "Sold out"}]}} =
+               Orders.add_line_item(order.id, sold_out.id, 1, authorize?: false)
+    end
+
+    test "an unlimited size has no cap", %{order: order, product_variant: unlimited} do
+      assert {:ok, _} = Orders.add_line_item(order.id, unlimited.id, 50, authorize?: false)
+    end
+
+    test "Jennie's orders aren't held to it", %{tracked: tracked} do
+      custom = generate(order(origin: :custom, state: :placed))
+      assert {:ok, _} = Orders.add_line_item(custom.id, tracked.id, 5, authorize?: false)
+    end
+  end
 end

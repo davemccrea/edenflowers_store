@@ -39,6 +39,7 @@ defmodule Edenflowers.Orders.LineItem do
 
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
       validate Edenflowers.Orders.Validations.Subscribable
+      validate Edenflowers.Orders.Validations.WithinStock
       change Edenflowers.Orders.Changes.PopulateFromVariant
       change Edenflowers.Orders.Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
@@ -57,6 +58,8 @@ defmodule Edenflowers.Orders.LineItem do
 
     # A subscription is for one bouquet each time.
     update :increment_quantity do
+      require_atomic? false
+      validate Edenflowers.Orders.Validations.WithinStock
       change atomic_update(:quantity, expr(if(is_nil(interval_weeks), quantity + 1, quantity)))
     end
 

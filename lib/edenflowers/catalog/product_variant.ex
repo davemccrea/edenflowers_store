@@ -54,6 +54,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
       # Cards are hidden from the storefront and offered only at checkout.
       filter expr(
                draft == false and
+                 (is_nil(stock_quantity) or stock_quantity > 0) and
                  product.draft == false and
                  product.product_category.slug == "cards" and
                  product.product_category.visibility != :draft

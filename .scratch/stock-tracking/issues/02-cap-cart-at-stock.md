@@ -1,6 +1,6 @@
 # Customers can't add more than is in stock
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 
@@ -14,12 +14,12 @@ Any change to a cart line's quantity (adding, incrementing, setting) is refused 
 
 ## Acceptance criteria
 
-- [ ] Adding, incrementing or setting a cart line above a tracked variant's stock fails with "Only N left" (or "Sold out" at 0), and the customer sees it.
-- [ ] Untracked variants have no cap.
-- [ ] On the product page, sold-out sizes are disabled and labelled "Sold out", and aren't selected by default.
-- [ ] When every size is sold out, the product page's add-to-cart is disabled.
-- [ ] The card drawer doesn't offer sold-out cards.
-- [ ] New strings are localised (en, fi, sv).
+- [x] Adding, incrementing or setting a cart line above a tracked variant's stock fails with "Only N left" (or "Sold out" at 0), and the customer sees it.
+- [x] Untracked variants have no cap.
+- [x] On the product page, sold-out sizes are disabled and labelled "Sold out", and aren't selected by default.
+- [x] When every size is sold out, the product page's add-to-cart is disabled.
+- [x] The card drawer doesn't offer sold-out cards.
+- [x] New strings are localised (en, fi, sv).
 
 ## Blocked by
 

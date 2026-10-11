@@ -8,6 +8,8 @@ defmodule EdenflowersWeb.Cart.LineItems do
   attr :id, :string, required: true
   attr :order, :any, required: true
 
+  def mount(socket), do: {:ok, assign(socket, :refused, %{})}
+
   def render(assigns) do
     ~H"""
     <div id={@id}>
@@ -123,6 +125,9 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   <.icon name="hero-trash" class="h-4 w-4" />
                 </.icon_button>
               </div>
+              <p :if={@refused[line_item.id]} role="alert" class="text-error text-sm">
+                {@refused[line_item.id]}
+              </p>
 
               <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
                 <.icon_button
@@ -171,13 +176,17 @@ defmodule EdenflowersWeb.Cart.LineItems do
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
-    if item = line_item(socket.assigns.order, id), do: Orders.increment_line_item(item)
-    {:noreply, socket}
+    with %{} = item <- line_item(socket.assigns.order, id),
+         {:error, %Ash.Error.Invalid{errors: [%{message: message} | _]}} <- Orders.increment_line_item(item) do
+      {:noreply, assign(socket, :refused, %{id => message})}
+    else
+      _ -> {:noreply, assign(socket, :refused, %{})}
+    end
   end
 
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     if item = line_item(socket.assigns.order, id), do: Orders.decrement_line_item(item)
-    {:noreply, socket}
+    {:noreply, assign(socket, :refused, %{})}
   end
 
   # Looked up on the session's own order, so a client can't adjust another cart's items,

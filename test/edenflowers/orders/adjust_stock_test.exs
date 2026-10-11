@@ -12,13 +12,17 @@ defmodule Edenflowers.Orders.AdjustStockTest do
     %{product: generate(product(tax_rate_id: tax_rate.id))}
   end
 
-  defp place_online_order(lines, line_attrs \\ []) do
+  defp fill_cart(lines, line_attrs \\ []) do
     order = generate(order(state: :payment, payment_intent_id: "pi_test"))
 
     for {variant, quantity} <- lines do
       generate(line_item([order_id: order.id, product_variant_id: variant.id, quantity: quantity] ++ line_attrs))
     end
 
+    order
+  end
+
+  defp pay(order) do
     order = Ash.load!(order, :grand_total, authorize?: false)
 
     {:ok, order} =
@@ -33,19 +37,20 @@ defmodule Edenflowers.Orders.AdjustStockTest do
     tracked = generate(product_variant(product_id: product.id, size: :small, stock_quantity: 3))
     unlimited = generate(product_variant(product_id: product.id, size: :large))
 
-    place_online_order([{tracked, 2}, {unlimited, 4}])
+    fill_cart([{tracked, 2}, {unlimited, 4}]) |> pay()
 
     assert stock(tracked) == 1
     assert stock(unlimited) == nil
   end
 
   test "an oversold Online Order is placed, stock stops at 0 and the oversell is logged", %{product: product} do
-    tracked = generate(product_variant(product_id: product.id, stock_quantity: 1))
+    tracked = generate(product_variant(product_id: product.id, stock_quantity: 2))
+    order = fill_cart([{tracked, 2}])
 
-    log =
-      capture_log(fn ->
-        assert %{state: :placed} = place_online_order([{tracked, 2}])
-      end)
+    # Someone else buys one while this customer is paying.
+    tracked |> Ash.Changeset.for_update(:update, %{stock_quantity: 1}) |> Ash.update!(authorize?: false)
+
+    log = capture_log(fn -> assert %{state: :placed} = pay(order) end)
 
     assert stock(tracked) == 0
     assert log =~ "took 2 of variant #{tracked.id} with only 1 in stock"
@@ -56,7 +61,7 @@ defmodule Edenflowers.Orders.AdjustStockTest do
     product = generate(product(tax_rate_id: tax_rate.id, subscribable: true, free_delivery: true))
     tracked = generate(product_variant(product_id: product.id, stock_quantity: 3))
 
-    place_online_order([{tracked, 1}], interval_weeks: 2)
+    fill_cart([{tracked, 1}], interval_weeks: 2) |> pay()
 
     assert stock(tracked) == 3
   end

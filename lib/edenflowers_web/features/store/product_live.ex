@@ -27,21 +27,28 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     cart_line = cart_line(socket.assigns.order, product.id)
 
+    # Sold-out sizes can't be picked, unless every size is sold out.
+    selectable_variants =
+      case Enum.reject(product_variants, &sold_out?/1) do
+        [] -> product_variants
+        in_stock -> in_stock
+      end
+
     default_variant =
-      case length(product_variants) do
+      case length(selectable_variants) do
         1 ->
-          List.first(product_variants)
+          List.first(selectable_variants)
 
         2 ->
-          List.first(product_variants)
+          List.first(selectable_variants)
 
         _ ->
           middle_index =
-            product_variants
+            selectable_variants
             |> length()
             |> div(2)
 
-          Enum.at(product_variants, middle_index)
+          Enum.at(selectable_variants, middle_index)
       end
 
     selected_variant =
@@ -160,6 +167,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       name="product_variant_id"
                       value={variant.id}
                       checked={@selected_variant.id == variant.id}
+                      disabled={sold_out?(variant)}
                       class="sr-only"
                       data-testid={"variant-option-#{variant.size}"}
                     />
@@ -167,7 +175,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       {AdminComponents.variant_size_label(variant.size)}
                     </span>
                     <span class="size-option__price text-base-content font-serif ml-2 text-lg">
-                      {Edenflowers.Format.storefront_price(variant.price, Edenflowers.Format.locale())}
+                      <%= if sold_out?(variant) do %>
+                        {~t"Sold out"}
+                      <% else %>
+                        {Edenflowers.Format.storefront_price(variant.price, Edenflowers.Format.locale())}
+                      <% end %>
                     </span>
                   </label>
                 </div>
@@ -267,7 +279,25 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   <p :if={@cart_note} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
                     {@cart_note}
                   </p>
-                  <.button type="submit" variant="primary" size="lg" data-testid="add-to-cart-button" class="w-full">
+                  <.button
+                    :if={sold_out?(@selected_variant)}
+                    type="button"
+                    variant="primary"
+                    size="lg"
+                    disabled
+                    data-testid="add-to-cart-button"
+                    class="w-full"
+                  >
+                    {~t"Sold out"}
+                  </.button>
+                  <.button
+                    :if={not sold_out?(@selected_variant)}
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    data-testid="add-to-cart-button"
+                    class="w-full"
+                  >
                     {if @replaces_cart?, do: ~t"Update cart", else: ~t"Add to cart"}
                   </.button>
               <% end %>
@@ -326,6 +356,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
         {:noreply, put_flash(socket, :error, add_error_message(error))}
     end
   end
+
+  defp sold_out?(variant), do: variant.stock_quantity == 0
 
   # A single size-less variant has nothing to choose; the header shows its price.
   defp one_size?([%{size: nil}]), do: true

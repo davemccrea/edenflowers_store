@@ -177,6 +177,16 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
       refute Enum.any?(variants, fn v -> v.id == other_variant.id end)
     end
 
+    test "excludes sold-out variants", %{card_product: card_product} do
+      sold_out = generate(product_variant(product_id: card_product.id, draft: false, stock_quantity: 0))
+      in_stock = generate(product_variant(product_id: card_product.id, draft: false, stock_quantity: 1))
+
+      ids = Enum.map(Catalog.list_card_drawer_variants!(authorize?: false), & &1.id)
+
+      assert in_stock.id in ids
+      refute sold_out.id in ids
+    end
+
     test "excludes draft variants", %{card_product: card_product} do
       draft_variant = generate(product_variant(product_id: card_product.id, draft: true))
 

@@ -52,7 +52,8 @@
   padding-bottom: 0.15em;
 }
 .size-option[data-active="true"] .size-option__label,
-.size-option:not([data-active="true"]):hover .size-option__label,
+.size-option:not([data-active="true"]):not(:has(input:disabled)):hover
+  .size-option__label,
 .size-option:has(input:focus-visible) .size-option__label {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);
@@ -62,6 +63,10 @@
 .size-option:has(input:focus-visible) {
   outline: 2px solid var(--focus-color, var(--color-primary));
   outline-offset: 2px;
+}
+.size-option:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Featured carousel, driven by the FeaturedCarousel hook. */

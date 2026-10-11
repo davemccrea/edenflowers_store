@@ -26,6 +26,41 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert [%LineItem{variant_size: nil}] = line_items(order)
   end
 
+  test "a sold-out size can't be picked, and isn't picked to start with", %{conn: conn} do
+    product = generate(product(draft: false))
+    generate(product_variant(product_id: product.id, size: :small, price: "40.00"))
+    generate(product_variant(product_id: product.id, size: :medium, price: "50.00", stock_quantity: 0))
+    generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+
+    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+    assert has_element?(view, "[data-testid=variant-option-medium][disabled]")
+    assert has_element?(view, "label", "Sold out")
+    refute has_element?(view, "[data-testid=variant-option-medium][checked]")
+    assert has_element?(view, "[data-testid=add-to-cart-button]:not([disabled])", "Add to cart")
+  end
+
+  test "a product with every size sold out can't be added", %{conn: conn} do
+    product = generate(product(draft: false))
+    generate(product_variant(product_id: product.id, size: nil, stock_quantity: 0))
+
+    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+    assert has_element?(view, "[data-testid=add-to-cart-button][disabled]", "Sold out")
+  end
+
+  test "the cart says when there are no more to add", %{conn: conn, order: order} do
+    product = generate(product(draft: false))
+    variant = generate(product_variant(product_id: product.id, size: nil, stock_quantity: 1))
+    line_item = Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+
+    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+    view |> element("#cart-line-items-increment-#{line_item.id}") |> render_click()
+
+    assert has_element?(view, "#cart-line-items [role=alert]", "Only 1 left")
+  end
+
   describe "a subscribable product" do
     setup do
       product = generate(product(subscribable: true, free_delivery: true, draft: false))
