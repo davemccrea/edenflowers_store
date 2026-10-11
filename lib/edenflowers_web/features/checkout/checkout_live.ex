@@ -691,6 +691,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     submit_form(socket, params)
   end
 
+  # The cart drawer hides Checkout for these carts; this catches a bouquet
+  # removed mid-checkout, or /checkout typed in directly.
+  def handle_event("pay", _, %{assigns: %{order: %{add_ons_only?: true}}} = socket) do
+    {:noreply,
+     socket
+     |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
+     |> push_navigate(to: ~p"/store")}
+  end
+
   def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
     {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
   end

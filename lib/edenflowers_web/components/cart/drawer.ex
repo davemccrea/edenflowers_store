@@ -38,8 +38,17 @@ defmodule EdenflowersWeb.Cart.Drawer do
             order={@order}
           />
 
+          <div :if={@order.add_ons_only?} class="flex flex-col gap-3 text-center">
+            <p class="text-base-content/70">
+              {~t"Add-ons are sold with flowers. Add a bouquet to check out."}
+            </p>
+            <.button navigate={~p"/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
+              {~t"Browse the store"}
+            </.button>
+          </div>
+
           <.button
-            :if={Enum.any?(@order.line_items)}
+            :if={Enum.any?(@order.line_items) and not @order.add_ons_only?}
             navigate={~p"/checkout"}
             variant="primary"
             phx-click={JS.exec("phx-hide", to: "#cart-drawer")}

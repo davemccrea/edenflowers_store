@@ -66,7 +66,7 @@ msgstr "Kurser"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:6
 #: lib/edenflowers_web/features/admin/components/components.ex:177
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:802
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:811
 #: lib/edenflowers_web/features/checkout/components/fields.ex:124
 #: lib/edenflowers_web/features/checkout/pay_live.ex:147
 #, elixir-autogen, elixir-format
@@ -82,7 +82,7 @@ msgstr "Leverans"
 msgid "Discount"
 msgstr "Rabatt"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:811
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:820
 #, elixir-autogen, elixir-format
 msgid "Free"
 msgstr "Gratis"
@@ -306,7 +306,7 @@ msgstr "Ditt namn *"
 msgid "Your cart is empty."
 msgstr "Din varukorg är tom."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:875
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:884
 #, elixir-autogen, elixir-format
 msgid "Address *"
 msgstr "Adress *"
@@ -377,7 +377,7 @@ msgstr "Medel"
 msgid "Next"
 msgstr "Nästa"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:708
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:717
 #, elixir-autogen, elixir-format
 msgid "Payment processing error. Please try again."
 msgstr "Ett fel uppstod vid betalningen. Försök igen."
@@ -433,12 +433,12 @@ msgstr "Ditt lösenord har återställts"
 msgid "e.g. Door code 1234, leave at the front door"
 msgstr "t.ex. Portkod 1234, lämna vid ytterdörren"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:868
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:877
 #, elixir-autogen, elixir-format
 msgid "%{name}'s address *"
 msgstr "%{name}s adress *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:869
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:878
 #, elixir-autogen, elixir-format
 msgid "%{name}'s phone number *"
 msgstr "%{name}s telefonnummer *"
@@ -506,7 +506,7 @@ msgid "Next slide"
 msgstr "Nästa bild"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:56
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:751
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:760
 #: lib/edenflowers_web/features/checkout/pay_live.ex:74
 #: lib/edenflowers_web/features/courses/course_live.ex:215
 #, elixir-autogen, elixir-format
@@ -515,8 +515,8 @@ msgstr "Betalningen är tillfälligt otillgänglig. Ladda om sidan och försök 
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:92
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:283
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:695
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1085
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:704
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1094
 #: lib/edenflowers_web/features/checkout/pay_live.ex:183
 #: lib/edenflowers_web/features/courses/course_live.ex:195
 #, elixir-autogen, elixir-format
@@ -676,6 +676,7 @@ msgstr "Dina uppgifter"
 msgid "your@email.com"
 msgstr "din@epost.fi"
 
+#: lib/edenflowers_web/components/cart/drawer.ex:46
 #: lib/edenflowers_web/components/cart/line_items.ex:148
 #: lib/edenflowers_web/controllers/error_html/404.html.heex:31
 #, elixir-autogen, elixir-format
@@ -1735,7 +1736,7 @@ msgstr "Din beställning är klar att hämta i butiken %{date}."
 msgid "I'll send a text message when it's ready."
 msgstr "Jag skickar ett sms när den är klar."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:876
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:885
 #, elixir-autogen, elixir-format
 msgid "Phone number *"
 msgstr "Telefonnummer *"
@@ -2304,17 +2305,17 @@ msgstr "alternativen har olika inställningar, välj ett enskilt alternativ för
 msgid "past"
 msgstr "passerad"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:885
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:894
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach %{name} about the delivery."
 msgstr "Jag ringer bara om jag behöver nå %{name} om leveransen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:887
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:896
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach you about the delivery."
 msgstr "Jag ringer bara om jag behöver nå dig om leveransen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:881
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:890
 #, elixir-autogen, elixir-format
 msgid "I'll send a message when your order is ready for pick up."
 msgstr "Jag skickar ett meddelande när din beställning är klar att hämtas."
@@ -5459,3 +5460,9 @@ msgstr "Sidan hittades inte"
 #, elixir-autogen, elixir-format
 msgid "The page you're looking for doesn't exist or has moved."
 msgstr "Sidan du letar efter finns inte eller har flyttats."
+
+#: lib/edenflowers_web/components/cart/drawer.ex:43
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:699
+#, elixir-autogen, elixir-format
+msgid "Add-ons are sold with flowers. Add a bouquet to check out."
+msgstr "Tillägg säljs bara tillsammans med blommor. Lägg till en bukett för att gå till kassan."

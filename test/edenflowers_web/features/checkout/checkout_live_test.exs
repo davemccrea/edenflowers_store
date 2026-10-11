@@ -752,4 +752,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert reloaded.line_items == []
     end
   end
+
+  describe "Cart with only add-ons" do
+    test "paying after the flowers are removed sends the customer to the store", %{conn: conn, order: order} do
+      [flowers] = order.line_items
+      chocolate = generate(product(product_category_id: generate(product_category(add_on: true)).id))
+      Orders.add_line_item!(order.id, generate(product_variant(product_id: chocolate.id)).id, 1, authorize?: false)
+
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, view, _html} = live(conn, "/checkout")
+      Orders.remove_line_item!(order, flowers.id, authorize?: false)
+
+      assert {:error, {:live_redirect, %{to: "/store"}}} = render_click(view, "pay", %{})
+    end
+  end
 end

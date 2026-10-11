@@ -1538,6 +1538,43 @@ defmodule Edenflowers.Orders.OrderTest do
     end
   end
 
+  describe "add_ons_only? calculation" do
+    setup do
+      add_ons = generate(product_category(add_on: true))
+      chocolate = generate(product(product_category_id: add_ons.id))
+      card = generate(product(product_category_id: add_ons.id))
+      flowers = generate(product())
+
+      %{
+        chocolate_variant: generate(product_variant(product_id: chocolate.id)),
+        card_variant: generate(product_variant(product_id: card.id)),
+        flowers_variant: generate(product_variant(product_id: flowers.id))
+      }
+    end
+
+    test "true when the cart holds only add-ons", ctx do
+      order = generate(order())
+      Orders.add_line_item!(order.id, ctx.chocolate_variant.id, 1, authorize?: false)
+      Orders.add_line_item!(order.id, ctx.card_variant.id, 1, %{is_card: true}, authorize?: false)
+
+      assert Ash.load!(order, :add_ons_only?, authorize?: false).add_ons_only?
+    end
+
+    test "false once flowers are in the cart", ctx do
+      order = generate(order())
+      Orders.add_line_item!(order.id, ctx.chocolate_variant.id, 1, authorize?: false)
+      Orders.add_line_item!(order.id, ctx.flowers_variant.id, 1, authorize?: false)
+
+      refute Ash.load!(order, :add_ons_only?, authorize?: false).add_ons_only?
+    end
+
+    test "false for an empty cart" do
+      order = generate(order())
+
+      refute Ash.load!(order, :add_ons_only?, authorize?: false).add_ons_only?
+    end
+  end
+
   describe "Order update_locale action" do
     test "updates locale to a configured locale" do
       order = Orders.create_for_checkout!(authorize?: false)

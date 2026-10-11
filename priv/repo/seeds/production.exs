@@ -115,6 +115,7 @@ Repo.transaction(fn ->
       name: "Cards",
       slug: "cards",
       visibility: :hidden,
+      add_on: true,
       description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
       translations: %{
         "sv-FI": %{

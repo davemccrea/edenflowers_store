@@ -167,6 +167,54 @@ for n <- 1..3 do
   end
 end
 
+# Chocolate is an add-on: it shows in the store but can only be checked out
+# alongside flowers.
+reduced_tax_rate = Ash.get!(TaxRate, %{name: "Reduced 13.5%"}, authorize?: false)
+
+chocolate_category =
+  Ash.Changeset.for_create(ProductCategory, :create, %{
+    name: "Chocolate",
+    slug: "chocolate",
+    visibility: :public,
+    add_on: true,
+    description: "Handmade chocolates to go with your flowers.",
+    translations: %{
+      "sv-FI": %{name: "Choklad", description: "Handgjord choklad till dina blommor."},
+      fi: %{name: "Suklaa", description: "Käsintehtyä suklaata kukkiesi kanssa."}
+    }
+  })
+  |> Ash.create!(authorize?: false)
+
+# The truffles come in one size, so their page has no size to choose.
+for {name, sizes} <- [
+      {"Dark Chocolate Truffles", [{nil, "8"}]},
+      {"Milk Chocolate Pralines", [small: "6", medium: "12"]}
+    ] do
+  product =
+    Ash.Changeset.for_create(Product, :create, %{
+      product_category_id: chocolate_category.id,
+      tax_rate_id: reduced_tax_rate.id,
+      name: name,
+      image_slug: "https://placehold.co/400x400",
+      description: "A box of handmade chocolates, sold with a bouquet.",
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+
+  for {size, price} <- sizes do
+    Ash.Changeset.for_create(ProductVariant, :create, %{
+      product_id: product.id,
+      price: price,
+      size: size,
+      image_slug: "https://placehold.co/400x400",
+      stock_trackable: false,
+      stock_quantity: 0,
+      draft: false
+    })
+    |> Ash.create!(authorize?: false)
+  end
+end
+
 subscription_product =
   Ash.Changeset.for_create(Product, :create, %{
     product_category_id: bouquets_category.id,

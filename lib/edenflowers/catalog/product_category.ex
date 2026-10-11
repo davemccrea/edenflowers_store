@@ -22,7 +22,7 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   actions do
     defaults [:read, :destroy, :create, :update]
-    default_accept [:slug, :visibility, :name, :description, :translations]
+    default_accept [:slug, :visibility, :add_on, :name, :description, :translations]
 
     read :public do
       filter expr(visibility == :public)
@@ -55,6 +55,10 @@ defmodule Edenflowers.Catalog.ProductCategory do
     # :hidden — intentionally kept out of the storefront, products are still
     #           reachable through other surfaces (e.g. card-drawer at checkout)
     attribute :visibility, __MODULE__.Visibility, allow_nil?: false, default: :draft
+
+    # Add-ons, like cards and chocolate, go with flowers: a cart of only
+    # add-ons can't be checked out, as delivering one alone isn't worth it.
+    attribute :add_on, :boolean, allow_nil?: false, default: false
   end
 
   relationships do

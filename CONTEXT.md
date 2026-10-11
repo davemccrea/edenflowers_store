@@ -26,6 +26,12 @@ _Avoid_: Phone order, manual order, bespoke order
 Jennie's private working note on any order — what was agreed, constraints like "deliver by 10:30, service at 11:00". Never shown to the Customer or Recipient.
 _Avoid_: Comment, internal note, order notes (and distinct from the Card Message and Delivery Instructions, which come from the Customer)
 
+### Catalogue
+
+**Add-on**:
+A product from an add-on category, like a card or chocolate, that goes with flowers but is never sold on its own: a cart of only add-ons can't be checked out, as a delivery for one alone would cost more than it earns. Custom Orders aren't held to this.
+_Avoid_: Extra, upsell, accessory
+
 ### Subscriptions
 
 **Subscription**:

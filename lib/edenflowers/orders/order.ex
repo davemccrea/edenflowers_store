@@ -69,6 +69,7 @@ defmodule Edenflowers.Orders.Order do
     :grand_total,
     :vat,
     :cart_effectively_empty?,
+    :add_ons_only?,
     :free_delivery?,
     :subscription?,
     :newsletter_offer_hidden?,
@@ -1096,6 +1097,9 @@ defmodule Edenflowers.Orders.Order do
 
     # The cart hides a lone card, so checkout treats it as empty too.
     calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0)
+
+    # A lone card already reads as an empty cart, so this is for the other add-ons.
+    calculate :add_ons_only?, :boolean, expr(non_card_line_item_count > 0 and non_add_on_line_item_count == 0)
   end
 
   aggregates do
@@ -1104,6 +1108,7 @@ defmodule Edenflowers.Orders.Order do
     sum :items_total, :line_items, :total, default: Decimal.new("0")
     sum :discount, :line_items, :discount, default: Decimal.new("0")
     count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
+    count :non_add_on_line_item_count, :line_items, filter: expr(product.product_category.add_on == false)
     exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
     exists :subscription?, :line_items, filter: expr(not is_nil(interval_weeks))
 

@@ -62,7 +62,8 @@ defmodule Generator do
         # string that occasionally collides. Must be unique across concurrently
         # running tests (not sequence/2, which restarts per test process) or
         # concurrent sandbox transactions deadlock on the index.
-        slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end)
+        slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end),
+        add_on: false
       },
       overrides: opts,
       authorize?: false
