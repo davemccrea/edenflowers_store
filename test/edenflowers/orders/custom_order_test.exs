@@ -513,6 +513,73 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "stock" do
+    setup ctx do
+      %{wreath: generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))}
+    end
+
+    defp stock(variant), do: Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).stock_quantity
+
+    test "placing takes tracked sizes off the shelf and leaves unlimited ones alone", ctx do
+      {:ok, _order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2"), catalogue_line(ctx.variant)]})
+
+      assert stock(ctx.wreath) == 1
+      assert stock(ctx.variant) == nil
+    end
+
+    test "placing more than is left is allowed, stops at 0 and logs nothing", ctx do
+      log =
+        capture_log(fn ->
+          assert {:ok, _order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "5")]})
+        end)
+
+      assert stock(ctx.wreath) == 0
+      refute log =~ "in stock"
+    end
+
+    test "cancelling puts the order's tracked sizes back", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
+
+      {:ok, _order} = Orders.cancel_order(order, actor: ctx.admin)
+
+      assert stock(ctx.wreath) == 3
+    end
+
+    test "editing takes or returns only the difference", ctx do
+      other = generate(product_variant(product_id: ctx.variant.product_id, size: :small, stock_quantity: 4))
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "1")]})
+      assert stock(ctx.wreath) == 2
+
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(ctx.wreath, "3")]}), actor: ctx.admin)
+
+      assert stock(ctx.wreath) == 0
+
+      {:ok, _order} =
+        Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(other, "1")]}), actor: ctx.admin)
+
+      assert stock(ctx.wreath) == 3
+      assert stock(other) == 3
+    end
+
+    test "cancelling a subscription's order returns nothing, as it never took stock", ctx do
+      order = generate(order(origin: :subscription, state: :placed))
+      generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 2))
+
+      {:ok, _order} = Orders.cancel_order(order, actor: ctx.admin)
+
+      assert stock(ctx.wreath) == 3
+    end
+
+    test "a fulfilled order can't be cancelled, so its stock stays taken", ctx do
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
+      order = Ash.Seed.update!(order, %{fulfillment_status: :fulfilled})
+
+      assert {:error, _} = Orders.cancel_order(order, actor: ctx.admin)
+      assert stock(ctx.wreath) == 1
+    end
+  end
+
   describe "paying" do
     test "an unpaid custom order is still on the list to fulfil", ctx do
       {:ok, order} = place(ctx)

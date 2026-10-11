@@ -440,6 +440,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.PriceFulfillment
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
       change Changes.ReplaceLineItems
+      change {Changes.AdjustStock, direction: :take}
       change run_oban_trigger(:send_order_details_email), where: [argument_equals(:email_customer?, true)]
     end
 
@@ -553,7 +554,7 @@ defmodule Edenflowers.Orders.Order do
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
-      change Changes.AdjustStock
+      change {Changes.AdjustStock, direction: :take, report_oversell?: true}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
 
@@ -628,7 +629,10 @@ defmodule Edenflowers.Orders.Order do
       change Changes.PriceFulfillment
       change set_attribute(:user_id, nil), where: [changing(:customer_email)]
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
+      # The old lines go back on the shelf before the new ones are taken.
+      change {Changes.AdjustStock, direction: :return}
       change Changes.ReplaceLineItems
+      change {Changes.AdjustStock, direction: :take}
       require_atomic? false
     end
 
@@ -643,6 +647,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
       change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+      change {Changes.AdjustStock, direction: :return}
       change load(@admin_show_load)
       require_atomic? false
     end

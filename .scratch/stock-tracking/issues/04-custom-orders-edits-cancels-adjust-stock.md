@@ -1,6 +1,6 @@
 # Custom Orders, edits and cancels adjust stock
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 
@@ -14,11 +14,11 @@ Saving a Custom Order takes stock for its tracked lines. Cancelling an open orde
 
 ## Acceptance criteria
 
-- [ ] Saving a Custom Order lowers stock for its tracked lines, and is never blocked even when it exceeds the count (which floors at 0, with no error logged).
-- [ ] Cancelling an open order (Online or Custom) puts its tracked lines back.
-- [ ] Editing an open order nets out correctly: a removed line comes back, 1 → 3 takes 2 more, and a swapped variant moves stock between the two.
-- [ ] Subscription Occurrences never change stock.
-- [ ] Fulfilled orders can't be edited or cancelled, so their stock never moves (existing guard, covered by a test).
+- [x] Saving a Custom Order lowers stock for its tracked lines, and is never blocked even when it exceeds the count (which floors at 0, with no error logged).
+- [x] Cancelling an open order (Online or Custom) puts its tracked lines back.
+- [x] Editing an open order nets out correctly: a removed line comes back, 1 → 3 takes 2 more, and a swapped variant moves stock between the two.
+- [x] Subscription Occurrences never change stock.
+- [x] Fulfilled orders can't be edited or cancelled, so their stock never moves (existing guard, covered by a test).
 
 ## Blocked by
 

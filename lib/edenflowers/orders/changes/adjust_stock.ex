@@ -1,10 +1,12 @@
 defmodule Edenflowers.Orders.Changes.AdjustStock do
   @moduledoc """
-  Takes an order's tracked sizes off the shelf when it is placed.
+  Takes an order's tracked sizes off the shelf (`direction: :take`), or puts
+  them back (`direction: :return`).
 
-  Stock never goes below 0. An Online Order that takes more than is left has
-  already been paid for, so it is placed all the same and the oversell is
-  logged as an error so it reaches ErrorTracker.
+  Stock never goes below 0. Nothing here is ever refused: an Online Order has
+  been paid for by the time it is placed, and Jennie knows the shelf better
+  than the count does. With `report_oversell?: true`, taking more than is left
+  is logged as an error so it reaches ErrorTracker.
   """
   use Ash.Resource.Change
 
@@ -14,17 +16,29 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
   alias Edenflowers.Catalog.ProductVariant
 
   @impl true
-  def change(changeset, _opts, _context) do
-    Ash.Changeset.after_action(changeset, fn _changeset, order ->
-      order = Ash.load!(order, :line_items, authorize?: false)
+  def init(opts) do
+    if opts[:direction] in [:take, :return],
+      do: {:ok, opts},
+      else: {:error, "direction must be :take or :return"}
+  end
 
-      # Sorted so two orders sharing sizes lock them in the same order and
-      # can't deadlock.
-      for {variant_id, quantity} <- quantities_by_variant(order.line_items) |> Enum.sort() do
-        take(order, variant_id, quantity)
-      end
+  @impl true
+  def change(changeset, opts, _context) do
+    Ash.Changeset.after_action(changeset, fn
+      # Occurrences are made fresh and never take stock, so they have none to return.
+      _changeset, %{origin: :subscription} = order ->
+        {:ok, order}
 
-      {:ok, order}
+      _changeset, order ->
+        %{line_items: line_items} = Ash.load!(order, :line_items, authorize?: false)
+
+        # Sorted so two orders sharing sizes lock them in the same order and
+        # can't deadlock.
+        for {variant_id, quantity} <- quantities_by_variant(line_items) |> Enum.sort() do
+          adjust(order, variant_id, quantity, opts)
+        end
+
+        {:ok, order}
     end)
   end
 
@@ -35,7 +49,7 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
     |> Map.new(fn {variant_id, quantities} -> {variant_id, Enum.sum(quantities)} end)
   end
 
-  defp take(order, variant_id, quantity) do
+  defp adjust(order, variant_id, quantity, opts) do
     variant =
       ProductVariant
       |> Ash.Query.filter(id == ^variant_id and not is_nil(stock_quantity))
@@ -43,15 +57,21 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
       |> Ash.read_one!(authorize?: false)
 
     if variant do
-      if quantity > variant.stock_quantity do
+      if Keyword.get(opts, :report_oversell?, false) and quantity > variant.stock_quantity do
         Logger.error(
           "Order #{order.id} took #{quantity} of variant #{variant.id} with only " <>
             "#{variant.stock_quantity} in stock."
         )
       end
 
+      stock_quantity =
+        case opts[:direction] do
+          :take -> max(variant.stock_quantity - quantity, 0)
+          :return -> variant.stock_quantity + quantity
+        end
+
       variant
-      |> Ash.Changeset.for_update(:update, %{stock_quantity: max(variant.stock_quantity - quantity, 0)})
+      |> Ash.Changeset.for_update(:update, %{stock_quantity: stock_quantity})
       |> Ash.update!(authorize?: false)
     end
   end
