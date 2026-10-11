@@ -69,6 +69,21 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
 
+  # Fills each size's stock with 0; nothing is saved until Jennie saves.
+  def handle_event("mark_sold_out", _params, socket) do
+    form = socket.assigns.form
+    params = form.source.params
+
+    sizes =
+      for size <- form.source.forms[:product_variants] || [], into: %{} do
+        key = size.name |> String.split(["[", "]"], trim: true) |> List.last()
+        {key, Map.put(params["product_variants"][key] || %{}, "stock_quantity", "0")}
+      end
+
+    params = Map.put(params, "product_variants", Map.merge(params["product_variants"] || %{}, sizes))
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+  end
+
   def handle_event("add_variant", _params, socket) do
     socket = update(socket, :form, &AshPhoenix.Form.add_form(&1, "form[product_variants]"))
     {:noreply, PhotoUpload.allow(socket, photo_fields(socket.assigns.form))}
@@ -221,6 +236,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   </button>
                 </li>
               </ul>
+              <div class="mt-3 flex justify-end">
+                <.button type="button" phx-click="mark_sold_out" variant="ghost" size="sm" data-testid="mark-sold-out">
+                  {~t"Mark every size sold out"}
+                </.button>
+              </div>
             </.form_section>
           </div>
 

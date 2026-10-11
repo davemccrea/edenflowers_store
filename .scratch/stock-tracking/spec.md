@@ -38,11 +38,13 @@ Most of what Jennie sells is made to order, but a few things come in fixed numbe
 8. **What customers see:**
    - Product page: a sold-out size is shown but disabled and labelled "Sold out", and the default selection skips it. If every size is sold out, add-to-cart is disabled.
    - Card drawer (`for_card_drawer`): sold-out cards are left out.
-   - No "Only N left" message and no "Sold out" tag in the store grid. Add them when they're asked for.
+   - Store grid and featured carousel: a product whose every size is sold out has its photo dimmed and "Sold out" in its caption line.
+   - No "Only N left" message. Add it when it's asked for.
 
 9. **What Jennie sees:**
    - The product form sets an absolute count, never "+5". Saving sends the count shown when the form opened, so a sale made while it's open is undone and may oversell later (logged, per decision 4). This is accepted for simplicity. If it ever bites, send only counts Jennie changed.
    - The products list shows stock for tracked variants ("3 left", "Sold out").
+   - The product form's "Mark every size sold out" button fills every size's stock with 0, and she saves as usual.
    - No stock history and no low-stock alerts. Products have no version log, so once she edits the count, the previous value is gone.
 
 ## Proposed term

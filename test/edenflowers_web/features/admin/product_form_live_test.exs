@@ -79,6 +79,22 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).stock_quantity == nil
   end
 
+  test "marks every size sold out in one go, keeping other unsaved edits", %{conn: conn} do
+    product = generate(product())
+    small = generate(product_variant(product_id: product.id, size: :small, stock_quantity: 4))
+    large = generate(product_variant(product_id: product.id, size: :large))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    view |> form("#product-form", form: %{name: "Christmas wreath"}) |> render_change()
+    view |> element("[data-testid=mark-sold-out]") |> render_click()
+    view |> form("#product-form") |> render_submit()
+
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, small.id, authorize?: false).stock_quantity == 0
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, large.id, authorize?: false).stock_quantity == 0
+    assert Ash.get!(Product, product.id, authorize?: false).name == "Christmas wreath"
+  end
+
   test "keeps uploaded photos when the first save fails validation", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())
