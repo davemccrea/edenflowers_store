@@ -15,7 +15,7 @@ Most of what Jennie sells is made to order, but a few things come in fixed numbe
    Rejected: holding stock in carts. That needs expiry, release jobs, and abandoned carts that keep stock tied up, all to guard against a rare race at this shop's traffic.
    Rejected: working out stock from orders, the way promotion usage is counted. A restock would then need to be recorded as its own entry.
 
-3. **One shared change, `Changes.AdjustStock`, makes every stock movement.** It runs inside the action's transaction, as one atomic update per tracked variant: `stock_quantity = GREATEST(stock_quantity - n, 0)`. It never reads the count first and writes it back afterwards, so two orders placed at the same moment can't leave the count wrong.
+3. **One shared change, `Changes.AdjustStock`, makes every stock movement.** It runs inside the action's transaction. For each tracked variant it locks the row (`FOR UPDATE`), then writes `max(count - n, 0)`. Variants are locked in id order. The lock means two orders placed at the same moment can't leave the count wrong, and the fixed order means they can't deadlock. Reading the count under the lock also gives the oversell check the count from before the update.
    - `finalize_checkout` and `place_custom` take the order's lines.
    - `cancel` puts the order's lines back.
    - `edit` puts the old lines back, then takes the new ones. It's the same change run twice, not a calculated difference.
@@ -41,7 +41,7 @@ Most of what Jennie sells is made to order, but a few things come in fixed numbe
    - No "Only N left" message and no "Sold out" tag in the store grid. Add them when they're asked for.
 
 9. **What Jennie sees:**
-   - The product form sets an absolute count, never "+5". Ash only writes attributes that have changed, so saving the form while a sale goes through doesn't put back a stale count. There's a test for this.
+   - The product form sets an absolute count, never "+5". Saving sends the count shown when the form opened, so a sale made while it's open is undone and may oversell later (logged, per decision 4). This is accepted for simplicity. If it ever bites, send only counts Jennie changed.
    - The products list shows stock for tracked variants ("3 left", "Sold out").
    - No stock history and no low-stock alerts. Products have no version log, so once she edits the count, the previous value is gone.
 

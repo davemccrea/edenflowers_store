@@ -34,17 +34,15 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
         price: Decimal.new("12.50"),
         image_slug: "image.jpg",
         size: :medium,
-        stock_trackable: true,
         stock_quantity: 100
       }
 
-      assert {:ok, %ProductVariant{size: size, stock_trackable: trackable, stock_quantity: quantity}} =
+      assert {:ok, %ProductVariant{size: size, stock_quantity: quantity}} =
                ProductVariant
                |> Ash.Changeset.for_create(:create, params)
                |> Ash.create(authorize?: false)
 
       assert size == :medium
-      assert trackable == true
       assert quantity == 100
     end
 

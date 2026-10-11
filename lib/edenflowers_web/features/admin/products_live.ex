@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           id="products-table"
           resource={Product}
           actor={@current_user}
-          query_opts={[load: [:cheapest_price, :product_category]]}
+          query_opts={[load: [:cheapest_price, :product_category, :product_variants]]}
           search={[
             label: ~t"Product",
             placeholder: ~t"Search name…",
@@ -82,6 +82,14 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             </span>
             <.badge :if={is_nil(product.cheapest_price)} tone={:warning}>{~t"No sizes"}</.badge>
           </:col>
+          <:col :let={product} label={~t"Stock"} class="max-sm:hidden">
+            <div :if={tracked_sizes(product) != []} class="flex flex-wrap gap-1">
+              <.badge :for={size <- tracked_sizes(product)} tone={(size.stock_quantity == 0 && :warning) || :tag}>
+                {stock_label(size)}
+              </.badge>
+            </div>
+            <.blank :if={tracked_sizes(product) == []} />
+          </:col>
           <:col
             :let={product}
             field="draft"
@@ -116,6 +124,13 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
     </Layouts.admin>
     """
   end
+
+  defp tracked_sizes(product), do: Enum.reject(product.product_variants, &is_nil(&1.stock_quantity))
+
+  defp stock_label(%{size: nil, stock_quantity: 0}), do: ~t"Sold out"
+  defp stock_label(%{size: nil, stock_quantity: count}), do: ~t"#{count} left"
+  defp stock_label(%{size: size, stock_quantity: 0}), do: ~t"#{variant_size_label(size)}: sold out"
+  defp stock_label(%{size: size, stock_quantity: count}), do: ~t"#{variant_size_label(size)}: #{count} left"
 
   defp search_products(query, _searchable_columns, search_term) do
     require Ash.Query

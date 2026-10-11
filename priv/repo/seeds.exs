@@ -60,8 +60,6 @@ for n <- 1..6 do
         end}",
       size: size,
       image_slug: "https://placehold.co/400x400",
-      stock_trackable: false,
-      stock_quantity: 0,
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -93,8 +91,6 @@ for n <- 1..4 do
         end}",
       size: size,
       image_slug: "https://placehold.co/400x400",
-      stock_trackable: false,
-      stock_quantity: 0,
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -127,8 +123,6 @@ for n <- 1..4 do
         end}",
       size: size,
       image_slug: "https://placehold.co/400x400",
-      stock_trackable: false,
-      stock_quantity: 0,
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -159,8 +153,6 @@ for n <- 1..3 do
         end}",
       size: size,
       image_slug: "https://placehold.co/400x400",
-      stock_trackable: false,
-      stock_quantity: 0,
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -207,8 +199,6 @@ for {name, sizes} <- [
       price: price,
       size: size,
       image_slug: "https://placehold.co/400x400",
-      stock_trackable: false,
-      stock_quantity: 0,
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -249,8 +239,6 @@ for {size, price} <- [small: "45", medium: "60", large: "75"] do
     price: price,
     size: size,
     image_slug: "https://placehold.co/400x400",
-    stock_trackable: false,
-    stock_quantity: 0,
     draft: false
   })
   |> Ash.create!(authorize?: false)

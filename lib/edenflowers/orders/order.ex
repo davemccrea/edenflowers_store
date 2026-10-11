@@ -553,6 +553,7 @@ defmodule Edenflowers.Orders.Order do
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
       change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change Changes.AdjustStock
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
 

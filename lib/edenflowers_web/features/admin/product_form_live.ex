@@ -167,7 +167,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                       show_errors={@form.source.submitted_once?}
                     />
                     <div class="min-w-0 flex-1 space-y-3">
-                      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <.input
                           field={variant[:size]}
                           type="select"
@@ -183,19 +183,18 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                           label={~t"Price (€)"}
                           class="input w-full tabular-nums"
                         />
+                        <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
+                             meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
+                        <.input
+                          field={variant[:stock_quantity]}
+                          type="number"
+                          min="0"
+                          label={~t"In stock"}
+                          placeholder={~t"Unlimited"}
+                          class="input w-full tabular-nums"
+                        />
                       </div>
                       <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                        <.input field={variant[:stock_trackable]} type="checkbox" label={~t"Limited stock"} />
-                        <div :if={variant[:stock_trackable].value in [true, "true"]} class="w-28">
-                          <.input
-                            field={variant[:stock_quantity]}
-                            type="number"
-                            min="0"
-                            aria-label={~t"In stock"}
-                            placeholder={~t"In stock"}
-                            class="input input-sm w-full tabular-nums"
-                          />
-                        </div>
                         <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
                         <.button
                           type="button"

@@ -66,6 +66,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Ash.get!(Edenflowers.Catalog.ProductVariant, large.id, authorize?: false).price == Decimal.new("60.00")
   end
 
+  test "sets a size's stock, and clearing it makes the size unlimited", %{conn: conn} do
+    product = generate(product())
+    variant = generate(product_variant(product_id: product.id, stock_quantity: 5))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+    view |> form("#product-form", form: %{product_variants: %{"0" => %{stock_quantity: "10"}}}) |> render_submit()
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).stock_quantity == 10
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+    view |> form("#product-form", form: %{product_variants: %{"0" => %{stock_quantity: ""}}}) |> render_submit()
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).stock_quantity == nil
+  end
+
   test "keeps uploaded photos when the first save fails validation", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())

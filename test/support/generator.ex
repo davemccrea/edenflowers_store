@@ -97,8 +97,7 @@ defmodule Generator do
         price: "35.00",
         size: :medium,
         image_slug: "image.png",
-        stock_trackable: false,
-        stock_quantity: 0
+        stock_quantity: nil
       },
       overrides: opts,
       authorize?: false

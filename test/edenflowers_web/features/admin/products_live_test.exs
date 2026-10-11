@@ -51,6 +51,20 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
     assert render_async(view, 500) =~ "Can be bought as a subscription"
   end
 
+  test "shows how many of each tracked size are left", %{conn: conn} do
+    wreath = generate(product(name: "Christmas wreath"))
+    generate(product_variant(product_id: wreath.id, size: :small, stock_quantity: 0))
+    generate(product_variant(product_id: wreath.id, size: :large, stock_quantity: 3))
+    generate(product_variant(product_id: wreath.id, size: :medium))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products")
+    html = render_async(view, 500)
+
+    assert html =~ "Small: sold out"
+    assert html =~ "Large: 3 left"
+    refute html =~ "Medium:"
+  end
+
   test "sorts by category and price", %{conn: conn} do
     anemones = generate(product_category(name: "Anemones"))
     zinnias = generate(product_category(name: "Zinnias"))

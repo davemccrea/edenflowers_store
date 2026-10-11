@@ -38,8 +38,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
   actions do
     defaults [
       :read,
-      create: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :product_id, :draft],
-      update: [:price, :size, :image_slug, :stock_trackable, :stock_quantity, :draft]
+      create: [:price, :size, :image_slug, :stock_quantity, :product_id, :draft],
+      update: [:price, :size, :image_slug, :stock_quantity, :draft]
     ]
 
     destroy :destroy do
@@ -87,7 +87,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
     attribute :image_slug, :string, allow_nil?: false
-    attribute :stock_trackable, :boolean, allow_nil?: false, default: false
+    # Nil for a size made to order, which never runs out.
     attribute :stock_quantity, :integer, constraints: [min: 0]
     attribute :draft, :boolean, allow_nil?: false, default: true
   end
