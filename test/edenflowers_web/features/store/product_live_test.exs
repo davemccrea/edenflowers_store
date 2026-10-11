@@ -12,6 +12,20 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     %{conn: Plug.Test.init_test_session(conn, %{order_id: order.id}), order: order}
   end
 
+  test "a one-size product has no size to choose, and still adds to the cart", %{conn: conn, order: order} do
+    product = generate(product(draft: false))
+    generate(product_variant(product_id: product.id, size: nil, price: "6.00"))
+
+    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+
+    refute has_element?(view, "legend", "Size")
+    assert has_element?(view, "[data-testid=product-price]", "6")
+
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert [%LineItem{variant_size: nil}] = line_items(order)
+  end
+
   describe "a subscribable product" do
     setup do
       product = generate(product(subscribable: true, free_delivery: true, draft: false))

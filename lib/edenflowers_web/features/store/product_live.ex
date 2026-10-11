@@ -146,7 +146,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               class="flex flex-col gap-6"
               data-testid="product-form"
             >
-              <fieldset class="flex flex-col gap-3">
+              <fieldset :if={not one_size?(@product_variants)} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"Size"}</legend>
                 <input type="hidden" name="product_variant_id" value="" />
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
@@ -326,6 +326,10 @@ defmodule EdenflowersWeb.Store.ProductLive do
         {:noreply, put_flash(socket, :error, add_error_message(error))}
     end
   end
+
+  # A single size-less variant has nothing to choose; the header shows its price.
+  defp one_size?([%{size: nil}]), do: true
+  defp one_size?(_variants), do: false
 
   defp cart_line(order, product_id), do: Enum.find(order.line_items, &(not &1.is_card and &1.product_id == product_id))
 
