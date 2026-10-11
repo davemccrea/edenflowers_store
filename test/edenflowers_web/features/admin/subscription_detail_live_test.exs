@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert render(view) =~ "Every 2 weeks"
     assert has_element?(view, "#subscription-fulfillment", "Storgatan 1, Jakobstad")
     assert has_element?(view, "#subscription-fulfillment", "Ring the bell twice")
-    assert has_element?(view, "#subscription-fulfillment", "Happy Mondays")
+    refute render(view) =~ "Happy Mondays"
     assert has_element?(view, "#subscription-recipient", "Grace Hopper")
     assert has_element?(view, ~s|#subscription-card img[alt="Visa"]|)
     assert has_element?(view, "#subscription-card", "•••• 4242, expires 08/27")
@@ -56,9 +56,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
 
     view |> element("button", "Pause") |> render_click()
     assert reload(subscription).state == :paused
+    refute has_element?(view, "#subscription-fulfillment .tabular-nums")
 
     view |> element("button", "Resume") |> render_click()
     assert reload(subscription).state == :active
+    assert has_element?(view, "#subscription-fulfillment .tabular-nums")
 
     view |> element("button", "Cancel") |> render_click()
     assert reload(subscription).state == :cancelled

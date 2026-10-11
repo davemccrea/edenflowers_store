@@ -290,6 +290,58 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :name, :string, default: nil
+  slot :contact
+
+  def person_block(assigns) do
+    ~H"""
+    <div class="space-y-1.5">
+      <p :if={@name} class="text-base-content text-base font-medium">{@name}</p>
+      <div :for={contact <- @contact} class="text-sm">{render_slot(contact)}</div>
+    </div>
+    """
+  end
+
+  attr :phone_number, :string, required: true
+
+  def phone_link(assigns) do
+    ~H"""
+    <a
+      href={"tel:#{@phone_number}"}
+      class="link link-primary inline-flex items-center gap-1.5"
+    >
+      <.icon name="hero-phone" class="h-3.5 w-3.5 shrink-0" />
+      {@phone_number}
+    </a>
+    """
+  end
+
+  attr :order, :map,
+    required: true,
+    doc: "needs `payment_status`, `amount_mismatch?`, `balance` and `fulfillment_status`"
+
+  attr :locale, :string, required: true
+
+  @doc "An order's payment status, or the amount still to collect or refund when it was part-paid or overpaid."
+  def order_payment_badge(%{order: order} = assigns) do
+    assigns = assign(assigns, :owes_money?, order.amount_mismatch? && order.fulfillment_status != :cancelled)
+
+    ~H"""
+    <.badge
+      :if={@owes_money?}
+      tone={if Decimal.positive?(@order.balance), do: :warning, else: :error}
+      class="tabular-nums"
+    >
+      <%= if Decimal.positive?(@order.balance) do %>
+        {~t"To collect #{amount = Edenflowers.Format.currency(@order.balance, @locale)}"}
+      <% else %>
+        {~t"To refund #{amount = Edenflowers.Format.currency(Decimal.abs(@order.balance), @locale)}"}
+      <% end %>
+    </.badge>
+    <.payment_status_badge :if={!@owes_money?} status={@order.payment_status} />
+    """
+  end
+
   attr :title, :string, required: true
   attr :class, :any, default: nil
   slot :description

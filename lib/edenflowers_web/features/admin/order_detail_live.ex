@@ -585,32 +585,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  attr :name, :string, default: nil
-  slot :contact
-
-  defp person_block(assigns) do
-    ~H"""
-    <div class="space-y-1.5">
-      <p :if={@name} class="text-base-content text-base font-medium">{@name}</p>
-      <div :for={contact <- @contact} class="text-sm">{render_slot(contact)}</div>
-    </div>
-    """
-  end
-
-  attr :phone_number, :string, required: true
-
-  defp phone_link(assigns) do
-    ~H"""
-    <a
-      href={"tel:#{@phone_number}"}
-      class="link link-primary inline-flex items-center gap-1.5"
-    >
-      <.icon name="hero-phone" class="h-3.5 w-3.5 shrink-0" />
-      {@phone_number}
-    </a>
-    """
-  end
-
   attr :urls, :map, required: true
   attr :sms_label, :string, required: true
   attr :whatsapp_label, :string, required: true

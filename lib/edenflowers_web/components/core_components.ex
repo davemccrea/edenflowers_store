@@ -290,7 +290,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :help, :string,
     default: nil,
-    doc: "hint text shown under the input, e.g. why a field is asked for (default text-like inputs only)"
+    doc: "hint text shown under the input, e.g. why a field is asked for (text-like inputs and checkboxes)"
 
   attr :value, :any
   attr :button_text, :string, default: nil
@@ -379,10 +379,12 @@ defmodule EdenflowersWeb.CoreComponents do
             value="true"
             checked={@checked}
             class={@class || "checkbox checkbox-sm"}
+            aria-describedby={@help && "#{@id}-help"}
             {@rest}
           />{@label}
         </span>
       </label>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 text-sm">{@help}</p>
       <.error :for={msg <- @errors}>{msg}</.error>
     </fieldset>
     """

@@ -109,20 +109,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             label={~t"Payment"}
             class="max-sm:hidden"
           >
-            <.payment_status_badge status={order.payment_status} />
+            <.order_payment_badge order={order} locale={@locale} />
           </:col>
           <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right max-sm:hidden">
-            <.badge
-              :if={order.amount_mismatch? && order.fulfillment_status != :cancelled}
-              tone={if Decimal.positive?(order.balance), do: :warning, else: :error}
-              class="mr-1.5"
-            >
-              <%= if Decimal.positive?(order.balance) do %>
-                {~t"To collect #{amount = Format.currency(order.balance, @locale)}"}
-              <% else %>
-                {~t"To refund #{amount = Format.currency(Decimal.abs(order.balance), @locale)}"}
-              <% end %>
-            </.badge>
             <span class="tabular-nums">{Format.currency(order.grand_total, @locale)}</span>
           </:col>
           <:col

@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
 
@@ -34,7 +35,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   end
 
   defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Promotion, id, actor: actor) do
+    case Ash.get(Promotion, id, actor: actor, load: [:usage]) do
       {:ok, promotion} ->
         form = AshPhoenix.Form.for_update(promotion, :update, actor: actor, transform_params: &percent_to_rate/3)
         {:ok, promotion.name, to_form(form)}
@@ -103,7 +104,21 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   defp history_label(:minimum_cart_total), do: ~t"Minimum cart total"
   defp history_label(:start_date), do: ~t"Starts"
   defp history_label(:expiration_date), do: ~t"Expires"
-  defp history_label(:usage_limit), do: ~t"Uses"
+  defp history_label(:usage_limit), do: ~t"Usage limit"
+
+  defp status(promotion) do
+    today = HelsinkiToday.today()
+
+    cond do
+      promotion.start_date && Date.after?(promotion.start_date, today) -> {~t"Scheduled", :neutral}
+      promotion.expiration_date && Date.before?(promotion.expiration_date, today) -> {~t"Expired", :neutral}
+      promotion.usage_limit && promotion.usage >= promotion.usage_limit -> {~t"Used up", :neutral}
+      true -> {~t"Active", :success}
+    end
+  end
+
+  defp usage_label(%{usage_limit: nil, usage: usage}), do: ~t"Used #{usage}"
+  defp usage_label(%{usage_limit: limit, usage: usage}), do: ~t"Used #{usage} / #{limit}"
 
   defp show(nil, _field, _locale), do: "—"
   defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)
@@ -163,6 +178,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page width="narrow">
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
+          <:subtitle :if={@form.source.type == :update}>
+            <span id="promotion-status" class="inline-flex flex-wrap items-center gap-1.5">
+              <.badge tone={elem(status(@form.source.data), 1)}>{elem(status(@form.source.data), 0)}</.badge>
+              <.badge tone={:tag} class="tabular-nums">{usage_label(@form.source.data)}</.badge>
+            </span>
+          </:subtitle>
           <:actions :if={@form.source.type == :update}>
             <.actions_menu id="promotion-actions">
               <.actions_menu_button
@@ -239,16 +260,18 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                 field={@form[:usage_limit]}
                 type="number"
                 min="1"
-                label={~t"Uses"}
+                label={~t"Usage limit"}
                 class="input w-full tabular-nums"
               />
             </div>
           </.form_section>
 
-          <.button type="submit" variant="primary" class="w-full sm:w-auto">{~t"Save promotion"}</.button>
+          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
+            {~t"Save promotion"}
+          </.button>
         </.form>
 
-        <.form_section :if={@history != []} title={~t"History"} class="mt-10">
+        <.widget :if={@history != []} title={~t"History"} class="mt-10">
           <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
             <.history_entry
               :for={{entry, index} <- Enum.with_index(@history)}
@@ -267,7 +290,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
               </:details>
             </.history_entry>
           </ol>
-        </.form_section>
+        </.widget>
       </.admin_page>
     </Layouts.admin>
     """

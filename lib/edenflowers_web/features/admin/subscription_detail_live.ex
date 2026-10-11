@@ -45,11 +45,15 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           back_label={~t"Subscriptions"}
         >
           <:subtitle>
-            <span class="inline-flex flex-wrap items-center gap-x-2">
-              <span>{product_name(@subscription)}, {variant_size_label(@subscription.product_variant.size)}</span>
-              <span aria-hidden="true">·</span>
-              <span>{Fields.interval_label(@subscription.interval_weeks)}</span>
-              <.subscription_state_badge state={@subscription.state} />
+            <span class="flex flex-col gap-2.5">
+              <span class="inline-flex flex-wrap items-center gap-x-2">
+                <span>{product_name(@subscription)}, {variant_size_label(@subscription.product_variant.size)}</span>
+                <span aria-hidden="true">·</span>
+                <span>{Fields.interval_label(@subscription.interval_weeks)}</span>
+              </span>
+              <span id="subscription-status" class="inline-flex flex-wrap items-center gap-1.5">
+                <.subscription_state_badge state={@subscription.state} />
+              </span>
             </span>
           </:subtitle>
           <:actions>
@@ -88,10 +92,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           <.widget id="subscription-fulfillment" title={~t"Fulfillment"}>
             <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
               <.summary_fact label={~t"Next delivery"}>
-                <span :if={@subscription.state != :cancelled} class="tabular-nums">
+                <%!-- Only an active subscription makes orders; resuming works out a fresh date. --%>
+                <span :if={@subscription.state == :active} class="tabular-nums">
                   {Format.weekday_day_month(@subscription.next_fulfillment_date, @locale)}
                 </span>
-                <.blank :if={@subscription.state == :cancelled} />
+                <.blank :if={@subscription.state != :active} />
               </.summary_fact>
               <.summary_fact label={~t"Method"}>
                 <.fulfillment_method
@@ -117,21 +122,15 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 </p>
               </div>
             </div>
-
-            <div :if={@subscription.card_message} class="mt-5">
-              <p class="eyebrow text-base-content/65 mb-1.5">{~t"Card message"}</p>
-              <blockquote
-                phx-no-format
-                class="text-base-content font-serif whitespace-pre-wrap break-words text-lg italic leading-relaxed"
-              >{@subscription.card_message}</blockquote>
-            </div>
           </.widget>
 
           <aside class="flex flex-col gap-6">
             <.widget id="subscription-customer" title={~t"Customer"}>
-              <div class="space-y-1.5 text-sm">
-                <p><.email_link email={@subscription.user.email} /></p>
-                <p>
+              <.person_block>
+                <:contact>
+                  <.email_link email={@subscription.user.email} />
+                </:contact>
+                <:contact>
                   <.link
                     id="subscription-customer-link"
                     navigate={~p"/admin/customers/#{@subscription.user_id}"}
@@ -140,17 +139,16 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                     <.icon name="hero-user" class="h-3.5 w-3.5 shrink-0" />
                     {~t"View customer's orders"}
                   </.link>
-                </p>
-              </div>
+                </:contact>
+              </.person_block>
             </.widget>
 
             <.widget :if={@subscription.recipient_name} id="subscription-recipient" title={~t"Recipient"}>
-              <div class="space-y-1.5">
-                <p class="text-base-content text-base font-medium">{@subscription.recipient_name}</p>
-                <p :if={@subscription.recipient_phone_number} class="text-sm tabular-nums">
-                  {@subscription.recipient_phone_number}
-                </p>
-              </div>
+              <.person_block name={@subscription.recipient_name}>
+                <:contact :if={@subscription.recipient_phone_number}>
+                  <.phone_link phone_number={@subscription.recipient_phone_number} />
+                </:contact>
+              </.person_block>
             </.widget>
 
             <.widget id="subscription-card" title={~t"Card on file"}>
@@ -209,7 +207,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             <.fulfillment_status_badge status={order.fulfillment_status} />
           </:col>
           <:col :let={order} field="payment_status" sort label={~t"Payment"} class="max-sm:hidden">
-            <.payment_status_badge status={order.payment_status} />
+            <.order_payment_badge order={order} locale={@locale} />
           </:col>
           <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
             <span class="whitespace-nowrap tabular-nums">{Format.currency(order.grand_total, @locale)}</span>

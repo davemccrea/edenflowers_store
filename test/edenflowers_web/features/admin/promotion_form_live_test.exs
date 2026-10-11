@@ -39,6 +39,23 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
     assert html =~ "Newsletter Welcome"
   end
 
+  test "shows whether a promotion can still be used", %{conn: conn} do
+    today = Edenflowers.Expressions.HelsinkiToday.today()
+    active = generate(promotion(usage_limit: 10))
+    scheduled = generate(promotion(start_date: Date.add(today, 3)))
+    expired = generate(promotion(expiration_date: Date.add(today, -1)))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{active.id}")
+    assert has_element?(view, "#promotion-status", "Active")
+    assert has_element?(view, "#promotion-status", "Used 0 / 10")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{scheduled.id}")
+    assert has_element?(view, "#promotion-status", "Scheduled")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{expired.id}")
+    assert has_element?(view, "#promotion-status", "Expired")
+  end
+
   test "generates a code without losing other input", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
 

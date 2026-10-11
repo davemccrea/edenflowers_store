@@ -70,8 +70,13 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
             {Fields.interval_label(subscription.interval_weeks)}
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort={[cycle: [:asc, :desc]]} label={~t"Next delivery"}>
-            <span class="tabular-nums max-sm:hidden">{Format.date(subscription.next_fulfillment_date, @locale)}</span>
-            <span class="sm:hidden">{Format.day_month(subscription.next_fulfillment_date, @locale)}</span>
+            <span :if={subscription.state == :active} class="tabular-nums max-sm:hidden">
+              {Format.date(subscription.next_fulfillment_date, @locale)}
+            </span>
+            <span :if={subscription.state == :active} class="sm:hidden">
+              {Format.day_month(subscription.next_fulfillment_date, @locale)}
+            </span>
+            <.blank :if={subscription.state != :active} />
           </:col>
           <:col
             :let={subscription}
