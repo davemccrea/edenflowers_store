@@ -19,7 +19,7 @@ Most of what Jennie sells is made to order, but a few things come in fixed numbe
    - `finalize_checkout` and `place_custom` take the order's lines.
    - `cancel` puts the order's lines back.
    - `edit` puts the old lines back, then takes the new ones. It's the same change run twice, not a calculated difference.
-   - Occurrences (`create_occurrence`, `place_unpaid_occurrence`) never touch stock. Subscription bouquets are florist's choice and made fresh.
+   - Subscriptions never touch stock. That covers both the first order's subscription line and every Occurrence. Subscription bouquets are florist's choice and made fresh, so a subscription line also isn't capped by stock in the cart.
    - Fulfilled orders are never adjusted, because `edit` and `cancel` already require `fulfillment_status == :pending`.
 
 4. **An Online Order is placed even if it oversells.** The card has already been charged (automatic capture), and placed means committed (ADR 0001). The count floors at 0, and if the count before the update was below `n`, an error is logged so it reaches ErrorTracker, the same way `ReportPromotionOverused` does. Jennie either makes one more, or cancels the order and refunds it in Stripe.

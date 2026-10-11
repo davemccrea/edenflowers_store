@@ -45,6 +45,8 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
   defp quantities_by_variant(line_items) do
     line_items
     |> Enum.reject(&is_nil(&1.product_variant_id))
+    # A subscription's bouquets are made fresh, its first one included.
+    |> Enum.filter(&is_nil(&1.interval_weeks))
     |> Enum.group_by(& &1.product_variant_id, & &1.quantity)
     |> Map.new(fn {variant_id, quantities} -> {variant_id, Enum.sum(quantities)} end)
   end

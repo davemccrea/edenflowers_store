@@ -12,11 +12,11 @@ defmodule Edenflowers.Orders.AdjustStockTest do
     %{product: generate(product(tax_rate_id: tax_rate.id))}
   end
 
-  defp place_online_order(lines) do
+  defp place_online_order(lines, line_attrs \\ []) do
     order = generate(order(state: :payment, payment_intent_id: "pi_test"))
 
     for {variant, quantity} <- lines do
-      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: quantity))
+      generate(line_item([order_id: order.id, product_variant_id: variant.id, quantity: quantity] ++ line_attrs))
     end
 
     order = Ash.load!(order, :grand_total, authorize?: false)
@@ -49,5 +49,15 @@ defmodule Edenflowers.Orders.AdjustStockTest do
 
     assert stock(tracked) == 0
     assert log =~ "took 2 of variant #{tracked.id} with only 1 in stock"
+  end
+
+  test "the first order of a subscription takes no stock" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id, subscribable: true, free_delivery: true))
+    tracked = generate(product_variant(product_id: product.id, stock_quantity: 3))
+
+    place_online_order([{tracked, 1}], interval_weeks: 2)
+
+    assert stock(tracked) == 3
   end
 end
