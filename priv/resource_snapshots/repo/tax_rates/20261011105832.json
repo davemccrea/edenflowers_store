@@ -1,18 +1,6 @@
 {
   "attributes": [
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "translations",
-      "type": "map"
-    },
-    {
       "allow_nil?": false,
       "default": "fragment(\"gen_random_uuid()\")",
       "generated?": false,
@@ -37,6 +25,18 @@
       "type": "text"
     },
     {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "percentage",
+      "type": "decimal"
+    },
+    {
       "allow_nil?": true,
       "default": "nil",
       "generated?": false,
@@ -45,44 +45,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "description",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "slug",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "\"draft\"",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "visibility",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "add_on",
-      "type": "boolean"
+      "source": "retired_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -91,19 +55,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "3386B2DFE483C435B729F551F358CC498BC2FACD5F2FA203FC6D5E8E70FB5FA1",
+  "hash": "88E4F1D064E931E79F6C98719936151606553A5BA4B99F4084964FC28564F99D",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "product_categories_unique_slug_index",
+      "index_name": "tax_rates_unique_name_index",
       "keys": [
         {
           "type": "atom",
-          "value": "slug"
+          "value": "name"
         }
       ],
-      "name": "unique_slug",
+      "name": "unique_name",
       "nils_distinct?": true,
       "where": null
     }
@@ -115,5 +79,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "product_categories"
+  "table": "tax_rates"
 }

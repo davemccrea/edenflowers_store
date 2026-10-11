@@ -21,7 +21,43 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "price",
+      "source": "name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "code",
+      "type": "citext"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "discount_rate",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "minimum_cart_total",
       "type": "decimal"
     },
     {
@@ -33,20 +69,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "size",
-      "type": "text"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "image_slug",
-      "type": "text"
+      "source": "start_date",
+      "type": "date"
     },
     {
       "allow_nil?": true,
@@ -57,84 +81,54 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "stock_quantity",
+      "source": "expiration_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "usage_limit",
       "type": "bigint"
-    },
-    {
-      "allow_nil?": false,
-      "default": "true",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "draft",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "archived_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "product_variants_product_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "products"
-      },
-      "scale": null,
-      "size": null,
-      "source": "product_id",
-      "type": "uuid"
     }
   ],
-  "base_filter": "(archived_at IS NULL)",
+  "base_filter": null,
   "check_constraints": [
     {
       "attribute": [
-        "price"
+        "minimum_cart_total"
       ],
-      "base_filter": "(archived_at IS NULL)",
-      "check": "price >= 0 AND price = round(price, 2)",
-      "name": "product_variants_valid_price"
+      "base_filter": null,
+      "check": "minimum_cart_total >= 0 AND minimum_cart_total = round(minimum_cart_total, 2)",
+      "name": "promotions_valid_minimum_cart_total"
     }
   ],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "0A5A4E03DE0D8AAD66888864CCCE52A7EC6CC3BD2D2B49F7C7429CDC53FCB0D3",
-  "identities": [],
+  "hash": "6B79B63B19687CD232636CD66A14BCA9F97FF4066C0542B485308567686D2447",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "promotions_unique_code_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "code"
+        }
+      ],
+      "name": "unique_code",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -142,5 +136,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "product_variants"
+  "table": "promotions"
 }

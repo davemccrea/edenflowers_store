@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "document_id",
+      "source": "version_action_type",
       "type": "text"
     },
     {
@@ -33,7 +33,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "organization_id",
+      "source": "version_action_name",
       "type": "text"
     },
     {
@@ -45,47 +45,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "processed_at",
-      "type": "utc_datetime"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "failed_at",
-      "type": "utc_datetime"
+      "source": "items",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "inserted_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "updated_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -105,17 +69,53 @@
           "global": null,
           "strategy": null
         },
-        "name": "expense_imports_expense_id_fkey",
+        "name": "orders_versions_version_source_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "expenses"
+        "table": "orders"
       },
       "scale": null,
       "size": null,
-      "source": "expense_id",
+      "source": "version_source_id",
       "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "changes",
+      "type": "map"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "version_inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "version_updated_at",
+      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -124,23 +124,8 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "5940D22684FA6F4A0F389FD51108228C14EFF2DB1890D6C89502FDD826235E45",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "expense_imports_unique_document_id_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "document_id"
-        }
-      ],
-      "name": "unique_document_id",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "1F2946613AE8B0E68D52F56EC755ABD385B0BDE1CED53615EE7DA1FD3FF09627",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -148,5 +133,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "expense_imports"
+  "table": "orders_versions"
 }

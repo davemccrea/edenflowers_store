@@ -317,8 +317,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "orders_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -357,8 +356,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:payments, [:payment_intent_id],
@@ -382,6 +380,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :description, :text
       add :slug, :text, null: false
       add :visibility, :text, null: false, default: "draft"
+      add :add_on, :boolean, null: false, default: false
     end
 
     create unique_index(:product_categories, [:slug],
@@ -406,7 +405,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :price, :decimal, null: false
       add :size, :text
       add :image_slug, :text, null: false
-      add :stock_trackable, :boolean, null: false, default: false
       add :stock_quantity, :bigint
       add :draft, :boolean, null: false, default: true
       add :archived_at, :utc_datetime_usec
@@ -477,8 +475,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -577,8 +574,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_product_variant_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :fulfillment_option_id,
           references(:fulfillment_options,
@@ -586,8 +582,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_fulfillment_option_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:subscriptions_versions, primary_key: false) do
@@ -601,8 +596,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -985,7 +979,6 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       remove :archived_at
       remove :draft
       remove :stock_quantity
-      remove :stock_trackable
       remove :image_slug
       remove :size
       remove :price
