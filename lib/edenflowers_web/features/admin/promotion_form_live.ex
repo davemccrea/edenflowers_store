@@ -149,7 +149,10 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
          |> push_navigate(to: PromotionsLive.default_path())}
 
       {:error, form} ->
-        {:noreply, assign(socket, :form, form)}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The promotion wasn't saved. Check the fields marked below.")}
     end
   end
 
@@ -239,14 +242,14 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                 type="text"
                 inputmode="decimal"
                 label={~t"Discount (%)"}
-                class="input w-full tabular-nums"
+                class="input max-w-48 w-full tabular-nums"
               />
               <.input
                 field={@form[:minimum_cart_total]}
                 type="text"
                 inputmode="decimal"
                 label={~t"Minimum cart total (€)"}
-                class="input w-full tabular-nums"
+                class="input max-w-48 w-full tabular-nums"
               />
             </div>
           </.form_section>
@@ -261,7 +264,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                 type="number"
                 min="1"
                 label={~t"Usage limit"}
-                class="input w-full tabular-nums"
+                class="input max-w-48 w-full tabular-nums"
               />
             </div>
           </.form_section>

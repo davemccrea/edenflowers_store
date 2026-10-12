@@ -230,7 +230,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          |> put_flash(:info, ~t"Prices saved.")}
 
       {:error, form} ->
-        {:noreply, assign(socket, :form, form)}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
     end
   end
 

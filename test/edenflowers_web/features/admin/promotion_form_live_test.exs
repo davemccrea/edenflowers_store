@@ -135,6 +135,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
       |> render_submit()
 
     assert html =~ ~s(value="150")
+    assert html =~ "The promotion wasn&#39;t saved"
     assert Ash.read!(Promotion, authorize?: false) == []
   end
 

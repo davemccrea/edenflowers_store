@@ -112,7 +112,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> push_navigate(to: ~p"/admin/products")}
 
       {:error, form} ->
-        {:noreply, assign(socket, :form, form)}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The product wasn't saved. Check the fields marked below.")}
     end
   end
 
@@ -199,8 +202,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     size="sm"
                     show_errors={@form.source.submitted_once?}
                   />
-                  <div class="min-w-0 flex-1 space-y-3">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div class="min-w-0 flex-1 space-y-3 2xl:flex 2xl:items-end 2xl:gap-6 2xl:space-y-0">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 2xl:flex-1">
                       <.input
                         field={variant[:size]}
                         type="select"
@@ -227,7 +230,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                         class="input w-full tabular-nums"
                       />
                     </div>
-                    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 2xl:shrink-0 2xl:flex-nowrap">
                       <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
                       <.button
                         type="button"
@@ -286,7 +289,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   type="number"
                   min="0"
                   label={~t"Position in store (0 = first)"}
-                  class="input w-full tabular-nums"
+                  class="input max-w-48 w-full tabular-nums"
                 />
               </div>
               <div>

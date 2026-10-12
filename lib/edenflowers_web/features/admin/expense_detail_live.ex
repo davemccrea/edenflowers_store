@@ -168,7 +168,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          |> put_flash(:info, ~t"Expense updated.")}
 
       {:error, form} ->
-        {:noreply, assign(socket, :form, form)}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The expense wasn't saved. Check the fields marked below.")}
     end
   end
 

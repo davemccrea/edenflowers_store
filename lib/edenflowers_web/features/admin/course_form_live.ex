@@ -74,7 +74,10 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
          |> push_navigate(to: ~p"/admin/courses")}
 
       {:error, form} ->
-        {:noreply, assign(socket, :form, form)}
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The course wasn't saved. Check the fields marked below.")}
     end
   end
 
@@ -131,14 +134,14 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                 type="number"
                 min="1"
                 label={~t"Seats"}
-                class="input w-full tabular-nums"
+                class="input max-w-48 w-full tabular-nums"
               />
               <.input
                 field={@form[:price]}
                 type="text"
                 inputmode="decimal"
                 label={~t"Price per seat (€)"}
-                class="input w-full tabular-nums"
+                class="input max-w-48 w-full tabular-nums"
               />
               <.input
                 field={@form[:tax_rate_id]}
