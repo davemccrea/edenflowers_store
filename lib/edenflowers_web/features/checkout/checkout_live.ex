@@ -433,7 +433,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           <label for={"#{@id}-card-message"} class="mb-1">{gettext("Card message")}</label>
           <%!-- The input is styled as the card itself, matching the thank-you page's card,
                so the customer sees their words as the recipient will. --%>
-          <div class="bg-cream text-cream-content relative px-7 py-6 shadow-sm transition duration-150 focus-within:shadow-lg">
+          <div class="bg-cream text-cream-content relative px-7 py-6 has-[textarea:focus-visible]:outline-primary has-[textarea:focus-visible]:outline-2 has-[textarea:focus-visible]:outline-offset-2">
             <%!-- Hidden rather than removed: adding or removing it makes LiveView move the
                  card image below, which replays its tuck-in animation. --%>
             <p
@@ -460,7 +460,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               type="button"
               phx-click={JS.exec("phx-show", to: "#card-drawer")}
               aria-haspopup="dialog"
-              class="card-tuck absolute top-4 right-4 shadow-md transition-shadow duration-200 hover:shadow-lg"
+              class="card-tuck absolute top-4 right-4"
               data-testid="card-image-button"
               title={gettext("Change card")}
             >

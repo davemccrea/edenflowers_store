@@ -928,7 +928,7 @@ msgstr "Kortmeddelande"
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Varukorgens summa måste vara minst %{edenflowers_format_currency} för att kampanjen ska gälla"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:116
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:117
 #: lib/edenflowers_web/features/admin/expenses_live.ex:114
 #: lib/edenflowers_web/features/admin/expenses_live.ex:115
 #: lib/edenflowers_web/features/admin/product_form_live.ex:282
@@ -955,7 +955,7 @@ msgstr "Fortsätt till kassan"
 msgid "Could not mark order as fulfilled."
 msgstr "Kunde inte markera beställningen som uppfylld."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:95
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Currency"
 msgstr "Valuta"
@@ -980,7 +980,7 @@ msgid "Dashboard"
 msgstr "Översikt"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:117
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:91
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:92
 #: lib/edenflowers_web/features/admin/expenses_live.ex:71
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:157
 #: lib/edenflowers_web/features/admin/order_form_live.ex:496
@@ -996,7 +996,7 @@ msgstr "Karta över leveransplatsen"
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:105
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:123
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:121
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:122
 #: lib/edenflowers_web/features/admin/order_form_live.ex:670
 #, elixir-autogen, elixir-format
 msgid "Description"
@@ -1027,7 +1027,7 @@ msgstr "Utgift"
 msgid "Expense not found."
 msgstr "Utgiften hittades inte."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:168
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:170
 #, elixir-autogen, elixir-format
 msgid "Expense updated."
 msgstr "Utgiften uppdaterades."
@@ -1267,7 +1267,7 @@ msgstr "Återbetald"
 msgid "Reviewed"
 msgstr "Granskad"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:132
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Save corrections"
 msgstr "Spara korrigeringar"
@@ -1313,7 +1313,7 @@ msgid "Tomorrow · %{format_day_month}"
 msgstr "I morgon · %{format_day_month}"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:49
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:103
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Total amount"
 msgstr "Totalbelopp"
@@ -1339,12 +1339,12 @@ msgstr "Okänd leverantör"
 msgid "Utilities"
 msgstr "Driftskostnader"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "VAT amount"
 msgstr "Momsbelopp"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:90
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "VAT number"
 msgstr "Momsnummer"
@@ -1354,7 +1354,7 @@ msgstr "Momsnummer"
 msgid "Vendor"
 msgstr "Leverantör"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:89
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Vendor name"
 msgstr "Leverantörens namn"
@@ -2141,7 +2141,7 @@ msgstr "%{queue_position} av %{queue_total}"
 msgid "Card to write"
 msgstr "Kort att skriva"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:190
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "Corrections saved, but the expense could not be marked as reviewed."
 msgstr "Korrigeringarna sparades, men utgiften kunde inte markeras som granskad."
@@ -2161,7 +2161,7 @@ msgstr "Det gick inte att spara profilbilden."
 msgid "Could not upload the picture."
 msgstr "Det gick inte att ladda upp bilden."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:184
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:186
 #, elixir-autogen, elixir-format
 msgid "Expense saved and marked as reviewed."
 msgstr "Utgiften sparades och markerades som granskad."
@@ -2221,7 +2221,7 @@ msgstr "Intäkter"
 msgid "Sales"
 msgstr "Försäljning"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:143
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Save and mark reviewed"
 msgstr "Spara och markera som granskad"
@@ -2843,11 +2843,6 @@ msgstr "Radera"
 msgid "Draft"
 msgstr "Utkast"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:296
-#, elixir-autogen, elixir-format
-msgid "Draft (hidden from the store)"
-msgstr "Utkast (syns inte i butiken)"
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:216
 #, elixir-autogen, elixir-format
 msgid "Edit course"
@@ -2880,6 +2875,7 @@ msgid "Hand-tied bouquet of red roses tied with a hessian bow"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:234
+#: lib/edenflowers_web/features/admin/product_form_live.ex:296
 #, elixir-autogen, elixir-format
 msgid "Hidden from the store"
 msgstr "Syns inte i butiken"
@@ -3744,8 +3740,8 @@ msgstr "Spara anteckningen"
 #: lib/edenflowers_web/features/account/account_live.ex:165
 #: lib/edenflowers_web/features/account/account_live.ex:961
 #: lib/edenflowers_web/features/admin/course_form_live.ex:163
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:129
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:140
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:131
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:142
 #: lib/edenflowers_web/features/admin/order_form_live.ex:576
 #: lib/edenflowers_web/features/admin/product_form_live.ex:316
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:272
@@ -5564,7 +5560,7 @@ msgstr "Inte sparat. Kontrollera de markerade fälten nedan."
 msgid "The course wasn't saved. Check the fields marked below."
 msgstr "Kursen sparades inte. Kontrollera de markerade fälten nedan."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:174
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:176
 #, elixir-autogen, elixir-format
 msgid "The expense wasn't saved. Check the fields marked below."
 msgstr "Utgiften sparades inte. Kontrollera de markerade fälten nedan."
@@ -5578,3 +5574,8 @@ msgstr "Produkten sparades inte. Kontrollera de markerade fälten nedan."
 #, elixir-autogen, elixir-format
 msgid "The promotion wasn't saved. Check the fields marked below."
 msgstr "Kampanjen sparades inte. Kontrollera de markerade fälten nedan."
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:88
+#, elixir-autogen, elixir-format
+msgid "Details"
+msgstr "Uppgifter"

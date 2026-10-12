@@ -350,7 +350,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A titled group of fields in an admin form, set off from the previous group by a rule."
   def form_section(assigns) do
     ~H"""
-    <section class={["border-base-content/12 border-t pt-6 first:border-t-0 first:pt-0", "xl:grid-cols-[16rem_minmax(0,1fr)] xl:grid xl:gap-10", @class]}>
+    <section class={["border-base-content/12 [section+&]:border-t [section+&]:pt-6", "xl:grid-cols-[16rem_minmax(0,1fr)] xl:grid xl:gap-10", @class]}>
       <header class="mb-4 xl:mb-0">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <p :if={@description != []} class="text-base-content/65 mt-1 text-sm">{render_slot(@description)}</p>

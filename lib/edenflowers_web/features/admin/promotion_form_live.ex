@@ -274,7 +274,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           </.button>
         </.form>
 
-        <.widget :if={@history != []} title={~t"History"} class="mt-10">
+        <.form_section :if={@history != []} title={~t"History"} class="border-base-content/12 mt-10 border-t pt-6">
           <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
             <.history_entry
               :for={{entry, index} <- Enum.with_index(@history)}
@@ -293,7 +293,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
               </:details>
             </.history_entry>
           </ol>
-        </.widget>
+        </.form_section>
       </.admin_page>
     </Layouts.admin>
     """

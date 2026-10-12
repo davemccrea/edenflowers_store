@@ -85,42 +85,44 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
         <section>
           <.form for={@form} id="expense-form" phx-submit="correct" phx-change="validate">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input field={@form[:vendor_name]} type="text" label={~t"Vendor name"} class="input w-full" />
-              <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT number"} class="input w-full" />
-              <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
-              <.input
-                field={@form[:currency]}
-                type="select"
-                label={~t"Currency"}
-                options={[EUR: :eur, SEK: :sek]}
-                class="select w-full"
-              />
-              <.input
-                field={@form[:total_amount]}
-                type="text"
-                inputmode="decimal"
-                label={~t"Total amount"}
-                class="input w-full"
-              />
-              <.input
-                field={@form[:vat_amount]}
-                type="text"
-                inputmode="decimal"
-                label={~t"VAT amount"}
-                class="input w-full"
-              />
-              <.input
-                field={@form[:category]}
-                type="select"
-                label={~t"Category"}
-                options={category_options()}
-                class="select w-full"
-              />
-              <div class="sm:col-span-2">
-                <.input field={@form[:description]} type="textarea" label={~t"Description"} class="textarea w-full" />
+            <.form_section title={~t"Details"}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input field={@form[:vendor_name]} type="text" label={~t"Vendor name"} class="input w-full" />
+                <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT number"} class="input w-full" />
+                <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
+                <.input
+                  field={@form[:currency]}
+                  type="select"
+                  label={~t"Currency"}
+                  options={[EUR: :eur, SEK: :sek]}
+                  class="select w-full"
+                />
+                <.input
+                  field={@form[:total_amount]}
+                  type="text"
+                  inputmode="decimal"
+                  label={~t"Total amount"}
+                  class="input w-full"
+                />
+                <.input
+                  field={@form[:vat_amount]}
+                  type="text"
+                  inputmode="decimal"
+                  label={~t"VAT amount"}
+                  class="input w-full"
+                />
+                <.input
+                  field={@form[:category]}
+                  type="select"
+                  label={~t"Category"}
+                  options={category_options()}
+                  class="select w-full"
+                />
+                <div class="sm:col-span-2">
+                  <.input field={@form[:description]} type="textarea" label={~t"Description"} class="textarea w-full" />
+                </div>
               </div>
-            </div>
+            </.form_section>
             <div class="mt-6 flex flex-col gap-3 sm:flex-row">
               <%!-- First in source order so Enter in a field saves without marking the expense reviewed. --%>
               <.button
