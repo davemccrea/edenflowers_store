@@ -418,7 +418,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="narrow">
+      <.admin_page>
         <.admin_page_header
           title={@page_title}
           back={if @order, do: ~p"/admin/orders/#{@order.id}", else: ~p"/admin/orders"}

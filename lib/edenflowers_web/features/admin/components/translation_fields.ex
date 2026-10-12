@@ -95,7 +95,8 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
     assigns = assign(assigns, :translations, @translations)
 
     ~H"""
-    <div class="divide-base-content/8 divide-y">
+    <%!-- Side by side once each language has room for a readable description. --%>
+    <div class="divide-base-content/8 divide-y 2xl:grid 2xl:grid-cols-3 2xl:gap-6 2xl:divide-y-0">
       <.language label="English" locale="en-GB" translating={@translating}>
         <.input field={@form[:name]} type="text" label={~t"Name"} lang="en" class="input w-full" />
         <.input
@@ -140,7 +141,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
     assigns = assign(assigns, :id, "language-" <> String.downcase(assigns.label))
 
     ~H"""
-    <div role="group" aria-labelledby={@id} class="space-y-3 py-5 first:pt-0 last:pb-0">
+    <div role="group" aria-labelledby={@id} class="space-y-3 py-5 first:pt-0 last:pb-0 2xl:py-0">
       <div class="flex items-center gap-3">
         <h3 id={@id} class="text-base-content font-medium">{@label}</h3>
         <.button

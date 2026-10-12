@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="narrow">
+      <.admin_page>
         <.admin_page_header title={@page_title} back={~p"/admin/products"} back_label={~t"Products"}>
           <:subtitle :if={@form.source.type == :update}>
             <span id="product-status" class="inline-flex flex-wrap items-center gap-1.5">
@@ -254,7 +254,16 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 </button>
               </li>
             </ul>
-            <div class="mt-3 flex justify-end">
+            <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <div class="w-full sm:w-64">
+                <.input
+                  field={@form[:tax_rate_id]}
+                  type="select"
+                  label={~t"VAT"}
+                  options={Enum.map(@tax_rates, &{&1.name, &1.id})}
+                  class="select w-full"
+                />
+              </div>
               <.button type="button" phx-click="mark_sold_out" variant="ghost" size="sm" data-testid="mark-sold-out">
                 {~t"Mark every size sold out"}
               </.button>
@@ -263,28 +272,23 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
           <.form_section title={~t"In the store"}>
             <div class="space-y-4">
-              <.input
-                field={@form[:product_category_id]}
-                type="select"
-                label={~t"Category"}
-                prompt={~t"Choose a category"}
-                options={Enum.map(@categories, &{&1.name, &1.id})}
-                class="select w-full"
-              />
-              <.input
-                field={@form[:tax_rate_id]}
-                type="select"
-                label={~t"VAT"}
-                options={Enum.map(@tax_rates, &{&1.name, &1.id})}
-                class="select w-full"
-              />
-              <.input
-                field={@form[:position]}
-                type="number"
-                min="0"
-                label={~t"Position in store (0 = first)"}
-                class="input w-full tabular-nums"
-              />
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@form[:product_category_id]}
+                  type="select"
+                  label={~t"Category"}
+                  prompt={~t"Choose a category"}
+                  options={Enum.map(@categories, &{&1.name, &1.id})}
+                  class="select w-full"
+                />
+                <.input
+                  field={@form[:position]}
+                  type="number"
+                  min="0"
+                  label={~t"Position in store (0 = first)"}
+                  class="input w-full tabular-nums"
+                />
+              </div>
               <div>
                 <.input field={@form[:draft]} type="checkbox" label={~t"Draft (hidden from the store)"} />
                 <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />

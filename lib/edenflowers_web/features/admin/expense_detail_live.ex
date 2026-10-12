@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="narrow">
+      <.admin_page>
         <.admin_page_header
           title={@expense.vendor_name || ~t"Unknown vendor"}
           back={~p"/admin/expenses"}

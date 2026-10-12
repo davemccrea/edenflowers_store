@@ -126,7 +126,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
       |> assign(:errors, if(assigns.show_errors, do: assigns.field.errors, else: []))
 
     ~H"""
-    <div class={@size == "sm" && "w-16 shrink-0"}>
+    <div class={if @size == "sm", do: "w-16 shrink-0", else: "max-w-60"}>
       <label
         phx-drop-target={@upload.ref}
         class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"

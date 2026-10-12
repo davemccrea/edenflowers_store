@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="full">
+      <.admin_page>
         <.admin_page_header title={~t"Promotions"}>
           <:actions>
             <.button navigate={~p"/admin/promotions/new"} variant="neutral" size="sm">

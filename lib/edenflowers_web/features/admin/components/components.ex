@@ -350,12 +350,12 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A titled group of fields in an admin form, set off from the previous group by a rule."
   def form_section(assigns) do
     ~H"""
-    <section class={["border-base-content/12 border-t pt-6 first:border-t-0 first:pt-0", @class]}>
-      <header class="mb-4">
+    <section class={["border-base-content/12 border-t pt-6 first:border-t-0 first:pt-0", "xl:grid-cols-[16rem_minmax(0,1fr)] xl:grid xl:gap-10", @class]}>
+      <header class="mb-4 xl:mb-0">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <p :if={@description != []} class="text-base-content/65 mt-1 text-sm">{render_slot(@description)}</p>
       </header>
-      {render_slot(@inner_block)}
+      <div class="min-w-0">{render_slot(@inner_block)}</div>
     </section>
     """
   end
@@ -372,21 +372,12 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  attr :width, :string, default: "wide", values: ~w(wide narrow full)
   slot :inner_block, required: true
 
-  @doc """
-  Page shell for admin screens: owns horizontal/vertical padding and the
-  content max-width so individual LiveViews don't each invent their own.
-
-  `width` is a semantic choice, not a measurement:
-    * `wide`   — dashboards, calendars, and multi-column detail or edit views
-    * `narrow` — single-column forms, details, and card lists
-    * `full`   — data tables, capped so rows stay scannable on very wide screens
-  """
+  @doc "Page shell for admin screens: owns the padding, so individual LiveViews don't each invent their own."
   def admin_page(assigns) do
     ~H"""
-    <div class={["px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8", admin_page_width_class(@width)]}>
+    <div class="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       {render_slot(@inner_block)}
     </div>
     """
@@ -476,8 +467,8 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="mb-8 sm:mb-10">
-      <div :if={@back || @nav != []} class="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 sm:mb-8">
+    <header class="mb-6 sm:mb-8">
+      <div :if={@back || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
         <.link
           :if={@back}
           navigate={@back}
@@ -545,8 +536,4 @@ defmodule EdenflowersWeb.Admin.Components do
 
     "#{Edenflowers.Format.day_month(DateTime.to_date(local), locale)} #{Edenflowers.Format.time(DateTime.to_time(local), locale)}"
   end
-
-  defp admin_page_width_class("wide"), do: "max-w-6xl"
-  defp admin_page_width_class("narrow"), do: "max-w-2xl"
-  defp admin_page_width_class("full"), do: "max-w-7xl"
 end

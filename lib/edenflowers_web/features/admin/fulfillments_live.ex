@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   def render(%{live_action: :index} = assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="wide">
+      <.admin_page>
         <.admin_page_header title={~t"Fulfillments"} />
 
         <.form_section title={~t"Calendar"}>
@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   def render(%{live_action: :edit} = assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="wide">
+      <.admin_page>
         <.admin_page_header title={@page_title} back={~p"/admin/fulfillments"} back_label={~t"Fulfillments"} />
 
         <.form_section title={~t"Prices"}>

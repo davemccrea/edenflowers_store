@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="wide">
+      <.admin_page>
         <.admin_page_header
           title={@order.customer_name || @order.order_reference}
           back={~p"/admin/orders"}

@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="full">
+      <.admin_page>
         <.admin_page_header title={~t"Subscriptions"} />
 
         <Cinder.collection

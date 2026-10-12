@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page width="narrow">
+      <.admin_page>
         <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
           <:subtitle :if={@form.source.type == :update}>
             <span id="promotion-status" class="inline-flex flex-wrap items-center gap-1.5">
