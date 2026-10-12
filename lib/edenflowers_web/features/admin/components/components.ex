@@ -347,15 +347,15 @@ defmodule EdenflowersWeb.Admin.Components do
   slot :description
   slot :inner_block, required: true
 
-  @doc "A titled group of fields in an admin form, set off from the previous group by a rule."
+  @doc "A titled group of fields in an admin form, framed like a `widget` so forms and detail pages match."
   def form_section(assigns) do
     ~H"""
-    <section class={["border-base-content/12 [section+&]:border-t [section+&]:pt-6", "xl:grid-cols-[16rem_minmax(0,1fr)] xl:grid xl:gap-10", @class]}>
-      <header class="mb-4 xl:mb-0">
+    <section class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
+      <header class="mb-4">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <p :if={@description != []} class="text-base-content/65 mt-1 text-sm">{render_slot(@description)}</p>
       </header>
-      <div class="min-w-0">{render_slot(@inner_block)}</div>
+      {render_slot(@inner_block)}
     </section>
     """
   end

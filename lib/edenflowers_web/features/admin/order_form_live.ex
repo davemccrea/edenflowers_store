@@ -427,155 +427,174 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           <:subtitle :if={@order && @order.payment_status == :paid}>
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
+          <:actions>
+            <.button type="submit" form="order-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+              {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
+            </.button>
+          </:actions>
         </.admin_page_header>
 
-        <.form for={@form} id="order-form" phx-change="validate" phx-submit="save" class="space-y-10">
-          <.form_section title={~t"Customer"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="sm:col-span-2">
-                <.input field={@form[:customer_name]} type="text" label={~t"Name"} class="input w-full" />
+        <.form
+          for={@form}
+          id="order-form"
+          phx-change="validate"
+          phx-submit="save"
+          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
+        >
+          <div class="space-y-6">
+            <.form_section title={~t"Customer"}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <.input field={@form[:customer_name]} type="text" label={~t"Name"} class="input w-full" />
+                </div>
+                <.input
+                  field={@form[:customer_phone_number]}
+                  type="tel"
+                  label={~t"Phone"}
+                  class="input w-full"
+                  autocomplete="off"
+                />
+                <.input
+                  field={@form[:customer_email]}
+                  type="email"
+                  label={~t"Email"}
+                  help={~t"A phone number or an email is needed. With an email, the order shows in their account."}
+                  class="input w-full"
+                  autocomplete="off"
+                />
+                <.input
+                  field={@form[:locale]}
+                  type="select"
+                  label={~t"Language"}
+                  help={~t"Used for their emails and the payment page."}
+                  options={locale_options()}
+                />
               </div>
-              <.input
-                field={@form[:customer_phone_number]}
-                type="tel"
-                label={~t"Phone"}
-                class="input w-full"
-                autocomplete="off"
-              />
-              <.input
-                field={@form[:customer_email]}
-                type="email"
-                label={~t"Email"}
-                help={~t"A phone number or an email is needed. With an email, the order shows in their account."}
-                class="input w-full"
-                autocomplete="off"
-              />
-              <.input
-                field={@form[:locale]}
-                type="select"
-                label={~t"Language"}
-                help={~t"Used for their emails and the payment page."}
-                options={locale_options()}
-              />
-            </div>
-          </.form_section>
+            </.form_section>
 
-          <.form_section title={~t"Items"}>
-            <div id="order-lines" class="space-y-3">
-              <.order_line
-                :for={{line, index} <- Enum.with_index(@lines)}
-                line={line}
-                index={index}
-                error={row_error(@line_error, index)}
-                variant_options={@variant_options}
-                tax_rate_options={tax_rate_options(@tax_rates)}
-              />
-              <p :if={@lines == []} class="text-base-content/65 text-sm">{~t"No items yet."}</p>
-            </div>
-            <.error :if={match?({nil, _message}, @line_error)}>{elem(@line_error, 1)}</.error>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="neutral" size="sm">
-                <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
-              </.button>
-              <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="neutral" size="sm">
-                <.icon name="hero-plus" class="h-4 w-4" /> {~t"Item with your own price"}
-              </.button>
-            </div>
-          </.form_section>
+            <.form_section title={~t"Items"}>
+              <div id="order-lines" class="space-y-3">
+                <.order_line
+                  :for={{line, index} <- Enum.with_index(@lines)}
+                  line={line}
+                  index={index}
+                  error={row_error(@line_error, index)}
+                  variant_options={@variant_options}
+                  tax_rate_options={tax_rate_options(@tax_rates)}
+                />
+                <p :if={@lines == []} class="text-base-content/65 text-sm">{~t"No items yet."}</p>
+              </div>
+              <.error :if={match?({nil, _message}, @line_error)}>{elem(@line_error, 1)}</.error>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="neutral" size="sm">
+                  <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
+                </.button>
+                <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="neutral" size="sm">
+                  <.icon name="hero-plus" class="h-4 w-4" /> {~t"Item with your own price"}
+                </.button>
+              </div>
+            </.form_section>
 
-          <.form_section title={~t"Delivery or pickup"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input
-                field={@form[:fulfillment_option_id]}
-                type="select"
-                label={~t"Method"}
-                prompt={~t"Choose…"}
-                options={Enum.map(@fulfillment_options, &{&1.name, &1.id})}
-              />
-              <div>
-                <.input field={@form[:fulfillment_date]} type="date" label={~t"Date"} class="input w-full" />
-                <div role="status">
-                  <p :if={@date_warning} id="date-warning" class="text-warning-content bg-warning/15 mt-2 px-3 py-2 text-sm">
-                    {@date_warning}
+            <.form_section title={~t"Delivery or pickup"}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@form[:fulfillment_option_id]}
+                  type="select"
+                  label={~t"Method"}
+                  prompt={~t"Choose…"}
+                  options={Enum.map(@fulfillment_options, &{&1.name, &1.id})}
+                />
+                <div>
+                  <.input field={@form[:fulfillment_date]} type="date" label={~t"Date"} class="input w-full" />
+                  <div role="status">
+                    <p
+                      :if={@date_warning}
+                      id="date-warning"
+                      class="text-warning-content bg-warning/15 mt-2 px-3 py-2 text-sm"
+                    >
+                      {@date_warning}
+                    </p>
+                  </div>
+                </div>
+                <div :if={@method == :delivery} class="sm:col-span-2">
+                  <.input
+                    field={@form[:delivery_address]}
+                    type="text"
+                    label={~t"Delivery address"}
+                    class="input w-full"
+                    phx-blur="quote_delivery"
+                    loading={match?(%{status: :loading}, @quote)}
+                  />
+                  <.delivery_quote quote={@quote} override={@form[:fulfillment_fee_override].value} />
+                </div>
+                <div :if={@method == :delivery} class="sm:col-span-2">
+                  <.input
+                    field={@form[:delivery_instructions]}
+                    type="text"
+                    label={~t"Delivery instructions"}
+                    class="input w-full"
+                  />
+                </div>
+                <.input
+                  field={@form[:fulfillment_fee_override]}
+                  type="text"
+                  inputmode="decimal"
+                  label={if @method == :delivery, do: ~t"Your own delivery fee", else: ~t"Your own fee"}
+                  help={~t"Leave blank to calculate it as checkout would. 0 for free."}
+                  class="input w-full"
+                />
+              </div>
+            </.form_section>
+
+            <.form_section title={~t"Recipient and card"}>
+              <:description>{~t"Leave the recipient blank when the flowers are for the customer."}</:description>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input field={@form[:recipient_name]} type="text" label={~t"Recipient"} class="input w-full" />
+                <.input
+                  field={@form[:recipient_phone_number]}
+                  type="tel"
+                  label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
+                  class="input w-full"
+                />
+                <div id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
+                  <.input
+                    field={@form[:card_message]}
+                    type="textarea"
+                    label={~t"Card message"}
+                    rows="3"
+                    maxlength="200"
+                  />
+                  <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
+                    <span id="char-count">0</span>/200
                   </p>
                 </div>
               </div>
-              <div :if={@method == :delivery} class="sm:col-span-2">
+            </.form_section>
+
+            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
+              {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
+            </.button>
+          </div>
+
+          <aside class="flex flex-col gap-6">
+            <.form_section :if={@mode == :new} title={~t"Payment"}>
+              <div class="space-y-4">
+                <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
+                  {option.name}
+                </.input>
                 <.input
-                  field={@form[:delivery_address]}
-                  type="text"
-                  label={~t"Delivery address"}
-                  class="input w-full"
-                  phx-blur="quote_delivery"
-                  loading={match?(%{status: :loading}, @quote)}
-                />
-                <.delivery_quote quote={@quote} override={@form[:fulfillment_fee_override].value} />
-              </div>
-              <div :if={@method == :delivery} class="sm:col-span-2">
-                <.input
-                  field={@form[:delivery_instructions]}
-                  type="text"
-                  label={~t"Delivery instructions"}
-                  class="input w-full"
+                  field={@form[:email_customer?]}
+                  type="checkbox"
+                  label={~t"Email the order details to the customer (needs an email)"}
                 />
               </div>
-              <.input
-                field={@form[:fulfillment_fee_override]}
-                type="text"
-                inputmode="decimal"
-                label={if @method == :delivery, do: ~t"Your own delivery fee", else: ~t"Your own fee"}
-                help={~t"Leave blank to calculate it as checkout would. 0 for free."}
-                class="input w-full"
-              />
-            </div>
-          </.form_section>
+            </.form_section>
 
-          <.form_section title={~t"Recipient and card"}>
-            <:description>{~t"Leave the recipient blank when the flowers are for the customer."}</:description>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input field={@form[:recipient_name]} type="text" label={~t"Recipient"} class="input w-full" />
-              <.input
-                field={@form[:recipient_phone_number]}
-                type="tel"
-                label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
-                class="input w-full"
-              />
-              <div id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
-                <.input
-                  field={@form[:card_message]}
-                  type="textarea"
-                  label={~t"Card message"}
-                  rows="3"
-                  maxlength="200"
-                />
-                <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
-                  <span id="char-count">0</span>/200
-                </p>
-              </div>
-            </div>
-          </.form_section>
-
-          <.form_section title={~t"Florist note"}>
-            <:description>{~t"Only you see this: what was agreed, timings, anything to remember."}</:description>
-            <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
-          </.form_section>
-
-          <.form_section :if={@mode == :new} title={~t"Payment"}>
-            <div class="space-y-4">
-              <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
-                {option.name}
-              </.input>
-              <.input
-                field={@form[:email_customer?]}
-                type="checkbox"
-                label={~t"Email the order details to the customer (needs an email)"}
-              />
-            </div>
-          </.form_section>
-
-          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-            {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
-          </.button>
+            <.form_section title={~t"Florist note"}>
+              <:description>{~t"Only you see this: what was agreed, timings, anything to remember."}</:description>
+              <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
+            </.form_section>
+          </aside>
         </.form>
       </.admin_page>
     </Layouts.admin>

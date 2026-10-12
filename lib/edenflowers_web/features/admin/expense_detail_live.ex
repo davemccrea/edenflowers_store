@@ -44,46 +44,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           </:subtitle>
         </.admin_page_header>
 
-        <section class="border-base-content/12 mb-8 flex flex-col gap-4 border-b pb-6 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-8">
-          <div class="min-w-0">
-            <p class="eyebrow text-base-content/65 mb-1">{~t"Total amount"}</p>
-            <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
-              <span :if={@expense.total_amount && @expense.currency}>
-                {Format.currency_in(@expense.total_amount, @expense.currency, @locale)}
-              </span>
-              <.blank :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} />
-              <span :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} class="sr-only">
-                {~t"No amount"}
-              </span>
-            </p>
-          </div>
-          <div class="sm:text-right">
-            <p class="eyebrow text-base-content/65 mb-1.5">{~t"Confidence"}</p>
-            <.confidence_badge confidence={@expense.confidence} />
-          </div>
-        </section>
-
-        <section class="text-base-content/65 mb-10 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <a
-            href={Edenflowers.External.PapraAPI.document_url(@expense.document_id)}
-            target="_blank"
-            rel="noopener"
-            class="link link-primary -my-2 inline-flex items-center gap-1 py-2 font-medium"
-          >
-            {~t"Open receipt in Papra"}
-            <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-          </a>
-          <span :if={@expense.processed_at} class="max-sm:hidden" aria-hidden="true">·</span>
-          <span :if={@expense.processed_at}>
-            {~t"Processed"} {Format.datetime(@expense.processed_at, @locale)}
-          </span>
-          <span :if={@expense.reviewed_at} class="max-sm:hidden" aria-hidden="true">·</span>
-          <span :if={@expense.reviewed_at}>
-            {~t"Reviewed"} {Format.datetime(@expense.reviewed_at, @locale)}
-          </span>
-        </section>
-
-        <section>
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <.form for={@form} id="expense-form" phx-submit="correct" phx-change="validate">
             <.form_section title={~t"Details"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -146,7 +107,44 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               </.button>
             </div>
           </.form>
-        </section>
+
+          <aside class="flex flex-col gap-6">
+            <.widget id="expense-summary" title={~t"Total amount"}>
+              <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight">
+                <span :if={@expense.total_amount && @expense.currency}>
+                  {Format.currency_in(@expense.total_amount, @expense.currency, @locale)}
+                </span>
+                <.blank :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} />
+                <span :if={is_nil(@expense.total_amount) or is_nil(@expense.currency)} class="sr-only">
+                  {~t"No amount"}
+                </span>
+              </p>
+              <p class="text-base-content/65 mt-3 flex items-center gap-2 text-sm">
+                {~t"Confidence"} <.confidence_badge confidence={@expense.confidence} />
+              </p>
+            </.widget>
+
+            <.widget id="expense-receipt" title={~t"Receipt"}>
+              <div class="space-y-1.5 text-sm">
+                <a
+                  href={Edenflowers.External.PapraAPI.document_url(@expense.document_id)}
+                  target="_blank"
+                  rel="noopener"
+                  class="link link-primary inline-flex items-center gap-1 font-medium"
+                >
+                  {~t"Open receipt in Papra"}
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                </a>
+                <p :if={@expense.processed_at} class="text-base-content/65">
+                  {~t"Processed"} {Format.datetime(@expense.processed_at, @locale)}
+                </p>
+                <p :if={@expense.reviewed_at} class="text-base-content/65">
+                  {~t"Reviewed"} {Format.datetime(@expense.reviewed_at, @locale)}
+                </p>
+              </div>
+            </.widget>
+          </aside>
+        </div>
       </.admin_page>
     </Layouts.admin>
     """

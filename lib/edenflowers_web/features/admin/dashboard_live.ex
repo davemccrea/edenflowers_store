@@ -43,8 +43,11 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       <.admin_page>
         <.admin_page_header title={~t"Dashboard"} />
 
-        <div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
-          <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+          <aside class="flex flex-col gap-6 xl:order-last">
+            <.quick_actions />
+            <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+          </aside>
           <.orders_widget
             orders_by_date={@orders_by_date}
             open_order_count={@open_order_count}
@@ -57,13 +60,29 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     """
   end
 
+  defp quick_actions(assigns) do
+    ~H"""
+    <.widget id="quick-actions" title={~t"Quick actions"}>
+      <div class="grid grid-cols-2 gap-2">
+        <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm" class="col-span-2">
+          <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
+        </.button>
+        <.button navigate={~p"/admin/products/new"} variant="neutral" size="sm">{~t"New product"}</.button>
+        <.button navigate={~p"/admin/promotions/new"} variant="neutral" size="sm">{~t"New promotion"}</.button>
+        <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">{~t"New course"}</.button>
+        <.button navigate={~p"/admin/fulfillments"} variant="neutral" size="sm">{~t"Calendar"}</.button>
+      </div>
+    </.widget>
+    """
+  end
+
   attr :sales_count, :integer, required: true
   attr :revenue, :any, required: true
   attr :locale, :any, required: true
 
   defp sales_widget(assigns) do
     ~H"""
-    <.widget title={~t"This month"} class="xl:order-last">
+    <.widget title={~t"This month"}>
       <dl class="grid grid-cols-2 gap-4 xl:grid-cols-1">
         <div>
           <dt class="text-base-content/65 text-sm">{~t"Sales"}</dt>

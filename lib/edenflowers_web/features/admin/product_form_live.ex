@@ -169,153 +169,172 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               <.badge :if={sold_out?(@form.source.data)} tone={:warning}>{~t"Sold out"}</.badge>
             </span>
           </:subtitle>
-          <:actions :if={@form.source.type == :update && !@form.source.data.draft}>
-            <.button href={~p"/product/#{@form.source.data.id}"} target="_blank" variant="ghost" size="sm">
+          <:actions>
+            <.button
+              :if={@form.source.type == :update && !@form.source.data.draft}
+              href={~p"/product/#{@form.source.data.id}"}
+              target="_blank"
+              variant="ghost"
+              size="sm"
+            >
               <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
+            </.button>
+            <.button type="submit" form="product-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+              {~t"Save"}
             </.button>
           </:actions>
         </.admin_page_header>
 
-        <.form for={@form} id="product-form" phx-change="validate" phx-submit="save" class="space-y-10">
-          <.form_section title={~t"Photo"}>
-            <.photo_input
-              field={@form[:image_slug]}
-              uploads={@uploads}
-              label={~t"Photo"}
-              show_errors={@form.source.submitted_once?}
-            />
-          </.form_section>
+        <.form
+          for={@form}
+          id="product-form"
+          phx-change="validate"
+          phx-submit="save"
+          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
+        >
+          <div class="space-y-6">
+            <.form_section title={~t"Name and description"}>
+              <.language_fields form={@form} translating={@translating} />
+            </.form_section>
 
-          <.form_section title={~t"Name and description"}>
-            <.language_fields form={@form} translating={@translating} />
-          </.form_section>
-
-          <.form_section title={~t"Sizes and prices"}>
-            <:description>{~t"A size needs a price. Without its own photo, it uses the product photo."}</:description>
-            <ul class="border-base-content/12 divide-base-content/8 divide-y border">
-              <.inputs_for :let={variant} field={@form[:product_variants]}>
-                <li class="flex gap-4 p-4">
-                  <.photo_input
-                    field={variant[:image_slug]}
-                    uploads={@uploads}
-                    label={~t"Photo"}
-                    size="sm"
-                    show_errors={@form.source.submitted_once?}
-                  />
-                  <div class="min-w-0 flex-1 space-y-3 2xl:flex 2xl:items-end 2xl:gap-6 2xl:space-y-0">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 2xl:flex-1">
-                      <.input
-                        field={variant[:size]}
-                        type="select"
-                        label={~t"Size"}
-                        prompt={~t"One size"}
-                        options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
-                        class="select w-full"
-                      />
-                      <.input
-                        field={variant[:price]}
-                        type="text"
-                        inputmode="decimal"
-                        label={~t"Price (€)"}
-                        class="input w-full tabular-nums"
-                      />
-                      <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
-                           meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
-                      <.input
-                        field={variant[:stock_quantity]}
-                        type="number"
-                        min="0"
-                        label={~t"In stock"}
-                        placeholder={~t"Unlimited"}
-                        class="input w-full tabular-nums"
-                      />
+            <.form_section title={~t"Sizes and prices"}>
+              <:description>{~t"A size needs a price. Without its own photo, it uses the product photo."}</:description>
+              <ul class="border-base-content/12 divide-base-content/8 divide-y border">
+                <.inputs_for :let={variant} field={@form[:product_variants]}>
+                  <li class="flex gap-4 p-4">
+                    <.photo_input
+                      field={variant[:image_slug]}
+                      uploads={@uploads}
+                      label={~t"Photo"}
+                      size="sm"
+                      show_errors={@form.source.submitted_once?}
+                    />
+                    <div class="min-w-0 flex-1 space-y-3 min-[1800px]:flex min-[1800px]:items-end min-[1800px]:gap-6 min-[1800px]:space-y-0">
+                      <div class="grid grid-cols-1 gap-3 min-[1800px]:flex-1 sm:grid-cols-3">
+                        <.input
+                          field={variant[:size]}
+                          type="select"
+                          label={~t"Size"}
+                          prompt={~t"One size"}
+                          options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
+                          class="select w-full"
+                        />
+                        <.input
+                          field={variant[:price]}
+                          type="text"
+                          inputmode="decimal"
+                          label={~t"Price (€)"}
+                          class="input w-full tabular-nums"
+                        />
+                        <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
+                             meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
+                        <.input
+                          field={variant[:stock_quantity]}
+                          type="number"
+                          min="0"
+                          label={~t"In stock"}
+                          placeholder={~t"Unlimited"}
+                          class="input w-full tabular-nums"
+                        />
+                      </div>
+                      <div class="flex flex-wrap items-center gap-x-6 gap-y-2 min-[1800px]:shrink-0 min-[1800px]:flex-nowrap">
+                        <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
+                        <.button
+                          type="button"
+                          phx-click="remove_variant"
+                          phx-value-path={variant.name}
+                          variant="ghost"
+                          size="sm"
+                          class="text-error ml-auto"
+                        >
+                          {~t"Remove"}
+                        </.button>
+                      </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 2xl:shrink-0 2xl:flex-nowrap">
-                      <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
-                      <.button
-                        type="button"
-                        phx-click="remove_variant"
-                        phx-value-path={variant.name}
-                        variant="ghost"
-                        size="sm"
-                        class="text-error ml-auto"
-                      >
-                        {~t"Remove"}
-                      </.button>
-                    </div>
-                  </div>
+                  </li>
+                </.inputs_for>
+                <li>
+                  <button
+                    type="button"
+                    phx-click="add_variant"
+                    class="text-base-content/80 flex w-full items-center gap-2 p-4 text-sm font-medium transition-colors hover:bg-base-200/60 hover:text-base-content"
+                  >
+                    <.icon name="hero-plus" class="h-4 w-4" />
+                    {~t"Add size"}
+                  </button>
                 </li>
-              </.inputs_for>
-              <li>
-                <button
-                  type="button"
-                  phx-click="add_variant"
-                  class="text-base-content/80 flex w-full items-center gap-2 p-4 text-sm font-medium transition-colors hover:bg-base-200/60 hover:text-base-content"
-                >
-                  <.icon name="hero-plus" class="h-4 w-4" />
-                  {~t"Add size"}
-                </button>
-              </li>
-            </ul>
-            <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
-              <div class="w-full sm:w-64">
-                <.input
-                  field={@form[:tax_rate_id]}
-                  type="select"
-                  label={~t"VAT"}
-                  options={Enum.map(@tax_rates, &{&1.name, &1.id})}
-                  class="select w-full"
-                />
+              </ul>
+              <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
+                <div class="w-full sm:w-64">
+                  <.input
+                    field={@form[:tax_rate_id]}
+                    type="select"
+                    label={~t"VAT"}
+                    options={Enum.map(@tax_rates, &{&1.name, &1.id})}
+                    class="select w-full"
+                  />
+                </div>
+                <.button type="button" phx-click="mark_sold_out" variant="ghost" size="sm" data-testid="mark-sold-out">
+                  {~t"Mark every size sold out"}
+                </.button>
               </div>
-              <.button type="button" phx-click="mark_sold_out" variant="ghost" size="sm" data-testid="mark-sold-out">
-                {~t"Mark every size sold out"}
-              </.button>
-            </div>
-          </.form_section>
+            </.form_section>
 
-          <.form_section title={~t"In the store"}>
-            <div class="space-y-4">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:product_category_id]}
-                  type="select"
-                  label={~t"Category"}
-                  prompt={~t"Choose a category"}
-                  options={Enum.map(@categories, &{&1.name, &1.id})}
-                  class="select w-full"
-                />
-                <.input
-                  field={@form[:position]}
-                  type="number"
-                  min="0"
-                  label={~t"Position in store (0 = first)"}
-                  class="input max-w-48 w-full tabular-nums"
-                />
-              </div>
-              <div>
-                <.input field={@form[:draft]} type="checkbox" label={~t"Hidden from the store"} />
-                <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
-                <.input
-                  :if={@free_dist_km}
-                  field={@form[:free_delivery]}
-                  type="checkbox"
-                  label={~t"Free delivery within #{km = @free_dist_km} km"}
-                />
-                <.input
-                  field={@form[:subscribable]}
-                  type="checkbox"
-                  label={~t"Can be bought as a subscription"}
-                  help={
-                    ~t"Customers choose on its product page to buy it once or to subscribe, every 1, 2 or 4 weeks. Free delivery must be ticked too."
-                  }
-                />
-              </div>
-            </div>
-          </.form_section>
+            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
+              {~t"Save product"}
+            </.button>
+          </div>
 
-          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-            {~t"Save product"}
-          </.button>
+          <aside class="flex flex-col gap-6">
+            <.form_section title={~t"Photo"}>
+              <.photo_input
+                field={@form[:image_slug]}
+                uploads={@uploads}
+                label={~t"Photo"}
+                show_errors={@form.source.submitted_once?}
+              />
+            </.form_section>
+
+            <.form_section title={~t"In the store"}>
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4">
+                  <.input
+                    field={@form[:product_category_id]}
+                    type="select"
+                    label={~t"Category"}
+                    prompt={~t"Choose a category"}
+                    options={Enum.map(@categories, &{&1.name, &1.id})}
+                    class="select w-full"
+                  />
+                  <.input
+                    field={@form[:position]}
+                    type="number"
+                    min="0"
+                    label={~t"Position in store (0 = first)"}
+                    class="input max-w-48 w-full tabular-nums"
+                  />
+                </div>
+                <div>
+                  <.input field={@form[:draft]} type="checkbox" label={~t"Hidden from the store"} />
+                  <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
+                  <.input
+                    :if={@free_dist_km}
+                    field={@form[:free_delivery]}
+                    type="checkbox"
+                    label={~t"Free delivery within #{km = @free_dist_km} km"}
+                  />
+                  <.input
+                    field={@form[:subscribable]}
+                    type="checkbox"
+                    label={~t"Can be bought as a subscription"}
+                    help={
+                      ~t"Customers choose on its product page to buy it once or to subscribe, every 1, 2 or 4 weeks. Free delivery must be ticked too."
+                    }
+                  />
+                </div>
+              </div>
+            </.form_section>
+          </aside>
         </.form>
       </.admin_page>
     </Layouts.admin>

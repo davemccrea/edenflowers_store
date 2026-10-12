@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <.calendar scope={@scope} options={@options} today={@today} />
         </.form_section>
 
-        <.form_section title={~t"Options"} class="mt-10">
+        <.form_section title={~t"Options"} class="mt-6">
           <:description>{~t"Open an option to change its prices or its own calendar."}</:description>
           <ul id="fulfillment-options" class="divide-base-content/8 divide-y">
             <li :for={option <- @options}>
@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <.pricing_form form={@form} rate_type={@form.source.data.rate_type} />
         </.form_section>
 
-        <.form_section title={~t"Calendar"} class="mt-10">
+        <.form_section title={~t"Calendar"} class="mt-6">
           <.calendar scope={@scope} options={@options} today={@today} />
         </.form_section>
       </.admin_page>

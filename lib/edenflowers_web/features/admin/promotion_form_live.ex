@@ -187,8 +187,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
               <.badge tone={:tag} class="tabular-nums">{usage_label(@form.source.data)}</.badge>
             </span>
           </:subtitle>
-          <:actions :if={@form.source.type == :update}>
-            <.actions_menu id="promotion-actions">
+          <:actions>
+            <.button type="submit" form="promotion-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+              {~t"Save"}
+            </.button>
+            <.actions_menu :if={@form.source.type == :update} id="promotion-actions">
               <.actions_menu_button
                 menu="promotion-actions"
                 phx-click="delete"
@@ -201,99 +204,103 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           </:actions>
         </.admin_page_header>
 
-        <.form for={@form} id="promotion-form" phx-change="validate" phx-submit="save" class="space-y-10">
-          <.form_section title={~t"Promotion"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
-              <div class="flex items-start gap-2">
-                <div class="flex-1">
-                  <.input
-                    field={@form[:code]}
-                    type="text"
-                    label={~t"Code"}
-                    help={~t"What customers type at checkout."}
-                    class="input font-mono w-full"
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+          <.form for={@form} id="promotion-form" phx-change="validate" phx-submit="save" class="space-y-6">
+            <.form_section title={~t"Promotion"}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
+                <div class="flex items-start gap-2">
+                  <div class="flex-1">
+                    <.input
+                      field={@form[:code]}
+                      type="text"
+                      label={~t"Code"}
+                      help={~t"What customers type at checkout."}
+                      class="input font-mono w-full"
+                    />
+                  </div>
+                  <.icon_button
+                    phx-click="generate_code"
+                    size="sm"
+                    class="mt-7"
+                    title={~t"Generate code"}
+                    aria_label={~t"Generate code"}
+                  >
+                    <.icon name="hero-arrow-path" class="h-4 w-4" />
+                  </.icon_button>
+                  <.copy_button
+                    id="copy-promotion-code"
+                    target={"##{@form[:code].id}"}
+                    label={~t"Copy code"}
+                    class="mt-7"
                   />
                 </div>
-                <.icon_button
-                  phx-click="generate_code"
-                  size="sm"
-                  class="mt-7"
-                  title={~t"Generate code"}
-                  aria_label={~t"Generate code"}
-                >
-                  <.icon name="hero-arrow-path" class="h-4 w-4" />
-                </.icon_button>
-                <.copy_button
-                  id="copy-promotion-code"
-                  target={"##{@form[:code].id}"}
-                  label={~t"Copy code"}
-                  class="mt-7"
+              </div>
+            </.form_section>
+
+            <.form_section title={~t"Discount"}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@form[:discount_rate]}
+                  value={rate_to_percent(@form[:discount_rate].value)}
+                  type="text"
+                  inputmode="decimal"
+                  label={~t"Discount (%)"}
+                  class="input max-w-48 w-full tabular-nums"
+                />
+                <.input
+                  field={@form[:minimum_cart_total]}
+                  type="text"
+                  inputmode="decimal"
+                  label={~t"Minimum cart total (€)"}
+                  class="input max-w-48 w-full tabular-nums"
                 />
               </div>
-            </div>
-          </.form_section>
+            </.form_section>
 
-          <.form_section title={~t"Discount"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input
-                field={@form[:discount_rate]}
-                value={rate_to_percent(@form[:discount_rate].value)}
-                type="text"
-                inputmode="decimal"
-                label={~t"Discount (%)"}
-                class="input max-w-48 w-full tabular-nums"
-              />
-              <.input
-                field={@form[:minimum_cart_total]}
-                type="text"
-                inputmode="decimal"
-                label={~t"Minimum cart total (€)"}
-                class="input max-w-48 w-full tabular-nums"
-              />
-            </div>
-          </.form_section>
+            <.form_section title={~t"Limits"}>
+              <:description>{~t"Leave blank for no limit."}</:description>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <.input field={@form[:start_date]} type="date" label={~t"Starts"} class="input w-full" />
+                <.input field={@form[:expiration_date]} type="date" label={~t"Expires"} class="input w-full" />
+                <.input
+                  field={@form[:usage_limit]}
+                  type="number"
+                  min="1"
+                  label={~t"Usage limit"}
+                  class="input max-w-48 w-full tabular-nums"
+                />
+              </div>
+            </.form_section>
 
-          <.form_section title={~t"Limits"}>
-            <:description>{~t"Leave blank for no limit."}</:description>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <.input field={@form[:start_date]} type="date" label={~t"Starts"} class="input w-full" />
-              <.input field={@form[:expiration_date]} type="date" label={~t"Expires"} class="input w-full" />
-              <.input
-                field={@form[:usage_limit]}
-                type="number"
-                min="1"
-                label={~t"Usage limit"}
-                class="input max-w-48 w-full tabular-nums"
-              />
-            </div>
-          </.form_section>
+            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
+              {~t"Save promotion"}
+            </.button>
+          </.form>
 
-          <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-            {~t"Save promotion"}
-          </.button>
-        </.form>
-
-        <.form_section :if={@history != []} title={~t"History"} class="border-base-content/12 mt-10 border-t pt-6">
-          <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
-            <.history_entry
-              :for={{entry, index} <- Enum.with_index(@history)}
-              id={"promotion-history-entry-#{index}"}
-              title={entry.title}
-              at={entry.at}
-              locale={@locale}
-            >
-              <:details :if={entry.changes != []}>
-                <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
-                  <div :for={{label, from, to} <- entry.changes}>
-                    <dt class="text-base-content/65 text-xs">{label}</dt>
-                    <dd class="text-base-content/85 break-words">{from} → {to}</dd>
-                  </div>
-                </dl>
-              </:details>
-            </.history_entry>
-          </ol>
-        </.form_section>
+          <aside :if={@history != []} class="flex flex-col gap-6">
+            <.widget id="promotion-history-widget" title={~t"History"}>
+              <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
+                <.history_entry
+                  :for={{entry, index} <- Enum.with_index(@history)}
+                  id={"promotion-history-entry-#{index}"}
+                  title={entry.title}
+                  at={entry.at}
+                  locale={@locale}
+                >
+                  <:details :if={entry.changes != []}>
+                    <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+                      <div :for={{label, from, to} <- entry.changes}>
+                        <dt class="text-base-content/65 text-xs">{label}</dt>
+                        <dd class="text-base-content/85 break-words">{from} → {to}</dd>
+                      </div>
+                    </dl>
+                  </:details>
+                </.history_entry>
+              </ol>
+            </.widget>
+          </aside>
+        </div>
       </.admin_page>
     </Layouts.admin>
     """
