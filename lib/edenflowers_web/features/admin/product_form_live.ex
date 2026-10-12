@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             </.form_section>
 
             <.form_section title={~t"Sizes and prices"}>
-              <:description>{~t"A size needs a price. Without its own photo, it uses the product photo."}</:description>
+              <:description>{~t"A new size without a photo gets the product photo."}</:description>
               <ul class="border-base-content/12 divide-base-content/8 divide-y border">
                 <.inputs_for :let={variant} field={@form[:product_variants]}>
                   <li class="flex gap-4 p-4">
@@ -327,9 +327,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     field={@form[:subscribable]}
                     type="checkbox"
                     label={~t"Can be bought as a subscription"}
-                    help={
-                      ~t"Customers choose on its product page to buy it once or to subscribe, every 1, 2 or 4 weeks. Free delivery must be ticked too."
-                    }
+                    help={~t"Customers can subscribe every 1, 2 or 4 weeks. Needs free delivery."}
                   />
                 </div>
               </div>

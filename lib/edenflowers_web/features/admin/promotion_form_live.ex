@@ -215,7 +215,6 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                       field={@form[:code]}
                       type="text"
                       label={~t"Code"}
-                      help={~t"What customers type at checkout."}
                       class="input font-mono w-full"
                     />
                   </div>

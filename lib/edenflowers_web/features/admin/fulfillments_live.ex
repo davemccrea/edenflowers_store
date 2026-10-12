@@ -78,7 +78,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         </.form_section>
 
         <.form_section title={~t"Options"} class="mt-6">
-          <:description>{~t"Open an option to change its prices or its own calendar."}</:description>
           <ul id="fulfillment-options" class="divide-base-content/8 divide-y">
             <li :for={option <- @options}>
               <.link
@@ -106,7 +105,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         <.admin_page_header title={@page_title} back={~p"/admin/fulfillments"} back_label={~t"Fulfillments"} />
 
         <.form_section title={~t"Prices"}>
-          <:description>{~t"New prices apply to the next delivery quote. Placed orders keep their fee."}</:description>
+          <:description>{~t"Placed orders keep their fee unless you change their delivery."}</:description>
           <.pricing_form form={@form} rate_type={@form.source.data.rate_type} />
         </.form_section>
 
@@ -174,7 +173,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="number"
             min="0"
             label={~t"Free delivery distance (km)"}
-            help={~t"Free-delivery products cost only the base price within this distance."}
+            help={~t"Within this distance delivery costs the base price, or nothing with a free-delivery product."}
             class="input w-full tabular-nums"
           />
           <.input

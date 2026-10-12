@@ -207,7 +207,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   type="textarea"
                   rows="3"
                   aria-label={~t"Florist note"}
-                  placeholder={~t"Only you see this: what was agreed, timings, anything to remember."}
+                  placeholder={~t"Only you see this."}
                 />
                 <.button type="submit" variant="neutral" size="sm">{~t"Save note"}</.button>
               </.form>

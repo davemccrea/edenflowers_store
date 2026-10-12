@@ -458,7 +458,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:customer_email]}
                   type="email"
                   label={~t"Email"}
-                  help={~t"A phone number or an email is needed. With an email, the order shows in their account."}
+                  help={~t"A phone or an email is needed. With an email, the order shows in their account."}
                   class="input w-full"
                   autocomplete="off"
                 />
@@ -591,7 +591,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </.form_section>
 
             <.form_section title={~t"Florist note"}>
-              <:description>{~t"Only you see this: what was agreed, timings, anything to remember."}</:description>
+              <:description>{~t"Only you see this."}</:description>
               <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
             </.form_section>
           </aside>

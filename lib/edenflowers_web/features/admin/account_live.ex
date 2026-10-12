@@ -57,9 +57,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={~t"Account"}>
-          <:subtitle>{~t"Your admin profile and session."}</:subtitle>
-        </.admin_page_header>
+        <.admin_page_header title={~t"Account"}></.admin_page_header>
 
         <section class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
           <div class="mb-5 flex items-center gap-3">

@@ -128,7 +128,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                   field={@form[:register_before]}
                   type="date"
                   label={~t"Book by"}
-                  help={~t"Online booking closes after this day."}
                   class="input w-full"
                 />
               </div>
