@@ -205,7 +205,14 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <.form for={@form} id="promotion-form" phx-change="validate" phx-submit="save" class="space-y-6">
+          <.form
+            for={@form}
+            id="promotion-form"
+            data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
+            phx-change="validate"
+            phx-submit="save"
+            class="space-y-6"
+          >
             <.form_section title={~t"Promotion"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />

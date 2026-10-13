@@ -45,7 +45,13 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <.form for={@form} id="expense-form" phx-submit="correct" phx-change="validate">
+          <.form
+            for={@form}
+            id="expense-form"
+            data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
+            phx-submit="correct"
+            phx-change="validate"
+          >
             <.form_section title={~t"Details"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input field={@form[:vendor_name]} type="text" label={~t"Vendor name"} class="input w-full" />
@@ -165,6 +171,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         {:noreply,
          socket
          |> assign_expense(updated)
+         |> push_event("admin-form-saved", %{id: "expense-form"})
          |> put_flash(:info, ~t"Expense updated.")}
 
       {:error, form} ->
@@ -181,12 +188,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         {:noreply,
          socket
          |> assign_expense(reviewed)
+         |> push_event("admin-form-saved", %{id: "expense-form"})
          |> put_flash(:info, ~t"Expense saved and marked as reviewed.")}
 
       {:error, _} ->
         {:noreply,
          socket
          |> assign_expense(expense)
+         |> push_event("admin-form-saved", %{id: "expense-form"})
          |> put_flash(:error, ~t"Corrections saved, but the expense could not be marked as reviewed.")}
     end
   end

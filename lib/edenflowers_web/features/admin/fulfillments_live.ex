@@ -151,7 +151,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
 
   defp pricing_form(assigns) do
     ~H"""
-    <.form for={@form} id="pricing-form" phx-change="validate" phx-submit="save" class="max-w-xl space-y-4">
+    <.form
+      for={@form}
+      id="pricing-form"
+      data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
+      phx-change="validate"
+      phx-submit="save"
+      class="max-w-xl space-y-4"
+    >
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <.input
           field={@form[:base_price]}
@@ -226,6 +233,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          socket
          |> replace_options([option])
          |> assign(:form, pricing_form(option, socket.assigns.current_user))
+         |> push_event("admin-form-saved", %{id: "pricing-form"})
          |> put_flash(:info, ~t"Prices saved.")}
 
       {:error, form} ->

@@ -188,6 +188,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         <.form
           for={@form}
           id="product-form"
+          data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
           phx-change="validate"
           phx-submit="save"
           class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"

@@ -332,6 +332,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       |> render_submit()
 
       assert render(view) =~ "Prices saved."
+      assert_push_event(view, "admin-form-saved", %{id: "pricing-form"})
 
       saved = Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false)
       assert Decimal.equal?(saved.base_price, "6.00")

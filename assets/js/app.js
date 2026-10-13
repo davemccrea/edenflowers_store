@@ -62,6 +62,76 @@ document.addEventListener("keydown", (event) => {
   event.target.click();
 });
 
+// Admin forms marked data-warn-unsaved (holding the warning text) ask before a
+// link leaves them with edits. Kept in a WeakSet rather than an attribute, which
+// LiveView would strip on the next patch. A save navigates from the server, so
+// it never asks; a failed save stays flagged.
+const editedForms = new WeakSet();
+
+const warnedForm = (el) =>
+  el?.closest?.("form[data-warn-unsaved]") ||
+  (el?.form?.matches("[data-warn-unsaved]") ? el.form : null);
+
+const unsavedForm = () =>
+  [...document.querySelectorAll("form[data-warn-unsaved]")].find((form) =>
+    editedForms.has(form),
+  );
+
+document.addEventListener("input", (event) => {
+  const form = warnedForm(event.target);
+  if (form) editedForms.add(form);
+});
+
+// Adding or removing a size, translating and the like change the form on the
+// server. A phx-click holding JS commands (copying a code) is client-only.
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.('button[type="button"][phx-click]');
+  if (button?.getAttribute("phx-click").startsWith("[")) return;
+  const form = warnedForm(button);
+  if (form) editedForms.add(form);
+});
+
+window.addEventListener("phx:before-navigate", (event) => {
+  const form = unsavedForm();
+  if (!form) return;
+  if (confirm(form.dataset.warnUnsaved)) return editedForms.delete(form);
+
+  event.preventDefault();
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (unsavedForm()) event.preventDefault();
+});
+
+window.addEventListener("phx:admin-form-saved", ({ detail }) => {
+  const form = document.getElementById(detail.id);
+  if (form) editedForms.delete(form);
+});
+
+// "/" jumps to the admin search; Ctrl or ⌘ + S saves the page's form.
+document.addEventListener("keydown", (event) => {
+  const typing = event.target.closest?.(
+    "input, textarea, select, [contenteditable]",
+  );
+  const modified = event.metaKey || event.ctrlKey || event.altKey;
+
+  if (event.key === "/" && !typing && !modified) {
+    const search = [...document.querySelectorAll("[data-admin-search]")].find(
+      (el) => el.offsetParent,
+    );
+    if (!search) return;
+    event.preventDefault();
+    search.focus();
+  }
+
+  if (event.key.toLowerCase() === "s" && (event.metaKey || event.ctrlKey)) {
+    const form = document.querySelector("form[data-warn-unsaved]");
+    if (!form) return;
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   // Waking a backgrounded tab drops the socket briefly; only toast if reconnecting drags on.

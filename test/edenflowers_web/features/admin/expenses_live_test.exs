@@ -93,6 +93,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
     |> render_submit(%{review: "true"})
 
+    assert_push_event(view, "admin-form-saved", %{id: "expense-form"})
+
     reviewed = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
     assert reviewed.vendor_name == "Typo Vendor"
     assert reviewed.reviewed_at
@@ -106,6 +108,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     view
     |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
     |> render_submit()
+
+    assert_push_event(view, "admin-form-saved", %{id: "expense-form"})
 
     saved = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
     assert saved.vendor_name == "Typo Vendor"
