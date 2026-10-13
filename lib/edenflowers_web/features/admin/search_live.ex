@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
     |> Ash.Query.filter(
       contains(customer_name, ^term) or contains(order_reference, ^term) or
         contains(customer_phone_number, ^term) or contains(customer_email, ^term) or
-        contains(recipient_name, ^term)
+        contains(recipient_name, ^term) or contains(delivery_address, ^term)
     )
     |> Ash.Query.limit(@limit)
     |> Ash.read!()
@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
         </.admin_page_header>
 
         <p :if={@term == ""} class="text-base-content/65 text-sm">
-          {~t"Search orders by name, reference, phone or email, and customers by name or email."}
+          {~t"Search orders by name, reference, phone, email or delivery address, and customers by name or email."}
         </p>
 
         <div :if={@term != ""} class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">

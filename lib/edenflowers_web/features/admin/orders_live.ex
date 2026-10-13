@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           actor={@current_user}
           search={[
             label: ~t"Order",
-            placeholder: ~t"Search name or order number…",
+            placeholder: ~t"Search orders…",
             fn: &search_orders/3
           ]}
           url_state={@url_state}
@@ -157,7 +157,10 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       expr(
         contains(customer_name, ^case_insensitive_term) or
           contains(order_reference, ^case_insensitive_term) or
-          contains(customer_phone_number, ^case_insensitive_term)
+          contains(customer_phone_number, ^case_insensitive_term) or
+          contains(customer_email, ^case_insensitive_term) or
+          contains(recipient_name, ^case_insensitive_term) or
+          contains(delivery_address, ^case_insensitive_term)
       )
     )
   end
