@@ -47,6 +47,18 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
   end
 
+  test "shows an order placed elsewhere without a refresh", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+
+    refute has_element?(view, "[data-item-id]", "Grace Hopper")
+    placed_order(customer_name: "Grace Hopper")
+
+    EdenflowersWeb.Endpoint.broadcast("admin:orders", "finalize_checkout", %{})
+    render_async(view, 500)
+
+    assert has_element?(view, "[data-item-id]", "Grace Hopper")
+  end
+
   test "lists every placed order once the default filter is cleared", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)

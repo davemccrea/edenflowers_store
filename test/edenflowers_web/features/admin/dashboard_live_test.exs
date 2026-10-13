@@ -49,6 +49,30 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
+  test "shows an order placed elsewhere without a refresh", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    refute render(view) =~ "Grace Hopper"
+
+    generate(
+      order(
+        state: :placed,
+        customer_name: "Grace Hopper",
+        fulfillment_method: :pickup,
+        fulfillment_date: ~D[2026-06-10],
+        fulfillment_status: :pending,
+        grand_total: "42.00",
+        ordered_at: DateTime.utc_now()
+      )
+    )
+
+    EdenflowersWeb.Endpoint.broadcast("admin:orders", "finalize_checkout", %{})
+
+    assert render(view) =~ "Grace Hopper"
+  end
+
   test "shows paid sales and revenue for the current month only", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 

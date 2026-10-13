@@ -920,6 +920,10 @@ defmodule Edenflowers.Orders.Order do
     publish :restart_checkout, ["order", "checkout_restarted", :id]
     publish :finalize_checkout, ["order", "placed", :id]
     publish :record_link_payment, ["order", "paid", :id]
+    # Tells open admin pages to show an order Jennie didn't place herself.
+    publish :finalize_checkout, ["admin", "orders"]
+    publish :place_unpaid_occurrence, ["admin", "orders"]
+    publish :record_link_payment, ["admin", "orders"]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end

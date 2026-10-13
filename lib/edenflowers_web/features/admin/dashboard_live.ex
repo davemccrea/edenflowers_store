@@ -13,6 +13,20 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+
+    {:ok,
+     socket
+     |> assign(:page_title, ~t"Dashboard")
+     |> assign(:locale, Localize.get_locale())
+     |> assign_orders()}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+    do: {:noreply, assign_orders(socket)}
+
+  defp assign_orders(socket) do
     actor = socket.assigns.current_user
     open_orders = Orders.list_open_orders!(actor: actor)
 
@@ -25,15 +39,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       |> Enum.group_by(& &1.fulfillment_date)
       |> Enum.sort_by(fn {date, _} -> date end, Date)
 
-    {:ok,
-     socket
-     |> assign(:page_title, ~t"Dashboard")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:orders_by_date, orders_by_date)
-     |> assign(:open_order_count, length(open_orders))
-     |> assign(:sales_count, sales.order_count)
-     |> assign(:revenue, sales.revenue)
-     |> assign(:today, today)}
+    socket
+    |> assign(:orders_by_date, orders_by_date)
+    |> assign(:open_order_count, length(open_orders))
+    |> assign(:sales_count, sales.order_count)
+    |> assign(:revenue, sales.revenue)
+    |> assign(:today, today)
   end
 
   @impl true

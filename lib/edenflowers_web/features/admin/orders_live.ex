@@ -13,6 +13,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Orders")
@@ -27,6 +29,10 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   def handle_params(params, uri, socket) do
     {:noreply, DefaultTableView.handle_params(params, uri, socket, @default_view)}
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
 
   @impl true
   def render(assigns) do
