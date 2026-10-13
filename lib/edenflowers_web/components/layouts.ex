@@ -245,7 +245,12 @@ defmodule EdenflowersWeb.Layouts do
           <.admin_account_menu current_user={@current_user} compact={true} />
         </div>
 
-        <div class="border-base-content/12 hidden items-center justify-end border-b px-8 py-3 lg:flex">
+        <div class="border-base-content/12 border-b px-4 py-2 lg:hidden">
+          <.admin_search id="admin-search-mobile" />
+        </div>
+
+        <div class="border-base-content/12 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
+          <.admin_search id="admin-search" class="w-full max-w-md" />
           <.admin_account_menu current_user={@current_user} />
         </div>
 
@@ -258,6 +263,35 @@ defmodule EdenflowersWeb.Layouts do
         </main>
       </div>
     </div>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :class, :any, default: nil
+
+  defp admin_search(assigns) do
+    ~H"""
+    <form action={~p"/admin/search"} method="get" role="search" class={["relative", @class]}>
+      <label for={@id} class="sr-only">{~t"Search orders and customers"}</label>
+      <.icon
+        name="hero-magnifying-glass"
+        class="text-base-content/50 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2"
+      />
+      <input
+        id={@id}
+        type="search"
+        name="q"
+        data-admin-search
+        placeholder={~t"Search orders and customers…"}
+        class="input input-sm w-full pl-9"
+      />
+      <kbd
+        aria-hidden="true"
+        class="kbd kbd-sm text-base-content/50 pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 lg:inline-flex"
+      >
+        /
+      </kbd>
+    </form>
     """
   end
 
