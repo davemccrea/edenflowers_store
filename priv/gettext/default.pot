@@ -2124,7 +2124,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/orders_live.ex:57
 #, elixir-autogen, elixir-format
-msgid "Search name or order number…"
+msgid "Search orders…"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:544
@@ -5615,7 +5615,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/search_live.ex:72
 #, elixir-autogen, elixir-format
-msgid "Search orders by name, reference, phone or email, and customers by name or email."
+msgid "Search orders by name, reference, phone, email or delivery address, and customers by name or email."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/search_live.ex:118

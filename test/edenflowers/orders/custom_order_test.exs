@@ -80,6 +80,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   describe "placing a custom order" do
+    test "broadcasts a newly placed order to open admin pages", ctx do
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "admin:orders")
+
+      assert {:ok, _order} = place(ctx)
+      assert_receive %Phoenix.Socket.Broadcast{topic: "admin:orders", event: "place_custom"}
+    end
+
     test "is placed straight away, unpaid, with its own reference", ctx do
       {:ok, order} = place(ctx)
 

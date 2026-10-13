@@ -2124,8 +2124,8 @@ msgstr "Beställning"
 
 #: lib/edenflowers_web/features/admin/orders_live.ex:57
 #, elixir-autogen, elixir-format
-msgid "Search name or order number…"
-msgstr "Sök namn eller ordernummer…"
+msgid "Search orders…"
+msgstr "Sök beställningar…"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:544
 #, elixir-autogen, elixir-format
@@ -5615,8 +5615,8 @@ msgstr "Sök beställningar och kunder…"
 
 #: lib/edenflowers_web/features/admin/search_live.ex:72
 #, elixir-autogen, elixir-format
-msgid "Search orders by name, reference, phone or email, and customers by name or email."
-msgstr "Sök beställningar efter namn, referens, telefon eller e-post och kunder efter namn eller e-post."
+msgid "Search orders by name, reference, phone, email or delivery address, and customers by name or email."
+msgstr "Sök beställningar efter namn, referens, telefon, e-post eller leveransadress och kunder efter namn eller e-post."
 
 #: lib/edenflowers_web/features/admin/search_live.ex:118
 #, elixir-autogen, elixir-format
