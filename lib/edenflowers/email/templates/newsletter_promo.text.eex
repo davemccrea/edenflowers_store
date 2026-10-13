@@ -4,7 +4,7 @@
 
 <%= gettext("As a welcome gift, here's 15% off your first order:") %>
 
-    <%= @promo_code %>
+<%= @promo_code %>
 
 <%= gettext("Use it once at checkout within the next 30 days.") %>
 

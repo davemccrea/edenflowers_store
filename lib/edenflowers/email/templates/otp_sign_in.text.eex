@@ -2,7 +2,7 @@
 
 <%= gettext("Here's your code to sign in to Eden Flowers:") %>
 
-    <%= @otp_code %>
+<%= @otp_code %>
 
 <%= gettext("It expires in 10 minutes. If you didn't ask for it, you can ignore this email.") %>
 
