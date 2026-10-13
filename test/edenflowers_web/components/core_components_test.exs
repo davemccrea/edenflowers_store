@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.CoreComponentsTest do
   # A bare `aria-invalid` reads as "false" to assistive tech, and the CSS that
   # turns the focus ring red matches on the explicit value.
   test "invalid inputs carry an explicit aria-invalid value" do
-    for type <- ~w(text select textarea) do
+    for type <- ~w(text select textarea checkbox) do
       html =
         render_component(&CoreComponents.input/1,
           type: type,
@@ -174,5 +174,24 @@ defmodule EdenflowersWeb.CoreComponentsTest do
 
     html = render_component(&CoreComponents.input/1, type: "text", name: "f", id: "f", value: "", errors: [])
     refute html =~ "aria-invalid"
+  end
+
+  test "help and errors describe each supported input" do
+    for type <- ~w(text select textarea checkbox) do
+      html =
+        render_component(&CoreComponents.input/1,
+          type: type,
+          name: "f",
+          id: "f",
+          value: "",
+          options: [],
+          help: "Helpful context",
+          errors: ["is required"]
+        )
+
+      assert attribute(html, "[aria-describedby]", "aria-describedby") == "f-help f-error"
+      assert html =~ ~s(id="f-help")
+      assert html =~ ~s(id="f-error")
+    end
   end
 end

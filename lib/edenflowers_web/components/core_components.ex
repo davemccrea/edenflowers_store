@@ -290,7 +290,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :help, :string,
     default: nil,
-    doc: "hint text shown under the input, e.g. why a field is asked for (text-like inputs and checkboxes)"
+    doc: "hint text shown under the input, e.g. why a field is asked for"
 
   attr :value, :any
   attr :button_text, :string, default: nil
@@ -379,13 +379,16 @@ defmodule EdenflowersWeb.CoreComponents do
             value="true"
             checked={@checked}
             class={@class || "checkbox checkbox-sm"}
-            aria-describedby={@help && "#{@id}-help"}
+            aria-invalid={@errors != [] && "true"}
+            aria-describedby={describedby(@id, @errors, @help)}
             {@rest}
           />{@label}
         </span>
       </label>
       <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 text-sm">{@help}</p>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
+      </div>
     </fieldset>
     """
   end
@@ -401,13 +404,14 @@ defmodule EdenflowersWeb.CoreComponents do
           class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           aria-invalid={@errors != [] && "true"}
-          aria-describedby={@errors != [] && "#{@id}-error"}
+          aria-describedby={describedby(@id, @errors, @help)}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
@@ -425,10 +429,11 @@ defmodule EdenflowersWeb.CoreComponents do
           name={@name}
           class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
           aria-invalid={@errors != [] && "true"}
-          aria-describedby={@errors != [] && "#{@id}-error"}
+          aria-describedby={describedby(@id, @errors, @help)}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
