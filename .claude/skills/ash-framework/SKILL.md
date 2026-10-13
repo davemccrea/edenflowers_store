@@ -72,7 +72,7 @@ metadata:
 ## Searching Documentation
 
 ```sh
-mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_oban -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
+mix usage_rules.search_docs "search term" -p ash -p ash_admin -p ash_archival -p ash_authentication -p ash_authentication_phoenix -p ash_oban -p ash_paper_trail -p ash_phoenix -p ash_postgres -p ash_rate_limiter -p ash_state_machine -p ash_translation -p cinder
 ```
 
 ## Available Mix Tasks
