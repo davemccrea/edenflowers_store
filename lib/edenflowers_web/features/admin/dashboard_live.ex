@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
     {:ok,
      socket
-     |> assign(:page_title, ~t"Dashboard")
+     |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
      |> assign_orders()}
   end
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={~t"Dashboard"} />
+        <.admin_page_header title={~t"Overview"} />
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <aside class="flex flex-col gap-6 xl:order-last">

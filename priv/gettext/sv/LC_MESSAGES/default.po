@@ -976,7 +976,7 @@ msgstr "Kund"
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:20
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:55
 #, elixir-autogen, elixir-format
-msgid "Dashboard"
+msgid "Overview"
 msgstr "Översikt"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:125

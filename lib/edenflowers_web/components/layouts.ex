@@ -169,7 +169,7 @@ defmodule EdenflowersWeb.Layouts do
       |> String.capitalize()
 
     primary_nav = [
-      {"/admin", ~t"Dashboard", true, "hero-squares-2x2"},
+      {"/admin", ~t"Overview", true, "hero-squares-2x2"},
       {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
       {"/admin/customers", ~t"Customers", true, "hero-users"},
       {"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},

@@ -14,8 +14,10 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
       |> Plug.Test.init_test_session(%{})
       |> Helpers.store_in_session(admin)
 
-    {:ok, _view, html} = live(conn, ~p"/admin")
+    {:ok, view, html} = live(conn, ~p"/admin")
 
+    assert has_element?(view, "h1", "Overview")
+    assert html =~ "Eden Flowers | Overview"
     assert html =~ "Admin account menu"
     assert html =~ "Jane"
     assert html =~ "jane@example.com"
