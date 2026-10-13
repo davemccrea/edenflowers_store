@@ -108,7 +108,6 @@ window.addEventListener("phx:admin-form-saved", ({ detail }) => {
   if (form) editedForms.delete(form);
 });
 
-// "/" jumps to the admin search; Ctrl or ⌘ + S saves the page's form.
 document.addEventListener("keydown", (event) => {
   const typing = event.target.closest?.(
     "input, textarea, select, [contenteditable]",
@@ -122,13 +121,6 @@ document.addEventListener("keydown", (event) => {
     if (!search) return;
     event.preventDefault();
     search.focus();
-  }
-
-  if (event.key.toLowerCase() === "s" && (event.metaKey || event.ctrlKey)) {
-    const form = document.querySelector("form[data-warn-unsaved]");
-    if (!form) return;
-    event.preventDefault();
-    form.requestSubmit();
   }
 });
 
