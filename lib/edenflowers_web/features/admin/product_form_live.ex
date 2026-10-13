@@ -328,7 +328,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     field={@form[:subscribable]}
                     type="checkbox"
                     label={~t"Can be bought as a subscription"}
-                    help={~t"Customers can subscribe every 1, 2 or 4 weeks. Needs free delivery."}
                   />
                 </div>
               </div>

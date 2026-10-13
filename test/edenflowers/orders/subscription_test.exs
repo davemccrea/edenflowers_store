@@ -38,8 +38,8 @@ defmodule Edenflowers.Orders.SubscriptionTest do
     }
   end
 
-  test "a subscription product must have free delivery" do
-    assert {:error, %Ash.Error.Invalid{errors: [%{field: :free_delivery}]}} =
+  test "a subscription product does not require free delivery" do
+    assert {:ok, product} =
              Ash.Changeset.for_create(Edenflowers.Catalog.Product, :create, %{
                name: "Subscription",
                description: "Florist's choice",
@@ -50,6 +50,9 @@ defmodule Edenflowers.Orders.SubscriptionTest do
                free_delivery: false
              })
              |> Ash.create(authorize?: false)
+
+    assert product.subscribable
+    refute product.free_delivery
   end
 
   describe "a subscription cart" do

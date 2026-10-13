@@ -5561,11 +5561,6 @@ msgstr ""
 msgid "A phone or an email is needed. With an email, the order shows in their account."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:331
-#, elixir-autogen, elixir-format
-msgid "Customers can subscribe every 1, 2 or 4 weeks. Needs free delivery."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:210
 #: lib/edenflowers_web/features/admin/order_form_live.ex:595
 #, elixir-autogen, elixir-format

@@ -111,15 +111,6 @@ defmodule Edenflowers.Catalog.Product do
     end
   end
 
-  # A subscribable product is always delivered free inside the free zone,
-  # bought once or not; unticking it would silently start charging every
-  # occurrence.
-  validations do
-    validate attribute_equals(:free_delivery, true),
-      where: [attribute_equals(:subscribable, true)],
-      message: "must be on for a subscription product"
-  end
-
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
