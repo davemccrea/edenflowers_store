@@ -2829,6 +2829,8 @@ msgid "Delete"
 msgstr "Radera"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:167
+#: lib/edenflowers_web/features/admin/product_form_live.ex:242
+#: lib/edenflowers_web/features/admin/product_form_live.ex:319
 #: lib/edenflowers_web/features/admin/products_live.ex:101
 #: lib/edenflowers_web/features/admin/products_live.ex:105
 #, elixir-autogen, elixir-format
@@ -2865,12 +2867,6 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Hand-tied bouquet of red roses tied with a hessian bow"
 msgstr ""
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:242
-#: lib/edenflowers_web/features/admin/product_form_live.ex:319
-#, elixir-autogen, elixir-format
-msgid "Hidden from the store"
-msgstr "Syns inte i butiken"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:236
 #, elixir-autogen, elixir-format

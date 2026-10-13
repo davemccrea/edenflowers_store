@@ -239,7 +239,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                         />
                       </div>
                       <div class="flex flex-wrap items-center gap-x-6 gap-y-2 min-[1800px]:shrink-0 min-[1800px]:flex-nowrap">
-                        <.input field={variant[:draft]} type="checkbox" label={~t"Hidden from the store"} />
+                        <.input field={variant[:draft]} type="checkbox" label={~t"Draft"} />
                         <.button
                           type="button"
                           phx-click="remove_variant"
@@ -316,7 +316,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   />
                 </div>
                 <div>
-                  <.input field={@form[:draft]} type="checkbox" label={~t"Hidden from the store"} />
+                  <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} />
                   <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
                   <.input
                     :if={@free_dist_km}
