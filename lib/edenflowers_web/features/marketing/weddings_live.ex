@@ -23,14 +23,30 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
          ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings.",
        og_image: image_url("local:///wedding/daniela_streng_3.jpg", 1200, 630)
      )
-     |> assign(gallery: gallery(), enquiry_mailto: enquiry_mailto())
+     |> assign(gallery: gallery())
      |> assign(
        personal_flowers: personal_flowers(),
        decorations: decorations(),
        decoration_photos: decoration_photos(),
-       example_weddings: example_weddings()
+       quantities: %{"bridal_bouquet" => 1}
      )
      |> assign(steps: steps(), testimonial: testimonial())}
+  end
+
+  def handle_event("change_quantity", %{"item" => id, "by" => by}, socket) when by in ["1", "-1"] do
+    {:noreply, update_quantity(socket, id, &max(&1 + String.to_integer(by), 0))}
+  end
+
+  def handle_event("toggle_item", %{"item" => id}, socket) do
+    {:noreply, update_quantity(socket, id, &if(&1 > 0, do: 0, else: 1))}
+  end
+
+  defp update_quantity(socket, id, fun) do
+    if Enum.any?(socket.assigns.personal_flowers ++ socket.assigns.decorations, &(&1.id == id)) do
+      update(socket, :quantities, fn quantities -> Map.update(quantities, id, fun.(0), fun) end)
+    else
+      socket
+    end
   end
 
   def render(assigns) do
@@ -93,70 +109,67 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
       <section class="not-last:border-b" aria-labelledby="prices-heading">
         <div class="container py-24">
-          <div class="grid items-start gap-10 md:grid-cols-2 md:gap-16">
+          <div class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div>
               <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
-              <p class="text-base-content/80 mb-10 text-lg leading-relaxed">
+              <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
                 {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans. Final prices depend on the flowers and techniques you choose."}
               </p>
               <h3 class="tile-title mb-3">{~t"Bouquets and accessories"}</h3>
-              <.price_list items={@personal_flowers} />
+              <.price_list items={@personal_flowers} quantities={@quantities} />
+              <h3 class="tile-title mt-12 mb-3">{~t"Decoration"}</h3>
+              <.price_list items={@decorations} quantities={@quantities} />
             </div>
 
-            <figure>
+            <%!-- The header is fixed, so the sticky card has to clear it. --%>
+            <div
+              class="bg-cream text-cream-content p-8 md:top-[calc(var(--header-height)+2rem)] md:sticky"
+              aria-labelledby="estimate-heading"
+            >
+              <h3 id="estimate-heading" class="eyebrow mb-4">{~t"Your estimate"}</h3>
+              <p id="wedding-estimate" class="font-serif text-5xl tabular-nums" aria-live="polite">
+                {estimate_label(estimate(@personal_flowers ++ @decorations, @quantities))}
+              </p>
+              <p :if={selected?(@quantities, "cake_flowers")} class="text-cream-content/80 mt-2">
+                {~t"+ cake flowers on request"}
+              </p>
+              <p class="text-cream-content/70 mt-6 text-sm leading-relaxed">
+                {~t"Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."}
+              </p>
+              <.button
+                href={enquiry_mailto(@personal_flowers ++ @decorations, @quantities)}
+                variant="primary"
+                class="mt-8 w-full"
+              >
+                {~t"Email me about your wedding"}
+              </.button>
+            </div>
+          </div>
+
+          <%!-- One 3:2 photo spanning two columns is as tall as the 3:4 photos beside it. --%>
+          <div class="mt-20 grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-6">
+            <figure class="col-span-2">
               <.image
                 src="local:///wedding/eden_flowers_2.jpg"
                 alt={~t"Wrist corsages of peach roses"}
                 width={800}
                 height={533}
-                sizes="(min-width: 768px) 50vw, 100vw"
+                sizes="(min-width: 48rem) 33vw, 100vw"
                 class="aspect-[3/2] w-full object-cover"
               />
               <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Eden Flowers" /></figcaption>
             </figure>
-          </div>
-
-          <div class="border-base-content/12 mt-20 grid gap-10 border-t pt-16 md:grid-cols-2 md:gap-16">
-            <div>
-              <h3 class="tile-title mb-3">{~t"Decoration"}</h3>
-              <.price_list items={@decorations} />
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 md:gap-6">
-              <figure :for={photo <- @decoration_photos}>
-                <.image
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={600}
-                  height={800}
-                  sizes="(min-width: 48rem) 25vw, 50vw"
-                  class="aspect-[3/4] w-full object-cover"
-                />
-                <figcaption class="mt-2">{photo.caption}</figcaption>
-              </figure>
-            </div>
-          </div>
-
-          <div :if={false} class="border-base-content/12 mt-20 border-t pt-16">
-            <h3 class="tile-title text-balance mb-4">{~t"Example weddings"}</h3>
-            <p class="text-base-content/80 mb-8 max-w-prose text-lg leading-relaxed">
-              {~t"What a whole wedding typically costs. Your quote is built from the prices above, so add or leave out whatever you like."}
-            </p>
-            <div class="grid gap-10 md:grid-cols-3 md:gap-16">
-              <article :for={wedding <- @example_weddings} class="border-t pt-4">
-                <header class="flex items-baseline justify-between gap-4">
-                  <h4 class="font-serif text-2xl">{wedding.name}</h4>
-                  <p class="font-serif shrink-0 text-lg tabular-nums">{price_label({:from, wedding.from})}</p>
-                </header>
-                <p class="text-base-content/70 mt-1 text-sm">{wedding.guests}</p>
-                <ul class="text-base-content/80 mt-4 list-disc space-y-1.5 pl-5">
-                  <li :for={item <- wedding.items}>{item}</li>
-                </ul>
-              </article>
-            </div>
-            <p class="text-base-content/70 mt-10 text-sm">
-              {~t"Delivery costs are added outside Vaasa."}
-            </p>
+            <figure :for={photo <- @decoration_photos}>
+              <.image
+                src={photo.src}
+                alt={photo.alt}
+                width={600}
+                height={800}
+                sizes="(min-width: 48rem) 17vw, 50vw"
+                class="aspect-[3/4] w-full object-cover"
+              />
+              <figcaption class="mt-2">{photo.caption}</figcaption>
+            </figure>
           </div>
         </div>
       </section>
@@ -198,7 +211,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
               {~t"I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Email me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
             </p>
-            <.button href={@enquiry_mailto} variant="inverse">{~t"Email me about your wedding"}</.button>
+            <.button href={enquiry_mailto(@personal_flowers ++ @decorations, @quantities)} variant="inverse">{~t"Email me about your wedding"}</.button>
             <p class="text-forest-content/85">
               {~t"Or call me on"}
               <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>
@@ -327,21 +340,21 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   # Prices in euros, from Jennie's 2027 wedding price list.
   defp personal_flowers do
     [
-      {~t"Bridal bouquet", {:range, 110, 190}},
-      {~t"Bridesmaid's bouquet", {:from, 45}},
-      {~t"Flower girl or toss bouquet", {:from, 35}},
-      {~t"Corsage or pocket square", {:from, 19}},
-      {~t"Hair and wrist flowers (crown, clip, tiara, bracelet)", {:from, 32}},
-      {~t"Cake flowers", :on_request}
+      %{id: "bridal_bouquet", label: ~t"Bridal bouquet", price: {:range, 110, 190}},
+      %{id: "bridesmaid_bouquet", label: ~t"Bridesmaid's bouquet", price: {:from, 45}},
+      %{id: "flower_girl_bouquet", label: ~t"Flower girl or toss bouquet", price: {:from, 35}},
+      %{id: "corsage", label: ~t"Corsage or pocket square", price: {:from, 19}},
+      %{id: "hair_flowers", label: ~t"Hair and wrist flowers (crown, clip, tiara, bracelet)", price: {:from, 32}},
+      %{id: "cake_flowers", label: ~t"Cake flowers", price: :on_request}
     ]
   end
 
   defp decorations do
     [
-      {~t"Silk flower garland, to rent", {:fixed, 95}},
-      {~t"Flower arch or flower gate", {:from, 320}},
-      {~t"Arrangement in an urn or on a pedestal", {:from, 95}},
-      {~t"Welcome sign arrangement", {:from, 70}}
+      %{id: "silk_garland", label: ~t"Silk flower garland, to rent", price: {:fixed, 95}},
+      %{id: "flower_arch", label: ~t"Flower arch or flower gate", price: {:from, 320}},
+      %{id: "urn_arrangement", label: ~t"Arrangement in an urn or on a pedestal", price: {:from, 95}},
+      %{id: "welcome_sign", label: ~t"Welcome sign arrangement", price: {:from, 70}}
     ]
   end
 
@@ -371,56 +384,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ]
   end
 
-  # Totals are the sum of the price list items, rounded up to the nearest 5 euros.
-  # Table flowers are priced as the old Basic package (€250) and Classic's table
-  # and venue flowers as the old Medium package (€350).
-  defp example_weddings do
-    bridal_flowers = [
-      ~t"Bridal bouquet",
-      ~t"Two bridesmaids' bouquets",
-      ~t"Four corsages or pocket squares"
-    ]
-
-    [
-      %{
-        name: ~t"Small and simple",
-        guests: ~t"About 40 guests",
-        from: 265,
-        items: [
-          ~t"Bridal bouquet",
-          ~t"Bridesmaid's bouquet",
-          ~t"Two corsages or pocket squares",
-          ~t"Welcome sign arrangement"
-        ]
-      },
-      %{
-        name: ~t"Classic",
-        guests: ~t"About 100 guests",
-        from: 630,
-        items:
-          bridal_flowers ++
-            [
-              ~t"Flowers in vases on every table",
-              ~t"Two arrangements for the ceremony or reception",
-              ~t"Consultation, delivery and set-up"
-            ]
-      },
-      %{
-        name: ~t"Full styling",
-        guests: ~t"About 100 guests",
-        from: 1040,
-        items:
-          bridal_flowers ++
-            [
-              ~t"Flowers in vases on every table",
-              ~t"Flower arch",
-              ~t"Two large arrangements in urns or on pedestals",
-              ~t"Consultation, delivery and set-up"
-            ]
-      }
-    ]
-  end
-
   defp steps do
     [
       {~t"Get in touch",
@@ -436,27 +399,117 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   end
 
   # mailto doesn't decode "+" as a space, so encode everything but unreserved characters.
-  defp enquiry_mailto do
+  defp enquiry_mailto(items, quantities) do
     subject = URI.encode(~t"Wedding enquiry", &URI.char_unreserved?/1)
 
-    body =
+    questions =
       [~t"Wedding date:", ~t"Venue:", ~t"Number of guests:", ~t"Colours and flowers we like:"]
       |> Enum.map_join("\n", &(&1 <> " "))
+
+    body =
+      [questions | estimate_summary(items, quantities)]
+      |> Enum.join("\n\n")
       |> URI.encode(&URI.char_unreserved?/1)
 
     "mailto:info@edenflowers.fi?subject=#{subject}&body=#{body}"
   end
 
+  defp estimate_summary(items, quantities) do
+    case Enum.filter(items, &selected?(quantities, &1.id)) do
+      [] ->
+        []
+
+      selected ->
+        lines =
+          Enum.map_join(selected, "\n", fn
+            %{price: :on_request, label: label} -> label
+            %{id: id, label: label} -> "#{quantities[id]} × #{label}"
+          end)
+
+        amount = euros(estimate(items, quantities))
+        [~t"Flowers we're interested in:" <> "\n" <> lines, ~t"Estimate: from #{amount}"]
+    end
+  end
+
+  # Every price counts at its lowest, so the estimate is always a "from" figure.
+  # Items priced on request are left out of the sum.
+  defp estimate(items, quantities) do
+    items
+    |> Enum.map(&(lowest_price(&1.price) * Map.get(quantities, &1.id, 0)))
+    |> Enum.sum()
+  end
+
+  defp lowest_price(:on_request), do: 0
+  defp lowest_price({:fixed, euros}), do: euros
+  defp lowest_price({:range, low, _high}), do: low
+  defp lowest_price({:from, low}), do: low
+
+  defp selected?(quantities, id), do: Map.get(quantities, id, 0) > 0
+
+  defp estimate_label(amount) do
+    amount = euros(amount)
+    ~t"From #{amount}"
+  end
+
   attr :items, :list, required: true
+  attr :quantities, :map, required: true
 
   defp price_list(assigns) do
     ~H"""
     <dl class="border-t">
-      <div :for={{item, price} <- @items} class="flex items-baseline justify-between gap-6 border-b py-3">
-        <dt class="text-lg">{item}</dt>
-        <dd class="text-base-content font-serif shrink-0 text-lg tabular-nums">{price_label(price)}</dd>
+      <div :for={item <- @items} class="flex items-center justify-between gap-6 border-b py-3">
+        <div>
+          <dt class="text-lg">{item.label}</dt>
+          <dd class="text-base-content font-serif text-lg tabular-nums">{price_label(item.price)}</dd>
+        </div>
+        <dd class="shrink-0">
+          <.quantity_picker item={item} quantity={Map.get(@quantities, item.id, 0)} />
+        </dd>
       </div>
     </dl>
+    """
+  end
+
+  attr :item, :map, required: true
+  attr :quantity, :integer, required: true
+
+  defp quantity_picker(%{item: %{price: :on_request}} = assigns) do
+    ~H"""
+    <input
+      type="checkbox"
+      class="checkbox"
+      checked={@quantity > 0}
+      phx-click="toggle_item"
+      phx-value-item={@item.id}
+      aria-label={~t"Add to the estimate: #{@item.label}"}
+    />
+    """
+  end
+
+  defp quantity_picker(assigns) do
+    ~H"""
+    <div class="flex items-center gap-2">
+      <.icon_button
+        size="lg"
+        disabled={@quantity == 0}
+        phx-click="change_quantity"
+        phx-value-item={@item.id}
+        phx-value-by="-1"
+        aria_label={~t"Remove one: #{@item.label}"}
+      >
+        <.icon class="h-4 w-4" name="hero-minus-mini" />
+      </.icon_button>
+      <span class="w-6 text-center tabular-nums" aria-label={~t"Quantity"}>{@quantity}</span>
+      <.icon_button
+        size="lg"
+        phx-click="change_quantity"
+        phx-value-item={@item.id}
+        phx-value-by="1"
+        aria_label={~t"Add one: #{@item.label}"}
+      >
+        <.icon class="h-4 w-4" name="hero-plus-mini" />
+      </.icon_button>
+    </div>
     """
   end
 
