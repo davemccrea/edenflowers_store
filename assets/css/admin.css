@@ -10,6 +10,12 @@
   --color-error-content: var(--color-red-700);
 }
 
+/* Treat rapid taps as activation rather than page zoom while keeping native
+   scrolling and pinch-to-zoom available in the installed admin app. */
+.admin-theme {
+  touch-action: manipulation;
+}
+
 /* daisyUI draws checkbox labels as small grey captions; in admin forms they
    sit beside text-field labels, so they match those instead. */
 .admin-theme .fieldset-label {

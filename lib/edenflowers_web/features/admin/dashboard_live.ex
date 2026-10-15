@@ -32,6 +32,13 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
     do: {:noreply, assign_orders(socket)}
 
+  defp greeting(%{name: name}) when is_binary(name) and name != "" do
+    first_name = name |> String.split() |> hd()
+    ~t"Hi, #{first_name}"
+  end
+
+  defp greeting(_user), do: ~t"Hi"
+
   defp assign_orders(socket) do
     actor = socket.assigns.current_user
     open_orders = Orders.list_open_orders!(actor: actor)
@@ -58,7 +65,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={~t"Overview"} />
+        <.admin_page_header title={greeting(@current_user)} />
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
 

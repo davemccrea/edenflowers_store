@@ -196,6 +196,10 @@ defmodule EdenflowersWeb.Layouts do
       phx-hook="AdminApp"
       class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
     >
+      <%!-- Opaque fixed strip under the status bar. Without a fixed element at the top edge,
+           iOS standalone draws its glass blur there, which bleeds over the topbar wordmark. --%>
+      <div aria-hidden="true" class="bg-base-200 h-[env(safe-area-inset-top)] fixed inset-x-0 top-0 z-40"></div>
+
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
         id="admin-nav-drawer"
