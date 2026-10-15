@@ -67,7 +67,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
           </.button>
         </div>
 
-        <.account_section :if={@subscriptions != []} id="subscriptions" title={~t"Subscriptions"}>
+        <%!-- Cream marks the one living thing on the page; the rest is history and settings. --%>
+        <.account_section
+          :if={@subscriptions != []}
+          id="subscriptions"
+          title={~t"Subscriptions"}
+          class="bg-cream text-cream-content -mx-4 mt-12 px-4 pb-6 sm:-mx-8 sm:mt-16 sm:px-8"
+        >
           <ol class="mt-6" data-testid="subscriptions">
             <li
               :for={subscription <- @subscriptions}
@@ -109,7 +115,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
         <.account_section id="upcoming" title={~t"Coming up"}>
           <div :if={@upcoming == []} class="mt-6">
-            <p class="text-base-content/80">{~t"Nothing on its way."}</p>
+            <p>{~t"Nothing on its way."}</p>
             <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
               <.button navigate={~p"/store"} variant="text">{~t"Visit the shop"}</.button>
               <.button navigate={~p"/courses"} variant="text">{~t"See what's coming up"}</.button>
@@ -122,14 +128,14 @@ defmodule EdenflowersWeb.Account.AccountLive do
         </.account_section>
 
         <.account_section :if={@past != []} id="past" title={~t"Past"}>
-          <ol class="mt-6" data-testid="past">
+          <ol class="text-base-content/70 mt-6" data-testid="past">
             <.timeline_entry :for={entry <- Enum.take(@past, @past_visible)} entry={entry} locale={@locale} />
           </ol>
           <details :if={length(@past) > @past_visible} class="group">
             <summary class="link-underline-hover mt-4 inline-block cursor-pointer list-none text-sm group-open:hidden">
               {~t"Show #{count = length(@past) - @past_visible} more"}
             </summary>
-            <ol data-testid="past-more">
+            <ol class="text-base-content/70" data-testid="past-more">
               <.timeline_entry :for={entry <- Enum.drop(@past, @past_visible)} entry={entry} locale={@locale} />
             </ol>
           </details>
@@ -137,7 +143,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
         <.account_section :if={@subscriptions == []} id="subscriptions" title={~t"Subscriptions"}>
           <div class="mt-6" data-testid="no-subscriptions">
-            <p class="text-base-content/80">
+            <p>
               {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel anytime."}
             </p>
             <.button
@@ -224,11 +230,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   attr :id, :string, required: true
   attr :title, :string, required: true
+  attr :class, :any, default: nil
   slot :inner_block, required: true
 
   defp account_section(assigns) do
     ~H"""
-    <section class="pt-12 sm:pt-16" aria-labelledby={"#{@id}-heading"}>
+    <section class={["pt-12 sm:pt-16", @class]} aria-labelledby={"#{@id}-heading"}>
       <h2 id={"#{@id}-heading"} class="section-title">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
@@ -259,7 +266,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp timeline_entry(assigns) do
     ~H"""
     <li class="border-base-content/12 grid-cols-[5rem_1fr] grid items-baseline gap-x-4 gap-y-2 border-t py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
-      <p class="text-base-content/70 tabular-nums">
+      <p class="tabular-nums">
         {Format.day_month(@entry.date, @locale)}
         <span :if={@entry.date.year != HelsinkiToday.today().year} class="block">{@entry.date.year}</span>
       </p>
@@ -794,7 +801,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     assigns = assign(assigns, unpaid: Subscription.unpaid_occurrence(assigns.orders, assigns.subscription))
 
     ~H"""
-    <span class="font-medium">{~t"Payment failed"}</span>
+    <span class="text-error font-medium">{~t"Payment failed"}</span>
     <span class="block text-sm">
       <.link
         :if={@unpaid}
@@ -862,7 +869,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <span class="text-base-content/70 block text-sm">
       <%= cond do %>
         <% @unpaid -> %>
-          {~t"Unpaid"} ·
+          <span class="text-error">{~t"Unpaid"}</span>
+          ·
           <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}
           </.link>
@@ -913,7 +921,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <p
           :if={@notice}
           role="status"
-          class={["bg-cream text-cream-content px-4 py-3 text-sm", elem(@notice, 0) == :error && "text-error"]}
+          class={["bg-cream px-4 py-3 text-sm", if(elem(@notice, 0) == :error, do: "text-error", else: "text-cream-content")]}
           data-testid="subscription-notice"
         >
           {elem(@notice, 1)}
@@ -929,7 +937,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
             <p :if={@subscription.changes_closed?} class="text-base-content/70 mt-2 text-sm" data-testid="changes-closed">
               {~t"Your next delivery is already being prepared. You can make changes again from #{date = Format.weekday_date(Subscription.changes_reopen_on(@subscription), @locale)}."}
-              <.link navigate={~p"/contact"} class="link-underline-hover text-primary">
+              <.link navigate={~p"/contact"} class="link-underline-hover text-base-content">
                 {~t"Need to change this one? Contact us."}
               </.link>
             </p>
@@ -1069,7 +1077,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
               </p>
               <.link
                 navigate={~p"/account/subscriptions/#{@id}/card"}
-                class="link-underline-static-body min-h-11 inline-flex shrink-0 items-center"
+                class="link-underline-hover text-primary min-h-11 inline-flex shrink-0 items-center"
               >
                 {~t"Update card"}
               </.link>
@@ -1234,7 +1242,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <span class="text-base-content/70 block text-sm" data-testid="order-unpaid">
       <%= cond do %>
         <% @order.payment_link_open? -> %>
-          {~t"Unpaid"} ·
+          <span class="text-error">{~t"Unpaid"}</span>
+          ·
           <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}
           </.link>
