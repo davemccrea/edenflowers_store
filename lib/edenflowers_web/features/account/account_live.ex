@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
           :if={@subscriptions != []}
           id="subscriptions"
           title={~t"Subscriptions"}
-          class="bg-cream text-cream-content -mx-4 mt-12 px-4 pb-6 sm:-mx-8 sm:mt-16 sm:px-8"
+          class="bg-cream text-cream-content -mx-4 mt-12 px-4 pt-10 pb-6 sm:-mx-8 sm:mt-16 sm:px-8"
         >
           <ol class="mt-6" data-testid="subscriptions">
             <li
@@ -230,12 +230,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   attr :id, :string, required: true
   attr :title, :string, required: true
-  attr :class, :any, default: nil
+  attr :class, :any, default: "pt-12 sm:pt-16"
   slot :inner_block, required: true
 
   defp account_section(assigns) do
     ~H"""
-    <section class={["pt-12 sm:pt-16", @class]} aria-labelledby={"#{@id}-heading"}>
+    <section class={@class} aria-labelledby={"#{@id}-heading"}>
       <h2 id={"#{@id}-heading"} class="section-title">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
