@@ -1,7 +1,7 @@
 # The rows the admin can't create: admins, tax rates, fulfillment options and
 # product categories. Run once against an empty database:
 #
-#     just seed-production
+#     just db-seed-production
 #
 # priv/repo/seeds.exs runs this first and builds its dev fixtures on top.
 

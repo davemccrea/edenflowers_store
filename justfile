@@ -8,93 +8,66 @@ port := env("PORT", "4000")
 default:
     @just --list --unsorted
 
-# Start the dev server
-[group('local')]
+# Run the development server
+[group('development')]
 dev: check-typst
-    PORT={{port}} iex -S mix phx.server
+    PORT={{ port }} iex -S mix phx.server
 
 # Run the test suite (extra args go to mix test)
-[group('local')]
+[group('development')]
 test *args: check-typst
-    mix test {{args}}
+    mix test {{ args }}
 
 # Forward Stripe webhooks to the local dev server
-[group('local')]
+[group('development')]
 stripe-listen:
-    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,refund.created,refund.updated --forward-to localhost:{{port}}/webhook/stripe
+    stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,refund.created,refund.updated --forward-to localhost:{{ port }}/webhook/stripe
 
 # Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
-[group('local')]
-install-typst:
+[group('setup')]
+typst-install:
     ./scripts/install-typst.sh
 
 [private]
 check-typst:
-    @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just install-typst'." >&2; exit 1; }
+    @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just typst-install'." >&2; exit 1; }
 
-# Drop and set up the dev and test databases (run `just seed local` afterwards for data)
-[group('local')]
-reset-local-db:
+# Drop and set up the dev and test databases (run `just db-seed local` afterwards for data)
+[group('database')]
+db-reset:
     ./scripts/reset-db.sh
 
 # Seed a database (local or staging, never production)
-[group('local')]
-[group('server')]
-seed target:
+[group('database')]
+db-seed target:
     #!/usr/bin/env bash
     set -euo pipefail
-    case "{{target}}" in
+    case "{{ target }}" in
       local)
         mix run priv/repo/seeds.exs ;;
       staging)
         ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
       *)
-        echo "Unknown target '{{target}}', use local or staging" >&2; exit 1 ;;
+        echo "Unknown target '{{ target }}', use local or staging" >&2; exit 1 ;;
     esac
 
 # Seed an empty production database with admins, tax rates, delivery options and categories (fails if already seeded)
-[group('server')]
 [confirm("Seed the PRODUCTION database? [y/N]")]
-seed-production:
+[group('database')]
+db-seed-production:
     ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'"
 
-# Deploy to staging or production (asks if no target is given)
-[group('deploy')]
-deploy *args:
-    ./scripts/deploy.sh {{args}}
-
-# Show recent deploys and follow the latest one until it finishes
-[group('deploy')]
-deploy-status:
-    @gh run list --workflow=deploy.yml --limit 5
-    @gh run watch "$(gh run list --workflow=deploy.yml --limit 1 --json databaseId -q '.[0].databaseId')" --compact --exit-status
-
-# Sync images/ to servers (staging, production, or both by default)
-[group('deploy')]
-sync-images target="all":
-    ./scripts/sync-images.sh {{target}}
-
-# Tail app logs on a server (staging or production)
-[group('server')]
-logs target:
-    ssh edenflowers-{{target}} 'cd /opt/edenflowers_store && docker compose logs -f --tail=200 app'
-
-# Open a remote IEx console on a server (staging or production)
-[group('server')]
-console target:
-    ssh -t edenflowers-{{target}} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
-
-# Dump the production database to tmp/
-[group('server')]
-dump-production-db:
+# Back up the production database to tmp/
+[group('database')]
+db-backup-production:
     @mkdir -p tmp
     ssh edenflowers-production 'sudo -u postgres pg_dump -Fc edenflowers_store_prod' > tmp/production-$(date +%F).dump
     @ls -lh tmp/production-$(date +%F).dump
 
-# Wipe the staging database, leaving an empty schema for the next deploy to migrate (hardcoded to staging, never production)
-[group('server')]
+# Wipe the staging database, leaving an empty schema for the next deploy to migrate
 [confirm("Wipe the STAGING database? [y/N]")]
-reset-staging-db:
+[group('database')]
+db-wipe-staging:
     #!/usr/bin/env bash
     set -euo pipefail
     ssh -T edenflowers-staging bash -s <<'EOF'
@@ -111,3 +84,51 @@ reset-staging-db:
       -c "grant all on schema public to $app_role" \
       -c "create extension citext"
     EOF
+
+# Deploy to staging or production (asks if no target is given)
+[group('deployment')]
+deploy *args:
+    ./scripts/deploy.sh {{ args }}
+
+# Show recent deploys and follow the latest one until it finishes
+[group('deployment')]
+deploy-watch:
+    @gh run list --workflow=deploy.yml --limit 5
+    @gh run watch "$(gh run list --workflow=deploy.yml --limit 1 --json databaseId -q '.[0].databaseId')" --compact --exit-status
+
+# Sync images/ to servers (staging, production, or both by default)
+[group('deployment')]
+images-sync target="all":
+    ./scripts/sync-images.sh {{ target }}
+
+# Tail app logs on a server (staging or production)
+[group('server')]
+server-logs target:
+    ssh edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose logs -f --tail=200 app'
+
+# Open a remote IEx console on a server (staging or production)
+[group('server')]
+server-console target:
+    ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
+
+# Backwards-compatible aliases for the previous command names. Keep these out of `just --list`.
+[private]
+alias install-typst := typst-install
+[private]
+alias reset-local-db := db-reset
+[private]
+alias seed := db-seed
+[private]
+alias seed-production := db-seed-production
+[private]
+alias dump-production-db := db-backup-production
+[private]
+alias reset-staging-db := db-wipe-staging
+[private]
+alias deploy-status := deploy-watch
+[private]
+alias sync-images := images-sync
+[private]
+alias logs := server-logs
+[private]
+alias console := server-console

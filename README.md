@@ -7,14 +7,14 @@
 ```bash
 git config core.hooksPath .githooks
 brew install just
-just install-typst
+just typst-install
 ```
 
-`just install-typst` puts the pinned [Typst](https://typst.app) CLI in `~/.local/bin`. Receipt PDFs are rendered with it, so the confirmation-email tests fail without it. `just dev` and `just test` stop early if it's missing.
+`just typst-install` puts the pinned [Typst](https://typst.app) CLI in `~/.local/bin`. Receipt PDFs are rendered with it, so the confirmation-email tests fail without it. `just dev` and `just test` stop early if it's missing.
 
 `.githooks/pre-commit` formats staged Elixir (`mix format`) and JS/CSS (Prettier via `npx`). `pre-push` runs `mix precommit`.
 
-The server commands (`just sync-images`, `logs`, `console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
+The remote commands (`just images-sync`, `server-logs`, `server-console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
 
 ```
 Host edenflowers-staging
@@ -28,23 +28,24 @@ Host edenflowers-production
 
 ### Commands
 
-Run `just` to list everything. Each recipe wraps a script in `scripts/`, which you can also run directly.
+Run `just` to see the commands grouped by purpose.
 
 ```bash
 just dev                        # dev server at localhost:4000, with .env loaded
 PORT=4001 just dev              # same, on another port (also honoured by stripe-listen)
-just reset-local-db             # drop, set up and seed dev + test databases
+just db-reset                   # drop and set up the dev + test databases
+just db-seed local              # seed the local database
 just deploy staging             # push current branch to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
-just sync-images [staging|production] # sync images/ to servers (both if omitted)
-just logs staging               # tail app logs on a server
-just console production         # remote IEx on a server
-just seed-production            # one-off base seed of an empty production database
+just images-sync [staging|production] # sync images/ to servers (both if omitted)
+just server-logs staging        # tail app logs on a server
+just server-console production  # remote IEx on a server
+just db-seed-production         # one-off base seed of an empty production database
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.
 
-`images/` is gitignored, so photos reach the servers only through `just sync-images`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
+`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
 
 ### Database
 

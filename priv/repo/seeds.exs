@@ -1,6 +1,6 @@
 # Dev and staging fixtures, built on the production base seed. Run it with:
 #
-#     just seed local
+#     just db-seed local
 
 alias Edenflowers.Accounts
 alias Edenflowers.Accounts.User
