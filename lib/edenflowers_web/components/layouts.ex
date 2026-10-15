@@ -75,6 +75,8 @@ defmodule EdenflowersWeb.Layouts do
     end
   end
 
+  defp admin_path?(path), do: path == "/admin" or String.starts_with?(path, "/admin/")
+
   @doc """
   Renders the page's flash notices plus the connection-lost toasts, which
   LiveView reveals on disconnect and hides again on reconnect.
@@ -189,7 +191,11 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <.flash_group flash={@flash} />
 
-    <div class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}>
+    <div
+      id="admin-app"
+      phx-hook="AdminApp"
+      class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
+    >
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
         id="admin-nav-drawer"

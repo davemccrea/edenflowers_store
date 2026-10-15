@@ -10,6 +10,13 @@ defmodule Edenflowers.Accounts do
   resources do
     resource Edenflowers.Accounts.Token
 
+    resource Edenflowers.Accounts.PushSubscription do
+      define :subscribe_to_push, action: :subscribe, args: [:endpoint, :p256dh, :auth, :locale]
+      define :get_push_subscription, action: :read, get_by: [:endpoint]
+      define :list_push_subscriptions, action: :read
+      define :unsubscribe_from_push, action: :destroy
+    end
+
     resource Edenflowers.Accounts.User do
       define :get_customer_for_admin, action: :admin_show, get_by: [:id]
       define :get_user_by_email, action: :get_by_email, args: [:email]

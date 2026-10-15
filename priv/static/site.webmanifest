@@ -1,7 +1,22 @@
 {
+  "id": "/",
   "name": "Eden Flowers",
   "short_name": "Eden Flowers",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png?v=20260506",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png?v=20260506",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/web-app-manifest-192x192.png?v=20260506",
       "sizes": "192x192",

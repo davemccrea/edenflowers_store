@@ -37,6 +37,16 @@ if config_env() in [:prod, :dev] do
          System.get_env("STRIPE_PUBLISHABLE_KEY") ||
            raise("environment variable STRIPE_PUBLISHABLE_KEY is missing.")
 
+  # Web Push for admin order notifications. Optional, like the Mapbox token:
+  # without the keys nothing is sent and the admin hides the setting. Generate
+  # a pair with `mix run -e 'Edenflowers.WebPush.generate_keys() |> IO.inspect()'`.
+  if vapid_public_key = System.get_env("VAPID_PUBLIC_KEY") do
+    config :web_push_ex, :vapid,
+      public_key: vapid_public_key,
+      private_key: System.get_env("VAPID_PRIVATE_KEY") || raise("environment variable VAPID_PRIVATE_KEY is missing."),
+      subject: System.get_env("VAPID_SUBJECT", "mailto:info@edenflowers.fi")
+  end
+
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,

@@ -19,7 +19,7 @@ defmodule EdenflowersWeb do
 
   def static_paths,
     do:
-      ~w(assets fonts images favicon.ico favicon.svg favicon-96x96.png apple-touch-icon.png site.webmanifest web-app-manifest-192x192.png web-app-manifest-512x512.png robots.txt)
+      ~w(assets fonts images favicon.ico favicon.svg favicon-96x96.png apple-touch-icon.png site.webmanifest admin.webmanifest admin-sw.js web-app-manifest-192x192.png web-app-manifest-512x512.png robots.txt)
 
   def router do
     quote do

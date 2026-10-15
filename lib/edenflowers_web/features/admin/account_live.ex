@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -12,6 +13,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Account")
+     |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> allow_upload(:avatar,
        accept: ~w(.jpg .jpeg .png .webp),
        max_file_size: 2_000_000,
@@ -22,6 +24,12 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   @impl true
   def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
+
+  def handle_event("push_subscribed", params, socket),
+    do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
+
+  def handle_event("push_unsubscribed", params, socket),
+    do: {:reply, PushSubscriptions.unsubscribe(params, socket.assigns.current_user), socket}
 
   def handle_event("remove_avatar", _params, socket) do
     user = socket.assigns.current_user
@@ -139,8 +147,58 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </.button>
           </div>
         </section>
+
+        <.device_notifications :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
       </.admin_page>
     </Layouts.admin>
+    """
+  end
+
+  attr :vapid_public_key, :string, required: true
+
+  # Per device, so it sits apart from the account details. The PushToggle hook
+  # sets data-state from the browser; each help line shows for its states.
+  defp device_notifications(assigns) do
+    ~H"""
+    <section
+      id="device-notifications"
+      phx-hook="PushToggle"
+      phx-update="ignore"
+      data-state="checking"
+      data-vapid-public-key={@vapid_public_key}
+      class="bg-base-100 border-base-content/12 group mt-6 border p-4 sm:p-5"
+    >
+      <h2 class="text-base-content mb-4 text-base font-semibold">{~t"This device"}</h2>
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <label for="push-toggle" class="text-base-content text-sm font-medium">
+            {~t"New order notifications"}
+          </label>
+          <p id="push-toggle-help" class="mt-0.5 text-sm" aria-live="polite">
+            <span class="text-base-content/65 hidden group-data-[state=checking]:inline group-data-[state=off]:inline group-data-[state=on]:inline">
+              {~t"Shown on this device only."}
+            </span>
+            <span class="text-base-content/65 hidden group-data-[state=unsupported]:inline">
+              {~t"Add Eden Admin to your home screen to get notifications."}
+            </span>
+            <span class="text-base-content/65 hidden group-data-[state=denied]:inline">
+              {~t"Notifications are blocked. Allow them for Eden Admin in your phone's Settings."}
+            </span>
+            <span class="text-error hidden group-data-[state=error]:inline">
+              {~t"Couldn't turn on notifications. Try again."}
+            </span>
+          </p>
+        </div>
+        <input
+          id="push-toggle"
+          type="checkbox"
+          role="switch"
+          disabled
+          aria-describedby="push-toggle-help"
+          class="toggle toggle-primary mt-0.5 shrink-0 group-data-[state=unsupported]:hidden"
+        />
+      </div>
+    </section>
     """
   end
 

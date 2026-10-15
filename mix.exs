@@ -129,6 +129,7 @@ defmodule Edenflowers.MixProject do
       {:hammer, "~> 7.0"},
       {:ex_phone_number, "~> 0.4"},
       {:jason, "~> 1.2"},
+      {:web_push_ex, "~> 0.2"},
       {:req, "~> 0.5"},
       {:tz, "~> 0.28"},
       # Dev & build tooling

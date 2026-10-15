@@ -3,6 +3,13 @@
 import EmblaCarousel from "../vendor/embla-carousel.esm";
 import PhotoSwipeLightbox from "../vendor/photoswipe-lightbox.esm";
 import PhotoSwipe from "../vendor/photoswipe.esm";
+import {
+  clearOrderAlerts,
+  currentSubscription,
+  pushSupported,
+  subscribeDevice,
+  unsubscribeDevice,
+} from "./push";
 
 export const Hooks = {};
 
@@ -1004,6 +1011,119 @@ Hooks.ArrowKeyNav = {
 
   destroyed() {
     window.removeEventListener("keydown", this.onKeydown);
+  },
+};
+
+/**
+ * On the admin layout. Clears new-order notifications and the app icon badge
+ * whenever the admin comes into view.
+ */
+Hooks.AdminApp = {
+  mounted() {
+    this.onVisible = () => {
+      if (document.visibilityState === "visible") clearOrderAlerts();
+    };
+    document.addEventListener("visibilitychange", this.onVisible);
+    this.onVisible();
+  },
+
+  destroyed() {
+    document.removeEventListener("visibilitychange", this.onVisible);
+  },
+};
+
+/**
+ * The account page's "New order notifications" switch for this device. Its
+ * state lives in the browser, so the hook reads it and sets `data-state`
+ * (checking, on, off, denied, unsupported, error), which picks the help text.
+ * The element is phx-update="ignore", so patches leave the switch alone.
+ */
+Hooks.PushToggle = {
+  async mounted() {
+    this.input = /** @type {HTMLInputElement} */ (
+      this.el.querySelector("input[role=switch]")
+    );
+    this.input.addEventListener("change", () => this.onChange());
+
+    if (!pushSupported()) return this.setState("unsupported");
+    if (Notification.permission === "denied") return this.setState("denied");
+
+    const subscription = await currentSubscription().catch(() => null);
+    this.setState(subscription ? "on" : "off");
+  },
+
+  async onChange() {
+    this.input.disabled = true;
+
+    if (this.input.checked) {
+      this.setState(
+        await subscribeDevice(this, this.el.dataset.vapidPublicKey),
+      );
+    } else {
+      await unsubscribeDevice(this).catch(() => {});
+      const subscription = await currentSubscription().catch(() => null);
+      this.setState(subscription ? "on" : "off");
+    }
+  },
+
+  /** @param {string} state */
+  setState(state) {
+    this.js().setAttribute(this.el, "data-state", state);
+    this.input.checked = state === "on";
+    this.input.disabled = !["on", "off", "error"].includes(state);
+  },
+};
+
+/**
+ * The Overview card offering order notifications, shown once in the installed
+ * app before it has asked for permission. Either button hides it for good on
+ * this device; the account page's switch is there after that.
+ */
+const PUSH_NUDGE_DISMISSED_KEY = "eden:push-nudge-dismissed";
+
+Hooks.PushNudge = {
+  mounted() {
+    const installed =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      /** @type {any} */ (navigator).standalone === true;
+
+    if (
+      !installed ||
+      !pushSupported() ||
+      Notification.permission !== "default" ||
+      this.dismissed()
+    )
+      return;
+
+    this.js().removeAttribute(this.el, "hidden");
+
+    this.el
+      .querySelector("[data-push-nudge=dismiss]")
+      ?.addEventListener("click", () => this.dismiss());
+
+    this.el
+      .querySelector("[data-push-nudge=enable]")
+      ?.addEventListener("click", () => {
+        subscribeDevice(this, this.el.dataset.vapidPublicKey);
+        this.dismiss();
+      });
+  },
+
+  dismissed() {
+    try {
+      return localStorage.getItem(PUSH_NUDGE_DISMISSED_KEY) !== null;
+    } catch {
+      return false;
+    }
+  },
+
+  dismiss() {
+    try {
+      localStorage.setItem(PUSH_NUDGE_DISMISSED_KEY, "1");
+    } catch {
+      // Without storage the card simply comes back next time.
+    }
+    this.js().setAttribute(this.el, "hidden", "");
   },
 };
 

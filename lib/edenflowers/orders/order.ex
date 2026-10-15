@@ -570,6 +570,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportPromotionOverused
 
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change Changes.PushNewOrder
 
       # Starts the Subscription straight away, so the confirmation page's link
       # to it has something to show. Outside the transaction, so a failed

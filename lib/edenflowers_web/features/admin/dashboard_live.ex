@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
   alias Edenflowers.Orders
   alias Edenflowers.Format
@@ -19,8 +20,13 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
      socket
      |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
+     |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign_orders()}
   end
+
+  @impl true
+  def handle_event("push_subscribed", params, socket),
+    do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
@@ -54,6 +60,8 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       <.admin_page>
         <.admin_page_header title={~t"Overview"} />
 
+        <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
+
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <aside class="flex flex-col gap-6 xl:order-last">
             <.quick_actions />
@@ -68,6 +76,38 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
         </div>
       </.admin_page>
     </Layouts.admin>
+    """
+  end
+
+  attr :vapid_public_key, :string, required: true
+
+  # Starts hidden: the PushNudge hook shows it only in the installed app, before
+  # it has asked for notification permission.
+  defp notifications_offer(assigns) do
+    ~H"""
+    <section
+      id="notifications-offer"
+      phx-hook="PushNudge"
+      phx-update="ignore"
+      hidden
+      data-vapid-public-key={@vapid_public_key}
+      aria-labelledby="notifications-offer-title"
+      class="bg-base-100 border-base-content/12 mb-6 flex flex-col gap-4 border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+    >
+      <div class="flex items-start gap-3">
+        <.icon name="hero-bell" class="text-primary mt-0.5 h-5 w-5 shrink-0" />
+        <div>
+          <h2 id="notifications-offer-title" class="text-base-content text-base font-semibold">
+            {~t"Get new orders on this phone"}
+          </h2>
+          <p class="text-base-content/65 text-sm">{~t"Same-day orders arrive straight away."}</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <.button type="button" variant="ghost" size="sm" data-push-nudge="dismiss">{~t"Not now"}</.button>
+        <.button type="button" variant="primary" size="sm" data-push-nudge="enable">{~t"Turn on"}</.button>
+      </div>
+    </section>
     """
   end
 

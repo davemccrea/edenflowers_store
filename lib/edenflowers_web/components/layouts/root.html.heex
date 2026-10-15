@@ -16,8 +16,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260506" />
     <link rel="shortcut icon" href="/favicon.ico?v=20260506" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20260506" />
-    <meta name="apple-mobile-web-app-title" content="Eden Flowers" />
-    <link rel="manifest" href="/site.webmanifest?v=20260506" />
+    <meta name="theme-color" content="#BDCCC3" />
+    <%!-- Admin pages install as their own app, opening on the dashboard. --%>
+    <%= if admin_path?(@conn.request_path) do %>
+      <meta name="apple-mobile-web-app-title" content="Eden Admin" />
+      <link rel="manifest" href="/admin.webmanifest?v=20261015" />
+    <% else %>
+      <meta name="apple-mobile-web-app-title" content="Eden Flowers" />
+      <link rel="manifest" href="/site.webmanifest?v=20261015" />
+    <% end %>
 
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <%!-- Before app.js: deferred scripts run in document order, and the Stripe hook needs it. --%>
