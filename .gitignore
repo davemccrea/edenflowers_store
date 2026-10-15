@@ -52,3 +52,6 @@ PLAN.md
 
 # Impeccable per-machine preferences (hook consent, local overrides).
 .impeccable/config.local.json
+
+# Database dumps can contain customer data.
+*.dump
