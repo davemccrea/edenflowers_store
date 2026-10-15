@@ -866,19 +866,15 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <span class="tabular-nums">
       {Format.weekday_day_month(if(@booked, do: @booked.fulfillment_date, else: @next), @locale)}
     </span>
-    <span class="text-base-content/70 block text-sm">
-      <%= cond do %>
-        <% @unpaid -> %>
-          <span class="text-error">{~t"Unpaid"}</span>
-          ·
-          <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
-            {~t"Pay now"}
-          </.link>
-        <% @booked -> %>
-          {~t"Being prepared"}
-        <% true -> %>
-          {~t"Charged #{date = Format.day_month(Subscription.charged_on(@next), @locale)}"}
-      <% end %>
+    <span :if={@unpaid} class="text-base-content/70 block text-sm">
+      <span class="text-error">{~t"Unpaid"}</span>
+      ·
+      <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+        {~t"Pay now"}
+      </.link>
+    </span>
+    <span :if={!@unpaid and !@booked} class="text-base-content/70 block text-sm">
+      {~t"Charged #{date = Format.day_month(Subscription.charged_on(@next), @locale)}"}
     </span>
     """
   end

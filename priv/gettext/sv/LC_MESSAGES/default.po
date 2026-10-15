@@ -4542,11 +4542,6 @@ msgstr "%{brand} •••• %{last4}, giltigt till %{expiry}"
 msgid "%{price} per delivery"
 msgstr "%{price} per leverans"
 
-#: lib/edenflowers_web/features/account/account_live.ex:870
-#, elixir-autogen, elixir-format
-msgid "Being prepared"
-msgstr "Förbereds"
-
 #: lib/edenflowers_web/features/account/account_live.ex:1146
 #, elixir-autogen, elixir-format
 msgid "Cancelled on %{date}."
