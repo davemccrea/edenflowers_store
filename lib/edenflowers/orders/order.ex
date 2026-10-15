@@ -501,6 +501,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
       change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
       change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
+      change Changes.PrefillFromLastOrder
       change transition_state(:delivery)
       require_atomic? false
     end
@@ -749,6 +750,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SnapshotFulfillmentMethod
       change set_attribute(:fulfillment_date, nil)
       change Changes.ClearDeliveryFields
+      change Changes.PrefillFromLastOrder
       require_atomic? false
     end
 
