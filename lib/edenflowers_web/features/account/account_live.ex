@@ -1026,7 +1026,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <%= if @booked do %>
       <p class="font-serif text-lg">{Format.weekday_date(@booked.fulfillment_date, @locale)}</p>
-      <p class="text-base-content/70 text-sm">{~t"Already booked and being prepared."}</p>
       <p class="text-base-content/70 text-sm">
         {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(Subscription.charged_on(@next), @locale)}."}
       </p>
