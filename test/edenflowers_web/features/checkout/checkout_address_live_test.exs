@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
     Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
 
-    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata ->
+    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer ->
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
     end)
 

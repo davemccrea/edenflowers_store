@@ -569,6 +569,8 @@ Hooks.Stripe = {
       const stripe = Stripe(this.publishableKey);
       const elements = stripe.elements({
         clientSecret: this.clientSecret,
+        customerSessionClientSecret:
+          this.el.dataset.customerSessionClientSecret || undefined,
         appearance: this.buildAppearance(),
         // Stripe has no "sv-FI", so pass the bare language ("en", "sv", "fi").
         locale: document.documentElement.lang.split(/[-_]/)[0],
@@ -584,8 +586,6 @@ Hooks.Stripe = {
         ],
       });
 
-      // Prefilling the email lets Link recognise a returning customer
-      // without them typing it again.
       const paymentElement = elements.create("payment", {
         paymentMethodOrder: ["mobilepay", "card"],
         defaultValues: {
@@ -599,6 +599,9 @@ Hooks.Stripe = {
       paymentElement.mount("#payment-element");
       paymentElement.on("ready", (event) => {
         this.stripeReady();
+      });
+      paymentElement.on("loaderror", (event) => {
+        this.logAndPushError("payment element failed to load", event.error);
       });
 
       // The server couldn't update the PaymentIntent, so Stripe never started.

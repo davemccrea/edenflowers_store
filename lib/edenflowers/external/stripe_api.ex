@@ -4,10 +4,12 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   This allows us to mock Stripe API calls in tests.
   """
 
-  @callback create_payment_intent(amount_cents :: integer(), metadata :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_payment_intent(amount_cents :: integer(), metadata :: map(), customer_id :: String.t() | nil) ::
+              {:ok, map()} | {:error, term()}
   @callback create_payment_intent_saving_card(amount_cents :: integer(), metadata :: map(), customer_id :: String.t()) ::
               {:ok, map()} | {:error, term()}
   @callback create_customer(params :: map()) :: {:ok, map()} | {:error, term()}
+  @callback create_customer_session(customer_id :: String.t()) :: {:ok, map()} | {:error, term()}
   @callback charge_off_session(amount_cents :: integer(), params :: map(), idempotency_key :: String.t()) ::
               {:ok, map()} | {:error, term()}
   @callback retrieve_payment_intent(order :: map()) :: {:ok, map()} | {:error, term()}
@@ -51,14 +53,17 @@ defmodule Edenflowers.External.StripeAPI do
     |> Decimal.round(2)
   end
 
+  # A Customer lets the Payment Element show and save that customer's cards.
   @impl true
-  def create_payment_intent(amount_cents, metadata) do
-    Stripe.PaymentIntent.create(%{
+  def create_payment_intent(amount_cents, metadata, customer_id) do
+    %{
       amount: amount_cents,
       currency: "EUR",
       automatic_payment_methods: %{enabled: true},
       metadata: metadata
-    })
+    }
+    |> then(&if(customer_id, do: Map.put(&1, :customer, customer_id), else: &1))
+    |> Stripe.PaymentIntent.create()
   end
 
   # Cards only: every later delivery is charged to this card off-session, and
@@ -78,6 +83,29 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def create_customer(params) do
     Stripe.Customer.create(params)
+  end
+
+  # Lets the Payment Element list the Customer's saved cards, offer to save
+  # the new one, and remove them.
+  @impl true
+  def create_customer_session(customer_id) do
+    Stripe.CustomerSession.create(%{
+      customer: customer_id,
+      components: %{
+        payment_element: %{
+          enabled: true,
+          features: %{
+            payment_method_redisplay: "enabled",
+            payment_method_save: "enabled",
+            # Saved for the customer to pick at a later checkout, never to
+            # charge without them, so `Payments.setup/2` doesn't mistake it
+            # for a subscription's card.
+            payment_method_save_usage: "on_session",
+            payment_method_remove: "enabled"
+          }
+        }
+      }
+    })
   end
 
   # `params` names the saved card (`customer`, `payment_method`) and the

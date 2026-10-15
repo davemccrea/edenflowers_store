@@ -60,6 +60,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:delivery_quote, quote_from_order(order))
        |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
        |> assign(:client_secret, nil)
+       |> assign(:customer_session_client_secret, nil)
        |> maybe_setup_payment(order, actor(socket))
        |> maybe_scroll_to_current_step()}
     else
@@ -266,6 +267,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     id={"#{@id}-form-4"}
                     phx-submit={lock_while_paying() |> JS.push("pay")}
                     client_secret={@client_secret}
+                    customer_session_client_secret={@customer_session_client_secret}
                     return_url={url(~p"/checkout/complete/#{@order.id}")}
                     billing_name={@order.customer_name}
                     billing_email={@order.customer_email}
@@ -1093,14 +1095,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
-    case Payments.setup(order, actor) do
-      {:ok, order, client_secret} ->
-        socket
-        |> assign(order: order)
-        |> assign(client_secret: client_secret)
-
-      {:error, _reason} ->
-        payment_unavailable(socket)
+    with {:ok, order, client_secret} <- Payments.setup(order, actor),
+         {:ok, customer_session_client_secret} <- Payments.customer_session(order, actor) do
+      socket
+      |> assign(order: order)
+      |> assign(client_secret: client_secret)
+      |> assign(customer_session_client_secret: customer_session_client_secret)
+    else
+      {:error, _reason} -> payment_unavailable(socket)
     end
   end
 
@@ -1118,7 +1120,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp payment_unavailable(socket) do
     socket
-    |> assign(client_secret: nil)
+    |> assign(client_secret: nil, customer_session_client_secret: nil)
     |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
   end
 end

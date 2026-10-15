@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   test "shows the order and a payment form for its total", %{conn: conn, order: order} do
     order_id = order.id
 
-    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, %{"order_id" => ^order_id} ->
+    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, %{"order_id" => ^order_id}, _customer ->
       {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
     end)
 

@@ -127,6 +127,12 @@ defmodule Edenflowers.Accounts.User do
       prepare build(load: [:placed_order_count, :last_ordered_at, :total_spent])
     end
 
+    # Signed-in customers save cards to this Customer at checkout.
+    update :ensure_stripe_customer do
+      require_atomic? false
+      change Edenflowers.Accounts.Changes.CreateStripeCustomer
+    end
+
     update :set_newsletter_promo do
       accept [:newsletter_promo_id]
       require_attributes [:newsletter_promo_id]
@@ -170,6 +176,8 @@ defmodule Edenflowers.Accounts.User do
 
     attribute :avatar, :binary, allow_nil?: true, select_by_default?: false
     attribute :avatar_content_type, :string, allow_nil?: true
+
+    attribute :stripe_customer_id, :string, allow_nil?: true
   end
 
   relationships do

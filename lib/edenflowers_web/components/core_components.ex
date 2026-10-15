@@ -203,6 +203,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :id, :string, required: true
   attr :client_secret, :string, required: true
+  attr :customer_session_client_secret, :string, default: nil, doc: "shows the signed-in customer's saved cards"
   attr :return_url, :string, required: true
   attr :billing_name, :string, default: nil
   attr :billing_email, :string, default: nil
@@ -222,6 +223,7 @@ defmodule EdenflowersWeb.CoreComponents do
       phx-hook="Stripe"
       data-intent={@intent}
       data-client-secret={@client_secret}
+      data-customer-session-client-secret={@customer_session_client_secret}
       data-publishable-key={Application.get_env(:edenflowers, :stripe_publishable_key)}
       data-return-url={@return_url}
       data-billing-name={@billing_name}

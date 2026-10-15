@@ -61,7 +61,7 @@ defmodule Edenflowers.PaymentsTest do
       expected_cents = StripeAPI.to_stripe_amount(order.grand_total)
       order_id = order.id
 
-      expect(StripeAPI.Mock, :create_payment_intent, fn ^expected_cents, %{"order_id" => ^order_id} ->
+      expect(StripeAPI.Mock, :create_payment_intent, fn ^expected_cents, %{"order_id" => ^order_id}, _customer ->
         {:ok, %{id: "pi_new", client_secret: "pi_new_secret", amount: expected_cents}}
       end)
 
@@ -69,11 +69,57 @@ defmodule Edenflowers.PaymentsTest do
       assert updated.payment_intent_id == "pi_new"
     end
 
+    test "a signed-in customer's PaymentIntent and CustomerSession carry their own Customer; a guest's carry none",
+         %{order: order} do
+      Edenflowers.Repo.query!("UPDATE orders SET payment_intent_id = NULL WHERE id = $1", [Ecto.UUID.dump!(order.id)])
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+      user = Edenflowers.Accounts.get_user_by_email!("john.smith@example.com", authorize?: false)
+
+      expect(StripeAPI.Mock, :create_customer, fn %{email: "john.smith@example.com"} -> {:ok, %{id: "cus_john"}} end)
+
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, "cus_john" ->
+        {:ok, %{id: "pi_john", client_secret: "pi_john_secret", amount: 0}}
+      end)
+
+      expect(StripeAPI.Mock, :create_customer_session, fn "cus_john" -> {:ok, %{client_secret: "cuss_john"}} end)
+
+      assert {:ok, order, "pi_john_secret"} = Payments.setup(order, user)
+      assert {:ok, "cuss_john"} = Payments.customer_session(order, user)
+
+      Edenflowers.Repo.query!("UPDATE orders SET payment_intent_id = NULL WHERE id = $1", [Ecto.UUID.dump!(order.id)])
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, nil ->
+        {:ok, %{id: "pi_guest", client_secret: "pi_guest_secret", amount: 0}}
+      end)
+
+      assert {:ok, order, "pi_guest_secret"} = Payments.setup(order, nil)
+      assert {:ok, nil} = Payments.customer_session(order, nil)
+    end
+
+    test "replaces a PaymentIntent opened before the customer signed in", %{order: order} do
+      user = Edenflowers.Accounts.get_user_by_email!("john.smith@example.com", authorize?: false)
+      Ash.Seed.update!(user, %{stripe_customer_id: "cus_john"})
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+      guest_intent = %{id: order.payment_intent_id, client_secret: "guest_secret", customer: nil}
+
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, guest_intent} end)
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^guest_intent -> {:ok, guest_intent} end)
+
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, "cus_john" ->
+        {:ok, %{id: "pi_john", client_secret: "pi_john_secret", amount: 0}}
+      end)
+
+      assert {:ok, _order, "pi_john_secret"} = Payments.setup(order, user)
+    end
+
     test "creates a PaymentIntent for a course booking's amount", %{registration: registration} do
       registration = generate(course_registration(amount: registration.amount, payment_intent_id: nil))
       registration_id = registration.id
 
-      expect(StripeAPI.Mock, :create_payment_intent, fn 17_000, %{"course_registration_id" => ^registration_id} ->
+      expect(StripeAPI.Mock, :create_payment_intent, fn 17_000,
+                                                        %{"course_registration_id" => ^registration_id},
+                                                        _customer ->
         {:ok, %{id: "pi_course_new", client_secret: "pi_course_secret", amount: 17_000}}
       end)
 
@@ -128,7 +174,7 @@ defmodule Edenflowers.PaymentsTest do
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, old_intent} end)
       expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent -> {:ok, %{id: old_intent.id}} end)
 
-      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, %{"order_id" => ^order_id} ->
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, %{"order_id" => ^order_id}, _customer ->
         {:ok, %{id: "pi_one_off", client_secret: "one_off_secret", amount: 0}}
       end)
 
@@ -137,7 +183,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "returns an error when Stripe fails", %{order: order} do
-      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata -> {:error, :network_error} end)
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer -> {:error, :network_error} end)
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:error, :not_found} end)
 
       capture_log(fn ->
@@ -150,7 +196,7 @@ defmodule Edenflowers.PaymentsTest do
       order = %{generate(order(state: :placed)) | grand_total: Decimal.new("50.00")}
       payment_intent = %{id: "pi_orphan", client_secret: "pi_orphan_secret", amount: 0}
 
-      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata -> {:ok, payment_intent} end)
+      expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer -> {:ok, payment_intent} end)
       expect(StripeAPI.Mock, :cancel_payment_intent, fn ^payment_intent -> {:ok, %{id: "pi_orphan"}} end)
 
       capture_log(fn ->
@@ -159,7 +205,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "a stale record cannot replace an existing PaymentIntent", %{order: order, registration: registration} do
-      expect(StripeAPI.Mock, :create_payment_intent, 2, fn _amount, metadata ->
+      expect(StripeAPI.Mock, :create_payment_intent, 2, fn _amount, metadata, _customer ->
         id = if metadata["order_id"], do: "pi_stale_order", else: "pi_stale_course"
         {:ok, %{id: id, client_secret: "secret", amount: 0}}
       end)

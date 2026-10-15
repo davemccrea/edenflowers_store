@@ -1,7 +1,7 @@
 # Saved Cards
 
-Status: needs-triage
-Parked: 2026-10-09. Approach agreed in conversation, not yet broken into issues.
+Status: ready-for-human
+Implemented 2026-10-15; needs a real Stripe check (see Comments).
 
 ## Problem
 
@@ -23,10 +23,16 @@ A logged-in customer types their card details at every checkout. Subscriptions a
 
 5. **Subscriptions keep their own Customers.** `Payments.create_payment_intent` still creates a fresh Customer per subscription order. Removing a card in the Payment Element therefore can't pull the card out from under a Subscription, and no delete guard is needed.
 
-6. **`Payments.setup/2` needs no change.** Its check compares `setup_future_usage` with `"off_session"`; a card saved through the checkbox on a one-off order is at most `on_session`.
+6. **`Payments.setup/2` also checks the Customer.** Its `setup_future_usage` check is unchanged: a card saved through the checkbox on a one-off order is at most `on_session`. A signed-in user's one-off PaymentIntent must also carry their Customer, so one opened before they signed in is replaced.
 
 ## Deferred until needed
 
 - Sharing one Customer between one-off orders and subscriptions (start a subscription on a card saved at checkout): add when customers ask. Needs a guard so removing a card can't break a live Subscription.
 - Managing cards on the account page: add if customers want it outside checkout.
 - Backfilling existing subscription Customers onto Users.
+
+## Comments
+
+2026-10-15: Implemented. Still to do by hand:
+- Turn Link off in the Stripe Dashboard (Settings → Payment methods), test and live.
+- Check in test mode with a signed-in user: save a card, come back, see it listed, remove it.
