@@ -21,7 +21,19 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_action_type",
+      "source": "price",
+      "type": "decimal"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "size",
       "type": "text"
     },
     {
@@ -33,8 +45,44 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_action_name",
+      "source": "image_slug",
       "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "stock_quantity",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "true",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "draft",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "archived_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
@@ -57,95 +105,35 @@
           "global": null,
           "strategy": null
         },
-        "name": "subscriptions_versions_version_source_id_fkey",
+        "name": "product_variants_product_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "subscriptions"
+        "table": "products"
       },
       "scale": null,
       "size": null,
-      "source": "version_source_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "changes",
-      "type": "map"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_inserted_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_updated_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "index_where": null,
-        "match_tenant?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "subscriptions_versions_user_id_fkey",
-        "on_delete": "nothing",
-        "on_update": "update",
-        "primary_key?": true,
-        "schema": "public",
-        "table": "users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "user_id",
+      "source": "product_id",
       "type": "uuid"
     }
   ],
-  "base_filter": null,
-  "check_constraints": [],
+  "base_filter": "(archived_at IS NULL)",
+  "check_constraints": [
+    {
+      "attribute": [
+        "price"
+      ],
+      "base_filter": "(archived_at IS NULL)",
+      "check": "price >= 0 AND price = round(price, 2)",
+      "name": "product_variants_valid_price"
+    }
+  ],
   "create_table_options": null,
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1019CD61112A911227BE8FE832DF808F89D2CC2800897E5F4A3371D933E7C38D",
+  "hash": "8B31DB9E2FB356E285931752AEC741C98BE0870B672AD2B1906BE09B88AD4CCE",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -154,5 +142,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "subscriptions_versions"
+  "table": "product_variants"
 }

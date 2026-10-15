@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "document_id",
       "type": "text"
     },
     {
@@ -33,56 +33,56 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
+      "source": "organization_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "processed_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "failed_at",
+      "type": "utc_datetime"
     },
     {
       "allow_nil?": false,
-      "default": "false",
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
     },
     {
-      "allow_nil?": true,
-      "default": "false",
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "admin",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "avatar",
-      "type": "binary"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "avatar_content_type",
-      "type": "text"
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": true,
@@ -105,16 +105,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "users_newsletter_promo_id_fkey",
+        "name": "expense_imports_expense_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "promotions"
+        "table": "expenses"
       },
       "scale": null,
       "size": null,
-      "source": "newsletter_promo_id",
+      "source": "expense_id",
       "type": "uuid"
     }
   ],
@@ -124,19 +124,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "DB88241123432E4C0203B18BB7E5F0B4D90FCCD738D259348C56FB1666C571A2",
+  "hash": "64928EAFAC6C061F8B953968769D1CC018856EA446679832D59F21D774786B10",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "expense_imports_unique_document_id_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "document_id"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_document_id",
       "nils_distinct?": true,
       "where": null
     }
@@ -148,5 +148,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "expense_imports"
 }

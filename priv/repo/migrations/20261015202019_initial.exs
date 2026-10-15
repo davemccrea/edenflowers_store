@@ -317,8 +317,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "orders_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -357,8 +356,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ),
-          null: false
+          ), null: false
     end
 
     create unique_index(:payments, [:payment_intent_id],
@@ -477,8 +475,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "products_product_category_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:promotions, primary_key: false) do
@@ -529,6 +526,28 @@ defmodule Edenflowers.Repo.Migrations.Initial do
         default: fragment("(now() AT TIME ZONE 'utc')")
     end
 
+    create table(:push_subscriptions, primary_key: false) do
+      add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
+      add :endpoint, :text, null: false
+      add :p256dh, :text, null: false
+      add :auth, :text, null: false
+      add :locale, :text, null: false
+
+      add :inserted_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :updated_at, :utc_datetime_usec,
+        null: false,
+        default: fragment("(now() AT TIME ZONE 'utc')")
+
+      add :user_id, :uuid, null: false
+    end
+
+    create unique_index(:push_subscriptions, [:endpoint],
+             name: "push_subscriptions_unique_endpoint_index"
+           )
+
     create table(:subscriptions, primary_key: false) do
       add :id, :uuid, null: false, default: fragment("gen_random_uuid()"), primary_key: true
     end
@@ -577,8 +596,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_product_variant_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :fulfillment_option_id,
           references(:fulfillment_options,
@@ -586,8 +604,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_fulfillment_option_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
     end
 
     create table(:subscriptions_versions, primary_key: false) do
@@ -601,8 +618,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
             name: "subscriptions_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ),
-          null: false
+          ), null: false
 
       add :changes, :map
 
@@ -739,6 +755,17 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     CREATE SEQUENCE reference_seq START 1400
     """)
 
+    alter table(:push_subscriptions) do
+      modify :user_id,
+             references(:users,
+               column: :id,
+               name: "push_subscriptions_user_id_fkey",
+               type: :uuid,
+               prefix: "public",
+               on_delete: :delete_all
+             )
+    end
+
     alter table(:subscriptions) do
       modify :user_id,
              references(:users,
@@ -768,6 +795,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
       add :admin, :boolean, default: false
       add :avatar, :binary
       add :avatar_content_type, :text
+      add :stripe_customer_id, :text
 
       add :newsletter_promo_id,
           references(:promotions,
@@ -788,6 +816,7 @@ defmodule Edenflowers.Repo.Migrations.Initial do
 
     alter table(:users) do
       remove :newsletter_promo_id
+      remove :stripe_customer_id
       remove :avatar_content_type
       remove :avatar
       remove :admin
@@ -811,6 +840,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     drop constraint(:subscriptions, "subscriptions_user_id_fkey")
 
     alter table(:subscriptions) do
+      modify :user_id, :uuid
+    end
+
+    drop constraint(:push_subscriptions, "push_subscriptions_user_id_fkey")
+
+    alter table(:push_subscriptions) do
       modify :user_id, :uuid
     end
 
@@ -915,6 +950,12 @@ defmodule Edenflowers.Repo.Migrations.Initial do
     end
 
     drop table(:subscriptions)
+
+    drop_if_exists unique_index(:push_subscriptions, [:endpoint],
+                     name: "push_subscriptions_unique_endpoint_index"
+                   )
+
+    drop table(:push_subscriptions)
 
     drop table(:promotions_versions)
 

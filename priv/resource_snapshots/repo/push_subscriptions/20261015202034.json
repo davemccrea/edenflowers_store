@@ -13,7 +13,7 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "name",
+      "source": "endpoint",
       "type": "text"
     },
     {
@@ -33,35 +33,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email",
-      "type": "citext"
+      "source": "p256dh",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "newsletter_opt_in",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
-      "default": "false",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "admin",
-      "type": "boolean"
-    },
-    {
-      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -69,23 +45,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "avatar",
-      "type": "binary"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "avatar_content_type",
+      "source": "auth",
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -93,11 +57,35 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "stripe_customer_id",
+      "source": "locale",
       "type": "text"
     },
     {
-      "allow_nil?": true,
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -117,16 +105,16 @@
           "global": null,
           "strategy": null
         },
-        "name": "users_newsletter_promo_id_fkey",
-        "on_delete": null,
+        "name": "push_subscriptions_user_id_fkey",
+        "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "promotions"
+        "table": "users"
       },
       "scale": null,
       "size": null,
-      "source": "newsletter_promo_id",
+      "source": "user_id",
       "type": "uuid"
     }
   ],
@@ -136,19 +124,19 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "3D97343C88DC67F7BE1BC2D04DABF54612BA3B86092BF31E2E65F757ACFFE1AA",
+  "hash": "35425041E37E908068D29EB1B09E2780453F398C1CE8633DDAFCC04D68ADE2C5",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "users_unique_email_index",
+      "index_name": "push_subscriptions_unique_endpoint_index",
       "keys": [
         {
           "type": "atom",
-          "value": "email"
+          "value": "endpoint"
         }
       ],
-      "name": "unique_email",
+      "name": "unique_endpoint",
       "nils_distinct?": true,
       "where": null
     }
@@ -160,5 +148,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "users"
+  "table": "push_subscriptions"
 }

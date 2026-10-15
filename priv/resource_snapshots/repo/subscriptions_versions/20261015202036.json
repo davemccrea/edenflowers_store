@@ -37,18 +37,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "items",
-      "type": "text"
-    },
-    {
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
@@ -69,12 +57,12 @@
           "global": null,
           "strategy": null
         },
-        "name": "orders_versions_version_source_id_fkey",
+        "name": "subscriptions_versions_version_source_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "orders"
+        "table": "subscriptions"
       },
       "scale": null,
       "size": null,
@@ -116,6 +104,39 @@
       "size": null,
       "source": "version_updated_at",
       "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "subscriptions_versions_user_id_fkey",
+        "on_delete": "nothing",
+        "on_update": "update",
+        "primary_key?": true,
+        "schema": "public",
+        "table": "users"
+      },
+      "scale": null,
+      "size": null,
+      "source": "user_id",
+      "type": "uuid"
     }
   ],
   "base_filter": null,
@@ -124,7 +145,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "1F2946613AE8B0E68D52F56EC755ABD385B0BDE1CED53615EE7DA1FD3FF09627",
+  "hash": "0573B2486FD401B61087F13A0BAA8FE62DD7FEAE64D09BFAC69656B99303D9BB",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -133,5 +154,5 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "orders_versions"
+  "table": "subscriptions_versions"
 }
