@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {~t"Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."}
           </.faq_item>
           <.faq_item question={~t"What is your delivery policy?"}>
-            {~t"Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM. Every delivery is handled carefully so the flowers arrive in perfect condition."}
+            {~t"Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM."}
           </.faq_item>
           <.faq_item question={~t"Can I include a personal message with my order?"}>
             {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}

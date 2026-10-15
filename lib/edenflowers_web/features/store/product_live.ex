@@ -237,9 +237,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   </label>
                 </div>
                 <div class="text-base-content/75 flex flex-col gap-1 text-base" data-testid="subscription-explainer">
-                  <p>
-                    {~t"Your card is charged #{days = Subscription.lead_days()} days before each one. Pause or cancel from your account."}
-                  </p>
+                  <p>{~t"Pause or cancel anytime."}</p>
                   <p :if={@has_subscription?} data-testid="already-subscribed">
                     {~t"You already have a subscription."}
                     <.link navigate={~p"/account"} class="link-underline-hover text-base-content">

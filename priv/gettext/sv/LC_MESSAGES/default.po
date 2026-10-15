@@ -621,8 +621,8 @@ msgstr "Kampanjkod"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:23
 #, elixir-autogen, elixir-format
-msgid "Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM. Every delivery is handled carefully so the flowers arrive in perfect condition."
-msgstr "Leverans samma dag gäller för beställningar som görs före kl. 14 på vardagar. För leverans under veckoslutet, beställ senast fredag kl. 14. Varje leverans hanteras varsamt så att blommorna kommer fram i perfekt skick."
+msgid "Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM."
+msgstr "Leverans samma dag gäller för beställningar som görs före kl. 14 på vardagar. För leverans under veckoslutet, beställ senast fredag kl. 14."
 
 #: lib/edenflowers_web/features/store/product_live.ex:309
 #, elixir-autogen, elixir-format
@@ -2463,10 +2463,10 @@ msgstr "Tårtblommor"
 msgid "Decoration"
 msgstr "Dekoration"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:116
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:138
 #, elixir-autogen, elixir-format
-msgid "Every wedding is different, so you'll get an exact quote once we've talked through your plans. Final prices depend on the flowers and techniques you choose."
-msgstr "Varje bröllop är unikt, så ni får en exakt offert när vi har pratat igenom era planer. Slutgiltiga priser beror på önskade blommor och teknik."
+msgid "Every wedding is different, so you'll get an exact quote once we've talked through your plans."
+msgstr "Varje bröllop är unikt, så ni får en exakt offert när vi har pratat igenom era planer."
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:366
 #, elixir-autogen, elixir-format
@@ -4909,8 +4909,8 @@ msgstr "Din leverans %{date} förbereddes redan när du avslutade. Efter den bli
 
 #: lib/edenflowers_web/features/account/account_live.ex:141
 #, elixir-autogen, elixir-format
-msgid "A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."
-msgstr "En bukett som floristen väljer, var 1, 2 eller 4 vecka. Pausa eller avsluta från ditt konto."
+msgid "A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel anytime."
+msgstr "En bukett som floristen väljer, var 1, 2 eller 4 vecka. Pausa eller avsluta när som helst."
 
 #: lib/edenflowers_web/features/account/account_live.ex:743
 #, elixir-autogen, elixir-format
@@ -4937,10 +4937,10 @@ msgstr "Din leverans %{date} förbereds redan och kommer ändå."
 msgid "Your flowers are still ready to collect at the shop on %{date}."
 msgstr "Dina blommor finns ändå att hämta i butiken %{date}."
 
-#: lib/edenflowers_web/features/store/product_live.ex:241
+#: lib/edenflowers_web/features/store/product_live.ex:240
 #, elixir-autogen, elixir-format
-msgid "Your card is charged %{days} days before each one. Pause or cancel from your account."
-msgstr "Ditt kort debiteras %{days} dagar före varje bukett. Pausa eller avsluta från ditt konto."
+msgid "Pause or cancel anytime."
+msgstr "Pausa eller avsluta när som helst."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:53
 #, elixir-autogen, elixir-format

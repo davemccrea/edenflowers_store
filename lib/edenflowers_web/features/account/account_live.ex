@@ -138,7 +138,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <.account_section :if={@subscriptions == []} id="subscriptions" title={~t"Subscriptions"}>
           <div class="mt-6" data-testid="no-subscriptions">
             <p class="text-base-content/80">
-              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel from your account."}
+              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel anytime."}
             </p>
             <.button
               :if={@subscription_product}

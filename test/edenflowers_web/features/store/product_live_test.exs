@@ -85,7 +85,6 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, "[data-testid=interval-option-4]")
-      assert has_element?(view, "[data-testid=subscription-explainer]", "charged 3 days before each one")
       assert has_element?(view, "[data-testid=per-delivery]", "per delivery")
 
       view

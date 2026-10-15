@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <div>
               <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
               <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
-                {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans. Final prices depend on the flowers and techniques you choose."}
+                {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans."}
               </p>
               <h3 class="tile-title mb-3">{~t"Bouquets and accessories"}</h3>
               <.price_list items={@personal_flowers} quantities={@quantities} />
