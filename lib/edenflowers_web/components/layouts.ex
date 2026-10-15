@@ -84,18 +84,12 @@ defmodule EdenflowersWeb.Layouts do
   """
   attr :flash, :map, required: true
 
-  attr :clear_admin_shortcut, :boolean,
-    default: false,
-    doc: "lifts the toasts above the admin shortcut on mobile, where both span the bottom edge"
-
   def flash_group(assigns) do
     ~H"""
     <div
       id="flash-group"
       aria-live="polite"
-      class={["toast z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6", if(@clear_admin_shortcut,
-    do: "max-sm:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
-    else: "bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")]}
+      class="toast bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
     >
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
@@ -597,6 +591,17 @@ defmodule EdenflowersWeb.Layouts do
                 </button>
               </div>
 
+              <%!-- Sits beside the menu button below xl because the right side is already wider, which pushes the logo off-centre --%>
+              <.link
+                :if={@current_user && @current_user.admin}
+                id="admin-shortcut-compact"
+                navigate={~p"/admin"}
+                aria-label="Admin"
+                class="group flex h-12 w-10 items-center justify-center xl:hidden"
+              >
+                <.icon name="hero-squares-2x2" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              </.link>
+
               <nav class="hidden xl:block">
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
@@ -623,6 +628,16 @@ defmodule EdenflowersWeb.Layouts do
 
             <%!-- Right --%>
             <div class="flex items-center justify-end md:gap-4">
+              <.link
+                :if={@current_user && @current_user.admin}
+                id="admin-shortcut"
+                navigate={~p"/admin"}
+                class="group hidden items-center gap-2 xl:flex"
+              >
+                <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-squares-2x2" />
+                <span class="text-base-content whitespace-nowrap text-sm group-hover:text-base-content/60">Admin</span>
+              </.link>
+
               <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account"}
@@ -685,20 +700,11 @@ defmodule EdenflowersWeb.Layouts do
       </header>
     </div>
 
-    <.flash_group flash={@flash} clear_admin_shortcut={@current_user && @current_user.admin} />
+    <.flash_group flash={@flash} />
 
     <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
       {render_slot(@inner_block)}
     </main>
-
-    <.link
-      :if={@current_user && @current_user.admin}
-      id="admin-shortcut"
-      navigate={~p"/admin"}
-      class="bg-base-content text-base-100 bottom-[calc(1rem+env(safe-area-inset-bottom))] start-4 fixed z-40 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium shadow-lg hover:opacity-90 sm:start-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
-    >
-      <.icon name="hero-document-text" class="h-5 w-5" /> Admin
-    </.link>
 
     <footer>
       <div class="bg-cream relative overflow-hidden border-t border-b">

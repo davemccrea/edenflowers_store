@@ -10,12 +10,14 @@ defmodule EdenflowersWeb.Marketing.AdminShortcutTest do
     {:ok, view, _html} = live(sign_in(conn, generate(admin_user())), ~p"/")
 
     assert has_element?(view, "#admin-shortcut[href='/admin']")
+    assert has_element?(view, "#admin-shortcut-compact[href='/admin']")
   end
 
   test "hides the admin shortcut from customers", %{conn: conn} do
     {:ok, view, _html} = live(sign_in(conn, generate(admin_user(admin: false))), ~p"/")
 
     refute has_element?(view, "#admin-shortcut")
+    refute has_element?(view, "#admin-shortcut-compact")
   end
 
   defp sign_in(conn, user) do
