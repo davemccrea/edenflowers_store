@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-start">
           <span class={legend_swatch(:closed)}></span>
-          <span>{~t"Unavailable to customers"}</span>
+          <span>{~t"Closed"}</span>
         </li>
         <li :if={@scope != :all} class="flex items-start">
           <span class={legend_swatch(:override)}></span>

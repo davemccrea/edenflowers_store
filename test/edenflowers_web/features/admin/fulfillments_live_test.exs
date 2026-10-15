@@ -331,7 +331,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       })
       |> render_submit()
 
-      assert render(view) =~ "Prices saved."
+      assert render(view) =~ "Saved."
       assert_push_event(view, "admin-form-saved", %{id: "pricing-form"})
 
       saved = Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false)
@@ -369,7 +369,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
         |> form("#pricing-form", %{"pricing" => %{"free_dist_km" => "50", "max_dist_km" => "20"}})
         |> render_submit()
 
-      refute html =~ "Prices saved."
+      refute html =~ "Saved."
 
       assert Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false).free_dist_km ==
                home_delivery.free_dist_km

@@ -180,7 +180,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="number"
             min="0"
             label={~t"Free delivery distance (km)"}
-            help={~t"Within this distance delivery costs the base price, or nothing with a free-delivery product."}
+            help={~t"Only the base price is charged within this distance."}
             class="input w-full tabular-nums"
           />
           <.input
@@ -196,7 +196,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <.input field={@form[:order_deadline]} type="time" label={~t"Same-day order deadline"} class="input w-full" />
       </div>
-      <.button type="submit" variant="primary">{~t"Save prices"}</.button>
+      <.button type="submit" variant="primary">{~t"Save"}</.button>
     </.form>
     """
   end
@@ -234,7 +234,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          |> replace_options([option])
          |> assign(:form, pricing_form(option, socket.assigns.current_user))
          |> push_event("admin-form-saved", %{id: "pricing-form"})
-         |> put_flash(:info, ~t"Prices saved.")}
+         |> put_flash(:info, ~t"Saved.")}
 
       {:error, form} ->
         {:noreply,
@@ -295,10 +295,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
   defp reset_confirm_message(:all, _options),
-    do: ~t"Reset every fulfillment option? All weekdays and dates reopen, and your closed days are lost."
+    do: ~t"Reset every fulfillment option? All closed days reopen."
 
   defp reset_confirm_message(option_id, options) do
     name = options |> Enum.find(&(&1.id == option_id)) |> Map.fetch!(:name)
-    ~t"Reset #{name}? All weekdays and dates reopen, and your closed days are lost."
+    ~t"Reset #{name}? All closed days reopen."
   end
 end
