@@ -295,11 +295,67 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <span :if={!@order.subscription_id}>{~t"Order"}</span> · {status_label(@order)} · #{@order.order_reference}
       </p>
       <.unpaid_note :if={@order.unpaid?} order={@order} />
+      <.order_cancel :if={@order.cancellable_by_customer?} order={@order} locale={@locale} />
     </div>
     <.entry_price price={@order.grand_total} locale={@locale}>
       <.receipt_link :if={@order.payment_status == :paid} href={~p"/order/#{@order.id}/receipt"} />
     </.entry_price>
     """
+  end
+
+  attr :order, :map, required: true
+  attr :locale, :string, required: true
+
+  # Asked in place, like stopping a subscription.
+  defp order_cancel(assigns) do
+    ~H"""
+    <div class="mt-2 text-sm" data-testid="order-cancel">
+      <p id={"order-#{@order.id}-cancel-actions"} class="text-base-content/70">
+        {~t"You can cancel until #{date = Format.day_month(@order.cancellable_until, @locale)}"} ·
+        <.button
+          id={"cancel-order-#{@order.id}-open"}
+          type="button"
+          variant="text"
+          phx-click={show_order_cancel(@order.id)}
+        >
+          {~t"Cancel order"}
+        </.button>
+      </p>
+      <section id={"cancel-order-#{@order.id}"} class="hidden" aria-labelledby={"cancel-order-#{@order.id}-title"}>
+        <h4 id={"cancel-order-#{@order.id}-title"} tabindex="-1" class="font-medium outline-hidden">
+          {~t"Cancel this order?"}
+        </h4>
+        <p class="mt-1">
+          {~t"We'll refund #{amount = Format.currency(@order.amount_paid, @locale)} to your card. It can take 5–10 days to arrive."}
+        </p>
+        <div class="mt-3 flex flex-wrap gap-3">
+          <.button type="button" variant="primary" size="sm" phx-click={hide_order_cancel(@order.id)}>
+            {~t"Keep it"}
+          </.button>
+          <.button
+            type="button"
+            variant="destructive"
+            size="sm"
+            phx-click={JS.push("cancel_order", value: %{id: @order.id})}
+          >
+            {~t"Cancel order"}
+          </.button>
+        </div>
+      </section>
+    </div>
+    """
+  end
+
+  defp show_order_cancel(id) do
+    JS.hide(to: "#order-#{id}-cancel-actions")
+    |> JS.show(to: "#cancel-order-#{id}")
+    |> JS.focus(to: "#cancel-order-#{id}-title")
+  end
+
+  defp hide_order_cancel(id) do
+    JS.hide(to: "#cancel-order-#{id}")
+    |> JS.show(to: "#order-#{id}-cancel-actions")
+    |> JS.focus(to: "#cancel-order-#{id}-open")
   end
 
   attr :registration, :map, required: true
@@ -421,6 +477,22 @@ defmodule EdenflowersWeb.Account.AccountLive do
     {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)}
   end
 
+  def handle_event("cancel_order", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
+
+    socket =
+      with {:ok, order} <- Orders.get_order_by_id(id, actor: user),
+           {:ok, _order} <- Orders.cancel_order_by_customer(order, actor: user) do
+        put_flash(socket, :info, ~t"Your order is cancelled. A confirmation is on its way to your email.")
+      else
+        {:error, error} ->
+          Logger.info("Order cancel refused: #{inspect(error)}")
+          put_flash(socket, :error, order_cancel_error_message(error))
+      end
+
+    {:noreply, socket |> assign(orders: orders(user)) |> assign_timeline()}
+  end
+
   def handle_event("edit_subscription", %{"subscription_id" => id} = params, socket) do
     subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
 
@@ -531,6 +603,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
+
+  defp order_cancel_error_message(%Ash.Error.Invalid{errors: [%{message: message} | _]}) when is_binary(message),
+    do: message
+
+  defp order_cancel_error_message(_error), do: ~t"This order couldn't be cancelled. Please contact us."
 
   defp size_options(subscription, locale) do
     for variant <- subscription.product_variant.product.product_variants,

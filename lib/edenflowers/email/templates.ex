@@ -14,6 +14,7 @@ defmodule Edenflowers.Email.Templates do
     {:payment_failed, [:assigns]},
     {:subscription_set_up, [:assigns]},
     {:order_delivered, [:assigns]},
+    {:order_cancelled, [:assigns]},
     {:course_confirmation, [:assigns]},
     {:newsletter_promo, [:assigns]},
     {:newsletter_already_subscribed, [:assigns]},

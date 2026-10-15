@@ -38,6 +38,7 @@ defmodule Edenflowers.Orders.Order do
 
   alias Edenflowers.Orders.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Orders.Subscription
   alias __MODULE__.PaymentMethod
 
   @locales Edenflowers.Locales.all()
@@ -296,6 +297,7 @@ defmodule Edenflowers.Orders.Order do
       :edit,
       :update_florist_note,
       :cancel,
+      :cancel_by_customer,
       :mark_fulfilled,
       :open_payment_link,
       :send_order_details_email,
@@ -323,7 +325,15 @@ defmodule Edenflowers.Orders.Order do
 
       prepare build(
                 sort: [ordered_at: :desc, inserted_at: :desc],
-                load: [:payment_status, :unpaid?, :grand_total, :payment_link_open?]
+                load: [
+                  :payment_status,
+                  :unpaid?,
+                  :grand_total,
+                  :payment_link_open?,
+                  :amount_paid,
+                  :cancellable_by_customer?,
+                  :cancellable_until
+                ]
               )
     end
 
@@ -655,6 +665,17 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    update :cancel_by_customer do
+      validate Validations.CancellableByCustomer
+      change set_attribute(:fulfillment_status, :cancelled)
+      change set_attribute(:cancelled_at, &DateTime.utc_now/0)
+      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+      change Edenflowers.Payments.Changes.RefundInFull
+      change {Changes.AdjustStock, direction: :return}
+      change Changes.SendCancelledEmail
+      require_atomic? false
+    end
+
     # Money Jennie takes in person, or hands back as a negative amount. Any
     # amount goes, so she can also settle a balance left by an edit.
     update :record_in_person_payment do
@@ -905,6 +926,10 @@ defmodule Edenflowers.Orders.Order do
       authorize_if always()
     end
 
+    bypass action(:cancel_by_customer) do
+      authorize_if expr(user_id == ^actor(:id))
+    end
+
     policy action_type(:read) do
       authorize_if expr(state in ^@checkout_states)
       authorize_if expr(state == :placed and user_id == ^actor(:id))
@@ -929,6 +954,7 @@ defmodule Edenflowers.Orders.Order do
     publish :place_unpaid_occurrence, ["admin", "orders"]
     publish :place_custom, ["admin", "orders"]
     publish :record_link_payment, ["admin", "orders"]
+    publish :cancel_by_customer, ["admin", "orders"]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end
@@ -1101,6 +1127,21 @@ defmodule Edenflowers.Orders.Order do
     calculate :payable?,
               :boolean,
               expr(balance > 0 and payment_status != :refunded and fulfillment_status != :cancelled)
+
+    # Jennie has had time to buy flowers for anything closer, so the customer
+    # gets the same notice as for a subscription change. Money taken in person
+    # can't be refunded through Stripe, so those orders go through her.
+    calculate :cancellable_by_customer?,
+              :boolean,
+              expr(
+                state == :placed and fulfillment_status == :pending and origin == :online and
+                  fulfillment_date > date_add(helsinki_today(), ^Subscription.cutoff_days(), :day) and
+                  not exists(payments, method != :stripe)
+              )
+
+    calculate :cancellable_until,
+              :date,
+              expr(date_add(fulfillment_date, ^(-Subscription.cutoff_days() - 1), :day))
 
     calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?)
 

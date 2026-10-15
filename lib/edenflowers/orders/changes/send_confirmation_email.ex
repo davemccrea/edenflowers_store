@@ -30,6 +30,8 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
   end
 
   defp load_for_send(order) do
-    Ash.load!(order, [:customer_first_name, :vat | Receipt.order_load()], authorize?: false)
+    Ash.load!(order, [:customer_first_name, :vat, :cancellable_by_customer?, :cancellable_until | Receipt.order_load()],
+      authorize?: false
+    )
   end
 end

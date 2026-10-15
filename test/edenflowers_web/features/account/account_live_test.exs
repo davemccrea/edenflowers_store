@@ -78,6 +78,29 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "orders" do
+    test "cancels an order before the cut-off and refunds it", %{conn: conn, user: user} do
+      order = placed_order(user_id: user.id, payment_intent_id: nil, fulfillment_date: Date.add(store_today(), 10))
+      generate(payment(order_id: order.id, amount: order.grand_total, payment_intent_id: "pi_account_cancel"))
+      too_late = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(store_today(), 2))
+
+      Edenflowers.External.StripeAPI.Mock
+      |> Mox.stub(:list_refunds, fn "pi_account_cancel" -> {:ok, []} end)
+      |> Mox.expect(:create_refund, fn "pi_account_cancel", 8850, _key ->
+        {:ok, %{id: "re_account_cancel", payment_intent: "pi_account_cancel", amount: 8850, status: "succeeded"}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#cancel-order-#{order.id}", "We'll refund €88.50")
+      refute has_element?(view, "#cancel-order-#{too_late.id}")
+
+      view |> element("#cancel-order-#{order.id} button", "Cancel order") |> render_click()
+
+      assert render(view) =~ "Your order is cancelled."
+      refute has_element?(view, "#cancel-order-#{order.id}")
+      assert Edenflowers.Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :cancelled
+    end
+
     test "lists the customer's own orders with a receipt link", %{conn: conn, user: user} do
       order = placed_order(user_id: user.id, paid: true)
 

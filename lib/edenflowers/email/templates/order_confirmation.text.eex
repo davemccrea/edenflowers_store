@@ -3,7 +3,9 @@
 <%= if @order.fulfillment_status == :fulfilled do %><%= gettext("Thank you for your order.") %><% else %><%= gettext("Thank you for your order. I'll have everything ready on %{date}.", date: @format_date.(@order.fulfillment_date)) %><% end %>
 
 <%= gettext("Your receipt is attached. If you need to change anything, just reply and I'll take care of it.") %>
-
+<%= if @order.cancellable_by_customer? do %>
+<%= gettext("Plans changed? You can cancel from your account until %{date} for a full refund: %{url}", date: @format_date.(@order.cancellable_until), url: @account_url) %>
+<% end %>
 <%= gettext("Warm wishes,") %>
 
 Jennie

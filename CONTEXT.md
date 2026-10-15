@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order Jennie has decided will not be made. Cancelling never refunds; refunds are handled separately in Stripe.
+A placed order that will not be made. When Jennie cancels, nothing is refunded; she refunds separately in Stripe. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid in person, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Online Order**:

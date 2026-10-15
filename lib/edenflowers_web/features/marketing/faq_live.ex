@@ -28,6 +28,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           <.faq_item question={~t"What happens if I'm not home for delivery?"}>
             {~t"If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."}
           </.faq_item>
+          <.faq_item question={~t"Can I cancel my order?"}>
+            {~t"Yes, from your account, up to #{days = Edenflowers.Orders.Subscription.cutoff_days() + 1} days before your delivery or pickup, and you'll be refunded in full. After that I've already bought your flowers, so get in touch and we'll work something out."}
+          </.faq_item>
         </dl>
 
         <section aria-labelledby="subscription-faq-heading" class="mt-20 md:mt-28" id="subscriptions">

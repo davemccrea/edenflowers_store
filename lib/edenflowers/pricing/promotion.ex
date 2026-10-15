@@ -112,7 +112,7 @@ defmodule Edenflowers.Pricing.Promotion do
   aggregates do
     # Unauthorized so a guest checking a code still counts everyone's orders.
     count :usage, :orders do
-      filter expr(state == :placed)
+      filter expr(state == :placed and fulfillment_status != :cancelled)
       authorize? false
     end
   end

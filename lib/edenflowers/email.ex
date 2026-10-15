@@ -24,7 +24,8 @@ defmodule Edenflowers.Email do
   defp render_order_confirmation(order) do
     Templates.order_confirmation(%{
       order: order,
-      format_date: &Format.date(&1, order.locale)
+      format_date: &Format.date(&1, order.locale),
+      account_url: EdenflowersWeb.Endpoint.url() <> "/account"
     })
   end
 
@@ -108,6 +109,24 @@ defmodule Edenflowers.Email do
       |> to(order.customer_email)
       |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
       |> text_body(Templates.order_delivered(%{order: order}))
+    end)
+  end
+
+  def order_cancelled(order, refunded_amount) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(from_address())
+      |> subject(~t"Your Eden Flowers order #{order.order_reference} is cancelled")
+      |> text_body(
+        Templates.order_cancelled(%{
+          order: order,
+          refunded: refunded_amount,
+          format_currency: &Format.currency(&1, order.locale),
+          format_date: &Format.date(&1, order.locale)
+        })
+      )
     end)
   end
 

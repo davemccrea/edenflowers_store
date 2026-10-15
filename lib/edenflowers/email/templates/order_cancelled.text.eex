@@ -1,0 +1,12 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Your order for %{date} is cancelled.", date: @format_date.(@order.fulfillment_date)) %>
+
+<%= if Decimal.positive?(@refunded) do %><%= gettext("I've refunded %{amount} to your card. It can take 5–10 days to show on your statement.", amount: @format_currency.(@refunded)) %>
+
+<% end %><%= gettext("If you didn't mean to cancel, just reply and I'll sort it out.") %>
+
+<%= gettext("Warm wishes,") %>
+
+Jennie
+Eden Flowers

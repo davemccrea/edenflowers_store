@@ -346,12 +346,24 @@ defmodule Edenflowers.Payments do
   taken off what's owed, so a second click never refunds the same money twice.
   The idempotency key covers two clicks racing each other.
   """
-  def refund_balance(%Order{id: order_id}) do
+  def refund_balance(%Order{} = order) do
+    refund(order, fn order -> Decimal.negate(order.balance) end)
+  end
+
+  @doc """
+  Refunds everything an order's customer has paid through Stripe, as
+  `refund_balance/1` does, for an order that will not be made.
+  """
+  def refund_in_full(%Order{} = order) do
+    refund(order, fn order -> order.amount_paid || Decimal.new(0) end)
+  end
+
+  defp refund(%Order{id: order_id}, owed) do
     with {:ok, refunds_by_payment} <- stripe_refunds(order_id),
          {:ok, _recorded} <- record_refunds(refunds_by_payment),
-         {:ok, order} <- Ash.get(Order, order_id, load: [:balance], authorize?: false) do
+         {:ok, order} <- Ash.get(Order, order_id, load: [:balance, :amount_paid], authorize?: false) do
       owed_cents =
-        StripeAPI.to_stripe_amount(Decimal.max(Decimal.negate(order.balance), 0)) -
+        StripeAPI.to_stripe_amount(Decimal.max(owed.(order), 0)) -
           pending_cents(refunds_by_payment)
 
       payment_count =
