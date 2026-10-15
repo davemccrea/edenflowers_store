@@ -1,6 +1,6 @@
 # Stock Tracking
 
-Status: needs-triage
+Status: done
 
 ## Problem
 
