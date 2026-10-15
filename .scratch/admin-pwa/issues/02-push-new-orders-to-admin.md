@@ -1,6 +1,6 @@
 # Push new orders to admin
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## What to build
 
@@ -104,6 +104,8 @@ Implemented 2026-10-15, with these departures from the spec above:
 - **`web_push_ex` for encryption and VAPID.** It does `aes128gcm` (which Apple requires; `web_push_elixir` only does the old `aesgcm`) and leaves sending to us, so `Edenflowers.WebPush` posts with Req. A test decrypts what reaches a stubbed push service and verifies the VAPID token.
 - **Service worker at `/admin-sw.js`**, a plain static file, registered with scope `/admin`. A script at the root may claim any scope below it, so there's no `/admin/sw.js` route and no header.
 - **Help text says "this device"**, not "this phone", since the switch also shows on a laptop.
+- **A plain Oban worker, not an AshOban trigger.** The change inserts `PushNewOrder` in the finalize transaction; there's no trigger condition to poll for.
+- Only devices whose user is still an admin are notified.
 - Without `VAPID_PUBLIC_KEY` the setting and offer are hidden and nothing is queued, so staging stays quiet.
 
 Still to check by hand on an iPhone: install, subscribe, receive, badge, tap-through.

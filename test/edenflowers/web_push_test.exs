@@ -133,6 +133,24 @@ defmodule Edenflowers.WebPushTest do
 
       assert [%{endpoint: "https://push.example.com/live"}] = Accounts.list_push_subscriptions!(actor: admin)
     end
+
+    test "skips devices whose user is no longer an admin" do
+      {:ok, former_admin} = Accounts.upsert_user("ada@example.com", "Ada", authorize?: false)
+      order = placed_order(order_reference: "1043")
+
+      Accounts.subscribe_to_push!("https://push.example.com/former", @ua_public, @auth_secret, "en-GB",
+        actor: former_admin,
+        authorize?: false
+      )
+
+      Req.Test.stub(WebPush, fn conn ->
+        send(self(), :pushed)
+        Plug.Conn.send_resp(conn, 201, "")
+      end)
+
+      assert :ok = perform_job(PushNewOrder, %{"order_id" => order.id})
+      refute_received :pushed
+    end
   end
 
   defp push_subscription, do: %{endpoint: "https://push.example.com/send/abc", p256dh: @ua_public, auth: @auth_secret}

@@ -9,11 +9,10 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
   require Logger
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.WebPush
-
-  @timezone "Europe/Helsinki"
 
   def new_for(order), do: new(%{"order_id" => order.id})
 
@@ -24,7 +23,7 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
     order = Orders.get_order_by_id!(order_id, load: [:grand_total], authorize?: false)
 
     failures =
-      Accounts.list_push_subscriptions!(authorize?: false)
+      Accounts.list_admin_push_subscriptions!(authorize?: false)
       |> Enum.map(&deliver(&1, order))
       |> Enum.reject(&(&1 == :ok))
 
@@ -49,15 +48,12 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
   defp payload(order, locale) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       title =
-        if order.fulfillment_date == today(),
+        if order.fulfillment_date == HelsinkiToday.today(),
           do: ~t"Same-day order #{order.order_reference}",
           else: ~t"New order #{order.order_reference}"
 
       body =
-        Enum.join(
-          [fulfillment_method(order.fulfillment_method), Format.date(order.fulfillment_date, locale)],
-          " "
-        ) <> " · " <> Format.currency(order.grand_total, locale)
+        "#{fulfillment_method(order.fulfillment_method)} #{Format.date(order.fulfillment_date, locale)} · #{Format.currency(order.grand_total, locale)}"
 
       Jason.encode!(%{
         title: title,
@@ -70,6 +66,4 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
 
   defp fulfillment_method(:delivery), do: ~t"Delivery"
   defp fulfillment_method(:pickup), do: ~t"Pickup"
-
-  defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 end

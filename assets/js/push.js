@@ -12,10 +12,15 @@ export const pushSupported = () =>
 const registerAdminWorker = () =>
   navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin" });
 
+// Looks up the worker without registering it, so devices that never turned
+// notifications on don't get one.
+const existingAdminWorker = () =>
+  navigator.serviceWorker.getRegistration("/admin");
+
 /** @returns {Promise<PushSubscription | null>} */
 export async function currentSubscription() {
-  const registration = await registerAdminWorker();
-  return registration.pushManager.getSubscription();
+  const registration = await existingAdminWorker();
+  return registration ? registration.pushManager.getSubscription() : null;
 }
 
 /** @param {string} base64url */
@@ -77,7 +82,9 @@ export async function clearOrderAlerts() {
     await navigator.clearAppBadge?.();
     if (!("serviceWorker" in navigator)) return;
 
-    const registration = await registerAdminWorker();
+    const registration = await existingAdminWorker();
+    if (!registration) return;
+
     const notifications = await registration.getNotifications();
     notifications.forEach((notification) => notification.close());
   } catch {

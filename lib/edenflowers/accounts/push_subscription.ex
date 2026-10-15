@@ -22,6 +22,11 @@ defmodule Edenflowers.Accounts.PushSubscription do
   actions do
     defaults [:read, :destroy]
 
+    # A device stops getting order notifications once its user is no longer an admin.
+    read :admin_devices do
+      filter expr(user.admin == true)
+    end
+
     # A browser re-subscribing hands back the same endpoint, possibly with new
     # keys, so it replaces the row rather than adding one.
     create :subscribe do

@@ -14,6 +14,7 @@ defmodule Edenflowers.Accounts do
       define :subscribe_to_push, action: :subscribe, args: [:endpoint, :p256dh, :auth, :locale]
       define :get_push_subscription, action: :read, get_by: [:endpoint]
       define :list_push_subscriptions, action: :read
+      define :list_admin_push_subscriptions, action: :admin_devices
       define :unsubscribe_from_push, action: :destroy
     end
 
