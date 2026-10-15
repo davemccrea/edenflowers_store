@@ -1,6 +1,10 @@
 defmodule EdenflowersWeb.Plugs.MaintenanceTest do
   use EdenflowersWeb.ConnCase, async: false
 
+  import Generator
+
+  alias AshAuthentication.Plug.Helpers
+
   test "redirects /back-soon to the homepage when maintenance mode is off", %{conn: conn} do
     conn = get(conn, "/back-soon")
     assert redirected_to(conn) == "/"
@@ -22,6 +26,18 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
 
     test "lets admin paths reach their own auth check", %{conn: conn} do
       assert conn |> get("/admin/orders") |> redirected_to() =~ "/sign-in"
+    end
+
+    test "lets a signed-in admin reach public pages", %{conn: conn} do
+      admin = generate(admin_user()) |> with_token()
+
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{})
+        |> Helpers.store_in_session(admin)
+        |> get("/about")
+
+      assert html_response(conn, 200)
     end
   end
 end

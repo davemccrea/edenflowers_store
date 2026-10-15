@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.Router do
     plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug EdenflowersWeb.Plugs.Maintenance
 
     plug Localize.Plug.PutLocale,
       from: [:session, :accept_language],
@@ -23,6 +22,7 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.PutLocaleSession
     plug EdenflowersWeb.Plugs.CaptureReturnTo
     plug :load_from_session
+    plug EdenflowersWeb.Plugs.Maintenance
   end
 
   pipeline :store do
