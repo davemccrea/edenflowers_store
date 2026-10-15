@@ -130,7 +130,13 @@ defmodule Edenflowers.Accounts.User do
     # Signed-in customers save cards to this Customer at checkout.
     update :ensure_stripe_customer do
       require_atomic? false
+      change get_and_lock_for_update()
       change Edenflowers.Accounts.Changes.CreateStripeCustomer
+    end
+
+    # The Customer was deleted in Stripe; the next checkout creates a new one.
+    update :forget_stripe_customer do
+      change set_attribute(:stripe_customer_id, nil)
     end
 
     update :set_newsletter_promo do

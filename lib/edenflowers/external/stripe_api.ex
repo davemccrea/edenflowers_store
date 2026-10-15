@@ -53,17 +53,26 @@ defmodule Edenflowers.External.StripeAPI do
     |> Decimal.round(2)
   end
 
+  @doc "Whether Stripe refused a request because the Customer it names no longer exists."
+  def missing_customer?(%Stripe.Error{extra: %{raw_error: %{"code" => "resource_missing", "param" => "customer"}}}),
+    do: true
+
+  def missing_customer?(_error), do: false
+
   # A Customer lets the Payment Element show and save that customer's cards.
   @impl true
   def create_payment_intent(amount_cents, metadata, customer_id) do
-    %{
+    params = %{
       amount: amount_cents,
       currency: "EUR",
       automatic_payment_methods: %{enabled: true},
       metadata: metadata
     }
-    |> then(&if(customer_id, do: Map.put(&1, :customer, customer_id), else: &1))
-    |> Stripe.PaymentIntent.create()
+
+    # A nil customer would be sent as an empty `customer=`.
+    params = if customer_id, do: Map.put(params, :customer, customer_id), else: params
+
+    Stripe.PaymentIntent.create(params)
   end
 
   # Cards only: every later delivery is charged to this card off-session, and

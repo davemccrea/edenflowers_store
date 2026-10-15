@@ -645,6 +645,19 @@ Hooks.Stripe = {
     }
   },
 
+  // The server replaced the PaymentIntent (the cart switched between one-off
+  // and subscription), so the one Elements holds is cancelled. The
+  // CustomerSession is replaced alongside it.
+  // ponytail: reloads the page rather than rebuilding Elements in place.
+  updated() {
+    if (
+      this.clientSecret &&
+      this.el.dataset.clientSecret !== this.clientSecret
+    ) {
+      window.location.reload();
+    }
+  },
+
   /**
    * Logs an error message and pushes a 'stripe:error' event to the server.
    * @param {string} message - The error message.

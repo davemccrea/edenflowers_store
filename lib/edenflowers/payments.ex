@@ -100,7 +100,7 @@ defmodule Edenflowers.Payments do
         end
       else
         with {:ok, customer_id} <- saved_card_customer(order, actor) do
-          StripeAPI.impl().create_payment_intent(amount_cents, metadata, customer_id)
+          create_one_off_payment_intent(amount_cents, metadata, customer_id, actor)
         end
       end
     end
@@ -114,23 +114,52 @@ defmodule Edenflowers.Payments do
     )
   end
 
-  # A PaymentIntent opened before the customer signed in has no Customer, so
-  # it can't show their saved cards.
+  # A Customer deleted in Stripe would block every checkout for the user, so
+  # forget it and let them pay without saved cards. The next checkout gives
+  # them a new Customer and replaces this PaymentIntent.
+  defp create_one_off_payment_intent(amount_cents, metadata, customer_id, actor) do
+    case StripeAPI.impl().create_payment_intent(amount_cents, metadata, customer_id) do
+      {:error, error} = result ->
+        if StripeAPI.missing_customer?(error) do
+          forget_stripe_customer(actor, customer_id)
+          StripeAPI.impl().create_payment_intent(amount_cents, metadata, nil)
+        else
+          result
+        end
+
+      result ->
+        result
+    end
+  end
+
+  defp forget_stripe_customer(user, customer_id) do
+    Logger.warning("Stripe Customer #{customer_id} of user #{user.id} no longer exists; forgetting it")
+
+    case Accounts.forget_stripe_customer(user, actor: user) do
+      {:ok, _user} -> :ok
+      {:error, reason} -> Logger.error("Failed to forget Stripe Customer of user #{user.id}: #{inspect(reason)}")
+    end
+  end
+
+  # The one-off PaymentIntent must carry exactly the signed-in user's Customer:
+  # one opened before they signed in can't show their saved cards, and one
+  # left over after they signed out would pay onto their Customer.
+  # Subscriptions keep a Customer of their own.
   defp payment_intent_fits?(payment_intent, order, customer_id) do
     saves_for_subscription? = Map.get(payment_intent, :setup_future_usage) == "off_session"
 
     order.subscription? == saves_for_subscription? and
-      (is_nil(customer_id) or Map.get(payment_intent, :customer) == customer_id)
+      (order.subscription? or Map.get(payment_intent, :customer) == customer_id)
   end
 
   # The Customer always comes from the signed-in actor, never from params, so
   # nobody can see or charge someone else's cards. Subscriptions keep a
   # Customer of their own, so removing a saved card can't break one.
   defp saved_card_customer(%Order{subscription?: false}, %User{} = user) do
-    with {:ok, user} <- Ash.reload(user, actor: user),
-         {:ok, user} <- Accounts.ensure_stripe_customer(user, actor: user) do
-      {:ok, user.stripe_customer_id}
-    else
+    case Accounts.ensure_stripe_customer(user, actor: user) do
+      {:ok, user} ->
+        {:ok, user.stripe_customer_id}
+
       {:error, reason} ->
         Logger.error("Failed to get a Stripe Customer for user #{user.id}: #{inspect(reason)}")
         {:error, :stripe_customer_failed}
@@ -141,23 +170,35 @@ defmodule Edenflowers.Payments do
 
   @doc """
   Returns the client secret of a CustomerSession that lets the Payment Element
-  show, save and remove the signed-in customer's cards, or nil for a guest or
-  a subscription. Call after `setup/2`, which gives the user their Customer.
+  show, save and remove the signed-in customer's cards. Call after `setup/2`,
+  which gives the user their Customer.
+
+  Returns nil for a guest or a subscription, and when Stripe can't make one:
+  saved cards are a convenience, and the customer can still type a card.
   """
-  def customer_session(%Order{} = order, actor) do
-    with {:ok, order} <- Ash.load(order, :subscription?, actor: system_actor()),
-         {:ok, customer_id} when is_binary(customer_id) <- saved_card_customer(order, actor),
-         {:ok, session} <- StripeAPI.impl().create_customer_session(customer_id) do
-      {:ok, session.client_secret}
+  def customer_session(%Order{} = order, %User{} = user) do
+    with {:ok, %{subscription?: false}} <- Ash.load(order, :subscription?, actor: system_actor()),
+         {:ok, %{stripe_customer_id: customer_id}} when is_binary(customer_id) <- Ash.reload(user, actor: user) do
+      case StripeAPI.impl().create_customer_session(customer_id) do
+        {:ok, session} ->
+          session.client_secret
+
+        {:error, reason} ->
+          if StripeAPI.missing_customer?(reason), do: forget_stripe_customer(user, customer_id)
+          Logger.error("Failed to create CustomerSession for #{describe(order)}: #{inspect(reason)}")
+          nil
+      end
     else
-      {:ok, nil} ->
-        {:ok, nil}
+      {:ok, _subscription_or_no_customer} ->
+        nil
 
       {:error, reason} ->
-        Logger.error("Failed to create CustomerSession for #{describe(order)}: #{inspect(reason)}")
-        {:error, :customer_session_failed}
+        Logger.error("Failed to look up the Stripe Customer for #{describe(order)}: #{inspect(reason)}")
+        nil
     end
   end
+
+  def customer_session(_order, _guest), do: nil
 
   @doc "Brings the order's PaymentIntent amount in line with what it still owes."
   def update_amount(%Order{} = order) do

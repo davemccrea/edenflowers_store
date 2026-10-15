@@ -112,6 +112,47 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     end
   end
 
+  describe "saved cards" do
+    setup %{variant: variant} do
+      order = generate(order(state: :payment, customer_name: "Ada Lovelace", customer_email: "ada@example.com"))
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      %{order: order}
+    end
+
+    test "hands a signed-in customer's CustomerSession to the Payment Element", %{conn: conn, order: order} do
+      user = with_token(generate(admin_user(admin: false, email: "ada@example.com")))
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_ada"}} end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, "cus_ada" ->
+        {:ok, %{id: "pi_ada", client_secret: "pi_ada_secret", amount: 0, customer: "cus_ada"}}
+      end)
+
+      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+        {:ok, %{id: "pi_ada", client_secret: "pi_ada_secret", customer: "cus_ada"}}
+      end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_customer_session, fn "cus_ada" ->
+        {:ok, %{client_secret: "cuss_ada"}}
+      end)
+
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> AshAuthentication.Plug.Helpers.store_in_session(user)
+        |> live(~p"/checkout")
+
+      assert render(view) =~ ~s|data-customer-session-client-secret="cuss_ada"|
+    end
+
+    test "gives a guest no CustomerSession", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+      assert render(view) =~ "data-client-secret"
+      refute render(view) =~ "data-customer-session-client-secret"
+    end
+  end
+
   describe "Step 1: Your Details" do
     test "prefills the name and email of a signed-in customer", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, name: "Ada Lovelace", email: "ada@example.com"))

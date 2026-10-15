@@ -730,16 +730,23 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
+    previous_method = socket.assigns.order.fulfillment_method
     Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
     # The action clears the date, as each option has its own calendar; drop
     # the typed one so it doesn't shadow that.
     socket = reload_order(socket, drop: ["fulfillment_date"])
 
-    # Switching to pickup unmounts the address field, which comes back empty.
-    if socket.assigns.order.fulfillment_method == :pickup do
-      {:noreply, assign(socket, delivery_quote: nil)}
-    else
-      {:noreply, socket}
+    # Switching to pickup unmounts the address field. It remounts with
+    # whatever address the order holds, which may be prefilled.
+    case socket.assigns.order.fulfillment_method do
+      :pickup ->
+        {:noreply, assign(socket, delivery_quote: nil)}
+
+      :delivery when previous_method == :pickup ->
+        {:noreply, assign(socket, delivery_quote: quote_from_order(socket.assigns.order))}
+
+      _ ->
+        {:noreply, socket}
     end
   end
 
@@ -1039,9 +1046,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
+    |> maybe_quote_on_entering_delivery(order)
     |> assign_forms(order, opts)
     |> ensure_payment_for_state(order, actor(socket))
   end
+
+  # The address field mounts fresh on the delivery step with the order's
+  # address, which may be prefilled, so the quote has to match it.
+  defp maybe_quote_on_entering_delivery(%{assigns: %{order: %{state: :delivery}}} = socket, _order), do: socket
+
+  defp maybe_quote_on_entering_delivery(socket, %{state: :delivery} = order),
+    do: assign(socket, delivery_quote: quote_from_order(order))
+
+  defp maybe_quote_on_entering_delivery(socket, _order), do: socket
 
   # Persisted (not just visual) so the dependent form-3b renders and the
   # value flows through on submit. Re-read afterwards: the update's result
@@ -1095,18 +1112,25 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
-    with {:ok, order, client_secret} <- Payments.setup(order, actor),
-         {:ok, customer_session_client_secret} <- Payments.customer_session(order, actor) do
-      socket
-      |> assign(order: order)
-      |> assign(client_secret: client_secret)
-      |> assign(customer_session_client_secret: customer_session_client_secret)
-    else
-      {:error, _reason} -> payment_unavailable(socket)
+    case Payments.setup(order, actor) do
+      {:ok, order, client_secret} ->
+        socket
+        |> assign(order: order)
+        |> assign(client_secret: client_secret)
+        |> assign(customer_session_client_secret: customer_session(socket, order, actor))
+
+      {:error, _reason} ->
+        payment_unavailable(socket)
     end
   end
 
   defp maybe_setup_payment(socket, _order, _actor), do: socket
+
+  # The Payment Element only starts once connected, so a CustomerSession made
+  # for the static render would go unused.
+  defp customer_session(socket, order, actor) do
+    if connected?(socket), do: Payments.customer_session(order, actor)
+  end
 
   defp ensure_payment_for_state(socket, %{state: :payment} = order, actor) do
     if socket.assigns[:client_secret] do
