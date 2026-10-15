@@ -622,15 +622,15 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <%!-- Right --%>
-            <div class="flex items-center justify-end lg:gap-4">
-              <%!-- Sign in (desktop only — mobile lives in nav drawer) --%>
+            <div class="flex items-center justify-end md:gap-4">
+              <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
-                class="group hidden h-10 w-10 shrink-0 items-center justify-center gap-1 xl:flex xl:h-auto xl:w-auto xl:gap-2"
+                class="group hidden h-10 w-10 shrink-0 items-center justify-center gap-1 md:flex md:h-auto md:w-auto md:gap-2"
               >
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
-                <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 lg:inline-flex">
+                <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 md:inline-flex">
                   {if @current_user,
                     do: ~t"Account",
                     else: ~t"Sign In"}
