@@ -1,6 +1,6 @@
 # Show the same-day fee on the checkout calendar
 
-Status: ready-for-agent
+Status: wontfix
 
 ## What to build
 
