@@ -244,9 +244,9 @@ defmodule EdenflowersWeb.Account.AccountLive do
       target="_blank"
       rel="noopener"
       aria-label={~t"Receipt (opens in a new tab)"}
-      class="link-underline-static-body text-base-content/70 whitespace-nowrap text-sm"
+      class="link-underline-static-body whitespace-nowrap text-sm"
     >
-      {~t"Receipt"}
+      {~t"Receipt"}<.icon name="hero-arrow-up-right-mini" class="size-3.5 align-[-0.1em] ml-0.5" />
     </a>
     """
   end
@@ -264,7 +264,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <span :if={@entry.date.year != HelsinkiToday.today().year} class="block">{@entry.date.year}</span>
       </p>
       <.order_entry :if={@entry.type == :order} order={@entry.item} locale={@locale} />
-      <.course_entry :if={@entry.type == :course} registration={@entry.item} locale={@locale} />
+      <.course_entry :if={@entry.type == :course} registration={@entry.item} upcoming?={@entry.upcoming?} locale={@locale} />
       <.subscription_entry :if={@entry.type == :subscription} subscription={@entry.item} locale={@locale} />
     </li>
     """
@@ -291,8 +291,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <div class="min-w-0">
       <h3 class="card-heading text-balance">{order_title(@order)}</h3>
       <p class="text-base-content/70 mt-1 text-sm">
-        {status_label(@order)} · #{@order.order_reference}
-        <span :if={@order.subscription_id} data-testid="order-subscription">· {~t"Subscription"}</span>
+        <span :if={@order.subscription_id} data-testid="order-subscription">{~t"Subscription order"}</span>
+        <span :if={!@order.subscription_id}>{~t"Order"}</span> · {status_label(@order)} · #{@order.order_reference}
       </p>
       <.unpaid_note :if={@order.unpaid?} order={@order} />
     </div>
@@ -303,6 +303,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   attr :registration, :map, required: true
+  attr :upcoming?, :boolean, required: true
   attr :locale, :string, required: true
 
   defp course_entry(assigns) do
@@ -314,7 +315,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         </.link>
       </h3>
       <p class="text-base-content/70 mt-1 text-sm tabular-nums">
-        {Format.time(@registration.course.start_time, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
+        {~t"Course"} · {course_state(@registration, @upcoming?, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
       </p>
     </div>
     <.entry_price price={@registration.amount} locale={@locale}>
@@ -322,6 +323,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
     </.entry_price>
     """
   end
+
+  defp course_state(registration, true = _upcoming?, locale),
+    do: ~t"Starts #{time = Format.time(registration.course.start_time, locale)}"
+
+  defp course_state(_registration, false = _upcoming?, _locale), do: ~t"Took place"
 
   attr :subscription, :map, required: true
   attr :locale, :string, required: true

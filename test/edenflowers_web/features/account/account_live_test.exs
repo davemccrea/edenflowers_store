@@ -458,7 +458,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       placed_order(user_id: user.id, subscription_id: subscription.id, paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "[data-testid=past] [data-testid=order-subscription]", "Subscription")
+      assert has_element?(view, "[data-testid=past] [data-testid=order-subscription]", "Subscription order")
     end
 
     test "pauses and resumes", %{conn: conn, user: user} do
