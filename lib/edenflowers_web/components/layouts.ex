@@ -218,25 +218,26 @@ defmodule EdenflowersWeb.Layouts do
       </aside>
 
       <div class={["flex min-w-0 flex-1 flex-col", @fill_viewport && "min-h-0"]}>
-        <%!-- Mobile topbar: hamburger pinned left, wordmark optically centered.
-             The trailing spacer matches the button cell so the center column is
-             truly centered on the bar, not on the leftover space. --%>
-        <div class="grid-cols-[auto_1fr_auto] bg-base-200 border-base-content/12 grid items-center border-b px-2 py-2.5 lg:hidden">
+        <%!-- Mobile topbar mirrors the store header's menu button and wordmark.
+             Equal side columns keep the wordmark centred on the bar. --%>
+        <div class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 grid items-center border-b px-3 py-2 sm:px-6 lg:hidden">
           <button
             type="button"
+            class="h-12 w-12"
             phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
             aria-label={~t"Open navigation menu"}
-            class="text-base-content/60 -m-px p-2 transition-colors hover:text-base-content active:bg-base-300/50"
           >
-            <.icon name="hero-bars-3" class="h-5 w-5" />
+            <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
           </button>
           <.link
             href={~p"/"}
-            class="text-primary logo-wordmark tracking-[0.12em] justify-self-center text-lg transition-colors active:text-primary/70"
+            class="text-primary logo-wordmark justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
           >
             Eden Flowers
           </.link>
-          <.admin_account_menu current_user={@current_user} compact={true} />
+          <div class="justify-self-end">
+            <.admin_account_menu current_user={@current_user} compact={true} />
+          </div>
         </div>
 
         <div class="border-base-content/12 border-b px-4 py-2 lg:hidden">
