@@ -1,6 +1,7 @@
 defmodule Edenflowers.Orders.CancelByCustomerTest do
   use Edenflowers.DataCase, async: true
 
+  import ExUnit.CaptureLog
   import Generator
   import Swoosh.TestAssertions
 
@@ -88,7 +89,12 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     |> Mox.stub(:list_refunds, fn _pi -> {:ok, []} end)
     |> Mox.expect(:create_refund, fn _pi, _cents, _key -> {:error, :charge_disputed} end)
 
-    assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
+    log =
+      capture_log(fn ->
+        assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
+      end)
+
+    assert log =~ "Could not refund order"
     assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
     refute_enqueued(worker: SendCancelledEmail)
   end

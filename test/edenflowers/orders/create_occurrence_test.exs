@@ -172,8 +172,9 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     stub_geocoding()
     stub(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
-    assert {:ok, _} = run(subscription)
+    log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
 
+    assert log =~ "missed its delivery"
     assert occurrences(subscription) == []
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 7)
   end

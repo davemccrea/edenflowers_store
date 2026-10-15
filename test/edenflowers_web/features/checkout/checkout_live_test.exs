@@ -14,7 +14,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       render_change: 2,
       render_submit: 2,
       element: 2,
-      assert_redirect: 2,
       assert_redirect: 3,
       assert_push_event: 3,
       refute_push_event: 3
