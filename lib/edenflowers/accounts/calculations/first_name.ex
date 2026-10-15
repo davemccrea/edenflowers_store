@@ -40,9 +40,9 @@ defmodule Edenflowers.Accounts.Calculations.FirstName do
     Enum.map(records, fn record -> extract(Map.get(record, source)) end)
   end
 
-  defp extract(nil), do: nil
+  def extract(nil), do: nil
 
-  defp extract(value) when is_binary(value) do
+  def extract(value) when is_binary(value) do
     case String.trim(value) do
       "" -> nil
       trimmed -> trimmed |> handle_comma_inversion() |> first_token()

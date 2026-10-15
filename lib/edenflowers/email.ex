@@ -130,6 +130,25 @@ defmodule Edenflowers.Email do
     })
   end
 
+  @doc """
+  A copy of a couple's wedding enquiry, bcc Jennie so she can reply to them
+  directly. `enquiry` is the job args of `Edenflowers.WeddingEnquiry.SendEmails`.
+  """
+  def wedding_enquiry(%{"name" => name, "email" => email} = enquiry) do
+    new()
+    |> from(from_address())
+    |> to({name, email})
+    |> bcc(from_address())
+    |> subject(~t"Your wedding enquiry to Eden Flowers")
+    |> text_body(
+      Templates.wedding_enquiry(%{
+        enquiry: enquiry,
+        first_name: Edenflowers.Accounts.Calculations.FirstName.extract(name),
+        wedding_date: Format.date(enquiry["wedding_date"], enquiry["locale"])
+      })
+    )
+  end
+
   def newsletter_promo(email_address, promo_code) do
     new()
     |> from(from_address())

@@ -3,6 +3,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  alias Edenflowers.WeddingEnquiry
+
   # Photographers without a known website are credited by name only.
   @photographer_sites %{
     "Björn Yrjans" => "https://www.bjornyrjans.com/",
@@ -30,15 +32,35 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
        decoration_photos: decoration_photos(),
        quantities: %{"bridal_bouquet" => 1}
      )
+     |> assign(enquiry_form: build_enquiry_form(%{}), enquiry_sent?: false)
      |> assign(steps: steps(), testimonial: testimonial())}
+  end
+
+  def handle_event("validate_enquiry", %{"enquiry" => params}, socket) do
+    {:noreply, assign(socket, enquiry_form: build_enquiry_form(params, :validate))}
+  end
+
+  def handle_event("send_enquiry", %{"enquiry" => params}, socket) do
+    items = socket.assigns.personal_flowers ++ socket.assigns.decorations
+    quantities = socket.assigns.quantities
+    estimate = estimate_label(estimate(items, quantities))
+    locale = to_string(Edenflowers.Format.locale())
+
+    case WeddingEnquiry.submit(params, selection_lines(items, quantities), estimate, locale) do
+      :ok ->
+        {:noreply, assign(socket, enquiry_sent?: true)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, enquiry_form: to_form(changeset, as: :enquiry))}
+
+      {:error, _reason} ->
+        {:noreply,
+         put_flash(socket, :error, ~t"Your enquiry couldn't be sent. Please try again, or email me directly.")}
+    end
   end
 
   def handle_event("change_quantity", %{"item" => id, "by" => by}, socket) when by in ["1", "-1"] do
     {:noreply, update_quantity(socket, id, &max(&1 + String.to_integer(by), 0))}
-  end
-
-  def handle_event("toggle_item", %{"item" => id}, socket) do
-    {:noreply, update_quantity(socket, id, &if(&1 > 0, do: 0, else: 1))}
   end
 
   defp update_quantity(socket, id, fun) do
@@ -126,22 +148,18 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               class="bg-cream text-cream-content p-8 md:top-[calc(var(--header-height)+2rem)] md:sticky"
               aria-labelledby="estimate-heading"
             >
-              <h3 id="estimate-heading" class="eyebrow mb-4">{~t"Your estimate"}</h3>
+              <h3 id="estimate-heading" class="eyebrow mb-4">{~t"Estimate"}</h3>
               <p id="wedding-estimate" class="font-serif text-5xl tabular-nums" aria-live="polite">
                 {estimate_label(estimate(@personal_flowers ++ @decorations, @quantities))}
               </p>
-              <p :if={selected?(@quantities, "cake_flowers")} class="text-cream-content/80 mt-2">
+              <p :if={selected?(@quantities, "cake_flowers")} id="estimate-cake-flowers" class="text-cream-content/80 mt-2">
                 {~t"+ cake flowers on request"}
               </p>
               <p class="text-cream-content/70 mt-6 text-sm leading-relaxed">
                 {~t"Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."}
               </p>
-              <.button
-                href={enquiry_mailto(@personal_flowers ++ @decorations, @quantities)}
-                variant="primary"
-                class="mt-8 w-full"
-              >
-                {~t"Email me about your wedding"}
+              <.button phx-click={open_enquiry()} variant="primary" class="mt-8 w-full">
+                {~t"Request a quote"}
               </.button>
             </div>
           </div>
@@ -209,9 +227,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
             <h2 id="enquire-heading" class="section-title text-forest-content">{~t"Planning a wedding?"}</h2>
             <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-              {~t"I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Email me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
+              {~t"I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
             </p>
-            <.button href={enquiry_mailto(@personal_flowers ++ @decorations, @quantities)} variant="inverse">{~t"Email me about your wedding"}</.button>
+            <.button phx-click={open_enquiry()} variant="inverse">{~t"Request a quote"}</.button>
             <p class="text-forest-content/85">
               {~t"Or call me on"}
               <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>
@@ -219,6 +237,37 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
           </div>
         </div>
       </section>
+
+      <.drawer
+        id="enquiry-drawer"
+        placement="right"
+        label={~t"Request a quote"}
+        class="bg-base-100 w-[92vw] h-full overflow-y-auto sm:w-[34rem]"
+      >
+        <div class="flex flex-col gap-6 p-6 sm:p-10">
+          <header class="flex items-center justify-between">
+            <h2 class="section-title">{~t"Request a quote"}</h2>
+            <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#enquiry-drawer")}>
+              <.icon name="hero-x-mark" class="h-6 w-6" />
+            </.icon_button>
+          </header>
+          <p :if={!@enquiry_sent?} class="text-base-content/80 leading-relaxed">
+            {~t"Tell me about your wedding and I'll send you a quote."}
+          </p>
+          <.enquiry_form
+            :if={!@enquiry_sent?}
+            form={@enquiry_form}
+            selection={selection_lines(@personal_flowers ++ @decorations, @quantities)}
+            estimate={estimate_label(estimate(@personal_flowers ++ @decorations, @quantities))}
+          />
+          <div :if={@enquiry_sent?} id="enquiry-sent" class="flex flex-col gap-3">
+            <p class="font-serif text-3xl">{~t"Thank you!"}</p>
+            <p class="text-base-content/80">
+              {~t"Your enquiry is on its way, and a copy is in your inbox. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."}
+            </p>
+          </div>
+        </div>
+      </.drawer>
     </Layouts.app>
     """
   end
@@ -398,57 +447,75 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ]
   end
 
-  # mailto doesn't decode "+" as a space, so encode everything but unreserved characters.
-  defp enquiry_mailto(items, quantities) do
-    subject = URI.encode(~t"Wedding enquiry", &URI.char_unreserved?/1)
-
-    questions =
-      [~t"Wedding date:", ~t"Venue:", ~t"Number of guests:", ~t"Colours and flowers we like:"]
-      |> Enum.map_join("\n", &(&1 <> " "))
-
-    body =
-      [questions | estimate_summary(items, quantities)]
-      |> Enum.join("\n\n")
-      |> URI.encode(&URI.char_unreserved?/1)
-
-    "mailto:info@edenflowers.fi?subject=#{subject}&body=#{body}"
-  end
-
-  defp estimate_summary(items, quantities) do
-    case Enum.filter(items, &selected?(quantities, &1.id)) do
-      [] ->
-        []
-
-      selected ->
-        lines =
-          Enum.map_join(selected, "\n", fn
-            %{price: :on_request, label: label} -> label
-            %{id: id, label: label} -> "#{quantities[id]} × #{label}"
-          end)
-
-        amount = euros(estimate(items, quantities))
-        [~t"Flowers we're interested in:" <> "\n" <> lines, ~t"Estimate: from #{amount}"]
+  defp selection_lines(items, quantities) do
+    for item <- items, selected?(quantities, item.id) do
+      if item.price == :on_request, do: item.label, else: "#{quantities[item.id]} × #{item.label}"
     end
   end
 
-  # Every price counts at its lowest, so the estimate is always a "from" figure.
-  # Items priced on request are left out of the sum.
+  # ponytail: "from" prices have no ceiling, so they count at their lowest at
+  # both ends and the range is too narrow. Give each item a range to fix it.
   defp estimate(items, quantities) do
-    items
-    |> Enum.map(&(lowest_price(&1.price) * Map.get(quantities, &1.id, 0)))
-    |> Enum.sum()
+    {Enum.sum_by(items, &(low_price(&1.price) * Map.get(quantities, &1.id, 0))),
+     Enum.sum_by(items, &(high_price(&1.price) * Map.get(quantities, &1.id, 0)))}
   end
 
-  defp lowest_price(:on_request), do: 0
-  defp lowest_price({:fixed, euros}), do: euros
-  defp lowest_price({:range, low, _high}), do: low
-  defp lowest_price({:from, low}), do: low
+  defp low_price(:on_request), do: 0
+  defp low_price({:fixed, euros}), do: euros
+  defp low_price({:range, low, _high}), do: low
+  defp low_price({:from, low}), do: low
+
+  defp high_price({:range, _low, high}), do: high
+  defp high_price(price), do: low_price(price)
 
   defp selected?(quantities, id), do: Map.get(quantities, id, 0) > 0
 
-  defp estimate_label(amount) do
-    amount = euros(amount)
-    ~t"From #{amount}"
+  defp estimate_label({same, same}), do: euros(same)
+  defp estimate_label({low, high}), do: price_label({:range, low, high})
+
+  defp open_enquiry, do: JS.exec("phx-show", to: "#enquiry-drawer")
+
+  # Errors only show once the couple has touched a field or tried to send.
+  defp build_enquiry_form(params, action \\ nil) do
+    params
+    |> WeddingEnquiry.changeset()
+    |> Map.put(:action, action)
+    |> to_form(as: :enquiry)
+  end
+
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :selection, :list, required: true
+  attr :estimate, :string, required: true
+
+  defp enquiry_form(assigns) do
+    ~H"""
+    <.form for={@form} id="enquiry-form" phx-change="validate_enquiry" phx-submit="send_enquiry" class="flex flex-col gap-4">
+      <div :if={@selection != []} class="bg-cream text-cream-content p-4 text-sm">
+        <p class="eyebrow mb-2">{~t"Flowers you're interested in"}</p>
+        <ul class="space-y-0.5">
+          <li :for={line <- @selection}>{line}</li>
+        </ul>
+        <p class="font-serif mt-2 text-lg">{@estimate}</p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <.input field={@form[:name]} label={~t"Your name *"} autocomplete="name" aria-required="true" />
+        <.input field={@form[:email]} type="email" label={~t"Email *"} autocomplete="email" aria-required="true" />
+        <.input field={@form[:wedding_date]} type="date" label={~t"Wedding date *"} aria-required="true" />
+        <.input field={@form[:guests]} type="number" min="1" label={~t"Number of guests"} />
+      </div>
+      <.input field={@form[:venue]} label={~t"Venue"} />
+      <.input field={@form[:message]} type="textarea" label={~t"Colours, flowers and anything else"} />
+      <%!-- Honeypot: hidden from people, so only bots fill it in. --%>
+      <.input field={@form[:website]} hidden tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <.button type="submit" variant="primary" phx-disable-with={~t"Sending…"}>{~t"Send enquiry"}</.button>
+      <p class="text-base-content/70 text-sm">
+        {~t"Or email me directly at"}
+        <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">info@edenflowers.fi</a>
+      </p>
+    </.form>
+    """
   end
 
   attr :items, :list, required: true
@@ -479,8 +546,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       type="checkbox"
       class="checkbox"
       checked={@quantity > 0}
-      phx-click="toggle_item"
+      phx-click="change_quantity"
       phx-value-item={@item.id}
+      phx-value-by={if @quantity > 0, do: "-1", else: "1"}
       aria-label={~t"Add to the estimate: #{@item.label}"}
     />
     """

@@ -1,0 +1,20 @@
+<%= if @first_name do %><%= gettext("Hi %{name},", name: @first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Thank you for your enquiry. Here's a copy of what you sent. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.") %>
+
+<%= gettext("Name: %{name}", name: @enquiry["name"]) %>
+<%= gettext("Email: %{email}", email: @enquiry["email"]) %>
+<%= gettext("Wedding date: %{date}", date: @wedding_date) %>
+<%= if @enquiry["venue"] do %><%= gettext("Venue: %{venue}", venue: @enquiry["venue"]) %>
+<% end %><%= if @enquiry["guests"] do %><%= gettext("Number of guests: %{guests}", guests: @enquiry["guests"]) %>
+<% end %><%= if @enquiry["selection"] != [] do %>
+<%= gettext("Flowers you're interested in:") %>
+<%= for line <- @enquiry["selection"] do %>- <%= line %>
+<% end %><%= gettext("Estimate: %{estimate}", estimate: @enquiry["estimate"]) %>
+<% end %><%= if @enquiry["message"] do %>
+<%= @enquiry["message"] %>
+<% end %>
+<%= gettext("Warm wishes,") %>
+
+Jennie
+Eden Flowers

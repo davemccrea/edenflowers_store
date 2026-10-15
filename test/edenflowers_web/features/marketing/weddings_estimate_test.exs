@@ -1,37 +1,54 @@
 defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   use EdenflowersWeb.ConnCase, async: true
+  use Oban.Testing, repo: Edenflowers.Repo
 
   import Phoenix.LiveViewTest
 
-  test "the estimate sums the lowest prices and is carried into the enquiry email", %{conn: conn} do
+  alias Edenflowers.WeddingEnquiry.SendEmails
+
+  @enquiry %{"name" => "Anna Svensson", "email" => "anna@example.com", "wedding_date" => "2027-06-12"}
+
+  test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/weddings")
 
-    assert view |> element("#wedding-estimate") |> render() =~ "110"
+    assert view |> element("#wedding-estimate") |> render() =~ "€110–€190"
 
     view |> element(~s{[phx-value-item="bridesmaid_bouquet"][phx-value-by="1"]}) |> render_click()
     view |> element(~s{[phx-value-item="bridesmaid_bouquet"][phx-value-by="1"]}) |> render_click()
     view |> element(~s{[phx-value-item="cake_flowers"]}) |> render_click()
 
-    assert view |> element("#wedding-estimate") |> render() =~ "200"
-    assert render(view) =~ "+ cake flowers on request"
+    assert view |> element("#wedding-estimate") |> render() =~ "€200–€280"
+    assert has_element?(view, "#estimate-cake-flowers")
 
-    # The estimate card and the enquiry section both link to the same email.
-    [mailto] =
-      view
-      |> render()
-      |> LazyHTML.from_document()
-      |> LazyHTML.query("a[href^=mailto]")
-      |> LazyHTML.attribute("href")
-      |> Enum.uniq()
+    view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
 
-    body = mailto |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query() |> Map.fetch!("body")
+    assert has_element?(view, "#enquiry-sent")
 
-    assert body =~ "1 × Bridal bouquet"
-    assert body =~ "2 × Bridesmaid's bouquet"
-    assert body =~ "Cake flowers"
-    assert body =~ "200"
+    assert_enqueued(
+      worker: SendEmails,
+      args: %{
+        name: "Anna Svensson",
+        selection: ["1 × Bridal bouquet", "2 × Bridesmaid's bouquet", "Cake flowers"],
+        estimate: "€200–€280"
+      }
+    )
+  end
 
-    view |> element(~s{[phx-value-item="bridal_bouquet"][phx-value-by="-1"]}) |> render_click()
-    assert view |> element("#wedding-estimate") |> render() =~ "90"
+  test "an enquiry without a wedding date isn't sent", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/weddings")
+
+    view |> form("#enquiry-form", enquiry: Map.delete(@enquiry, "wedding_date")) |> render_submit()
+
+    refute has_element?(view, "#enquiry-sent")
+    refute_enqueued(worker: SendEmails)
+  end
+
+  test "a filled-in honeypot looks sent but nothing goes out", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/weddings")
+
+    view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit(%{enquiry: %{website: "spam.example"}})
+
+    assert has_element?(view, "#enquiry-sent")
+    refute_enqueued(worker: SendEmails)
   end
 end
