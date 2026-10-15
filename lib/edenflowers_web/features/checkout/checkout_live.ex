@@ -707,7 +707,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   # Others may have bought the last of a size since it went in the cart.
   def handle_event("pay", _, socket) do
-    case WithinStock.lines_over_stock(socket.assigns.order) do
+    order = Ash.load!(socket.assigns.order, [line_items: [:over_stock?, :product_variant]], actor: actor(socket))
+
+    case Enum.filter(order.line_items, & &1.over_stock?) do
       [] ->
         pay(socket)
 

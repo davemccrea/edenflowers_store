@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Product, id, actor: actor, load: [:product_variants]) do
+    case Ash.get(Product, id, actor: actor, load: [:product_variants, :sold_out?]) do
       {:ok, product} ->
         form = AshPhoenix.Form.for_update(product, :update, actor: actor) |> TranslationFields.add_forms()
         {:ok, product.name, to_form(form)}
@@ -143,9 +143,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     end
   end
 
-  defp sold_out?(product),
-    do: product.product_variants != [] and Enum.all?(product.product_variants, &(&1.stock_quantity == 0))
-
   defp photo_fields(form), do: ["form[image_slug]" | variant_photo_fields(form)]
 
   defp variant_photo_fields(form) do
@@ -166,7 +163,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <span id="product-status" class="inline-flex flex-wrap items-center gap-1.5">
               <.badge :if={@form.source.data.draft} tone={:neutral}>{~t"Draft"}</.badge>
               <.badge :if={!@form.source.data.draft} tone={:success}>{~t"Published"}</.badge>
-              <.badge :if={sold_out?(@form.source.data)} tone={:warning}>{~t"Sold out"}</.badge>
+              <.badge :if={@form.source.data.sold_out?} tone={:warning}>{~t"Sold out"}</.badge>
             </span>
           </:subtitle>
           <:actions>

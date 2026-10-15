@@ -606,6 +606,7 @@ defmodule Edenflowers.Orders.Order do
 
       argument :line_items, {:array, :map}, allow_nil?: false
 
+      validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
 
       validate Validations.EnteredLineItems
@@ -643,6 +644,7 @@ defmodule Edenflowers.Orders.Order do
 
     # Never refunds: Jennie refunds a paid order in the Stripe dashboard.
     update :cancel do
+      validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)

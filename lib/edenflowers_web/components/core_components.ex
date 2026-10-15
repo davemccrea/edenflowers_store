@@ -847,14 +847,12 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map,
     required: true,
-    doc: "must respond to :name, :image_slug, :cheapest_price, :free_delivery, :subscribable, :product_variants"
+    doc: "must respond to :name, :image_slug, :cheapest_price, :free_delivery, :subscribable, :sold_out?"
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
 
   def product_card(assigns) do
-    assigns = assign(assigns, :sold_out?, Enum.all?(assigns.product.product_variants, &(&1.stock_quantity == 0)))
-
     ~H"""
     <.link
       navigate={@navigate}
@@ -868,7 +866,7 @@ defmodule EdenflowersWeb.CoreComponents do
           height={750}
           sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
           sizes="(min-width: 640px) 25vw, 50vw"
-          class={["h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]", @sold_out? && "opacity-50"]}
+          class={["h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]", @product.sold_out? && "opacity-50"]}
         />
       </figure>
 
@@ -883,11 +881,11 @@ defmodule EdenflowersWeb.CoreComponents do
           {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
         </p>
         <p
-          :if={@sold_out? or @product.free_delivery or @product.subscribable}
+          :if={@product.sold_out? or @product.free_delivery or @product.subscribable}
           class="text-base-content/60 font-sans tracking-[0.18em] text-xs uppercase leading-snug"
         >
-          <span :if={@sold_out?} class="text-base-content/80 font-bold" data-testid="sold-out">{~t"Sold out"}</span>
-          <span :if={@sold_out? and (@product.free_delivery or @product.subscribable)} aria-hidden="true">·</span>
+          <span :if={@product.sold_out?} class="text-base-content/80 font-bold" data-testid="sold-out">{~t"Sold out"}</span>
+          <span :if={@product.sold_out? and (@product.free_delivery or @product.subscribable)} aria-hidden="true">·</span>
           <span :if={@product.free_delivery}>{~t"Free delivery"}</span>
           <span :if={@product.free_delivery and @product.subscribable} aria-hidden="true">·</span>
           <span :if={@product.subscribable}>{~t"Subscription"}</span>

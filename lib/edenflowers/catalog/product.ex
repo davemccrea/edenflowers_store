@@ -133,6 +133,15 @@ defmodule Edenflowers.Catalog.Product do
     has_many :product_variants, Edenflowers.Catalog.ProductVariant
   end
 
+  calculations do
+    calculate :sold_out?,
+              :boolean,
+              expr(
+                exists(product_variants) and
+                  not exists(product_variants, is_nil(stock_quantity) or stock_quantity > 0)
+              )
+  end
+
   aggregates do
     min :cheapest_price, :product_variants, :price
   end

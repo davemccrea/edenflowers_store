@@ -10,6 +10,6 @@ defmodule Edenflowers.Catalog.Preparations.VisibleInStore do
         exists(product_variants) and
         product_category.visibility == :public
     )
-    |> Ash.Query.load([:cheapest_price, :product_variants, :product_category])
+    |> Ash.Query.load([:cheapest_price, :sold_out?, :product_variants, :product_category])
   end
 end

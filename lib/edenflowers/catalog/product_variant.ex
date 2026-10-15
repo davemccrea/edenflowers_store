@@ -42,6 +42,16 @@ defmodule Edenflowers.Catalog.ProductVariant do
       update: [:price, :size, :image_slug, :stock_quantity, :draft]
     ]
 
+    # Stock never goes below 0; see Orders.Changes.AdjustStock.
+    update :adjust_stock do
+      argument :by, :integer, allow_nil?: false
+
+      change atomic_update(
+               :stock_quantity,
+               expr(if(stock_quantity + ^arg(:by) < 0, 0, stock_quantity + ^arg(:by)))
+             )
+    end
+
     destroy :destroy do
       primary? true
       require_atomic? false

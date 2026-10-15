@@ -569,6 +569,25 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert stock(other) == 3
     end
 
+    test "editing an Online Order returns its old lines and takes its new ones", ctx do
+      # As if placing it had already taken 1 of 4.
+      order = generate(order(origin: :online, state: :placed))
+      line_item = generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 1))
+
+      line = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+      {:ok, _order} = Orders.edit_order(order, params(ctx, %{line_items: [line]}), actor: ctx.admin)
+
+      assert stock(ctx.wreath) == 2
+    end
+
+    test "a cart can't be cancelled, as it has taken no stock to return", ctx do
+      order = generate(order(state: :payment))
+      generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 2))
+
+      assert {:error, _} = Orders.cancel_order(order, actor: ctx.admin)
+      assert stock(ctx.wreath) == 3
+    end
+
     test "cancelling a subscription's order returns nothing, as it never took stock", ctx do
       order = generate(order(origin: :subscription, state: :placed))
       generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 2))

@@ -140,6 +140,15 @@ defmodule Edenflowers.Orders.LineItem do
 
     calculate :subtotal, :decimal, expr(unit_price * quantity)
 
+    # More than is in stock, as others bought it since it went in the cart.
+    # A subscription's bouquets are made fresh.
+    calculate :over_stock?,
+              :boolean,
+              expr(
+                is_nil(interval_weeks) and not is_nil(product_variant.stock_quantity) and
+                  quantity > product_variant.stock_quantity
+              )
+
     calculate :total,
               :decimal,
               expr(

@@ -139,6 +139,20 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
     end
   end
 
+  describe "a product's sold_out?" do
+    defp sold_out?(product), do: Ash.load!(product, :sold_out?, authorize?: false).sold_out?
+
+    test "is true only when every size is tracked and at 0", %{product: product} do
+      refute sold_out?(product)
+
+      generate(product_variant(product_id: product.id, size: :small, stock_quantity: 0))
+      assert sold_out?(product)
+
+      generate(product_variant(product_id: product.id, size: :large))
+      refute sold_out?(product)
+    end
+  end
+
   describe "Catalog.list_card_drawer_variants" do
     setup do
       tax_rate = generate(tax_rate())
