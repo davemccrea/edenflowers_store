@@ -3385,7 +3385,6 @@ msgid "How"
 msgstr ""
 
 #: lib/edenflowers/email/templates/order_details.text.eex:17
-#: lib/edenflowers/email/templates/payment_failed.text.eex:12
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:21
 #, elixir-autogen, elixir-format
 msgid "If anything needs changing, just reply and I'll take care of it."
@@ -4988,11 +4987,6 @@ msgstr ""
 msgid "First pickup"
 msgstr ""
 
-#: lib/edenflowers/email/templates/payment_failed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "I tried to charge your saved card for your next subscription order, but the payment didn't go through."
-msgstr ""
-
 #: lib/edenflowers/email.ex:67
 #, elixir-autogen, elixir-format
 msgid "Payment needed for your subscription order %{order_order_reference}"
@@ -5805,4 +5799,14 @@ msgstr ""
 #: lib/edenflowers_web/features/account/account_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "See subscriptions"
+msgstr ""
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "If anything needs changing, just reply to this email."
+msgstr ""
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "The payment for your next subscription order didn't go through on your saved card."
 msgstr ""

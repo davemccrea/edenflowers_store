@@ -3385,7 +3385,6 @@ msgid "How"
 msgstr "Hur"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:17
-#: lib/edenflowers/email/templates/payment_failed.text.eex:12
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:21
 #, elixir-autogen, elixir-format
 msgid "If anything needs changing, just reply and I'll take care of it."
@@ -4988,11 +4987,6 @@ msgstr "På ditt konto kan du pausa, ändra storlek eller intervall, byta betalk
 msgid "First pickup"
 msgstr "Första avhämtningen"
 
-#: lib/edenflowers/email/templates/payment_failed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "I tried to charge your saved card for your next subscription order, but the payment didn't go through."
-msgstr "Jag försökte ta betalt för nästa beställning i din prenumeration med ditt sparade kort, men betalningen gick inte igenom."
-
 #: lib/edenflowers/email.ex:67
 #, elixir-autogen, elixir-format
 msgid "Payment needed for your subscription order %{order_order_reference}"
@@ -5806,3 +5800,13 @@ msgstr "Blommor var 1, 2 eller 4 vecka. Pausa eller avsluta när som helst."
 #, elixir-autogen, elixir-format
 msgid "See subscriptions"
 msgstr "Se prenumerationer"
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "If anything needs changing, just reply to this email."
+msgstr "Om något behöver ändras, svara bara på det här mejlet."
+
+#: lib/edenflowers/email/templates/payment_failed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "The payment for your next subscription order didn't go through on your saved card."
+msgstr "Betalningen för nästa beställning i din prenumeration med ditt sparade kort gick inte igenom."
