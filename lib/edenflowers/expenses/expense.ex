@@ -1,14 +1,36 @@
 defmodule Edenflowers.Expenses.Expense.Category do
+  @moduledoc """
+  Expense categories, each mapping to an expense line on Vero's business tax
+  return (form 5). The descriptions double as Claude's classification guide.
+  """
   use Ash.Type.Enum,
     values: [
-      :office_supplies,
-      :travel,
-      :meals,
-      :software,
-      :marketing,
-      :utilities,
-      :professional_services,
-      :other
+      flowers_and_plants:
+        "Fresh and dried flowers, plants and greenery bought for resale or arrangements (Vero: Ostot, hankintamenot).",
+      florist_supplies:
+        "Floral foam, wire, ribbon, wrapping, vases, pots, cards and packaging used in products (Vero: Ostot, hankintamenot).",
+      rent: "Rent for the shop, storage or rented equipment (Vero: Vuokrakulut).",
+      entertainment:
+        "Hospitality for customers and business partners, such as meals, drinks, events and gifts, only 50% deductible (Vero: Edustuskulut).",
+      bank_fees:
+        "Bank account charges, card terminal and payment provider fees; loan, limit and guarantee fees go in other (Vero: Muut elinkeinotoiminnan kulut).",
+      vehicle:
+        "Fuel, servicing, tyres, insurance, parking and tolls; only deductible as costs when the car is a business asset, driven over 50% for business (Vero: Muut elinkeinotoiminnan kulut).",
+      travel: "Tickets, accommodation and taxis on business trips (Vero: Muut elinkeinotoiminnan kulut).",
+      marketing:
+        "Advertising, social media ads, printed flyers, signage and ordinary promotional gifts, which are fully deductible (Vero: Muut elinkeinotoiminnan kulut).",
+      software: "Software subscriptions, website hosting and domains (Vero: Muut elinkeinotoiminnan kulut).",
+      utilities: "Electricity, water, waste, phone and internet (Vero: Muut elinkeinotoiminnan kulut).",
+      office_supplies:
+        "Stationery, printer ink, cleaning supplies and other consumables (Vero: Muut elinkeinotoiminnan kulut).",
+      equipment:
+        "Tools, furniture, fridges and other equipment; items up to 1200 € (3600 € a year in total) or lasting 3 years or less are expensed, the rest depreciated (Vero: Muut elinkeinotoiminnan kulut or Poistot).",
+      insurance: "Business, liability and property insurance premiums (Vero: Muut elinkeinotoiminnan kulut).",
+      professional_services: "Accounting, legal and consultancy fees (Vero: Muut elinkeinotoiminnan kulut).",
+      other:
+        "Anything that fits none of the other categories, including loan and financing fees (Vero: Muut vähennyskelpoiset kulut or Muut rahoituskulut).",
+      unknown:
+        "Use when the document does not show what was purchased clearly enough to choose a category. Prefer this over guessing."
     ]
 end
 
