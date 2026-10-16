@@ -74,6 +74,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             >
               {~t"Resume"}
             </.button>
+          </:actions>
+          <:menu>
             <.actions_menu :if={@subscription.state != :cancelled} id="subscription-actions">
               <.actions_menu_button
                 menu="subscription-actions"
@@ -84,7 +86,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 {~t"Cancel subscription"}
               </.actions_menu_button>
             </.actions_menu>
-          </:actions>
+          </:menu>
         </.admin_page_header>
 
         <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">

@@ -144,8 +144,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             >
               <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
             </.button>
-            <.order_menu order={@order} payments={@payments} locale={@locale} />
           </:actions>
+          <:menu>
+            <.order_menu order={@order} payments={@payments} locale={@locale} />
+          </:menu>
         </.admin_page_header>
 
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>

@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           <:subtitle :if={@expense.reviewed_at}>
             <.badge tone={:success} icon="hero-check">{~t"Reviewed"}</.badge>
           </:subtitle>
-          <:actions>
+          <:menu>
             <.actions_menu id="expense-actions">
               <.actions_menu_button
                 menu="expense-actions"
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 {~t"Delete"}
               </.actions_menu_button>
             </.actions_menu>
-          </:actions>
+          </:menu>
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
