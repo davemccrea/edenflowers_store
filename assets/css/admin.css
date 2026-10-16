@@ -14,6 +14,15 @@
    scrolling and pinch-to-zoom available in the installed admin app. */
 .admin-theme {
   touch-action: manipulation;
+  background-color: var(--color-base-100);
+}
+
+/* Pulling past the top reveals the page canvas above the sticky topbar, so it
+   matches the topbar instead of showing a white band. iOS takes the canvas
+   colour from body, which covers any html background, so body carries it and
+   the admin app paints its own page colour. */
+body:has(.admin-theme) {
+  background-color: var(--color-base-200);
 }
 
 /* daisyUI draws checkbox labels as small grey captions; in admin forms they
