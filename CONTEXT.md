@@ -19,8 +19,8 @@ An order a customer places themselves through checkout.
 _Avoid_: Web order, cart order
 
 **Custom Order**:
-An order Jennie enters in the admin on a customer's behalf, however the request reached her (phone, in the shop, email, message). It may contain catalogue items, items she describes and prices herself, or both.
-_Avoid_: Phone order, manual order, bespoke order
+An order Jennie enters in the admin on a customer's behalf, however the request reached her (phone, in the shop, email, message). It may contain catalogue items, items she describes and prices herself, or both. A sale over the counter is a Custom Order too: every sale the shop makes is an order, so the orders are the shop's complete record of its sales.
+_Avoid_: Phone order, manual order, bespoke order, walk-in sale, till sale
 
 **Florist Note**:
 Jennie's private working note on any order — what was agreed, constraints like "deliver by 10:30, service at 11:00". Never shown to the Customer or Recipient.
