@@ -20,6 +20,7 @@ mix usage_rules.search_docs "search term" -p req_llm
 
 ## Available Mix Tasks
 
+- `mix req_llm.billing` - Check billing layers, record provider evidence, and audit JSONL worksheets
 - `mix req_llm.doctor` - Diagnose ReqLLM installation and runtime configuration
 - `mix req_llm.gen` - Generate text or objects from any AI model
 - `mix req_llm.install` - Install and configure ReqLLM for use in an application.
