@@ -124,11 +124,10 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-// Admin page changes animate like a native app: a deeper page pushes in from
-// the right, a shallower one pops back, and a sibling cross-fades (admin.css).
-// Only LiveView navigations animate; every other diff patches straight away.
+// Admin page changes animate like a native app (admin.css). Only link and
+// server navigations animate. Browser back and forward swap instantly, as
+// does every other diff.
 let pendingAdminTransition = null;
-let browserAnimatedPop = false;
 
 const adminPath = (href) =>
   new URL(href, location.href).pathname.replace(/\/$/, "");
@@ -139,35 +138,42 @@ const isSectionList = (path) => /^\/admin\/[^/]+$/.test(path);
 
 // As on iOS: opening something pushes, even across sections (a customer's
 // order), going up to a page above pops, and switching to another section's
-// list is like changing tabs, which fades through.
+// list is like changing tabs, which fades through. Overview is another tab
+// beside the sections, though every admin path sits under it.
 function transitionBetween(from, to) {
+  if (from === to) return null;
+  if (to === "/admin") return "fade";
+  if (from === "/admin") return isSectionList(to) ? "fade" : "push";
   if (isInside(to, from)) return "push";
   if (isInside(from, to)) return "pop";
   if (isSectionList(to)) return "fade";
   return "push";
 }
 
+// A link can name its own transition where the hierarchy can't tell, such as
+// the previous and next arrows between orders. Captured ahead of LiveView's
+// click handler, which starts the navigation.
+let linkTransition = null;
+
+document.addEventListener(
+  "click",
+  (event) => {
+    linkTransition =
+      event.target.closest?.("a[data-transition]")?.dataset.transition ?? null;
+  },
+  true,
+);
+
 window.addEventListener("phx:page-loading-start", ({ detail }) => {
   if (detail.kind !== "redirect") return;
   // location still holds the page being left.
-  pendingAdminTransition = transitionBetween(
-    adminPath(location.href),
-    adminPath(detail.to),
-  );
+  pendingAdminTransition =
+    linkTransition ??
+    transitionBetween(adminPath(location.href), adminPath(detail.to));
+  linkTransition = null;
 });
 window.addEventListener("phx:page-loading-stop", () => {
   pendingAdminTransition = null;
-});
-
-// Back and forward send no page-loading events, but LiveView reports their
-// direction. Safari's swipe-back already animates, so that one is left alone.
-// Registered before liveSocket.connect() so it runs ahead of LiveView's handler.
-window.addEventListener("popstate", (event) => {
-  browserAnimatedPop = event.hasUAVisualTransition;
-});
-window.addEventListener("phx:navigate", ({ detail }) => {
-  if (!detail.pop || detail.patch || browserAnimatedPop) return;
-  pendingAdminTransition = detail.direction === "backward" ? "pop" : "push";
 });
 
 // LiveView applies updates in the order they arrive. A view transition delays
@@ -193,10 +199,13 @@ function onDocumentPatch(start) {
 
   // An open drawer or modal would be snapshotted mid-page, so those navigations
   // swap instantly, as they did before.
+  // Only the installed app animates, as a native one would. In a browser tab
+  // pages swap straight away, as on most web apps.
   const animate =
     kind &&
     document.startViewTransition &&
     document.querySelector(".admin-theme") &&
+    matchMedia("(display-mode: standalone)").matches &&
     !document.querySelector("dialog[open]");
   if (!animate) return start();
 

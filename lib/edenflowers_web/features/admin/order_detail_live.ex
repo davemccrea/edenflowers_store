@@ -507,7 +507,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       aria-label={~t"Orders to fulfil"}
       class="border-base-content/12 bg-base-100 divide-base-content/12 flex h-9 items-stretch divide-x border text-sm"
     >
-      <.queue_link to={@queue.previous} icon="hero-chevron-left" label={~t"Previous order"} arrow_key="ArrowLeft" />
+      <.queue_link
+        to={@queue.previous}
+        icon="hero-chevron-left"
+        label={~t"Previous order"}
+        arrow_key="ArrowLeft"
+        transition="pop"
+      />
       <span class="text-base-content/80 flex items-center px-3 tabular-nums">
         <%= if @fulfilled do %>
           {~t"Fulfilled · #{remaining_to_fulfil(@queue)} left"}
@@ -515,7 +521,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           {~t"#{@queue.position} of #{@queue.total} to fulfil"}
         <% end %>
       </span>
-      <.queue_link to={@queue.next} icon="hero-chevron-right" label={~t"Next order"} arrow_key="ArrowRight" />
+      <.queue_link
+        to={@queue.next}
+        icon="hero-chevron-right"
+        label={~t"Next order"}
+        arrow_key="ArrowRight"
+        transition="push"
+      />
     </nav>
     """
   end
@@ -524,6 +536,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :icon, :string, required: true
   attr :label, :string, required: true
   attr :arrow_key, :string, required: true
+  attr :transition, :string, required: true, doc: "Page transition in app.js, matching the arrow's direction"
 
   defp queue_link(%{to: nil} = assigns) do
     ~H"""
@@ -542,6 +555,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       aria-keyshortcuts={@arrow_key}
       title={~t"#{@label} (#{arrow_symbol(@arrow_key)})"}
       data-arrow-key={@arrow_key}
+      data-transition={@transition}
     >
       <.icon name={@icon} class="h-4 w-4" />
     </.link>
