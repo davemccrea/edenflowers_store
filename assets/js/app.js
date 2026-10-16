@@ -130,14 +130,30 @@ document.addEventListener("keydown", (event) => {
 let pendingAdminTransition = null;
 let browserAnimatedPop = false;
 
-const pathDepth = (href) =>
-  new URL(href, location.href).pathname.split("/").filter(Boolean).length;
+const adminPath = (href) =>
+  new URL(href, location.href).pathname.replace(/\/$/, "");
+
+const isInside = (path, ancestor) => path.startsWith(`${ancestor}/`);
+
+const isSectionList = (path) => /^\/admin\/[^/]+$/.test(path);
+
+// As on iOS: opening something pushes, even across sections (a customer's
+// order), going up to a page above pops, and switching to another section's
+// list is like changing tabs, which fades through.
+function transitionBetween(from, to) {
+  if (isInside(to, from)) return "push";
+  if (isInside(from, to)) return "pop";
+  if (isSectionList(to)) return "fade";
+  return "push";
+}
 
 window.addEventListener("phx:page-loading-start", ({ detail }) => {
   if (detail.kind !== "redirect") return;
   // location still holds the page being left.
-  const change = pathDepth(detail.to) - pathDepth(location.href);
-  pendingAdminTransition = change > 0 ? "push" : change < 0 ? "pop" : "fade";
+  pendingAdminTransition = transitionBetween(
+    adminPath(location.href),
+    adminPath(detail.to),
+  );
 });
 window.addEventListener("phx:page-loading-stop", () => {
   pendingAdminTransition = null;

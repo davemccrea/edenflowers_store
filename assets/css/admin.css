@@ -27,8 +27,9 @@ body:has(.admin-theme) {
 
 /* Page transitions, started in app.js. The topbar, search bar, sidebar and
    desktop header carry their own view-transition-name, so they stay put while
-   the page under them moves. A sibling page keeps the browser's default
-   cross-fade. */
+   the page under them moves. Switching section fades through: the old page
+   fades out before the new one fades and grows in, so two layouts never show
+   on top of each other as they would in a cross-fade. */
 
 /* Leaving a scrolled page brings the search bar back down from behind the
    topbar, which has to stay in front of it as it does on the page. */
@@ -74,6 +75,28 @@ body:has(.admin-theme) {
     &::view-transition-new(root) {
       animation-name: admin-page-return;
     }
+  }
+
+  html[data-admin-transition="fade"] {
+    &::view-transition-old(root) {
+      animation: 90ms ease-in both admin-page-fade-out;
+    }
+    &::view-transition-new(root) {
+      animation: 210ms cubic-bezier(0, 0, 0.2, 1) 90ms both admin-page-fade-in;
+    }
+  }
+}
+
+@keyframes admin-page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes admin-page-fade-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
   }
 }
 
