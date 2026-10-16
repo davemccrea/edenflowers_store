@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
           <header class="order-first md:hidden">
             <.link
               navigate={~p"/store/#{@product.product_category.slug}"}
-              class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
+              class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
             >
               {@product_category.name}
             </.link>
@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
             <header class="hidden md:block">
               <.link
                 navigate={~p"/store/#{@product.product_category.slug}"}
-                class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
+                class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
               >
                 {@product_category.name}
               </.link>
@@ -159,7 +159,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                   <label
                     :for={variant <- @product_variants}
-                    class="size-option"
+                    class="size-option touch-target"
                     data-active={(@selected_variant.id == variant.id && "true") || nil}
                   >
                     <input
@@ -188,7 +188,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               <fieldset :if={@product.subscribable} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"How to buy"}</legend>
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
-                  <label class="size-option" data-active={(not @subscribe? && "true") || nil}>
+                  <label class="size-option touch-target" data-active={(not @subscribe? && "true") || nil}>
                     <input
                       type="radio"
                       name="subscribe"
@@ -199,7 +199,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                     />
                     <span class="size-option__label font-serif text-xl">{~t"Buy once"}</span>
                   </label>
-                  <label class="size-option" data-active={(@subscribe? && "true") || nil}>
+                  <label class="size-option touch-target" data-active={(@subscribe? && "true") || nil}>
                     <input
                       type="radio"
                       name="subscribe"
@@ -222,7 +222,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                   <label
                     :for={weeks <- Subscription.intervals()}
-                    class="size-option"
+                    class="size-option touch-target"
                     data-active={(to_string(weeks) == @interval_weeks && "true") || nil}
                   >
                     <input

@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.Admin.Components do
       href={"https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}
       target="_blank"
       rel="noopener"
-      class="link link-primary inline-flex items-center gap-1.5"
+      class="link link-primary touch-target inline-flex items-center gap-1.5"
       title={~t"Search Fastmail for this address"}
     >
       <.icon name="hero-envelope" class="h-3.5 w-3.5 shrink-0" />
@@ -316,7 +316,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <a
       href={"tel:#{@phone_number}"}
-      class="link link-primary inline-flex items-center gap-1.5"
+      class="link link-primary touch-target inline-flex items-center gap-1.5"
     >
       <.icon name="hero-phone" class="h-3.5 w-3.5 shrink-0" />
       {@phone_number}
@@ -358,7 +358,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A titled group of fields in an admin form, framed like a `widget` so forms and detail pages match."
   def form_section(assigns) do
     ~H"""
-    <section class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
+    <section class={["admin-card p-4 sm:p-5", @class]}>
       <header class="mb-4">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <p :if={@description != []} class="text-base-content/65 mt-1 text-sm">{render_slot(@description)}</p>
@@ -404,7 +404,7 @@ defmodule EdenflowersWeb.Admin.Components do
   """
   def widget(assigns) do
     ~H"""
-    <section id={@id} class={["bg-base-100 border-base-content/12 border p-4 sm:p-5", @class]}>
+    <section id={@id} class={["admin-card p-4 sm:p-5", @class]}>
       <div class="mb-4 flex items-start justify-between gap-3">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <.count_badge :if={@count != nil} count={@count} active={@count > 0} />
@@ -487,7 +487,10 @@ defmodule EdenflowersWeb.Admin.Components do
           <ol class="text-base-content/70 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm font-medium">
             <li :for={{{label, path}, index} <- Enum.with_index(@trail)} class="flex min-w-0 items-center gap-1.5">
               <.icon :if={index > 0} name="hero-chevron-right" class="text-base-content/40 h-3.5 w-3.5 shrink-0" />
-              <.link navigate={path} class="max-w-[14rem] -my-2 truncate py-2 transition-colors hover:text-base-content">
+              <.link
+                navigate={path}
+                class="max-w-[14rem] -my-2 truncate py-2 transition-colors pointer-coarse:-my-3 pointer-coarse:py-3 hover:text-base-content"
+              >
                 {label}
               </.link>
             </li>

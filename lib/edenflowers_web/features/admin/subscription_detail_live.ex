@@ -133,7 +133,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                   <.link
                     id="subscription-customer-link"
                     navigate={~p"/admin/customers/#{@subscription.user_id}"}
-                    class="link link-primary inline-flex items-center gap-1.5"
+                    class="link link-primary touch-target inline-flex items-center gap-1.5"
                   >
                     <.icon name="hero-user" class="h-3.5 w-3.5 shrink-0" />
                     {~t"View customer's orders"}
@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           <:col :let={order} field="fulfillment_date" sort={[cycle: [:desc, :asc]]} label={~t"Fulfillment date"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
-              class="whitespace-nowrap font-medium tabular-nums hover:underline"
+              class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
             >
               {Format.date(order.fulfillment_date, @locale)}
             </.link>

@@ -542,15 +542,17 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
   defp quantity_picker(%{item: %{price: :on_request}} = assigns) do
     ~H"""
-    <input
-      type="checkbox"
-      class="checkbox"
-      checked={@quantity > 0}
-      phx-click="change_quantity"
-      phx-value-item={@item.id}
-      phx-value-by={if @quantity > 0, do: "-1", else: "1"}
-      aria-label={~t"Add to the estimate: #{@item.label}"}
-    />
+    <label class="touch-target inline-flex">
+      <input
+        type="checkbox"
+        class="checkbox"
+        checked={@quantity > 0}
+        phx-click="change_quantity"
+        phx-value-item={@item.id}
+        phx-value-by={if @quantity > 0, do: "-1", else: "1"}
+        aria-label={~t"Add to the estimate: #{@item.label}"}
+      />
+    </label>
     """
   end
 

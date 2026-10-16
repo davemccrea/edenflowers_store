@@ -86,3 +86,39 @@ body {
   translate: 0 1px;
   transition: none;
 }
+
+/* Touch screens get 44px targets (Apple HIG, WCAG 2.5.5). Pointer-based
+   rather than width-based, so a desktop keeps daisyUI's denser sizes and a
+   tablet still gets the larger ones. */
+@media (pointer: coarse) {
+  :is(.btn, .input, .select, .file-input) {
+    min-height: 2.75rem;
+  }
+
+  .btn-square {
+    min-width: 2.75rem;
+  }
+
+  .menu li > :is(a, button) {
+    min-height: 2.75rem;
+  }
+}
+
+/* Grows a small link or icon's tappable area to 44px on touch screens without
+   moving anything. Not for elements that clip overflow (truncate), or that
+   already draw something with ::after. */
+@utility touch-target {
+  @media (pointer: coarse) {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      transform: translate(-50%, -50%);
+    }
+  }
+}

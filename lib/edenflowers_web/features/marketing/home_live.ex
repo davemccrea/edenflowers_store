@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             </p>
             <.link
               navigate={~p"/about"}
-              class="eyebrow text-forest-content link-underline-hover"
+              class="eyebrow text-forest-content link-underline-hover touch-target"
             >
               {~t"Learn more"}
             </.link>
@@ -201,7 +201,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <li>
               <a
                 href="https://www.dermosil.com/"
-                class="block"
+                class="touch-target block"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Dermosil"
@@ -218,7 +218,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </a>
             </li>
             <li>
-              <a href="https://sfp.fi/" class="block" target="_blank" rel="noopener noreferrer" aria-label="SFP RKP">
+              <a
+                href="https://sfp.fi/"
+                class="touch-target block"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="SFP RKP"
+              >
                 <img
                   src="/images/logo-sfp.svg"
                   alt="SFP RKP"
@@ -233,7 +239,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <li>
               <a
                 href="https://evl.fi/en/"
-                class="block"
+                class="touch-target block"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={~t"Evangelical Lutheran Church of Finland"}
@@ -252,7 +258,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <li>
               <a
                 href="https://bnf.fi/"
-                class="block"
+                class="touch-target block"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Bonnier News Finland"

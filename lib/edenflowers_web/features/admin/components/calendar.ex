@@ -32,6 +32,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
       field={nil}
       module={EdenflowersWeb.DatePicker}
       selected_date={nil}
+      framed={false}
       cell_state={fn date -> CalendarViewModel.cell_state(@scope, @options, date, @today) end}
       cell_class={
         fn day, state, opts ->
@@ -162,7 +163,7 @@ defmodule EdenflowersWeb.Admin.Calendar do
   end
 
   defp weekday_class(state) do
-    base = "relative px-1.5 py-1 text-xs font-semibold uppercase tracking-wider"
+    base = "relative px-1.5 py-3.5 sm:py-1 text-xs font-semibold uppercase tracking-wider"
 
     state_class =
       case state do

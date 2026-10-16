@@ -31,6 +31,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :th_class, "text-left font-semibold whitespace-nowrap max-sm:whitespace-normal max-sm:px-2"
   set :td_class, "py-2 align-middle whitespace-nowrap max-sm:px-2"
 
+  set :filter_toggle_class, "cursor-pointer select-none inline-flex items-center gap-1 pointer-coarse:min-h-11"
   set :filter_count_class, "badge badge-primary badge-sm tabular-nums"
   set :filter_container_class, "card-body p-4 sm:p-5"
   # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.

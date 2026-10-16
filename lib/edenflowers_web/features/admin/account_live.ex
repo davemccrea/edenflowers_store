@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       <.admin_page>
         <.admin_page_header title={~t"Account"} />
 
-        <section class="bg-base-100 border-base-content/12 border p-4 sm:p-5">
+        <section class="admin-card p-4 sm:p-5">
           <div class="mb-5 flex items-center gap-3">
             <img
               :if={@current_user.avatar_content_type}
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       phx-update="ignore"
       data-state="checking"
       data-vapid-public-key={@vapid_public_key}
-      class="bg-base-100 border-base-content/12 group mt-6 border p-4 sm:p-5"
+      class="admin-card group mt-6 p-4 sm:p-5"
     >
       <h2 class="text-base-content mb-4 text-base font-semibold">{~t"This device"}</h2>
       <div class="flex items-start justify-between gap-4">

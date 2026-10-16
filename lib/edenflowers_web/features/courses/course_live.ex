@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
             <header>
               <.link
                 navigate={~p"/courses"}
-                class="eyebrow text-base-content/70 link-underline-hover mb-5 inline-block w-fit"
+                class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
               >
                 {~t"Courses"}
               </.link>

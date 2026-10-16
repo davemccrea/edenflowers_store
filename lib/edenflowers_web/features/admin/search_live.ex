@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
             <.link
               :if={length(@orders) == @limit}
               navigate={~p"/admin/orders?#{%{search: @term}}"}
-              class="link link-primary mt-3 inline-block text-sm"
+              class="link link-primary touch-target mt-3 inline-block text-sm"
             >
               {~t"See all matching orders"}
             </.link>
@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
             <.link
               :if={length(@customers) == @limit}
               navigate={~p"/admin/customers?#{%{search: @term}}"}
-              class="link link-primary mt-3 inline-block text-sm"
+              class="link link-primary touch-target mt-3 inline-block text-sm"
             >
               {~t"See all matching customers"}
             </.link>
