@@ -124,6 +124,58 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+// Admin page changes animate like a native app: a deeper page pushes in from
+// the right, a shallower one pops back, and a sibling cross-fades (admin.css).
+// Only LiveView navigations animate; every other diff patches straight away.
+let pendingAdminTransition = null;
+let browserAnimatedPop = false;
+
+const pathDepth = (href) =>
+  new URL(href, location.href).pathname.split("/").filter(Boolean).length;
+
+window.addEventListener("phx:page-loading-start", ({ detail }) => {
+  if (detail.kind !== "redirect") return;
+  // location still holds the page being left.
+  const change = pathDepth(detail.to) - pathDepth(location.href);
+  pendingAdminTransition = change > 0 ? "push" : change < 0 ? "pop" : "fade";
+});
+window.addEventListener("phx:page-loading-stop", () => {
+  pendingAdminTransition = null;
+});
+
+// Back and forward send no page-loading events, but LiveView reports their
+// direction. Safari's swipe-back already animates, so that one is left alone.
+// Registered before liveSocket.connect() so it runs ahead of LiveView's handler.
+window.addEventListener("popstate", (event) => {
+  browserAnimatedPop = event.hasUAVisualTransition;
+});
+window.addEventListener("phx:navigate", ({ detail }) => {
+  if (!detail.pop || detail.patch || browserAnimatedPop) return;
+  pendingAdminTransition = detail.direction === "backward" ? "pop" : "push";
+});
+
+// LiveView swaps in the new page inside `start`, so the view transition
+// captures the old page, runs `start` and animates to the result.
+function onDocumentPatch(start) {
+  const kind = pendingAdminTransition;
+  pendingAdminTransition = null;
+
+  // An open drawer or modal would be snapshotted mid-page, so those navigations
+  // swap instantly, as they did before.
+  const animate =
+    kind &&
+    document.startViewTransition &&
+    document.querySelector(".admin-theme") &&
+    !document.querySelector("dialog[open]");
+  if (!animate) return start();
+
+  const root = document.documentElement;
+  root.dataset.adminTransition = kind;
+  document
+    .startViewTransition(start)
+    .finished.finally(() => delete root.dataset.adminTransition);
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   // Waking a backgrounded tab drops the socket briefly; only toast if reconnecting drags on.
@@ -131,6 +183,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   hooks: { ...Hooks, ...colocatedHooks },
   dom: {
+    onDocumentPatch,
     onNodeAdded(node) {
       makeCinderControlOperable(node);
       node

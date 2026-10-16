@@ -25,6 +25,82 @@ body:has(.admin-theme) {
   background-color: var(--color-base-200);
 }
 
+/* Page transitions, started in app.js. The topbar, search bar, sidebar and
+   desktop header carry their own view-transition-name, so they stay put while
+   the page under them moves. A sibling page keeps the browser's default
+   cross-fade. */
+
+/* Leaving a scrolled page brings the search bar back down from behind the
+   topbar, which has to stay in front of it as it does on the page. */
+::view-transition-group(admin-topbar) {
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-admin-transition="push"],
+  html[data-admin-transition="pop"] {
+    &::view-transition-old(root),
+    &::view-transition-new(root) {
+      animation-duration: 400ms;
+      animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+      animation-fill-mode: both;
+      /* The default plus-lighter blend washes out where the pages overlap. */
+      mix-blend-mode: normal;
+    }
+  }
+
+  /* The page on top casts a shadow on the one beneath, as on iOS. Once it
+     fills the screen the shadow sits off its left edge, out of view. */
+  html[data-admin-transition="push"]::view-transition-new(root),
+  html[data-admin-transition="pop"]::view-transition-old(root) {
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.12);
+  }
+
+  html[data-admin-transition="push"] {
+    &::view-transition-old(root) {
+      animation-name: admin-page-recede;
+    }
+    &::view-transition-new(root) {
+      animation-name: admin-page-enter;
+    }
+  }
+
+  /* The leaving page slides off on top of the one it uncovers. */
+  html[data-admin-transition="pop"] {
+    &::view-transition-old(root) {
+      z-index: 1;
+      animation-name: admin-page-leave;
+    }
+    &::view-transition-new(root) {
+      animation-name: admin-page-return;
+    }
+  }
+}
+
+@keyframes admin-page-enter {
+  from {
+    translate: 100% 0;
+  }
+}
+
+@keyframes admin-page-recede {
+  to {
+    translate: -30% 0;
+  }
+}
+
+@keyframes admin-page-leave {
+  to {
+    translate: 100% 0;
+  }
+}
+
+@keyframes admin-page-return {
+  from {
+    translate: -30% 0;
+  }
+}
+
 /* daisyUI draws checkbox labels as small grey captions; in admin forms they
    sit beside text-field labels, so they match those instead. */
 .admin-theme .fieldset-label {
