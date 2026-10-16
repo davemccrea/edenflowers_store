@@ -591,7 +591,6 @@ defmodule EdenflowersWeb.Layouts do
       <header class="w-full">
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="grid-cols-[1fr_auto_1fr] grid items-center xl:gap-x-8">
-            <%!-- Left --%>
             <div class="flex justify-start">
               <div class="block xl:hidden">
                 <button
@@ -631,7 +630,6 @@ defmodule EdenflowersWeb.Layouts do
               </nav>
             </div>
 
-            <%!-- Centre --%>
             <div class="flex items-center justify-center">
               <.link
                 navigate={~p"/"}
@@ -641,7 +639,6 @@ defmodule EdenflowersWeb.Layouts do
               </.link>
             </div>
 
-            <%!-- Right --%>
             <div class="flex items-center justify-end md:gap-4">
               <.link
                 :if={@current_user && @current_user.admin}

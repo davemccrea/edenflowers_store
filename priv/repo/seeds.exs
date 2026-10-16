@@ -33,7 +33,6 @@ plants_category = category.("plants")
 cards_category = category.("cards")
 pre_loved_category = category.("pre-loved")
 
-# Create Bouquet products
 for n <- 1..6 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
@@ -66,7 +65,6 @@ for n <- 1..6 do
   end
 end
 
-# Create Plant products
 for n <- 1..4 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
@@ -97,8 +95,8 @@ for n <- 1..4 do
   end
 end
 
-# Create Card products — category is draft, so they don't surface in the store
-# ribbon, but they can still be added during checkout.
+# The Cards category keeps them out of the store ribbon, but they can still be
+# added during checkout.
 for n <- 1..4 do
   product =
     Ash.Changeset.for_create(Product, :create, %{
@@ -129,7 +127,6 @@ for n <- 1..4 do
   end
 end
 
-# Create Pre-Loved products
 for n <- 1..3 do
   product =
     Ash.Changeset.for_create(Product, :create, %{

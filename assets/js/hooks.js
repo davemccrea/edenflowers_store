@@ -188,7 +188,6 @@ Hooks.FocusElement = {
   // before the customer has seen it.
   mounted() {
     this.handleEvent("focus-element", ({ id, focus = true }) => {
-      // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         const element = document.getElementById(id);
         if (!element) return;
@@ -303,13 +302,7 @@ Hooks.CalendarHook = {
     }
   },
 
-  /**
-   * Handles the keydown event for the calendar grid.
-   * @example
-   * handleKeyDown("ArrowUp");
-   * @param {String} key - The key pressed by the user.
-   * @returns {void}
-   */
+  /** @param {string} key */
   handleKeyDown(key) {
     // If focusable dates are missing/empty, every nav would otherwise fall
     // through to serverFocus and spam the server on each keypress.
@@ -348,7 +341,6 @@ Hooks.CalendarHook = {
   },
 
   /**
-   * Parses the data-key-targets JSON map from a cell element.
    * @param {Element} el
    * @returns {Object<string, string> | null}
    */
@@ -369,17 +361,7 @@ Hooks.CalendarHook = {
     }
   },
 
-  //
-  // Focus Management
-  //
-
-  /**
-   * Moves focus to the given date.
-   * @example
-   * clientFocus("2023-06-01");
-   * @param {String} date - The date to move the focus to.
-   * @returns {void}
-   */
+  /** @param {string} date */
   clientFocus(date) {
     if (!date) {
       this.error("Cannot focus on null date.");
@@ -396,10 +378,7 @@ Hooks.CalendarHook = {
    * Used when the focus is to be moved to a date that is not focusable by the client.
    * The server will rerender into the new month; updated() then restores DOM
    * focus to the newly-promoted view date via the `pendingKeyboardNav` flag.
-   * @example
-   * serverFocus("ArrowUp");
-   * @param {String} key - The key pressed by the user.
-   * @returns {void}
+   * @param {string} key
    */
   serverFocus(key) {
     this.pendingKeyboardNav = true;
@@ -407,12 +386,8 @@ Hooks.CalendarHook = {
   },
 
   /**
-   * Set tabindex="-1" on the focused element and set tabindex="0" on the element that will become focused.
-   * At any given time, only one gridcell within the calendar grid can be in the tab sequence.
-   * @example
-   * setTabIndex("2023-06-01");
-   * @param {String | null} nextDate - The date receiving focus.
-   * @returns {void}
+   * Only one gridcell within the calendar grid is in the tab sequence at a time.
+   * @param {string | null} nextDate
    */
   setTabIndex(nextDate = null) {
     const viewDateEl = this.getElement(`${this.id}-day-${this.viewDate}`);
@@ -428,10 +403,7 @@ Hooks.CalendarHook = {
     }
   },
 
-  /**
-   * Validates all requirements for the hook to work properly
-   * @returns {Boolean} Whether all requirements are met
-   */
+  /** @returns {boolean} */
   validateRequirements() {
     this.id = this.el.getAttribute("id");
     if (!this.id) {
@@ -464,14 +436,9 @@ Hooks.CalendarHook = {
     return true;
   },
 
-  //
-  // Utility Methods
-  //
-
   /**
-   * Gets an element by ID and logs an error if not found
-   * @param {String} id - The element ID
-   * @returns {Element | null} - The found element or null
+   * @param {string} id
+   * @returns {Element | null}
    */
   getElement(id) {
     const element = document.getElementById(id);
@@ -482,12 +449,9 @@ Hooks.CalendarHook = {
   },
 
   /**
-   * Checks if the given date is focusable by the client.
    * A focusable date is a date within the current month.
-   * @example
-   * isClientFocusable("2023-06-01");
-   * @param {String | null} date - The date to check.
-   * @returns {Boolean}
+   * @param {string | null} date
+   * @returns {boolean}
    */
   isClientFocusable(date) {
     if (!date) return false;
@@ -508,20 +472,14 @@ Hooks.CalendarHook = {
     }
   },
 
-  /**
-   * Gets the view date from the element's data attribute.
-   * @returns {String | null}
-   */
+  /** @returns {string | null} */
   getViewDate() {
     return this.el.getAttribute("data-view-date");
   },
 
   /**
-   * Logs error message to the console and forwards error to the server.
-   * @example
-   * error("Attribute 'data-focusable-dates' is required.");
-   * @param {String} message - The error message to send to the server.
-   * @returns {void}
+   * Logs to the console and forwards the error to the server.
+   * @param {string} message
    */
   error(message) {
     console.error(`CalendarHook Error: ${message}`);

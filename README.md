@@ -33,33 +33,38 @@ Run `just` to see the commands grouped by purpose.
 ```bash
 just dev                        # dev server at localhost:4000, with .env loaded
 PORT=4001 just dev              # same, on another port (also honoured by stripe-listen)
+just test [args]                # run the test suite
+just stripe-listen              # forward Stripe webhooks to the dev server
 just db-reset                   # drop and set up the dev + test databases
-just db-seed local              # seed the local database
+just db-seed local|staging      # seed the local or staging database
+just db-seed-production         # one-off base seed of an empty production database
+just db-backup-production       # pg_dump production into tmp/
+just db-wipe-staging            # drop the staging schema so the next deploy migrates from scratch
 just deploy staging             # push current branch to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
+just deploy-watch               # follow the latest deploy run
 just images-sync [staging|production] # sync images/ to servers (both if omitted)
 just server-logs staging        # tail app logs on a server
 just server-console production  # remote IEx on a server
-just db-seed-production         # one-off base seed of an empty production database
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.
 
-`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It mirrors with `--delete`: anything removed locally is removed on the server too.
+`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It doesn't delete: files removed locally stay on the server, as do photos uploaded through the admin (`images/uploads/`, never pushed to). Filenames must be ASCII.
 
 ### Database
 
-- `mix ash_postgres.generate_migrations NAME` — generate migrations
-- `./scripts/regen-schema.sh` — drop the database, delete all migrations and resource snapshots, regenerate them from the Ash resources, and re-seed. For breaking schema changes before there's production data to migrate.
+- `mix ash_postgres.generate_migrations NAME`: generate migrations
+- `./scripts/regen-schema.sh`: drop the database, delete all migrations and resource snapshots, regenerate them from the Ash resources, and re-seed. For breaking schema changes before there's production data to migrate.
 
 ### Translations
 
-- `mix gettext.extract` — extract gettext() calls to .pot files
-- `mix gettext.merge priv/gettext` — update all locale-specific .po files
+- `mix gettext.extract`: extract gettext() calls to .pot files
+- `mix gettext.merge priv/gettext`: update all locale-specific .po files
 
 ### Papra expense capture
 
-Upload a document to [Papra](https://papra.app) and tag it `receipt`. That fires a webhook to `/webhook/papra`, and the app sends the document to Claude to extract the expense. Needs `PAPRA_BASE_URL`, `PAPRA_API_KEY`, `PAPRA_WEBHOOK_SECRET` and `ANTHROPIC_API_KEY` in `.env`.
+Upload a document to [Papra](https://papra.app) and tag it `receipt`. That fires a webhook to `/webhook/papra`, and the app sends the document to Claude to extract the expense. Needs `PAPRA_BASE_URL`, `PAPRA_API_KEY`, `PAPRA_WEBHOOK_SECRET`, `PAPRA_ORGANIZATION_ID` and `ANTHROPIC_API_KEY` in `.env`.
 
 ### Stripe webhooks in dev
 
@@ -81,4 +86,4 @@ Servers are provisioned by [phoenix-ansible](https://github.com/davemccrea/phoen
 
 ## Maintenance mode
 
-`MAINTENANCE_MODE=true` redirects all visitors to `/back-soon`.
+`MAINTENANCE_MODE=true` redirects visitors to `/back-soon`. Signed-in admins, and the sign-in and admin paths, are let through.
