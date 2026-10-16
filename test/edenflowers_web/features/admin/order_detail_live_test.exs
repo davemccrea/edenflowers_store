@@ -447,9 +447,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
-    assert has_element?(view, "header nav", "2 of 3 to fulfil")
-    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{earlier.id}"]|)
-    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{later.id}"]|)
+    assert has_element?(view, "#order-queue-nav", "2 of 3 to fulfil")
+    assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{earlier.id}"]|)
+    assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
 
   test "keeps stepping after marking an order fulfilled and counts what is left", %{conn: conn} do
@@ -463,9 +463,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     |> element(~s|button[phx-click="mark_fulfilled"]|)
     |> render_click()
 
-    assert has_element?(view, "header nav", "Fulfilled · 2 left")
-    refute has_element?(view, "header nav", "1 of 3 to fulfil")
-    assert has_element?(view, ~s|header nav a[href="/admin/orders/#{later.id}"]|)
+    assert has_element?(view, "#order-queue-nav", "Fulfilled · 2 left")
+    refute has_element?(view, "#order-queue-nav", "1 of 3 to fulfil")
+    assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
 
   test "omits queue stepping for an order already fulfilled", %{conn: conn} do
@@ -473,7 +473,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    refute has_element?(view, "header nav")
+    refute has_element?(view, "#order-queue-nav")
   end
 
   test "redirects missing orders back to the admin orders table", %{conn: conn} do

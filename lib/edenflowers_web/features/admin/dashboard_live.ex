@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={greeting(@current_user)} />
+        <.admin_page_header title={greeting(@current_user)} overview />
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
 

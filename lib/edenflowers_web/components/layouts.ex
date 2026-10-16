@@ -238,7 +238,7 @@ defmodule EdenflowersWeb.Layouts do
             <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
           </button>
           <.link
-            href={~p"/"}
+            navigate={~p"/admin"}
             class="text-primary logo-wordmark justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
           >
             Eden Flowers
@@ -315,7 +315,7 @@ defmodule EdenflowersWeb.Layouts do
     ~H"""
     <div class="flex h-full flex-col py-5">
       <div class="mb-6 flex items-center justify-between px-5">
-        <.link href={~p"/"} class="text-primary logo-wordmark text-lg">
+        <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-lg">
           Eden Flowers
         </.link>
         <button
@@ -448,6 +448,12 @@ defmodule EdenflowersWeb.Layouts do
           <.link navigate={~p"/admin/account"}>
             <.icon name="hero-user-circle" class="h-4 w-4" />
             {~t"Account"}
+          </.link>
+        </li>
+        <li>
+          <.link href={~p"/"}>
+            <.icon name="hero-building-storefront" class="h-4 w-4" />
+            {~t"View store"}
           </.link>
         </li>
         <li>

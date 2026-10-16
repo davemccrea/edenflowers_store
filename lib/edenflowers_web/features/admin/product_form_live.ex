@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={~p"/admin/products"} back_label={~t"Products"}>
+        <.admin_page_header title={@page_title} breadcrumbs={[{~t"Products", ~p"/admin/products"}]}>
           <:subtitle :if={@form.source.type == :update}>
             <span id="product-status" class="inline-flex flex-wrap items-center gap-1.5">
               <.badge :if={@form.source.data.draft} tone={:neutral}>{~t"Draft"}</.badge>

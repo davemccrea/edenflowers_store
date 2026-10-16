@@ -180,7 +180,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={PromotionsLive.default_path()} back_label={~t"Promotions"}>
+        <.admin_page_header title={@page_title} breadcrumbs={[{~t"Promotions", PromotionsLive.default_path()}]}>
           <:subtitle :if={@form.source.type == :update}>
             <span id="promotion-status" class="inline-flex flex-wrap items-center gap-1.5">
               <.badge tone={elem(status(@form.source.data), 1)}>{elem(status(@form.source.data), 0)}</.badge>

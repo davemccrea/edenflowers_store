@@ -41,8 +41,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
       <.admin_page>
         <.admin_page_header
           title={@subscription.user.name || ~t"Unnamed customer"}
-          back={~p"/admin/subscriptions"}
-          back_label={~t"Subscriptions"}
+          breadcrumbs={[{~t"Subscriptions", ~p"/admin/subscriptions"}]}
         >
           <:subtitle>
             <span class="flex flex-col gap-2.5">

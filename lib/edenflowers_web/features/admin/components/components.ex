@@ -459,24 +459,32 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :title, :string, required: true
-  attr :back, :string, default: nil, doc: "path for a back-navigation link"
-  attr :back_label, :string, default: nil
+
+  attr :breadcrumbs, :list,
+    default: [],
+    doc: "{label, path} for each page between Overview and this one, outermost first"
+
+  attr :overview, :boolean, default: false, doc: "the Overview page itself, which has no breadcrumb trail"
   slot :subtitle, doc: "supporting text rendered under the title"
   slot :actions
-  slot :nav, doc: "sibling navigation rendered opposite the back link"
+  slot :nav, doc: "sibling navigation rendered opposite the breadcrumbs"
 
   def admin_page_header(assigns) do
+    assigns = assign(assigns, :trail, [{~t"Overview", ~p"/admin"} | assigns.breadcrumbs])
+
     ~H"""
     <header class="mb-6 sm:mb-8">
-      <div :if={@back || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-        <.link
-          :if={@back}
-          navigate={@back}
-          class="text-base-content/80 -my-2 -ml-1 inline-flex items-center gap-1.5 py-2 pr-2 pl-1 text-sm font-medium transition-colors hover:text-base-content"
-        >
-          <.icon name="hero-arrow-left" class="h-4 w-4" />
-          {@back_label || ~t"Back"}
-        </.link>
+      <div :if={!@overview || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+        <nav :if={!@overview} aria-label={~t"Breadcrumb"} class="min-w-0">
+          <ol class="text-base-content/70 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm font-medium">
+            <li :for={{{label, path}, index} <- Enum.with_index(@trail)} class="flex min-w-0 items-center gap-1.5">
+              <.icon :if={index > 0} name="hero-chevron-right" class="text-base-content/40 h-3.5 w-3.5 shrink-0" />
+              <.link navigate={path} class="max-w-[14rem] -my-2 truncate py-2 transition-colors hover:text-base-content">
+                {label}
+              </.link>
+            </li>
+          </ol>
+        </nav>
         {render_slot(@nav)}
       </div>
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

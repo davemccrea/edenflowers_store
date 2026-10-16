@@ -90,7 +90,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={~p"/admin/courses"} back_label={~t"Courses"}>
+        <.admin_page_header title={@page_title} breadcrumbs={[{~t"Courses", ~p"/admin/courses"}]}>
           <:actions>
             <.button
               :if={@form.source.type == :update}
