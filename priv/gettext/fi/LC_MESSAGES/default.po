@@ -531,7 +531,7 @@ msgstr "Maksaminen ei ole juuri nyt käytettävissä. Yritä hetken kuluttua uud
 msgid "Previous slide"
 msgstr "Edellinen kuva"
 
-#: lib/edenflowers_web/components/layouts/root.html.heex:37
+#: lib/edenflowers_web/components/layouts/root.html.heex:45
 #, elixir-autogen, elixir-format
 msgid "Skip to main content"
 msgstr "Siirry pääsisältöön"
@@ -5231,7 +5231,7 @@ msgstr "Naistenpäivä"
 msgid "Go to the home page"
 msgstr "Siirry etusivulle"
 
-#: lib/edenflowers_web/components/layouts/root.html.heex:8
+#: lib/edenflowers_web/components/layouts/root.html.heex:16
 #: lib/edenflowers_web/controllers/error_html/404.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "Page not found"

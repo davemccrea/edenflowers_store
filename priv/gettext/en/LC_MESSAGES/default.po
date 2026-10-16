@@ -531,7 +531,7 @@ msgstr ""
 msgid "Previous slide"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts/root.html.heex:37
+#: lib/edenflowers_web/components/layouts/root.html.heex:45
 #, elixir-autogen, elixir-format
 msgid "Skip to main content"
 msgstr ""
@@ -5231,7 +5231,7 @@ msgstr ""
 msgid "Go to the home page"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts/root.html.heex:8
+#: lib/edenflowers_web/components/layouts/root.html.heex:16
 #: lib/edenflowers_web/controllers/error_html/404.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "Page not found"

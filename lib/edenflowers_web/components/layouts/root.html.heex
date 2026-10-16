@@ -2,7 +2,15 @@
 <html lang={to_string(Localize.get_locale().cldr_locale_id)} class="w-full">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <%!-- maximum-scale stops iOS zooming in on admin form fields smaller than 16px. --%>
+    <meta
+      name="viewport"
+      content={
+        if admin_path?(@conn.request_path),
+          do: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover",
+          else: "width=device-width, initial-scale=1, viewport-fit=cover"
+      }
+    />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title default="Store" prefix="Eden Flowers | ">
       {assigns[:page_title] || if(assigns[:status] == 404, do: ~t"Page not found")}

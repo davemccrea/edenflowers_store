@@ -351,53 +351,70 @@ document.addEventListener("pointerdown", (down) => {
 
 // In the installed admin app, swiping right pulls the navigation drawer out
 // under the finger, and lets go the same way as the swipe-to-close. The left
-// edge is left to the iOS swipe back, and text fields to selecting text.
-document.addEventListener("pointerdown", (down) => {
-  if (down.pointerType === "mouse" || down.clientX < 20) return;
+// edge is left to the iOS swipe back, text fields to selecting text, and
+// anything scrolled sideways to scrolling back. These are touch events rather
+// than pointer events so the first sideways move can stop the browser from
+// starting a scroll, which would cancel the swipe.
+document.addEventListener("touchstart", (start) => {
+  if (start.touches.length > 1) return;
+  const touch = start.changedTouches[0];
+  if (touch.clientX < 20) return;
   if (!matchMedia("(display-mode: standalone)").matches) return;
-  if (down.target.closest?.("input, textarea, select, [contenteditable]"))
+  if (start.target.closest?.("input, textarea, select, [contenteditable]"))
     return;
+  if (scrolledSideways(start.target)) return;
   const dialog = document.getElementById("admin-nav-drawer-dialog");
   if (!dialog || document.querySelector("dialog[open]")) return;
 
   let offset = 0;
   const listening = new AbortController();
+  const sameTouch = (event) =>
+    [...event.changedTouches].find((t) => t.identifier === touch.identifier);
 
   const move = (event) => {
-    if (event.pointerId !== down.pointerId) return;
-    const dx = event.clientX - down.clientX;
-    const dy = event.clientY - down.clientY;
+    const moved = sameTouch(event);
+    if (!moved) return;
+    const dx = moved.clientX - touch.clientX;
+    const dy = moved.clientY - touch.clientY;
 
     if (!dialog.open) {
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      // A mostly vertical drag is a scroll.
+      if (dx === 0 && dy === 0) return;
+      // The first move decides: only a mostly rightward one is a swipe.
       if (dx <= Math.abs(dy)) return listening.abort();
       dialog.style.transition = "none";
       openDrawer(dialog);
     }
 
+    event.preventDefault();
     offset = Math.min(Math.max(dx, 0), dialog.offsetWidth);
     dialog.style.translate = `${offset - dialog.offsetWidth}px 0`;
   };
 
   const end = (event) => {
-    if (event.pointerId !== down.pointerId) return;
+    if (!sameTouch(event)) return;
     listening.abort();
     if (!dialog.open) return;
 
-    const velocity = offset / (event.timeStamp - down.timeStamp);
+    const velocity = offset / (event.timeStamp - start.timeStamp);
     const swiped = offset > dialog.offsetWidth / 3 || velocity > 0.5;
 
     dialog.style.removeProperty("transition");
     dialog.style.removeProperty("translate");
-    if (event.type !== "pointerup" || !swiped) closeDrawer(dialog);
+    if (event.type !== "touchend" || !swiped) closeDrawer(dialog);
   };
 
   const options = { signal: listening.signal };
-  window.addEventListener("pointermove", move, options);
-  window.addEventListener("pointerup", end, options);
-  window.addEventListener("pointercancel", end, options);
+  window.addEventListener("touchmove", move, { ...options, passive: false });
+  window.addEventListener("touchend", end, options);
+  window.addEventListener("touchcancel", end, options);
 });
+
+function scrolledSideways(element) {
+  for (; element; element = element.parentElement) {
+    if (element.scrollLeft > 0) return true;
+  }
+  return false;
+}
 
 topbar.config({
   barColors: { 0: "oklch(36.84% 0.0478 156.76)" },

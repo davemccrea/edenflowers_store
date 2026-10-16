@@ -17,16 +17,6 @@
   background-color: var(--color-base-100);
 }
 
-/* In the installed app, swiping right opens the navigation drawer (app.js).
-   The browser would claim a sideways drag as a pan and cancel the swipe, so
-   the page only pans vertically. Tables that scroll sideways are their own
-   scroll containers and still do. */
-@media (display-mode: standalone) {
-  .admin-theme {
-    touch-action: pan-y pinch-zoom;
-  }
-}
-
 /* Pulling past the top reveals the page canvas above the sticky topbar, so it
    matches the topbar instead of showing a white band. iOS takes the canvas
    colour from body, which covers any html background, so body carries it and
