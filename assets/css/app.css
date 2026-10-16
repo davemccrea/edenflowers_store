@@ -12,6 +12,9 @@
 
 @source "../../deps/ash_authentication_phoenix";
 @source "../js";
+/* With source(none) the watcher only watches @source directories, so without
+   this it never sees edits to our own stylesheets. */
+@source "../css";
 @source "../../lib/edenflowers_web";
 @source "../../lib/edenflowers";
 
