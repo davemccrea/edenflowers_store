@@ -5,12 +5,13 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
 
   Signed-in admins can reach every page. Sign-in and admin paths stay reachable
   so an admin can sign in; admin routes enforce their own admin check.
+  Payment links stay reachable so customers can pay custom orders.
   """
 
   import Plug.Conn
 
   @maintenance_path "/back-soon"
-  @bypass_prefixes ["/admin", "/sign-in", "/sign-out", "/auth"]
+  @bypass_prefixes ["/admin", "/sign-in", "/sign-out", "/auth", "/pay"]
 
   def init(opts), do: opts
 
