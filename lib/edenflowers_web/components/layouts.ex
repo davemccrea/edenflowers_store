@@ -286,7 +286,7 @@ defmodule EdenflowersWeb.Layouts do
         name="q"
         data-admin-search
         placeholder={~t"Search orders and customers…"}
-        class="input input-sm w-full pl-9"
+        class="input w-full pl-9 lg:input-sm"
       />
       <kbd
         aria-hidden="true"
