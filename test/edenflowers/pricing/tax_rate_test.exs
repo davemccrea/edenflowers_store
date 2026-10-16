@@ -18,6 +18,14 @@ defmodule Edenflowers.Pricing.TaxRateTest do
     assert id == current.id
   end
 
+  test "the standard rate is listed first, so admin forms default to it" do
+    generate(tax_rate(name: "Reduced 13.5%", percentage: "0.135"))
+    standard = generate(tax_rate(name: "Standard 25.5%", percentage: "0.255"))
+
+    assert [%{id: id}, _] = Pricing.list_selectable_tax_rates!(authorize?: false)
+    assert id == standard.id
+  end
+
   test "a rate still in use can't be destroyed" do
     tax_rate = generate(tax_rate())
     generate(product(tax_rate_id: tax_rate.id))

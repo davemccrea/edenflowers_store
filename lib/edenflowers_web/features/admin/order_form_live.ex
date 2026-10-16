@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   require Ash.Query
   require Logger
 
-  alias Edenflowers.Catalog.{Product, ProductVariant}
+  alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.{Availability, DeliveryError, Fee}
@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor))
          |> assign(:variant_options, variant_options(actor))
          |> assign(:tax_rates, tax_rates)
-         |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates, actor))
+         |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
          |> assign(:lines, initial_lines(mode, order, tax_rates))
          |> assign(:form, build_form(mode, order, actor))
          |> assign(:delivery_quote, stored_quote(mode, order))
@@ -154,6 +154,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Enum.find_value(tax_rates, fn rate -> Decimal.equal?(rate.percentage, percentage) && rate.id end)
   end
 
+  defp default_tax_rate_id([]), do: nil
+  defp default_tax_rate_id([standard | _]), do: standard.id
+
   defp tax_rates(nil, actor), do: Pricing.list_selectable_tax_rates!(actor: actor)
 
   defp tax_rates(order, actor) do
@@ -180,23 +183,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
        variant.id}
     end)
-  end
-
-  # Custom items default to the rate most of the catalogue is sold at.
-  defp default_tax_rate_id(tax_rates, actor) do
-    selectable = MapSet.new(tax_rates, & &1.id)
-
-    Product
-    |> Ash.Query.select([:tax_rate_id])
-    |> Ash.read!(actor: actor)
-    |> Enum.map(& &1.tax_rate_id)
-    |> Enum.filter(&MapSet.member?(selectable, &1))
-    |> Enum.frequencies()
-    |> Enum.max_by(fn {_id, count} -> count end, fn -> nil end)
-    |> case do
-      {id, _count} -> id
-      nil -> tax_rates |> List.first() |> then(&(&1 && &1.id))
-    end
   end
 
   @impl true

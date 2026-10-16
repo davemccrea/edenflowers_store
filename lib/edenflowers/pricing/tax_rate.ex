@@ -16,9 +16,11 @@ defmodule Edenflowers.Pricing.TaxRate do
     # Destroy is refused by the foreign keys while anything still uses the rate.
     defaults [:read, :destroy, create: [:name, :percentage], update: [:name, :percentage]]
 
+    # Highest first, so the standard rate is what a select in an admin form
+    # starts on.
     read :selectable do
       filter expr(is_nil(retired_at))
-      prepare build(sort: [name: :asc])
+      prepare build(sort: [percentage: :desc])
     end
 
     # Hides a rate from the admin forms while what already uses it keeps it.
