@@ -21,6 +21,7 @@ defmodule Edenflowers.External.ClaudeAPI do
 
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
+  alias Edenflowers.Expenses.Expense.Category
 
   @model "anthropic:claude-sonnet-4-6"
 
@@ -32,8 +33,10 @@ defmodule Edenflowers.External.ClaudeAPI do
     vat_amount: [type: :string, doc: "VAT/tax amount as a decimal string, e.g. 25.50, if shown separately."],
     currency: [type: :string, doc: "ISO 4217 currency code, lowercase (e.g. eur, sek)."],
     category: [
-      type: :string,
-      doc: "One of: office_supplies, travel, meals, software, marketing, utilities, professional_services, other."
+      type: {:in, Enum.map(Category.values(), &Atom.to_string/1)},
+      doc:
+        "The category that best fits what was purchased:\n" <>
+          Enum.map_join(Category.values(), "\n", &"- #{&1}: #{Category.description(&1)}")
     ],
     description: [type: :string, doc: "Short description of what was purchased."],
     confidence: [
@@ -45,7 +48,7 @@ defmodule Edenflowers.External.ClaudeAPI do
 
   @prompt """
   Extract the expense details from this receipt or invoice.
-  Use a lowercase ISO 4217 code for the currency and a lowercase value for the category.
+  Use a lowercase ISO 4217 code for the currency.
   Omit any field you cannot determine with reasonable confidence.
   Set confidence to reflect your overall certainty across all fields.
   """

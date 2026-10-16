@@ -192,14 +192,22 @@ defmodule EdenflowersWeb.Admin.Components do
     |> Enum.map(fn value -> {category_label(value), value} end)
   end
 
-  def category_label(:office_supplies), do: ~t"Office supplies"
+  def category_label(:flowers_and_plants), do: ~t"Flowers and plants"
+  def category_label(:florist_supplies), do: ~t"Florist supplies"
+  def category_label(:rent), do: ~t"Rent"
+  def category_label(:entertainment), do: ~t"Entertainment"
+  def category_label(:bank_fees), do: ~t"Bank fees"
+  def category_label(:vehicle), do: ~t"Vehicle"
   def category_label(:travel), do: ~t"Travel"
-  def category_label(:meals), do: ~t"Meals"
-  def category_label(:software), do: ~t"Software"
   def category_label(:marketing), do: ~t"Marketing"
+  def category_label(:software), do: ~t"Software"
   def category_label(:utilities), do: ~t"Utilities"
+  def category_label(:office_supplies), do: ~t"Office supplies"
+  def category_label(:equipment), do: ~t"Equipment"
+  def category_label(:insurance), do: ~t"Insurance"
   def category_label(:professional_services), do: ~t"Professional services"
   def category_label(:other), do: ~t"Other"
+  def category_label(:unknown), do: ~t"Unknown"
   def category_label(value), do: to_string(value)
 
   attr :confidence, :atom, required: true
