@@ -32,10 +32,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
     do: {:noreply, assign_orders(socket)}
 
-  defp greeting(%{name: name}) when is_binary(name) and name != "" do
-    first_name = name |> String.split() |> hd()
-    ~t"Hi, #{first_name}"
-  end
+  defp greeting(%{first_name: first_name}) when is_binary(first_name), do: ~t"Hi, #{first_name}"
 
   defp greeting(_user), do: ~t"Hi"
 
