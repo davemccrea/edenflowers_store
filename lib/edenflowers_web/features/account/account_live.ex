@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(subscriptions: subscriptions(user))
      |> assign(edited_subscriptions: MapSet.new())
      |> assign(subscription_notice: nil)
-     |> assign_subscription_product()
+     |> assign_subscription_path()
      |> assign(registrations: registrations(user))
      |> assign(past_visible: @past_visible)
      |> assign_timeline()
@@ -144,15 +144,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <.account_section :if={@subscriptions == []} id="subscriptions" title={~t"Subscriptions"}>
           <div class="mt-6" data-testid="no-subscriptions">
             <p>
-              {~t"A florist's-choice bouquet every 1, 2 or 4 weeks. Pause or cancel anytime."}
+              {~t"Flowers every 1, 2 or 4 weeks. Pause or cancel anytime."}
             </p>
-            <.button
-              :if={@subscription_product}
-              navigate={~p"/product/#{@subscription_product.id}"}
-              variant="text"
-              class="mt-4"
-            >
-              {~t"See the subscription"}
+            <.button :if={@subscription_path} navigate={@subscription_path} variant="text" class="mt-4">
+              {~t"See subscriptions"}
             </.button>
           </div>
         </.account_section>
@@ -588,13 +583,22 @@ defmodule EdenflowersWeb.Account.AccountLive do
     |> assign_timeline()
   end
 
-  # Only the empty state links to it, so it's looked up only then.
-  defp assign_subscription_product(%{assigns: %{subscriptions: []}} = socket) do
+  # Only the empty state links to it, so it's looked up only then. The store has
+  # no subscribable filter, so several products send the customer to the store.
+  defp assign_subscription_path(%{assigns: %{subscriptions: []}} = socket) do
     query = Ash.Query.filter(Edenflowers.Catalog.Product, subscribable == true)
-    assign(socket, subscription_product: List.first(Catalog.list_store_products!(query: query)))
+
+    path =
+      case Catalog.list_store_products!(query: query) do
+        [] -> nil
+        [product] -> ~p"/product/#{product.id}"
+        _several -> ~p"/store"
+      end
+
+    assign(socket, subscription_path: path)
   end
 
-  defp assign_subscription_product(socket), do: assign(socket, subscription_product: nil)
+  defp assign_subscription_path(socket), do: assign(socket, subscription_path: nil)
 
   defp subscriptions(user) do
     Orders.list_my_subscriptions!(actor: user)

@@ -51,8 +51,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     days = Edenflowers.Orders.Subscription.lead_days()
 
     [
-      {~t"What will I get?",
-       ~t"Whatever's looking best that week. I pick every bouquet myself, so no two are the same."},
       {~t"Can I pick it up instead?", pickup_answer()},
       {~t"When do I pay?",
        ~t"You pay for the first bouquet at checkout. After that, your card is charged #{days = days} days before each one, so I know to order your flowers."},

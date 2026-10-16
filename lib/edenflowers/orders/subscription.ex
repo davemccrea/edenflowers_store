@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Subscription do
   @moduledoc """
-  A customer's standing request for a florist's-choice bouquet every few
+  A customer's standing request for a subscribable product every few
   weeks. Not an order: it creates ordinary orders, its Occurrences, from the
   delivery details of the first one. See ADR 0003.
   """
