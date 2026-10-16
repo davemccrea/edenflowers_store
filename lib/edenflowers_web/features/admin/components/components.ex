@@ -72,10 +72,10 @@ defmodule EdenflowersWeb.Admin.Components do
   A popover anchored to its trigger rather than a focus dropdown, so it sits in
   the top layer and closes on Esc or a click outside.
 
-  On phones the header actions wrap, so the trigger can land anywhere along the
-  row. Rather than letting the browser flip the menu to the side with room
-  (`position-try-fallbacks`), which iOS Safari 26 draws without its border and
-  shadow, the menu spans the row below the trigger and starts at the page gutter.
+  Its trigger always sits at the right edge (the page header's `menu` slot, or
+  the end of a row), so the menu opens below it aligned to its right edge. Avoid
+  `position-try-fallbacks` for flipping: iOS Safari 26 draws the flipped menu
+  without its border and shadow.
   """
   def actions_menu(assigns) do
     ~H"""
@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.Admin.Components do
       id={@id}
       popover
       style={"position-anchor: --#{@id}"}
-      class={["dropdown menu bg-base-100 border-base-300 mt-2 border p-1 shadow max-sm:[--anchor-h:span-all] max-sm:ml-4 max-sm:justify-self-start sm:dropdown-end", @class]}
+      class={["dropdown dropdown-end menu bg-base-100 border-base-300 mt-2 border p-1 shadow", @class]}
     >
       {render_slot(@inner_block)}
     </ul>
@@ -475,6 +475,7 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :overview, :boolean, default: false, doc: "the Overview page itself, which has no breadcrumb trail"
   slot :subtitle, doc: "supporting text rendered under the title"
   slot :actions
+  slot :menu, doc: "the page's `actions_menu`, kept beside the title on phones while the actions wrap below it"
   slot :nav, doc: "sibling navigation rendered opposite the breadcrumbs"
 
   def admin_page_header(assigns) do
@@ -498,17 +499,22 @@ defmodule EdenflowersWeb.Admin.Components do
         </nav>
         {render_slot(@nav)}
       </div>
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-          <h1 class="font-sans text-base-content text-xl font-semibold tracking-tight sm:text-2xl">
-            {@title}
-          </h1>
-          <p :if={@subtitle != []} class="text-base-content/65 mt-1.5 text-sm leading-relaxed">
-            {render_slot(@subtitle)}
-          </p>
+      <div class="flex items-start gap-2">
+        <div class="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <h1 class="font-sans text-base-content text-xl font-semibold tracking-tight sm:text-2xl">
+              {@title}
+            </h1>
+            <p :if={@subtitle != []} class="text-base-content/65 mt-1.5 text-sm leading-relaxed">
+              {render_slot(@subtitle)}
+            </p>
+          </div>
+          <div :if={@actions != []} class="flex flex-wrap items-center gap-2 sm:mt-0.5 sm:shrink-0 sm:justify-end">
+            {render_slot(@actions)}
+          </div>
         </div>
-        <div :if={@actions != []} class="flex flex-wrap items-center gap-2 sm:mt-0.5 sm:shrink-0 sm:justify-end">
-          {render_slot(@actions)}
+        <div :if={@menu != []} class="-mt-1 shrink-0 sm:mt-0.5">
+          {render_slot(@menu)}
         </div>
       </div>
     </header>

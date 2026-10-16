@@ -191,6 +191,8 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
             <.button type="submit" form="promotion-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
               {~t"Save"}
             </.button>
+          </:actions>
+          <:menu>
             <.actions_menu :if={@form.source.type == :update} id="promotion-actions">
               <.actions_menu_button
                 menu="promotion-actions"
@@ -201,7 +203,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                 {~t"Delete"}
               </.actions_menu_button>
             </.actions_menu>
-          </:actions>
+          </:menu>
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
