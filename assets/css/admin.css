@@ -249,3 +249,18 @@ body:has(.admin-theme) {
     color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
   );
 }
+
+/* Card surface. On phones it runs to the screen edges (cancelling admin_page's
+   px-4) and drops its side borders, so content gets the full width. */
+@utility admin-card {
+  @apply bg-base-100 border-base-content/12 border max-sm:-mx-4 max-sm:border-x-0;
+}
+
+/* Table links and sort headers are a line of text inside a 48px row; on touch
+   screens they take the row's full height. */
+@media (pointer: coarse) {
+  .admin-table-scroll :is(td a, th [phx-click]) {
+    padding-block: 0.75rem;
+    margin-block: -0.75rem;
+  }
+}

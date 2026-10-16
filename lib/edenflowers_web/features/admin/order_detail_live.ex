@@ -298,7 +298,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.link
                     id="order-customer-link"
                     navigate={~p"/admin/customers/#{@order.user_id}"}
-                    class="link link-primary inline-flex items-center gap-1.5"
+                    class="link link-primary touch-target inline-flex items-center gap-1.5"
                   >
                     <.icon name="hero-user" class="h-3.5 w-3.5 shrink-0" />
                     {~t"View customer's orders"}
@@ -505,7 +505,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       id="order-queue-nav"
       phx-hook="ArrowKeyNav"
       aria-label={~t"Orders to fulfil"}
-      class="border-base-content/12 bg-base-100 divide-base-content/12 flex h-9 items-stretch divide-x border text-sm"
+      class="border-base-content/12 bg-base-100 divide-base-content/12 flex h-9 items-stretch divide-x border text-sm pointer-coarse:h-11"
     >
       <.queue_link
         to={@queue.previous}
@@ -540,7 +540,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp queue_link(%{to: nil} = assigns) do
     ~H"""
-    <span class="text-base-content/25 flex w-9 items-center justify-center" aria-hidden="true">
+    <span class="text-base-content/25 flex w-9 items-center justify-center pointer-coarse:w-11" aria-hidden="true">
       <.icon name={@icon} class="h-4 w-4" />
     </span>
     """
@@ -550,7 +550,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     ~H"""
     <.link
       navigate={~p"/admin/orders/#{@to}"}
-      class="text-base-content/80 flex w-9 items-center justify-center transition-colors hover:bg-base-200 hover:text-base-content"
+      class="text-base-content/80 flex w-9 items-center justify-center transition-colors pointer-coarse:w-11 hover:bg-base-200 hover:text-base-content"
       aria-label={@label}
       aria-keyshortcuts={@arrow_key}
       title={~t"#{@label} (#{arrow_symbol(@arrow_key)})"}
@@ -605,7 +605,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp message_links(assigns) do
     ~H"""
     <div class="flex flex-wrap gap-x-4 gap-y-1.5">
-      <a href={@urls.sms} class="link link-primary inline-flex items-center gap-1.5">
+      <a href={@urls.sms} class="link link-primary touch-target inline-flex items-center gap-1.5">
         <.icon name="hero-chat-bubble-left-ellipsis" class="h-3.5 w-3.5 shrink-0" />
         {@sms_label}
       </a>
@@ -613,7 +613,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         href={@urls.whatsapp}
         target="_blank"
         rel="noopener"
-        class="link link-primary inline-flex items-center gap-1.5"
+        class="link link-primary touch-target inline-flex items-center gap-1.5"
       >
         <.icon name="hero-chat-bubble-oval-left" class="h-3.5 w-3.5 shrink-0" />
         {@whatsapp_label}
@@ -707,7 +707,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           href={StripeAPI.dashboard_payment_url(@payment.payment_intent_id)}
           target="_blank"
           rel="noopener"
-          class="text-base-content/60 -my-3 -ml-1 inline-flex p-2 align-middle hover:text-base-content"
+          class="text-base-content/60 touch-target -my-3 -ml-1 inline-flex p-2 align-middle hover:text-base-content"
           aria-label={~t"View #{amount = Format.currency(@payment.amount, @locale)} payment in Stripe"}
         >
           <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />

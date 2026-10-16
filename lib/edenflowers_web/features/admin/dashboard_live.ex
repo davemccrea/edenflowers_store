@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       hidden
       data-vapid-public-key={@vapid_public_key}
       aria-labelledby="notifications-offer-title"
-      class="bg-base-100 border-base-content/12 mb-6 flex flex-col gap-4 border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+      class="admin-card mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
     >
       <div class="flex items-start gap-3">
         <.icon name="hero-bell" class="text-primary mt-0.5 h-5 w-5 shrink-0" />
@@ -185,7 +185,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       </div>
 
       <div :if={@orders_by_date != []} class="border-base-content/12 mt-4 border-t pt-3">
-        <.link navigate={~p"/admin/orders"} class="text-primary inline-block py-1 text-sm hover:underline">
+        <.link navigate={~p"/admin/orders"} class="text-primary touch-target inline-block py-1 text-sm hover:underline">
           {~t"View all orders"} →
         </.link>
       </div>

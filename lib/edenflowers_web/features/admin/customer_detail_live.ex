@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
 
         <section
           id="customer-summary"
-          class="bg-base-100 border-base-content/12 mb-6 grid grid-cols-2 gap-x-8 gap-y-5 border p-4 sm:grid-cols-4 sm:p-5"
+          class="admin-card mb-6 grid grid-cols-2 gap-x-8 gap-y-5 p-4 sm:grid-cols-4 sm:p-5"
         >
           <.summary_fact label={~t"Orders"}>
             <span class="tabular-nums">{@customer.placed_order_count}</span>
@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           <:col :let={order} field="ordered_at" sort={[cycle: [:desc, :asc]]} label={~t"Ordered"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
-              class="whitespace-nowrap font-medium tabular-nums hover:underline"
+              class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
             >
               {Format.date(order.ordered_at, @locale)}
             </.link>

@@ -116,6 +116,10 @@ defmodule EdenflowersWeb.DatePicker do
 
   attr :error, :boolean, default: false
 
+  attr :framed, :boolean,
+    default: true,
+    doc: "Draws the picker's own border and padding. Turn off when a surrounding card already frames it."
+
   slot :day_decoration,
     required: false,
     doc:
@@ -132,7 +136,7 @@ defmodule EdenflowersWeb.DatePicker do
     ~H"""
     <div
       id={"#{@id}"}
-      class={"#{if @error, do: "border-error", else: "border-base-content/20"} bg-base-100 select-none border p-2"}
+      class={["bg-base-100 select-none", @framed && "border p-2", if(@error, do: "border-error", else: "border-base-content/20")]}
       phx-hook="CalendarHook"
       data-view-date={Date.to_iso8601(@view_date)}
       data-focusable-dates={focusable_dates_json(@view_date)}
@@ -158,6 +162,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="current-month"
           type="button"
+          class="min-h-11 px-3"
         >
           {Localize.DateTime.to_string!(@view_date, format: "LLLL y")}
           <span class="sr-only">, {~t"go to current month"}</span>
@@ -167,7 +172,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-target={@myself}
           phx-click="next-month"
           type="button"
-          class="text-base-content flex flex-none items-center justify-center p-1.5 hover:text-base-content/60"
+          class="text-base-content size-11 -mr-3 flex flex-none items-center justify-center hover:text-base-content/60"
         >
           <span class="sr-only">{~t"Next month"}</span>
           <.icon name="hero-chevron-right" class="h-5 w-5" />
@@ -176,7 +181,7 @@ defmodule EdenflowersWeb.DatePicker do
 
       <div
         aria-hidden={if @on_weekday_click, do: nil, else: "true"}
-        class={["border-base-content/20 mt-2 grid border-b text-center text-sm leading-6", if(@on_week_click, do: "grid-cols-[1.5rem_repeat(7,_1fr)] gap-x-1", else: "grid-cols-7")]}
+        class={["border-base-content/20 mt-2 grid border-b text-center text-sm leading-6", if(@on_week_click, do: "grid-cols-[2rem_repeat(7,_1fr)] gap-x-0.5 sm:gap-x-1", else: "grid-cols-7")]}
       >
         <span :if={@on_week_click} aria-hidden="true"></span>
         <%= for week_day <- List.first(@week_rows) do %>
@@ -203,7 +208,7 @@ defmodule EdenflowersWeb.DatePicker do
         <div
           :for={week <- @week_rows}
           class={if @on_week_click,
-      do: "grid-cols-[1.5rem_repeat(7,_1fr)] grid gap-x-1 gap-y-0.5",
+      do: "grid-cols-[2rem_repeat(7,_1fr)] grid gap-x-0.5 gap-y-0.5 sm:gap-x-1",
       else: "grid grid-cols-7 gap-0.5"}
         >
           <button
@@ -328,7 +333,7 @@ defmodule EdenflowersWeb.DatePicker do
     is_disabled = same_month?(view_date, today_date)
 
     base_class =
-      "flex flex-none items-center justify-center p-1.5"
+      "-ml-3 flex size-11 flex-none items-center justify-center"
 
     if is_disabled do
       "#{base_class} text-base-content/20"

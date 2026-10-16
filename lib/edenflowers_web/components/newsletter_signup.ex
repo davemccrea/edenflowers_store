@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
               name="email_address"
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="flex-1 border-0 bg-transparent px-0 py-2 text-base placeholder:text-base-content/40 focus-visible:outline-hidden"
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base pointer-coarse:py-2.5 placeholder:text-base-content/40 focus-visible:outline-hidden"
               placeholder={~t"your@email.com"}
               autocomplete="email"
               required
@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
             <button
               type="submit"
               aria-label={~t"Subscribe"}
-              class="text-base-content/70 group flex flex-none p-1 transition-colors hover:text-base-content"
+              class="text-base-content/70 touch-target group flex flex-none p-1 transition-colors hover:text-base-content"
             >
               <.icon
                 name="hero-arrow-right"

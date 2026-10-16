@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.Layouts do
         onkeydown="delete this.dataset.pointer"
         onblur="delete this.dataset.pointer"
         onchange="this.blur(); window.location.href = this.value"
-        class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        class="min-h-11 min-w-11 absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 cursor-pointer opacity-0"
       >
         <option
           :for={{code, name, current?} <- @locales}
@@ -130,7 +130,7 @@ defmodule EdenflowersWeb.Layouts do
         <div class="flex h-12 items-center justify-center xl:h-10">
           <.link
             navigate={~p"/"}
-            class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
+            class="text-primary logo-wordmark touch-target whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
           >
             Eden Flowers
           </.link>
@@ -239,7 +239,7 @@ defmodule EdenflowersWeb.Layouts do
           </button>
           <.link
             navigate={~p"/admin"}
-            class="text-primary logo-wordmark justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
+            class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
           >
             Eden Flowers
           </.link>
@@ -412,7 +412,7 @@ defmodule EdenflowersWeb.Layouts do
         type="button"
         tabindex="0"
         aria-label={~t"Admin account menu"}
-        class={["inline-flex items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+        class={["inline-flex items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "touch-target h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
         <img
           :if={@current_user.avatar_content_type}
@@ -611,7 +611,7 @@ defmodule EdenflowersWeb.Layouts do
                 id="admin-shortcut-compact"
                 navigate={~p"/admin"}
                 aria-label="Admin"
-                class="group flex h-12 w-10 items-center justify-center xl:hidden"
+                class="touch-target group flex h-12 w-10 items-center justify-center xl:hidden"
               >
                 <.icon name="hero-squares-2x2" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
               </.link>
@@ -633,7 +633,7 @@ defmodule EdenflowersWeb.Layouts do
             <div class="flex items-center justify-center">
               <.link
                 navigate={~p"/"}
-                class="text-primary logo-wordmark whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
+                class="text-primary logo-wordmark touch-target whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
               >
                 Eden Flowers
               </.link>
@@ -759,17 +759,26 @@ defmodule EdenflowersWeb.Layouts do
               <h3 class="eyebrow text-base-content/70">{~t"Help"}</h3>
               <ul class="space-y-1">
                 <li>
-                  <.link navigate={~p"/faq"} class="footer-line link-underline-hover">
+                  <.link
+                    navigate={~p"/faq"}
+                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                  >
                     {~t"FAQ"}
                   </.link>
                 </li>
                 <li>
-                  <.link navigate={~p"/contact"} class="footer-line link-underline-hover">
+                  <.link
+                    navigate={~p"/contact"}
+                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                  >
                     {~t"Contact"}
                   </.link>
                 </li>
                 <li>
-                  <.link navigate={~p"/about"} class="footer-line link-underline-hover">
+                  <.link
+                    navigate={~p"/about"}
+                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                  >
                     {~t"About"}
                   </.link>
                 </li>

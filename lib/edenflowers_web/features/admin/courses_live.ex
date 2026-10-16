@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     <details
       id={"course-#{@course.id}"}
       phx-mounted={JS.ignore_attributes(["open"])}
-      class="bg-base-100 border-base-content/12 group border"
+      class="admin-card group"
     >
       <summary class="list-none p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3">
@@ -253,8 +253,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         </.form>
 
         <ul class="divide-base-content/12 divide-y">
-          <li :for={registration <- @registrations} class="flex items-center justify-between gap-3 py-2.5">
-            <div class="min-w-0">
+          <li :for={registration <- @registrations} class="flex items-center gap-3 py-2.5">
+            <div class="min-w-0 flex-1">
               <p class="text-base-content truncate font-medium">
                 {registration.name}
                 <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
@@ -268,33 +268,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 href={fastmail_compose(to: registration.email)}
                 target="_blank"
                 rel="noopener"
-                class="text-base-content/65 truncate text-sm hover:underline"
+                class="text-base-content/65 truncate text-sm pointer-coarse:py-3 hover:underline"
               >
                 {registration.email}
               </a>
             </div>
-            <div class="flex shrink-0 gap-1">
-              <.button
-                :if={registration.payment_intent_id}
-                href={StripeAPI.dashboard_payment_url(registration.payment_intent_id)}
-                target="_blank"
-                rel="noopener"
-                variant="ghost"
-                size="sm"
-              >
-                Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-              </.button>
-              <.button
-                :if={registration.seats_held > 1}
-                type="button"
-                phx-click="remove_seat"
-                phx-value-id={registration.id}
-                data-confirm={remove_seat_confirmation(registration)}
-                variant="ghost"
-                size="sm"
-              >
-                {~t"Remove a seat"}
-              </.button>
+            <div class="flex shrink-0 items-center gap-1">
+              <%!-- Mark paid stays out of the menu: it's what the florist taps at the course itself. --%>
               <.button
                 :if={registration.pays_at_course?}
                 type="button"
@@ -305,17 +285,35 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               >
                 {~t"Mark paid"}
               </.button>
-              <.button
-                type="button"
-                phx-click="cancel"
-                phx-value-id={registration.id}
-                data-confirm={cancel_confirmation(registration)}
-                variant="ghost"
-                size="sm"
-                class="text-error"
-              >
-                {pgettext("course booking", "Cancel")}
-              </.button>
+              <.actions_menu id={"registration-actions-#{registration.id}"}>
+                <li :if={registration.payment_intent_id}>
+                  <.link
+                    href={StripeAPI.dashboard_payment_url(registration.payment_intent_id)}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                  </.link>
+                </li>
+                <.actions_menu_button
+                  :if={registration.seats_held > 1}
+                  menu={"registration-actions-#{registration.id}"}
+                  phx-click="remove_seat"
+                  phx-value-id={registration.id}
+                  data-confirm={remove_seat_confirmation(registration)}
+                >
+                  {~t"Remove a seat"}
+                </.actions_menu_button>
+                <.actions_menu_button
+                  menu={"registration-actions-#{registration.id}"}
+                  phx-click="cancel"
+                  phx-value-id={registration.id}
+                  data-confirm={cancel_confirmation(registration)}
+                  class="text-error"
+                >
+                  {pgettext("course booking", "Cancel")}
+                </.actions_menu_button>
+              </.actions_menu>
             </div>
           </li>
           <li :for={registration <- @cancelled} data-status="cancelled" class="text-base-content/50 py-2.5">

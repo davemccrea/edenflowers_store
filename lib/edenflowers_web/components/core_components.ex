@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.CoreComponents do
         </div>
         <button
           type="button"
-          class="text-base-content/50 size-8 -my-1 grid shrink-0 place-items-center hover:text-base-content"
+          class="text-base-content/50 touch-target size-8 -my-1 grid shrink-0 place-items-center hover:text-base-content"
           aria-label={~t"close"}
         >
           <.icon name="hero-x-mark" class="size-4" />
@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.CoreComponents do
     classes =
       if assigns.variant == "text" do
         [
-          "link-underline-static-body inline-flex items-center gap-2 hover:decoration-current",
+          "link-underline-static-body touch-target inline-flex items-center gap-2 hover:decoration-current",
           assigns[:class]
         ]
       else
@@ -373,7 +373,7 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="fieldset-label">
+        <span class="fieldset-label pointer-coarse:min-h-11">
           <input
             type="checkbox"
             id={@id}
@@ -945,7 +945,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label={~t"Eden Flowers on Facebook"}
-        class="inline-block transition duration-300 hover:opacity-60"
+        class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///facebook_logo_bw_128px.png"
@@ -960,7 +960,7 @@ defmodule EdenflowersWeb.CoreComponents do
         target="_blank"
         rel="noopener noreferrer"
         aria-label={~t"Eden Flowers on Instagram"}
-        class="inline-block transition duration-300 hover:opacity-60"
+        class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
         <.image
           src="local:///instagram_logo_bw_128px.png"
@@ -1007,7 +1007,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <button
       type="button"
-      class="group relative flex h-10 w-10 items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
+      class="touch-target group relative flex h-10 w-10 items-center justify-center gap-1 lg:h-auto lg:w-auto lg:gap-2"
       aria-label={cart_aria_label(@count)}
       aria-controls="cart-drawer"
       {@rest}
