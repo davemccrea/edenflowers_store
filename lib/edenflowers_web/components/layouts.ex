@@ -196,10 +196,6 @@ defmodule EdenflowersWeb.Layouts do
       phx-hook="AdminApp"
       class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
     >
-      <%!-- Opaque fixed strip under the status bar. Without a fixed element at the top edge,
-           iOS standalone draws its glass blur there, which bleeds over the topbar wordmark. --%>
-      <div aria-hidden="true" class="bg-base-200 h-[env(safe-area-inset-top)] fixed inset-x-0 top-0 z-40"></div>
-
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
         id="admin-nav-drawer"
@@ -229,8 +225,10 @@ defmodule EdenflowersWeb.Layouts do
 
       <div class={["flex min-w-0 flex-1 flex-col", @fill_viewport && "min-h-0"]}>
         <%!-- Mobile topbar mirrors the store header's menu button and wordmark.
-             Equal side columns keep the wordmark centred on the bar. --%>
-        <div class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 grid items-center border-b px-3 py-2 sm:px-6 lg:hidden">
+             Equal side columns keep the wordmark centred on the bar.
+             It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
+             blur over the top edge unless a sticky or fixed element covers it. --%>
+        <div class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <button
             type="button"
             class="h-12 w-12"
