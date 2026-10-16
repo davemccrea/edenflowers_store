@@ -201,8 +201,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          |> put_flash(:info, ~t"Expense deleted.")
          |> push_navigate(to: ~p"/admin/expenses")}
 
+      # Deleting removes the tags in Papra first, which is what usually fails.
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"The expense couldn't be deleted.")}
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           ~t"The expense couldn't be deleted because Papra couldn't be reached. Try again later."
+         )}
     end
   end
 

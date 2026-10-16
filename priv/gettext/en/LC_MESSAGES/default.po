@@ -2104,7 +2104,7 @@ msgstr ""
 msgid "Card to write"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:225
 #, elixir-autogen, elixir-format
 msgid "Corrections saved, but the expense could not be marked as reviewed."
 msgstr ""
@@ -2124,7 +2124,7 @@ msgstr ""
 msgid "Could not upload the picture."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:216
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:218
 #, elixir-autogen, elixir-format
 msgid "Expense saved and marked as reviewed."
 msgstr ""
@@ -5832,7 +5832,7 @@ msgstr "Delete this expense? This can't be undone."
 msgid "Expense deleted."
 msgstr "Expense deleted."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:205
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:207
 #, elixir-autogen, elixir-format
-msgid "The expense couldn't be deleted."
-msgstr "The expense couldn't be deleted."
+msgid "The expense couldn't be deleted because Papra couldn't be reached. Try again later."
+msgstr "The expense couldn't be deleted because Papra couldn't be reached. Try again later."

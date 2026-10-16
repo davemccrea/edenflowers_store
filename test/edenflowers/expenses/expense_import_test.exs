@@ -35,6 +35,8 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
       {:ok, @extracted_fields}
     end)
 
+    expect(Edenflowers.External.PapraAPI.Mock, :add_document_tag, fn @document_id, "processed" -> :ok end)
+
     import = record_import()
     assert {:ok, _import} = process(import)
 
@@ -60,6 +62,7 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
   test "recording the same document twice processes it once" do
     expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
     expect(Edenflowers.External.ClaudeAPI.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
+    expect(Edenflowers.External.PapraAPI.Mock, :add_document_tag, fn _, _ -> :ok end)
 
     import = record_import()
     assert {:ok, _import} = process(import)
@@ -68,6 +71,20 @@ defmodule Edenflowers.Expenses.ExpenseImportTest do
     assert {:cancel, :trigger_no_longer_applies} = process(import)
 
     assert [_expense] = Ash.read!(Expense, authorize?: false)
+  end
+
+  test "still processes the document when the processed tag can't be added" do
+    expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, @file_response} end)
+    expect(Edenflowers.External.ClaudeAPI.Mock, :extract_expense, fn _, _ -> {:ok, @extracted_fields} end)
+
+    expect(Edenflowers.External.PapraAPI.Mock, :add_document_tag, fn _, _ ->
+      {:error, {:papra_tag_not_found, "processed"}}
+    end)
+
+    import = record_import()
+
+    assert capture_log(fn -> assert {:ok, _import} = process(import) end) =~ "as processed"
+    assert Ash.get!(ExpenseImport, import.id, authorize?: false).processed_at
   end
 
   test "fails the job when Papra fetch fails" do

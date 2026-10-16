@@ -45,7 +45,14 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      description "Deletes an expense and removes its tags from the Papra document."
+      primary? true
+      require_atomic? false
+      change Edenflowers.Expenses.Changes.RemovePapraTags
+    end
 
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false

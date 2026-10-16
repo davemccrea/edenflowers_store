@@ -4,6 +4,7 @@ defmodule Edenflowers.Expenses.Changes.Process do
   Papra, extracts structured fields via Claude, and ingests them into the
   `Edenflowers.Expenses` domain. `Expenses.ingest_expense` upserts on
   `document_id`, so a retry after a partial failure cannot duplicate the expense.
+  Finally it tags the document as processed in Papra.
   """
   use Ash.Resource.Change
 
@@ -24,6 +25,7 @@ defmodule Edenflowers.Expenses.Changes.Process do
            {:ok, fields} <- claude().extract_expense(document.body, document.content_type),
            {:ok, expense} <- Expenses.ingest_expense(Map.put(fields, :document_id, document_id), actor: system_actor()) do
         Logger.info("Processed expense document #{document_id}")
+        tag_processed(document_id)
 
         changeset
         |> Ash.Changeset.force_change_attribute(:expense_id, expense.id)
@@ -34,5 +36,14 @@ defmodule Edenflowers.Expenses.Changes.Process do
           Ash.Changeset.add_error(changeset, error)
       end
     end)
+  end
+
+  # ponytail: a failed tag is only logged, since failing the job would re-run the Claude
+  # extraction on retry. Give it its own AshOban trigger if missed tags become a problem.
+  defp tag_processed(document_id) do
+    case papra().add_document_tag(document_id, Edenflowers.External.PapraAPI.processed_tag()) do
+      :ok -> :ok
+      {:error, error} -> Logger.warning("Failed to tag Papra document #{document_id} as processed: #{inspect(error)}")
+    end
   end
 end

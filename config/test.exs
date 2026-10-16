@@ -54,6 +54,10 @@ config :edenflowers, :here_api, Edenflowers.External.HereAPI.Mock
 config :edenflowers, :papra_api, Edenflowers.External.PapraAPI.Mock
 config :edenflowers, :claude_api, Edenflowers.External.ClaudeAPI.Mock
 config :edenflowers, :papra_webhook_secret, "test-webhook-secret"
+config :edenflowers, :papra_base_url, "http://papra.test"
+config :edenflowers, :papra_api_key, "test-papra-key"
+config :edenflowers, :papra_organization_id, "org_test"
+config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.PapraAPI}, retry: false
 
 # Push services are stubbed per test with Req.Test.
 config :edenflowers, :web_push_req_options, plug: {Req.Test, Edenflowers.WebPush}

@@ -64,7 +64,7 @@ just server-console production  # remote IEx on a server
 
 ### Papra expense capture
 
-Upload a document to [Papra](https://papra.app) and tag it `receipt`. That fires a webhook to `/webhook/papra`, and the app sends the document to Claude to extract the expense. Needs `PAPRA_BASE_URL`, `PAPRA_API_KEY`, `PAPRA_WEBHOOK_SECRET`, `PAPRA_ORGANIZATION_ID` and `ANTHROPIC_API_KEY` in `.env`.
+Upload a document to [Papra](https://papra.app) and tag it `receipt`. That fires a webhook to `/webhook/papra`, and the app sends the document to Claude to extract the expense, then tags the document `processed`. Deleting the expense in admin removes both tags. Needs `PAPRA_BASE_URL`, `PAPRA_API_KEY`, `PAPRA_WEBHOOK_SECRET`, `PAPRA_ORGANIZATION_ID` and `ANTHROPIC_API_KEY` in `.env`. The `processed` tag must already exist in Papra, and the API key needs `documents:read`, `documents:update` and `tags:read`.
 
 ### Stripe webhooks in dev
 

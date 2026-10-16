@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
 
   alias Edenflowers.Expenses
 
-  @receipt_tag "receipt"
+  @receipt_tag Edenflowers.External.PapraAPI.receipt_tag()
 
   def handle_event(%{"type" => "document:tag:added", "data" => %{"tagName" => @receipt_tag} = data}) do
     with {:ok, document_id} <- fetch(data, "documentId"),

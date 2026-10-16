@@ -2104,7 +2104,7 @@ msgstr "%{queue_position} av %{queue_total} att hantera"
 msgid "Card to write"
 msgstr "Kort att skriva"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:225
 #, elixir-autogen, elixir-format
 msgid "Corrections saved, but the expense could not be marked as reviewed."
 msgstr "Korrigeringarna sparades, men utgiften kunde inte markeras som granskad."
@@ -2124,7 +2124,7 @@ msgstr "Det gick inte att spara profilbilden."
 msgid "Could not upload the picture."
 msgstr "Det gick inte att ladda upp bilden."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:216
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:218
 #, elixir-autogen, elixir-format
 msgid "Expense saved and marked as reviewed."
 msgstr "Utgiften sparades och markerades som granskad."
@@ -5832,7 +5832,7 @@ msgstr "Radera utgiften? Det går inte att ångra."
 msgid "Expense deleted."
 msgstr "Utgiften raderades."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:205
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:207
 #, elixir-autogen, elixir-format
-msgid "The expense couldn't be deleted."
-msgstr "Utgiften kunde inte raderas."
+msgid "The expense couldn't be deleted because Papra couldn't be reached. Try again later."
+msgstr "Utgiften kunde inte raderas eftersom Papra inte gick att nå. Försök igen senare."
