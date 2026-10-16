@@ -314,7 +314,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 size="sm"
                 class="text-error"
               >
-                {~t"Cancel"}
+                {pgettext("course booking", "Cancel")}
               </.button>
             </div>
           </li>

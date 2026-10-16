@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.KeyDateIcon do
       <li :for={%{key: key, date: date} <- @key_dates} class="flex items-center gap-2">
         <.flower name="flower-30" class="text-primary/70 h-5 w-5 shrink-0" />
         <span class="font-serif text-base-content/85 italic">
-          {Localize.DateTime.to_string!(date, format: "EEEE d MMMM")} · {label(key)}
+          {Edenflowers.Format.weekday_day_month(date, Edenflowers.Format.locale())} · {label(key)}
         </span>
       </li>
     </ul>

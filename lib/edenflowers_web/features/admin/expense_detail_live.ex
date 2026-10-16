@@ -41,6 +41,18 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           <:subtitle :if={@expense.reviewed_at}>
             <.badge tone={:success} icon="hero-check">{~t"Reviewed"}</.badge>
           </:subtitle>
+          <:actions>
+            <.actions_menu id="expense-actions">
+              <.actions_menu_button
+                menu="expense-actions"
+                phx-click="delete"
+                data-confirm={~t"Delete this expense? This can't be undone."}
+                class="text-error"
+              >
+                {~t"Delete"}
+              </.actions_menu_button>
+            </.actions_menu>
+          </:actions>
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
@@ -178,6 +190,19 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          socket
          |> assign(:form, form)
          |> put_flash(:error, ~t"The expense wasn't saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("delete", _params, socket) do
+    case Ash.destroy(socket.assigns.expense, actor: socket.assigns.current_user) do
+      :ok ->
+        {:noreply,
+         socket
+         |> put_flash(:info, ~t"Expense deleted.")
+         |> push_navigate(to: ~p"/admin/expenses")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"The expense couldn't be deleted.")}
     end
   end
 

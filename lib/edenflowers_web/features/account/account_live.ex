@@ -848,7 +848,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <span class="font-medium tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
       <span class="text-base-content/70 block text-sm">{~t"One final delivery remains"}</span>
     <% else %>
-      {~t"Cancelled"}
+      {pgettext("subscription", "Cancelled")}
       <span class="text-base-content/70 block text-sm tabular-nums">
         {Format.day_month(helsinki_date(@subscription.updated_at), @locale)}
       </span>

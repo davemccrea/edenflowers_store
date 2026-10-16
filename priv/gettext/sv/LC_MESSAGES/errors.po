@@ -21,7 +21,7 @@ msgid "is invalid"
 msgstr "Ange ett giltigt värde"
 
 msgid "must be accepted"
-msgstr "Vänligen acceptera detta för att fortsätta"
+msgstr "Godkänn detta för att fortsätta"
 
 msgid "has invalid format"
 msgstr "Ange ett giltigt format"
@@ -119,4 +119,4 @@ msgid "course not found"
 msgstr "Den här kursen finns inte längre."
 
 msgid "Must be a valid email address"
-msgstr "Måste vara en giltig e-postadress"
+msgstr "Ange en giltig e-postadress"

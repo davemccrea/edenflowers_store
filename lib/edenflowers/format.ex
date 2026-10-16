@@ -91,16 +91,24 @@ defmodule Edenflowers.Format do
   def distance(meters, locale),
     do: "#{Localize.Number.to_string!(meters / 1000, locale: locale, fractional_digits: 1)} km"
 
-  @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\". For agenda labels."
+  @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\" / \"8.6.\". For agenda labels."
   @spec day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def day_month(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "d MMM")
+    format = if language(locale) == "fi", do: "d.M.", else: "d MMM"
+    Localize.Date.to_string!(date, locale: locale, format: format)
   end
 
-  @doc "Localized weekday with day-and-month, e.g. \"Monday 8 Jun\" / \"måndag 8 juni\"."
+  @doc """
+  Localized weekday with day-and-month, e.g. "Monday 8 Jun" / "måndag 8 juni" /
+  "maanantai 8.6.". For labels.
+
+  Finnish uses the standalone weekday (`cccc`): CLDR's format-context weekday is
+  the essive "maanantaina", which only reads right inside a sentence.
+  """
   @spec weekday_day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_day_month(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMM")
+    format = if language(locale) == "fi", do: "cccc d.M.", else: "EEEE d MMM"
+    Localize.Date.to_string!(date, locale: locale, format: format)
   end
 
   @doc "Localized weekday name for a `Fulfillment.Weekday`, e.g. \"Friday\" / \"fredag\"."
@@ -109,14 +117,31 @@ defmodule Edenflowers.Format do
     # 1 January 2024 was a Monday.
     ~D[2024-01-01]
     |> Date.add(Edenflowers.Fulfillment.Weekday.to_integer(weekday) - 1)
-    |> Localize.Date.to_string!(locale: locale, format: "EEEE")
+    |> Localize.Date.to_string!(locale: locale, format: "cccc")
   end
 
-  @doc "Localized weekday with day and full month, e.g. \"Monday 8 June\" / \"måndag 8 juni\". For prose."
+  @doc """
+  Localized weekday with day and full month, for prose: "Monday 8 June" /
+  "måndag den 8 juni" / "maanantaina 8. kesäkuuta".
+
+  The Finnish form is essive ("on Monday"), so Finnish translations must not put
+  a postposition such as "alkaen" or "asti" after it.
+  """
   @spec weekday_date(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_date(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "EEEE d MMMM")
+    format =
+      case language(locale) do
+        "fi" -> "EEEE d. MMMM"
+        "sv" -> "EEEE 'den' d MMMM"
+        _ -> "EEEE d MMMM"
+      end
+
+    Localize.Date.to_string!(date, locale: locale, format: format)
   end
+
+  # Locales arrive both as atoms from `locale/0` (:"sv-FI") and as strings
+  # stored on orders ("sv-FI").
+  defp language(locale), do: locale |> to_string() |> String.split("-") |> hd()
 
   @spec datetime(DateTime.t(), Localize.Locale.locale_id(), String.t()) :: String.t()
   def datetime(datetime, locale, time_zone \\ "Europe/Helsinki") do

@@ -8,6 +8,11 @@ defmodule Edenflowers.Expenses.ExpenseImport do
   postgres do
     table "expense_imports"
     repo Edenflowers.Repo
+
+    # Removing the import with its expense lets the document be re-imported by tagging it again.
+    references do
+      reference :expense, on_delete: :delete
+    end
   end
 
   oban do

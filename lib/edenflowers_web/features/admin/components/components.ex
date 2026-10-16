@@ -257,7 +257,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def subscription_state_label(:active), do: ~t"Active"
   def subscription_state_label(:paused), do: ~t"Paused"
   def subscription_state_label(:payment_failed), do: ~t"Payment failed"
-  def subscription_state_label(:cancelled), do: ~t"Cancelled"
+  def subscription_state_label(:cancelled), do: pgettext("subscription", "Cancelled")
 
   defp subscription_state_tone(:active), do: :success
   defp subscription_state_tone(:payment_failed), do: :error

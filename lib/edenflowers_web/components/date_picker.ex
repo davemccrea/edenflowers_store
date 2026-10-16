@@ -159,7 +159,7 @@ defmodule EdenflowersWeb.DatePicker do
           phx-click="current-month"
           type="button"
         >
-          {Localize.DateTime.to_string!(@view_date, format: "MMMM y")}
+          {Localize.DateTime.to_string!(@view_date, format: "LLLL y")}
           <span class="sr-only">, {~t"go to current month"}</span>
         </button>
         <button
@@ -385,19 +385,19 @@ defmodule EdenflowersWeb.DatePicker do
   end
 
   defp weekday_aria_label(date, state_label) do
-    weekday = Localize.DateTime.to_string!(date, format: "EEEE")
+    weekday = Localize.DateTime.to_string!(date, format: "cccc")
     label = ~t"Toggle #{weekday}"
     if state_label, do: "#{label}, #{state_label}", else: label
   end
 
   defp week_aria_label(week) do
-    first = Localize.DateTime.to_string!(List.first(week), format: "d MMM")
-    last = Localize.DateTime.to_string!(List.last(week), format: "d MMM")
+    first = Edenflowers.Format.day_month(List.first(week), Edenflowers.Format.locale())
+    last = Edenflowers.Format.day_month(List.last(week), Edenflowers.Format.locale())
     ~t"Toggle week #{first} to #{last}"
   end
 
   defp day_aria_label(day, today_date, selected_date, selectable?, state_label) do
-    base = Localize.DateTime.to_string!(day, format: "EEEE, d MMMM y")
+    base = Localize.Date.to_string!(day, format: :full)
 
     suffixes =
       [
@@ -414,12 +414,12 @@ defmodule EdenflowersWeb.DatePicker do
   end
 
   defp live_region_text(view_date, nil) do
-    Localize.DateTime.to_string!(view_date, format: "MMMM y")
+    Localize.DateTime.to_string!(view_date, format: "LLLL y")
   end
 
   defp live_region_text(view_date, selected_date) do
-    month = Localize.DateTime.to_string!(view_date, format: "MMMM y")
-    date = Localize.DateTime.to_string!(selected_date, format: "EEEE, d MMMM y")
+    month = Localize.DateTime.to_string!(view_date, format: "LLLL y")
+    date = Localize.Date.to_string!(selected_date, format: :full)
     "#{month}. #{date} #{~t"selected"}."
   end
 

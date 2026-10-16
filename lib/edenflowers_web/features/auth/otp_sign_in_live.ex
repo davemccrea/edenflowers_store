@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
             <%= if @resend_remaining > 0 do %>
               <span class="text-base-content/70">
-                {~t"Resend code in"} {@resend_remaining}s
+                {~t"Resend code in #{seconds = @resend_remaining}s"}
               </span>
             <% else %>
               <.button type="button" phx-click="resend" variant="text">

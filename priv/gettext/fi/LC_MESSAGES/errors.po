@@ -39,7 +39,7 @@ msgid "is still associated with this entry"
 msgstr "on edelleen liitetty tähän merkintään"
 
 msgid "are still associated with this entry"
-msgstr "ovat edelleen liitetty tähän merkintään"
+msgstr "on edelleen liitetty tähän merkintään"
 
 msgid "should have %{count} item(s)"
 msgid_plural "should have %{count} item(s)"

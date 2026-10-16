@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
       :resume -> ~t"Resumed"
       :change -> ~t"Changed"
       :replace_card -> ~t"Card replaced"
-      :cancel -> ~t"Cancelled"
+      :cancel -> pgettext("subscription", "Cancelled")
       other -> to_string(other)
     end
   end
