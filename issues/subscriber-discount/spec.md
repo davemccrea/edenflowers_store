@@ -1,5 +1,6 @@
 # Subscriber Discount
 
+Summary: Discount subscriptions, most for the most frequent deliveries
 Status: needs-triage
 
 ## Problem

@@ -1,5 +1,6 @@
 # Customer Reminders
 
+Summary: Remind customers to order again before an occasion they ordered for last year
 Status: needs-triage
 Parked: 2026-10-10. Approach sketched in conversation, not yet broken into issues.
 

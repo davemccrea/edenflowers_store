@@ -1,5 +1,6 @@
 # Delivery Windows
 
+Summary: Let customers book a delivery time window, for an extra fee
 Status: needs-triage
 Parked: 2026-10-07. Design agreed in a grilling session, not yet broken into issues.
 

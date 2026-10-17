@@ -1,5 +1,6 @@
 # Saved Cards
 
+Summary: Save a logged-in customer's card for faster checkout
 Status: ready-for-human
 Implemented 2026-10-15; needs a real Stripe check (see Comments).
 

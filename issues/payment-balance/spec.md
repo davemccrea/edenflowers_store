@@ -1,5 +1,6 @@
 # Payment Balance
 
+Summary: Make an order's balance mean what a booking's does, and show what's owed in one place
 Status: ready-for-agent
 
 ## Problem
