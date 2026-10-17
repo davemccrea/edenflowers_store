@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
   test "says so once the order is paid", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} =
-      Orders.record_in_person_payment(order, "85.00", :cash, actor: admin)
+      Orders.record_payment(order, "85.00", :cash, actor: admin)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 

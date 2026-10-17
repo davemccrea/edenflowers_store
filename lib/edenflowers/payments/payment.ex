@@ -1,7 +1,7 @@
 defmodule Edenflowers.Payments.Payment do
   @moduledoc """
   Money that moved for an order or a course booking: paid through Stripe
-  (checkout or a payment link), taken in person, or handed back. A refund is
+  (checkout or a payment link), recorded by Jennie, or handed back. A refund is
   a negative payment. It belongs to exactly one order or one registration.
 
   Only money that actually moved is recorded. A PaymentIntent still waiting
@@ -11,7 +11,7 @@ defmodule Edenflowers.Payments.Payment do
 
   `payment_method_type` says what paid, for the receipt: Stripe's payment
   method type ("card", "mobilepay", …) with the card's brand and last four, or
-  the in-person method. It's blank on payments recorded before it existed, so
+  the method Jennie recorded. It's blank on payments recorded before it existed, so
   their receipts stay as they were sent.
   """
   use Ash.Resource,

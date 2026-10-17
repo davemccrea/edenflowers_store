@@ -504,9 +504,9 @@ defmodule Edenflowers.PoliciesTest do
       assert {:error, %Ash.Error.Forbidden{}} = Orders.cancel_order(order, actor: customer)
     end
 
-    test "record an in-person payment", %{order: order, customer: customer} do
+    test "record a payment", %{order: order, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
-               Orders.record_in_person_payment(order, "100.00", :cash, actor: customer)
+               Orders.record_payment(order, "100.00", :cash, actor: customer)
     end
 
     test "open a payment link", %{order: order, customer: customer} do

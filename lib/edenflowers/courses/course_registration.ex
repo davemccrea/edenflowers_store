@@ -138,21 +138,21 @@ defmodule Edenflowers.Courses.CourseRegistration do
     update :mark_paid do
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :amount, :decimal, public?: false
-      validate argument_in(:payment_method, Edenflowers.Payments.PaymentMethod.in_person())
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate attribute_equals(:status, :confirmed), message: "isn't confirmed"
       change Changes.CollectBalance
       change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
       require_atomic? false
     end
 
-    # Money handed back in cash, by MobilePay or on Zettle, after a seat was
-    # removed or the booking cancelled.
-    update :record_in_person_refund do
+    # Money Jennie hands back herself, after a seat was removed or the booking
+    # cancelled.
+    update :record_refund do
       argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
-      validate argument_in(:payment_method, Edenflowers.Payments.PaymentMethod.in_person())
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate compare(:amount, less_than: 0), message: "must be a refund"
-      validate Edenflowers.Payments.Validations.InPersonRefundCovered
+      validate Edenflowers.Payments.Validations.RefundCoveredOutsideStripe
       change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
       require_atomic? false
     end
@@ -298,7 +298,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   aggregates do
     sum :amount_paid, :payments, :amount, default: Decimal.new("0")
-    sum :in_person_paid, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
+    sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
   end
 
   identities do

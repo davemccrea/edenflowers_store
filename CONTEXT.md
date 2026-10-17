@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order that will not be made. When Jennie cancels, nothing is refunded; she refunds separately in Stripe. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid in person, go through Jennie.
+A placed order that will not be made. When Jennie cancels, nothing is refunded; she refunds separately in Stripe. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Online Order**:
@@ -52,13 +52,9 @@ _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its 
 A private link Jennie gives a customer so they can pay what an order still owes online: a custom order not yet paid, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
 _Avoid_: Invoice, payment request, Stripe link
 
-**In-person Payment**:
-A payment Jennie takes outside the website — on the Zettle card reader, by MobilePay, in cash, or by a Zervant invoice paid to her bank — and then records against the order.
-_Avoid_: Offline payment, manual payment, till payment
-
 **Payment**:
-Money that moved for an order or a course booking: through Stripe, or taken in person. A refund is a negative Payment. An order or booking can have several.
-_Avoid_: Transaction, charge
+Money that moved for an order or a course booking, by any method: Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe payments are recorded from Stripe; Jennie records every other method herself, wherever it was paid. A refund is a negative Payment, made the same way the money came in. An order or booking can have several.
+_Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Balance**:
 What is still owed on a placed order or a confirmed course booking: its total minus what has been paid. A cancelled booking's total is zero. Positive is to collect, negative is to refund; editing a paid order is what usually leaves one.

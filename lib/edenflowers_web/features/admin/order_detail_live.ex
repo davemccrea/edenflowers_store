@@ -44,14 +44,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
-    |> assign(:in_person_form, in_person_form(order))
+    |> assign(:payment_form, payment_form(order))
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
 
-  defp in_person_form(order) do
-    amount = if refundable_in_person?(order), do: Decimal.negate(order.in_person_paid), else: order.balance
-    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :in_person)
+  defp payment_form(order) do
+    amount = if refundable_outside_stripe?(order), do: Decimal.negate(order.paid_outside_stripe), else: order.balance
+    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :payment)
   end
 
   defp payments(order) do
@@ -76,8 +76,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
 
-  defp refundable_in_person?(order),
-    do: order.fulfillment_status == :cancelled and Decimal.positive?(order.in_person_paid)
+  defp refundable_outside_stripe?(order),
+    do: order.fulfillment_status == :cancelled and Decimal.positive?(order.paid_outside_stripe)
 
   @impl true
   def render(assigns) do
@@ -273,15 +273,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 :if={owes_money?(@order)}
                 order={@order}
                 payments={@payments}
-                in_person_form={@in_person_form}
+                payment_form={@payment_form}
                 payment_message_urls={@payment_message_urls}
                 locale={@locale}
               />
 
-              <.refund_in_person
-                :if={refundable_in_person?(@order)}
+              <.refund_outside_stripe
+                :if={refundable_outside_stripe?(@order)}
                 order={@order}
-                form={@in_person_form}
+                form={@payment_form}
                 locale={@locale}
               />
             </section>
@@ -401,10 +401,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_event("record_in_person_payment", %{"in_person" => params}, socket) do
+  def handle_event("record_payment", %{"payment" => params}, socket) do
     amount = String.replace(params["amount"], ",", ".")
 
-    case Orders.record_in_person_payment(socket.assigns.order, amount, params["payment_method"],
+    case Orders.record_payment(socket.assigns.order, amount, params["payment_method"],
            actor: socket.assigns.current_user
          ) do
       {:ok, order} ->
@@ -499,8 +499,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
 
-  defp in_person_method_options do
-    Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
+  defp method_options do
+    PaymentMethod.values()
+    |> List.delete(:stripe)
+    |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 
   defp payment_label(%{amount: amount, method: method}) do
@@ -735,7 +737,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   attr :order, :map, required: true
   attr :payments, :list, required: true
-  attr :in_person_form, :any, required: true
+  attr :payment_form, :any, required: true
   attr :payment_message_urls, :map, default: nil
   attr :locale, :string, required: true
 
@@ -815,7 +817,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </div>
       </div>
 
-      <.in_person_payment form={@in_person_form} refund?={!Decimal.positive?(@order.balance)} />
+      <.record_payment form={@payment_form} refund?={!Decimal.positive?(@order.balance)} />
     </div>
     """
   end
@@ -823,9 +825,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :form, :any, required: true
   attr :refund?, :boolean, default: false
 
-  defp in_person_payment(assigns) do
+  defp record_payment(assigns) do
     ~H"""
-    <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
+    <details id="record-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
       <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
         {if @refund?, do: ~t"Record a refund", else: ~t"Record a payment"}
         <.icon
@@ -833,15 +835,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
         />
       </summary>
-      <.form for={@form} id="in-person-payment-form" phx-submit="record_in_person_payment" class="mt-3">
-        <fieldset aria-describedby="in-person-payment-help">
+      <.form for={@form} id="payment-form" phx-submit="record_payment" class="mt-3">
+        <fieldset aria-describedby="payment-help">
           <div class="grid grid-cols-2 items-end gap-2 text-sm">
             <.input
               field={@form[:payment_method]}
               type="select"
               label={~t"How"}
               class="select select-sm w-full"
-              options={in_person_method_options()}
+              options={method_options()}
             />
             <.input
               field={@form[:amount]}
@@ -864,7 +866,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               {if @refund?, do: ~t"Record refund", else: ~t"Record payment"}
             </.button>
           </div>
-          <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
+          <p id="payment-help" class="text-base-content/65 mt-1.5 text-xs">
             {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
           </p>
         </fieldset>
@@ -877,15 +879,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :form, :any, required: true
   attr :locale, :string, required: true
 
-  # A cancelled order won't be made, so money taken in person goes back in person.
-  defp refund_in_person(assigns) do
+  # A cancelled order won't be made, so money paid outside Stripe is handed back the same way.
+  defp refund_outside_stripe(assigns) do
     ~H"""
-    <div id="order-refund-in-person" class="border-base-content/12 mt-4 border-t pt-4">
+    <div id="order-refund-outside-stripe" class="border-base-content/12 mt-4 border-t pt-4">
       <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
-        {~t"Paid in person"}
-        <span class="tabular-nums">{Format.currency(@order.in_person_paid, @locale)}</span>
+        {~t"Paid outside Stripe"}
+        <span class="tabular-nums">{Format.currency(@order.paid_outside_stripe, @locale)}</span>
       </p>
-      <.in_person_payment form={@form} refund? />
+      <.record_payment form={@form} refund? />
     </div>
     """
   end

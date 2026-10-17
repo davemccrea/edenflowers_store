@@ -85,29 +85,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Resend payment link")
   end
 
-  test "a cancelled order paid in person is refunded in person", %{conn: conn} do
+  test "a cancelled order paid outside Stripe is refunded the same way", %{conn: conn} do
     order = placed_order(fulfillment_status: :cancelled, payment_intent_id: nil)
     generate(payment(order_id: order.id, amount: Decimal.new("88.50"), method: :cash))
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-refund-in-person", "€88.50")
-    assert has_element?(view, ~s|#in-person-payment-form input[value="-88.50"]|)
+    assert has_element?(view, "#order-refund-outside-stripe", "€88.50")
+    assert has_element?(view, ~s|#payment-form input[value="-88.50"]|)
 
     view
-    |> form("#in-person-payment-form", in_person: %{payment_method: "cash", amount: "-88,50"})
+    |> form("#payment-form", payment: %{payment_method: "cash", amount: "-88,50"})
     |> render_submit()
 
-    refute has_element?(view, "#order-refund-in-person")
+    refute has_element?(view, "#order-refund-outside-stripe")
     assert has_element?(view, "#order-payments", "Refund")
   end
 
-  test "a cancelled order paid only through Stripe has no in-person refund", %{conn: conn} do
+  test "a cancelled order paid only through Stripe has nothing to refund by hand", %{conn: conn} do
     order = placed_order(fulfillment_status: :cancelled, paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    refute has_element?(view, "#order-refund-in-person")
+    refute has_element?(view, "#order-refund-outside-stripe")
   end
 
   test "the actions menu says why each action is unavailable", %{conn: conn} do

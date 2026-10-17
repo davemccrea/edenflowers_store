@@ -532,7 +532,7 @@ elin_payment =
   |> Ash.read_one!(authorize?: false)
 
 {:ok, :recorded} =
-  Edenflowers.Payments.record_refund(%{
+  Edenflowers.Payments.record_stripe_refund(%{
     id: "re_seed_elin",
     payment_intent: elin_payment.payment_intent_id,
     amount: Edenflowers.External.StripeAPI.to_stripe_amount(elin_payment.amount),
@@ -1160,7 +1160,7 @@ walk_in =
   })
 
 walk_in = Orders.get_order_for_admin!(walk_in.id, actor: jennie)
-Orders.record_in_person_payment!(walk_in, walk_in.balance, :mobilepay, actor: jennie)
+Orders.record_payment!(walk_in, walk_in.balance, :mobilepay, actor: jennie)
 
 # Paid through the link, then made smaller, then refunded in the Stripe dashboard.
 smaller =
@@ -1187,7 +1187,12 @@ Orders.edit_order!(
 )
 
 {:ok, :recorded} =
-  Payments.record_refund(%{id: "re_seed_smaller", payment_intent: "pi_seed_smaller", amount: 6000, status: "succeeded"})
+  Payments.record_stripe_refund(%{
+    id: "re_seed_smaller",
+    payment_intent: "pi_seed_smaller",
+    amount: 6000,
+    status: "succeeded"
+  })
 
 # Delivered to a phone-only customer who promised to pay next week.
 fulfilled_unpaid =
@@ -1261,7 +1266,7 @@ refund_in_full = fn order ->
   [payment] = order.payments
 
   {:ok, :recorded} =
-    Payments.record_refund(%{
+    Payments.record_stripe_refund(%{
       id: "re_seed_#{order.order_reference}",
       payment_intent: payment.payment_intent_id,
       amount: Edenflowers.External.StripeAPI.to_stripe_amount(payment.amount),
@@ -1297,7 +1302,7 @@ cash =
 
 cash = Orders.get_order_for_admin!(cash.id, actor: jennie, load: [:line_items])
 [bouquet | _] = Enum.filter(cash.line_items, &(&1.product_variant_id != nil))
-cash = Orders.record_in_person_payment!(cash, cash.balance, :cash, actor: jennie)
+cash = Orders.record_payment!(cash, cash.balance, :cash, actor: jennie)
 
 Orders.edit_order!(cash, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
   actor: jennie
@@ -1315,7 +1320,7 @@ collected =
   })
 
 collected = Orders.get_order_for_admin!(collected.id, actor: jennie)
-collected = Orders.record_in_person_payment!(collected, collected.balance, :zettle, actor: jennie)
+collected = Orders.record_payment!(collected, collected.balance, :zettle, actor: jennie)
 Orders.mark_order_fulfilled!(collected, actor: jennie)
 
 # A free replacement for a returning customer whose first bouquet wilted.
