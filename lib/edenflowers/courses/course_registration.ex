@@ -142,6 +142,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
+    # Money handed back in cash, by MobilePay or on Zettle, after a seat was
+    # removed or the booking cancelled.
+    update :record_in_person_refund do
+      argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      validate argument_in(:payment_method, Edenflowers.Payments.PaymentMethod.in_person())
+      validate compare(:amount, less_than: 0), message: "must be a refund"
+      validate Edenflowers.Payments.Validations.InPersonRefundCovered
+      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
+      require_atomic? false
+    end
+
     # Recorded from Stripe's refund webhook, so a refund Jennie makes in the
     # Stripe dashboard shows up on the booking without her entering it again.
     update :record_stripe_refund do
@@ -283,6 +295,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   aggregates do
     sum :amount_paid, :payments, :amount, default: Decimal.new("0")
+    sum :in_person_paid, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
   end
 
   identities do
