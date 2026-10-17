@@ -1,6 +1,6 @@
 # In-person refunds on course bookings
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

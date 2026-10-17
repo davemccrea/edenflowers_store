@@ -1,6 +1,6 @@
 # Monthly Accounting Report
 
-Status: ready-for-agent, but the Försäljning sheet (issue 03) waits for course payments and refunds to be recorded (`.scratch/course-payments/`, issues 01 to 05)
+Status: ready-for-agent
 
 ## Problem
 

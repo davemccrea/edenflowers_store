@@ -1,6 +1,6 @@
 # In-person refunds can't be recorded on cancelled orders
 
-Status: ready-for-agent
+Status: done
 Type: bug
 
 ## What to build

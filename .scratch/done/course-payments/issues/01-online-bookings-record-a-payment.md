@@ -1,6 +1,6 @@
 # Online course bookings record a Payment
 
-Status: ready-for-agent
+Status: done
 Type: refactor
 
 ## What to build
