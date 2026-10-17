@@ -1366,39 +1366,9 @@ msgstr ""
 msgid "Made in Minimossen"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:31
-#, elixir-autogen, elixir-format
-msgid "Flowers for everyday moments"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:21
-#, elixir-autogen, elixir-format
-msgid "Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:18
-#, elixir-autogen, elixir-format
-msgid "Hi, I'm Jennie! I've run Eden Flowers in Vaasa since 2018. You'll find the shop in Minimossen, the recycling mall at Myrvägen 1."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:25
-#, elixir-autogen, elixir-format
-msgid "I make flowers for every occasion: christenings, weddings, funerals and everything in between. Whether it's for your own home or for a friend, ordering should be easy, so"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:22
+#: lib/edenflowers_web/features/marketing/about_live.ex:24
 #, elixir-autogen, elixir-format
 msgid "get in touch"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:27
-#, elixir-autogen, elixir-format
-msgid "or just pop in."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/about_live.ex:26
-#, elixir-autogen, elixir-format
-msgid "order online"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/contact_live.ex:27
@@ -1516,20 +1486,10 @@ msgstr ""
 msgid "Wrist corsages of peach roses"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:131
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen."
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:122
 #: lib/edenflowers_web/features/marketing/home_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "Funeral flowers"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:189
-#, elixir-autogen, elixir-format
-msgid "Ordering for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:160
@@ -6044,4 +6004,44 @@ msgstr ""
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "You can still pay at the course instead. If your plans change, reply to this email and let me know."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:131
+#, elixir-autogen, elixir-format
+msgid "Every arrangement is made with fresh cut flowers, and delivery is free within 5 km of Minimossen."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:31
+#, elixir-autogen, elixir-format
+msgid "Flowers for every stage of life"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Hi, I'm Jennie! I've run Eden Flowers in Vaasa since January 2019. I have a small shop in Minimossen, the recycling mall at Myrvägen 1. There you'll find my popular pick-up bouquets, trendy houseplants, and second-hand pots and vases."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:21
+#, elixir-autogen, elixir-format
+msgid "I make flowers for every occasion: christenings, weddings, funerals and everything in between."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:22
+#, elixir-autogen, elixir-format
+msgid "Order easily online"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:189
+#, elixir-autogen, elixir-format
+msgid "Would you like to order flowers for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:25
+#, elixir-autogen, elixir-format
+msgid "for a more specific order."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/about_live.ex:23
+#, elixir-autogen, elixir-format
+msgid "or"
 msgstr ""
