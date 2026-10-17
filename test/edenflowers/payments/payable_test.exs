@@ -85,6 +85,12 @@ defmodule Edenflowers.Payments.PayableTest do
     |> Ash.update()
   end
 
+  defp undo_payment(record, payment_id) do
+    record
+    |> Ash.Changeset.for_update(:undo_payment, %{payment_id: payment_id}, authorize?: false)
+    |> Ash.update()
+  end
+
   defp reload(record), do: Ash.load!(record, @fields, authorize?: false, reuse_values?: false)
 
   defp payments(record), do: Ash.load!(record, :payments, authorize?: false, reuse_values?: false).payments
@@ -290,11 +296,55 @@ defmodule Edenflowers.Payments.PayableTest do
         assert Exception.message(error) =~ "Lower the order or cancel it before refunding"
       end
 
-      test "a payment recorded by mistake is corrected by recording the opposite amount" do
+      test "a refund while something is still to collect is refused" do
         record = build(@parent, payments: [cash: "30.00"])
 
-        assert {:ok, record} = record_payment(record, "-30.00")
+        assert {:error, error} = record_payment(record, "-30.00")
+        assert Exception.message(error) =~ "Lower the order or cancel it before refunding"
+      end
+
+      test "undoing a whole payment recorded by mistake leaves the total owed again" do
+        {:ok, record} = record_payment(build(@parent), "80.00", :zettle)
+        [payment] = payments(record)
+
+        assert {:ok, record} = undo_payment(record, payment.id)
+
         assert_money(record.balance, "80.00")
+        refute record.settled?
+        refute record.refunded?
+        undo = Enum.find(payments(record), & &1.reverses_payment_id)
+        assert %{method: :zettle, reverses_payment_id: reversed} = undo
+        assert reversed == payment.id
+        assert_money(undo.amount, "-80.00")
+      end
+
+      test "undoing a refund recorded by mistake owes it back again" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00", cash: "-80.00"])
+        refund = Enum.find(payments(record), &Decimal.negative?(&1.amount))
+
+        assert {:ok, record} = undo_payment(record, refund.id)
+        assert_money(record.balance, "-80.00")
+      end
+
+      test "a payment is undone once" do
+        {:ok, record} = record_payment(build(@parent), "30.00")
+        [payment] = payments(record)
+
+        assert {:ok, record} = undo_payment(record, payment.id)
+        assert {:error, _error} = undo_payment(record, payment.id)
+
+        undo = Enum.find(payments(record), & &1.reverses_payment_id)
+        assert {:error, error} = undo_payment(record, undo.id)
+        assert Exception.message(error) =~ "can't be undone"
+      end
+
+      test "a Stripe payment, or another record's payment, can't be undone" do
+        record = build(@parent, payments: [stripe: "80.00"])
+        [stripe] = payments(record)
+        [other] = payments(build(@parent, payments: [cash: "80.00"]))
+
+        assert {:error, _error} = undo_payment(record, stripe.id)
+        assert {:error, _error} = undo_payment(record, other.id)
       end
 
       test "recording cancels the open PaymentIntent, which charged the old balance" do

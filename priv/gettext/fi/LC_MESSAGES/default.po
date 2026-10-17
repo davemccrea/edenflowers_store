@@ -3791,11 +3791,6 @@ msgstr "Maksettu tähän mennessä"
 msgid "Refund · %{how}"
 msgstr "Hyvitys · %{how}"
 
-#: lib/edenflowers_web/features/admin/components/components.ex:452
-#, elixir-autogen, elixir-format
-msgid "A minus amount records a refund. To correct a mistake, record the opposite amount."
-msgstr "Miinusmerkkinen summa kirjaa hyvityksen. Korjaa virhe kirjaamalla vastakkainen summa."
-
 #: lib/edenflowers_web/features/admin/components/components.ex:135
 #, elixir-autogen, elixir-format
 msgid "Copied"
@@ -3805,11 +3800,6 @@ msgstr "Kopioitu"
 #, elixir-autogen, elixir-format
 msgid "Item %{number}"
 msgstr "Tuote %{number}"
-
-#: lib/edenflowers_web/features/admin/components/components.ex:444
-#, elixir-autogen, elixir-format
-msgid "Record this payment? It can't be removed, only offset by recording the opposite amount."
-msgstr "Kirjataanko maksu? Sitä ei voi poistaa, vain kumota kirjaamalla vastakkainen summa."
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:774
 #, elixir-autogen, elixir-format
@@ -5280,11 +5270,6 @@ msgstr "Kampanjaa ei tallennettu. Tarkista alla merkityt kentät."
 msgid "Details"
 msgstr "Tiedot"
 
-#: lib/edenflowers_web/features/admin/dashboard_live.ex:155
-#, elixir-autogen, elixir-format
-msgid "Quick actions"
-msgstr "Pikatoiminnot"
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "A new size without a photo gets the product photo."
@@ -5806,11 +5791,6 @@ msgstr "Ajoneuvokulut"
 msgid "Record refund"
 msgstr "Kirjaa hyvitys"
 
-#: lib/edenflowers_web/features/admin/components/components.ex:445
-#, elixir-autogen, elixir-format
-msgid "Record this refund? It can't be removed, only offset by recording the opposite amount."
-msgstr "Kirjataanko hyvitys? Sitä ei voi poistaa, vain kumota kirjaamalla vastakkainen summa."
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
@@ -5882,3 +5862,76 @@ msgstr "Kirjaus ei onnistunut. Tarkista summa."
 #, elixir-autogen, elixir-format
 msgid "To collect / To refund"
 msgstr "Perittävää / Hyvitettävää"
+
+#: lib/edenflowers_web/features/admin/components/components.ex:452
+#, elixir-autogen, elixir-format
+msgid "A minus amount records a refund."
+msgstr "Miinusmerkkinen summa kirjaa hyvityksen."
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:99
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:408
+#, elixir-autogen, elixir-format
+msgid "Could not undo the payment."
+msgstr "Maksun peruminen ei onnistunut."
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:97
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:405
+#, elixir-autogen, elixir-format
+msgid "Payment undone."
+msgstr "Maksu peruttu."
+
+#: lib/edenflowers_web/features/admin/components/components.ex:444
+#, elixir-autogen, elixir-format
+msgid "Record this payment? A mistake can be undone afterwards."
+msgstr "Kirjataanko maksu? Virheen voi perua jälkikäteen."
+
+#: lib/edenflowers_web/features/admin/components/components.ex:445
+#, elixir-autogen, elixir-format
+msgid "Record this refund? A mistake can be undone afterwards."
+msgstr "Kirjataanko hyvitys? Virheen voi perua jälkikäteen."
+
+#: lib/edenflowers_web/features/admin/order_log.ex:50
+#, elixir-autogen, elixir-format
+msgid "Undid %{amount} · %{how}"
+msgstr "Peruttu %{amount} · %{how}"
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:729
+#, elixir-autogen, elixir-format
+msgid "Undo"
+msgstr "Peru"
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:444
+#, elixir-autogen, elixir-format
+msgid "Undo %{amount} payment"
+msgstr "Peru maksu %{amount}"
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:443
+#, elixir-autogen, elixir-format
+msgid "Undo %{amount} refund"
+msgstr "Peru hyvitys %{amount}"
+
+#: lib/edenflowers_web/features/admin/components/components.ex:484
+#, elixir-autogen, elixir-format
+msgid "Undo the %{amount} payment by %{how}? This records the opposite amount."
+msgstr "Perutaanko %{amount} maksu (%{how})? Vastakkainen summa kirjataan."
+
+#: lib/edenflowers_web/features/admin/components/components.ex:483
+#, elixir-autogen, elixir-format
+msgid "Undo the %{amount} refund by %{how}? This records the opposite amount."
+msgstr "Perutaanko %{amount} hyvitys (%{how})? Vastakkainen summa kirjataan."
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:497
+#, elixir-autogen, elixir-format
+msgid "Undone · %{how}"
+msgstr "Peruttu · %{how}"
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:228
+#, elixir-autogen, elixir-format
+msgctxt "course"
+msgid "Past"
+msgstr "Päättynyt"
+
+#: lib/edenflowers_web/features/admin/dashboard_live.ex:155
+#, elixir-autogen, elixir-format
+msgid "Quick actions"
+msgstr "Pikatoiminnot"

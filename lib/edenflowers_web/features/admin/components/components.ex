@@ -416,7 +416,7 @@ defmodule EdenflowersWeb.Admin.Components do
         </summary>
         <.form for={@form} id={"#{@id}-form"} phx-submit="record_payment" class="mt-3">
           <input type="hidden" name="record_id" value={@record.id} />
-          <fieldset aria-describedby={"#{@id}-help"}>
+          <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"}>
             <div class="grid grid-cols-2 items-end gap-2 text-sm">
               <.input
                 field={@form[:payment_method]}
@@ -441,15 +441,15 @@ defmodule EdenflowersWeb.Admin.Components do
                 class="col-span-2"
                 data-confirm={
                   if @collect?,
-                    do: ~t"Record this payment? It can't be removed, only offset by recording the opposite amount.",
-                    else: ~t"Record this refund? It can't be removed, only offset by recording the opposite amount."
+                    do: ~t"Record this payment? A mistake can be undone afterwards.",
+                    else: ~t"Record this refund? A mistake can be undone afterwards."
                 }
               >
                 {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
               </.button>
             </div>
-            <p id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-xs">
-              {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+            <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-xs">
+              {~t"A minus amount records a refund."}
             </p>
           </fieldset>
         </.form>
@@ -472,6 +472,16 @@ defmodule EdenflowersWeb.Admin.Components do
     Edenflowers.Payments.PaymentMethod.values()
     |> List.delete(:stripe)
     |> Enum.map(&{EdenflowersWeb.Admin.OrderLog.payment_method_label(&1), &1})
+  end
+
+  @doc "Asks before undoing a payment Jennie recorded, naming it."
+  def undo_confirmation(payment, locale) do
+    amount = Edenflowers.Format.currency(Decimal.abs(payment.amount), locale)
+    how = EdenflowersWeb.Admin.OrderLog.payment_method_label(payment.method)
+
+    if Decimal.negative?(payment.amount),
+      do: ~t"Undo the #{amount} refund by #{how}? This records the opposite amount.",
+      else: ~t"Undo the #{amount} payment by #{how}? This records the opposite amount."
   end
 
   @doc "Why recording money was refused, in the action's own words, for a flash."

@@ -31,6 +31,21 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
+    # Takes back a payment Jennie recorded by mistake, once, by recording the
+    # opposite amount against it. A refund on something that still stands
+    # otherwise has to wait until it's lowered (WithinBalance).
+    update :undo_payment do
+      argument :payment_id, :uuid, allow_nil?: false
+      argument :amount, :decimal, public?: false
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, public?: false
+      argument :reverses_payment_id, :uuid, public?: false
+
+      change Changes.UndoPayment
+      change Changes.CancelOpenPaymentIntent
+      change {Changes.RecordPayment, amount: :amount}
+      require_atomic? false
+    end
+
     # From Stripe's refund webhook, so a refund Jennie makes in the Stripe
     # dashboard shows up without her entering it again. Recorded whatever it
     # is, because the money moved; one beyond what was owed back leaves a
@@ -47,7 +62,13 @@ defmodule Edenflowers.Payments.Payable do
     # Positive is still to collect, negative is to refund.
     calculate :balance, :decimal, expr(total_due - amount_paid)
 
-    calculate :refunded?, :boolean, expr(exists(payments, amount > 0) and amount_paid <= 0)
+    # An undone payment and its undo don't count as taking and handing back money.
+    calculate :refunded?,
+              :boolean,
+              expr(
+                exists(payments, amount > 0 and is_nil(reverses_payment_id) and not exists(reversal, true)) and
+                  amount_paid <= 0
+              )
 
     # A record refunded in Stripe without being cancelled reads as owed again
     # by its balance, but is settled.

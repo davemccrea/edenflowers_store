@@ -37,6 +37,7 @@ defmodule Edenflowers.Payments.Payment do
     references do
       reference :order, on_delete: :delete
       reference :course_registration, on_delete: :delete
+      reference :reverses_payment, on_delete: :delete
     end
   end
 
@@ -55,7 +56,8 @@ defmodule Edenflowers.Payments.Payment do
         :stripe_refund_id,
         :payment_method_type,
         :card_brand,
-        :card_last4
+        :card_last4,
+        :reverses_payment_id
       ]
     end
   end
@@ -91,10 +93,21 @@ defmodule Edenflowers.Payments.Payment do
   relationships do
     belongs_to :order, Edenflowers.Orders.Order
     belongs_to :course_registration, Edenflowers.Courses.CourseRegistration
+
+    # An undo is the opposite amount, pointing at the payment it takes back.
+    belongs_to :reverses_payment, __MODULE__
+    has_one :reversal, __MODULE__, destination_attribute: :reverses_payment_id
+  end
+
+  calculations do
+    calculate :undoable?,
+              :boolean,
+              expr(method != :stripe and is_nil(reverses_payment_id) and not exists(reversal, true))
   end
 
   identities do
     identity :unique_payment_intent, [:payment_intent_id]
     identity :unique_stripe_refund, [:stripe_refund_id]
+    identity :unique_reversal, [:reverses_payment_id]
   end
 end

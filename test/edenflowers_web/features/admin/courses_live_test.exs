@@ -72,6 +72,20 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
   end
 
+  test "a past course stays listed, marked past, until its bookings are settled", %{conn: conn} do
+    owing = past_course("Spring posies")
+    generate(course_registration(course_id: owing.id, status: :confirmed))
+    settled = past_course("Winter garlands")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+    assert has_element?(view, "#course-#{owing.id}", "Past")
+    refute has_element?(view, "#course-#{settled.id}")
+  end
+
+  defp past_course(name),
+    do: generate(course(name: name)) |> Ash.Seed.update!(%{date: Date.add(Date.utc_today(), -7)})
+
   test "marking a booking paid clears it from the still-to-pay list", %{conn: conn} do
     registration = generate(course_registration(status: :confirmed, name: "Birgitta"))
 

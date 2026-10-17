@@ -46,6 +46,16 @@ defmodule Edenflowers.Courses.Course do
       filter expr(date >= fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date"))
       prepare build(default_sort: [date: :asc, start_time: :asc])
     end
+
+    # The upcoming courses, and past ones until every booking on them is settled.
+    read :admin_list do
+      filter expr(
+               date >= fragment("(now() AT TIME ZONE 'Europe/Helsinki')::date") or
+                 exists(bookings, committed? and not settled?)
+             )
+
+      prepare build(default_sort: [date: :asc, start_time: :asc])
+    end
   end
 
   policies do
