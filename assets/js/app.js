@@ -349,8 +349,8 @@ document.addEventListener("pointerdown", (down) => {
   window.addEventListener("pointercancel", end, options);
 });
 
-// In the installed admin app, swiping right pulls the navigation drawer out
-// under the finger, and lets go the same way as the swipe-to-close. The left
+// On touch screens, swiping right pulls the navigation drawer out under the
+// finger, and lets go the same way as the swipe-to-close. The left
 // edge is left to the iOS swipe back, text fields to selecting text, and
 // anything scrolled sideways to scrolling back. These are touch events rather
 // than pointer events so the first sideways move can stop the browser from
@@ -359,11 +359,10 @@ document.addEventListener("touchstart", (start) => {
   if (start.touches.length > 1) return;
   const touch = start.changedTouches[0];
   if (touch.clientX < 20) return;
-  if (!matchMedia("(display-mode: standalone)").matches) return;
   if (start.target.closest?.("input, textarea, select, [contenteditable]"))
     return;
   if (scrolledSideways(start.target)) return;
-  const dialog = document.getElementById("admin-nav-drawer-dialog");
+  const dialog = navDrawer();
   if (!dialog || document.querySelector("dialog[open]")) return;
 
   let offset = 0;
@@ -408,6 +407,13 @@ document.addEventListener("touchstart", (start) => {
   window.addEventListener("touchend", end, options);
   window.addEventListener("touchcancel", end, options);
 });
+
+// From lg up the admin has a persistent sidebar instead of its drawer.
+function navDrawer() {
+  const admin = document.getElementById("admin-nav-drawer-dialog");
+  if (admin) return matchMedia("(min-width: 64rem)").matches ? null : admin;
+  return document.getElementById("nav-drawer-dialog");
+}
 
 function scrolledSideways(element) {
   for (; element; element = element.parentElement) {
