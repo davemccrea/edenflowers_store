@@ -61,19 +61,18 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     end
 
     test "summarises each option's prices", %{conn: conn} do
-      home_delivery =
-        generate(
-          fulfillment_option(
-            fulfillment_method: :delivery,
-            rate_type: :dynamic,
-            name: "Home delivery",
-            base_price: "3.00",
-            price_per_km: "1.50",
-            free_dist_km: 5,
-            max_dist_km: 20,
-            same_day: false
-          )
+      generate(
+        fulfillment_option(
+          fulfillment_method: :delivery,
+          rate_type: :dynamic,
+          name: "Home delivery",
+          base_price: "3.00",
+          price_per_km: "1.50",
+          free_dist_km: 5,
+          max_dist_km: 20,
+          same_day: false
         )
+      )
 
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
