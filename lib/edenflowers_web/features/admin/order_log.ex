@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     |> Enum.sort_by(& &1.at, {:desc, DateTime})
   end
 
-  def payment_method_label(:stripe), do: ~t"Online (Stripe)"
+  def payment_method_label(:stripe), do: ~t"Stripe"
   def payment_method_label(:zettle), do: ~t"Card (Zettle)"
   def payment_method_label(:mobilepay), do: ~t"MobilePay"
   def payment_method_label(:cash), do: ~t"Cash"
@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: action}) do
     case action do
       :place_custom -> ~t"Placed by Jennie"
-      :finalize_checkout -> ~t"Placed and paid online"
+      :finalize_checkout -> ~t"Placed and paid with Stripe"
       :place_unpaid_occurrence -> ~t"Placed, but the saved card was refused"
       :edit -> ~t"Edited"
       :update_florist_note -> ~t"Florist note changed"

@@ -393,7 +393,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp locale_options, do: [{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]
 
   defp payment_options do
-    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Pays in person", value: "false"}]
+    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
   end
 
   defp tax_rate_options(tax_rates) do

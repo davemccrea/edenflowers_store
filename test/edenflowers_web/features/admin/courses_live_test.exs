@@ -66,9 +66,9 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     |> render_submit()
 
     assert has_element?(view, "li", "Birgitta")
-    assert has_element?(view, "li", "Pays at course")
+    assert has_element?(view, "li", "To collect")
     assert render(view) =~ "2 / 10 seats"
-    assert render(view) =~ "1 still to pay at the course"
+    assert render(view) =~ "1 to collect"
     assert_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
   end
 
@@ -79,8 +79,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     view |> form("#mark-paid-#{registration.id}", %{payment_method: "mobilepay"}) |> render_submit()
 
-    refute has_element?(view, "li", "Pays at course")
-    refute render(view) =~ "still to pay"
+    refute has_element?(view, "li", "To collect")
+    refute render(view) =~ ~r"\d+ to collect"
 
     assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
   end
@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, 0)
   end
 
-  test "a cancelled booking paid online is refunded with Stripe", %{conn: conn} do
+  test "a cancelled booking paid with Stripe is refunded with Stripe", %{conn: conn} do
     registration = generate(course_registration(status: :cancelled, amount: Decimal.new("85.00")))
 
     generate(
@@ -117,11 +117,11 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
     refute has_element?(view, "#refund-outside-stripe-#{registration.id}")
-    assert view |> element("#refund-with-stripe-#{registration.id}") |> render_click() =~ "Refunded through Stripe."
+    assert view |> element("#refund-with-stripe-#{registration.id}") |> render_click() =~ "Refunded with Stripe."
     refute has_element?(view, "#refund-with-stripe-#{registration.id}")
   end
 
-  test "a booking paid online isn't still to pay", %{conn: conn} do
+  test "a booking paid with Stripe has nothing to collect", %{conn: conn} do
     registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
 
     generate(
@@ -132,8 +132,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    refute has_element?(view, "li", "Pays at course")
-    refute render(view) =~ "still to pay"
+    refute has_element?(view, "li", "To collect")
+    refute render(view) =~ ~r"\d+ to collect"
   end
 
   test "links a Stripe booking to its payment in the Stripe dashboard", %{conn: conn} do
