@@ -166,3 +166,8 @@ SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
 printf '\n%s%s✓ Deployed %s%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
   "$BOLD" "$GREEN" "$TAG" "$RESET" "$DIM" "$RESET"
+
+# The deploy is already under way, so a failed release mustn't look like a failed deploy.
+if ! scripts/release.sh "$TAG"; then
+  printf '\n  %srelease notes not published — rerun with: scripts/release.sh %s%s\n' "$DIM" "$TAG" "$RESET"
+fi
