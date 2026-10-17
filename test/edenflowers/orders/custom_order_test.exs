@@ -518,6 +518,31 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status]).payment_status == nil
     end
+
+    test "money taken in person can be handed back, but no new money taken", ctx do
+      {:ok, order} = place(ctx)
+      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
+
+      assert {:error, error} = Orders.record_in_person_payment(order, "10.00", :cash, actor: ctx.admin)
+      assert Exception.message(error) =~ "can only be a refund on a cancelled order"
+
+      {:ok, order} = Orders.record_in_person_payment(order, "-134.00", :mobilepay, actor: ctx.admin)
+      assert order.payment_status == :refunded
+      assert Decimal.equal?(order.in_person_paid, 0)
+    end
+
+    test "no more can be handed back in person than was taken in person", ctx do
+      {:ok, order} = place(ctx)
+      {:ok, order} = Orders.record_in_person_payment(order, "100.00", :cash, actor: ctx.admin)
+      generate(payment(order_id: order.id, amount: Decimal.new("34.00"), payment_intent_id: "pi_rest"))
+      {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
+
+      assert {:error, error} = Orders.record_in_person_payment(order, "-134.00", :cash, actor: ctx.admin)
+      assert Exception.message(error) =~ "is more than was paid in person"
+
+      assert {:ok, _order} = Orders.record_in_person_payment(order, "-100.00", :cash, actor: ctx.admin)
+    end
   end
 
   describe "stock" do
