@@ -539,7 +539,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
 
       assert {:error, error} = Orders.record_payment(order, "-134.00", :cash, actor: ctx.admin)
-      assert Exception.message(error) =~ "is more than was paid outside Stripe"
+      assert Exception.message(error) =~ "That's more than was paid outside Stripe"
 
       assert {:ok, _order} = Orders.record_payment(order, "-100.00", :cash, actor: ctx.admin)
     end

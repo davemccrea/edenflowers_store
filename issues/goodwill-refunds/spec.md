@@ -14,9 +14,9 @@ The reason for refusing doesn't hold. The monthly report is cash-basis VAT (mont
 1. **A goodwill refund is money handed back without lowering what was sold.** It's a refund `Payment` marked `goodwill`. It leaves the balance where it was, so the order or booking stays settled, and a goodwill refund of everything received reads `refunded?` (payment status "Refunded"). It's still a negative row in the monthly report.
    It lives in `Edenflowers.Payments.Payable`, so orders and bookings both get it.
 
-2. **Jennie gives one once nothing is to collect, up to what was received.** On a record that's committed, not cancelled and has `balance <= 0`, capped at what was received less what's already been handed back (goodwill or not). A record with something to collect still refuses a refund (`WithinBalance`); a mistake is still corrected with Undo.
+2. **Jennie gives one once nothing is to collect, up to what was received.** On a record that's committed, not cancelled and has `balance <= 0`, capped at what was received less what's already been handed back (goodwill or not). A record with something to collect still refuses a refund (`Validations.Recordable`); a mistake is still corrected with Undo.
    - **Stripe:** refunds that amount through Stripe, reusing `Payments.refund/2`'s spreading over the Stripe payments, and the webhook records it. Capped at what was paid through Stripe less what Stripe already refunded.
-   - **Any other method:** records it, capped at `paid_outside_stripe`, as `RefundCoveredOutsideStripe` does today.
+   - **Any other method:** records it, capped at `paid_outside_stripe`, as `Validations.Recordable` does today.
    - A goodwill refund Jennie recorded can be undone like any other payment.
 
 3. **A Stripe refund beyond what was owed back is goodwill.** `record_stripe_refund` marks the part beyond `-balance` as goodwill, so a refund made in the Stripe dashboard on a settled order no longer reads as "To collect". A refund that straddles (owed back €20, refunded €50) is €20 ordinary and €30 goodwill; split it into two rows (the `unique_stripe_refund` identity then includes `goodwill`) or store the goodwill part as an amount on one row, whichever reads simpler. This replaces decision 3's "one beyond what was owed back leaves a balance to collect".
