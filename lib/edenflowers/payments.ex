@@ -364,17 +364,18 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Refunds an order's negative balance through Stripe, newest Stripe payment
-  first, as far as its Stripe payments cover it. Refunds that succeed at once
-  are recorded here; pending ones arrive through the refund webhook.
+  Refunds an order's or course booking's negative balance through Stripe,
+  newest Stripe payment first, as far as its Stripe payments cover it.
+  Refunds that succeed at once are recorded here; pending ones arrive
+  through the refund webhook.
 
   Stripe is the source of truth for what's already been refunded: succeeded
   refunds missing from our records are recorded first, and pending ones are
   taken off what's owed, so a second click never refunds the same money twice.
   The idempotency key covers two clicks racing each other.
   """
-  def refund_balance(%Order{} = order) do
-    refund(order, fn order -> Decimal.negate(order.balance) end)
+  def refund_balance(payable) do
+    refund(payable, fn payable -> Decimal.negate(payable.balance) end)
   end
 
   @doc """
@@ -385,19 +386,19 @@ defmodule Edenflowers.Payments do
     refund(order, fn order -> order.amount_paid || Decimal.new(0) end)
   end
 
-  defp refund(%Order{id: order_id} = order, owed) do
-    with {:ok, refunds_by_payment} <- stripe_refunds(order),
+  defp refund(%resource{id: id} = payable, owed) do
+    with {:ok, refunds_by_payment} <- stripe_refunds(payable),
          {:ok, _recorded} <- record_refunds(refunds_by_payment),
-         {:ok, order} <- Ash.get(Order, order_id, load: [:balance, :amount_paid], authorize?: false) do
+         {:ok, payable} <- Ash.get(resource, id, load: [:balance, :amount_paid], authorize?: false) do
       owed_cents =
-        StripeAPI.to_stripe_amount(Decimal.max(owed.(order), 0)) -
+        StripeAPI.to_stripe_amount(Decimal.max(owed.(payable), 0)) -
           pending_cents(refunds_by_payment)
 
-      payment_count = order |> payments_query() |> Ash.count!(authorize?: false)
+      payment_count = payable |> payments_query() |> Ash.count!(authorize?: false)
 
       refunds_by_payment
       |> Enum.sort_by(fn {payment, _refunds} -> payment.paid_at end, {:desc, DateTime})
-      |> refund_from(owed_cents, "#{order_id}-#{payment_count}", [])
+      |> refund_from(owed_cents, "#{id}-#{payment_count}", [])
     end
   end
 
