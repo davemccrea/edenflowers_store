@@ -142,6 +142,15 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
+    # Recorded from Stripe's refund webhook, so a refund Jennie makes in the
+    # Stripe dashboard shows up on the booking without her entering it again.
+    update :record_stripe_refund do
+      argument :stripe_refund_id, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount}
+      require_atomic? false
+    end
+
     # When someone in a group drops out. Removing the last seat is a cancel.
     # seats and amount stay what was bought, because the receipt is rebuilt
     # from them. Nothing is refunded: the seat's price is left as a negative
@@ -191,6 +200,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :add_payment_intent_id,
                      :mark_payment_cancelled,
                      :confirm_payment,
+                     :record_stripe_refund,
                      :send_confirmation_email,
                      :reconcile_payment,
                      :cancel
