@@ -471,14 +471,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def handle_event("refund_with_stripe", _params, socket) do
     case Edenflowers.Payments.refund_balance(socket.assigns.order) do
       {:ok, refunds} ->
-        message =
-          cond do
-            refunds == [] -> ~t"Nothing left to refund. Stripe already has refunds covering it."
-            Enum.all?(refunds, &(&1.status == "succeeded")) -> ~t"Refunded with Stripe."
-            true -> ~t"Refund sent to Stripe. It shows here once it goes through."
-          end
-
-        {:noreply, socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:info, message)}
+        {:noreply,
+         socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:info, refund_message(refunds))}
 
       {:error, reason} ->
         Logger.error("Stripe refund for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
