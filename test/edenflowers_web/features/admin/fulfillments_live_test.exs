@@ -45,9 +45,19 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   describe "options list" do
     test "links each option to its own page", %{conn: conn, delivery: delivery, pickup: pickup} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      render_async(view, 500)
 
-      assert has_element?(view, ~s|#fulfillment-options a[href="/admin/fulfillments/#{delivery.id}"]|, "Delivery")
-      assert has_element?(view, ~s|#fulfillment-options a[href="/admin/fulfillments/#{pickup.id}"]|, "Pickup")
+      assert has_element?(view, ~s|tr a[href="/admin/fulfillments/#{delivery.id}"]|, "Delivery")
+      assert has_element?(view, ~s|tr a[href="/admin/fulfillments/#{pickup.id}"]|, "Pickup")
+    end
+
+    test "lists options in their sort order, not by name", %{conn: conn} do
+      generate(fulfillment_option(name: "Zeta", sort_key: -2))
+      generate(fulfillment_option(name: "Alpha", sort_key: -1))
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      html = render_async(view, 500)
+      assert :binary.match(html, "Zeta") < :binary.match(html, "Alpha")
     end
 
     test "summarises each option's prices", %{conn: conn} do
@@ -67,11 +77,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      assert has_element?(
-               view,
-               ~s|a[href="/admin/fulfillments/#{home_delivery.id}"]|,
-               "€3.00 · €1.50/km · free within 5 km · up to 20 km"
-             )
+      assert render_async(view, 500) =~ "€3.00 · €1.50/km · free within 5 km · up to 20 km"
     end
 
     test "an unknown option goes back to the list", %{conn: conn} do
@@ -308,6 +314,55 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     test "renders a data-confirm attribute on the reset button", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
       assert html =~ "Reset every fulfillment option?"
+    end
+  end
+
+  describe "same-day for every option" do
+    test "switching same-day off applies to every option", %{conn: conn, delivery: delivery, pickup: pickup} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      assert has_element?(view, "#same-day-form input.toggle[type=checkbox]")
+      refute has_element?(view, "#same-day-form fieldset.hidden input[type=time]")
+
+      view |> form("#same-day-form", %{"same_day" => %{"same_day" => "false"}}) |> render_change()
+      assert has_element?(view, "#same-day-form fieldset.hidden input[type=time]")
+
+      view
+      |> form("#same-day-form", %{"same_day" => %{"same_day" => "false"}})
+      |> render_submit()
+
+      assert render(view) =~ "Saved."
+      refute Fulfillment.get_option_by_id!(delivery.id, authorize?: false).same_day
+      refute Fulfillment.get_option_by_id!(pickup.id, authorize?: false).same_day
+    end
+
+    test "options that differ all get what's saved", %{conn: conn, delivery: delivery, pickup: pickup} do
+      Fulfillment.update_pricing!(pickup, %{same_day: false}, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      assert render(view) =~ "Options differ. Saving applies to all."
+
+      view
+      |> form("#same-day-form", %{"same_day" => %{"same_day" => "true", "order_deadline" => "12:00"}})
+      |> render_submit()
+
+      delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
+      assert {delivery.same_day, delivery.order_deadline} == {true, ~T[12:00:00]}
+      assert {pickup.same_day, pickup.order_deadline} == {true, ~T[12:00:00]}
+    end
+
+    test "turning same-day on needs a deadline", %{conn: conn, delivery: delivery, pickup: pickup} do
+      Fulfillment.update_pricing!(delivery, %{same_day: false}, authorize?: false)
+      Fulfillment.update_pricing!(pickup, %{same_day: false, order_deadline: nil}, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      html =
+        view
+        |> form("#same-day-form", %{"same_day" => %{"same_day" => "true", "order_deadline" => ""}})
+        |> render_submit()
+
+      assert html =~ "is required"
+      refute Fulfillment.get_option_by_id!(delivery.id, authorize?: false).same_day
+      refute Fulfillment.get_option_by_id!(pickup.id, authorize?: false).same_day
     end
   end
 

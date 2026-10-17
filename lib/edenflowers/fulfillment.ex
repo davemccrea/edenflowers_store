@@ -46,6 +46,21 @@ defmodule Edenflowers.Fulfillment do
 
   defp same_day_options(opts), do: Enum.filter(list_options!(opts), & &1.same_day)
 
+  @doc """
+  Apply `:same_day` and/or `:order_deadline` to every option, or to none if any
+  refuses them. Each option can still change them on its own afterwards.
+  """
+  def set_same_day_for_all(changes, opts) do
+    Ash.transact(Edenflowers.Fulfillment.FulfillmentOption, fn ->
+      Enum.reduce_while(list_options!(opts), [], fn option, updated ->
+        case update_pricing(option, changes, opts) do
+          {:ok, option} -> {:cont, [option | updated]}
+          error -> {:halt, error}
+        end
+      end)
+    end)
+  end
+
   resources do
     resource Edenflowers.Fulfillment.FulfillmentOption do
       define :list_options, action: :read

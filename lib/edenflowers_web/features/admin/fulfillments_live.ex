@@ -4,7 +4,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
 
   `:index` shows one calendar for every fulfillment option at once (with a
   `:mixed` indicator when options disagree) and lists the options with their
-  prices. `:edit` shows one option's prices form and a calendar for just that
+  prices in a table. Its same-day form writes the same-day switch and deadline to every
+  option. `:edit` shows one option's prices form and a calendar for just that
   option.
 
   The florist clicks dates / weekday headers on a calendar to enable or
@@ -45,7 +46,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Fulfillments")
-     |> assign(:scope, :all)}
+     |> assign(:scope, :all)
+     |> assign_same_day_form()}
   end
 
   defp mount_action(:edit, %{"id" => id}, socket) do
@@ -77,21 +79,33 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <.calendar scope={@scope} options={@options} today={@today} />
         </.form_section>
 
+        <.form_section title={~t"Same-day"} class="mt-6">
+          <:description>{~t"Changes here apply to every option."}</:description>
+          <.same_day_form form={@same_day_form} varies?={@same_day_varies?} />
+        </.form_section>
+
         <.form_section title={~t"Options"} class="mt-6">
-          <ul id="fulfillment-options" class="divide-base-content/8 divide-y">
-            <li :for={option <- @options}>
-              <.link
-                navigate={~p"/admin/fulfillments/#{option.id}"}
-                class="-mx-2 flex items-center justify-between gap-4 rounded px-2 py-3 hover:bg-base-200"
-              >
-                <div class="min-w-0">
-                  <p class="text-base-content font-medium">{option.name}</p>
-                  <p class="text-base-content/65 text-sm tabular-nums">{price_summary(option, @locale)}</p>
-                </div>
-                <.icon name="hero-chevron-right" class="text-base-content/50 h-4 w-4 shrink-0" />
+          <Cinder.collection
+            id="fulfillment-options"
+            query={Fulfillment.FulfillmentOption}
+            action={:list_for_checkout}
+            actor={@current_user}
+            theme={EdenflowersWeb.Admin.CinderTheme}
+            click={fn option -> JS.navigate(~p"/admin/fulfillments/#{option.id}") end}
+          >
+            <:col :let={option} field="name" label={~t"Name"}>
+              <.link navigate={~p"/admin/fulfillments/#{option.id}"} class="font-medium hover:underline">
+                {option.name}
               </.link>
-            </li>
-          </ul>
+            </:col>
+            <:col :let={option} label={~t"Prices"}>
+              <span class="tabular-nums">{price_summary(option, @locale)}</span>
+            </:col>
+            <:col :let={option} label={~t"Same-day until"}>
+              <span :if={option.same_day} class="tabular-nums">{Format.time(option.order_deadline, @locale)}</span>
+              <.blank :if={not option.same_day} />
+            </:col>
+          </Cinder.collection>
         </.form_section>
       </.admin_page>
     </Layouts.admin>
@@ -147,6 +161,34 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   attr :form, Phoenix.HTML.Form, required: true
+  attr :varies?, :boolean, required: true
+
+  defp same_day_form(assigns) do
+    ~H"""
+    <.form
+      for={@form}
+      id="same-day-form"
+      phx-change="validate-same-day"
+      phx-submit="save-same-day"
+      class="max-w-xl space-y-4"
+    >
+      <.input field={@form[:same_day]} type="checkbox" label={~t"Same-day fulfillment"} class="toggle toggle-primary" />
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <.input
+          field={@form[:order_deadline]}
+          type="time"
+          label={~t"Same-day order deadline"}
+          class="input w-full"
+          hidden={not Phoenix.HTML.Form.normalize_value("checkbox", @form[:same_day].value)}
+        />
+      </div>
+      <p :if={@varies?} class="text-base-content/65 text-sm">{~t"Options differ. Saving applies to all."}</p>
+      <.button type="submit" variant="primary">{~t"Save"}</.button>
+    </.form>
+    """
+  end
+
+  attr :form, Phoenix.HTML.Form, required: true
   attr :rate_type, :atom, required: true
 
   defp pricing_form(assigns) do
@@ -192,9 +234,15 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           />
         <% end %>
       </div>
-      <.input field={@form[:same_day]} type="checkbox" label={~t"Same-day fulfillment"} />
+      <.input field={@form[:same_day]} type="checkbox" label={~t"Same-day fulfillment"} class="toggle toggle-primary" />
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <.input field={@form[:order_deadline]} type="time" label={~t"Same-day order deadline"} class="input w-full" />
+        <.input
+          field={@form[:order_deadline]}
+          type="time"
+          label={~t"Same-day order deadline"}
+          class="input w-full"
+          hidden={not Phoenix.HTML.Form.normalize_value("checkbox", @form[:same_day].value)}
+        />
       </div>
       <.button type="submit" variant="primary">{~t"Save"}</.button>
     </.form>
@@ -213,12 +261,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         []
       end
 
-    same_day =
-      if option.same_day,
-        do: [~t"same day until #{time = Format.time(option.order_deadline, locale)}"],
-        else: []
-
-    Enum.join([Format.currency(option.base_price, locale)] ++ distance ++ same_day, " · ")
+    Enum.join([Format.currency(option.base_price, locale)] ++ distance, " · ")
   end
 
   @impl true
@@ -240,6 +283,37 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         {:noreply,
          socket
          |> assign(:form, form)
+         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("validate-same-day", %{"same_day" => params}, socket) do
+    {:noreply, assign(socket, :same_day_form, to_form(params, as: "same_day"))}
+  end
+
+  def handle_event("save-same-day", %{"same_day" => params}, socket) do
+    # A blank deadline keeps each option's own, rather than clearing them all.
+    changes =
+      case params["order_deadline"] do
+        "" -> %{same_day: params["same_day"]}
+        deadline -> %{same_day: params["same_day"], order_deadline: deadline}
+      end
+
+    case Fulfillment.set_same_day_for_all(changes, actor: socket.assigns.current_user) do
+      {:ok, updated} ->
+        {:noreply,
+         socket
+         |> replace_options(updated)
+         |> assign_same_day_form()
+         |> Cinder.refresh_table("fulfillment-options")
+         |> put_flash(:info, ~t"Saved.")}
+
+      {:error, error} ->
+        errors = for %{field: field} = e <- Ash.Error.to_error_class(error).errors, do: {field, {e.message, []}}
+
+        {:noreply,
+         socket
+         |> assign(:same_day_form, to_form(params, as: "same_day", errors: errors, action: :validate))
          |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
     end
   end
@@ -277,6 +351,27 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     option
     |> AshPhoenix.Form.for_update(:update_pricing, actor: actor, as: "pricing")
     |> to_form()
+  end
+
+  defp assign_same_day_form(socket) do
+    options = socket.assigns.options
+    deadline = shared(options, :order_deadline)
+
+    params = %{
+      "same_day" => to_string(Enum.all?(options, & &1.same_day)),
+      "order_deadline" => if(match?(%Time{}, deadline), do: Calendar.strftime(deadline, "%H:%M"), else: "")
+    }
+
+    socket
+    |> assign(:same_day_form, to_form(params, as: "same_day"))
+    |> assign(:same_day_varies?, shared(options, :same_day) == :mixed or deadline == :mixed)
+  end
+
+  defp shared(options, field) do
+    case options |> Enum.map(&Map.fetch!(&1, field)) |> Enum.uniq() do
+      [value] -> value
+      _ -> :mixed
+    end
   end
 
   defp scoped_options(%{assigns: %{scope: scope, options: options}}),
