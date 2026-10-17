@@ -283,18 +283,17 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Records a refund made in the Stripe dashboard against the order it paid
-  for. Refunds of course bookings, and refunds not yet succeeded, are left
-  alone; Stripe sends `refund.updated` once a pending refund goes through.
+  Records a refund made in the Stripe dashboard against the order or course
+  booking it paid for. Refunds not yet succeeded are left alone; Stripe sends
+  `refund.updated` once a pending refund goes through.
   """
   def record_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
       when is_binary(payment_intent_id) do
-    with {:ok, %Payment{order_id: order_id}} <- find_payment(payment_intent_id),
+    with {:ok, payment} <- find_payment(payment_intent_id),
          false <- refund_recorded?(refund.id),
-         {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()),
          amount = Decimal.negate(StripeAPI.from_stripe_amount(refund.amount)),
-         {:ok, _order} <- Orders.record_stripe_refund(order, refund.id, amount, actor: system_actor()) do
-      Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for order #{order_id}")
+         {:ok, _record} <- record_stripe_refund(payment, refund.id, amount) do
+      Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(parent_ref(payment))}")
       {:ok, :recorded}
     else
       :not_found -> {:ok, :ignored}
@@ -305,6 +304,21 @@ defmodule Edenflowers.Payments do
 
   def record_refund(_refund), do: {:ok, :ignored}
 
+  defp record_stripe_refund(%Payment{order_id: order_id}, refund_id, amount) when is_binary(order_id) do
+    with {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()) do
+      Orders.record_stripe_refund(order, refund_id, amount, actor: system_actor())
+    end
+  end
+
+  defp record_stripe_refund(%Payment{course_registration_id: registration_id}, refund_id, amount) do
+    with {:ok, registration} <- Courses.get_registration_by_id(registration_id, actor: system_actor()) do
+      Courses.record_registration_stripe_refund(registration, refund_id, amount, actor: system_actor())
+    end
+  end
+
+  defp parent_ref(%Payment{order_id: order_id}) when is_binary(order_id), do: {"order_id", order_id}
+  defp parent_ref(%Payment{course_registration_id: registration_id}), do: {"course_registration_id", registration_id}
+
   # The webhook and the order page can record the same refund at once; the
   # unique stripe_refund_id turns the loser's insert into an error.
   defp recorded_meanwhile_or_error(refund_id, error) do
@@ -314,18 +328,20 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Asks Stripe for the refunds on an order's Stripe payments and records any
-  whose webhook never arrived. Returns how many were newly recorded.
+  Asks Stripe for the refunds on an order's or course booking's Stripe
+  payments and records any whose webhook never arrived. Returns how many were
+  newly recorded.
   """
-  def sync_refunds(%Order{id: order_id}) do
-    with {:ok, refunds_by_payment} <- stripe_refunds(order_id) do
+  def sync_refunds(payable) do
+    with {:ok, refunds_by_payment} <- stripe_refunds(payable) do
       record_refunds(refunds_by_payment)
     end
   end
 
-  defp stripe_refunds(order_id) do
-    Payment
-    |> Ash.Query.filter(order_id == ^order_id and not is_nil(payment_intent_id) and amount > 0)
+  defp stripe_refunds(payable) do
+    payable
+    |> payments_query()
+    |> Ash.Query.filter(not is_nil(payment_intent_id) and amount > 0)
     |> Ash.read!(authorize?: false)
     |> Enum.reduce_while({:ok, []}, fn payment, {:ok, acc} ->
       case StripeAPI.impl().list_refunds(payment.payment_intent_id) do
@@ -369,18 +385,15 @@ defmodule Edenflowers.Payments do
     refund(order, fn order -> order.amount_paid || Decimal.new(0) end)
   end
 
-  defp refund(%Order{id: order_id}, owed) do
-    with {:ok, refunds_by_payment} <- stripe_refunds(order_id),
+  defp refund(%Order{id: order_id} = order, owed) do
+    with {:ok, refunds_by_payment} <- stripe_refunds(order),
          {:ok, _recorded} <- record_refunds(refunds_by_payment),
          {:ok, order} <- Ash.get(Order, order_id, load: [:balance, :amount_paid], authorize?: false) do
       owed_cents =
         StripeAPI.to_stripe_amount(Decimal.max(owed.(order), 0)) -
           pending_cents(refunds_by_payment)
 
-      payment_count =
-        Payment
-        |> Ash.Query.filter(order_id == ^order_id)
-        |> Ash.count!(authorize?: false)
+      payment_count = order |> payments_query() |> Ash.count!(authorize?: false)
 
       refunds_by_payment
       |> Enum.sort_by(fn {payment, _refunds} -> payment.paid_at end, {:desc, DateTime})
@@ -430,6 +443,9 @@ defmodule Edenflowers.Payments do
 
     Kernel.max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)
   end
+
+  defp payments_query(%Order{id: id}), do: Ash.Query.filter(Payment, order_id == ^id)
+  defp payments_query(%CourseRegistration{id: id}), do: Ash.Query.filter(Payment, course_registration_id == ^id)
 
   defp find_payment(payment_intent_id) do
     Payment
