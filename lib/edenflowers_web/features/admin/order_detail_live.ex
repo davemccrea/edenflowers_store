@@ -480,7 +480,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         message =
           cond do
             refunds == [] -> ~t"Nothing left to refund. Stripe already has refunds covering it."
-            Enum.all?(refunds, &(&1.status == "succeeded")) -> ~t"Refunded through Stripe."
+            Enum.all?(refunds, &(&1.status == "succeeded")) -> ~t"Refunded with Stripe."
             true -> ~t"Refund sent to Stripe. It shows here once it goes through."
           end
 
@@ -488,14 +488,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
       {:error, reason} ->
         Logger.error("Stripe refund for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not refund through Stripe. Check the payment in Stripe.")}
+        {:noreply, put_flash(socket, :error, ~t"Could not refund with Stripe. Check the payment in Stripe.")}
     end
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
 
   defp cancel_confirmation(%{holds_money?: true}),
-    do: ~t"Cancel this order? It is paid, so refund the customer in Stripe or by hand. This can't be undone."
+    do: ~t"Cancel this order? It is paid, so refund it with Stripe or record a refund. This can't be undone."
 
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
 
@@ -785,7 +785,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           phx-click="refund_with_stripe"
           phx-disable-with={~t"Refunding…"}
           data-confirm={
-            ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card through Stripe?"
+            ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card with Stripe?"
           }
           variant="primary"
           size="sm"

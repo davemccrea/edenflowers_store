@@ -2576,21 +2576,6 @@ msgstr ""
 msgid "Seats"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:228
-#, elixir-autogen, elixir-format
-msgid "%{count} still to pay at the course"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:335
-#, elixir-autogen, elixir-format
-msgid "Mark paid"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:304
-#, elixir-autogen, elixir-format
-msgid "Pays at course"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:287
 #, elixir-autogen, elixir-format
 msgid "They'll get a confirmation email. Payment is taken at the course."
@@ -3209,11 +3194,6 @@ msgstr ""
 msgid "Cancel order"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:498
-#, elixir-autogen, elixir-format
-msgid "Cancel this order? It is paid, so refund the customer in Stripe or by hand. This can't be undone."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:500
 #, elixir-autogen, elixir-format
 msgid "Cancel this order? This can't be undone."
@@ -3417,11 +3397,6 @@ msgstr ""
 msgid "Note saved."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_log.ex:37
-#, elixir-autogen, elixir-format
-msgid "Online (Stripe)"
-msgstr ""
-
 #: lib/edenflowers_web/features/checkout/pay_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Order %{reference}"
@@ -3485,14 +3460,10 @@ msgstr ""
 msgid "Payment link created."
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/courses_live.ex:69
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:411
 #, elixir-autogen, elixir-format
 msgid "Payment recorded."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_form_live.ex:396
-#, elixir-autogen, elixir-format
-msgid "Pays in person"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:426
@@ -3768,6 +3739,7 @@ msgstr ""
 msgid "Receipt emailed"
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/courses_live.ex:335
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:866
 #, elixir-autogen, elixir-format
 msgid "Record payment"
@@ -3778,6 +3750,7 @@ msgstr ""
 msgid "This order is paid. If the total changes, the order page shows the balance to collect or refund."
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/courses_live.ex:304
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:749
 #, elixir-autogen, elixir-format
 msgid "To collect"
@@ -3816,11 +3789,6 @@ msgstr ""
 #: lib/edenflowers_web/features/checkout/pay_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Paid so far"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_log.ex:67
-#, elixir-autogen, elixir-format
-msgid "Placed and paid online"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:510
@@ -3943,18 +3911,6 @@ msgstr ""
 msgid "Refunds from Stripe recorded."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:107
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:491
-#, elixir-autogen, elixir-format
-msgid "Could not refund through Stripe. Check the payment in Stripe."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:431
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:788
-#, elixir-autogen, elixir-format
-msgid "Refund %{amount} to the customer's card through Stripe?"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:447
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:484
 #, elixir-autogen, elixir-format
@@ -3965,12 +3921,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:793
 #, elixir-autogen, elixir-format
 msgid "Refund with Stripe"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:446
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:483
-#, elixir-autogen, elixir-format
-msgid "Refunded through Stripe."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:429
@@ -4708,11 +4658,6 @@ msgstr ""
 msgid "Booking cancelled."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/courses_live.ex:69
-#, elixir-autogen, elixir-format
-msgid "Booking marked as paid."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Could not cancel the booking."
@@ -4721,11 +4666,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:245
 #, elixir-autogen, elixir-format
 msgid "Could not change the subscription."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/courses_live.ex:71
-#, elixir-autogen, elixir-format
-msgid "Could not mark the booking as paid."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:121
@@ -5908,4 +5848,52 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:887
 #, elixir-autogen, elixir-format
 msgid "Paid outside Stripe"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:228
+#, elixir-autogen, elixir-format
+msgid "%{count} to collect"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:498
+#, elixir-autogen, elixir-format
+msgid "Cancel this order? It is paid, so refund it with Stripe or record a refund. This can't be undone."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:71
+#, elixir-autogen, elixir-format
+msgid "Could not record the payment."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:107
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:491
+#, elixir-autogen, elixir-format
+msgid "Could not refund with Stripe. Check the payment in Stripe."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_log.ex:67
+#, elixir-autogen, elixir-format
+msgid "Placed and paid with Stripe"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:396
+#, elixir-autogen, elixir-format
+msgid "Record the payment later"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:431
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:788
+#, elixir-autogen, elixir-format
+msgid "Refund %{amount} to the customer's card with Stripe?"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:446
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:483
+#, elixir-autogen, elixir-format
+msgid "Refunded with Stripe."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_log.ex:37
+#, elixir-autogen, elixir-format
+msgid "Stripe"
 msgstr ""
