@@ -223,7 +223,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-log", "Paid €46.50 · Online (Stripe)")
+    assert has_element?(view, "#order-log", "Paid €46.50 · Stripe")
     assert has_element?(view, "#order-log", "Refunded €10.00 · Cash")
   end
 
@@ -238,7 +238,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Online (Stripe)")
+    assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
 
     assert view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click() =~
              "No new refunds in Stripe."
@@ -348,11 +348,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
         view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click()
       end)
 
-    assert html =~ "Could not refund through Stripe."
+    assert html =~ "Could not refund with Stripe."
     assert log =~ ":card_declined"
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, "#order-log", "Refunded €30.00 · Online (Stripe)")
+    assert has_element?(view, "#order-log", "Refunded €30.00 · Stripe")
   end
 
   test "doesn't refund again what Stripe already has refunds for", %{conn: conn} do
@@ -377,7 +377,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert view |> element(~s|button[phx-click="refund_with_stripe"]|) |> render_click() =~
              "Nothing left to refund."
 
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Online (Stripe)")
+    assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
   end
 
   test "offers no Stripe refund when the order wasn't paid through Stripe", %{conn: conn} do

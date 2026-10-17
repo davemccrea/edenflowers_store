@@ -66,9 +66,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <- Courses.mark_registration_paid(registration, payment_method, actor: actor) do
-        put_flash(socket, :info, ~t"Booking marked as paid.")
+        put_flash(socket, :info, ~t"Payment recorded.")
       else
-        _ -> put_flash(socket, :error, ~t"Could not mark the booking as paid.")
+        _ -> put_flash(socket, :error, ~t"Could not record the payment.")
       end
 
     {:noreply, load_courses(socket)}
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       else
         error ->
           Logger.error("Stripe refund for course registration #{id} failed: #{inspect(error)}")
-          put_flash(socket, :error, ~t"Could not refund through Stripe. Check the payment in Stripe.")
+          put_flash(socket, :error, ~t"Could not refund with Stripe. Check the payment in Stripe.")
       end
 
     {:noreply, load_courses(socket)}
@@ -225,7 +225,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <div class="border-base-content/12 border-t p-4 sm:p-5">
         <p :if={@registrations == []} class="text-base-content/65 mb-4 text-sm">{~t"No bookings yet"}</p>
         <p :if={@still_to_pay > 0} class="text-base-content/65 mb-4 text-sm">
-          {~t"#{count = @still_to_pay} still to pay at the course"}
+          {~t"#{count = @still_to_pay} to collect"}
         </p>
 
         <div class="mb-4 flex flex-wrap gap-2">
@@ -301,7 +301,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   +{registration.seats_held - 1}
                 </span>
                 <.badge :if={owes?(registration)} tone={:warning} class="ml-1 align-middle">
-                  {~t"Pays at course"}
+                  {~t"To collect"}
                 </.badge>
               </p>
               <a
@@ -316,7 +316,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               <.refund_with_stripe :if={refundable_with_stripe?(registration)} registration={registration} locale={@locale} />
             </div>
             <div class="flex shrink-0 items-center gap-1">
-              <%!-- Mark paid stays out of the menu: it's what the florist taps at the course itself. --%>
+              <%!-- Recording a payment stays out of the menu: it's what the florist taps at the course itself. --%>
               <form
                 :if={owes?(registration)}
                 id={"mark-paid-#{registration.id}"}
@@ -332,7 +332,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 >
                   {Phoenix.HTML.Form.options_for_select(method_options(), :zettle)}
                 </select>
-                <.button type="submit" variant="neutral" size="sm">{~t"Mark paid"}</.button>
+                <.button type="submit" variant="neutral" size="sm">{~t"Record payment"}</.button>
               </form>
               <.actions_menu id={"registration-actions-#{registration.id}"}>
                 <li :if={stripe_payment_intent_id(registration)}>
@@ -428,7 +428,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       phx-value-id={@registration.id}
       phx-disable-with={~t"Refunding…"}
       data-confirm={
-        ~t"Refund #{amount = Format.currency(stripe_refund(@registration), @locale)} to the customer's card through Stripe?"
+        ~t"Refund #{amount = Format.currency(stripe_refund(@registration), @locale)} to the customer's card with Stripe?"
       }
       variant="neutral"
       size="sm"
@@ -443,7 +443,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   defp refund_message(refunds) do
     if Enum.all?(refunds, &(&1.status == "succeeded")),
-      do: ~t"Refunded through Stripe.",
+      do: ~t"Refunded with Stripe.",
       else: ~t"Refund sent to Stripe. It shows here once it goes through."
   end
 
