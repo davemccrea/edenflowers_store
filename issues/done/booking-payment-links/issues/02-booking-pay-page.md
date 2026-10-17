@@ -1,6 +1,6 @@
 # The customer pays a booking's link on its own page
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

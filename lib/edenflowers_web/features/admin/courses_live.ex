@@ -122,6 +122,38 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
+  def handle_event("open_payment_link", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+           {:ok, _} <- Courses.open_registration_payment_link(registration, actor: actor) do
+        put_flash(socket, :info, ~t"Payment link created.")
+      else
+        _ -> put_flash(socket, :error, ~t"Could not create a payment link.")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
+  def handle_event("email_payment_link", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+           {:ok, _} <- Courses.email_registration_payment_link(registration, actor: actor) do
+        put_flash(socket, :info, ~t"Payment link emailed.")
+      else
+        _ -> put_flash(socket, :error, ~t"Could not email the payment link.")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
+  def handle_event("payment_link_copied", _params, socket) do
+    {:noreply, put_flash(socket, :info, ~t"Payment link copied.")}
+  end
+
   def handle_event("remove_seat", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
@@ -162,6 +194,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :outside_stripe_refund,
             :stripe_refund,
             :seats_held,
+            :payment_link_open?,
             payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)
           ]
         ]
@@ -378,6 +411,39 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     </.link>
                   </li>
                   <.actions_menu_button
+                    :if={to_collect?(registration)}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="email_payment_link"
+                    phx-value-id={registration.id}
+                    data-confirm={email_payment_link_confirmation(registration, @locale)}
+                  >
+                    {if payment_link_emailed?(registration),
+                      do: ~t"Resend payment link",
+                      else: ~t"Email payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :if={to_collect?(registration) and registration.payment_link_open?}
+                    id={"copy-payment-link-#{registration.id}"}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click={
+                      JS.dispatch("edenflowers:copy", to: "#payment-link-url-#{registration.id}")
+                      |> JS.push("payment_link_copied")
+                    }
+                  >
+                    {~t"Copy payment link"}
+                    <span id={"payment-link-url-#{registration.id}"} hidden>
+                      {EdenflowersWeb.PaymentLink.url_for(registration)}
+                    </span>
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :if={to_collect?(registration) and not registration.payment_link_open?}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="open_payment_link"
+                    phx-value-id={registration.id}
+                  >
+                    {~t"Create payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
                     :for={payment <- registration.payments}
                     :if={payment.undoable?}
                     id={"undo-payment-#{payment.id}"}
@@ -453,6 +519,17 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     if Decimal.negative?(payment.amount),
       do: ~t"Undo #{amount} refund",
       else: ~t"Undo #{amount} payment"
+  end
+
+  defp payment_link_emailed?(registration),
+    do: registration.payment_link_open? and not is_nil(registration.payment_link_emailed_at)
+
+  defp email_payment_link_confirmation(registration, locale) do
+    question = ~t"Email a payment link to #{email = registration.email}?"
+
+    if payment_link_emailed?(registration),
+      do: ~t"Last sent #{time = Format.datetime(registration.payment_link_emailed_at, locale)}." <> " " <> question,
+      else: question
   end
 
   defp paid?(registration), do: Decimal.positive?(registration.amount_paid)

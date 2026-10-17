@@ -150,6 +150,29 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  A link to pay a course booking online, for what it still owes. Expects
+  `:course` translated, `:first_name` and `:balance` loaded.
+  """
+  def course_payment_link(registration, payment_link_url) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(from_address())
+      |> subject(~t"Pay for your place on #{course = registration.course.name}")
+      |> text_body(
+        Templates.course_payment_link(%{
+          registration: registration,
+          payment_link_url: payment_link_url,
+          format_date: &Format.weekday_numeric_date(&1, registration.locale),
+          format_time: &Format.time(&1, registration.locale),
+          format_currency: &Format.currency(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   A copy of a couple's wedding enquiry, bcc Jennie so she can reply to them
   directly. `enquiry` is the job args of `Edenflowers.WeddingEnquiry.SendEmails`.
   """

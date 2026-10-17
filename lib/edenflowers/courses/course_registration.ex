@@ -83,6 +83,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
       prepare build(load: [:balance, :course])
     end
 
+    read :by_payment_link_token do
+      argument :token, :string, allow_nil?: false
+      get? true
+      filter expr(not is_nil(payment_link_token) and payment_link_token == ^arg(:token))
+      prepare build(load: [:course, :seats_held, :total_due, :amount_paid, :balance, :payment_link_open?])
+    end
+
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
@@ -140,6 +147,43 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
+    # A payment through the payment link on a booking already confirmed, so
+    # unlike confirm_payment this only records what arrived.
+    update :record_link_payment do
+      argument :payment_intent_id, :string, allow_nil?: false
+      argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+      argument :paid_with, :map, default: %{}
+      # One Jennie dropped by recording a payment can still be paid, and that
+      # money has arrived all the same. Only the PaymentIntent paid stops being open.
+      change fn changeset, _context ->
+        if changeset.data.payment_intent_id == Ash.Changeset.get_argument(changeset, :payment_intent_id),
+          do: Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil),
+          else: changeset
+      end
+
+      # The confirmation goes out again, now with the receipt.
+      change set_attribute(:confirmation_emailed_at, nil)
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      require_atomic? false
+    end
+
+    # Only a confirmed booking owes money; a pending one pays at checkout.
+    update :open_payment_link do
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      change Edenflowers.Payments.Changes.OpenPaymentLink
+      require_atomic? false
+    end
+
+    # Opens the link if need be, so sending it is opening one.
+    update :email_payment_link do
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      change Edenflowers.Payments.Changes.OpenPaymentLink
+      change Changes.SendPaymentLinkEmail
+      transaction? false
+      require_atomic? false
+    end
+
     # When someone in a group drops out. Removing the last seat is a cancel.
     # seats and amount stay what was bought, because the receipt is rebuilt
     # from them. Nothing is refunded: the seat's price is left as a negative
@@ -189,6 +233,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :add_payment_intent_id,
                      :mark_payment_cancelled,
                      :confirm_payment,
+                     :record_link_payment,
                      :record_stripe_refund,
                      :send_confirmation_email,
                      :reconcile_payment,
@@ -214,6 +259,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
   end
 
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish :record_link_payment, ["course_registration", "paid", :id]
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
@@ -234,6 +285,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string
+    attribute :payment_link_token, :string, sensitive?: true
+    attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
     attribute :receipt_emailed_at, :utc_datetime
@@ -268,9 +321,14 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :holds_seats?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
+
+    calculate :payment_link_open?,
+              :boolean,
+              expr(not is_nil(payment_link_token) and balance > 0 and status == :confirmed)
   end
 
   identities do
     identity :unique_reference, [:reference]
+    identity :unique_payment_link_token, [:payment_link_token]
   end
 end

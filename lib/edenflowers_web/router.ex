@@ -57,6 +57,7 @@ defmodule EdenflowersWeb.Router do
       scope "/", Courses do
         live "/courses", CoursesLive
         live "/courses/bookings/:id", CourseBookingLive
+        live "/courses/pay/:token", CoursePayLive
         live "/courses/:id", CourseLive
       end
 

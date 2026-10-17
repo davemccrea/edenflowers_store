@@ -1,6 +1,6 @@
 # Jennie emails or copies a booking's payment link from the courses page
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

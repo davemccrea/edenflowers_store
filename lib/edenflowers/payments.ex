@@ -211,9 +211,15 @@ defmodule Edenflowers.Payments do
 
   def customer_session(_order, _guest), do: nil
 
-  @doc "Brings the order's PaymentIntent amount in line with what it still owes."
-  def update_amount(%Order{} = order) do
-    StripeAPI.impl().update_payment_intent(order.payment_intent_id, StripeAPI.to_stripe_amount(expected_amount(order)))
+  @doc """
+  Brings the PaymentIntent of an order or booking, with `balance` loaded, in
+  line with what it still owes.
+  """
+  def update_amount(payable) do
+    StripeAPI.impl().update_payment_intent(
+      payable.payment_intent_id,
+      StripeAPI.to_stripe_amount(expected_amount(payable))
+    )
   end
 
   @doc """
@@ -493,8 +499,9 @@ defmodule Edenflowers.Payments do
   defp metadata_key(%Order{}), do: "order_id"
   defp metadata_key(%CourseRegistration{}), do: "course_registration_id"
 
-  # Checkout loads only the grand total; nothing is paid yet, so it is the balance.
-  defp expected_amount(%Order{balance: %Decimal{} = balance}), do: balance
+  # Checkout loads only the price; nothing is paid yet, so it is the balance.
+  # A payment link loads the balance, so it charges what is still owed.
+  defp expected_amount(%{balance: %Decimal{} = balance}), do: balance
   defp expected_amount(%Order{grand_total: grand_total}), do: grand_total
   defp expected_amount(%CourseRegistration{amount: amount}), do: amount
 
@@ -537,10 +544,31 @@ defmodule Edenflowers.Payments do
     end
   end
 
+  # As for orders: a checkout payment confirms the booking, and a payment
+  # link payment, on a booking already confirmed, only records the money.
   defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid, paid_with) do
-    Courses.confirm_registration_payment(id, payment_intent.id, %{amount_paid: amount_paid, paid_with: paid_with},
-      actor: system_actor()
-    )
+    with {:ok, registration} <- Courses.get_registration_by_id(id, actor: system_actor()) do
+      cond do
+        recorded?(payment_intent.id) ->
+          :already_recorded
+
+        registration.status == :confirmed ->
+          Courses.record_registration_link_payment(
+            registration,
+            payment_intent.id,
+            %{amount_paid: amount_paid, paid_with: paid_with},
+            actor: system_actor()
+          )
+
+        true ->
+          Courses.confirm_registration_payment(
+            registration,
+            payment_intent.id,
+            %{amount_paid: amount_paid, paid_with: paid_with},
+            actor: system_actor()
+          )
+      end
+    end
   end
 
   @doc """

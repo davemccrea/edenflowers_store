@@ -1,5 +1,5 @@
-defmodule Edenflowers.Orders.Changes.OpenPaymentLink do
-  @moduledoc "Gives the order a payment link, keeping the one it already has."
+defmodule Edenflowers.Payments.Changes.OpenPaymentLink do
+  @moduledoc "Gives the order or booking a payment link, keeping the one it already has."
   use Ash.Resource.Change
 
   @impl true
