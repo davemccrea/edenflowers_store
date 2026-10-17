@@ -29,7 +29,7 @@ using the shop and its admin, not how the code changed. Leave out internal-only 
 tests, seeds, specs, refactors and tooling. If nothing user-facing changed, say so in one line.
 Output only the Markdown notes, with no title and no preamble."
 
-NOTES="$(mktemp --suffix=.md)"
+NOTES="$(mktemp -t release-notes)"
 trap 'rm -f "$NOTES"' EXIT
 
 printf '%s\n' "$COMMITS" | claude -p "$PROMPT" --tools "" --no-session-persistence > "$NOTES"
