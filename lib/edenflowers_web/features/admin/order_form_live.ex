@@ -565,13 +565,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 </div>
               </div>
             </.form_section>
-
-            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-              {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
-            </.button>
           </div>
 
-          <aside class="flex flex-col gap-6">
+          <aside class="flex flex-col gap-6 xl:row-span-2">
             <.form_section :if={@mode == :new} title={~t"Payment"}>
               <div class="space-y-4">
                 <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
@@ -590,6 +586,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
             </.form_section>
           </aside>
+
+          <%!-- After the aside so its fields sit above Save once stacked. --%>
+          <.button
+            type="submit"
+            variant="primary"
+            phx-disable-with={~t"Saving…"}
+            class="w-full sm:w-auto sm:justify-self-start xl:col-start-1"
+          >
+            {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
+          </.button>
         </.form>
       </.admin_page>
     </Layouts.admin>

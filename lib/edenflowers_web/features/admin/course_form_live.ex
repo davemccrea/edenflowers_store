@@ -166,13 +166,9 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                 <.input field={@form[:location_address]} type="text" label={~t"Address"} class="input w-full" />
               </div>
             </.form_section>
-
-            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-              {~t"Save course"}
-            </.button>
           </div>
 
-          <aside class="flex flex-col gap-6">
+          <aside class="flex flex-col gap-6 xl:row-span-2">
             <.form_section title={~t"Photo"}>
               <.photo_input
                 field={@form[:image_slug]}
@@ -182,6 +178,16 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               />
             </.form_section>
           </aside>
+
+          <%!-- After the aside so its fields sit above Save once stacked. --%>
+          <.button
+            type="submit"
+            variant="primary"
+            phx-disable-with={~t"Saving…"}
+            class="w-full sm:w-auto sm:justify-self-start xl:col-start-1"
+          >
+            {~t"Save course"}
+          </.button>
         </.form>
       </.admin_page>
     </Layouts.admin>
