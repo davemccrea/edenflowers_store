@@ -4,7 +4,7 @@ Status: done
 
 ## Parent
 
-`.scratch/stock-tracking/spec.md`
+`.scratch/done/stock-tracking/spec.md`
 
 ## What to build
 

@@ -1,6 +1,6 @@
 # Refund course bookings from the app
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

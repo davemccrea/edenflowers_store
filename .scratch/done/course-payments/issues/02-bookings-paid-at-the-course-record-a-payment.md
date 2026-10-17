@@ -1,6 +1,6 @@
 # Bookings paid at the course record a Payment, and registrations get a balance
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

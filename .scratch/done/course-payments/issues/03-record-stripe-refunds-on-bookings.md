@@ -1,6 +1,6 @@
 # Stripe refunds on course bookings are recorded
 
-Status: ready-for-agent
+Status: done
 Type: bug
 
 ## What to build
