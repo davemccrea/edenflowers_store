@@ -130,15 +130,22 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # Jennie ticks off manual bookings as people pay at the course.
+    # Jennie ticks off manual bookings as people pay at the course, recording
+    # the balance as paid the way she took it.
     update :mark_paid do
-      validate absent(:paid_at), message: "already marked as paid"
-      change set_attribute(:paid_at, &DateTime.utc_now/0)
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :amount, :decimal, public?: false
+      validate argument_in(:payment_method, Edenflowers.Payments.PaymentMethod.in_person())
+      validate attribute_equals(:status, :confirmed), message: "isn't confirmed"
+      change Changes.CollectBalance
+      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
+      require_atomic? false
     end
 
     # When someone in a group drops out. Removing the last seat is a cancel.
     # seats and amount stay what was bought, because the receipt is rebuilt
-    # from them; a Stripe booking is refunded for the seat in the Stripe dashboard.
+    # from them. Nothing is refunded: the seat's price is left as a negative
+    # balance for Jennie to refund.
     update :remove_seat do
       change atomic_update(
                :removed_seats,
@@ -155,7 +162,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
              )
     end
 
-    # Jennie refunds in the Stripe dashboard; cancelling here frees the seats.
+    # Frees the seats and leaves what was paid as a negative balance for
+    # Jennie to refund.
     update :cancel do
       change set_attribute(:status, :cancelled)
       change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
@@ -228,8 +236,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     attribute :payment_intent_id, :string
     attribute :confirmed_at, :utc_datetime
-    # Only for manual bookings: a Stripe booking is paid when it is confirmed.
-    attribute :paid_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
     attribute :receipt_emailed_at, :utc_datetime
     attribute :receipt_sha256, :string
@@ -249,13 +255,24 @@ defmodule Edenflowers.Courses.CourseRegistration do
   calculations do
     calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
 
-    calculate :pays_at_course?, :boolean, expr(is_nil(payment_intent_id) and is_nil(paid_at))
-
     calculate :seats_held, :integer, expr(seats - removed_seats)
+
+    # amount is the price times seats bought, so the seats still held cost
+    # exactly their share of it.
+    calculate :total_due,
+              :decimal,
+              expr(if status == :cancelled, do: 0, else: round(amount * seats_held / seats, 2))
+
+    # Positive is still to collect, negative is to refund.
+    calculate :balance, :decimal, expr(total_due - amount_paid)
 
     calculate :holds_seats?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
+  end
+
+  aggregates do
+    sum :amount_paid, :payments, :amount, default: Decimal.new("0")
   end
 
   identities do

@@ -22,4 +22,21 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     assert reloaded.confirmation_emailed_at
     refute reloaded.receipt_emailed_at
   end
+
+  @tag :typst
+  test "a paid booking gets its receipt" do
+    registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+
+    generate(
+      payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
+    )
+
+    assert {:ok, _registration} =
+             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
+
+    assert_email_sent(fn email ->
+      refute email.text_body =~ "You pay at the course"
+      assert [_receipt] = email.attachments
+    end)
+  end
 end
