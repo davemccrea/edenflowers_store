@@ -440,14 +440,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     """
   end
 
-  defp refund_message([]), do: ~t"Nothing left to refund. Stripe already has refunds covering it."
-
-  defp refund_message(refunds) do
-    if Enum.all?(refunds, &(&1.status == "succeeded")),
-      do: ~t"Refunded with Stripe.",
-      else: ~t"Refund sent to Stripe. It shows here once it goes through."
-  end
-
   # A paid booking's PaymentIntent is on its Payment; a pending one's is still on the booking.
   defp stripe_payment_intent_id(registration),
     do: Enum.find_value(registration.payments, & &1.payment_intent_id) || registration.payment_intent_id
