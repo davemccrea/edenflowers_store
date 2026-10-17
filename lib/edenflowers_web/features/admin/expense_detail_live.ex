@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </div>
           </.form>
 
-          <aside class="flex flex-col gap-6">
+          <aside class="order-first flex flex-col gap-6 xl:order-none">
             <.widget id="expense-summary" title={~t"Total amount"}>
               <p class="text-base-content truncate text-3xl font-semibold tabular-nums tracking-tight">
                 <span :if={@expense.total_amount && @expense.currency}>
