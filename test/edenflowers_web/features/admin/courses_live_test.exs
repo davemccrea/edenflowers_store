@@ -77,7 +77,24 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    view |> element(~s|button[phx-click="mark_paid"][phx-value-id="#{registration.id}"]|) |> render_click()
+    view |> form("#mark-paid-#{registration.id}", %{payment_method: "mobilepay"}) |> render_submit()
+
+    refute has_element?(view, "li", "Pays at course")
+    refute render(view) =~ "still to pay"
+
+    assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
+  end
+
+  test "a booking paid online isn't still to pay", %{conn: conn} do
+    registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+
+    generate(
+      payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
+    )
+
+    generate(course_registration(course_id: registration.course_id, status: :pending, payment_intent_id: "pi_open"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
     refute has_element?(view, "li", "Pays at course")
     refute render(view) =~ "still to pay"

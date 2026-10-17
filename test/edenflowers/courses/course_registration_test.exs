@@ -143,15 +143,50 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
-  test "a manual booking is marked paid only once" do
-    admin = generate(admin_user())
-    {:ok, registration} = add_manually(generate(course()), 1, admin)
+  describe "paying at the course" do
+    setup do
+      admin = generate(admin_user())
+      {:ok, registration} = add_manually(generate(course(price: "85.00")), 2, admin)
+      %{admin: admin, registration: registration}
+    end
 
-    assert {:ok, paid} = Courses.mark_registration_paid(registration, actor: admin)
-    assert paid.paid_at
+    test "a manual booking owes its price until it is marked paid", %{admin: admin, registration: registration} do
+      assert Decimal.equal?(balance(registration), "170.00")
 
-    assert {:error, error} = Courses.mark_registration_paid(registration, actor: admin)
-    assert Exception.message(error) =~ "already marked as paid"
+      assert {:ok, _paid} = Courses.mark_registration_paid(registration, :mobilepay, actor: admin)
+
+      assert [%{method: :mobilepay, amount: amount}] = Ash.load!(registration, :payments, authorize?: false).payments
+      assert Decimal.equal?(amount, "170.00")
+      assert Decimal.equal?(balance(registration), 0)
+    end
+
+    test "is marked paid only while something is owed", %{admin: admin, registration: registration} do
+      assert {:ok, _paid} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+
+      assert {:error, error} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+      assert Exception.message(error) =~ "nothing is owed"
+    end
+
+    test "is paid in person, not through Stripe", %{admin: admin, registration: registration} do
+      assert {:error, _error} = Courses.mark_registration_paid(registration, :stripe, actor: admin)
+    end
+
+    test "a paid booking owes a refund after a seat is removed or it is cancelled", %{
+      admin: admin,
+      registration: registration
+    } do
+      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+
+      {:ok, registration} = Courses.remove_registration_seat(registration, actor: admin)
+      assert Decimal.equal?(balance(registration), "-85.00")
+
+      {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
+      assert Decimal.equal?(balance(registration), "-170.00")
+    end
+  end
+
+  defp balance(registration) do
+    Ash.load!(registration, :balance, authorize?: false, reuse_values?: false).balance
   end
 
   test "removing seats stops at the last one, which needs a cancel" do
