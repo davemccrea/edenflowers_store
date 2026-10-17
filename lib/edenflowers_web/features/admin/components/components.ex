@@ -351,6 +351,133 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :id, :string, required: true
+
+  attr :record, :map,
+    required: true,
+    doc: "an order or booking, with `balance`, `settled?`, `outside_stripe_refund` and `stripe_refund` loaded"
+
+  attr :locale, :string, required: true
+  attr :class, :any, default: nil
+  slot :inner_block, doc: "more ways to settle it, like the order page's payment link"
+
+  @doc """
+  What's still owed on an order or booking, and how to settle it. Hidden once
+  settled. Sends `record_payment` with `payment` params and the record's id as
+  `record_id`, and `refund_with_stripe` with it as `id`.
+  """
+  def balance_panel(%{record: %{settled?: true}} = assigns) do
+    ~H""
+  end
+
+  def balance_panel(assigns) do
+    assigns =
+      assigns
+      |> assign(:collect?, Decimal.positive?(assigns.record.balance))
+      |> assign(:form, balance_form(assigns.record))
+
+    ~H"""
+    <div id={@id} class={["border-warning/40 border-t pt-4", @class]}>
+      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
+        {if @collect?, do: ~t"To collect", else: ~t"To refund"}
+        <span class="tabular-nums">{Edenflowers.Format.currency(Decimal.abs(@record.balance), @locale)}</span>
+      </p>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
+        {render_slot(@inner_block)}
+        <.button
+          :if={@record.stripe_refundable?}
+          type="button"
+          phx-click="refund_with_stripe"
+          phx-value-id={@record.id}
+          phx-disable-with={~t"Refunding…"}
+          data-confirm={
+            ~t"Refund #{amount = Edenflowers.Format.currency(@record.stripe_refund, @locale)} to the customer's card with Stripe?"
+          }
+          variant="primary"
+          size="sm"
+        >
+          {~t"Refund with Stripe"}
+        </.button>
+      </div>
+
+      <details
+        :if={@collect? or Decimal.positive?(@record.outside_stripe_refund)}
+        id={"#{@id}-record"}
+        phx-mounted={JS.ignore_attributes(["open"])}
+        class="group mt-4"
+      >
+        <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
+          {if @collect?, do: ~t"Record a payment", else: ~t"Record a refund"}
+          <.icon
+            name="hero-chevron-right"
+            class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+          />
+        </summary>
+        <.form for={@form} id={"#{@id}-form"} phx-submit="record_payment" class="mt-3">
+          <input type="hidden" name="record_id" value={@record.id} />
+          <fieldset aria-describedby={"#{@id}-help"}>
+            <div class="grid grid-cols-2 items-end gap-2 text-sm">
+              <.input
+                field={@form[:payment_method]}
+                id={"#{@id}-method"}
+                type="select"
+                label={~t"How"}
+                class="select select-sm w-full"
+                options={payment_method_options()}
+              />
+              <.input
+                field={@form[:amount]}
+                id={"#{@id}-amount"}
+                type="text"
+                inputmode="decimal"
+                label={~t"Amount (€)"}
+                class="input input-sm w-full tabular-nums"
+              />
+              <.button
+                type="submit"
+                variant="primary"
+                size="sm"
+                class="col-span-2"
+                data-confirm={
+                  if @collect?,
+                    do: ~t"Record this payment? It can't be removed, only offset by recording the opposite amount.",
+                    else: ~t"Record this refund? It can't be removed, only offset by recording the opposite amount."
+                }
+              >
+                {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
+              </.button>
+            </div>
+            <p id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-xs">
+              {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+            </p>
+          </fieldset>
+        </.form>
+      </details>
+    </div>
+    """
+  end
+
+  defp balance_form(record) do
+    amount =
+      if Decimal.positive?(record.balance),
+        do: record.balance,
+        else: Decimal.negate(record.outside_stripe_refund)
+
+    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :payment)
+  end
+
+  @doc "Every way Jennie records money herself; Stripe records its own."
+  def payment_method_options do
+    Edenflowers.Payments.PaymentMethod.values()
+    |> List.delete(:stripe)
+    |> Enum.map(&{EdenflowersWeb.Admin.OrderLog.payment_method_label(&1), &1})
+  end
+
+  @doc "Why recording money was refused, in the action's own words, for a flash."
+  def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
+  def payment_error(_error), do: ~t"Could not record it. Check the amount."
+
   attr :title, :string, required: true
   attr :class, :any, default: nil
   slot :description

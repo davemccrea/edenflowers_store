@@ -8,7 +8,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Payments.PaymentMethod
   alias EdenflowersWeb.Admin.OrderLog
   alias Edenflowers.PhoneNumber
   alias Edenflowers.External.StripeAPI
@@ -44,14 +43,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
-    |> assign(:payment_form, payment_form(order))
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
-  end
-
-  defp payment_form(order) do
-    amount = if refundable_outside_stripe?(order), do: Decimal.negate(order.paid_outside_stripe), else: order.balance
-    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :payment)
   end
 
   defp payments(order) do
@@ -73,11 +66,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
 
   defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
-
-  defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
-
-  defp refundable_outside_stripe?(order),
-    do: order.fulfillment_status == :cancelled and Decimal.positive?(order.paid_outside_stripe)
 
   @impl true
   def render(assigns) do
@@ -112,7 +100,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.subscription_badge :if={@order.origin == :subscription} />
                 <%!-- The payment card sits below the job on narrow screens; this says money is waiting there. --%>
                 <.badge
-                  :if={owes_money?(@order)}
+                  :if={!@order.settled?}
                   href="#order-payment-summary"
                   tone={if Decimal.positive?(@order.balance), do: :warning, else: :error}
                   class="tabular-nums xl:hidden"
@@ -232,7 +220,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <aside class="flex flex-col gap-6">
             <section
               id="order-payment-summary"
-              class={["border p-4 sm:p-5 xl:order-first", if(owes_money?(@order),
+              class={["border p-4 sm:p-5 xl:order-first", if(!@order.settled?,
     do: "bg-warning/10 border-warning/40",
     else: "bg-base-100 border-base-content/12")]}
             >
@@ -269,20 +257,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </div>
               </dl>
 
-              <.collect
-                :if={owes_money?(@order)}
+              <.balance_panel id="order-balance" record={@order} locale={@locale} class="mt-4">
+                <.payment_link_buttons :if={Decimal.positive?(@order.balance)} order={@order} locale={@locale} />
+              </.balance_panel>
+              <.payment_link
+                :if={@order.payment_link_open? && Decimal.positive?(@order.balance)}
                 order={@order}
-                payments={@payments}
-                payment_form={@payment_form}
                 payment_message_urls={@payment_message_urls}
-                locale={@locale}
-              />
-
-              <.refund_outside_stripe
-                :if={refundable_outside_stripe?(@order)}
-                order={@order}
-                form={@payment_form}
-                locale={@locale}
               />
             </section>
 
@@ -410,8 +391,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment recorded.")}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not record the payment. Check the amount.")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, payment_error(error))}
     end
   end
 
@@ -498,12 +479,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     do: ~t"Cancel this order? It is paid, so refund it with Stripe or record a refund. This can't be undone."
 
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
-
-  defp method_options do
-    PaymentMethod.values()
-    |> List.delete(:stripe)
-    |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
-  end
 
   defp payment_label(%{amount: amount, method: method}) do
     if Decimal.negative?(amount),
@@ -736,158 +711,62 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :order, :map, required: true
-  attr :payments, :list, required: true
-  attr :payment_form, :any, required: true
-  attr :payment_message_urls, :map, default: nil
   attr :locale, :string, required: true
 
-  # In the order Jennie reaches for it: send the link, or record what she took herself.
-  defp collect(assigns) do
+  # Sending the link comes first: it's how most custom orders get paid.
+  defp payment_link_buttons(assigns) do
     ~H"""
-    <div id="order-collect" class="border-warning/40 mt-4 border-t pt-4">
-      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
-        {if Decimal.positive?(@order.balance), do: ~t"To collect", else: ~t"To refund"}
-        <span class="tabular-nums">{Format.currency(Decimal.abs(@order.balance), @locale)}</span>
-      </p>
-
-      <div class="mt-3 flex flex-wrap items-center gap-2">
-        <.button
-          :if={Decimal.positive?(@order.balance) && @order.customer_email}
-          type="button"
-          phx-click="email_payment_link"
-          data-confirm={
-            confirm_send(
-              ~t"Email a payment link to #{email = @order.customer_email}?",
-              @order.payment_link_open? && @order.details_emailed_at,
-              @locale
-            )
-          }
-          variant="primary"
-          size="sm"
-        >
-          <.icon name="hero-envelope" class="h-4 w-4" />
-          {if @order.payment_link_open? && @order.details_emailed_at,
-            do: ~t"Resend payment link",
-            else: ~t"Email payment link"}
-        </.button>
-        <.button
-          :if={Decimal.positive?(@order.balance) && !@order.payment_link_open?}
-          type="button"
-          phx-click="open_payment_link"
-          variant="ghost"
-          size="sm"
-        >
-          {~t"Create payment link"}
-        </.button>
-        <.button
-          :if={Decimal.negative?(@order.balance) && paid_through_stripe?(@payments)}
-          type="button"
-          phx-click="refund_with_stripe"
-          phx-disable-with={~t"Refunding…"}
-          data-confirm={
-            ~t"Refund #{amount = Format.currency(Decimal.abs(@order.balance), @locale)} to the customer's card with Stripe?"
-          }
-          variant="primary"
-          size="sm"
-        >
-          {~t"Refund with Stripe"}
-        </.button>
-      </div>
-
-      <div :if={@order.payment_link_open?} id="order-payment-link" class="mt-4">
-        <label for="payment-link-url" class="eyebrow text-base-content/65 mb-1.5 block">
-          {~t"Payment link"}
-        </label>
-        <div class="flex gap-2">
-          <input
-            id="payment-link-url"
-            type="text"
-            readonly
-            value={EdenflowersWeb.PaymentLink.url_for(@order)}
-            class="input input-sm font-mono min-w-0 flex-1 text-xs"
-          />
-          <.copy_button id="copy-payment-link" target="#payment-link-url" label={~t"Copy payment link"} />
-        </div>
-        <div :if={@payment_message_urls} class="mt-2.5 text-sm">
-          <.message_links
-            urls={@payment_message_urls}
-            sms_label={~t"Text payment link"}
-            whatsapp_label={~t"WhatsApp payment link"}
-          />
-        </div>
-      </div>
-
-      <.record_payment form={@payment_form} refund?={!Decimal.positive?(@order.balance)} />
-    </div>
-    """
-  end
-
-  attr :form, :any, required: true
-  attr :refund?, :boolean, default: false
-
-  defp record_payment(assigns) do
-    ~H"""
-    <details id="record-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
-      <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
-        {if @refund?, do: ~t"Record a refund", else: ~t"Record a payment"}
-        <.icon
-          name="hero-chevron-right"
-          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
-        />
-      </summary>
-      <.form for={@form} id="payment-form" phx-submit="record_payment" class="mt-3">
-        <fieldset aria-describedby="payment-help">
-          <div class="grid grid-cols-2 items-end gap-2 text-sm">
-            <.input
-              field={@form[:payment_method]}
-              type="select"
-              label={~t"How"}
-              class="select select-sm w-full"
-              options={method_options()}
-            />
-            <.input
-              field={@form[:amount]}
-              type="text"
-              inputmode="decimal"
-              label={~t"Amount (€)"}
-              class="input input-sm w-full tabular-nums"
-            />
-            <.button
-              type="submit"
-              variant="primary"
-              size="sm"
-              class="col-span-2"
-              data-confirm={
-                if @refund?,
-                  do: ~t"Record this refund? It can't be removed, only offset by recording the opposite amount.",
-                  else: ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
-              }
-            >
-              {if @refund?, do: ~t"Record refund", else: ~t"Record payment"}
-            </.button>
-          </div>
-          <p id="payment-help" class="text-base-content/65 mt-1.5 text-xs">
-            {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
-          </p>
-        </fieldset>
-      </.form>
-    </details>
+    <.button
+      :if={@order.customer_email}
+      type="button"
+      phx-click="email_payment_link"
+      data-confirm={
+        confirm_send(
+          ~t"Email a payment link to #{email = @order.customer_email}?",
+          @order.payment_link_open? && @order.details_emailed_at,
+          @locale
+        )
+      }
+      variant="primary"
+      size="sm"
+    >
+      <.icon name="hero-envelope" class="h-4 w-4" />
+      {if @order.payment_link_open? && @order.details_emailed_at,
+        do: ~t"Resend payment link",
+        else: ~t"Email payment link"}
+    </.button>
+    <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="ghost" size="sm">
+      {~t"Create payment link"}
+    </.button>
     """
   end
 
   attr :order, :map, required: true
-  attr :form, :any, required: true
-  attr :locale, :string, required: true
+  attr :payment_message_urls, :map, default: nil
 
-  # A cancelled order won't be made, so money paid outside Stripe is handed back the same way.
-  defp refund_outside_stripe(assigns) do
+  defp payment_link(assigns) do
     ~H"""
-    <div id="order-refund-outside-stripe" class="border-base-content/12 mt-4 border-t pt-4">
-      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
-        {~t"Paid outside Stripe"}
-        <span class="tabular-nums">{Format.currency(@order.paid_outside_stripe, @locale)}</span>
-      </p>
-      <.record_payment form={@form} refund? />
+    <div id="order-payment-link" class="mt-4">
+      <label for="payment-link-url" class="eyebrow text-base-content/65 mb-1.5 block">
+        {~t"Payment link"}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="payment-link-url"
+          type="text"
+          readonly
+          value={EdenflowersWeb.PaymentLink.url_for(@order)}
+          class="input input-sm font-mono min-w-0 flex-1 text-xs"
+        />
+        <.copy_button id="copy-payment-link" target="#payment-link-url" label={~t"Copy payment link"} />
+      </div>
+      <div :if={@payment_message_urls} class="mt-2.5 text-sm">
+        <.message_links
+          urls={@payment_message_urls}
+          sms_label={~t"Text payment link"}
+          whatsapp_label={~t"WhatsApp payment link"}
+        />
+      </div>
     </div>
     """
   end

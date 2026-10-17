@@ -257,8 +257,8 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, "#order-collect", "To collect €10.00")
-      assert has_element?(view, ~s|#payment-form input[value="10.00"]|)
+      assert has_element?(view, "#order-balance", "To collect €10.00")
+      assert has_element?(view, ~s|#order-balance-form input[value="10.00"]|)
     end
 
     test "keeps a retired VAT rate when editing another field", ctx do
@@ -309,7 +309,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, "#order-collect", "To collect €85.00")
+      assert has_element?(view, "#order-balance", "To collect €85.00")
       render_click(view, "email_payment_link")
 
       order = Ash.reload!(order, authorize?: false)
@@ -328,12 +328,12 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       view
-      |> form("#payment-form", payment: %{payment_method: "mobilepay", amount: "85,00"})
+      |> form("#order-balance-form", payment: %{payment_method: "mobilepay", amount: "85,00"})
       |> render_submit()
 
       assert has_element?(view, "#order-payments", "MobilePay")
       refute has_element?(view, "#payment-link-url")
-      refute has_element?(view, "#payment-form")
+      refute has_element?(view, "#order-balance-form")
     end
 
     test "records a paid Zervant invoice", ctx do
@@ -342,7 +342,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       view
-      |> form("#payment-form", payment: %{payment_method: "zervant", amount: "85,00"})
+      |> form("#order-balance-form", payment: %{payment_method: "zervant", amount: "85,00"})
       |> render_submit()
 
       assert has_element?(view, "#order-payments", "Invoice (Zervant)")

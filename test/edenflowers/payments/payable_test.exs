@@ -22,6 +22,7 @@ defmodule Edenflowers.Payments.PayableTest do
     :refunded?,
     :settled?,
     :outside_stripe_refund,
+    :stripe_refund,
     :stripe_refundable?
   ]
 
@@ -161,6 +162,7 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert_money(record.balance, "-80.00")
         assert record.stripe_refundable?
+        assert_money(record.stripe_refund, "50.00")
         assert_money(record.outside_stripe_refund, "30.00")
       end
 
@@ -187,6 +189,7 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.balance, "-40.00")
         refute record.settled?
         assert record.stripe_refundable?
+        assert_money(record.stripe_refund, "40.00")
         assert_money(record.outside_stripe_refund, "30.00")
       end
 
