@@ -161,7 +161,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :settled?,
             :outside_stripe_refund,
             :stripe_refund,
-            :stripe_refundable?,
             :seats_held,
             payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)
           ]

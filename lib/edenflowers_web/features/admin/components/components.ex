@@ -386,7 +386,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <div class="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
         {render_slot(@inner_block)}
         <.button
-          :if={@record.stripe_refundable?}
+          :if={Decimal.positive?(@record.stripe_refund)}
           type="button"
           phx-click="refund_with_stripe"
           phx-value-id={@record.id}
