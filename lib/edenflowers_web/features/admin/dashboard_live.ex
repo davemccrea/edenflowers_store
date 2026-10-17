@@ -168,7 +168,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp same_day_widget(assigns) do
     ~H"""
-    <.widget id="same-day" title={~t"Same-day orders"}>
+    <.widget id="same-day" title={~t"Ordering for today"}>
       <form id="same-day-form" phx-change="set_same_day" class="flex items-start justify-between gap-4">
         <label for="same-day-toggle" class="text-sm">
           <span class="text-base-content block font-medium">

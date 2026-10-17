@@ -11,8 +11,8 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/components/layouts.ex:518
-#: lib/edenflowers_web/components/layouts.ex:782
+#: lib/edenflowers_web/components/layouts.ex:528
+#: lib/edenflowers_web/components/layouts.ex:792
 #: lib/edenflowers_web/features/marketing/about_live.ex:16
 #, elixir-autogen, elixir-format
 msgid "About"
@@ -30,29 +30,29 @@ msgstr "Använd"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:23
 #: lib/edenflowers_web/components/cart/drawer.ex:25
-#: lib/edenflowers_web/components/layouts.ex:703
-#: lib/edenflowers_web/components/layouts.ex:705
+#: lib/edenflowers_web/components/layouts.ex:713
+#: lib/edenflowers_web/components/layouts.ex:715
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:295
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr "Varukorg"
 
-#: lib/edenflowers_web/components/layouts.ex:517
+#: lib/edenflowers_web/components/layouts.ex:527
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:10
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Condolences"
 msgstr "Begravning"
 
-#: lib/edenflowers_web/components/layouts.ex:519
-#: lib/edenflowers_web/components/layouts.ex:774
+#: lib/edenflowers_web/components/layouts.ex:529
+#: lib/edenflowers_web/components/layouts.ex:784
 #: lib/edenflowers_web/features/marketing/contact_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Contact"
 msgstr "Kontakt"
 
 #: lib/edenflowers_web/components/layouts.ex:174
-#: lib/edenflowers_web/components/layouts.ex:515
+#: lib/edenflowers_web/components/layouts.ex:525
 #: lib/edenflowers_web/features/admin/course_form_live.ex:93
 #: lib/edenflowers_web/features/admin/courses_live.ex:20
 #: lib/edenflowers_web/features/admin/courses_live.ex:175
@@ -98,7 +98,7 @@ msgstr "Nästa månad"
 msgid "Previous month"
 msgstr "Föregående månad"
 
-#: lib/edenflowers_web/components/layouts.ex:514
+#: lib/edenflowers_web/components/layouts.ex:524
 #: lib/edenflowers_web/features/store/store_live.ex:62
 #, elixir-autogen, elixir-format
 msgid "Store"
@@ -115,7 +115,7 @@ msgstr "Butik"
 msgid "Total"
 msgstr "Totalt"
 
-#: lib/edenflowers_web/components/layouts.ex:516
+#: lib/edenflowers_web/components/layouts.ex:526
 #: lib/edenflowers_web/features/marketing/home_live.ex:178
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:23
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:81
@@ -149,9 +149,9 @@ msgstr "Kassa"
 msgid "Payment"
 msgstr "Betalning"
 
-#: lib/edenflowers_web/components/layouts.ex:450
-#: lib/edenflowers_web/components/layouts.ex:570
-#: lib/edenflowers_web/components/layouts.ex:662
+#: lib/edenflowers_web/components/layouts.ex:460
+#: lib/edenflowers_web/components/layouts.ex:580
+#: lib/edenflowers_web/components/layouts.ex:672
 #: lib/edenflowers_web/features/account/account_live.ex:37
 #: lib/edenflowers_web/features/account/account_live.ex:63
 #: lib/edenflowers_web/features/admin/account_live.ex:15
@@ -160,7 +160,7 @@ msgstr "Betalning"
 msgid "Account"
 msgstr "Konto"
 
-#: lib/edenflowers_web/components/layouts.ex:815
+#: lib/edenflowers_web/components/layouts.ex:825
 #, elixir-autogen, elixir-format
 msgid "Built with "
 msgstr "Byggd med "
@@ -225,7 +225,7 @@ msgid "Learn more"
 msgstr "Läs mer"
 
 #: lib/edenflowers_web/components/layouts.ex:236
-#: lib/edenflowers_web/components/layouts.ex:599
+#: lib/edenflowers_web/components/layouts.ex:609
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Öppna navigeringsmeny"
@@ -265,8 +265,8 @@ msgstr "Mottagarens namn *"
 msgid "Remove"
 msgstr "Ta bort"
 
-#: lib/edenflowers_web/components/layouts.ex:570
-#: lib/edenflowers_web/components/layouts.ex:663
+#: lib/edenflowers_web/components/layouts.ex:580
+#: lib/edenflowers_web/components/layouts.ex:673
 #, elixir-autogen, elixir-format
 msgid "Sign In"
 msgstr "Logga in"
@@ -451,13 +451,13 @@ msgstr "%{name}s telefonnummer *"
 msgid "This field is required"
 msgstr "Det här fältet är obligatoriskt"
 
-#: lib/edenflowers_web/components/layouts.ex:749
+#: lib/edenflowers_web/components/layouts.ex:759
 #: lib/edenflowers_web/features/marketing/contact_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr "Öppettider"
 
-#: lib/edenflowers_web/components/layouts.ex:789
+#: lib/edenflowers_web/components/layouts.ex:799
 #, elixir-autogen, elixir-format
 msgid "Socials"
 msgstr "Sociala medier"
@@ -492,8 +492,8 @@ msgstr "Kategorier"
 msgid "Close cart"
 msgstr "Stäng varukorgen"
 
-#: lib/edenflowers_web/components/layouts.ex:325
-#: lib/edenflowers_web/components/layouts.ex:540
+#: lib/edenflowers_web/components/layouts.ex:326
+#: lib/edenflowers_web/components/layouts.ex:550
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Stäng navigeringsmenyn"
@@ -551,7 +551,7 @@ msgstr "Lägg i varukorgen"
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
 msgstr "Våra arrangemang håller 5–7 dagar med rätt skötsel. Byt vatten varannan till var tredje dag, snitta stjälkarna och undvik direkt solljus och drag."
 
-#: lib/edenflowers_web/components/layouts.ex:766
+#: lib/edenflowers_web/components/layouts.ex:776
 #, elixir-autogen, elixir-format
 msgid "FAQ"
 msgstr "Vanliga frågor"
@@ -594,7 +594,7 @@ msgstr "Presentalternativ"
 msgid "Have a question?"
 msgstr "Har du en fråga?"
 
-#: lib/edenflowers_web/components/layouts.ex:759
+#: lib/edenflowers_web/components/layouts.ex:769
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr "Hjälp"
@@ -827,26 +827,26 @@ msgstr "Avhämtning i butik"
 msgid "close"
 msgstr "stäng"
 
-#: lib/edenflowers_web/components/layouts.ex:743
+#: lib/edenflowers_web/components/layouts.ex:753
 #: lib/edenflowers_web/features/marketing/contact_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr "65230 Vasa"
 
-#: lib/edenflowers_web/components/layouts.ex:734
+#: lib/edenflowers_web/components/layouts.ex:744
 #: lib/edenflowers_web/features/admin/course_form_live.ex:166
 #: lib/edenflowers_web/features/marketing/contact_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr "Adress"
 
-#: lib/edenflowers_web/components/layouts.ex:752
+#: lib/edenflowers_web/components/layouts.ex:762
 #: lib/edenflowers_web/features/marketing/contact_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Mon–Fri: 09:00–17:00"
 msgstr "Mån–Fre: 09:00–17:00"
 
-#: lib/edenflowers_web/components/layouts.ex:742
+#: lib/edenflowers_web/components/layouts.ex:752
 #: lib/edenflowers_web/features/marketing/contact_live.ex:49
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
@@ -859,13 +859,13 @@ msgstr "Myrvägen 1"
 msgid "Phone"
 msgstr "Telefonnummer"
 
-#: lib/edenflowers_web/components/layouts.ex:753
+#: lib/edenflowers_web/components/layouts.ex:763
 #: lib/edenflowers_web/features/marketing/contact_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Sat: 10:00–15:00"
 msgstr "Lör: 10:00–15:00"
 
-#: lib/edenflowers_web/components/layouts.ex:754
+#: lib/edenflowers_web/components/layouts.ex:764
 #: lib/edenflowers_web/features/marketing/contact_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Sun: closed"
@@ -881,7 +881,7 @@ msgstr "Åtkomst"
 msgid "Admin"
 msgstr "Administratör"
 
-#: lib/edenflowers_web/components/layouts.ex:414
+#: lib/edenflowers_web/components/layouts.ex:424
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr "Administratörens kontomeny"
@@ -1272,7 +1272,7 @@ msgstr "Sök efter adressen i Fastmail"
 msgid "Search vendor or description…"
 msgstr "Sök leverantör eller beskrivning…"
 
-#: lib/edenflowers_web/components/layouts.ex:462
+#: lib/edenflowers_web/components/layouts.ex:472
 #: lib/edenflowers_web/features/account/account_live.ex:66
 #: lib/edenflowers_web/features/admin/account_live.ex:146
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:14
@@ -1286,7 +1286,7 @@ msgstr "Logga ut"
 msgid "Software"
 msgstr "Programvara"
 
-#: lib/edenflowers_web/components/layouts.ex:352
+#: lib/edenflowers_web/components/layouts.ex:353
 #, elixir-autogen, elixir-format
 msgid "System"
 msgstr "System"
@@ -1470,7 +1470,8 @@ msgstr "Enligt offert"
 msgid "Planning a wedding?"
 msgstr "Planerar ni bröllop?"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:107
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:101
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:121
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Prices"
@@ -2154,7 +2155,7 @@ msgstr "Bild"
 msgid "Previous order"
 msgstr "Föregående beställning"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:142
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "Reset calendar"
 msgstr "Återställ kalender"
@@ -2280,7 +2281,7 @@ msgctxt "expense confidence"
 msgid "Medium"
 msgstr "Medel"
 
-#: lib/edenflowers_web/components/layouts.ex:801
+#: lib/edenflowers_web/components/layouts.ex:811
 #, elixir-autogen, elixir-format
 msgid "Business ID:"
 msgstr "FO-nummer:"
@@ -2301,7 +2302,7 @@ msgstr "Eden Flowers på Instagram"
 msgid "Evangelical Lutheran Church of Finland"
 msgstr "Evangelisk-lutherska kyrkan i Finland"
 
-#: lib/edenflowers_web/components/layouts.ex:529
+#: lib/edenflowers_web/components/layouts.ex:539
 #, elixir-autogen, elixir-format
 msgid "Navigation menu"
 msgstr "Navigeringsmeny"
@@ -2561,6 +2562,7 @@ msgstr "Språk"
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:101
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:119
 #: lib/edenflowers_web/features/admin/courses_live.ex:291
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:96
 #: lib/edenflowers_web/features/admin/order_form_live.ex:443
 #: lib/edenflowers_web/features/admin/products_live.ex:61
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:101
@@ -4072,7 +4074,8 @@ msgstr "Hej, %{current_user_first_name}"
 
 #: lib/edenflowers_web/features/account/account_live.ex:166
 #: lib/edenflowers_web/features/admin/course_form_live.ex:105
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:199
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:186
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:247
 #: lib/edenflowers_web/features/admin/product_form_live.ex:180
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:192
 #, elixir-autogen, elixir-format
@@ -5014,81 +5017,79 @@ msgstr "Hämtas"
 msgid "•••• %{last4}, expires %{expiry}"
 msgstr "•••• %{last4}, giltigt till %{expiry}"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:167
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "Base price (€)"
 msgstr "Grundpris (€)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:182
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "Free delivery distance (km)"
 msgstr "Avstånd för gratis leverans (km)"
 
 #: lib/edenflowers_web/components/layouts.ex:173
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:47
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:73
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:105
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:48
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:75
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:119
 #, elixir-autogen, elixir-format
 msgid "Fulfillments"
 msgstr "Leveranser"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:190
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
 msgstr "Maximalt avstånd (km)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:175
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Price per km (€)"
 msgstr "Pris per km (€)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:195
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:175
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "Same-day fulfillment"
 msgstr "Leverans samma dag"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:197
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:180
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Same-day order deadline"
 msgstr "Sista beställningstid för samma dag"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:208
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:256
 #, elixir-autogen, elixir-format
 msgid "%{price}/km"
 msgstr "%{price}/km"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:75
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:112
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:77
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Calendar"
 msgstr "Kalender"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:56
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Fulfillment option not found."
 msgstr "Leveransalternativet hittades inte."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:80
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Options"
 msgstr "Alternativ"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:209
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:257
 #, elixir-autogen, elixir-format
 msgid "free within %{km} km"
 msgstr "gratis inom %{km} km"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:218
-#, elixir-autogen, elixir-format
-msgid "same day until %{time}"
-msgstr "samma dag till %{time}"
-
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:210
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "up to %{km} km"
 msgstr "upp till %{km} km"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:76
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:78
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "Changes here apply to every option."
 msgstr "Ändringar här gäller alla alternativ."
@@ -5237,7 +5238,8 @@ msgstr "Förbrukad"
 msgid "View in store"
 msgstr "Visa i butiken"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:243
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:286
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:317
 #, elixir-autogen, elixir-format
 msgid "Not saved. Check the fields marked below."
 msgstr "Inte sparat. Kontrollera de markerade fälten nedan."
@@ -5283,7 +5285,7 @@ msgstr "Ett telefonnummer eller en e-post behövs. Med e-post syns beställninge
 msgid "Only you see this."
 msgstr "Bara du ser detta."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:108
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Placed orders keep their fee unless you change their delivery."
 msgstr "Lagda beställningar behåller sin avgift om du inte ändrar leveransen."
@@ -5336,7 +5338,7 @@ msgstr "Visa alla matchande beställningar"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:113
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:62
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:157
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:199
 #: lib/edenflowers_web/features/admin/order_form_live.ex:434
 #: lib/edenflowers_web/features/admin/product_form_live.ex:188
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:213
@@ -5519,22 +5521,23 @@ msgstr "Genomförd"
 msgid "Closed"
 msgstr "Stängd"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:183
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:225
 #, elixir-autogen, elixir-format
 msgid "Only the base price is charged within this distance."
 msgstr "Inom detta avstånd debiteras bara grundpriset."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:302
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:397
 #, elixir-autogen, elixir-format
 msgid "Reset %{name}? All closed days reopen."
 msgstr "Återställ %{name}? Alla stängda dagar öppnas igen."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:298
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:393
 #, elixir-autogen, elixir-format
 msgid "Reset every fulfillment option? All closed days reopen."
 msgstr "Återställ alla leveransalternativ? Alla stängda dagar öppnas igen."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:237
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:280
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:309
 #, elixir-autogen, elixir-format
 msgid "Saved."
 msgstr "Sparat."
@@ -5684,7 +5687,7 @@ msgstr "Hej"
 msgid "Hi, %{first_name}"
 msgstr "Hej %{first_name}"
 
-#: lib/edenflowers_web/components/layouts.ex:456
+#: lib/edenflowers_web/components/layouts.ex:466
 #, elixir-autogen, elixir-format
 msgid "View store"
 msgstr "Gå till butiken"
@@ -5948,7 +5951,22 @@ msgstr "Öppet i dag"
 msgid "Paused for today"
 msgstr "Pausat i dag"
 
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:185
+#, elixir-autogen, elixir-format
+msgid "Options differ. Saving applies to all."
+msgstr "Alternativen skiljer sig. Sparandet gäller alla."
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:82
+#, elixir-autogen, elixir-format
+msgid "Same-day"
+msgstr "Leverans samma dag"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "Same-day until"
+msgstr "Samma dag till kl."
+
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:171
 #, elixir-autogen, elixir-format
-msgid "Same-day orders"
-msgstr "Beställningar samma dag"
+msgid "Ordering for today"
+msgstr "Beställning till i dag"
