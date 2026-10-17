@@ -98,8 +98,6 @@ defmodule Edenflowers.Payments.Payable do
                   true -> amount_paid - paid_outside_stripe
                 end
               )
-
-    calculate :stripe_refundable?, :boolean, expr(stripe_refund > 0)
   end
 
   aggregates do

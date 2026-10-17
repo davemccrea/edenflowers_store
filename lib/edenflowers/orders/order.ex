@@ -81,7 +81,6 @@ defmodule Edenflowers.Orders.Order do
     :settled?,
     :outside_stripe_refund,
     :stripe_refund,
-    :stripe_refundable?,
     :items_subtotal,
     :items_total,
     :vat,

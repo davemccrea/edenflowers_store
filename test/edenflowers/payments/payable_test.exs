@@ -22,8 +22,7 @@ defmodule Edenflowers.Payments.PayableTest do
     :refunded?,
     :settled?,
     :outside_stripe_refund,
-    :stripe_refund,
-    :stripe_refundable?
+    :stripe_refund
   ]
 
   # An order or booking for 80.00, paid with `payments` like `[stripe: "50.00", cash: "30.00"]`.
@@ -123,7 +122,7 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.balance, "80.00")
         refute record.settled?
         assert_money(record.outside_stripe_refund, 0)
-        refute record.stripe_refundable?
+        assert_money(record.stripe_refund, 0)
       end
 
       for payments <- [[stripe: "80.00"], [cash: "80.00"], [stripe: "50.00", mobilepay: "30.00"]] do
@@ -156,7 +155,7 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert_money(record.balance, "-80.00")
         refute record.settled?
-        assert record.stripe_refundable?
+        assert_money(record.stripe_refund, "80.00")
         assert_money(record.outside_stripe_refund, 0)
       end
 
@@ -164,7 +163,7 @@ defmodule Edenflowers.Payments.PayableTest do
         record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
 
         assert_money(record.balance, "-80.00")
-        refute record.stripe_refundable?
+        assert_money(record.stripe_refund, 0)
         assert_money(record.outside_stripe_refund, "80.00")
       end
 
@@ -172,7 +171,6 @@ defmodule Edenflowers.Payments.PayableTest do
         record = build(@parent, state: :cancelled, payments: [stripe: "50.00", cash: "30.00"])
 
         assert_money(record.balance, "-80.00")
-        assert record.stripe_refundable?
         assert_money(record.stripe_refund, "50.00")
         assert_money(record.outside_stripe_refund, "30.00")
       end
@@ -199,7 +197,6 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.total_due, "40.00")
         assert_money(record.balance, "-40.00")
         refute record.settled?
-        assert record.stripe_refundable?
         assert_money(record.stripe_refund, "40.00")
         assert_money(record.outside_stripe_refund, "30.00")
       end
