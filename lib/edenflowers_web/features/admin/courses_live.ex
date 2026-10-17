@@ -23,6 +23,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
      |> load_courses()}
   end
 
+  # The Overview links here with ?booking= to open that booking's course and point at it.
+  @impl true
+  def handle_params(params, _uri, socket), do: {:noreply, assign(socket, :highlighted_booking_id, params["booking"])}
+
   @impl true
   def handle_event("new_booking", %{"course-id" => course_id}, socket) do
     form =
@@ -159,7 +163,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :stripe_refund,
             :stripe_refundable?,
             :seats_held,
-            payments: [:undoable?]
+            payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)
           ]
         ]
       )
@@ -191,6 +195,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             course={course}
             locale={@locale}
             booking_form={if @booking_course_id == course.id, do: @booking_form}
+            highlighted_booking_id={@highlighted_booking_id}
           />
         </div>
       </.admin_page>
@@ -201,6 +206,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :course, :map, required: true
   attr :locale, :any, required: true
   attr :booking_form, :any, required: true
+  attr :highlighted_booking_id, :string, default: nil
 
   defp course(assigns) do
     {registrations, cancelled} = Enum.split_with(assigns.course.bookings, &(&1.status == :confirmed))
@@ -217,6 +223,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     ~H"""
     <details
       id={"course-#{@course.id}"}
+      open={Enum.any?(@course.bookings, &(&1.id == @highlighted_booking_id))}
       phx-mounted={JS.ignore_attributes(["open"])}
       class="admin-card group"
     >
@@ -316,7 +323,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         </.form>
 
         <ul class="divide-base-content/12 divide-y">
-          <li :for={registration <- @registrations} class="py-2.5">
+          <li
+            :for={registration <- @registrations}
+            id={"registration-#{registration.id}"}
+            aria-current={registration.id == @highlighted_booking_id && "true"}
+            class={["py-2.5", registration.id == @highlighted_booking_id && highlighted_row_class()]}
+          >
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div class="min-w-48 flex-1">
                 <p class="text-base-content truncate font-medium">
@@ -337,20 +349,20 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   {registration.email}
                 </a>
               </div>
-              <div class="ml-auto flex shrink-0 items-center gap-1">
+              <div class="flex w-full items-center justify-end gap-1 sm:ml-auto sm:w-auto sm:shrink-0">
                 <%!-- Recording a payment stays out of the menu: it's what the florist taps at the course itself. --%>
                 <form
                   :if={to_collect?(registration)}
                   id={"mark-paid-#{registration.id}"}
                   phx-submit="mark_paid"
-                  class="flex items-center gap-1"
+                  class="flex flex-1 items-center gap-1 sm:flex-none"
                 >
                   <input type="hidden" name="registration_id" value={registration.id} />
                   <label for={"mark-paid-method-#{registration.id}"} class="sr-only">{~t"How"}</label>
                   <select
                     id={"mark-paid-method-#{registration.id}"}
                     name="payment_method"
-                    class="select select-sm w-auto"
+                    class="select select-sm flex-1 sm:w-auto sm:flex-none"
                   >
                     {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
                   </select>
@@ -408,7 +420,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               class="mt-3"
             />
           </li>
-          <li :for={registration <- @cancelled} data-status="cancelled" class="text-base-content/50 py-2.5">
+          <li
+            :for={registration <- @cancelled}
+            id={"registration-#{registration.id}"}
+            data-status="cancelled"
+            aria-current={registration.id == @highlighted_booking_id && "true"}
+            class={["text-base-content/50 py-2.5", registration.id == @highlighted_booking_id && highlighted_row_class()]}
+          >
             <p class="truncate line-through">
               {registration.name}
               <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
@@ -435,6 +453,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     do: Enum.find_value(registration.payments, & &1.payment_intent_id) || registration.payment_intent_id
 
   defp to_collect?(registration), do: not registration.settled? and Decimal.positive?(registration.balance)
+
+  defp highlighted_row_class, do: "row-flash scroll-mt-[calc(env(safe-area-inset-top)+6rem)]"
 
   defp undo_label(payment, locale) do
     amount = Format.currency(Decimal.abs(payment.amount), locale)
