@@ -16,7 +16,6 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Payment
 
@@ -29,7 +28,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       |> Ash.Changeset.for_create(
         :record,
         Map.merge(paid_with(changeset, method), %{
-          parent_key(record) => record.id,
+          Edenflowers.Payments.parent_key(record) => record.id,
           amount: Ash.Changeset.get_argument(changeset, opts[:amount]),
           method: method,
           payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
@@ -44,9 +43,6 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       end
     end)
   end
-
-  defp parent_key(%Order{}), do: :order_id
-  defp parent_key(%CourseRegistration{}), do: :course_registration_id
 
   # Whatever the caller loaded about the money is stale now.
   @payable_fields [:amount_paid, :paid_outside_stripe, :balance, :refunded?, :settled?]

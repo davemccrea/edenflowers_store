@@ -292,8 +292,8 @@ defmodule Edenflowers.Payments do
     with {:ok, payment} <- find_payment(payment_intent_id),
          false <- refund_recorded?(refund.id),
          amount = Decimal.negate(StripeAPI.from_stripe_amount(refund.amount)),
-         {:ok, _record} <- record_refund_against(payment, refund.id, amount) do
-      Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(parent_ref(payment))}")
+         {:ok, record} <- record_refund_against(payment, refund.id, amount) do
+      Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(record)}")
       {:ok, :recorded}
     else
       :not_found -> {:ok, :ignored}
@@ -305,23 +305,14 @@ defmodule Edenflowers.Payments do
   def record_stripe_refund(_refund), do: {:ok, :ignored}
 
   defp record_refund_against(payment, refund_id, amount) do
-    with {:ok, parent} <- get_parent(payment) do
-      parent
+    with {:ok, payment} <- Ash.load(payment, [:order, :course_registration], actor: system_actor()) do
+      (payment.order || payment.course_registration)
       |> Ash.Changeset.for_update(:record_stripe_refund, %{stripe_refund_id: refund_id, amount: amount},
         actor: system_actor()
       )
       |> Ash.update()
     end
   end
-
-  defp get_parent(%Payment{order_id: order_id}) when is_binary(order_id),
-    do: Orders.get_order_by_id(order_id, actor: system_actor())
-
-  defp get_parent(%Payment{course_registration_id: registration_id}),
-    do: Courses.get_registration_by_id(registration_id, actor: system_actor())
-
-  defp parent_ref(%Payment{order_id: order_id}) when is_binary(order_id), do: {"order_id", order_id}
-  defp parent_ref(%Payment{course_registration_id: registration_id}), do: {"course_registration_id", registration_id}
 
   # The webhook and the order page can record the same refund at once; the
   # unique stripe_refund_id turns the loser's insert into an error.
@@ -449,8 +440,11 @@ defmodule Edenflowers.Payments do
     Kernel.max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)
   end
 
-  defp payments_query(%Order{id: id}), do: Ash.Query.filter(Payment, order_id == ^id)
-  defp payments_query(%CourseRegistration{id: id}), do: Ash.Query.filter(Payment, course_registration_id == ^id)
+  defp payments_query(payable), do: Ash.Query.do_filter(Payment, %{parent_key(payable) => payable.id})
+
+  @doc "The `Payment` attribute that points at an order or course registration."
+  def parent_key(%Order{}), do: :order_id
+  def parent_key(%CourseRegistration{}), do: :course_registration_id
 
   defp find_payment(payment_intent_id) do
     Payment
