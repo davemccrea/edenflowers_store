@@ -64,8 +64,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     actor = socket.assigns.current_user
 
     socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.mark_registration_paid(registration, payment_method, actor: actor) do
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor, load: [:balance]),
+           {:ok, _} <-
+             Courses.record_registration_payment(registration, registration.balance, payment_method, actor: actor) do
         put_flash(socket, :info, ~t"Payment recorded.")
       else
         _ -> put_flash(socket, :error, ~t"Could not record the payment.")
@@ -85,7 +86,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <-
-             Courses.record_registration_refund(registration, amount, payment_method, actor: actor) do
+             Courses.record_registration_payment(registration, amount, payment_method, actor: actor) do
         put_flash(socket, :info, ~t"Refund recorded.")
       else
         _ -> put_flash(socket, :error, ~t"Could not record the refund. Check the amount.")

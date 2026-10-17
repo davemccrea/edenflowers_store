@@ -304,17 +304,21 @@ defmodule Edenflowers.Payments do
 
   def record_stripe_refund(_refund), do: {:ok, :ignored}
 
-  defp record_refund_against(%Payment{order_id: order_id}, refund_id, amount) when is_binary(order_id) do
-    with {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()) do
-      Orders.record_stripe_refund(order, refund_id, amount, actor: system_actor())
+  defp record_refund_against(payment, refund_id, amount) do
+    with {:ok, parent} <- get_parent(payment) do
+      parent
+      |> Ash.Changeset.for_update(:record_stripe_refund, %{stripe_refund_id: refund_id, amount: amount},
+        actor: system_actor()
+      )
+      |> Ash.update()
     end
   end
 
-  defp record_refund_against(%Payment{course_registration_id: registration_id}, refund_id, amount) do
-    with {:ok, registration} <- Courses.get_registration_by_id(registration_id, actor: system_actor()) do
-      Courses.record_registration_stripe_refund(registration, refund_id, amount, actor: system_actor())
-    end
-  end
+  defp get_parent(%Payment{order_id: order_id}) when is_binary(order_id),
+    do: Orders.get_order_by_id(order_id, actor: system_actor())
+
+  defp get_parent(%Payment{course_registration_id: registration_id}),
+    do: Courses.get_registration_by_id(registration_id, actor: system_actor())
 
   defp parent_ref(%Payment{order_id: order_id}) when is_binary(order_id), do: {"order_id", order_id}
   defp parent_ref(%Payment{course_registration_id: registration_id}), do: {"course_registration_id", registration_id}

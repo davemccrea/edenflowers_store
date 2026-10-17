@@ -12,6 +12,37 @@ defmodule Edenflowers.Payments.Payable do
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 
+  alias Edenflowers.Payments.{Changes, Validations}
+
+  actions do
+    # Money Jennie took or handed back by any method except Stripe.
+    update :record_payment do
+      argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
+      validate Validations.Committed
+      validate Validations.WithinBalance
+      validate Validations.RefundCoveredOutsideStripe
+      # A payment link charges the balance this changes; visiting it again
+      # opens a PaymentIntent for whatever is left.
+      change Changes.CancelOpenPaymentIntent
+      change {Changes.RecordPayment, amount: :amount}
+      require_atomic? false
+    end
+
+    # From Stripe's refund webhook, so a refund Jennie makes in the Stripe
+    # dashboard shows up without her entering it again. Recorded whatever it
+    # is, because the money moved; one beyond what was owed back leaves a
+    # balance to collect.
+    update :record_stripe_refund do
+      argument :stripe_refund_id, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
+      change {Changes.RecordPayment, method: :stripe, amount: :amount}
+      require_atomic? false
+    end
+  end
+
   calculations do
     # Positive is still to collect, negative is to refund.
     calculate :balance, :decimal, expr(total_due - amount_paid)

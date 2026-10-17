@@ -134,39 +134,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # Jennie ticks off manual bookings as people pay at the course, recording
-    # the balance as paid the way she took it.
-    update :mark_paid do
-      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
-      argument :amount, :decimal, public?: false
-      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
-      validate attribute_equals(:status, :confirmed), message: "isn't confirmed"
-      change Changes.CollectBalance
-      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
-      require_atomic? false
-    end
-
-    # Money Jennie hands back herself, after a seat was removed or the booking
-    # cancelled.
-    update :record_refund do
-      argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
-      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
-      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
-      validate compare(:amount, less_than: 0), message: "must be a refund"
-      validate Edenflowers.Payments.Validations.RefundCoveredOutsideStripe
-      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
-      require_atomic? false
-    end
-
-    # Recorded from Stripe's refund webhook, so a refund Jennie makes in the
-    # Stripe dashboard shows up on the booking without her entering it again.
-    update :record_stripe_refund do
-      argument :stripe_refund_id, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount}
-      require_atomic? false
-    end
-
     # When someone in a group drops out. Removing the last seat is a cancel.
     # seats and amount stay what was bought, because the receipt is rebuilt
     # from them. Nothing is refunded: the seat's price is left as a negative

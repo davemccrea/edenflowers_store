@@ -6,6 +6,12 @@ defmodule Edenflowers.Payments.PayableTest do
   use Edenflowers.DataCase, async: true
 
   import Generator
+  import Mox
+
+  alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Payments
+
+  setup :verify_on_exit!
 
   @fields [
     :total_due,
@@ -71,6 +77,25 @@ defmodule Edenflowers.Payments.PayableTest do
 
   defp parent_key(:order), do: :order_id
   defp parent_key(:booking), do: :course_registration_id
+
+  defp record_payment(record, amount, method \\ :cash) do
+    record
+    |> Ash.Changeset.for_update(:record_payment, %{amount: amount, payment_method: method}, authorize?: false)
+    |> Ash.update()
+  end
+
+  defp reload(record), do: Ash.load!(record, @fields, authorize?: false, reuse_values?: false)
+
+  defp payments(record), do: Ash.load!(record, :payments, authorize?: false, reuse_values?: false).payments
+
+  defp stripe_refund(payment_intent_id, cents) do
+    %{
+      id: "re_#{System.unique_integer([:positive])}",
+      status: "succeeded",
+      payment_intent: payment_intent_id,
+      amount: cents
+    }
+  end
 
   defp assert_money(actual, expected), do: assert(Decimal.equal?(actual, expected), "#{actual} != #{expected}")
 
@@ -167,6 +192,117 @@ defmodule Edenflowers.Payments.PayableTest do
 
       test "an uncommitted one owes nothing yet" do
         refute build(@parent, state: :uncommitted).committed?
+      end
+
+      for method <- [:cash, :mobilepay, :zettle, :zervant] do
+        test "paying the whole balance by #{method} settles it" do
+          record = build(@parent)
+
+          assert {:ok, record} = record_payment(record, "80.00", unquote(method))
+
+          assert record.settled?
+          assert [%{method: unquote(method), paid_at: %DateTime{}} = payment] = payments(record)
+          assert_money(payment.amount, "80.00")
+        end
+      end
+
+      test "a part-payment leaves the rest owed" do
+        {:ok, record} = record_payment(build(@parent), "30.00")
+
+        assert_money(record.balance, "50.00")
+      end
+
+      test "a payment larger than the balance is refused" do
+        record = build(@parent)
+
+        assert {:error, error} = record_payment(record, "80.01")
+        assert Exception.message(error) =~ "That's more than is owed"
+        assert payments(record) == []
+      end
+
+      test "a Stripe payment can't be recorded by hand" do
+        assert {:error, error} = record_payment(build(@parent), "80.00", :stripe)
+        assert Exception.message(error) =~ "is recorded from Stripe"
+      end
+
+      test "a payment on a cancelled one is refused" do
+        assert {:error, _error} = record_payment(build(@parent, state: :cancelled), "10.00")
+        assert {:error, _error} = record_payment(build(@parent, state: :cancelled, payments: [cash: "80.00"]), "10.00")
+      end
+
+      test "a payment on an uncommitted one is refused" do
+        assert {:error, error} = record_payment(build(@parent, state: :uncommitted), "10.00")
+        assert Exception.message(error) =~ "can't be recorded before it's placed or confirmed"
+      end
+
+      test "a refund of what's owed back, up to what was paid outside Stripe, settles it" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
+
+        assert {:ok, record} = record_payment(record, Decimal.negate(record.outside_stripe_refund), :mobilepay)
+        assert record.settled?
+      end
+
+      test "a refund larger than what was paid outside Stripe is refused" do
+        record = build(@parent, state: :cancelled, payments: [stripe: "50.00", cash: "30.00"])
+
+        assert {:error, error} = record_payment(record, "-30.01")
+        assert Exception.message(error) =~ "is more than was paid outside Stripe"
+      end
+
+      test "a refund larger than what's owed back is refused" do
+        record = build(@parent, lowered: true, payments: [cash: "80.00"])
+
+        assert {:error, error} = record_payment(record, "-40.01")
+        assert Exception.message(error) =~ "That's more than is owed back"
+      end
+
+      test "a goodwill refund on a settled one is refused" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        assert {:error, error} = record_payment(record, "-10.00")
+        assert Exception.message(error) =~ "Lower the order or cancel it before refunding"
+      end
+
+      test "a payment recorded by mistake is corrected by recording the opposite amount" do
+        record = build(@parent, payments: [cash: "30.00"])
+
+        assert {:ok, record} = record_payment(record, "-30.00")
+        assert_money(record.balance, "80.00")
+      end
+
+      test "recording cancels the open PaymentIntent, which charged the old balance" do
+        record = build(@parent) |> Ash.Seed.update!(%{payment_intent_id: "pi_open"}) |> reload()
+        expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_open"} -> {:ok, %{id: "pi_open"}} end)
+
+        assert {:ok, record} = record_payment(record, "30.00")
+        assert record.payment_intent_id == nil
+      end
+
+      test "a Stripe refund is recorded once, however often it's delivered" do
+        record = build(@parent, state: :cancelled)
+
+        generate(
+          payment([{parent_key(@parent), record.id}, amount: Decimal.new("80.00"), payment_intent_id: "pi_paid"])
+        )
+
+        refund = stripe_refund("pi_paid", 8_000)
+
+        assert {:ok, :recorded} = Payments.record_stripe_refund(refund)
+        assert {:ok, :already_recorded} = Payments.record_stripe_refund(refund)
+
+        assert reload(record).settled?
+      end
+
+      test "a Stripe refund beyond what was owed back is recorded, leaving a balance to collect" do
+        record = build(@parent, lowered: true)
+
+        generate(
+          payment([{parent_key(@parent), record.id}, amount: Decimal.new("80.00"), payment_intent_id: "pi_paid"])
+        )
+
+        assert {:ok, :recorded} = Payments.record_stripe_refund(stripe_refund("pi_paid", 6_000))
+
+        assert_money(reload(record).balance, "20.00")
       end
     end
   end

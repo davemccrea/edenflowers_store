@@ -1,6 +1,6 @@
 # Jennie records payments and refunds on orders and bookings the same way
 
-Status: ready-for-agent
+Status: done
 Type: refactor
 
 ## What to build

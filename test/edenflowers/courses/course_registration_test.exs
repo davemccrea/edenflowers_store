@@ -150,76 +150,30 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       %{admin: admin, registration: registration}
     end
 
-    test "a manual booking owes its price until it is marked paid", %{admin: admin, registration: registration} do
+    test "a manual booking owes its price until it is paid at the course", %{admin: admin, registration: registration} do
       assert Decimal.equal?(balance(registration), "170.00")
 
-      assert {:ok, _paid} = Courses.mark_registration_paid(registration, :mobilepay, actor: admin)
+      assert {:ok, _paid} = Courses.record_registration_payment(registration, "170.00", :mobilepay, actor: admin)
 
       assert [%{method: :mobilepay, amount: amount}] = Ash.load!(registration, :payments, authorize?: false).payments
       assert Decimal.equal?(amount, "170.00")
       assert Decimal.equal?(balance(registration), 0)
     end
 
-    test "is marked paid only while something is owed", %{admin: admin, registration: registration} do
-      assert {:ok, _paid} = Courses.mark_registration_paid(registration, :cash, actor: admin)
-
-      assert {:error, error} = Courses.mark_registration_paid(registration, :cash, actor: admin)
-      assert Exception.message(error) =~ "nothing is owed"
-    end
-
-    test "is recorded by Jennie, not as a Stripe payment", %{admin: admin, registration: registration} do
-      assert {:error, _error} = Courses.mark_registration_paid(registration, :stripe, actor: admin)
-    end
-
     test "a paid booking owes a refund after a seat is removed or it is cancelled", %{
       admin: admin,
       registration: registration
     } do
-      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+      {:ok, registration} = Courses.record_registration_payment(registration, "170.00", :cash, actor: admin)
 
       {:ok, registration} = Courses.remove_registration_seat(registration, actor: admin)
       assert Decimal.equal?(balance(registration), "-85.00")
 
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
       assert Decimal.equal?(balance(registration), "-170.00")
-    end
 
-    test "money paid outside Stripe is refunded the same way, even on a cancelled booking", %{
-      admin: admin,
-      registration: registration
-    } do
-      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
-      {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
-
-      assert {:error, error} =
-               Courses.record_registration_refund(registration, "-170.01", :cash, actor: admin)
-
-      assert Exception.message(error) =~ "is more than was paid outside Stripe"
-
-      assert {:ok, registration} =
-               Courses.record_registration_refund(registration, "-170.00", :mobilepay, actor: admin)
-
+      assert {:ok, registration} = Courses.record_registration_payment(registration, "-170.00", :cash, actor: admin)
       assert Decimal.equal?(balance(registration), 0)
-    end
-
-    test "a recorded refund can't hand back money paid through Stripe", %{admin: admin} do
-      registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
-
-      generate(
-        payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
-      )
-
-      {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
-
-      assert {:error, _error} =
-               Courses.record_registration_refund(registration, "-1.00", :cash, actor: admin)
-    end
-
-    test "a recorded refund must be negative", %{admin: admin, registration: registration} do
-      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
-
-      assert {:error, error} = Courses.record_registration_refund(registration, "10.00", :cash, actor: admin)
-      assert Exception.message(error) =~ "must be a refund"
     end
   end
 

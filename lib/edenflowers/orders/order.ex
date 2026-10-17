@@ -28,7 +28,6 @@ defmodule Edenflowers.Orders.Order do
   alias Edenflowers.Orders.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.Subscription
-  alias Edenflowers.Payments.PaymentMethod
 
   @locales Edenflowers.Locales.all()
 
@@ -668,28 +667,6 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
-    # Money Jennie takes herself, or hands back as a negative amount, so she
-    # can also settle a balance left by an edit. A cancelled order won't be
-    # made, so it can only be refunded.
-    update :record_payment do
-      argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
-      argument :payment_method, PaymentMethod, allow_nil?: false
-
-      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
-
-      validate compare(:amount, less_than: 0),
-        where: [attribute_equals(:fulfillment_status, :cancelled)],
-        message: "can only be a refund on a cancelled order"
-
-      validate Edenflowers.Payments.Validations.RefundCoveredOutsideStripe
-      # The link charges the balance, which this payment changes; visiting it
-      # again opens a PaymentIntent for whatever is left.
-      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
-      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
-      change load(@admin_show_load)
-      require_atomic? false
-    end
-
     # A payment through the payment link: a custom order's first payment, or
     # a balance left by editing any order. The order is already placed, so
     # unlike finalize_checkout this only records the payment.
@@ -712,15 +689,6 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
-      require_atomic? false
-    end
-
-    # Recorded from Stripe's refund webhook, so a refund Jennie makes in the
-    # Stripe dashboard shows up on the order without her entering it again.
-    update :record_stripe_refund do
-      argument :stripe_refund_id, :string, allow_nil?: false
-      argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount}
       require_atomic? false
     end
 
