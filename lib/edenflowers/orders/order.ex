@@ -70,6 +70,7 @@ defmodule Edenflowers.Orders.Order do
   @admin_show_load [
     :payment_status,
     :amount_paid,
+    :in_person_paid,
     :holds_money?,
     :balance,
     :unpaid?,
@@ -665,14 +666,20 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
-    # Money Jennie takes in person, or hands back as a negative amount. Any
-    # amount goes, so she can also settle a balance left by an edit.
+    # Money Jennie takes in person, or hands back as a negative amount, so she
+    # can also settle a balance left by an edit. A cancelled order won't be
+    # made, so it can only be refunded.
     update :record_in_person_payment do
       argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
       argument :payment_method, PaymentMethod, allow_nil?: false
 
       validate argument_in(:payment_method, PaymentMethod.in_person())
-      validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
+
+      validate compare(:amount, less_than: 0),
+        where: [attribute_equals(:fulfillment_status, :cancelled)],
+        message: "can only be a refund on a cancelled order"
+
+      validate Edenflowers.Payments.Validations.InPersonRefundCovered
       # The link charges the balance, which this payment changes; visiting it
       # again opens a PaymentIntent for whatever is left.
       change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
@@ -1159,6 +1166,8 @@ defmodule Edenflowers.Orders.Order do
 
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount
+
+    sum :in_person_paid, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
 
     # Unauthorized because the checkout actor, often a guest, can't read the
     # order's user under the User read policy.
