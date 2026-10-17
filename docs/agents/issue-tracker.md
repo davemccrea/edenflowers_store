@@ -5,11 +5,11 @@ Issues and specs for this repo live as markdown files in `issues/`.
 ## Conventions
 
 - One feature per directory: `issues/<feature-slug>/`
-- The spec is `issues/<feature-slug>/spec.md`
+- The spec is `issues/<feature-slug>/spec.md`, with a one-line `Summary:` above its `Status:` line saying what the feature does for the shop
 - Implementation issues are one file per ticket at `issues/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`, never a single combined tickets file
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
-- The `Status:` lines are the only record of status; keep them current as work lands. `just issues` lists every open feature with its statuses
+- The `Status:` lines are the only record of status; keep them current as work lands. `just issues` lists every open feature with its spec's status and summary, then each ticket's number, status and `#` title, so keep ticket titles descriptive
 - Open features stay at the top level of `issues/` whatever their status. When every issue is `done` or `wontfix`, set the spec's `Status:` to match, move the directory into `issues/done/`, and fix any `issues/<feature-slug>/` paths that pointed at it
 - When only the human can finish an issue (a decision, a check on a real device or in a dashboard), set it to `ready-for-human` and say what's left in its `## Comments`
 

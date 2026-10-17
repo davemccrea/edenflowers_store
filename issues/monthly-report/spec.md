@@ -1,5 +1,6 @@
 # Monthly Accounting Report
 
+Summary: One monthly download of income and expenses, with receipts, for the accountant
 Status: ready-for-agent
 
 ## Problem
