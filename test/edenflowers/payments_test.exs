@@ -435,8 +435,8 @@ defmodule Edenflowers.PaymentsTest do
       log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(order_intent(order, paid_cents)) end)
 
       assert log =~ "Amount mismatch"
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid])
-      assert order.amount_mismatch?
+      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance, :amount_paid])
+      assert Decimal.equal?(order.balance, Decimal.new("0.01"))
       assert Decimal.equal?(order.amount_paid, Decimal.div(paid_cents, 100))
     end
 
@@ -522,7 +522,7 @@ defmodule Edenflowers.PaymentsTest do
       assert unchanged_order.payment_status == :pending
       assert unchanged_order.order_reference == order.order_reference
       assert is_nil(unchanged_order.ordered_at)
-      assert is_nil(unchanged_order.amount_paid)
+      assert Decimal.eq?(unchanged_order.amount_paid, 0)
       assert is_nil(unchanged_order.vat_breakdown)
 
       assert %{status: :pending, confirmed_at: nil} =

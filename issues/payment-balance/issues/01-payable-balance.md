@@ -1,6 +1,6 @@
 # Orders and bookings work out what's owed the same way
 
-Status: ready-for-agent
+Status: done
 Type: refactor
 
 ## What to build

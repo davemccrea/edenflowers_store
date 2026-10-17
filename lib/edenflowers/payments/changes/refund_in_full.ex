@@ -21,7 +21,7 @@ defmodule Edenflowers.Payments.Changes.RefundInFull do
 
       case Payments.refund_in_full(order) do
         {:ok, _refunds} ->
-          Ash.Changeset.set_context(changeset, %{refunded_amount: order.amount_paid || Decimal.new(0)})
+          Ash.Changeset.set_context(changeset, %{refunded_amount: order.amount_paid})
 
         {:error, error} ->
           Logger.error("Could not refund order #{order.id} the customer cancelled: #{inspect(error)}")

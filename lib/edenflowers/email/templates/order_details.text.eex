@@ -5,7 +5,7 @@
 <%= for line_item <- @order.line_items do %><%= line_item.quantity %> × <%= line_item.product_name %>  <%= @format_currency.(line_item.subtotal) %>
 <% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
 <% end %><%= gettext("Total") %>  <%= @format_currency.(@order.grand_total) %>
-<%= if @order.amount_paid do %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
+<%= if Decimal.positive?(@order.amount_paid) do %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
 <%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
 <% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @format_date.(@order.fulfillment_date), address: @order.delivery_address) %><% else %><%= gettext("Ready to collect at the shop on %{date}", date: @format_date.(@order.fulfillment_date)) %><% end %>

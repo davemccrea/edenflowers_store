@@ -151,12 +151,12 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 <dt>{~t"Total"}</dt>
                 <dd class="tabular-nums" data-testid="pay-total">{Format.currency(@shown_order.grand_total, @locale)}</dd>
               </div>
-              <div :if={@shown_order.amount_paid} class="flex justify-between gap-4 py-3">
+              <div :if={Decimal.positive?(@shown_order.amount_paid)} class="flex justify-between gap-4 py-3">
                 <dt>{~t"Paid so far"}</dt>
                 <dd class="tabular-nums">{Format.currency(@shown_order.amount_paid, @locale)}</dd>
               </div>
               <div
-                :if={@shown_order.amount_paid && @shown_order.payable?}
+                :if={Decimal.positive?(@shown_order.amount_paid) && @shown_order.payable?}
                 class="flex justify-between gap-4 py-3 font-semibold"
               >
                 <dt>{~t"Left to pay"}</dt>

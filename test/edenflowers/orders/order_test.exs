@@ -1299,6 +1299,38 @@ defmodule Edenflowers.Orders.OrderTest do
     end
   end
 
+  describe "what an order owes" do
+    defp payment_view(order) do
+      Ash.load!(order, [:balance, :payment_status, :payable?], authorize?: false, reuse_values?: false)
+    end
+
+    defp cancel(order), do: Ash.Seed.update!(order, %{fulfillment_status: :cancelled})
+
+    test "an order edited up after it was paid has the difference to collect" do
+      order = placed_order(paid: true)
+      [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
+      line_item |> Ash.Changeset.for_update(:set_quantity, %{quantity: 3}) |> Ash.update!(authorize?: false)
+
+      order = payment_view(order)
+      assert Decimal.equal?(order.balance, "42.00")
+      assert order.payment_status == :pending
+      assert order.payable?
+    end
+
+    test "payment status" do
+      assert payment_view(placed_order(paid: "40.00")).payment_status == :pending
+      assert payment_view(placed_order(refunded: true)).payment_status == :refunded
+      assert payment_view(cancel(placed_order())).payment_status == nil
+      assert payment_view(cancel(placed_order(paid: true))).payment_status == :paid
+    end
+
+    test "the payment link charges nothing once the order is cancelled or refunded" do
+      assert payment_view(placed_order(paid: "40.00")).payable?
+      refute payment_view(cancel(placed_order(paid: "40.00"))).payable?
+      refute payment_view(placed_order(refunded: true)).payable?
+    end
+  end
+
   describe "Order reset action" do
     test "reset clears all checkout fields and returns to step 1" do
       tax_rate = generate(tax_rate())

@@ -140,12 +140,12 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert log =~ "Amount mismatch"
 
       order =
-        Orders.get_order_by_id!(order.id, authorize?: false, load: [:amount_mismatch?, :amount_paid, :payment_status])
+        Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance, :amount_paid, :payment_status])
 
       assert order.state == :placed
       assert order.payment_status == :pending
       assert Decimal.equal?(order.amount_paid, Decimal.div(expected_amount - 1, 100))
-      assert order.amount_mismatch?
+      assert Decimal.equal?(order.balance, Decimal.new("0.01"))
     end
 
     test "logs error and returns :ok when payment_intent_id does not match", %{

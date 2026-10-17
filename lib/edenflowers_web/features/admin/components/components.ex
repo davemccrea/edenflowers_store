@@ -326,13 +326,14 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :order, :map,
     required: true,
-    doc: "needs `payment_status`, `amount_mismatch?`, `balance` and `fulfillment_status`"
+    doc: "needs `payment_status`, `settled?`, `amount_paid` and `balance`"
 
   attr :locale, :string, required: true
 
   @doc "An order's payment status, or the amount still to collect or refund when it was part-paid or overpaid."
   def order_payment_badge(%{order: order} = assigns) do
-    assigns = assign(assigns, :owes_money?, order.amount_mismatch? && order.fulfillment_status != :cancelled)
+    # An order that took nothing yet reads as Unpaid rather than as its total to collect.
+    assigns = assign(assigns, :owes_money?, not order.settled? and Decimal.positive?(order.amount_paid))
 
     ~H"""
     <.badge
