@@ -101,6 +101,26 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, 0)
   end
 
+  test "a cancelled booking paid online is refunded with Stripe", %{conn: conn} do
+    registration = generate(course_registration(status: :cancelled, amount: Decimal.new("85.00")))
+
+    generate(
+      payment(course_registration_id: registration.id, amount: Decimal.new("85.00"), payment_intent_id: "pi_paid")
+    )
+
+    Edenflowers.External.StripeAPI.Mock
+    |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
+    |> Mox.expect(:create_refund, fn "pi_paid", 8_500, _key ->
+      {:ok, %{id: "re_1", payment_intent: "pi_paid", amount: 8_500, status: "succeeded"}}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+    refute has_element?(view, "#refund-in-person-#{registration.id}")
+    assert view |> element("#refund-with-stripe-#{registration.id}") |> render_click() =~ "Refunded through Stripe."
+    refute has_element?(view, "#refund-with-stripe-#{registration.id}")
+  end
+
   test "a booking paid online isn't still to pay", %{conn: conn} do
     registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
 

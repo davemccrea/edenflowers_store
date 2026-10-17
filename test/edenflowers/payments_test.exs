@@ -624,6 +624,58 @@ defmodule Edenflowers.PaymentsTest do
     end
   end
 
+  describe "refund_balance/1 for a course booking" do
+    setup %{registration: registration} do
+      assert {:ok, :completed} = Payments.complete(course_intent(registration))
+      stub(StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      stub(StripeAPI.Mock, :list_refunds, fn _payment_intent_id -> {:ok, []} end)
+      %{registration: Courses.get_registration_by_id!(registration.id, authorize?: false)}
+    end
+
+    defp succeeded_refund(payment_intent_id, cents) do
+      %{id: "re_#{cents}", payment_intent: payment_intent_id, amount: cents, status: "succeeded"}
+    end
+
+    defp refunds(registration) do
+      Courses.get_registration_by_id!(registration.id, authorize?: false, load: [:payments]).payments
+      |> Enum.filter(&Decimal.negative?(&1.amount))
+    end
+
+    test "refunds a cancelled booking what was paid, once", %{registration: registration} do
+      pi = registration.payment_intent_id
+      expect(StripeAPI.Mock, :create_refund, fn ^pi, 17_000, _key -> {:ok, succeeded_refund(pi, 17_000)} end)
+
+      {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
+      assert {:ok, [_refund]} = Payments.refund_balance(registration)
+
+      # The second click finds the first refund in Stripe.
+      stub(StripeAPI.Mock, :list_refunds, fn ^pi -> {:ok, [succeeded_refund(pi, 17_000)]} end)
+
+      assert {:ok, []} = Payments.refund_balance(registration)
+
+      assert [%{amount: amount, method: :stripe}] = refunds(registration)
+      assert Decimal.equal?(amount, "-170.00")
+    end
+
+    test "refunds one seat's price after a seat is removed", %{registration: registration} do
+      pi = registration.payment_intent_id
+      expect(StripeAPI.Mock, :create_refund, fn ^pi, 8_500, _key -> {:ok, succeeded_refund(pi, 8_500)} end)
+
+      {:ok, registration} = Courses.remove_registration_seat(registration, authorize?: false)
+      assert {:ok, [_refund]} = Payments.refund_balance(registration)
+
+      assert [%{amount: amount}] = refunds(registration)
+      assert Decimal.equal?(amount, "-85.00")
+    end
+
+    test "cancelling refunds nothing by itself", %{registration: registration} do
+      {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
+
+      assert [] = refunds(registration)
+      assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, "-170.00")
+    end
+  end
+
   describe "Payment" do
     test "belongs to exactly one order or course registration", %{order: order, registration: registration} do
       for parents <- [%{}, %{order_id: order.id, course_registration_id: registration.id}] do

@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.CoursesLive do
   use EdenflowersWeb, :live_view
 
+  require Logger
+
   import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Layouts
@@ -92,6 +94,22 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
+  def handle_event("refund_with_stripe", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+           {:ok, refunds} <- Edenflowers.Payments.refund_balance(registration) do
+        put_flash(socket, :info, refund_message(refunds))
+      else
+        error ->
+          Logger.error("Stripe refund for course registration #{id} failed: #{inspect(error)}")
+          put_flash(socket, :error, ~t"Could not refund through Stripe. Check the payment in Stripe.")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
   def handle_event("remove_seat", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
@@ -124,7 +142,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        load: [bookings: [:balance, :in_person_paid, :seats_held]]
+        load: [bookings: [:balance, :amount_paid, :in_person_paid, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -295,6 +313,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 {registration.email}
               </a>
               <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
+              <.refund_with_stripe :if={refundable_with_stripe?(registration)} registration={registration} locale={@locale} />
             </div>
             <div class="flex shrink-0 items-center gap-1">
               <%!-- Mark paid stays out of the menu: it's what the florist taps at the course itself. --%>
@@ -353,6 +372,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             </p>
             <p class="truncate text-sm">{registration.email}</p>
             <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
+            <.refund_with_stripe :if={refundable_with_stripe?(registration)} registration={registration} locale={@locale} />
           </li>
         </ul>
       </div>
@@ -396,10 +416,51 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     """
   end
 
+  attr :registration, :map, required: true
+  attr :locale, :any, required: true
+
+  defp refund_with_stripe(assigns) do
+    ~H"""
+    <.button
+      id={"refund-with-stripe-#{@registration.id}"}
+      type="button"
+      phx-click="refund_with_stripe"
+      phx-value-id={@registration.id}
+      phx-disable-with={~t"Refunding…"}
+      data-confirm={
+        ~t"Refund #{amount = Format.currency(stripe_refund(@registration), @locale)} to the customer's card through Stripe?"
+      }
+      variant="neutral"
+      size="sm"
+      class="mt-2"
+    >
+      {~t"Refund with Stripe"}
+    </.button>
+    """
+  end
+
+  defp refund_message([]), do: ~t"Nothing left to refund. Stripe already has refunds covering it."
+
+  defp refund_message(refunds) do
+    if Enum.all?(refunds, &(&1.status == "succeeded")),
+      do: ~t"Refunded through Stripe.",
+      else: ~t"Refund sent to Stripe. It shows here once it goes through."
+  end
+
   defp owes?(registration), do: Decimal.positive?(registration.balance)
 
   defp refundable_in_person?(registration),
     do: Decimal.negative?(registration.balance) and Decimal.positive?(registration.in_person_paid)
+
+  defp refundable_with_stripe?(registration),
+    do: Decimal.negative?(registration.balance) and Decimal.positive?(stripe_paid(registration))
+
+  defp stripe_paid(registration), do: Decimal.sub(registration.amount_paid, registration.in_person_paid)
+
+  # What the Stripe refund will send back: the balance, as far as Stripe payments cover it.
+  defp stripe_refund(registration) do
+    registration.balance |> Decimal.negate() |> Decimal.min(stripe_paid(registration))
+  end
 
   defp in_person_refund(registration) do
     registration.balance |> Decimal.negate() |> Decimal.min(registration.in_person_paid) |> Decimal.negate()
@@ -409,22 +470,21 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
   end
 
-  # Manual bookings never reach Stripe, so they have no payment intent.
-  defp manual?(registration), do: is_nil(registration.payment_intent_id)
+  defp paid?(registration), do: Decimal.positive?(registration.amount_paid)
 
   defp remove_seat_confirmation(registration) do
-    if manual?(registration) do
-      ~t"Remove one seat from this booking?"
+    if paid?(registration) do
+      ~t"This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
     else
-      ~t"This does not refund. Refund one seat in Stripe first. Remove one seat from this booking?"
+      ~t"Remove one seat from this booking?"
     end
   end
 
   defp cancel_confirmation(registration) do
-    if manual?(registration) do
-      ~t"This frees the seats. Refund them yourself if they paid. Cancel this booking?"
+    if paid?(registration) do
+      ~t"This frees the seats but does not refund. Refund here afterwards. Cancel this booking?"
     else
-      ~t"This frees the seats but does not refund. Refund in Stripe first. Cancel this booking?"
+      ~t"This frees the seats. Cancel this booking?"
     end
   end
 
