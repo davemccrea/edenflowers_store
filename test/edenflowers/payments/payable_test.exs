@@ -326,6 +326,15 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.balance, "-80.00")
       end
 
+      test "a payment already refunded can't be undone" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00", cash: "-80.00"])
+        payment = Enum.find(payments(record), &Decimal.positive?(&1.amount))
+
+        assert {:error, error} = undo_payment(record, payment.id)
+        assert Exception.message(error) =~ "is more than was paid outside Stripe"
+        assert reload(record).settled?
+      end
+
       test "a payment is undone once" do
         {:ok, record} = record_payment(build(@parent), "30.00")
         [payment] = payments(record)
