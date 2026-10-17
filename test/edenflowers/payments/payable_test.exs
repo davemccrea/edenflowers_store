@@ -255,6 +255,13 @@ defmodule Edenflowers.Payments.PayableTest do
         assert Exception.message(error) =~ "is recorded from Stripe"
       end
 
+      test "a refusal is in Jennie's language" do
+        Gettext.put_locale(EdenflowersWeb.Gettext, "fi")
+
+        assert {:error, error} = record_payment(build(@parent), "80.01")
+        assert Exception.message(error) =~ "Summa on suurempi kuin maksettavaa on jäljellä."
+      end
+
       test "a payment on a cancelled one is refused" do
         assert {:error, _error} = record_payment(build(@parent, state: :cancelled), "10.00")
         assert {:error, _error} = record_payment(build(@parent, state: :cancelled, payments: [cash: "80.00"]), "10.00")
@@ -262,7 +269,7 @@ defmodule Edenflowers.Payments.PayableTest do
 
       test "a payment on an uncommitted one is refused" do
         assert {:error, error} = record_payment(build(@parent, state: :uncommitted), "10.00")
-        assert Exception.message(error) =~ "can't be recorded before it's placed or confirmed"
+        assert Exception.message(error) =~ "Nothing can be recorded until it's placed or confirmed"
       end
 
       test "a refund of what's owed back, up to what was paid outside Stripe, settles it" do
@@ -276,7 +283,7 @@ defmodule Edenflowers.Payments.PayableTest do
         record = build(@parent, state: :cancelled, payments: [stripe: "50.00", cash: "30.00"])
 
         assert {:error, error} = record_payment(record, "-30.01")
-        assert Exception.message(error) =~ "is more than was paid outside Stripe"
+        assert Exception.message(error) =~ "That's more than was paid outside Stripe"
       end
 
       test "a refund larger than what's owed back is refused" do
@@ -290,14 +297,14 @@ defmodule Edenflowers.Payments.PayableTest do
         record = build(@parent, payments: [cash: "80.00"])
 
         assert {:error, error} = record_payment(record, "-10.00")
-        assert Exception.message(error) =~ "Lower the order or cancel it before refunding"
+        assert Exception.message(error) =~ "Nothing is owed back. Lower the price or cancel before refunding"
       end
 
       test "a refund while something is still to collect is refused" do
         record = build(@parent, payments: [cash: "30.00"])
 
         assert {:error, error} = record_payment(record, "-30.00")
-        assert Exception.message(error) =~ "Lower the order or cancel it before refunding"
+        assert Exception.message(error) =~ "Nothing is owed back. Lower the price or cancel before refunding"
       end
 
       test "undoing a whole payment recorded by mistake leaves the total owed again" do
@@ -328,7 +335,7 @@ defmodule Edenflowers.Payments.PayableTest do
         payment = Enum.find(payments(record), &Decimal.positive?(&1.amount))
 
         assert {:error, error} = undo_payment(record, payment.id)
-        assert Exception.message(error) =~ "is more than was paid outside Stripe"
+        assert Exception.message(error) =~ "Its money was since refunded"
         assert reload(record).settled?
       end
 

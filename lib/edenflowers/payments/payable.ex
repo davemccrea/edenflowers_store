@@ -21,9 +21,7 @@ defmodule Edenflowers.Payments.Payable do
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
-      validate Validations.Committed
-      validate Validations.WithinBalance
-      validate Validations.RefundCoveredOutsideStripe
+      validate Validations.Recordable
       # A payment link charges the balance this changes; visiting it again
       # opens a PaymentIntent for whatever is left.
       change Changes.CancelOpenPaymentIntent
@@ -33,7 +31,7 @@ defmodule Edenflowers.Payments.Payable do
 
     # Takes back a payment Jennie recorded by mistake, once, by recording the
     # opposite amount against it. A refund on something that still stands
-    # otherwise has to wait until it's lowered (WithinBalance).
+    # otherwise has to wait until it's lowered (Validations.Recordable).
     update :undo_payment do
       argument :payment_id, :uuid, allow_nil?: false
       argument :amount, :decimal, public?: false
@@ -42,7 +40,7 @@ defmodule Edenflowers.Payments.Payable do
 
       change Changes.UndoPayment
       # Undoing a payment whose money was since handed back would leave it owed again.
-      validate Validations.RefundCoveredOutsideStripe
+      validate {Validations.Recordable, undo?: true}
       change Changes.CancelOpenPaymentIntent
       change {Changes.RecordPayment, amount: :amount}
       require_atomic? false
