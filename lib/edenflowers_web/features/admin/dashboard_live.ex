@@ -218,7 +218,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
               {~t"Card to write"}
             </.badge>
             <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
-              <%= if @order.amount_paid do %>
+              <%= if Decimal.positive?(@order.amount_paid) do %>
                 {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
               <% else %>
                 {~t"Unpaid"}

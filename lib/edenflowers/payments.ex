@@ -383,7 +383,7 @@ defmodule Edenflowers.Payments do
   `refund_balance/1` does, for an order that will not be made.
   """
   def refund_in_full(%Order{} = order) do
-    refund(order, fn order -> order.amount_paid || Decimal.new(0) end)
+    refund(order, fn order -> order.amount_paid end)
   end
 
   defp refund(%resource{id: id} = payable, owed) do

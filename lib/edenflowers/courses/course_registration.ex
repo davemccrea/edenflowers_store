@@ -8,7 +8,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub],
-    extensions: [AshOban]
+    extensions: [AshOban],
+    fragments: [Edenflowers.Payments.Payable]
 
   alias Edenflowers.Courses.Changes
 
@@ -288,17 +289,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
               :decimal,
               expr(if status == :cancelled, do: 0, else: round(amount * seats_held / seats, 2))
 
-    # Positive is still to collect, negative is to refund.
-    calculate :balance, :decimal, expr(total_due - amount_paid)
+    # A pending booking only holds its seats while the customer pays.
+    calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
 
     calculate :holds_seats?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
-  end
-
-  aggregates do
-    sum :amount_paid, :payments, :amount, default: Decimal.new("0")
-    sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
   end
 
   identities do

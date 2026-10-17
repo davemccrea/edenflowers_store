@@ -57,8 +57,15 @@ Money that moved for an order or a course booking, by any method: Stripe, the Ze
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Balance**:
-What is still owed on a placed order or a confirmed course booking: its total minus what has been paid. A cancelled booking's total is zero. Positive is to collect, negative is to refund; editing a paid order is what usually leaves one.
+What is still owed on a placed order or a confirmed course booking: its Total due minus what has been paid. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one.
 _Avoid_: Amount mismatch, outstanding, difference
+
+**Total due**:
+What a placed order or confirmed course booking is still to be paid for, before what's been paid is taken off. Zero once cancelled; the order's or booking's total itself stays as ordered, for the receipt.
+_Avoid_: Amount due, outstanding
+
+**Settled**:
+Nothing is owed either way, or everything taken was handed back.
 
 ### People
 

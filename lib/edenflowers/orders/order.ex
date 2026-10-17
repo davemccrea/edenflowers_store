@@ -20,7 +20,8 @@ defmodule Edenflowers.Orders.Order do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub],
-    extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource]
+    extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource],
+    fragments: [Edenflowers.Payments.Payable]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -78,7 +79,7 @@ defmodule Edenflowers.Orders.Order do
     :customer_name,
     :customer_first_name,
     :grand_total,
-    :amount_mismatch?,
+    :settled?,
     :items_subtotal,
     :items_total,
     :vat,
@@ -365,7 +366,8 @@ defmodule Edenflowers.Orders.Order do
                   :fulfillment_date,
                   :fulfillment_method,
                   :grand_total,
-                  :amount_mismatch?,
+                  :settled?,
+                  :amount_paid,
                   :balance,
                   :payment_status,
                   :fulfillment_status
@@ -1093,21 +1095,18 @@ defmodule Edenflowers.Orders.Order do
     end
 
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
-    calculate :amount_mismatch?, :boolean, expr(not is_nil(amount_paid) and amount_paid != grand_total)
-
-    # Positive is still to collect, negative is to refund. Left by a payment of
-    # the wrong amount, or by editing an order after it was paid.
-    calculate :balance, :decimal, expr(grand_total - (amount_paid || 0))
+    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: 0, else: grand_total)
+    calculate :committed?, :boolean, expr(state == :placed)
 
     calculate :payment_status,
               __MODULE__.PaymentStatus,
               expr(
                 # A €0 order that never took money owes nothing, so it reads as paid.
-                # A cancelled order still owing is called off, not unpaid.
+                # A cancelled order that took nothing is called off, not unpaid.
                 cond do
-                  exists(payments, amount > 0) and amount_paid <= 0 -> :refunded
+                  refunded? -> :refunded
+                  fulfillment_status == :cancelled and amount_paid == 0 -> nil
                   balance <= 0 -> :paid
-                  fulfillment_status == :cancelled -> nil
                   true -> :pending
                 end
               )
@@ -1117,12 +1116,10 @@ defmodule Edenflowers.Orders.Order do
     calculate :unpaid?, :boolean, expr(state == :placed and payable?)
 
     # Some of the customer's money is still with us: paid, and not all refunded.
-    calculate :holds_money?, :boolean, expr((amount_paid || 0) > 0)
+    calculate :holds_money?, :boolean, expr(amount_paid > 0)
 
-    # A refunded order is settled even though its balance reads as owed again.
-    calculate :payable?,
-              :boolean,
-              expr(balance > 0 and payment_status != :refunded and fulfillment_status != :cancelled)
+    # What the payment link can charge.
+    calculate :payable?, :boolean, expr(balance > 0 and not refunded?)
 
     # Jennie has had time to buy flowers for anything closer, so the customer
     # gets the same notice as for a subscription change. Money paid outside
@@ -1163,11 +1160,6 @@ defmodule Edenflowers.Orders.Order do
     count :non_add_on_line_item_count, :line_items, filter: expr(product.product_category.add_on == false)
     exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
     exists :subscription?, :line_items, filter: expr(not is_nil(interval_weeks))
-
-    # Nil until money has moved, so a placed order with no payments reads as unpaid.
-    sum :amount_paid, :payments, :amount
-
-    sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
 
     # Unauthorized because the checkout actor, often a guest, can't read the
     # order's user under the User read policy.
