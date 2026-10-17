@@ -60,7 +60,6 @@ defmodule Edenflowers.Orders do
     end
 
     resource Edenflowers.Orders.Order.Version
-    resource Edenflowers.Orders.Payment
 
     resource Edenflowers.Orders.Subscription do
       define :activate_subscription, action: :activate

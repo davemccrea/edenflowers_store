@@ -75,8 +75,9 @@ defmodule Edenflowers.Orders.Receipt do
     }
   end
 
-  # Expects the registration's `course` loaded. A booking has one line and a
-  # single VAT rate, so the breakdown is computed here rather than snapshotted.
+  # Expects the registration's `course` and `payments` loaded. A booking has
+  # one line and a single VAT rate, so the breakdown is computed here rather
+  # than snapshotted.
   def build_payload(%CourseRegistration{} = registration) do
     locale = registration.locale
     course = registration.course
@@ -126,11 +127,7 @@ defmodule Edenflowers.Orders.Receipt do
         }
       ],
       grand_total: amount,
-      payments:
-        if(registration.payment_method_type,
-          do: [payment_payload(registration, registration.amount, registration.confirmed_at, locale)],
-          else: []
-        )
+      payments: payments_payload(registration.payments, locale)
     }
   end
 
@@ -141,19 +138,19 @@ defmodule Edenflowers.Orders.Receipt do
     for payment <- Enum.sort_by(payments, & &1.paid_at, DateTime),
         payment.payment_method_type,
         Decimal.compare(payment.amount, 0) == :gt do
-      payment_payload(payment, payment.amount, payment.paid_at, locale)
+      payment_payload(payment, locale)
     end
   end
 
   # Dated, since money paid after the order (a payment link, cash at pickup)
   # would otherwise carry only the order date.
-  defp payment_payload(paid_with, amount, paid_at, locale) do
+  defp payment_payload(payment, locale) do
     %{
-      method: paid_with.payment_method_type,
-      card_brand: paid_with.card_brand,
-      card_last4: paid_with.card_last4,
-      paid_on: Format.date(paid_at, locale),
-      amount: Format.currency(amount, locale)
+      method: payment.payment_method_type,
+      card_brand: payment.card_brand,
+      card_last4: payment.card_last4,
+      paid_on: Format.date(payment.paid_at, locale),
+      amount: Format.currency(payment.amount, locale)
     }
   end
 

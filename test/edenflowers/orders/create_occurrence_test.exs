@@ -11,7 +11,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.{HereAPI, StripeAPI}
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{Order, Payment, Subscription}
+  alias Edenflowers.Orders.{Order, Subscription}
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
   alias Edenflowers.Orders.Workers.CreateOccurrence
   alias Edenflowers.Orders.Workers.SendConfirmationEmail
