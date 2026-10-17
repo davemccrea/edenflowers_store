@@ -8,7 +8,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias Edenflowers.Format
-  alias Edenflowers.Fulfillment
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -23,19 +22,12 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
      |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
-     |> assign(:same_day, Fulfillment.same_day_today(actor: socket.assigns.current_user))
      |> assign_orders()}
   end
 
   @impl true
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
-
-  def handle_event("set_same_day", params, socket) do
-    actor = socket.assigns.current_user
-    Fulfillment.set_same_day_today(if(params["open"] == "true", do: :open, else: :paused), actor: actor)
-    {:noreply, assign(socket, :same_day, Fulfillment.same_day_today(actor: actor))}
-  end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
@@ -87,7 +79,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           who: registration.name,
           what: registration.course.name,
           balance: registration.balance,
-          href: ~p"/admin/courses" <> "#course-#{registration.course_id}"
+          href: ~p"/admin/courses?#{[booking: registration.id]}" <> "#registration-#{registration.id}"
         }
       end
 
@@ -96,7 +88,10 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
       |> Enum.sort_by(&Decimal.abs(&1.balance), {:desc, Decimal})
       |> Enum.split_with(&Decimal.positive?(&1.balance))
 
-    Enum.reject([{~t"To collect", to_collect}, {~t"To refund", to_refund}], fn {_title, rows} -> rows == [] end)
+    Enum.reject(
+      [{"collect", ~t"To collect", to_collect}, {"refund", ~t"To refund", to_refund}],
+      fn {_key, _title, rows} -> rows == [] end
+    )
   end
 
   @impl true
@@ -116,16 +111,17 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <aside class="flex flex-col gap-6 xl:order-last">
-            <.same_day_widget :if={@same_day != :not_offered} same_day={@same_day} />
             <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
-            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
           </aside>
-          <.orders_widget
-            orders_by_date={@orders_by_date}
-            open_order_count={@open_order_count}
-            today={@today}
-            locale={@locale}
-          />
+          <div class="flex min-w-0 flex-col gap-6">
+            <.orders_widget
+              orders_by_date={@orders_by_date}
+              open_order_count={@open_order_count}
+              today={@today}
+              locale={@locale}
+            />
+            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
+          </div>
         </div>
       </.admin_page>
     </Layouts.admin>
@@ -164,35 +160,6 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     """
   end
 
-  attr :same_day, :atom, required: true
-
-  defp same_day_widget(assigns) do
-    ~H"""
-    <.widget id="same-day" title={~t"Ordering for today"}>
-      <form id="same-day-form" phx-change="set_same_day" class="flex items-start justify-between gap-4">
-        <label for="same-day-toggle" class="text-sm">
-          <span class="text-base-content block font-medium">
-            {if @same_day == :open, do: ~t"Open for today", else: ~t"Paused for today"}
-          </span>
-          <span class="text-base-content/65 block">
-            {if @same_day == :open, do: ~t"Customers can order for today.", else: ~t"Back on tomorrow."}
-          </span>
-        </label>
-        <input type="hidden" name="open" value="false" />
-        <input
-          id="same-day-toggle"
-          type="checkbox"
-          role="switch"
-          name="open"
-          value="true"
-          checked={@same_day == :open}
-          class="toggle toggle-primary mt-0.5 shrink-0"
-        />
-      </form>
-    </.widget>
-    """
-  end
-
   attr :sales_count, :integer, required: true
   attr :revenue, :any, required: true
   attr :locale, :any, required: true
@@ -214,37 +181,60 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     """
   end
 
-  attr :balances, :list, required: true, doc: "`{title, rows}` groups, largest first"
+  attr :balances, :list, required: true, doc: "`{key, title, rows}` groups, largest first"
   attr :locale, :any, required: true
+  attr :shown_per_group, :integer, default: 5
 
   defp balances_widget(assigns) do
     ~H"""
     <.widget id="balances" title={~t"To collect / To refund"}>
       <div class="space-y-4">
-        <section :for={{title, rows} <- @balances} aria-label={title}>
+        <section :for={{key, title, rows} <- @balances} aria-label={title}>
           <p class="eyebrow text-base-content/65 flex items-baseline justify-between gap-4 pb-1.5">
             <span>{title} · <span class="tabular-nums">{length(rows)}</span></span>
             <span class="tabular-nums">{Format.currency(sum_balances(rows), @locale)}</span>
           </p>
           <ul class="divide-base-content/12 divide-y">
-            <li :for={row <- rows} id={"balance-#{row.id}"}>
-              <.link
-                navigate={row.href}
-                class="flex items-baseline justify-between gap-4 py-2 transition-colors hover:bg-base-200/50"
-              >
-                <span class="min-w-0">
-                  <span class="text-base-content block truncate font-medium">{row.who}</span>
-                  <span :if={row.what} class="text-base-content/65 block truncate text-sm">{row.what}</span>
-                </span>
-                <span class="text-base-content shrink-0 tabular-nums">
-                  {Format.currency(Decimal.abs(row.balance), @locale)}
-                </span>
-              </.link>
-            </li>
+            <.balance_row :for={row <- Enum.take(rows, @shown_per_group)} row={row} locale={@locale} />
           </ul>
+          <details
+            :if={length(rows) > @shown_per_group}
+            id={"balances-more-#{key}"}
+            phx-mounted={JS.ignore_attributes(["open"])}
+            class="group"
+          >
+            <summary class="text-primary touch-target flex cursor-pointer list-none items-center py-1 text-sm hover:underline group-open:hidden">
+              {~t"Show #{count = length(rows) - @shown_per_group} more"}
+            </summary>
+            <ul class="divide-base-content/12 border-base-content/12 divide-y border-t">
+              <.balance_row :for={row <- Enum.drop(rows, @shown_per_group)} row={row} locale={@locale} />
+            </ul>
+          </details>
         </section>
       </div>
     </.widget>
+    """
+  end
+
+  attr :row, :map, required: true
+  attr :locale, :any, required: true
+
+  defp balance_row(assigns) do
+    ~H"""
+    <li id={"balance-#{@row.id}"}>
+      <.link
+        navigate={@row.href}
+        class="-mx-2 flex items-baseline justify-between gap-4 rounded px-2 py-2 transition-colors hover:bg-base-200/50"
+      >
+        <span class="min-w-0">
+          <span class="text-base-content block truncate font-medium">{@row.who}</span>
+          <span :if={@row.what} class="text-base-content/65 block truncate text-sm">{@row.what}</span>
+        </span>
+        <span class="text-base-content shrink-0 tabular-nums">
+          {Format.currency(Decimal.abs(@row.balance), @locale)}
+        </span>
+      </.link>
+    </li>
     """
   end
 

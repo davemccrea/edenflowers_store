@@ -7,8 +7,6 @@ defmodule Edenflowers.Fulfillment do
     show?(true)
   end
 
-  alias Edenflowers.Expressions.HelsinkiToday
-
   def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
 
   @doc "The delivery option priced by distance, whose free distance free-delivery products get."
@@ -23,28 +21,6 @@ defmodule Edenflowers.Fulfillment do
       _ -> nil
     end
   end
-
-  @doc """
-  Whether customers can order for today with the options that offer same-day:
-  `:open`, `:paused` when every one of them has today closed, or `:not_offered`.
-  """
-  def same_day_today(opts) do
-    today = HelsinkiToday.today()
-
-    case same_day_options(opts) do
-      [] -> :not_offered
-      options -> if Enum.all?(options, &(today in &1.disabled_dates)), do: :paused, else: :open
-    end
-  end
-
-  @doc "Close or reopen today on every same-day option. Admins can still place orders for today."
-  def set_same_day_today(:paused, opts),
-    do: Enum.each(same_day_options(opts), &close_date!(&1, HelsinkiToday.today(), opts))
-
-  def set_same_day_today(:open, opts),
-    do: Enum.each(same_day_options(opts), &reopen_date!(&1, HelsinkiToday.today(), opts))
-
-  defp same_day_options(opts), do: Enum.filter(list_options!(opts), & &1.same_day)
 
   @doc """
   Apply `:same_day` and/or `:order_deadline` to every option, or to none if any
@@ -72,8 +48,6 @@ defmodule Edenflowers.Fulfillment do
       define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
       define :set_week, action: :set_week, args: [:week, :today, :direction]
       define :reset_calendar, action: :reset_calendar
-      define :close_date, action: :close_date, args: [:date]
-      define :reopen_date, action: :reopen_date, args: [:date]
       define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
       define :fulfill_on_date, action: :fulfill_on_date, args: [:fulfillment_option_id, :date]
     end
