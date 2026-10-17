@@ -5,6 +5,29 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 source scripts/lib/ui.sh
 
+offer_watch() {
+  echo
+  read -r -p "  Watch the deploy? [Y/n] " REPLY
+  if [[ "$REPLY" =~ ^[Nn]$ ]]; then
+    return
+  fi
+
+  # The run takes a few seconds to appear after the push; until then "latest" is the previous deploy.
+  local sha run_id=""
+  sha="$(git rev-parse HEAD)"
+  printf '  %swaiting for the GitHub Actions run...%s\n' "$DIM" "$RESET"
+  for _ in {1..30}; do
+    run_id="$(gh run list --workflow=deploy.yml --commit "$sha" --limit 1 --json databaseId -q '.[0].databaseId')"
+    [[ -n "$run_id" ]] && break
+    sleep 2
+  done
+  if [[ -z "$run_id" ]]; then
+    fail "no deploy run found for $sha, try 'just deploy-watch' in a moment"
+  fi
+
+  gh run watch "$run_id" --compact --exit-status
+}
+
 section "Preflight checks"
 
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -48,6 +71,7 @@ if [[ "$TARGET" == "staging" ]]; then
 
   printf '\n%s%s✓ Deployed %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
     "$BOLD" "$GREEN" "$BRANCH" "$RESET" "$DIM" "$RESET"
+  offer_watch
   exit 0
 fi
 
@@ -171,3 +195,5 @@ printf '\n%s%s✓ Deployed %s%s  %sGitHub Actions will build and deploy the Dock
 if ! scripts/release.sh "$TAG"; then
   printf '\n  %srelease notes not published — rerun with: scripts/release.sh %s%s\n' "$DIM" "$TAG" "$RESET"
 fi
+
+offer_watch
