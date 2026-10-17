@@ -183,6 +183,45 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
       assert Decimal.equal?(balance(registration), "-170.00")
     end
+
+    test "money taken in person is refunded in person, even on a cancelled booking", %{
+      admin: admin,
+      registration: registration
+    } do
+      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+      {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
+
+      assert {:error, error} =
+               Courses.record_registration_in_person_refund(registration, "-170.01", :cash, actor: admin)
+
+      assert Exception.message(error) =~ "is more than was paid in person"
+
+      assert {:ok, registration} =
+               Courses.record_registration_in_person_refund(registration, "-170.00", :mobilepay, actor: admin)
+
+      assert Decimal.equal?(balance(registration), 0)
+    end
+
+    test "an in-person refund can't hand back money paid through Stripe", %{admin: admin} do
+      registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+
+      generate(
+        payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
+      )
+
+      Mox.stub(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
+
+      assert {:error, _error} =
+               Courses.record_registration_in_person_refund(registration, "-1.00", :cash, actor: admin)
+    end
+
+    test "an in-person refund must be negative", %{admin: admin, registration: registration} do
+      {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
+
+      assert {:error, error} = Courses.record_registration_in_person_refund(registration, "10.00", :cash, actor: admin)
+      assert Exception.message(error) =~ "must be a refund"
+    end
   end
 
   defp balance(registration) do
