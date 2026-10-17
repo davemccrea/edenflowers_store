@@ -412,5 +412,24 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
     end
+
+    test "records a partial refund from the Stripe dashboard once", %{registration: registration} do
+      assert :ok = course_succeeded(registration, 17_000)
+
+      for _redelivery <- 1..2 do
+        assert :ok =
+                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(
+                   refund_event("refund.updated", registration.payment_intent_id, "succeeded")
+                 )
+      end
+
+      payments =
+        Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false, load: [:payments]).payments
+
+      assert [%{stripe_refund_id: "re_1", method: :stripe} = refund] =
+               Enum.filter(payments, &Decimal.negative?(&1.amount))
+
+      assert Decimal.equal?(refund.amount, "-5.00")
+    end
   end
 end
