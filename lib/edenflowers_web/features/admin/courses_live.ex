@@ -72,6 +72,26 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
+  def handle_event(
+        "record_in_person_refund",
+        %{"registration_id" => id, "payment_method" => payment_method, "amount" => amount},
+        socket
+      ) do
+    actor = socket.assigns.current_user
+    amount = String.replace(amount, ",", ".")
+
+    socket =
+      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+           {:ok, _} <-
+             Courses.record_registration_in_person_refund(registration, amount, payment_method, actor: actor) do
+        put_flash(socket, :info, ~t"Refund recorded.")
+      else
+        _ -> put_flash(socket, :error, ~t"Could not record the refund. Check the amount.")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
   def handle_event("remove_seat", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
@@ -104,7 +124,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        load: [bookings: [:balance, :seats_held]]
+        load: [bookings: [:balance, :in_person_paid, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -274,6 +294,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               >
                 {registration.email}
               </a>
+              <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
             </div>
             <div class="flex shrink-0 items-center gap-1">
               <%!-- Mark paid stays out of the menu: it's what the florist taps at the course itself. --%>
@@ -331,6 +352,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
             </p>
             <p class="truncate text-sm">{registration.email}</p>
+            <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
           </li>
         </ul>
       </div>
@@ -338,7 +360,50 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     """
   end
 
+  attr :registration, :map, required: true
+
+  # Money taken at the course goes back in person, up to what was taken that way.
+  defp refund_in_person(assigns) do
+    ~H"""
+    <form
+      id={"refund-in-person-#{@registration.id}"}
+      phx-submit="record_in_person_refund"
+      class="text-base-content mt-2 flex flex-wrap items-center gap-1"
+    >
+      <input type="hidden" name="registration_id" value={@registration.id} />
+      <label for={"refund-method-#{@registration.id}"} class="sr-only">{~t"How"}</label>
+      <select id={"refund-method-#{@registration.id}"} name="payment_method" class="select select-sm w-auto">
+        {Phoenix.HTML.Form.options_for_select(in_person_method_options(), :zettle)}
+      </select>
+      <label for={"refund-amount-#{@registration.id}"} class="sr-only">{~t"Amount (€)"}</label>
+      <input
+        id={"refund-amount-#{@registration.id}"}
+        type="text"
+        inputmode="decimal"
+        name="amount"
+        value={Decimal.to_string(in_person_refund(@registration), :normal)}
+        class="input input-sm w-24 tabular-nums"
+      />
+      <.button
+        type="submit"
+        variant="neutral"
+        size="sm"
+        data-confirm={~t"Record this refund? It can't be removed, only offset by recording the opposite amount."}
+      >
+        {~t"Record refund"}
+      </.button>
+    </form>
+    """
+  end
+
   defp owes?(registration), do: Decimal.positive?(registration.balance)
+
+  defp refundable_in_person?(registration),
+    do: Decimal.negative?(registration.balance) and Decimal.positive?(registration.in_person_paid)
+
+  defp in_person_refund(registration) do
+    registration.balance |> Decimal.negate() |> Decimal.min(registration.in_person_paid) |> Decimal.negate()
+  end
 
   defp in_person_method_options do
     Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
