@@ -1,7 +1,7 @@
 # Payment Balance
 
 Summary: Record and settle money on orders and course bookings the same way, and show what's owed in one place
-Status: ready-for-agent
+Status: done
 
 ## Problem
 
