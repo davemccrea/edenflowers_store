@@ -17,7 +17,9 @@ A booking Jennie adds by hand says "Payment is taken at the course". Some custom
 
 4. **The customer pays on a page in the booking's language.** `/courses/pay/:token`, in the courses feature, showing the course, date, seats, what's been paid and what's owed, then the Payment Element. It reads the booking only through its token and shows nothing else about it. Paid, it says so and stays readable. Modelled on `PayLive`; not merged with it, since what it shows differs.
 
-5. **Jennie sends it from the booking.** In the booking's ⋯ menu on the courses page, shown while the booking owes money: "Email payment link" (opens the link, then emails it in the booking's locale) and "Copy payment link". The email is a new course email: the course, what's owed, the link. Sending again confirms first, as on the order page.
+5. **The link is in addition to paying at the course, not instead.** The quick payment form on the booking row stays, and an added booking still says payment is taken at the course. Whichever comes first settles the booking: recording a payment by hand cancels the link's open PaymentIntent, and a settled booking's link reads as paid. Paying part online leaves the rest for the quick form, prefilled with the balance.
+
+6. **Jennie sends it from the booking.** In the booking's ⋯ menu on the courses page, shown while the booking owes money: "Email payment link" (opens the link, then emails it in the booking's locale) and "Copy payment link". The email is a new course email: the course, what's owed, the link. Sending again confirms first, as on the order page.
 
 ## Out of scope
 
