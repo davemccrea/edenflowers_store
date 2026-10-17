@@ -531,6 +531,18 @@ defmodule Edenflowers.PoliciesTest do
       end
     end
 
+    test "only the admin undoes a payment", %{records: records, customer: customer} do
+      for record <- records do
+        {:ok, record} = record(record, :record_payment, %{amount: "1.00", payment_method: :cash}, %{admin: true})
+        [payment] = Ash.load!(record, :payments, authorize?: false).payments
+        undo = %{payment_id: payment.id}
+
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :undo_payment, undo, customer)
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :undo_payment, undo, %{system: true})
+        assert {:ok, _record} = record(record, :undo_payment, undo, %{admin: true})
+      end
+    end
+
     test "only the system actor records a Stripe refund", %{records: records, customer: customer} do
       for record <- records do
         refund = %{stripe_refund_id: "re_#{record.id}", amount: "-1.00"}

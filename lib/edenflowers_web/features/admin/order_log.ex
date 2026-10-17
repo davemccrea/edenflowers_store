@@ -46,9 +46,11 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     how = payment_method_label(payment.method)
 
     title =
-      if Decimal.negative?(payment.amount),
-        do: ~t"Refunded #{amount} · #{how}",
-        else: ~t"Paid #{amount} · #{how}"
+      cond do
+        payment.reverses_payment_id -> ~t"Undid #{amount} · #{how}"
+        Decimal.negative?(payment.amount) -> ~t"Refunded #{amount} · #{how}"
+        true -> ~t"Paid #{amount} · #{how}"
+      end
 
     %{at: payment.paid_at, title: title, details: []}
   end

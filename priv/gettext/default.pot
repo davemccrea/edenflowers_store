@@ -3791,11 +3791,6 @@ msgstr ""
 msgid "Refund · %{how}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/components.ex:452
-#, elixir-autogen, elixir-format
-msgid "A minus amount records a refund. To correct a mistake, record the opposite amount."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/components/components.ex:135
 #, elixir-autogen, elixir-format
 msgid "Copied"
@@ -3804,11 +3799,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_form_live.ex:734
 #, elixir-autogen, elixir-format
 msgid "Item %{number}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/components.ex:444
-#, elixir-autogen, elixir-format
-msgid "Record this payment? It can't be removed, only offset by recording the opposite amount."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:774
@@ -5280,11 +5270,6 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/dashboard_live.ex:155
-#, elixir-autogen, elixir-format
-msgid "Quick actions"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "A new size without a photo gets the product photo."
@@ -5806,11 +5791,6 @@ msgstr ""
 msgid "Record refund"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/components.ex:445
-#, elixir-autogen, elixir-format
-msgid "Record this refund? It can't be removed, only offset by recording the opposite amount."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/courses_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
@@ -5881,4 +5861,77 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/dashboard_live.ex:195
 #, elixir-autogen, elixir-format
 msgid "To collect / To refund"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/components.ex:452
+#, elixir-autogen, elixir-format
+msgid "A minus amount records a refund."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:99
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:408
+#, elixir-autogen, elixir-format
+msgid "Could not undo the payment."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:97
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:405
+#, elixir-autogen, elixir-format
+msgid "Payment undone."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/components.ex:444
+#, elixir-autogen, elixir-format
+msgid "Record this payment? A mistake can be undone afterwards."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/components.ex:445
+#, elixir-autogen, elixir-format
+msgid "Record this refund? A mistake can be undone afterwards."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_log.ex:50
+#, elixir-autogen, elixir-format
+msgid "Undid %{amount} · %{how}"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:729
+#, elixir-autogen, elixir-format
+msgid "Undo"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:444
+#, elixir-autogen, elixir-format
+msgid "Undo %{amount} payment"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:443
+#, elixir-autogen, elixir-format
+msgid "Undo %{amount} refund"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/components.ex:484
+#, elixir-autogen, elixir-format
+msgid "Undo the %{amount} payment by %{how}? This records the opposite amount."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/components.ex:483
+#, elixir-autogen, elixir-format
+msgid "Undo the %{amount} refund by %{how}? This records the opposite amount."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:497
+#, elixir-autogen, elixir-format
+msgid "Undone · %{how}"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/courses_live.ex:228
+#, elixir-autogen, elixir-format
+msgctxt "course"
+msgid "Past"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/dashboard_live.ex:155
+#, elixir-autogen, elixir-format
+msgid "Quick actions"
 msgstr ""

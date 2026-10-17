@@ -67,6 +67,10 @@ _Avoid_: Amount due, outstanding
 **Settled**:
 Nothing is owed either way, or everything taken was handed back.
 
+**Undo** (a payment):
+Taking back a payment or refund Jennie recorded by mistake, by recording the opposite amount against it. Once per payment, never a Stripe one. Not a refund: an undone payment never counted as money taken.
+_Avoid_: Void, reversal, correction
+
 ### People
 
 **Customer**:

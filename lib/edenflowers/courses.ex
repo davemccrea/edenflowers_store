@@ -11,6 +11,7 @@ defmodule Edenflowers.Courses do
     resource Edenflowers.Courses.Course do
       define :get_course_by_id, action: :read, get_by: [:id]
       define :list_upcoming_courses, action: :upcoming
+      define :list_admin_courses, action: :admin_list
     end
 
     resource Edenflowers.Courses.CourseRegistration do
@@ -24,6 +25,7 @@ defmodule Edenflowers.Courses do
 
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
       define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
+      define :undo_registration_payment, action: :undo_payment, args: [:payment_id]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
     end

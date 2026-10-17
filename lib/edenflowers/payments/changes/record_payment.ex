@@ -10,7 +10,8 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       argument when not given.
 
   Stripe ids come from the `:payment_intent_id` and `:stripe_refund_id`
-  arguments, where the action has them, and a Stripe payment's method from
+  arguments, and the payment an undo takes back from `:reverses_payment_id`,
+  where the action has them, and a Stripe payment's method from
   the `:paid_with` argument (see `Edenflowers.Payments.paid_with/1`).
   """
   use Ash.Resource.Change
@@ -32,7 +33,8 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
           amount: Ash.Changeset.get_argument(changeset, opts[:amount]),
           method: method,
           payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
-          stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id)
+          stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
+          reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id)
         })
       )
       |> Ash.create(authorize?: false)

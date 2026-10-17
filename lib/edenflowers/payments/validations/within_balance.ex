@@ -2,10 +2,8 @@ defmodule Edenflowers.Payments.Validations.WithinBalance do
   @moduledoc """
   Refuses an `amount` Jennie records that would take the balance past zero.
   An overpayment isn't a sale, and a goodwill refund on something that still
-  stands has to lower it first, so the monthly report sees a lower sale.
-
-  A refund while something is still to collect corrects a payment recorded by
-  mistake, which only moves the balance further from zero.
+  stands has to lower it first, so the monthly report sees a lower sale. A
+  payment recorded by mistake is taken back with `undo_payment` instead.
   """
   use Ash.Resource.Validation
 
@@ -21,10 +19,10 @@ defmodule Edenflowers.Payments.Validations.WithinBalance do
       Decimal.positive?(amount) and Decimal.gt?(amount, balance) ->
         {:error, field: :amount, message: "That's more than is owed"}
 
-      Decimal.negative?(amount) and Decimal.eq?(balance, 0) ->
+      Decimal.negative?(amount) and not Decimal.negative?(balance) ->
         {:error, field: :amount, message: "Lower the order or cancel it before refunding"}
 
-      Decimal.negative?(amount) and Decimal.negative?(balance) and Decimal.lt?(amount, balance) ->
+      Decimal.negative?(amount) and Decimal.lt?(amount, balance) ->
         {:error, field: :amount, message: "That's more than is owed back"}
 
       true ->

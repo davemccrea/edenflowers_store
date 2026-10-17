@@ -888,6 +888,7 @@ defmodule Edenflowers.Orders.Order do
                      :update_florist_note,
                      :cancel,
                      :record_payment,
+                     :undo_payment,
                      :open_payment_link,
                      :send_order_details_email,
                      :email_receipt

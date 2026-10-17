@@ -49,7 +49,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp payments(order) do
     order
-    |> Ash.load!([payments: Ash.Query.sort(Edenflowers.Payments.Payment, paid_at: :asc)], authorize?: false)
+    |> Ash.load!(
+      [payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)],
+      authorize?: false
+    )
     |> Map.fetch!(:payments)
   end
 
@@ -396,6 +399,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  def handle_event("undo_payment", %{"id" => payment_id}, socket) do
+    case Orders.undo_payment(socket.assigns.order, payment_id, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment undone.")}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not undo the payment.")}
+    end
+  end
+
   def handle_event("open_payment_link", _params, socket) do
     case Orders.open_payment_link(socket.assigns.order, actor: socket.assigns.current_user) do
       {:ok, order} ->
@@ -479,6 +492,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     do: ~t"Cancel this order? It is paid, so refund it with Stripe or record a refund. This can't be undone."
 
   defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
+
+  defp payment_label(%{reverses_payment_id: reversed, method: method}) when is_binary(reversed),
+    do: ~t"Undone · #{how = OrderLog.payment_method_label(method)}"
 
   defp payment_label(%{amount: amount, method: method}) do
     if Decimal.negative?(amount),
@@ -702,6 +718,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
         </a>
+        <button
+          :if={@payment.undoable?}
+          type="button"
+          phx-click="undo_payment"
+          phx-value-id={@payment.id}
+          data-confirm={undo_confirmation(@payment, @locale)}
+          class="text-base-content/60 touch-target ml-1 text-xs hover:text-base-content hover:underline"
+        >
+          {~t"Undo"}
+        </button>
       </dt>
       <dd class="text-base-content/90 tabular-nums">
         {Format.currency(negate(@payment.amount), @locale)}
