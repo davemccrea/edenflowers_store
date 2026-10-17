@@ -124,6 +124,21 @@ body:has(.admin-theme) {
   }
 }
 
+/* Points at the row a link was for, e.g. a booking opened from the Overview.
+   The delay lets the page transition finish first. */
+.row-flash {
+  animation: row-flash 1.1s ease-in-out 0.1s both;
+}
+
+/* Fades in to the warning badge's colours (.admin-badge-warning) and back out. */
+@keyframes row-flash {
+  50% {
+    background-color: var(--color-amber-50);
+    box-shadow: 0 0 0 1px
+      color-mix(in oklab, var(--color-amber-600) 25%, transparent);
+  }
+}
+
 /* daisyUI draws checkbox labels as small grey captions; in admin forms they
    sit beside text-field labels, so they match those instead. */
 .admin-theme .fieldset-label {
