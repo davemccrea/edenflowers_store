@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
+  alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias Edenflowers.Format
 
@@ -55,6 +56,39 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     |> assign(:sales_count, sales.order_count)
     |> assign(:revenue, sales.revenue)
     |> assign(:today, today)
+    |> assign(:balances, balances(actor))
+  end
+
+  # Bookings don't broadcast on admin:orders, so one settles here at the next page load.
+  defp balances(actor) do
+    order_rows =
+      for order <- Orders.list_unsettled_orders!(actor: actor) do
+        %{
+          id: "order-#{order.id}",
+          who: order.customer_name || order.order_reference,
+          what: if(order.customer_name, do: order.order_reference),
+          balance: order.balance,
+          href: ~p"/admin/orders/#{order.id}"
+        }
+      end
+
+    booking_rows =
+      for registration <- Courses.list_unsettled_registrations!(actor: actor) do
+        %{
+          id: "booking-#{registration.id}",
+          who: registration.name,
+          what: registration.course.name,
+          balance: registration.balance,
+          href: ~p"/admin/courses" <> "#course-#{registration.course_id}"
+        }
+      end
+
+    {to_collect, to_refund} =
+      (order_rows ++ booking_rows)
+      |> Enum.sort_by(&Decimal.abs(&1.balance), {:desc, Decimal})
+      |> Enum.split_with(&Decimal.positive?(&1.balance))
+
+    Enum.reject([{~t"To collect", to_collect}, {~t"To refund", to_refund}], fn {_title, rows} -> rows == [] end)
   end
 
   @impl true
@@ -70,6 +104,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
           <aside class="flex flex-col gap-6 xl:order-last">
             <.quick_actions />
             <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
           </aside>
           <.orders_widget
             orders_by_date={@orders_by_date}
@@ -151,6 +186,42 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     </.widget>
     """
   end
+
+  attr :balances, :list, required: true, doc: "`{title, rows}` groups, largest first"
+  attr :locale, :any, required: true
+
+  defp balances_widget(assigns) do
+    ~H"""
+    <.widget id="balances" title={~t"To collect / To refund"}>
+      <div class="space-y-4">
+        <section :for={{title, rows} <- @balances} aria-label={title}>
+          <p class="eyebrow text-base-content/65 flex items-baseline justify-between gap-4 pb-1.5">
+            <span>{title} · <span class="tabular-nums">{length(rows)}</span></span>
+            <span class="tabular-nums">{Format.currency(sum_balances(rows), @locale)}</span>
+          </p>
+          <ul class="divide-base-content/12 divide-y">
+            <li :for={row <- rows} id={"balance-#{row.id}"}>
+              <.link
+                navigate={row.href}
+                class="flex items-baseline justify-between gap-4 py-2 transition-colors hover:bg-base-200/50"
+              >
+                <span class="min-w-0">
+                  <span class="text-base-content block truncate font-medium">{row.who}</span>
+                  <span :if={row.what} class="text-base-content/65 block truncate text-sm">{row.what}</span>
+                </span>
+                <span class="text-base-content shrink-0 tabular-nums">
+                  {Format.currency(Decimal.abs(row.balance), @locale)}
+                </span>
+              </.link>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </.widget>
+    """
+  end
+
+  defp sum_balances(rows), do: rows |> Enum.map(&Decimal.abs(&1.balance)) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
 
   attr :orders_by_date, :list, required: true
   attr :open_order_count, :integer, required: true

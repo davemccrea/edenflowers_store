@@ -15,6 +15,7 @@ defmodule Edenflowers.Courses do
 
     resource Edenflowers.Courses.CourseRegistration do
       define :list_my_registrations, action: :mine
+      define :list_unsettled_registrations, action: :unsettled
       define :register_for_course, action: :register
       define :add_registration_manually, action: :add_manually
       define :get_registration_by_id, action: :read, get_by: [:id]

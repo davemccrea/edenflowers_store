@@ -98,6 +98,11 @@ defmodule Edenflowers.Payments.PayableTest do
     }
   end
 
+  defp unsettled_ids(:order), do: Enum.map(Edenflowers.Orders.list_unsettled_orders!(authorize?: false), & &1.id)
+
+  defp unsettled_ids(:booking),
+    do: Enum.map(Edenflowers.Courses.list_unsettled_registrations!(authorize?: false), & &1.id)
+
   defp assert_money(actual, expected), do: assert(Decimal.equal?(actual, expected), "#{actual} != #{expected}")
 
   for parent <- [:order, :booking] do
@@ -195,6 +200,25 @@ defmodule Edenflowers.Payments.PayableTest do
 
       test "an uncommitted one owes nothing yet" do
         refute build(@parent, state: :uncommitted).committed?
+      end
+
+      test "the unsettled list holds what's still owed either way" do
+        listed = [
+          build(@parent),
+          build(@parent, payments: [cash: "30.00"]),
+          build(@parent, state: :cancelled, payments: [cash: "80.00"])
+        ]
+
+        left_out = [
+          build(@parent, payments: [cash: "80.00"]),
+          build(@parent, payments: [stripe: "80.00", stripe: "-80.00"]),
+          build(@parent, state: :cancelled),
+          build(@parent, state: :uncommitted)
+        ]
+
+        ids = unsettled_ids(@parent)
+        for record <- listed, do: assert(record.id in ids)
+        for record <- left_out, do: refute(record.id in ids)
       end
 
       for method <- [:cash, :mobilepay, :zettle, :zervant] do

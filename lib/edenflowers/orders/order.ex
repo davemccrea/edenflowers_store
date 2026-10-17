@@ -377,6 +377,12 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    # What the Overview lists as still to collect or refund.
+    read :unsettled do
+      filter expr(committed? and not settled?)
+      prepare build(load: [:balance, :customer_name, :order_reference])
+    end
+
     read :to_fulfil do
       # Unpaid custom orders still have to be made (ADR 0001).
       filter expr(state == :placed and fulfillment_status == :pending)
