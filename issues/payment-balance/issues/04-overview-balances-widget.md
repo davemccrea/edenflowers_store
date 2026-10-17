@@ -1,6 +1,6 @@
 # To collect / To refund on the Overview
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

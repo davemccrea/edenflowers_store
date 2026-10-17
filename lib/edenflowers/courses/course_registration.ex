@@ -77,6 +77,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       filter expr(user_id == ^actor(:id) and status == :confirmed)
     end
 
+    # What the Overview lists as still to collect or refund.
+    read :unsettled do
+      filter expr(committed? and not settled?)
+      prepare build(load: [:balance, :course])
+    end
+
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
