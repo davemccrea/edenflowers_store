@@ -167,7 +167,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Exception.message(error) =~ "nothing is owed"
     end
 
-    test "is paid in person, not through Stripe", %{admin: admin, registration: registration} do
+    test "is recorded by Jennie, not as a Stripe payment", %{admin: admin, registration: registration} do
       assert {:error, _error} = Courses.mark_registration_paid(registration, :stripe, actor: admin)
     end
 
@@ -184,7 +184,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Decimal.equal?(balance(registration), "-170.00")
     end
 
-    test "money taken in person is refunded in person, even on a cancelled booking", %{
+    test "money paid outside Stripe is refunded the same way, even on a cancelled booking", %{
       admin: admin,
       registration: registration
     } do
@@ -192,17 +192,17 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
 
       assert {:error, error} =
-               Courses.record_registration_in_person_refund(registration, "-170.01", :cash, actor: admin)
+               Courses.record_registration_refund(registration, "-170.01", :cash, actor: admin)
 
-      assert Exception.message(error) =~ "is more than was paid in person"
+      assert Exception.message(error) =~ "is more than was paid outside Stripe"
 
       assert {:ok, registration} =
-               Courses.record_registration_in_person_refund(registration, "-170.00", :mobilepay, actor: admin)
+               Courses.record_registration_refund(registration, "-170.00", :mobilepay, actor: admin)
 
       assert Decimal.equal?(balance(registration), 0)
     end
 
-    test "an in-person refund can't hand back money paid through Stripe", %{admin: admin} do
+    test "a recorded refund can't hand back money paid through Stripe", %{admin: admin} do
       registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
 
       generate(
@@ -212,13 +212,13 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
 
       assert {:error, _error} =
-               Courses.record_registration_in_person_refund(registration, "-1.00", :cash, actor: admin)
+               Courses.record_registration_refund(registration, "-1.00", :cash, actor: admin)
     end
 
-    test "an in-person refund must be negative", %{admin: admin, registration: registration} do
+    test "a recorded refund must be negative", %{admin: admin, registration: registration} do
       {:ok, registration} = Courses.mark_registration_paid(registration, :cash, actor: admin)
 
-      assert {:error, error} = Courses.record_registration_in_person_refund(registration, "10.00", :cash, actor: admin)
+      assert {:error, error} = Courses.record_registration_refund(registration, "10.00", :cash, actor: admin)
       assert Exception.message(error) =~ "must be a refund"
     end
   end

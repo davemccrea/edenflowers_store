@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   def handle_event(
-        "record_in_person_refund",
+        "record_refund",
         %{"registration_id" => id, "payment_method" => payment_method, "amount" => amount},
         socket
       ) do
@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <-
-             Courses.record_registration_in_person_refund(registration, amount, payment_method, actor: actor) do
+             Courses.record_registration_refund(registration, amount, payment_method, actor: actor) do
         put_flash(socket, :info, ~t"Refund recorded.")
       else
         _ -> put_flash(socket, :error, ~t"Could not record the refund. Check the amount.")
@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        load: [bookings: [:payments, :balance, :amount_paid, :in_person_paid, :seats_held]]
+        load: [bookings: [:payments, :balance, :amount_paid, :paid_outside_stripe, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -312,7 +312,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               >
                 {registration.email}
               </a>
-              <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
+              <.refund_outside_stripe :if={refundable_outside_stripe?(registration)} registration={registration} />
               <.refund_with_stripe :if={refundable_with_stripe?(registration)} registration={registration} locale={@locale} />
             </div>
             <div class="flex shrink-0 items-center gap-1">
@@ -330,7 +330,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   name="payment_method"
                   class="select select-sm w-auto"
                 >
-                  {Phoenix.HTML.Form.options_for_select(in_person_method_options(), :zettle)}
+                  {Phoenix.HTML.Form.options_for_select(method_options(), :zettle)}
                 </select>
                 <.button type="submit" variant="neutral" size="sm">{~t"Mark paid"}</.button>
               </form>
@@ -371,7 +371,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
             </p>
             <p class="truncate text-sm">{registration.email}</p>
-            <.refund_in_person :if={refundable_in_person?(registration)} registration={registration} />
+            <.refund_outside_stripe :if={refundable_outside_stripe?(registration)} registration={registration} />
             <.refund_with_stripe :if={refundable_with_stripe?(registration)} registration={registration} locale={@locale} />
           </li>
         </ul>
@@ -382,18 +382,18 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   attr :registration, :map, required: true
 
-  # Money taken at the course goes back in person, up to what was taken that way.
-  defp refund_in_person(assigns) do
+  # Money paid outside Stripe is handed back the same way, up to what was paid that way.
+  defp refund_outside_stripe(assigns) do
     ~H"""
     <form
-      id={"refund-in-person-#{@registration.id}"}
-      phx-submit="record_in_person_refund"
+      id={"refund-outside-stripe-#{@registration.id}"}
+      phx-submit="record_refund"
       class="text-base-content mt-2 flex flex-wrap items-center gap-1"
     >
       <input type="hidden" name="registration_id" value={@registration.id} />
       <label for={"refund-method-#{@registration.id}"} class="sr-only">{~t"How"}</label>
       <select id={"refund-method-#{@registration.id}"} name="payment_method" class="select select-sm w-auto">
-        {Phoenix.HTML.Form.options_for_select(in_person_method_options(), :zettle)}
+        {Phoenix.HTML.Form.options_for_select(method_options(), :zettle)}
       </select>
       <label for={"refund-amount-#{@registration.id}"} class="sr-only">{~t"Amount (€)"}</label>
       <input
@@ -401,7 +401,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         type="text"
         inputmode="decimal"
         name="amount"
-        value={Decimal.to_string(in_person_refund(@registration), :normal)}
+        value={Decimal.to_string(outside_stripe_refund(@registration), :normal)}
         class="input input-sm w-24 tabular-nums"
       />
       <.button
@@ -449,8 +449,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   defp owes?(registration), do: Decimal.positive?(registration.balance)
 
-  defp refundable_in_person?(registration),
-    do: Decimal.negative?(registration.balance) and Decimal.positive?(registration.in_person_paid)
+  defp refundable_outside_stripe?(registration),
+    do: Decimal.negative?(registration.balance) and Decimal.positive?(registration.paid_outside_stripe)
 
   defp refundable_with_stripe?(registration),
     do: Decimal.negative?(registration.balance) and Decimal.positive?(stripe_paid(registration))
@@ -459,19 +459,21 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   defp stripe_payment_intent_id(registration),
     do: Enum.find_value(registration.payments, & &1.payment_intent_id) || registration.payment_intent_id
 
-  defp stripe_paid(registration), do: Decimal.sub(registration.amount_paid, registration.in_person_paid)
+  defp stripe_paid(registration), do: Decimal.sub(registration.amount_paid, registration.paid_outside_stripe)
 
   # What the Stripe refund will send back: the balance, as far as Stripe payments cover it.
   defp stripe_refund(registration) do
     registration.balance |> Decimal.negate() |> Decimal.min(stripe_paid(registration))
   end
 
-  defp in_person_refund(registration) do
-    registration.balance |> Decimal.negate() |> Decimal.min(registration.in_person_paid) |> Decimal.negate()
+  defp outside_stripe_refund(registration) do
+    registration.balance |> Decimal.negate() |> Decimal.min(registration.paid_outside_stripe) |> Decimal.negate()
   end
 
-  defp in_person_method_options do
-    Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
+  defp method_options do
+    PaymentMethod.values()
+    |> List.delete(:stripe)
+    |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 
   defp paid?(registration), do: Decimal.positive?(registration.amount_paid)
