@@ -1,6 +1,6 @@
 # Installable admin app
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## What to build
 

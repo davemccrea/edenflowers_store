@@ -23,6 +23,19 @@ test *args: check-typst
 stripe-listen:
     stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,refund.created,refund.updated --forward-to localhost:{{ port }}/webhook/stripe
 
+# List open features in issues/ with the statuses of their spec and tickets
+[group('development')]
+issues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for dir in issues/*/; do
+      feature=$(basename "$dir")
+      [ "$feature" = done ] && continue
+      statuses=$(grep -rh -m1 '^Status:' "$dir" | sed 's/^Status: //' | sort | uniq -c \
+        | awk '{ n = $1; $1 = ""; sub(/^ /, ""); print (n > 1 ? $0 " ×" n : $0) }' | paste -sd ';' - | sed 's/;/, /g')
+      printf '%-22s %s\n' "$feature" "${statuses:-no Status line}"
+    done
+
 # Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
 [group('setup')]
 typst-install:

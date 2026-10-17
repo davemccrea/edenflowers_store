@@ -11,7 +11,7 @@ ADR 0002 made every payment and refund on an order a `Payment` row, but course b
 - **Course refunds aren't recorded anywhere.** `Payments.record_refund/1` deliberately ignores course bookings, and cash handed back has nowhere to go.
 - **In-person refunds on cancelled orders are refused.** `record_in_person_payment` rejects cancelled orders, so cash, MobilePay or Zettle handed back for one can't be recorded.
 
-The monthly report (`.scratch/monthly-report/`) books sales from payments, so every payment and every refund must be recorded, in one place.
+The monthly report (`issues/monthly-report/`) books sales from payments, so every payment and every refund must be recorded, in one place.
 
 ## Decisions
 

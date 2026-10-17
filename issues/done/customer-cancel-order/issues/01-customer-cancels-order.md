@@ -1,6 +1,6 @@
 # Customer cancels their order from the account page
 
-Status: ready-for-agent
+Status: done
 
 ## What to build
 
