@@ -41,6 +41,8 @@ defmodule Edenflowers.Payments.Payable do
       argument :reverses_payment_id, :uuid, public?: false
 
       change Changes.UndoPayment
+      # Undoing a payment whose money was since handed back would leave it owed again.
+      validate Validations.RefundCoveredOutsideStripe
       change Changes.CancelOpenPaymentIntent
       change {Changes.RecordPayment, amount: :amount}
       require_atomic? false
