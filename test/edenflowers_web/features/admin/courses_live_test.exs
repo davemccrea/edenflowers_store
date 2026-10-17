@@ -40,6 +40,19 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "[data-status=cancelled]", "Cancelled Carl")
   end
 
+  test "a link from the Overview opens the booking's course and highlights the booking", %{conn: conn} do
+    course = generate(course(name: "Autumn wreaths"))
+    other_course = generate(course(name: "Spring posies"))
+    registration = generate(course_registration(course_id: course.id, status: :confirmed, name: "Anna"))
+    generate(course_registration(course_id: other_course.id, status: :confirmed, name: "Birgitta"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses?#{[booking: registration.id]}")
+
+    assert has_element?(view, "#course-#{course.id}[open]")
+    refute has_element?(view, "#course-#{other_course.id}[open]")
+    assert has_element?(view, ~s|#registration-#{registration.id}[aria-current="true"]|, "Anna")
+  end
+
   test "cancelling a booking moves it to the cancelled list", %{conn: conn} do
     registration = generate(course_registration(status: :confirmed, name: "Anna"))
 
