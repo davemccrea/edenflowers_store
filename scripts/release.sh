@@ -37,7 +37,7 @@ ok "draft written"
 
 "${VISUAL:-${EDITOR:-vi}}" "$NOTES"
 
-if [[ ! -s "$NOTES" ]] || ! grep -q '[^[:space:]]' "$NOTES"; then
+if ! grep -q '[^[:space:]]' "$NOTES"; then
   fail "notes are empty, release not published"
 fi
 
