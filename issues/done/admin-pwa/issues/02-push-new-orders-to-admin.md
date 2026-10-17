@@ -1,6 +1,6 @@
 # Push new orders to admin
 
-Status: ready-for-human
+Status: done
 
 ## What to build
 
