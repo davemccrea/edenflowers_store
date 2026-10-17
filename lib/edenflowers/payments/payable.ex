@@ -65,7 +65,18 @@ defmodule Edenflowers.Payments.Payable do
                 end
               )
 
-    calculate :stripe_refundable?, :boolean, expr(balance < 0 and amount_paid > paid_outside_stripe)
+    # What Payments.refund_balance/1 sends back: the balance, as far as Stripe payments cover it.
+    calculate :stripe_refund,
+              :decimal,
+              expr(
+                cond do
+                  balance >= 0 or amount_paid <= paid_outside_stripe -> 0
+                  -balance < amount_paid - paid_outside_stripe -> -balance
+                  true -> amount_paid - paid_outside_stripe
+                end
+              )
+
+    calculate :stripe_refundable?, :boolean, expr(stripe_refund > 0)
   end
 
   aggregates do

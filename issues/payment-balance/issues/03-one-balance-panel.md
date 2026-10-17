@@ -1,6 +1,6 @@
 # One balance panel on orders and bookings
 
-Status: ready-for-agent
+Status: done
 Type: refactor
 
 ## What to build
