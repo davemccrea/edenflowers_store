@@ -25,7 +25,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
 
   @tag :typst
   test "a paid booking gets its receipt" do
-    registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+    registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
 
     generate(
       payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")

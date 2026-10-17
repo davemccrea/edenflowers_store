@@ -124,6 +124,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
       validate Edenflowers.Courses.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      # The PaymentIntent is spent and kept on its Payment. Left here,
+      # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
+      change set_attribute(:payment_intent_id, nil)
       change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
