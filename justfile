@@ -90,10 +90,9 @@ db-wipe-staging:
 deploy *args:
     ./scripts/deploy.sh {{ args }}
 
-# Show recent deploys and follow the latest one until it finishes
+# Follow the latest deploy until it finishes
 [group('deployment')]
 deploy-watch:
-    @gh run list --workflow=deploy.yml --limit 5
     @gh run watch "$(gh run list --workflow=deploy.yml --limit 1 --json databaseId -q '.[0].databaseId')" --compact --exit-status
 
 # Sync images/ to servers (staging, production, or both by default)
