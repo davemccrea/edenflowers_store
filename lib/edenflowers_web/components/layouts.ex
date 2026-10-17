@@ -311,6 +311,7 @@ defmodule EdenflowersWeb.Layouts do
         :locale_picker_id,
         if(assigns.closeable, do: "admin-locale-picker-mobile", else: "admin-locale-picker-desktop")
       )
+      |> assign(:version, "v#{Application.spec(:edenflowers, :vsn)}")
 
     ~H"""
     <div class="flex h-full flex-col py-5">
@@ -359,6 +360,15 @@ defmodule EdenflowersWeb.Layouts do
           current_path={@current_path}
           exact={false}
         />
+
+        <a
+          href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
+          target="_blank"
+          rel="noopener"
+          class="text-base-content/50 mt-3 block px-3 text-xs hover:text-base-content/80"
+        >
+          {@version}
+        </a>
       </div>
     </div>
     """
