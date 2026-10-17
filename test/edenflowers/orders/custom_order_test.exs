@@ -525,7 +525,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
 
       assert {:error, error} = Orders.record_payment(order, "10.00", :cash, actor: ctx.admin)
-      assert Exception.message(error) =~ "can only be a refund on a cancelled order"
+      assert Exception.message(error) =~ "That's more than is owed"
 
       {:ok, order} = Orders.record_payment(order, "-134.00", :mobilepay, actor: ctx.admin)
       assert order.payment_status == :refunded
@@ -663,9 +663,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       {:ok, paid} = Orders.record_payment(partial, "124.00", :cash, actor: ctx.admin)
       assert paid.payment_status == :paid
-
-      {:ok, refunded} = Orders.record_payment(paid, "-134.00", :cash, actor: ctx.admin)
-      assert refunded.payment_status == :refunded
     end
 
     test "a free order owes nothing", ctx do

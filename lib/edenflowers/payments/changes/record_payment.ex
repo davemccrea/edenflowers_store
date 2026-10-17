@@ -46,8 +46,13 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
   defp parent_key(%Order{}), do: :order_id
   defp parent_key(%CourseRegistration{}), do: :course_registration_id
 
-  defp reload(%Order{} = order), do: Ash.load(order, :payment_status, authorize?: false, reuse_values?: false)
-  defp reload(registration), do: {:ok, registration}
+  # Whatever the caller loaded about the money is stale now.
+  @payable_fields [:amount_paid, :paid_outside_stripe, :balance, :refunded?, :settled?]
+
+  defp reload(%Order{} = order),
+    do: Ash.load(order, [:payment_status | @payable_fields], authorize?: false, reuse_values?: false)
+
+  defp reload(registration), do: Ash.load(registration, @payable_fields, authorize?: false, reuse_values?: false)
 
   # A refund isn't something the customer paid with.
   defp paid_with(changeset, :stripe) do

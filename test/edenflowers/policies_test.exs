@@ -504,13 +504,40 @@ defmodule Edenflowers.PoliciesTest do
       assert {:error, %Ash.Error.Forbidden{}} = Orders.cancel_order(order, actor: customer)
     end
 
-    test "record a payment", %{order: order, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} =
-               Orders.record_payment(order, "100.00", :cash, actor: customer)
-    end
-
     test "open a payment link", %{order: order, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} = Orders.open_payment_link(order, actor: customer)
+    end
+  end
+
+  describe "recording money" do
+    # Valid amounts, so it's the policy that refuses and not a validation.
+    setup %{customer: customer} do
+      order = placed_order(user_id: customer.id, payment_intent_id: nil)
+      registration = generate(course_registration(status: :confirmed, user_id: customer.id))
+      {:ok, records: [order, registration]}
+    end
+
+    defp record(record, action, params, actor) do
+      record |> Ash.Changeset.for_update(action, params, actor: actor) |> Ash.update()
+    end
+
+    test "only the admin records a payment", %{records: records, customer: customer} do
+      for record <- records do
+        payment = %{amount: "1.00", payment_method: :cash}
+
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :record_payment, payment, customer)
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :record_payment, payment, %{system: true})
+        assert {:ok, _record} = record(record, :record_payment, payment, %{admin: true})
+      end
+    end
+
+    test "only the system actor records a Stripe refund", %{records: records, customer: customer} do
+      for record <- records do
+        refund = %{stripe_refund_id: "re_#{record.id}", amount: "-1.00"}
+
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :record_stripe_refund, refund, customer)
+        assert {:ok, _record} = record(record, :record_stripe_refund, refund, %{system: true})
+      end
     end
   end
 

@@ -22,13 +22,7 @@ defmodule Edenflowers.Courses do
       define :mark_registration_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
 
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
-      define :record_registration_stripe_refund, action: :record_stripe_refund, args: [:stripe_refund_id, :amount]
-
-      define :record_registration_refund,
-        action: :record_refund,
-        args: [:amount, :payment_method]
-
-      define :mark_registration_paid, action: :mark_paid, args: [:payment_method]
+      define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
     end
