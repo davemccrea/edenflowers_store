@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.PaymentMethod
+  alias Edenflowers.Payments.PaymentMethod
   alias EdenflowersWeb.Admin.OrderLog
   alias Edenflowers.PhoneNumber
   alias Edenflowers.External.StripeAPI
@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp payments(order) do
     order
-    |> Ash.load!([payments: Ash.Query.sort(Edenflowers.Orders.Payment, paid_at: :asc)], authorize?: false)
+    |> Ash.load!([payments: Ash.Query.sort(Edenflowers.Payments.Payment, paid_at: :asc)], authorize?: false)
     |> Map.fetch!(:payments)
   end
 

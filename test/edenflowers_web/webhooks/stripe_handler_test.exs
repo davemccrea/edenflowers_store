@@ -353,7 +353,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
                  refund_event("refund.created", "pi_course", "succeeded")
                )
 
-      refute Enum.any?(Ash.read!(Edenflowers.Orders.Payment, authorize?: false), &(&1.stripe_refund_id == "re_1"))
+      refute Enum.any?(Ash.read!(Edenflowers.Payments.Payment, authorize?: false), &(&1.stripe_refund_id == "re_1"))
     end
   end
 

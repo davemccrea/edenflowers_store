@@ -99,7 +99,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
     assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
     assert Ash.reload!(occurrence, authorize?: false).fulfillment_status == :cancelled
-    assert Ash.get!(Edenflowers.Orders.Payment, payment.id, authorize?: false).amount == payment.amount
+    assert Ash.get!(Edenflowers.Payments.Payment, payment.id, authorize?: false).amount == payment.amount
   end
 
   test "cancel leaves a booked occurrence in place after its customer-change deadline", context do

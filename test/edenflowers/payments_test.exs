@@ -380,8 +380,23 @@ defmodule Edenflowers.PaymentsTest do
 
       assert {:ok, :completed} = Payments.complete(Map.put(course_intent(registration), :payment_method, "pm_card"))
 
-      assert %{payment_method_type: "card", card_brand: "amex", card_last4: "0005"} =
-               Courses.get_registration_by_id!(registration.id, authorize?: false)
+      assert [%{payment_method_type: "card", card_brand: "amex", card_last4: "0005"}] =
+               Courses.get_registration_by_id!(registration.id, authorize?: false, load: [:payments]).payments
+    end
+
+    test "records a course booking's payment once, however often it completes", %{registration: registration} do
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _registration -> {:ok, course_intent(registration)} end)
+
+      assert {:ok, :completed} = Payments.complete(course_intent(registration))
+      assert {:ok, :already_completed} = Payments.complete(course_intent(registration))
+      assert {:ok, :already_completed} = Payments.reconcile(registration)
+
+      payment_intent_id = registration.payment_intent_id
+
+      assert [%{method: :stripe, payment_intent_id: ^payment_intent_id, paid_at: %DateTime{}} = payment] =
+               Courses.get_registration_by_id!(registration.id, authorize?: false, load: [:payments]).payments
+
+      assert Decimal.equal?(payment.amount, "170.00")
     end
 
     test "places an order the customer stepped back from while paying", %{order: order} do
@@ -584,6 +599,17 @@ defmodule Edenflowers.PaymentsTest do
     test "refuses a PaymentIntent that names nothing it knows" do
       assert {:error, :unknown_payable} = Payments.complete(%{id: "pi_x", metadata: %{}})
       assert {:error, :unknown_payable} = Payments.complete(%{id: "pi_x", metadata: %{"order_id" => ""}})
+    end
+  end
+
+  describe "Payment" do
+    test "belongs to exactly one order or course registration", %{order: order, registration: registration} do
+      for parents <- [%{}, %{order_id: order.id, course_registration_id: registration.id}] do
+        assert {:error, %Ash.Error.Invalid{}} =
+                 Edenflowers.Payments.Payment
+                 |> Ash.Changeset.for_create(:record, Map.merge(parents, %{amount: "10.00", method: :cash}))
+                 |> Ash.create(authorize?: false)
+      end
     end
   end
 

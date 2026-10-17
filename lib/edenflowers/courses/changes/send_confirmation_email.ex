@@ -48,7 +48,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :first_name, :pays_at_course?], actor: system_actor())
+    |> Ash.load!([:course, :payments, :first_name, :pays_at_course?], actor: system_actor())
     |> translate_course()
   end
 

@@ -57,11 +57,11 @@ A payment Jennie takes outside the website — on the Zettle card reader, by Mob
 _Avoid_: Offline payment, manual payment, till payment
 
 **Payment**:
-Money that moved for an order: through Stripe, or taken in person. A refund is a negative Payment. An order can have several.
+Money that moved for an order or a course booking: through Stripe, or taken in person. A refund is a negative Payment. An order or booking can have several.
 _Avoid_: Transaction, charge
 
 **Balance**:
-What is still owed on a placed order: its total minus what has been paid. Positive is to collect, negative is to refund; editing a paid order is what usually leaves one.
+What is still owed on a placed order or a confirmed course booking: its total minus what has been paid. A cancelled booking's total is zero. Positive is to collect, negative is to refund; editing a paid order is what usually leaves one.
 _Avoid_: Amount mismatch, outstanding, difference
 
 ### People

@@ -10,7 +10,8 @@ alias Edenflowers.Catalog.ProductCategory
 alias Edenflowers.Catalog.{Product, ProductVariant}
 alias Edenflowers.Courses.{Course, CourseRegistration}
 alias Edenflowers.Fulfillment.{Availability, Fee, FulfillmentOption, Weekday}
-alias Edenflowers.Orders.{Order, LineItem, Payment}
+alias Edenflowers.Orders.{Order, LineItem}
+alias Edenflowers.Payments.Payment
 alias Edenflowers.Orders.Calculations.Vat
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
@@ -480,31 +481,42 @@ today = Date.utc_today()
   {midsummer_crown, "Matti Laine", "matti.laine@example.com", 1, :confirmed, "fi", :direct_paid}
 ]
 |> Enum.each(fn {course, name, email, seats, status, locale, paid_via} ->
-  Ash.Seed.seed!(CourseRegistration, %{
-    course_id: course.id,
-    name: name,
-    email: email,
-    seats: seats,
-    status: status,
-    locale: locale,
-    reference: next_reference.(),
-    tax_rate: tax_rate.percentage,
-    amount: Decimal.mult(course.price, seats),
-    confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
-    # Already emailed, otherwise the SendConfirmationEmail trigger emails every
-    # seeded booking — for real on staging.
-    confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
-    paid_at: if(paid_via == :direct_paid, do: DateTime.utc_now()),
-    # A pending registration with a fake PaymentIntent makes the ReconcilePayment
-    # cron fail against Stripe, so it stays an abandoned checkout instead.
-    payment_intent_id:
-      if(paid_via == :stripe and status != :pending,
-        do: "pi_seed_#{System.unique_integer([:positive])}"
-      ),
-    payment_method_type: if(paid_via == :stripe and status != :pending, do: "card"),
-    card_brand: if(paid_via == :stripe and status != :pending, do: "mastercard"),
-    card_last4: if(paid_via == :stripe and status != :pending, do: "4444")
-  })
+  registration =
+    Ash.Seed.seed!(CourseRegistration, %{
+      course_id: course.id,
+      name: name,
+      email: email,
+      seats: seats,
+      status: status,
+      locale: locale,
+      reference: next_reference.(),
+      tax_rate: tax_rate.percentage,
+      amount: Decimal.mult(course.price, seats),
+      confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
+      # Already emailed, otherwise the SendConfirmationEmail trigger emails every
+      # seeded booking — for real on staging.
+      confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
+      paid_at: if(paid_via == :direct_paid, do: DateTime.utc_now()),
+      # A pending registration with a fake PaymentIntent makes the ReconcilePayment
+      # cron fail against Stripe, so it stays an abandoned checkout instead.
+      payment_intent_id:
+        if(paid_via == :stripe and status != :pending,
+          do: "pi_seed_#{System.unique_integer([:positive])}"
+        )
+    })
+
+  if registration.payment_intent_id do
+    Ash.Seed.seed!(Payment, %{
+      course_registration_id: registration.id,
+      amount: registration.amount,
+      method: :stripe,
+      payment_intent_id: registration.payment_intent_id,
+      paid_at: registration.confirmed_at,
+      payment_method_type: "card",
+      card_brand: "mastercard",
+      card_last4: "4444"
+    })
+  end
 end)
 
 # One of Anna's group of three dropped out.

@@ -13,7 +13,8 @@ defmodule Edenflowers.PoliciesTest do
   alias Edenflowers.Orders
 
   alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
-  alias Edenflowers.Orders.{LineItem, Payment}
+  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Fulfillment.{FulfillmentOption}
   alias Edenflowers.Pricing.{Promotion, TaxRate}
 
@@ -529,6 +530,17 @@ defmodule Edenflowers.PoliciesTest do
       other_customer = generate(admin_user(admin: false))
 
       assert [] = Payment |> Ash.Query.filter(order_id == ^order.id) |> Ash.read!(actor: other_customer)
+    end
+
+    test "only the owner sees the payments on their course booking", %{customer: owner} do
+      registration = generate(course_registration(status: :confirmed, user_id: owner.id))
+      payment = generate(payment(course_registration_id: registration.id))
+      other_customer = generate(admin_user(admin: false))
+      query = Ash.Query.filter(Payment, course_registration_id == ^registration.id)
+
+      assert [%{id: id}] = Ash.read!(query, actor: owner)
+      assert id == payment.id
+      assert [] = Ash.read!(query, actor: other_customer)
     end
   end
 

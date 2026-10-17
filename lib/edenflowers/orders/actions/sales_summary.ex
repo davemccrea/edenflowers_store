@@ -3,7 +3,7 @@ defmodule Edenflowers.Orders.Actions.SalesSummary do
 
   require Ash.Query
 
-  alias Edenflowers.Orders.Payment
+  alias Edenflowers.Payments.Payment
 
   @impl true
   def run(input, _opts, context) do

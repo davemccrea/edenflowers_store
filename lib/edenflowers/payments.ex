@@ -11,6 +11,17 @@ defmodule Edenflowers.Payments do
   already confirmed and `PaymentIntentMismatch` for a PaymentIntent the
   record no longer holds. See `Edenflowers.Payments.Errors`.
   """
+  use Ash.Domain,
+    otp_app: :edenflowers,
+    extensions: [AshAdmin.Domain]
+
+  admin do
+    show?(true)
+  end
+
+  resources do
+    resource Edenflowers.Payments.Payment
+  end
 
   require Logger
   require Ash.Query
@@ -23,7 +34,7 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Payment
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch}
 
   @metadata_keys ["order_id", "course_registration_id"]
@@ -393,7 +404,7 @@ defmodule Edenflowers.Payments do
   defp refund_from([], _left_cents, _key, refunds), do: {:ok, Enum.reverse(refunds)}
 
   defp refund_from([{payment, existing_refunds} | rest], left_cents, key, refunds) do
-    case min(left_cents, refundable_cents(payment, existing_refunds)) do
+    case Kernel.min(left_cents, refundable_cents(payment, existing_refunds)) do
       0 ->
         refund_from(rest, left_cents, key, refunds)
 
@@ -417,7 +428,7 @@ defmodule Edenflowers.Payments do
       |> Enum.map(& &1.amount)
       |> Enum.sum()
 
-    max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)
+    Kernel.max(StripeAPI.to_stripe_amount(payment.amount) - refunded, 0)
   end
 
   defp find_payment(payment_intent_id) do
@@ -512,7 +523,7 @@ defmodule Edenflowers.Payments do
   end
 
   defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid, paid_with) do
-    Courses.confirm_registration_payment(id, payment_intent.id, Map.put(paid_with, :amount_paid, amount_paid),
+    Courses.confirm_registration_payment(id, payment_intent.id, %{amount_paid: amount_paid, paid_with: paid_with},
       actor: system_actor()
     )
   end

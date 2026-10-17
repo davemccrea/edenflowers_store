@@ -4,7 +4,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Courses.{Course, CourseRegistration}
-  alias Edenflowers.Orders.{LineItem, Order, Payment}
+  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Payments.Payment
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
   @sample_dir Path.join([:code.priv_dir(:edenflowers), "receipts", "sample"])
@@ -220,9 +221,13 @@ defmodule Edenflowers.Orders.ReceiptTest do
         amount: Decimal.new("85.00"),
         tax_rate: Decimal.new("0.255"),
         confirmed_at: ~U[2026-09-22 15:40:00Z],
-        payment_method_type: "card",
-        card_brand: "amex",
-        card_last4: "0005",
+        payments: [
+          payment("85.00", :stripe, ~U[2026-09-22 15:40:00Z],
+            payment_method_type: "card",
+            card_brand: "amex",
+            card_last4: "0005"
+          )
+        ],
         course: %Course{
           name: "Advent Wreaths",
           date: ~D[2026-11-14],
@@ -236,7 +241,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22/09/2026", amount: "€85.00"}] =
                Receipt.build_payload(registration).payments
 
-      assert Receipt.build_payload(%{registration | payment_method_type: nil}).payments == []
+      assert Receipt.build_payload(%{registration | payments: []}).payments == []
     end
   end
 

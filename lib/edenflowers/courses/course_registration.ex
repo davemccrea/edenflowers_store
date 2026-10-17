@@ -118,13 +118,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
     update :confirm_payment do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
-      # What paid, for the receipt; see Edenflowers.Payments.paid_with/1.
-      accept [:payment_method_type, :card_brand, :card_last4]
+      argument :paid_with, :map, default: %{}
       validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :status, paid: :confirmed}
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       validate Edenflowers.Courses.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
 
       require_atomic? false
@@ -227,9 +227,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string
-    attribute :payment_method_type, :string
-    attribute :card_brand, :string
-    attribute :card_last4, :string
     attribute :confirmed_at, :utc_datetime
     # Only for manual bookings: a Stripe booking is paid when it is confirmed.
     attribute :paid_at, :utc_datetime
@@ -246,6 +243,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     belongs_to :course, Edenflowers.Courses.Course, allow_nil?: false
+    has_many :payments, Edenflowers.Payments.Payment
   end
 
   calculations do
