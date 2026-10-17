@@ -463,9 +463,10 @@ today = Date.utc_today()
   end)
 
 # Course bookings. Ash.Seed for the same reason as orders below: a booking is
-# confirmed by a Stripe payment or by Jennie. The pending and cancelled ones should not
-# show on the admin courses page. Emma and Kristina were added by Jennie and
-# pay at the course, so they have no payment intent; Kristina already has.
+# confirmed by a Stripe payment or by Jennie. Like a placed order, a booking paid
+# online keeps its PaymentIntent only on its Stripe payment. Emma, Kristina and
+# Matti were added by Jennie and pay at the course; Kristina and Matti already have.
+# Johan cancelled and is still owed his money; Elin cancelled and was refunded.
 # The third course is left empty on purpose, and the past one has its history.
 [
   {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI", :stripe},
@@ -476,6 +477,9 @@ today = Date.utc_today()
   {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "sv-FI", :stripe},
   {christmas_wreath, "Sofia Korhonen", "sofia.korhonen@example.com", 2, :confirmed, "fi", :stripe},
   {christmas_wreath, "Sarah Mitchell", "sarah.mitchell@example.com", 1, :confirmed, "en-GB", :stripe},
+  {christmas_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI", :stripe},
+  # No PaymentIntent: a fake one makes the ReconcilePayment cron fail against
+  # Stripe, so it stays an abandoned checkout instead.
   {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe},
   {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI", :stripe},
   {midsummer_crown, "Matti Laine", "matti.laine@example.com", 1, :confirmed, "fi", :direct_paid}
@@ -492,24 +496,18 @@ today = Date.utc_today()
       reference: next_reference.(),
       tax_rate: tax_rate.percentage,
       amount: Decimal.mult(course.price, seats),
-      confirmed_at: if(status == :confirmed, do: DateTime.utc_now()),
+      confirmed_at: if(status != :pending, do: DateTime.utc_now()),
       # Already emailed, otherwise the SendConfirmationEmail trigger emails every
       # seeded booking — for real on staging.
-      confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
-      # A pending registration with a fake PaymentIntent makes the ReconcilePayment
-      # cron fail against Stripe, so it stays an abandoned checkout instead.
-      payment_intent_id:
-        if(paid_via == :stripe and status != :pending,
-          do: "pi_seed_#{System.unique_integer([:positive])}"
-        )
+      confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now())
     })
 
-  if registration.payment_intent_id do
+  if paid_via == :stripe and status != :pending do
     Ash.Seed.seed!(Payment, %{
       course_registration_id: registration.id,
       amount: registration.amount,
       method: :stripe,
-      payment_intent_id: registration.payment_intent_id,
+      payment_intent_id: "pi_seed_#{System.unique_integer([:positive])}",
       paid_at: registration.confirmed_at,
       payment_method_type: "card",
       card_brand: "mastercard",
@@ -527,7 +525,21 @@ today = Date.utc_today()
   end
 end)
 
-# One of Anna's group of three dropped out.
+# Elin's refund, made in the Stripe dashboard and recorded as the webhook would.
+elin_payment =
+  Payment
+  |> Ash.Query.filter(course_registration.email == "elin.sjoberg@example.com")
+  |> Ash.read_one!(authorize?: false)
+
+{:ok, :recorded} =
+  Edenflowers.Payments.record_refund(%{
+    id: "re_seed_elin",
+    payment_intent: elin_payment.payment_intent_id,
+    amount: Edenflowers.External.StripeAPI.to_stripe_amount(elin_payment.amount),
+    status: "succeeded"
+  })
+
+# One of Anna's group of three dropped out, and is still owed a refund.
 CourseRegistration
 |> Ash.Query.filter(email == "anna.svensson@example.com")
 |> Ash.read_one!(authorize?: false)
