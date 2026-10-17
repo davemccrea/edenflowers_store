@@ -301,4 +301,38 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                Fulfillment.fulfill_on_date(option.id, ~D[2024-04-02], %{now: now}, authorize?: false)
     end
   end
+
+  describe "pausing same-day orders" do
+    test "closes today on the same-day options only, and reopening restores them" do
+      today = Edenflowers.Expressions.HelsinkiToday.today()
+      next_week = Date.add(today, 7)
+
+      plain = generate(fulfillment_option(disabled_dates: [next_week]))
+      extra_day = generate(fulfillment_option(available_days: [], enabled_dates: [today]))
+      no_same_day = generate(fulfillment_option(same_day: false, order_deadline: nil))
+
+      assert Fulfillment.same_day_today(authorize?: false) == :open
+
+      Fulfillment.set_same_day_today(:paused, authorize?: false)
+
+      assert Fulfillment.same_day_today(authorize?: false) == :paused
+      assert Enum.sort(reload(plain).disabled_dates, Date) == [today, next_week]
+      assert reload(extra_day).disabled_dates == [today]
+      assert reload(no_same_day).disabled_dates == []
+
+      Fulfillment.set_same_day_today(:open, authorize?: false)
+
+      assert Fulfillment.same_day_today(authorize?: false) == :open
+      assert reload(plain).disabled_dates == [next_week]
+      assert %{disabled_dates: [], enabled_dates: [^today]} = reload(extra_day)
+    end
+
+    test "is not offered when no option has same-day" do
+      generate(fulfillment_option(same_day: false, order_deadline: nil))
+
+      assert Fulfillment.same_day_today(authorize?: false) == :not_offered
+    end
+  end
+
+  defp reload(option), do: Fulfillment.get_option_by_id!(option.id, authorize?: false)
 end

@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
   alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias Edenflowers.Format
+  alias Edenflowers.Fulfillment
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -22,12 +23,19 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
      |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
+     |> assign(:same_day, Fulfillment.same_day_today(actor: socket.assigns.current_user))
      |> assign_orders()}
   end
 
   @impl true
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
+
+  def handle_event("set_same_day", params, socket) do
+    actor = socket.assigns.current_user
+    Fulfillment.set_same_day_today(if(params["open"] == "true", do: :open, else: :paused), actor: actor)
+    {:noreply, assign(socket, :same_day, Fulfillment.same_day_today(actor: actor))}
+  end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
@@ -96,13 +104,19 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={greeting(@current_user)} overview />
+        <.admin_page_header title={greeting(@current_user)} overview>
+          <:actions>
+            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
+              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
+            </.button>
+          </:actions>
+        </.admin_page_header>
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <aside class="flex flex-col gap-6 xl:order-last">
-            <.quick_actions />
+            <.same_day_widget :if={@same_day != :not_offered} same_day={@same_day} />
             <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
             <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
           </aside>
@@ -150,18 +164,31 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
     """
   end
 
-  defp quick_actions(assigns) do
+  attr :same_day, :atom, required: true
+
+  defp same_day_widget(assigns) do
     ~H"""
-    <.widget id="quick-actions" title={~t"Quick actions"}>
-      <div class="grid grid-cols-2 gap-2">
-        <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm" class="col-span-2">
-          <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
-        </.button>
-        <.button navigate={~p"/admin/products/new"} variant="neutral" size="sm">{~t"New product"}</.button>
-        <.button navigate={~p"/admin/promotions/new"} variant="neutral" size="sm">{~t"New promotion"}</.button>
-        <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">{~t"New course"}</.button>
-        <.button navigate={~p"/admin/fulfillments"} variant="neutral" size="sm">{~t"Calendar"}</.button>
-      </div>
+    <.widget id="same-day" title={~t"Same-day orders"}>
+      <form id="same-day-form" phx-change="set_same_day" class="flex items-start justify-between gap-4">
+        <label for="same-day-toggle" class="text-sm">
+          <span class="text-base-content block font-medium">
+            {if @same_day == :open, do: ~t"Open for today", else: ~t"Paused for today"}
+          </span>
+          <span class="text-base-content/65 block">
+            {if @same_day == :open, do: ~t"Customers can order for today.", else: ~t"Back on tomorrow."}
+          </span>
+        </label>
+        <input type="hidden" name="open" value="false" />
+        <input
+          id="same-day-toggle"
+          type="checkbox"
+          role="switch"
+          name="open"
+          value="true"
+          checked={@same_day == :open}
+          class="toggle toggle-primary mt-0.5 shrink-0"
+        />
+      </form>
     </.widget>
     """
   end

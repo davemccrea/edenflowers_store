@@ -151,4 +151,20 @@ defmodule EdenflowersWeb.Admin.DashboardLiveTest do
     assert sales =~ ~r/>\s*2\s*</
     assert sales =~ "90.00"
   end
+
+  test "pauses and reopens same-day orders for today", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    generate(fulfillment_option())
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#same-day", "Open for today")
+
+    view |> element("#same-day form") |> render_change(%{"open" => "false"})
+    assert has_element?(view, "#same-day", "Paused for today")
+    assert Edenflowers.Fulfillment.same_day_today(authorize?: false) == :paused
+
+    view |> element("#same-day form") |> render_change(%{"open" => "true"})
+    assert has_element?(view, "#same-day", "Open for today")
+  end
 end

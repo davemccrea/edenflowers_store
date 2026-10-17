@@ -116,6 +116,39 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       change Edenflowers.Fulfillment.Changes.SetWeek
     end
 
+    update :close_date do
+      description "Close a single date regardless of its weekday rule. Leaves enabled_dates alone, " <>
+                    "so :reopen_date returns the date to exactly what it was."
+
+      require_atomic? false
+      argument :date, :date, allow_nil?: false
+
+      change fn changeset, _context ->
+        date = Ash.Changeset.get_argument(changeset, :date)
+
+        Ash.Changeset.force_change_attribute(
+          changeset,
+          :disabled_dates,
+          Enum.uniq([date | changeset.data.disabled_dates])
+        )
+      end
+    end
+
+    update :reopen_date do
+      require_atomic? false
+      argument :date, :date, allow_nil?: false
+
+      change fn changeset, _context ->
+        date = Ash.Changeset.get_argument(changeset, :date)
+
+        Ash.Changeset.force_change_attribute(
+          changeset,
+          :disabled_dates,
+          List.delete(changeset.data.disabled_dates, date)
+        )
+      end
+    end
+
     update :reset_calendar do
       description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
       change set_attribute(:available_days, Edenflowers.Fulfillment.Weekday.all())
