@@ -85,19 +85,19 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
   end
 
-  test "a cancelled booking paid at the course is refunded in person", %{conn: conn} do
+  test "a cancelled booking paid at the course is refunded the same way", %{conn: conn} do
     registration = generate(course_registration(status: :cancelled, amount: Decimal.new("85.00")))
     generate(payment(course_registration_id: registration.id, amount: Decimal.new("85.00"), method: :cash))
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    assert has_element?(view, ~s|#refund-in-person-#{registration.id} input[name="amount"][value="-85.00"]|)
+    assert has_element?(view, ~s|#refund-outside-stripe-#{registration.id} input[name="amount"][value="-85.00"]|)
 
     view
-    |> form("#refund-in-person-#{registration.id}", %{payment_method: "cash", amount: "-85,00"})
+    |> form("#refund-outside-stripe-#{registration.id}", %{payment_method: "cash", amount: "-85,00"})
     |> render_submit()
 
-    refute has_element?(view, "#refund-in-person-#{registration.id}")
+    refute has_element?(view, "#refund-outside-stripe-#{registration.id}")
     assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, 0)
   end
 
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    refute has_element?(view, "#refund-in-person-#{registration.id}")
+    refute has_element?(view, "#refund-outside-stripe-#{registration.id}")
     assert view |> element("#refund-with-stripe-#{registration.id}") |> render_click() =~ "Refunded through Stripe."
     refute has_element?(view, "#refund-with-stripe-#{registration.id}")
   end

@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
 
   @impl true
   def handle_event(%Stripe.Event{type: type} = event) when type in ["refund.created", "refund.updated"] do
-    case Payments.record_refund(event.data.object) do
+    case Payments.record_stripe_refund(event.data.object) do
       {:ok, _outcome} ->
         :ok
 

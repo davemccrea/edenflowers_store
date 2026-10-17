@@ -70,7 +70,7 @@ defmodule Edenflowers.Orders.Order do
   @admin_show_load [
     :payment_status,
     :amount_paid,
-    :in_person_paid,
+    :paid_outside_stripe,
     :holds_money?,
     :balance,
     :unpaid?,
@@ -153,7 +153,7 @@ defmodule Edenflowers.Orders.Order do
         worker_module_name Edenflowers.Orders.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendConfirmationEmail
         default_actor Edenflowers.Actors.system_actor()
-        # An in-person payment gets its receipt only when Jennie sends one.
+        # A payment Jennie records gets its receipt only when she sends one.
         where expr(
                 state == :placed and exists(payments, method == :stripe) and not is_nil(customer_email) and
                   is_nil(receipt_emailed_at)
@@ -666,20 +666,20 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
-    # Money Jennie takes in person, or hands back as a negative amount, so she
+    # Money Jennie takes herself, or hands back as a negative amount, so she
     # can also settle a balance left by an edit. A cancelled order won't be
     # made, so it can only be refunded.
-    update :record_in_person_payment do
+    update :record_payment do
       argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
       argument :payment_method, PaymentMethod, allow_nil?: false
 
-      validate argument_in(:payment_method, PaymentMethod.in_person())
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
 
       validate compare(:amount, less_than: 0),
         where: [attribute_equals(:fulfillment_status, :cancelled)],
         message: "can only be a refund on a cancelled order"
 
-      validate Edenflowers.Payments.Validations.InPersonRefundCovered
+      validate Edenflowers.Payments.Validations.RefundCoveredOutsideStripe
       # The link charges the balance, which this payment changes; visiting it
       # again opens a PaymentIntent for whatever is left.
       change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
@@ -746,7 +746,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SendPaymentFailedEmail
     end
 
-    # For an in-person payment, whose receipt is only sent when the customer asks.
+    # For a payment Jennie recorded, whose receipt is only sent when the customer asks.
     update :email_receipt do
       accept []
       validate attribute_equals(:payment_status, :paid), message: "is not paid yet"
@@ -908,7 +908,7 @@ defmodule Edenflowers.Orders.Order do
                      :edit,
                      :update_florist_note,
                      :cancel,
-                     :record_in_person_payment,
+                     :record_payment,
                      :open_payment_link,
                      :send_order_details_email,
                      :email_receipt
@@ -1125,8 +1125,8 @@ defmodule Edenflowers.Orders.Order do
               expr(balance > 0 and payment_status != :refunded and fulfillment_status != :cancelled)
 
     # Jennie has had time to buy flowers for anything closer, so the customer
-    # gets the same notice as for a subscription change. Money taken in person
-    # can't be refunded through Stripe, so those orders go through her.
+    # gets the same notice as for a subscription change. Money paid outside
+    # Stripe can't be refunded through Stripe, so those orders go through her.
     calculate :cancellable_by_customer?,
               :boolean,
               expr(
@@ -1167,7 +1167,7 @@ defmodule Edenflowers.Orders.Order do
     # Nil until money has moved, so a placed order with no payments reads as unpaid.
     sum :amount_paid, :payments, :amount
 
-    sum :in_person_paid, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
+    sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
 
     # Unauthorized because the checkout actor, often a guest, can't read the
     # order's user under the User read policy.

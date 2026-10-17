@@ -24,8 +24,8 @@ defmodule Edenflowers.Courses do
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
       define :record_registration_stripe_refund, action: :record_stripe_refund, args: [:stripe_refund_id, :amount]
 
-      define :record_registration_in_person_refund,
-        action: :record_in_person_refund,
+      define :record_registration_refund,
+        action: :record_refund,
         args: [:amount, :payment_method]
 
       define :mark_registration_paid, action: :mark_paid, args: [:payment_method]

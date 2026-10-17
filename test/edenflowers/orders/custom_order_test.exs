@@ -304,7 +304,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
     test "a paid order can still change, leaving a balance to collect or refund", ctx do
       {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "134.00", :zettle, actor: ctx.admin)
 
       {:ok, order} =
         Orders.edit_order(order, params(ctx, %{line_items: [catalogue_line(ctx.variant)]}), actor: ctx.admin)
@@ -312,13 +312,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       order = Ash.load!(order, [:balance], authorize?: false)
       assert Decimal.equal?(order.balance, "-85.00")
 
-      {:ok, _order} = Orders.record_in_person_payment(order, "-85.00", :cash, actor: ctx.admin)
+      {:ok, _order} = Orders.record_payment(order, "-85.00", :cash, actor: ctx.admin)
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "0.00")
     end
 
-    test "records how an in-person payment was made, for the receipt", ctx do
+    test "records how a payment Jennie took was made, for the receipt", ctx do
       {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "134.00", :zettle, actor: ctx.admin)
 
       assert [%{payment_method_type: "zettle", card_brand: nil}] =
                Ash.load!(order, :payments, authorize?: false).payments
@@ -519,29 +519,29 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status]).payment_status == nil
     end
 
-    test "money taken in person can be handed back, but no new money taken", ctx do
+    test "money paid outside Stripe can be handed back, but no new money taken", ctx do
       {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
       {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
 
-      assert {:error, error} = Orders.record_in_person_payment(order, "10.00", :cash, actor: ctx.admin)
+      assert {:error, error} = Orders.record_payment(order, "10.00", :cash, actor: ctx.admin)
       assert Exception.message(error) =~ "can only be a refund on a cancelled order"
 
-      {:ok, order} = Orders.record_in_person_payment(order, "-134.00", :mobilepay, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "-134.00", :mobilepay, actor: ctx.admin)
       assert order.payment_status == :refunded
-      assert Decimal.equal?(order.in_person_paid, 0)
+      assert Decimal.equal?(order.paid_outside_stripe, 0)
     end
 
-    test "no more can be handed back in person than was taken in person", ctx do
+    test "no more can be handed back than was paid outside Stripe", ctx do
       {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_in_person_payment(order, "100.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "100.00", :cash, actor: ctx.admin)
       generate(payment(order_id: order.id, amount: Decimal.new("34.00"), payment_intent_id: "pi_rest"))
       {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
 
-      assert {:error, error} = Orders.record_in_person_payment(order, "-134.00", :cash, actor: ctx.admin)
-      assert Exception.message(error) =~ "is more than was paid in person"
+      assert {:error, error} = Orders.record_payment(order, "-134.00", :cash, actor: ctx.admin)
+      assert Exception.message(error) =~ "is more than was paid outside Stripe"
 
-      assert {:ok, _order} = Orders.record_in_person_payment(order, "-100.00", :cash, actor: ctx.admin)
+      assert {:ok, _order} = Orders.record_payment(order, "-100.00", :cash, actor: ctx.admin)
     end
   end
 
@@ -638,11 +638,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
     end
 
-    test "in person records how it was paid and sends no receipt by itself", ctx do
+    test "a recorded payment says how it was paid and sends no receipt by itself", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       {:ok, order} =
-        Orders.record_in_person_payment(order, "130.00", :mobilepay, actor: ctx.admin)
+        Orders.record_payment(order, "130.00", :mobilepay, actor: ctx.admin)
 
       order = Orders.get_order_for_admin!(order.id, actor: ctx.admin, load: [:payments])
       assert order.payment_status == :pending
@@ -658,13 +658,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "payment status follows the balance", ctx do
       {:ok, order} = place(ctx)
 
-      {:ok, partial} = Orders.record_in_person_payment(order, "10.00", :cash, actor: ctx.admin)
+      {:ok, partial} = Orders.record_payment(order, "10.00", :cash, actor: ctx.admin)
       assert partial.payment_status == :pending
 
-      {:ok, paid} = Orders.record_in_person_payment(partial, "124.00", :cash, actor: ctx.admin)
+      {:ok, paid} = Orders.record_payment(partial, "124.00", :cash, actor: ctx.admin)
       assert paid.payment_status == :paid
 
-      {:ok, refunded} = Orders.record_in_person_payment(paid, "-134.00", :cash, actor: ctx.admin)
+      {:ok, refunded} = Orders.record_payment(paid, "-134.00", :cash, actor: ctx.admin)
       assert refunded.payment_status == :refunded
     end
 
@@ -677,11 +677,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       refute order.payable?
     end
 
-    test "in person can't be recorded as a Stripe payment", ctx do
+    test "a Stripe payment can't be recorded by hand", ctx do
       {:ok, order} = place(ctx)
 
       assert {:error, _} =
-               Orders.record_in_person_payment(order, "134.00", :stripe, actor: ctx.admin)
+               Orders.record_payment(order, "134.00", :stripe, actor: ctx.admin)
     end
 
     test "through the payment link records the payment and emails the receipt", ctx do
@@ -712,7 +712,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       capture_log(fn ->
         {:ok, _order} =
-          Orders.record_in_person_payment(order, "134.00", :zettle, actor: ctx.admin)
+          Orders.record_payment(order, "134.00", :zettle, actor: ctx.admin)
       end)
 
       log =
@@ -759,7 +759,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       {:ok, order} =
-        Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
+        Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
 
       {:ok, order} = Orders.email_receipt(order, actor: ctx.admin)
 
@@ -770,7 +770,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     @tag :typst
     test "after collection, doesn't promise to have the order ready", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
-      {:ok, order} = Orders.record_in_person_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
       {:ok, order} = Orders.mark_order_fulfilled(order, actor: ctx.admin)
 
       {:ok, _order} = Orders.email_receipt(order, actor: ctx.admin)

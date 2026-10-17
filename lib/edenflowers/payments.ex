@@ -274,7 +274,7 @@ defmodule Edenflowers.Payments do
 
         {:error, error} ->
           # A PaymentIntent the order has moved on from, such as the one a
-          # payment link drops when Jennie records an in-person payment.
+          # payment link drops when Jennie records a payment.
           if find_error(error, PaymentIntentMismatch),
             do: {:ok, :unchanged},
             else: {:error, {:payment_update_failed, id, error}}
@@ -287,12 +287,12 @@ defmodule Edenflowers.Payments do
   booking it paid for. Refunds not yet succeeded are left alone; Stripe sends
   `refund.updated` once a pending refund goes through.
   """
-  def record_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
+  def record_stripe_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
       when is_binary(payment_intent_id) do
     with {:ok, payment} <- find_payment(payment_intent_id),
          false <- refund_recorded?(refund.id),
          amount = Decimal.negate(StripeAPI.from_stripe_amount(refund.amount)),
-         {:ok, _record} <- record_stripe_refund(payment, refund.id, amount) do
+         {:ok, _record} <- record_refund_against(payment, refund.id, amount) do
       Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(parent_ref(payment))}")
       {:ok, :recorded}
     else
@@ -302,15 +302,15 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  def record_refund(_refund), do: {:ok, :ignored}
+  def record_stripe_refund(_refund), do: {:ok, :ignored}
 
-  defp record_stripe_refund(%Payment{order_id: order_id}, refund_id, amount) when is_binary(order_id) do
+  defp record_refund_against(%Payment{order_id: order_id}, refund_id, amount) when is_binary(order_id) do
     with {:ok, order} <- Orders.get_order_by_id(order_id, actor: system_actor()) do
       Orders.record_stripe_refund(order, refund_id, amount, actor: system_actor())
     end
   end
 
-  defp record_stripe_refund(%Payment{course_registration_id: registration_id}, refund_id, amount) do
+  defp record_refund_against(%Payment{course_registration_id: registration_id}, refund_id, amount) do
     with {:ok, registration} <- Courses.get_registration_by_id(registration_id, actor: system_actor()) do
       Courses.record_registration_stripe_refund(registration, refund_id, amount, actor: system_actor())
     end
@@ -355,7 +355,7 @@ defmodule Edenflowers.Payments do
     refunds_by_payment
     |> all_refunds()
     |> Enum.reduce_while({:ok, 0}, fn refund, {:ok, recorded} ->
-      case record_refund(refund) do
+      case record_stripe_refund(refund) do
         {:ok, :recorded} -> {:cont, {:ok, recorded + 1}}
         {:ok, _ignored_or_already_recorded} -> {:cont, {:ok, recorded}}
         error -> {:halt, error}
@@ -429,7 +429,7 @@ defmodule Edenflowers.Payments do
                  cents,
                  "refund-#{key}-#{payment.payment_intent_id}"
                ),
-             {:ok, _outcome} <- record_refund(refund) do
+             {:ok, _outcome} <- record_stripe_refund(refund) do
           refund_from(rest, left_cents - cents, key, [refund | refunds])
         end
     end

@@ -56,5 +56,5 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       else: Map.get(changeset.arguments, :paid_with, %{})
   end
 
-  defp paid_with(_changeset, in_person), do: %{payment_method_type: to_string(in_person)}
+  defp paid_with(_changeset, method), do: %{payment_method_type: to_string(method)}
 end
