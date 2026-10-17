@@ -24,6 +24,10 @@ defmodule Edenflowers.Courses do
       define :mark_registration_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
 
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
+      define :record_registration_link_payment, action: :record_link_payment, args: [:payment_intent_id]
+      define :open_registration_payment_link, action: :open_payment_link
+      define :email_registration_payment_link, action: :email_payment_link
+      define :get_registration_by_payment_link_token, action: :by_payment_link_token, args: [:token]
       define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
       define :undo_registration_payment, action: :undo_payment, args: [:payment_id]
       define :remove_registration_seat, action: :remove_seat

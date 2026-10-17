@@ -1,7 +1,7 @@
 # Booking Payment Links
 
 Summary: Send a course booking a link to pay what it owes online, as custom orders already can
-Status: ready-for-agent
+Status: done
 
 ## Problem
 

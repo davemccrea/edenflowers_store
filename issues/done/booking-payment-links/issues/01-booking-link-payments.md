@@ -1,6 +1,6 @@
 # A booking can open a payment link and record what's paid through it
 
-Status: ready-for-agent
+Status: done
 Type: feature
 
 ## What to build

@@ -424,7 +424,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:origin, :custom)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
-      change Changes.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change Edenflowers.Payments.Changes.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
       change load(:payment_status)
 
       validate Validations.EnteredLineItems
@@ -603,7 +603,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
-      change Changes.OpenPaymentLink
+      change Edenflowers.Payments.Changes.OpenPaymentLink
       change run_oban_trigger(:send_payment_failed_email)
       require_atomic? false
     end
@@ -705,7 +705,7 @@ defmodule Edenflowers.Orders.Order do
     update :open_payment_link do
       validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
       change set_context(%{skip_version_when_unchanged?: true})
-      change Changes.OpenPaymentLink
+      change Edenflowers.Payments.Changes.OpenPaymentLink
       change load(@admin_show_load)
       require_atomic? false
     end
