@@ -1,6 +1,6 @@
 # Installable admin app
 
-Status: ready-for-human
+Status: done
 
 ## What to build
 
