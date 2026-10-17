@@ -50,7 +50,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp in_person_form(order) do
-    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(order.balance, :normal)}, as: :in_person)
+    amount = if refundable_in_person?(order), do: Decimal.negate(order.in_person_paid), else: order.balance
+    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :in_person)
   end
 
   defp payments(order) do
@@ -74,6 +75,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
 
   defp owes_money?(order), do: order.fulfillment_status != :cancelled and not Decimal.eq?(order.balance, 0)
+
+  defp refundable_in_person?(order),
+    do: order.fulfillment_status == :cancelled and Decimal.positive?(order.in_person_paid)
 
   @impl true
   def render(assigns) do
@@ -271,6 +275,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 payments={@payments}
                 in_person_form={@in_person_form}
                 payment_message_urls={@payment_message_urls}
+                locale={@locale}
+              />
+
+              <.refund_in_person
+                :if={refundable_in_person?(@order)}
+                order={@order}
+                form={@in_person_form}
                 locale={@locale}
               />
             </section>
@@ -804,49 +815,77 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </div>
       </div>
 
-      <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
-        <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
-          {if Decimal.positive?(@order.balance),
-            do: ~t"Record a payment",
-            else: ~t"Record a refund"}
-          <.icon
-            name="hero-chevron-right"
-            class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
-          />
-        </summary>
-        <.form for={@in_person_form} id="in-person-payment-form" phx-submit="record_in_person_payment" class="mt-3">
-          <fieldset aria-describedby="in-person-payment-help">
-            <div class="grid grid-cols-2 items-end gap-2 text-sm">
-              <.input
-                field={@in_person_form[:payment_method]}
-                type="select"
-                label={~t"How"}
-                class="select select-sm w-full"
-                options={in_person_method_options()}
-              />
-              <.input
-                field={@in_person_form[:amount]}
-                type="text"
-                inputmode="decimal"
-                label={~t"Amount (€)"}
-                class="input input-sm w-full tabular-nums"
-              />
-              <.button
-                type="submit"
-                variant="primary"
-                size="sm"
-                class="col-span-2"
-                data-confirm={~t"Record this payment? It can't be removed, only offset by recording the opposite amount."}
-              >
-                {~t"Record payment"}
-              </.button>
-            </div>
-            <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
-              {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
-            </p>
-          </fieldset>
-        </.form>
-      </details>
+      <.in_person_payment form={@in_person_form} refund?={!Decimal.positive?(@order.balance)} />
+    </div>
+    """
+  end
+
+  attr :form, :any, required: true
+  attr :refund?, :boolean, default: false
+
+  defp in_person_payment(assigns) do
+    ~H"""
+    <details id="in-person-payment" phx-mounted={JS.ignore_attributes(["open"])} class="group mt-4">
+      <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
+        {if @refund?, do: ~t"Record a refund", else: ~t"Record a payment"}
+        <.icon
+          name="hero-chevron-right"
+          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+        />
+      </summary>
+      <.form for={@form} id="in-person-payment-form" phx-submit="record_in_person_payment" class="mt-3">
+        <fieldset aria-describedby="in-person-payment-help">
+          <div class="grid grid-cols-2 items-end gap-2 text-sm">
+            <.input
+              field={@form[:payment_method]}
+              type="select"
+              label={~t"How"}
+              class="select select-sm w-full"
+              options={in_person_method_options()}
+            />
+            <.input
+              field={@form[:amount]}
+              type="text"
+              inputmode="decimal"
+              label={~t"Amount (€)"}
+              class="input input-sm w-full tabular-nums"
+            />
+            <.button
+              type="submit"
+              variant="primary"
+              size="sm"
+              class="col-span-2"
+              data-confirm={
+                if @refund?,
+                  do: ~t"Record this refund? It can't be removed, only offset by recording the opposite amount.",
+                  else: ~t"Record this payment? It can't be removed, only offset by recording the opposite amount."
+              }
+            >
+              {if @refund?, do: ~t"Record refund", else: ~t"Record payment"}
+            </.button>
+          </div>
+          <p id="in-person-payment-help" class="text-base-content/65 mt-1.5 text-xs">
+            {~t"A minus amount records a refund. To correct a mistake, record the opposite amount."}
+          </p>
+        </fieldset>
+      </.form>
+    </details>
+    """
+  end
+
+  attr :order, :map, required: true
+  attr :form, :any, required: true
+  attr :locale, :string, required: true
+
+  # A cancelled order won't be made, so money taken in person goes back in person.
+  defp refund_in_person(assigns) do
+    ~H"""
+    <div id="order-refund-in-person" class="border-base-content/12 mt-4 border-t pt-4">
+      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
+        {~t"Paid in person"}
+        <span class="tabular-nums">{Format.currency(@order.in_person_paid, @locale)}</span>
+      </p>
+      <.in_person_payment form={@form} refund? />
     </div>
     """
   end
