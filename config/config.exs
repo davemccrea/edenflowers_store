@@ -63,6 +63,7 @@ config :edenflowers,
     Edenflowers.Fulfillment,
     Edenflowers.Pricing,
     Edenflowers.Courses,
+    Edenflowers.Payments,
     Edenflowers.Expenses
   ]
 

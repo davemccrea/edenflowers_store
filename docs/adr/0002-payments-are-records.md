@@ -8,3 +8,7 @@ An order can be paid more than once: a custom order paid later, a balance left b
 - A succeeded payment is always recorded, even for an order cancelled or already paid in person; it is reported as an error so Jennie refunds it.
 - Refunds made in the Stripe dashboard arrive through the `refund.created`/`refund.updated` webhooks, which the Stripe webhook endpoint must be subscribed to.
 - Sales revenue counts payments by when the money moved, not orders by when they were placed.
+
+## Amendment: course bookings
+
+Course bookings kept their money as fields on the registration, so online bookings didn't record when they were paid and course refunds weren't recorded at all. A `Payment` now belongs to either an order or a course registration, exactly one, enforced by a check constraint, and the resource lives in the `Payments` domain. Every payment and refund on a booking, through Stripe or in person, is a row like an order's, and a registration has a balance like an order's. Two foreign keys were chosen over a polymorphic reference so the database keeps cascades and joins honest.

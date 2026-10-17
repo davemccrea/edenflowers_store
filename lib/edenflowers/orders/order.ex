@@ -14,18 +14,6 @@ defmodule Edenflowers.Orders.Order.Origin do
   use Ash.Type.Enum, values: [:online, :custom, :subscription]
 end
 
-defmodule Edenflowers.Orders.Order.PaymentMethod do
-  @moduledoc """
-  How a paid order was paid. `:stripe` covers checkout and the payment link,
-  card or MobilePay alike. The rest are in-person payments Jennie records herself;
-  `:mobilepay` is her own MobilePay number, outside Stripe, and `:zervant` is an
-  invoice she sent from Zervant and was paid by bank transfer.
-  """
-  use Ash.Type.Enum, values: [:stripe, :zettle, :mobilepay, :cash, :zervant]
-
-  def in_person, do: [:zettle, :mobilepay, :cash, :zervant]
-end
-
 defmodule Edenflowers.Orders.Order do
   use Ash.Resource,
     domain: Edenflowers.Orders,
@@ -39,7 +27,7 @@ defmodule Edenflowers.Orders.Order do
   alias Edenflowers.Orders.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.Subscription
-  alias __MODULE__.PaymentMethod
+  alias Edenflowers.Payments.PaymentMethod
 
   @locales Edenflowers.Locales.all()
 
@@ -564,7 +552,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
-      change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change {Changes.AdjustStock, direction: :take, report_oversell?: true}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
@@ -688,7 +676,7 @@ defmodule Edenflowers.Orders.Order do
       # The link charges the balance, which this payment changes; visiting it
       # again opens a PaymentIntent for whatever is left.
       change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
-      change {Changes.RecordPayment, amount: :amount}
+      change {Edenflowers.Payments.Changes.RecordPayment, amount: :amount}
       change load(@admin_show_load)
       require_atomic? false
     end
@@ -711,7 +699,7 @@ defmodule Edenflowers.Orders.Order do
 
       # The receipt goes out again, showing the order as it now stands.
       change set_attribute(:receipt_emailed_at, nil)
-      change {Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
       change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
@@ -723,7 +711,7 @@ defmodule Edenflowers.Orders.Order do
     update :record_stripe_refund do
       argument :stripe_refund_id, :string, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
-      change {Changes.RecordPayment, method: :stripe, amount: :amount}
+      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount}
       require_atomic? false
     end
 
@@ -1058,7 +1046,7 @@ defmodule Edenflowers.Orders.Order do
     # The Subscription this order started or was created by.
     belongs_to :subscription, Edenflowers.Orders.Subscription
     has_many :line_items, Edenflowers.Orders.LineItem
-    has_many :payments, Edenflowers.Orders.Payment
+    has_many :payments, Edenflowers.Payments.Payment
   end
 
   calculations do

@@ -132,10 +132,10 @@ defmodule Generator do
     )
   end
 
-  @doc "Records money received for an order, as a Stripe payment unless `method:` says otherwise."
+  @doc "Records money received for an order or course booking, as a Stripe payment unless `method:` says otherwise."
   def payment(opts \\ []) do
     seed_generator(
-      %Edenflowers.Orders.Payment{amount: Decimal.new("10.00"), method: :stripe},
+      %Edenflowers.Payments.Payment{amount: Decimal.new("10.00"), method: :stripe},
       overrides: opts,
       authorize?: false
     )
