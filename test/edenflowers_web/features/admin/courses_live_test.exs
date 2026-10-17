@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   end
 
   test "a booking paid online isn't still to pay", %{conn: conn} do
-    registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+    registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
 
     generate(
       payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
@@ -137,7 +137,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   end
 
   test "links a Stripe booking to its payment in the Stripe dashboard", %{conn: conn} do
-    generate(course_registration(status: :confirmed, payment_intent_id: "pi_123"))
+    registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
+    generate(payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_123"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 

@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        load: [bookings: [:balance, :amount_paid, :in_person_paid, :seats_held]]
+        load: [bookings: [:payments, :balance, :amount_paid, :in_person_paid, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -335,9 +335,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 <.button type="submit" variant="neutral" size="sm">{~t"Mark paid"}</.button>
               </form>
               <.actions_menu id={"registration-actions-#{registration.id}"}>
-                <li :if={registration.payment_intent_id}>
+                <li :if={stripe_payment_intent_id(registration)}>
                   <.link
-                    href={StripeAPI.dashboard_payment_url(registration.payment_intent_id)}
+                    href={StripeAPI.dashboard_payment_url(stripe_payment_intent_id(registration))}
                     target="_blank"
                     rel="noopener"
                   >
@@ -454,6 +454,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   defp refundable_with_stripe?(registration),
     do: Decimal.negative?(registration.balance) and Decimal.positive?(stripe_paid(registration))
+
+  # A paid booking's PaymentIntent is on its Payment; a pending one's is still on the booking.
+  defp stripe_payment_intent_id(registration),
+    do: Enum.find_value(registration.payments, & &1.payment_intent_id) || registration.payment_intent_id
 
   defp stripe_paid(registration), do: Decimal.sub(registration.amount_paid, registration.in_person_paid)
 

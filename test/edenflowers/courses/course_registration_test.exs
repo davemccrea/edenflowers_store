@@ -203,13 +203,12 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
 
     test "an in-person refund can't hand back money paid through Stripe", %{admin: admin} do
-      registration = generate(course_registration(status: :confirmed, payment_intent_id: "pi_paid"))
+      registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))
 
       generate(
         payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
       )
 
-      Mox.stub(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
 
       assert {:error, _error} =
