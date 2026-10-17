@@ -496,7 +496,6 @@ today = Date.utc_today()
       # Already emailed, otherwise the SendConfirmationEmail trigger emails every
       # seeded booking — for real on staging.
       confirmation_emailed_at: if(status == :confirmed, do: DateTime.utc_now()),
-      paid_at: if(paid_via == :direct_paid, do: DateTime.utc_now()),
       # A pending registration with a fake PaymentIntent makes the ReconcilePayment
       # cron fail against Stripe, so it stays an abandoned checkout instead.
       payment_intent_id:
@@ -515,6 +514,15 @@ today = Date.utc_today()
       payment_method_type: "card",
       card_brand: "mastercard",
       card_last4: "4444"
+    })
+  end
+
+  if paid_via == :direct_paid do
+    Ash.Seed.seed!(Payment, %{
+      course_registration_id: registration.id,
+      amount: registration.amount,
+      method: :cash,
+      payment_method_type: "cash"
     })
   end
 end)

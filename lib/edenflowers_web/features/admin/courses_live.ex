@@ -8,6 +8,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Payments.PaymentMethod
+  alias EdenflowersWeb.Admin.OrderLog
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -56,12 +58,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   @impl true
-  def handle_event("mark_paid", %{"id" => id}, socket) do
+  def handle_event("mark_paid", %{"registration_id" => id, "payment_method" => payment_method}, socket) do
     actor = socket.assigns.current_user
 
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.mark_registration_paid(registration, actor: actor) do
+           {:ok, _} <- Courses.mark_registration_paid(registration, payment_method, actor: actor) do
         put_flash(socket, :info, ~t"Booking marked as paid.")
       else
         _ -> put_flash(socket, :error, ~t"Could not mark the booking as paid.")
@@ -102,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     courses =
       Courses.list_upcoming_courses!(
         actor: socket.assigns.current_user,
-        load: [bookings: [:pays_at_course?, :seats_held]]
+        load: [bookings: [:balance, :seats_held]]
       )
 
     assign(socket, :courses, courses)
@@ -151,7 +153,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       |> assign(:cancelled, cancelled)
       |> assign(:registrations, registrations)
       |> assign(:seats, Enum.sum_by(registrations, & &1.seats_held))
-      |> assign(:still_to_pay, Enum.count(registrations, & &1.pays_at_course?))
+      |> assign(:still_to_pay, Enum.count(registrations, &owes?/1))
       |> assign(:bcc, registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(","))
 
     ~H"""
@@ -260,7 +262,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
                   +{registration.seats_held - 1}
                 </span>
-                <.badge :if={registration.pays_at_course?} tone={:warning} class="ml-1 align-middle">
+                <.badge :if={owes?(registration)} tone={:warning} class="ml-1 align-middle">
                   {~t"Pays at course"}
                 </.badge>
               </p>
@@ -275,16 +277,23 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             </div>
             <div class="flex shrink-0 items-center gap-1">
               <%!-- Mark paid stays out of the menu: it's what the florist taps at the course itself. --%>
-              <.button
-                :if={registration.pays_at_course?}
-                type="button"
-                phx-click="mark_paid"
-                phx-value-id={registration.id}
-                variant="neutral"
-                size="sm"
+              <form
+                :if={owes?(registration)}
+                id={"mark-paid-#{registration.id}"}
+                phx-submit="mark_paid"
+                class="flex items-center gap-1"
               >
-                {~t"Mark paid"}
-              </.button>
+                <input type="hidden" name="registration_id" value={registration.id} />
+                <label for={"mark-paid-method-#{registration.id}"} class="sr-only">{~t"How"}</label>
+                <select
+                  id={"mark-paid-method-#{registration.id}"}
+                  name="payment_method"
+                  class="select select-sm w-auto"
+                >
+                  {Phoenix.HTML.Form.options_for_select(in_person_method_options(), :zettle)}
+                </select>
+                <.button type="submit" variant="neutral" size="sm">{~t"Mark paid"}</.button>
+              </form>
               <.actions_menu id={"registration-actions-#{registration.id}"}>
                 <li :if={registration.payment_intent_id}>
                   <.link
@@ -327,6 +336,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       </div>
     </details>
     """
+  end
+
+  defp owes?(registration), do: Decimal.positive?(registration.balance)
+
+  defp in_person_method_options do
+    Enum.map(PaymentMethod.in_person(), &{OrderLog.payment_method_label(&1), &1})
   end
 
   # Manual bookings never reach Stripe, so they have no payment intent.

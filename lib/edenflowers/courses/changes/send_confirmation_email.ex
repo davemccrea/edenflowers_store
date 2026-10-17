@@ -28,14 +28,20 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
     end)
   end
 
+  defp deliver(registration) do
+    if Decimal.positive?(registration.balance),
+      do: deliver_without_receipt(registration),
+      else: deliver_with_receipt(registration)
+  end
+
   # Nothing has been paid yet, so there is no receipt to send.
-  defp deliver(%{pays_at_course?: true} = registration) do
+  defp deliver_without_receipt(registration) do
     with {:ok, _result} <- registration |> Email.course_confirmation() |> Mailer.deliver() do
       {:ok, %{}}
     end
   end
 
-  defp deliver(registration) do
+  defp deliver_with_receipt(registration) do
     with {:ok, pdf} <- Receipt.generate(registration),
          {:ok, _result} <-
            registration
@@ -48,7 +54,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :pays_at_course?], actor: system_actor())
+    |> Ash.load!([:course, :payments, :first_name, :balance], actor: system_actor())
     |> translate_course()
   end
 
