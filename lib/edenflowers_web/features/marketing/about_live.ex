@@ -15,16 +15,14 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
           <div class="text-base-content/80 flex max-w-2xl flex-col gap-6 text-lg leading-relaxed">
             <h1 class="page-title text-base-content mb-4">{~t"About"}</h1>
             <p>
-              {~t"Hi, I'm Jennie! I've run Eden Flowers in Vaasa since 2018. You'll find the shop in Minimossen, the recycling mall at Myrvägen 1."}
+              {~t"Hi, I'm Jennie! I've run Eden Flowers in Vaasa since January 2019. I have a small shop in Minimossen, the recycling mall at Myrvägen 1. There you'll find my popular pick-up bouquets, trendy houseplants, and second-hand pots and vases."}
             </p>
             <p>
-              {~t"Drop by for ready-made bouquets, houseplants, and second-hand pots and vases. For anything made to order,"}
-              <.link navigate={~p"/contact"} class="link-underline-static-body">{~t"get in touch"}</.link>.
-            </p>
-            <p>
-              {~t"I make flowers for every occasion: christenings, weddings, funerals and everything in between. Whether it's for your own home or for a friend, ordering should be easy, so"}
-              <.link navigate={~p"/store"} class="link-underline-static-body">{~t"order online"}</.link>
-              {~t"or just pop in."}
+              {~t"I make flowers for every occasion: christenings, weddings, funerals and everything in between."}
+              <.link navigate={~p"/store"} class="link-underline-static-body">{~t"Order easily online"}</.link>
+              {~t"or"}
+              <.link navigate={~p"/contact"} class="link-underline-static-body">{~t"get in touch"}</.link>
+              {~t"for a more specific order."}
             </p>
           </div>
 

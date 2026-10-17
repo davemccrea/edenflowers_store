@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
-            {~t"Flowers for everyday moments"}
+            {~t"Flowers for every stage of life"}
           </h1>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.button
@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Made in Minimossen"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Every arrangement is made fresh to order, and delivery is free within 5 km of Minimossen."}
+              {~t"Every arrangement is made with fresh cut flowers, and delivery is free within 5 km of Minimossen."}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </div>
           <%!-- Stands in for a condolences tile until there is a real photograph of funeral work. --%>
           <p class="tile-title text-balance mt-12 max-w-2xl">
-            {~t"Ordering for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."}
+            {~t"Would you like to order flowers for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."}
             <.link navigate={~p"/condolences"} class="link-underline-static-body whitespace-nowrap">
               {~t"Funeral flowers"}
             </.link>
