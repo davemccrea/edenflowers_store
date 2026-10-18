@@ -13,14 +13,22 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias Edenflowers.Orders
   alias Edenflowers.Payments
 
-  def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method}, actor) do
-    amount = String.replace(amount, ",", ".")
+  def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
+    input = %{
+      amount: String.replace(amount, ",", "."),
+      payment_method: payment_method,
+      email_receipt?: params["email_receipt"] == "true"
+    }
 
-    case Ash.update(payable, %{amount: amount, payment_method: payment_method}, action: :record_payment, actor: actor) do
-      {:ok, _payable} -> {:info, ~t"Payment recorded."}
+    case Ash.update(payable, input, action: :record_payment, actor: actor) do
+      {:ok, payable} -> recorded_message(payable.__metadata__[:receipt_emailed?])
       {:error, error} -> {:error, payment_error(error)}
     end
   end
+
+  defp recorded_message(true), do: {:info, ~t"Payment recorded and receipt emailed."}
+  defp recorded_message(false), do: {:error, ~t"Payment recorded, but the receipt could not be emailed."}
+  defp recorded_message(nil), do: {:info, ~t"Payment recorded."}
 
   def undo_payment(payable, payment_id, actor) do
     case Ash.update(payable, %{payment_id: payment_id}, action: :undo_payment, actor: actor) do

@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   import Generator
   import Mox
   import Phoenix.LiveViewTest
+  import Swoosh.TestAssertions
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
@@ -98,6 +99,23 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
   defp balance(record), do: Ash.load!(record, :balance, authorize?: false, reuse_values?: false).balance
 
+  defp receipt_checkbox(:order, _order), do: ~s|#order-balance-email-receipt[checked]|
+
+  defp receipt_checkbox(:booking, registration),
+    do: ~s|#mark-paid-#{registration.id} input[type=checkbox][name=email_receipt][checked]|
+
+  defp record_cash_payment(view, :order, _order, email_receipt),
+    do:
+      view
+      |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt: email_receipt})
+      |> render_submit()
+
+  defp record_cash_payment(view, :booking, registration, email_receipt) do
+    view
+    |> form("#mark-paid-#{registration.id}", payment_method: "cash", email_receipt: email_receipt)
+    |> render_submit()
+  end
+
   for parent <- [:order, :booking] do
     describe "#{parent}" do
       @parent parent
@@ -109,6 +127,27 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         assert has_element?(view, panel, "To refund €88.50")
         assert has_element?(view, stripe_refund_button(@parent, record), "Refund with Stripe")
         assert has_element?(view, record_refund_button(@parent, record))
+      end
+
+      test "the payment that settles it emails a receipt, ticked by default", %{conn: conn} do
+        record = build(@parent)
+        {view, _panel} = open(conn, @parent, record)
+
+        assert has_element?(view, receipt_checkbox(@parent, record))
+        assert record_cash_payment(view, @parent, record, "true") =~ "Payment recorded and receipt emailed."
+
+        assert Decimal.eq?(balance(record), 0)
+        assert_email_sent(fn email -> assert [%{content_type: "application/pdf"}] = email.attachments end)
+      end
+
+      test "unticked, the payment that settles it sends nothing", %{conn: conn} do
+        record = build(@parent)
+        {view, _panel} = open(conn, @parent, record)
+
+        assert record_cash_payment(view, @parent, record, "false") =~ "Payment recorded."
+
+        assert Decimal.eq?(balance(record), 0)
+        assert_no_email_sent()
       end
 
       test "a settled one has nothing to settle", %{conn: conn} do
@@ -195,6 +234,20 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
              "That&#39;s more than is owed back"
 
     assert Decimal.equal?(balance(order), "-88.50")
+  end
+
+  test "an order part payment doesn't offer a receipt", %{conn: conn} do
+    order = build(:order)
+    {view, panel} = open(conn, :order, order)
+
+    assert has_element?(view, receipt_checkbox(:order, order))
+    view |> form("#{panel}-form", payment: %{amount: "50,00"}) |> render_change()
+    refute has_element?(view, "#order-balance-email-receipt")
+
+    view |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash"}) |> render_submit()
+
+    assert Decimal.equal?(balance(order), "38.50")
+    assert_no_email_sent()
   end
 
   test "an order payment above the balance says why and records nothing", %{conn: conn} do

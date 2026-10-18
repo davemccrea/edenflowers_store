@@ -360,23 +360,29 @@ defmodule EdenflowersWeb.Admin.Components do
     doc: "an order or booking, with `balance`, `settled?`, `outside_stripe_refund` and `stripe_refund` loaded"
 
   attr :locale, :string, required: true
+  attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
+  attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
   attr :class, :any, default: nil
   slot :inner_block, doc: "more ways to settle it, like the order page's payment link"
 
   @doc """
   What's still owed on an order or booking, and how to settle it. Hidden once
   settled. Sends `record_payment` with `payment` params and the record's id as
-  `record_id`, and `refund_with_stripe` with it as `id`.
+  `record_id`, `change_payment` with `payment` params as the form is filled
+  in, and `refund_with_stripe` with the record's id as `id`.
   """
   def balance_panel(%{record: %{settled?: true}} = assigns) do
     ~H""
   end
 
   def balance_panel(assigns) do
+    form = balance_form(assigns.record, assigns.params)
+
     assigns =
       assigns
       |> assign(:collect?, Decimal.positive?(assigns.record.balance))
-      |> assign(:form, balance_form(assigns.record))
+      |> assign(:form, form)
+      |> assign(:settles?, settles?(assigns.record, form[:amount].value))
 
     ~H"""
     <div id={@id} class={["border-warning/40 border-t pt-4", @class]}>
@@ -416,7 +422,7 @@ defmodule EdenflowersWeb.Admin.Components do
             class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
           />
         </summary>
-        <.form for={@form} id={"#{@id}-form"} phx-submit="record_payment" class="mt-3">
+        <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="mt-3">
           <input type="hidden" name="record_id" value={@record.id} />
           <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"}>
             <div class="grid grid-cols-2 items-end gap-2 text-sm">
@@ -436,6 +442,14 @@ defmodule EdenflowersWeb.Admin.Components do
                 label={~t"Amount (€)"}
                 class="input input-sm w-full tabular-nums"
               />
+              <div :if={@collect? and @settles? and @receipt_email?} class="col-span-2">
+                <.input
+                  field={@form[:email_receipt]}
+                  id={"#{@id}-email-receipt"}
+                  type="checkbox"
+                  label={~t"Email a receipt"}
+                />
+              </div>
               <.button
                 type="submit"
                 variant="primary"
@@ -460,13 +474,22 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  defp balance_form(record) do
+  defp balance_form(record, params) do
     amount =
       if Decimal.positive?(record.balance),
         do: record.balance,
         else: Decimal.negate(record.outside_stripe_refund)
 
-    to_form(%{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal)}, as: :payment)
+    %{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal), "email_receipt" => "true"}
+    |> Map.merge(params)
+    |> to_form(as: :payment)
+  end
+
+  defp settles?(record, amount) do
+    case Decimal.parse(String.replace(amount, ",", ".")) do
+      {amount, ""} -> Decimal.eq?(amount, record.balance)
+      _ -> false
+    end
   end
 
   @doc "Every way Jennie records money herself; Stripe records its own."

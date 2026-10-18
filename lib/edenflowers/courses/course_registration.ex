@@ -219,6 +219,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
       change Changes.SendConfirmationEmail
     end
+
+    # The confirmation again, now with the receipt, when Jennie records the
+    # payment that settles the booking, even if she chose not to email the
+    # customer when she added it.
+    update :email_receipt do
+      accept []
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      change set_attribute(:skip_confirmation_email, false)
+      transaction? false
+      require_atomic? false
+      change Changes.SendConfirmationEmail
+    end
   end
 
   policies do

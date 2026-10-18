@@ -274,7 +274,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </div>
               </dl>
 
-              <.balance_panel id="order-balance" record={@order} locale={@locale} class="mt-4">
+              <.balance_panel
+                id="order-balance"
+                record={@order}
+                locale={@locale}
+                params={@payment_params}
+                receipt_email?={!!@order.customer_email}
+                class="mt-4"
+              >
                 <.payment_link_buttons :if={Decimal.positive?(@order.balance)} order={@order} locale={@locale} />
               </.balance_panel>
               <.payment_link
@@ -483,6 +490,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  def handle_event("change_payment", %{"payment" => params}, socket) do
+    {:noreply, assign(socket, :payment_params, params)}
+  end
+
   def handle_event("record_payment", %{"payment" => params}, socket) do
     result = PaymentActions.record_payment(socket.assigns.order, params, socket.assigns.current_user)
     {:noreply, flash_payment_result(socket, result)}
@@ -544,13 +555,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, flash_payment_result(socket, PaymentActions.refund_with_stripe(socket.assigns.order))}
   end
 
-  defp flash_payment_result(socket, {:info, message}) do
+  # Reloads on an error too: a payment can be recorded while its receipt failed to send.
+  defp flash_payment_result(socket, {kind, message}) do
     socket
     |> assign_order(reload(socket.assigns.order, socket))
-    |> put_flash(:info, message)
+    |> put_flash(kind, message)
   end
-
-  defp flash_payment_result(socket, {:error, message}), do: put_flash(socket, :error, message)
 
   defp mark_fulfilled(socket, attrs) do
     case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
@@ -574,6 +584,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
+    |> assign(:payment_params, %{})
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
