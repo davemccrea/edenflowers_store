@@ -5,11 +5,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Layouts
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Format
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Format
+  alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

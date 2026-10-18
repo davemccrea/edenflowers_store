@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   import Generator
   import Mox
 
+  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Orders
 
   setup :verify_on_exit!
@@ -138,7 +139,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> AshAuthentication.Plug.Helpers.store_in_session(user)
+        |> Helpers.store_in_session(user)
         |> live(~p"/checkout")
 
       assert render(view) =~ ~s|data-customer-session-client-secret="cuss_ada"|
@@ -159,7 +160,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> Helpers.store_in_session(user)
       |> visit("/checkout")
       |> assert_has("[data-testid=customer-name-input]", value: "Ada Lovelace")
       |> assert_has("[data-testid=customer-email-input]", value: "ada@example.com")
@@ -308,7 +309,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> Helpers.store_in_session(user)
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='account-note']")
@@ -319,7 +320,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> Helpers.store_in_session(user)
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
@@ -330,7 +331,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> Helpers.store_in_session(user)
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> assert_has("[data-testid='newsletter-opt-in-checkbox']")

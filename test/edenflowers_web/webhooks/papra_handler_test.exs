@@ -4,6 +4,8 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
   import ExUnit.CaptureLog
   import Mox
 
+  alias EdenflowersWeb.Webhooks.PapraHandler
+
   setup :verify_on_exit!
 
   setup do
@@ -14,7 +16,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
   describe "document:tag:added with receipt tag" do
     test "records an import and enqueues its processing trigger" do
       assert :ok =
-               EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+               PapraHandler.handle_event(%{
                  "type" => "document:tag:added",
                  "data" => %{
                    "documentId" => "doc_abc123",
@@ -36,8 +38,8 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
         }
       }
 
-      assert :ok = EdenflowersWeb.Webhooks.PapraHandler.handle_event(event)
-      assert :ok = EdenflowersWeb.Webhooks.PapraHandler.handle_event(event)
+      assert :ok = PapraHandler.handle_event(event)
+      assert :ok = PapraHandler.handle_event(event)
 
       assert [_single_job] =
                all_enqueued(worker: Edenflowers.Expenses.Workers.Process)
@@ -46,7 +48,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
     test "returns :error when documentId is missing" do
       capture_log(fn ->
         assert :error =
-                 EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+                 PapraHandler.handle_event(%{
                    "type" => "document:tag:added",
                    "data" => %{"organizationId" => "org_xyz456", "tagName" => "receipt"}
                  })
@@ -58,7 +60,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
     test "returns :error when organizationId is missing" do
       capture_log(fn ->
         assert :error =
-                 EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+                 PapraHandler.handle_event(%{
                    "type" => "document:tag:added",
                    "data" => %{"documentId" => "doc_abc123", "tagName" => "receipt"}
                  })
@@ -71,7 +73,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
   describe "document:tag:added with other tags" do
     test "ignores tags that are not receipt" do
       assert :ok =
-               EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+               PapraHandler.handle_event(%{
                  "type" => "document:tag:added",
                  "data" => %{
                    "documentId" => "doc_abc123",
@@ -87,7 +89,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
   describe "unhandled events" do
     test "returns :ok for document:created" do
       assert :ok =
-               EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+               PapraHandler.handle_event(%{
                  "type" => "document:created",
                  "data" => %{
                    "documentId" => "doc_abc123",
@@ -100,7 +102,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
 
     test "returns :ok for unrecognised event types" do
       assert :ok =
-               EdenflowersWeb.Webhooks.PapraHandler.handle_event(%{
+               PapraHandler.handle_event(%{
                  "type" => "document:deleted",
                  "data" => %{}
                })

@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.Components do
   use EdenflowersWeb, :html
 
+  alias EdenflowersWeb.Admin.OrderLog
+
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
 
@@ -471,13 +473,13 @@ defmodule EdenflowersWeb.Admin.Components do
   def payment_method_options do
     Edenflowers.Payments.PaymentMethod.values()
     |> List.delete(:stripe)
-    |> Enum.map(&{EdenflowersWeb.Admin.OrderLog.payment_method_label(&1), &1})
+    |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 
   @doc "Asks before undoing a payment Jennie recorded, naming it."
   def undo_confirmation(payment, locale) do
     amount = Edenflowers.Format.currency(Decimal.abs(payment.amount), locale)
-    how = EdenflowersWeb.Admin.OrderLog.payment_method_label(payment.method)
+    how = OrderLog.payment_method_label(payment.method)
 
     if Decimal.negative?(payment.amount),
       do: ~t"Undo the #{amount} refund by #{how}? This records the opposite amount.",

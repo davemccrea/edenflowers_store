@@ -34,8 +34,10 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.Errors.AlreadyPaid
+  alias Edenflowers.Payments.Errors.AmountMismatch
+  alias Edenflowers.Payments.Errors.PaymentIntentMismatch
   alias Edenflowers.Payments.Payment
-  alias Edenflowers.Payments.Errors.{AlreadyPaid, AmountMismatch, PaymentIntentMismatch}
 
   @metadata_keys ["order_id", "course_registration_id"]
 

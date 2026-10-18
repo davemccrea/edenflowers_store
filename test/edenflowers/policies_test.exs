@@ -5,18 +5,21 @@ defmodule Edenflowers.PoliciesTest do
   guests and for signed-in customers.
   """
   use Edenflowers.DataCase, async: true
-  import Generator
   require Ash.Query
+  import Generator
 
   alias Edenflowers.Courses.Course
 
   alias Edenflowers.Orders
 
-  alias Edenflowers.Catalog.{Product, ProductCategory, ProductVariant}
+  alias Edenflowers.Catalog.Product
+  alias Edenflowers.Catalog.ProductCategory
+  alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Payments.Payment
-  alias Edenflowers.Fulfillment.{FulfillmentOption}
-  alias Edenflowers.Pricing.{Promotion, TaxRate}
+  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Pricing.TaxRate
 
   setup do
     {:ok, customer: generate(admin_user(admin: false))}

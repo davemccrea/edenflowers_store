@@ -6,6 +6,9 @@ defmodule EdenflowersWeb.Checkout.Fields do
 
   @checkout_states Order.checkout_states()
 
+  # Stripe's `card.brand` values we have a logo for in priv/static/images/cards.
+  @card_logos %{"visa" => "Visa", "mastercard" => "Mastercard", "amex" => "American Express"}
+
   attr :state, :atom, required: true
   attr :order, :map, required: true
   slot :inner_block
@@ -154,9 +157,6 @@ defmodule EdenflowersWeb.Checkout.Fields do
   def card_label(%{card_brand: brand, card_last4: last4} = card) do
     ~t"#{brand = String.capitalize(brand)} •••• #{last4 = last4}, expires #{expiry = card_expiry(card)}"
   end
-
-  # Stripe's `card.brand` values we have a logo for in priv/static/images/cards.
-  @card_logos %{"visa" => "Visa", "mastercard" => "Mastercard", "amex" => "American Express"}
 
   @doc "The saved card with its network's logo, or `card_label/1` for a brand without one."
   attr :card, :map, required: true

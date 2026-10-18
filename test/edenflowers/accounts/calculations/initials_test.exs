@@ -1,8 +1,8 @@
 defmodule Edenflowers.Accounts.Calculations.InitialsTest do
   use Edenflowers.DataCase, async: true
 
-  alias Edenflowers.Accounts.Calculations.Initials
   alias Edenflowers.Accounts
+  alias Edenflowers.Accounts.Calculations.Initials
 
   describe "calculate/3 extraction" do
     test "uses first and last initials for a regular full name" do

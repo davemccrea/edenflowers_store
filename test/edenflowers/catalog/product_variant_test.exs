@@ -1,8 +1,8 @@
 defmodule Edenflowers.Catalog.ProductVariantTest do
   use Edenflowers.DataCase, async: true
   import Generator
-  alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Catalog
+  alias Edenflowers.Catalog.ProductVariant
 
   setup do
     tax_rate = generate(tax_rate())

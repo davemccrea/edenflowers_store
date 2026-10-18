@@ -13,8 +13,8 @@ defmodule Edenflowers.Orders.Changes.ResetCheckout do
 
   require Ash.Query
 
-  alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Changes.ClearDeliveryFields
+  alias Edenflowers.Orders.LineItem
 
   @reset_attrs Map.merge(Map.from_keys(ClearDeliveryFields.fields(), nil), %{
                  customer_name: nil,

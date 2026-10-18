@@ -4,11 +4,14 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Layouts
+  alias Edenflowers.Format
+  alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Admin.DefaultTableView
   alias EdenflowersWeb.Checkout.Fields
-  alias Edenflowers.Orders.Subscription
-  alias Edenflowers.Format
+  alias EdenflowersWeb.Layouts
+
+  # The subscriptions still being delivered, or about to be once their payment is fixed.
+  @default_view %{"state" => "active,payment_failed"}
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -19,9 +22,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
      |> assign(:page_title, ~t"Subscriptions")
      |> assign(:locale, Localize.get_locale())}
   end
-
-  # The subscriptions still being delivered, or about to be once their payment is fixed.
-  @default_view %{"state" => "active,payment_failed"}
 
   @impl true
   def handle_params(params, uri, socket) do

@@ -1,9 +1,9 @@
 defmodule EdenflowersWeb.Admin.CustomerDetailLive do
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Components
-
   require Ash.Query
+
+  import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Accounts
   alias Edenflowers.Accounts.User

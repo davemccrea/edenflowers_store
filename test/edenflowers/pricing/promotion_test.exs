@@ -1,8 +1,9 @@
 defmodule Edenflowers.Pricing.PromotionTest do
-  alias Edenflowers.Pricing
-  alias Edenflowers.Orders
-  alias Edenflowers.Pricing.Promotion
   use Edenflowers.DataCase, async: true
+
+  alias Edenflowers.Orders
+  alias Edenflowers.Pricing
+  alias Edenflowers.Pricing.Promotion
 
   describe "Promotion Resource" do
     test "creates a promotion" do

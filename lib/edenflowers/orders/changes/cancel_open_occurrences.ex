@@ -5,7 +5,8 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
 
   alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{Order, Subscription}
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Subscription
 
   @impl true
   def change(changeset, _opts, _context) do

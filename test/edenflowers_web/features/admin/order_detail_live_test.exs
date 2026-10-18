@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   import Phoenix.LiveViewTest
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
   setup %{conn: conn} do
@@ -206,7 +207,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     order = placed_order()
     generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_missed_refund"))
 
-    Mox.expect(Edenflowers.External.StripeAPI.Mock, :list_refunds, 2, fn "pi_missed_refund" ->
+    Mox.expect(StripeAPI.Mock, :list_refunds, 2, fn "pi_missed_refund" ->
       {:ok, [%{id: "re_missed", payment_intent: "pi_missed_refund", amount: 1000, status: "succeeded"}]}
     end)
 
@@ -241,10 +242,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     )
 
     balance = Orders.get_order_for_admin!(order.id, authorize?: false).balance
-    to_refund = Edenflowers.External.StripeAPI.to_stripe_amount(Decimal.abs(balance))
+    to_refund = StripeAPI.to_stripe_amount(Decimal.abs(balance))
     test_pid = self()
 
-    Edenflowers.External.StripeAPI.Mock
+    StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn
       "pi_new" -> {:ok, [%{id: "re_pending", amount: 1000, status: "pending"}]}
       "pi_old" -> {:ok, []}
@@ -270,7 +271,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     test_pid = self()
 
     # Stripe hasn't listed the first refund yet when the second click arrives.
-    Edenflowers.External.StripeAPI.Mock
+    StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
     |> Mox.expect(:create_refund, 2, fn "pi_paid", cents, key ->
       send(test_pid, {:refund_key, key})
@@ -309,7 +310,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       )
     )
 
-    Edenflowers.External.StripeAPI.Mock
+    StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn _payment_intent_id -> {:ok, []} end)
     |> Mox.expect(:create_refund, fn "pi_new", cents, _key ->
       {:ok, %{id: "re_pi_new", payment_intent: "pi_new", amount: cents, status: "succeeded"}}
@@ -335,9 +336,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     generate(payment(order_id: order.id, amount: Decimal.new("500.00"), payment_intent_id: "pi_paid"))
 
     balance = Orders.get_order_for_admin!(order.id, authorize?: false).balance
-    pending = Edenflowers.External.StripeAPI.to_stripe_amount(Decimal.abs(balance)) - 1000
+    pending = StripeAPI.to_stripe_amount(Decimal.abs(balance)) - 1000
 
-    Edenflowers.External.StripeAPI.Mock
+    StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn "pi_paid" ->
       {:ok,
        [

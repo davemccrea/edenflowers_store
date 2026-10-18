@@ -15,7 +15,9 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.{FulfillmentOption, KeyDates, Weekday}
+  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment.KeyDates
+  alias Edenflowers.Fulfillment.Weekday
 
   @impl true
   def change(changeset, _opts, _context) do

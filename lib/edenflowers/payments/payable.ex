@@ -12,7 +12,8 @@ defmodule Edenflowers.Payments.Payable do
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 
-  alias Edenflowers.Payments.{Changes, Validations}
+  alias Edenflowers.Payments.Changes
+  alias Edenflowers.Payments.Validations
 
   actions do
     # Money Jennie took or handed back by any method except Stripe.

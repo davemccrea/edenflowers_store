@@ -4,8 +4,9 @@ defmodule Edenflowers.Email do
   `Edenflowers.Email.Templates`; subjects are localised per the order's locale.
   """
 
-  import Swoosh.Email
   use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  import Swoosh.Email
 
   alias Edenflowers.Email.Templates
   alias Edenflowers.Format

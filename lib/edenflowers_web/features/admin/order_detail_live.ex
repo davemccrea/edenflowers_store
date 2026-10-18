@@ -5,12 +5,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias EdenflowersWeb.Admin.OrderLog
   alias Edenflowers.PhoneNumber
-  alias Edenflowers.External.StripeAPI
+  alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}

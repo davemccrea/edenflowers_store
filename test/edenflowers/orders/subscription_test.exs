@@ -8,9 +8,12 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{LineItem, Order, Subscription}
+  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Schedulers.StartSubscription, as: ScheduleStartSubscription
-  alias Edenflowers.Orders.Workers.{SendSubscriptionSetupEmail, StartSubscription}
+  alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
+  alias Edenflowers.Orders.Workers.StartSubscription
   alias Edenflowers.Payments
 
   setup :verify_on_exit!

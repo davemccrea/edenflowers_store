@@ -10,7 +10,9 @@ defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmail do
 
   require Logger
 
-  alias Edenflowers.{Email, Mailer, Repo}
+  alias Edenflowers.Email
+  alias Edenflowers.Mailer
+  alias Edenflowers.Repo
 
   @events [[:error_tracker, :error, :new], [:error_tracker, :error, :unresolved]]
 

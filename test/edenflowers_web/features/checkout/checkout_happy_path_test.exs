@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Webhooks.StripeHandler
 
   @moduletag :typst
 
@@ -104,7 +105,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     # Simulate Stripe firing payment_intent.succeeded — this finalizes the
     # order and enqueues the confirmation email Oban job.
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
+             StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     assert finalized.state == :placed
@@ -195,7 +196,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
+             StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized =
       Orders.get_order_by_id!(order.id, authorize?: false)
@@ -281,7 +282,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
+             StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
 
@@ -359,7 +360,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit()
 
     assert :ok =
-             EdenflowersWeb.Webhooks.StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
+             StripeHandler.handle_event(payment_intent_succeeded_event(order.id))
 
     finalized =
       Orders.get_order_by_id!(order.id, authorize?: false)

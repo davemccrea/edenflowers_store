@@ -11,9 +11,6 @@ defmodule Edenflowers.Fulfillment.KeyDates do
 
   alias Edenflowers.Fulfillment.Weekday
 
-  @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
-  @type key_date :: %{date: Date.t(), key: atom()}
-
   # Presentation (labels, artwork) lives in `EdenflowersWeb.KeyDateIcon`.
   @key_dates [
     %{key: :valentines_day, rule: {:fixed, 2, 14}},
@@ -21,6 +18,9 @@ defmodule Edenflowers.Fulfillment.KeyDates do
     %{key: :mothers_day, rule: {:nth_weekday, 5, :sunday, 2}},
     %{key: :fathers_day, rule: {:nth_weekday, 11, :sunday, 2}}
   ]
+
+  @typedoc "A florist key date materialised for a specific year — the shape returned by `for_year/1`."
+  @type key_date :: %{date: Date.t(), key: atom()}
 
   @spec for_year(integer()) :: [key_date()]
   def for_year(year) do

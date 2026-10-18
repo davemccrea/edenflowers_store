@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Webhooks.StripeHandler
 
   setup do
     order = order_in_payment()
@@ -22,7 +23,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "stores the new card and returns a held subscription to active", %{order: order} do
       subscription = generate(subscription(user_id: order.user_id, state: :payment_failed))
 
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(subscription))
+      assert :ok = StripeHandler.handle_event(setup_intent_succeeded(subscription))
 
       assert %{state: :active, stripe_payment_method_id: "pm_new"} = Ash.reload!(subscription, authorize?: false)
     end
@@ -31,7 +32,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "acknowledges a card saved to a cancelled subscription, so Stripe stops retrying", %{order: order} do
       subscription = generate(subscription(user_id: order.user_id, state: :cancelled))
 
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(subscription))
+      assert :ok = StripeHandler.handle_event(setup_intent_succeeded(subscription))
 
       assert %{state: :cancelled, stripe_payment_method_id: "pm_card"} = Ash.reload!(subscription, authorize?: false)
     end
@@ -40,7 +41,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "asks Stripe to retry when the card can't be saved for another reason" do
       missing_subscription = %{id: Ecto.UUID.generate()}
 
-      assert :error = EdenflowersWeb.Webhooks.StripeHandler.handle_event(setup_intent_succeeded(missing_subscription))
+      assert :error = StripeHandler.handle_event(setup_intent_succeeded(missing_subscription))
     end
 
     defp setup_intent_succeeded(subscription) do
@@ -65,7 +66,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       expected_amount: expected_amount
     } do
       assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+               StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_succeeded_1",
                  type: "payment_intent.succeeded",
                  data: %{
@@ -104,11 +105,11 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       }
 
       # First delivery — finalizes + enqueues.
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
+      assert :ok = StripeHandler.handle_event(event)
       # Stripe redelivers the same event after we've already processed it. The
       # handler must still return :ok so Stripe stops retrying, and the receipt_emailed_at
       # guard in the worker prevents a duplicate send.
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(event)
+      assert :ok = StripeHandler.handle_event(event)
 
       order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
       assert order.state == :placed
@@ -124,7 +125,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       log =
         capture_log(fn ->
           assert :ok =
-                   EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                   StripeHandler.handle_event(%Stripe.Event{
                      id: "evt_amount_mismatch",
                      type: "payment_intent.succeeded",
                      data: %{
@@ -155,7 +156,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       log =
         capture_log(fn ->
           assert :ok =
-                   EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                   StripeHandler.handle_event(%Stripe.Event{
                      id: "evt_pi_mismatch",
                      type: "payment_intent.succeeded",
                      data: %{
@@ -179,7 +180,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "returns :ok when metadata.order_id is missing (permanent failure, stop retries)", %{order: order} do
       capture_log(fn ->
         assert :ok =
-                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_no_metadata",
                    type: "payment_intent.succeeded",
                    data: %{object: %{id: order.payment_intent_id, metadata: %{}}}
@@ -198,7 +199,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       for metadata <- [%{"order_id" => order.id}, %{"course_registration_id" => registration.id}] do
         assert :ok =
-                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_failed",
                    type: "payment_intent.payment_failed",
                    data: %{object: %{id: "pi_failed", metadata: metadata}}
@@ -217,7 +218,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   describe "payment_intent.canceled" do
     test "clears the canceled intent so the order can open a fresh one", %{order: order} do
       assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+               StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_canceled_1",
                  type: "payment_intent.canceled",
                  data: %{object: %{id: order.payment_intent_id, metadata: %{"order_id" => order.id}}}
@@ -234,7 +235,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "returns :ok for an unhandled event type" do
       capture_log(fn ->
         assert :ok =
-                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+                 StripeHandler.handle_event(%Stripe.Event{
                    id: "evt_random",
                    type: "invoice.paid",
                    data: %{object: %{}}
@@ -249,7 +250,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     defp link_succeeded(order, amount_received) do
-      EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+      StripeHandler.handle_event(%Stripe.Event{
         id: "evt_link_succeeded",
         type: "payment_intent.succeeded",
         data: %{
@@ -296,7 +297,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       payment_intent_id = order.payment_intent_id
 
       assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+               StripeHandler.handle_event(%Stripe.Event{
                  id: "evt_paid",
                  type: "payment_intent.succeeded",
                  data: %{
@@ -325,11 +326,11 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     test "is recorded against the order once it succeeds, only once", %{order: order, payment_intent_id: pi} do
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
+      assert :ok = StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
       assert [] = refunds(order)
 
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
+      assert :ok = StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
+      assert :ok = StripeHandler.handle_event(refund_event("refund.updated", pi, "succeeded"))
 
       assert [refund] = refunds(order)
       assert Decimal.equal?(refund.amount, "-5.00")
@@ -339,8 +340,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     test "is never recorded when a pending refund fails", %{order: order, payment_intent_id: pi} do
       balance_before = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance]).balance
 
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
-      assert :ok = EdenflowersWeb.Webhooks.StripeHandler.handle_event(refund_event("refund.updated", pi, "failed"))
+      assert :ok = StripeHandler.handle_event(refund_event("refund.created", pi, "pending"))
+      assert :ok = StripeHandler.handle_event(refund_event("refund.updated", pi, "failed"))
 
       assert [] = refunds(order)
       balance_after = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance]).balance
@@ -349,9 +350,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
     test "of a payment the shop doesn't know is ignored" do
       assert :ok =
-               EdenflowersWeb.Webhooks.StripeHandler.handle_event(
-                 refund_event("refund.created", "pi_course", "succeeded")
-               )
+               StripeHandler.handle_event(refund_event("refund.created", "pi_course", "succeeded"))
 
       refute Enum.any?(Ash.read!(Edenflowers.Payments.Payment, authorize?: false), &(&1.stripe_refund_id == "re_1"))
     end
@@ -375,7 +374,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     defp course_succeeded(registration, amount_received) do
-      EdenflowersWeb.Webhooks.StripeHandler.handle_event(%Stripe.Event{
+      StripeHandler.handle_event(%Stripe.Event{
         id: "evt_course_succeeded",
         type: "payment_intent.succeeded",
         data: %{
@@ -418,9 +417,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
       for _redelivery <- 1..2 do
         assert :ok =
-                 EdenflowersWeb.Webhooks.StripeHandler.handle_event(
-                   refund_event("refund.updated", registration.payment_intent_id, "succeeded")
-                 )
+                 StripeHandler.handle_event(refund_event("refund.updated", registration.payment_intent_id, "succeeded"))
       end
 
       payments =

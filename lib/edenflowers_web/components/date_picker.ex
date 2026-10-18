@@ -8,6 +8,8 @@ defmodule EdenflowersWeb.DatePicker do
   @week_begins :default
   @default_timezone "Europe/Helsinki"
 
+  @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
+
   def mount(socket) do
     today_date = today()
 
@@ -433,8 +435,6 @@ defmodule EdenflowersWeb.DatePicker do
     |> assign(view_date: date)
     |> assign(week_rows: week_rows(date))
   end
-
-  @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
 
   defp key_targets_json(date, today_date) do
     @nav_keys

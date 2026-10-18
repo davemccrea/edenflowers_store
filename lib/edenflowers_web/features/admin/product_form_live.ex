@@ -5,13 +5,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
   import EdenflowersWeb.Admin.TranslationFields
 
-  alias EdenflowersWeb.Admin.PhotoUpload
-  alias EdenflowersWeb.Admin.TranslationFields
-  alias EdenflowersWeb.Layouts
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Pricing
+  alias EdenflowersWeb.Admin.PhotoUpload
+  alias EdenflowersWeb.Admin.TranslationFields
+  alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

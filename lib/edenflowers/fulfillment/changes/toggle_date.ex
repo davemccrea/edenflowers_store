@@ -21,7 +21,8 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.{FulfillmentOption, Weekday}
+  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment.Weekday
 
   @impl true
   def change(changeset, _opts, _context) do

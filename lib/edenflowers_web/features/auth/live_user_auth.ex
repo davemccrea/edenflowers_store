@@ -3,9 +3,10 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
   Helpers for authenticating users in LiveViews.
   """
 
-  import Phoenix.Component
   use EdenflowersWeb, :verified_routes
   use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  import Phoenix.Component
 
   alias EdenflowersWeb.Auth.ReturnTo
 

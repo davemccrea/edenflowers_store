@@ -19,6 +19,45 @@ defmodule EdenflowersWeb.CoreComponents do
   @max_image_dimension 3840
   @gallery_thumb_width 480
 
+  @button_variants %{
+    "primary" => "btn-primary",
+    "secondary" => "btn-primary btn-outline",
+    "neutral" => "",
+    "ghost" => "btn-ghost",
+    "inverse" =>
+      "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
+    "destructive" => "btn-error btn-outline"
+  }
+
+  @button_sizes %{
+    "sm" => "btn-sm",
+    "md" => "btn-md",
+    "lg" => "btn-lg"
+  }
+
+  @flower_paths Path.wildcard(Path.join(File.cwd!(), "priv/svg/flower-*.svg")) |> Enum.sort()
+
+  @flowers (for path <- @flower_paths, into: %{} do
+              raw = File.read!(path)
+
+              viewbox =
+                case Regex.run(~r/viewBox="([^"]+)"/, raw, capture: :all_but_first) do
+                  [vb] -> vb
+                  _ -> "0 0 100 100"
+                end
+
+              body =
+                raw
+                |> String.replace(~r/<\?xml[^?]*\?>\s*/, "")
+                |> String.replace(~r|<svg\b[^>]*>|, "")
+                |> String.replace(~r|</svg>\s*\z|, "")
+                |> String.replace("fill:#000000", "fill:currentColor")
+
+              {Path.basename(path, ".svg"), %{viewbox: viewbox, body: Phoenix.HTML.raw(body)}}
+            end)
+
+  for path <- @flower_paths, do: @external_resource(path)
+
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
   default top/bottom rhythm. Use for every page that doesn't need
@@ -103,22 +142,6 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :variant, :string, default: "secondary", values: ~w(primary secondary neutral ghost text inverse destructive)
   attr :size, :string, default: "md", values: ~w(sm md lg)
   slot :inner_block, required: true
-
-  @button_variants %{
-    "primary" => "btn-primary",
-    "secondary" => "btn-primary btn-outline",
-    "neutral" => "",
-    "ghost" => "btn-ghost",
-    "inverse" =>
-      "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
-    "destructive" => "btn-error btn-outline"
-  }
-
-  @button_sizes %{
-    "sm" => "btn-sm",
-    "md" => "btn-md",
-    "lg" => "btn-lg"
-  }
 
   def button(%{rest: rest} = assigns) do
     classes =
@@ -587,29 +610,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  @flower_paths Path.wildcard(Path.join(File.cwd!(), "priv/svg/flower-*.svg")) |> Enum.sort()
-
-  @flowers (for path <- @flower_paths, into: %{} do
-              raw = File.read!(path)
-
-              viewbox =
-                case Regex.run(~r/viewBox="([^"]+)"/, raw, capture: :all_but_first) do
-                  [vb] -> vb
-                  _ -> "0 0 100 100"
-                end
-
-              body =
-                raw
-                |> String.replace(~r/<\?xml[^?]*\?>\s*/, "")
-                |> String.replace(~r|<svg\b[^>]*>|, "")
-                |> String.replace(~r|</svg>\s*\z|, "")
-                |> String.replace("fill:#000000", "fill:currentColor")
-
-              {Path.basename(path, ".svg"), %{viewbox: viewbox, body: Phoenix.HTML.raw(body)}}
-            end)
-
-  for path <- @flower_paths, do: @external_resource(path)
-
   @doc """
   Renders a hand-drawn botanical illustration inline.
 
@@ -622,6 +622,8 @@ defmodule EdenflowersWeb.CoreComponents do
 
       <.flower name="flower-30" class="h-32 w-32 text-primary/80" />
   """
+  # Credo reads the @flowers lookup as a module attribute declared mid-module.
+  # credo:disable-for-next-line Credo.Check.Readability.StrictModuleLayout
   attr :name, :string, required: true, values: Map.keys(@flowers)
   attr :class, :any, default: "h-6 w-6"
 
