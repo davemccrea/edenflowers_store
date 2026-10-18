@@ -827,7 +827,7 @@ defmodule Edenflowers.Orders.Order do
       accept []
       transaction? false
       require_atomic? false
-      change Changes.SendDeliveredEmail
+      change Changes.SendDeliveredEmail, where: [attribute_equals(:skip_delivered_email, false)]
     end
 
     action :sales_summary, :map do
