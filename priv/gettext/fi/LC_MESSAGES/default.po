@@ -3655,7 +3655,7 @@ msgstr "Hyvitettävää %{amount}"
 
 #: lib/edenflowers/email/templates/order_details.text.eex:9
 #: lib/edenflowers_web/features/checkout/pay_live.ex:123
-#: lib/edenflowers_web/features/courses/course_pay_live.ex:96
+#: lib/edenflowers_web/features/courses/course_pay_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
 msgstr "Maksettavaa jäljellä"

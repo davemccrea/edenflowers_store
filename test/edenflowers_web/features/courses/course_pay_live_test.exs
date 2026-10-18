@@ -42,6 +42,21 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     refute render(view) =~ "else@example.com"
   end
 
+  test "shows only the amount due while nothing is paid", %{conn: conn, admin: admin} do
+    registration = generate(course_registration(status: :confirmed, amount: Decimal.new("85.00")))
+    {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
+
+    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, _metadata, nil ->
+      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
+
+    assert has_element?(view, "[data-testid=pay-total]", "85.00")
+    refute has_element?(view, "[data-testid=pay-balance]")
+    refute render(view) =~ "Paid so far"
+  end
+
   test "says so once the booking is settled", %{conn: conn, admin: admin, registration: registration} do
     {:ok, _paid} = Courses.record_registration_payment(registration, "120.00", :cash, actor: admin)
 

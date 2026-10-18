@@ -90,13 +90,13 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
             <%= if Decimal.positive?(@payable.amount_paid) do %>
               <dt class="eyebrow text-base-content/70">{~t"Paid so far"}</dt>
               <dd class="tabular-nums">{Format.currency(@payable.amount_paid, @locale)}</dd>
-            <% end %>
 
-            <%= if @payable.payment_link_open? do %>
-              <dt class="eyebrow text-base-content/70">{~t"Left to pay"}</dt>
-              <dd class="font-semibold tabular-nums" data-testid="pay-balance">
-                {Format.currency(@payable.balance, @locale)}
-              </dd>
+              <%= if @payable.payment_link_open? do %>
+                <dt class="eyebrow text-base-content/70">{~t"Left to pay"}</dt>
+                <dd class="font-semibold tabular-nums" data-testid="pay-balance">
+                  {Format.currency(@payable.balance, @locale)}
+                </dd>
+              <% end %>
             <% end %>
           </dl>
 
