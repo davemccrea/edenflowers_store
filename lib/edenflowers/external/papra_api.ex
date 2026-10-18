@@ -19,6 +19,9 @@ defmodule Edenflowers.External.PapraAPI do
 
   @behaviour Edenflowers.External.PapraAPI.Behaviour
 
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :papra_api, __MODULE__)
+
   def receipt_tag, do: "receipt"
   def processed_tag, do: "processed"
 

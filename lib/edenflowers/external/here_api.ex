@@ -7,6 +7,9 @@ end
 defmodule Edenflowers.External.HereAPI do
   @behaviour Edenflowers.External.HereAPI.Behaviour
 
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :here_api, __MODULE__)
+
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger

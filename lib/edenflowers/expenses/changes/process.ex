@@ -12,17 +12,16 @@ defmodule Edenflowers.Expenses.Changes.Process do
   import Edenflowers.Actors
 
   alias Edenflowers.Expenses
-
-  defp papra, do: Application.get_env(:edenflowers, :papra_api, Edenflowers.External.PapraAPI)
-  defp claude, do: Application.get_env(:edenflowers, :claude_api, Edenflowers.External.ClaudeAPI)
+  alias Edenflowers.External.ClaudeAPI
+  alias Edenflowers.External.PapraAPI
 
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       %{document_id: document_id, organization_id: organization_id} = changeset.data
 
-      with {:ok, document} <- papra().fetch_document(organization_id, document_id),
-           {:ok, fields} <- claude().extract_expense(document.body, document.content_type),
+      with {:ok, document} <- PapraAPI.impl().fetch_document(organization_id, document_id),
+           {:ok, fields} <- ClaudeAPI.impl().extract_expense(document.body, document.content_type),
            {:ok, expense} <- Expenses.ingest_expense(Map.put(fields, :document_id, document_id), actor: system_actor()) do
         Logger.info("Processed expense document #{document_id}")
         tag_processed(document_id)
@@ -41,7 +40,7 @@ defmodule Edenflowers.Expenses.Changes.Process do
   # ponytail: a failed tag is only logged, since failing the job would re-run the Claude
   # extraction on retry. Give it its own AshOban trigger if missed tags become a problem.
   defp tag_processed(document_id) do
-    case papra().add_document_tag(document_id, Edenflowers.External.PapraAPI.processed_tag()) do
+    case PapraAPI.impl().add_document_tag(document_id, PapraAPI.processed_tag()) do
       :ok -> :ok
       {:error, error} -> Logger.warning("Failed to tag Papra document #{document_id} as processed: #{inspect(error)}")
     end

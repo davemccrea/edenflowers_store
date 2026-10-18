@@ -5,6 +5,7 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
   """
   use Ash.Resource.Actions.Implementation
 
+  alias Edenflowers.External.HereAPI
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Fee
 
@@ -13,8 +14,8 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
     %{delivery_address: delivery_address, fulfillment_option_id: option_id} = input.arguments
 
     with {:ok, option} <- Fulfillment.get_option_by_id(option_id, authorize?: false),
-         {:ok, {geocoded_address, position, here_id}} <- here_api().geocode(delivery_address),
-         {:ok, distance} <- here_api().route_distance(position) do
+         {:ok, {geocoded_address, position, here_id}} <- HereAPI.impl().geocode(delivery_address),
+         {:ok, distance} <- HereAPI.impl().route_distance(position) do
       case Fee.calculate(option, distance) do
         %{error: nil} = fee ->
           {:ok,
@@ -35,6 +36,4 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
       {:error, reason} -> {:ok, %{error: reason}}
     end
   end
-
-  defp here_api, do: Application.get_env(:edenflowers, :here_api, Edenflowers.External.HereAPI)
 end

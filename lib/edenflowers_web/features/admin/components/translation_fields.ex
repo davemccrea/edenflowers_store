@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
     else
       socket
       |> assign(:translating, from)
-      |> start_async(:translate, fn -> claude().translate(fields, from) end)
+      |> start_async(:translate, fn -> Edenflowers.External.ClaudeAPI.impl().translate(fields, from) end)
     end
   end
 
@@ -85,8 +85,6 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
   end
 
   defp blank?(value), do: String.trim(value || "") == ""
-
-  defp claude, do: Application.get_env(:edenflowers, :claude_api, Edenflowers.External.ClaudeAPI)
 
   attr :form, Phoenix.HTML.Form, required: true
   attr :translating, :string, default: nil, doc: "the locale being translated from, while Claude works"

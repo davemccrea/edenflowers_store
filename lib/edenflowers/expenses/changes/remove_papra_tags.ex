@@ -10,15 +10,13 @@ defmodule Edenflowers.Expenses.Changes.RemovePapraTags do
 
   alias Edenflowers.External.PapraAPI
 
-  defp papra, do: Application.get_env(:edenflowers, :papra_api, PapraAPI)
-
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       document_id = changeset.data.document_id
 
-      with :ok <- papra().remove_document_tag(document_id, PapraAPI.receipt_tag()),
-           :ok <- papra().remove_document_tag(document_id, PapraAPI.processed_tag()) do
+      with :ok <- PapraAPI.impl().remove_document_tag(document_id, PapraAPI.receipt_tag()),
+           :ok <- PapraAPI.impl().remove_document_tag(document_id, PapraAPI.processed_tag()) do
         changeset
       else
         {:error, error} ->
