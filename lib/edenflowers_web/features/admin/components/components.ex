@@ -627,35 +627,24 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :title, :string, required: true
 
-  attr :breadcrumbs, :list,
-    default: [],
-    doc: "{label, path} for each page between Overview and this one, outermost first"
-
-  attr :overview, :boolean, default: false, doc: "the Overview page itself, which has no breadcrumb trail"
+  attr :back, :any, default: nil, doc: "{label, path} of the page above this one, shown as a back link"
   slot :subtitle, doc: "supporting text rendered under the title"
   slot :actions
   slot :menu, doc: "the page's `actions_menu`, kept beside the title on phones while the actions wrap below it"
-  slot :nav, doc: "sibling navigation rendered opposite the breadcrumbs"
+  slot :nav, doc: "sibling navigation rendered opposite the back link"
 
   def admin_page_header(assigns) do
-    assigns = assign(assigns, :trail, [{~t"Overview", ~p"/admin"} | assigns.breadcrumbs])
-
     ~H"""
     <header class="mb-6 sm:mb-8">
-      <div :if={!@overview || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-        <nav :if={!@overview} aria-label={~t"Breadcrumb"} class="min-w-0">
-          <ol class="text-base-content/70 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm font-medium">
-            <li :for={{{label, path}, index} <- Enum.with_index(@trail)} class="flex min-w-0 items-center gap-1.5">
-              <.icon :if={index > 0} name="hero-chevron-right" class="text-base-content/40 h-3.5 w-3.5 shrink-0" />
-              <.link
-                navigate={path}
-                class="max-w-[14rem] -my-2 truncate py-2 transition-colors pointer-coarse:-my-3 pointer-coarse:py-3 hover:text-base-content"
-              >
-                {label}
-              </.link>
-            </li>
-          </ol>
-        </nav>
+      <div :if={@back || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+        <.link
+          :if={@back}
+          navigate={elem(@back, 1)}
+          class="text-base-content/70 -my-2 inline-flex min-w-0 items-center gap-1.5 py-2 text-sm font-medium transition-colors pointer-coarse:-my-3 pointer-coarse:py-3 hover:text-base-content"
+        >
+          <.icon name="hero-arrow-left" class="h-4 w-4 shrink-0" />
+          <span class="max-w-[14rem] truncate">{elem(@back, 0)}</span>
+        </.link>
         {render_slot(@nav)}
       </div>
       <div class="flex items-start gap-2">

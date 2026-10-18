@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={greeting(@current_user)} overview>
+        <.admin_page_header title={greeting(@current_user)}>
           <:actions>
             <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}

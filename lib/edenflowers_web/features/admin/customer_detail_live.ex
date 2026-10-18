@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
       <.admin_page>
         <.admin_page_header
           title={@customer.name || ~t"Unnamed customer"}
-          breadcrumbs={[{~t"Customers", ~p"/admin/customers"}]}
+          back={{~t"Customers", ~p"/admin/customers"}}
         >
           <:subtitle>
             <.email_link email={@customer.email} />

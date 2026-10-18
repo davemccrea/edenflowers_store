@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.admin_page>
         <.admin_page_header
           title={@order.customer_name || @order.order_reference}
-          breadcrumbs={[{~t"Orders", ~p"/admin/orders"}]}
+          back={{~t"Orders", ~p"/admin/orders"}}
         >
           <:nav :if={@queue}>
             <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} />
