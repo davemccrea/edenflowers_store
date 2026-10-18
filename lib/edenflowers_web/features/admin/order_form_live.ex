@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Accounts
   alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
@@ -44,6 +45,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:tax_rates, tax_rates)
          |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
          |> assign(:form, build_form(mode, order, actor, tax_rates))
+         |> assign(:customer_search_empty?, false)
          |> assign(:delivery_quote, stored_quote(mode, order))
          |> assign_date_warning()}
 
@@ -84,11 +86,52 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           id="order-form"
           data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
           phx-change="validate"
+          phx-auto-recover="recover"
           phx-submit="save"
           class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
         >
           <div class="space-y-6">
             <.form_section title={~t"Customer"}>
+              <div :if={@mode == :new} class="mb-4">
+                <label for="form_customer_id_text_input" class="mb-1 block">{~t"Find an existing customer"}</label>
+                <LiveSelect.live_select
+                  field={@form[:customer_id]}
+                  id="customer-select"
+                  allow_clear
+                  debounce={300}
+                  update_min_len={0}
+                  style={:daisyui}
+                  container_class="relative"
+                  dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-300 border p-1 shadow"
+                  option_class="break-words whitespace-normal pointer-coarse:min-h-11"
+                  active_option_class="menu-active"
+                  available_option_class="cursor-pointer"
+                  selected_option_class="cursor-pointer font-semibold"
+                  text_input_class="input w-full pr-10"
+                  text_input_selected_class=""
+                  no_basic_styles_for_clear_buttons
+                  clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 h-full"
+                >
+                  <:option :let={option}>
+                    <span data-selected={to_string(option.selected)}>{option.label}</span>
+                  </:option>
+                  <:clear_button>
+                    <.icon name="hero-x-mark" class="size-5" />
+                    <span class="sr-only">{~t"Clear customer selection"}</span>
+                  </:clear_button>
+                </LiveSelect.live_select>
+                <p id="customer-search-help" class="text-base-content/65 mt-1.5 text-sm">
+                  {~t"Search by name or email, or enter contact details below. Changes apply only to this order."}
+                </p>
+                <div id="customer-results" role="status">
+                  <p :if={@customer_search_empty?} class="text-base-content/65 mt-2 text-sm">
+                    {~t"No customers found."}
+                  </p>
+                  <p :if={@form[:customer_id].value} class="text-base-content/65 mt-2 text-sm">
+                    {~t"Customer selected. Review the contact details below."}
+                  </p>
+                </div>
+              </div>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <.input field={@form[:customer_name]} type="text" label={~t"Name"} class="input w-full" />
@@ -311,19 +354,34 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   @impl true
+  def handle_event(
+        "live_select_change",
+        %{"id" => "customer-select", "text" => term},
+        %{assigns: %{mode: :new}} = socket
+      ) do
+    term = String.trim(term)
+
+    customers =
+      if term == "",
+        do: [],
+        else: Accounts.search_customers!(term, actor: socket.assigns.current_user, query: [limit: 10])
+
+    options =
+      Enum.map(customers, fn customer ->
+        {Enum.join(Enum.reject([customer.name, to_string(customer.email)], &is_nil/1), " · "), customer.id}
+      end)
+
+    send_update(LiveSelect.Component, id: "customer-select", options: options)
+    {:noreply, assign(socket, :customer_search_empty?, term != "" && customers == [])}
+  end
+
   def handle_event("validate", %{"form" => params}, socket) do
-    option_before = current_option_id(socket.assigns)
+    params = prefill_customer(params, socket.assigns)
+    validate_form(socket, params)
+  end
 
-    socket =
-      socket
-      |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
-      |> assign_date_warning()
-
-    if current_option_id(socket.assigns) == option_before do
-      {:noreply, socket}
-    else
-      {:noreply, requote_for_new_option(socket)}
-    end
+  def handle_event("recover", %{"form" => params}, socket) do
+    validate_form(socket, params)
   end
 
   def handle_event("quote_delivery", %{"value" => address}, socket) do
@@ -520,6 +578,52 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
        variant.id}
     end)
+  end
+
+  defp customer_phone(customer_id, actor) do
+    last =
+      Orders.get_last_order_with_customer_phone!(customer_id,
+        actor: actor,
+        not_found_error?: false
+      )
+
+    if last, do: last.customer_phone_number || last.recipient_phone_number, else: ""
+  end
+
+  defp prefill_customer(%{"customer_id" => id} = params, %{mode: :new} = assigns)
+       when id not in [nil, ""] do
+    if id == assigns.form[:customer_id].value do
+      params
+    else
+      case Accounts.get_customer_for_admin(id, actor: assigns.current_user) do
+        {:ok, customer} when not is_nil(customer) ->
+          Map.merge(params, %{
+            "customer_name" => customer.name || "",
+            "customer_email" => to_string(customer.email),
+            "customer_phone_number" => customer_phone(customer.id, assigns.current_user)
+          })
+
+        _ ->
+          params
+      end
+    end
+  end
+
+  defp prefill_customer(params, _assigns), do: params
+
+  defp validate_form(socket, params) do
+    option_before = current_option_id(socket.assigns)
+
+    socket =
+      socket
+      |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
+      |> assign_date_warning()
+
+    if current_option_id(socket.assigns) == option_before do
+      {:noreply, socket}
+    else
+      {:noreply, requote_for_new_option(socket)}
+    end
   end
 
   # Priced as soon as the address is typed, so Jennie can tell a caller what

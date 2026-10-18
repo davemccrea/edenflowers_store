@@ -1,9 +1,10 @@
 ---
 id: TASK-55
 title: Select an existing customer when creating a Custom Order
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 20:19'
+updated_date: '2026-10-18 21:22'
 labels:
   - spec
   - admin
@@ -25,9 +26,21 @@ Add a customer selector to the new Custom Order form. Selecting a Customer prefi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can find and select an existing Customer in the new Custom Order form.
-- [ ] #2 Selecting a Customer prefills their available name, email and phone in the Customer contact fields; missing details can be entered manually.
-- [ ] #3 Jennie can edit the prefilled contact information and place the order with those details without changing the saved Customer record.
-- [ ] #4 Jennie can still create a Custom Order by entering contact information manually without selecting an existing Customer.
-- [ ] #5 Selecting a Customer does not overwrite a separate Recipient's details on a gift order.
+- [x] #1 Jennie can find and select an existing Customer in the new Custom Order form.
+- [x] #2 Selecting a Customer prefills their available name, email and phone in the Customer contact fields; missing details can be entered manually.
+- [x] #3 Jennie can edit the prefilled contact information and place the order with those details without changing the saved Customer record.
+- [x] #4 Jennie can still create a Custom Order by entering contact information manually without selecting an existing Customer.
+- [x] #5 Selecting a Customer does not overwrite a separate Recipient's details on a gift order.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented and reviewed: LiveSelect 1.7.5 single-select customer search reuses Accounts.search_customers, supports keyboard selection and clearing, and matches incumbent admin inputs, menus, theme colors, spacing and focus styles. Prefills saved name/email and latest available buyer phone through an Orders read action; online gift pickups are included while separate gift Recipient phones are excluded. Selected Customer is linked using Ash manage_relationship without upserting saved contact details. Manual entry and order-only edits remain available. Gift Recipient fields, nested order lines and edited contacts survive validation and dedicated LiveView form recovery. Accessibility adapter supplies combobox/listbox semantics and actual selected state missing from LiveSelect. Ash/Phoenix, spec and Ponytail reviews completed; actionable findings fixed and targeted re-review passed. Final verification: source .env && mix precommit passed (1360 tests, 0 failures; warnings-as-errors compile, codegen check, formatting, strict Credo); node --test test/customer_select_keyboard_test.mjs passed (2 tests); assets build and git diff --check passed. Browser visual verification unavailable. New UI strings use GettextSigils; translation extraction/generation awaits user opt-in.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Jennie can search for and select a returning Customer in a site-styled LiveSelect combobox, edit their order-only contact details, or enter details manually, while preserving saved Customer records and separate Recipient information.
+<!-- SECTION:FINAL_SUMMARY:END -->
