@@ -1,9 +1,10 @@
 ---
 id: TASK-17
-title: Payable Consolidation
+title: Share Stripe payment handling between orders and course bookings
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies: []
 ordinal: 47000

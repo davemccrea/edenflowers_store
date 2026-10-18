@@ -1,9 +1,10 @@
 ---
 id: TASK-21
-title: Code Conventions
+title: Enforce one module layout and dependency style with Credo
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 04:05'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies: []
 ordinal: 71000

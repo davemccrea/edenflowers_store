@@ -1,9 +1,10 @@
 ---
 id: TASK-19
-title: Lean Into Ash
+title: Close the stale-order race and let Ash do the hand-rolled work
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:24'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies: []
 ordinal: 60000

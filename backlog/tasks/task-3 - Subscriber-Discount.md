@@ -1,9 +1,10 @@
 ---
 id: TASK-3
-title: Subscriber Discount
+title: 'Discount subscriptions, most for the most frequent deliveries'
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 02:13'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies: []
 ordinal: 3000
