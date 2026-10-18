@@ -22,6 +22,8 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback list_refunds(payment_intent_id :: String.t()) :: {:ok, [map()]} | {:error, term()}
   @callback create_refund(payment_intent_id :: String.t(), amount_cents :: integer(), idempotency_key :: String.t()) ::
               {:ok, map()} | {:error, term()}
+  @callback list_balance_transactions_page(created :: map(), starting_after :: String.t() | nil) ::
+              {:ok, %{data: [map()], has_more: boolean()}} | {:error, term()}
 end
 
 defmodule Edenflowers.External.StripeAPI do
@@ -189,6 +191,31 @@ defmodule Edenflowers.External.StripeAPI do
     Stripe.Refund.create(%{payment_intent: payment_intent_id, amount: amount_cents},
       headers: %{"Idempotency-Key" => idempotency_key}
     )
+  end
+
+  @doc """
+  Every balance transaction created from `from` up to, not including, `until`,
+  following Stripe's pages to the end.
+  """
+  def list_balance_transactions(%DateTime{} = from, %DateTime{} = until) do
+    created = %{gte: DateTime.to_unix(from), lt: DateTime.to_unix(until)}
+    list_balance_transactions(created, nil, [])
+  end
+
+  defp list_balance_transactions(created, starting_after, pages) do
+    with {:ok, %{data: data, has_more: has_more}} <- impl().list_balance_transactions_page(created, starting_after) do
+      if has_more,
+        do: list_balance_transactions(created, List.last(data).id, [data | pages]),
+        else: {:ok, [data | pages] |> Enum.reverse() |> Enum.concat()}
+    end
+  end
+
+  @impl true
+  def list_balance_transactions_page(created, starting_after) do
+    params = %{created: created, limit: 100}
+    params = if starting_after, do: Map.put(params, :starting_after, starting_after), else: params
+
+    Stripe.BalanceTransaction.list(params)
   end
 
   def dashboard_payment_url(nil), do: nil

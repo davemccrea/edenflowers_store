@@ -1,7 +1,8 @@
 defmodule Edenflowers.Accounting.MonthlyReport do
   @moduledoc """
   Builds the zip Jennie sends her accountant each month: a spreadsheet of the
-  month's sales and expenses, and every receipt PDF behind them, in Swedish.
+  month's sales, expenses and Stripe fees and payouts, and every receipt PDF
+  behind the expenses, in Swedish.
 
   VAT is reported on a cash basis, so a payment counts in the month of its
   `paid_at` (Helsinki time), and an expense in the month it was paid: its
@@ -14,6 +15,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Payments.Payment
   alias Edenflowers.ShopTime
@@ -34,7 +36,9 @@ defmodule Edenflowers.Accounting.MonthlyReport do
            {:ok, expenses} <- paid_expenses(first, last),
            rows = expenses |> Enum.with_index(1) |> Enum.map(fn {e, n} -> {n, e, receipt_name(n, e)} end),
            {:ok, receipts} <- fetch_receipts(rows),
-           workbook = %Workbook{sheets: [sales_sheet(payments), expenses_sheet(rows)]},
+           {:ok, transactions} <-
+             StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
+           workbook = %Workbook{sheets: [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)]},
            {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
            files = [{~c"#{spreadsheet}", xlsx} | receipts],
            {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
@@ -261,6 +265,63 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   defp currency(nil), do: nil
   defp currency(currency), do: currency |> to_string() |> String.upcase()
+
+  # Stripe's rows are not sales: they let the accountant book Stripe's fees and
+  # match its payouts, which arrive in the bank net of fees.
+  defp stripe_sheet(transactions) do
+    headings = [~t"Date", ~t"Type", ~t"Description", ~t"Gross amount", ~t"Fee", ~t"Net amount", ~t"Payout id"]
+
+    rows =
+      transactions
+      |> Enum.sort_by(& &1.created)
+      |> Enum.map(fn transaction ->
+        [
+          transaction.created
+          |> DateTime.from_unix!()
+          |> DateTime.shift_zone!(ShopTime.timezone())
+          |> DateTime.to_date()
+          |> date_cell(),
+          transaction_type(transaction.type),
+          transaction.description,
+          stripe_amount_cell(transaction.amount),
+          stripe_amount_cell(transaction.fee),
+          stripe_amount_cell(transaction.net),
+          if(transaction.type == "payout", do: transaction.source)
+        ]
+      end)
+
+    # A charge's fee is in its fee column; a fee Stripe charges on its own
+    # (Radar, currency conversion) is a row whose net is the negative fee.
+    fees =
+      Enum.sum_by(transactions, & &1.fee) -
+        (transactions |> Enum.filter(&fee_type?(&1.type)) |> Enum.sum_by(& &1.net))
+
+    paid_out = transactions |> Enum.filter(&(&1.type == "payout")) |> Enum.sum_by(&(-&1.net))
+
+    %Sheet{
+      name: "Stripe",
+      rows:
+        [Enum.map(headings, &[&1, bold: true]) | rows] ++
+          [
+            [],
+            [nil, nil, [~t"Total fees", bold: true], nil, stripe_amount_cell(fees)],
+            [nil, nil, [~t"Paid out to bank", bold: true], nil, nil, stripe_amount_cell(paid_out)]
+          ]
+    }
+  end
+
+  defp fee_type?(type), do: type in ["stripe_fee", "stripe_fx_fee", "tax_fee", "application_fee"]
+
+  defp transaction_type(type) when type in ["charge", "payment"], do: ~t"Charge"
+  defp transaction_type(type) when type in ["refund", "payment_refund"], do: ~t"Refund"
+  defp transaction_type("payout"), do: ~t"Payout"
+  defp transaction_type("adjustment"), do: ~t"Adjustment"
+
+  defp transaction_type(type) do
+    if fee_type?(type), do: ~t"Fee", else: type
+  end
+
+  defp stripe_amount_cell(cents), do: cents |> StripeAPI.from_stripe_amount() |> amount_cell()
 
   defp date_cell(nil), do: nil
   defp date_cell(date), do: [{Date.to_erl(date), {0, 0, 0}}, yyyymmdd: true]
