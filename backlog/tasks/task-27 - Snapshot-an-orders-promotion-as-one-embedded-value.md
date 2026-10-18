@@ -4,8 +4,10 @@ title: Snapshot an order's promotion as one embedded value
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:37'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: low
 type: refactor

@@ -4,9 +4,11 @@ title: Look up every external API's implementation the same way
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:37'
 labels:
   - spec
   - quick
+  - developers
 dependencies: []
 priority: low
 type: refactor

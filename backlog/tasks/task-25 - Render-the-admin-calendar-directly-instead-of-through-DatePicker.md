@@ -4,9 +4,10 @@ title: Render the admin calendar directly instead of through DatePicker
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 11:35'
-updated_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:37'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: low
 type: refactor

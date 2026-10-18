@@ -4,10 +4,11 @@ title: Sign in as admin on dev with one click
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 05:42'
-updated_date: '2026-10-18 11:24'
+updated_date: '2026-10-18 11:37'
 labels:
   - quick
   - spec
+  - developers
 dependencies: []
 priority: low
 type: chore

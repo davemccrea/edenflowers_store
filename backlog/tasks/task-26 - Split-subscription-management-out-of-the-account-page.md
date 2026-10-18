@@ -4,8 +4,10 @@ title: Split subscription management out of the account page
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:37'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: medium
 type: refactor
