@@ -1,10 +1,10 @@
 ---
 id: TASK-11.3
-title: Income sheet split by VAT rate
+title: Add the sales sheet with income split by VAT rate
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:08'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies:
   - TASK-11.2

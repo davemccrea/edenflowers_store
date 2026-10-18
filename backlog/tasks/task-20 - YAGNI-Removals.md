@@ -1,9 +1,10 @@
 ---
 id: TASK-20
-title: YAGNI Removals
+title: Remove machinery the shop doesn't use
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:31'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies: []
 ordinal: 67000

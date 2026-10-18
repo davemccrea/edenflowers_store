@@ -1,10 +1,10 @@
 ---
 id: TASK-11.4
-title: Stripe fees and payouts sheet
+title: Add the Stripe fees and payouts sheet
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:08'
+updated_date: '2026-10-18 05:48'
 labels: []
 dependencies:
   - TASK-11.2
