@@ -274,31 +274,4 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       assert Decimal.eq?(fee, Decimal.new("8.10"))
     end
   end
-
-  describe "fulfill_on_date action" do
-    test "returns nil when bookable", %{tax_rate: tax_rate} do
-      option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-      now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-
-      assert {:ok, nil} =
-               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-05], %{now: now}, authorize?: false)
-    end
-
-    test "returns :past when the date is in the past", %{tax_rate: tax_rate} do
-      option = generate(fulfillment_option(tax_rate_id: tax_rate.id))
-      now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
-
-      assert {:ok, :past} =
-               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-01], %{now: now}, authorize?: false)
-    end
-
-    test "normalises now to Helsinki for the same-day deadline", %{tax_rate: tax_rate} do
-      option = generate(fulfillment_option(tax_rate_id: tax_rate.id, same_day: true, order_deadline: ~T[14:00:00]))
-      # 14:01 Helsinki is past the 14:00 cutoff even though its UTC wall-clock is earlier.
-      now = DateTime.from_naive!(~N[2024-04-02 14:01:00], "Europe/Helsinki")
-
-      assert {:ok, :order_deadline_passed} =
-               Fulfillment.fulfill_on_date(option.id, ~D[2024-04-02], %{now: now}, authorize?: false)
-    end
-  end
 end

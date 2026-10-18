@@ -1260,6 +1260,20 @@ defmodule Edenflowers.Orders.OrderTest do
 
       assert %Ash.Error.Invalid{} = error
     end
+
+    test "save_step_3 reports an unknown option instead of raising" do
+      order = generate(order(state: :delivery))
+
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
+               order
+               |> Ash.Changeset.for_update(:submit_delivery, %{
+                 fulfillment_option_id: Ash.UUID.generate(),
+                 fulfillment_date: Date.add(Date.utc_today(), 1)
+               })
+               |> Ash.update(authorize?: false)
+
+      assert Enum.any?(errors, &(&1.field == :fulfillment_option_id))
+    end
   end
 
   describe "Order state transitions" do

@@ -130,18 +130,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       run Edenflowers.Fulfillment.Actions.CalculateDelivery
     end
-
-    action :fulfill_on_date, :atom do
-      description "Why the option can't be fulfilled on `date`, or nil when it can. Returns " <>
-                    "{:ok, nil} when bookable and {:ok, reason} when not — a non-bookable date " <>
-                    "is a normal result, not an error, so it stays out of Ash.Error.Unknown."
-
-      allow_nil? true
-      argument :fulfillment_option_id, :uuid, allow_nil?: false
-      argument :date, :date, allow_nil?: false
-      argument :now, :utc_datetime, default: &DateTime.utc_now/0
-      run Edenflowers.Fulfillment.Actions.FulfillOnDate
-    end
   end
 
   policies do
