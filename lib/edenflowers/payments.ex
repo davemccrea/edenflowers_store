@@ -49,7 +49,7 @@ defmodule Edenflowers.Payments do
   def setup(%{payment_intent_id: nil} = payable, actor) do
     case create_payment_intent(payable, actor) do
       {:ok, payment_intent} ->
-        persist_payment_intent(payable, payment_intent, actor)
+        persist_payment_intent(payable, payment_intent)
 
       {:error, reason} ->
         Logger.error("Failed to create payment intent for #{describe(payable)}: #{inspect(reason)}")
@@ -482,8 +482,13 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  defp persist_payment_intent(payable, payment_intent, actor) do
-    case add_payment_intent_id(payable, payment_intent.id, actor) do
+  defp persist_payment_intent(payable, payment_intent) do
+    # Customers never update a placed order or a booking, and the record was
+    # already read with their actor, so the system actor stores the id.
+    case Ash.update(payable, %{payment_intent_id: payment_intent.id},
+           action: :add_payment_intent_id,
+           actor: system_actor()
+         ) do
       {:ok, payable} ->
         Logger.info(
           "Created PaymentIntent #{payment_intent.id} for #{describe(payable)} (#{payment_intent.amount} cents)"
@@ -507,70 +512,57 @@ defmodule Edenflowers.Payments do
   defp expected_amount(%Order{grand_total: grand_total}), do: grand_total
   defp expected_amount(%CourseRegistration{amount: amount}), do: amount
 
-  defp add_payment_intent_id(%Order{} = order, payment_intent_id, actor) do
-    Orders.add_payment_intent_id(order, payment_intent_id, actor: actor)
-  end
-
-  # Customers never update a booking, so only the system actor may store the id.
-  defp add_payment_intent_id(%CourseRegistration{} = registration, payment_intent_id, _actor) do
-    Courses.add_registration_payment_intent_id(registration, payment_intent_id, actor: system_actor())
-  end
-
   # A recorded PaymentIntent is a redelivery. Otherwise a checkout payment
-  # places the order, and a payment link payment, on an order already placed,
-  # only records the money.
-  defp complete_payable({"order_id", id}, payment_intent, amount_paid, paid_with) do
-    with {:ok, order} <- Orders.get_order_by_id(id, actor: system_actor()) do
+  # places the order or confirms the booking, and a payment link payment only
+  # records the money.
+  defp complete_payable(ref, payment_intent, amount_paid, paid_with) do
+    with {:ok, payable} <- get_payable(ref) do
       cond do
         recorded?(payment_intent.id) ->
           :already_recorded
 
-        order.state == :placed ->
-          Orders.record_link_payment(order, payment_intent.id, %{amount_paid: amount_paid, paid_with: paid_with},
+        link_payment?(payable) ->
+          Ash.update(
+            payable,
+            %{payment_intent_id: payment_intent.id, amount_paid: amount_paid, paid_with: paid_with},
+            action: :record_link_payment,
             actor: system_actor()
           )
 
         true ->
-          Orders.finalize_checkout(
-            order,
-            payment_intent.id,
-            %{
-              amount_paid: amount_paid,
-              paid_with: paid_with,
-              stripe_customer_id: Map.get(payment_intent, :customer),
-              stripe_payment_method_id: Map.get(payment_intent, :payment_method)
-            },
-            actor: system_actor()
-          )
+          complete_checkout(payable, payment_intent, amount_paid, paid_with)
       end
     end
   end
 
-  # As for orders: a checkout payment confirms the booking, and a payment
-  # link payment, on a booking already confirmed, only records the money.
-  defp complete_payable({"course_registration_id", id}, payment_intent, amount_paid, paid_with) do
-    with {:ok, registration} <- Courses.get_registration_by_id(id, actor: system_actor()) do
-      cond do
-        recorded?(payment_intent.id) ->
-          :already_recorded
+  defp get_payable({"order_id", id}), do: Orders.get_order_by_id(id, actor: system_actor())
+  defp get_payable({"course_registration_id", id}), do: Courses.get_registration_by_id(id, actor: system_actor())
 
-        registration.status == :confirmed ->
-          Courses.record_registration_link_payment(
-            registration,
-            payment_intent.id,
-            %{amount_paid: amount_paid, paid_with: paid_with},
-            actor: system_actor()
-          )
+  # A payment link only opens on an order already placed or a booking already confirmed.
+  defp link_payment?(%Order{state: state}), do: state == :placed
+  defp link_payment?(%CourseRegistration{status: status}), do: status == :confirmed
 
-        true ->
-          Courses.confirm_registration_payment(
-            registration,
-            payment_intent.id,
-            %{amount_paid: amount_paid, paid_with: paid_with},
-            actor: system_actor()
-          )
-      end
-    end
+  defp complete_checkout(%Order{} = order, payment_intent, amount_paid, paid_with) do
+    Orders.finalize_checkout(
+      order,
+      payment_intent.id,
+      %{
+        amount_paid: amount_paid,
+        paid_with: paid_with,
+        stripe_customer_id: Map.get(payment_intent, :customer),
+        stripe_payment_method_id: Map.get(payment_intent, :payment_method)
+      },
+      actor: system_actor()
+    )
+  end
+
+  defp complete_checkout(%CourseRegistration{} = registration, payment_intent, amount_paid, paid_with) do
+    Courses.confirm_registration_payment(
+      registration,
+      payment_intent.id,
+      %{amount_paid: amount_paid, paid_with: paid_with},
+      actor: system_actor()
+    )
   end
 
   @doc """
@@ -636,12 +628,13 @@ defmodule Edenflowers.Payments do
     |> Ash.exists?(authorize?: false)
   end
 
-  defp cancel_payable({"order_id", id}, payment_intent_id) do
-    Orders.mark_payment_cancelled(id, payment_intent_id, actor: system_actor())
-  end
-
-  defp cancel_payable({"course_registration_id", id}, payment_intent_id) do
-    Courses.mark_registration_payment_cancelled(id, payment_intent_id, actor: system_actor())
+  defp cancel_payable(ref, payment_intent_id) do
+    with {:ok, payable} <- get_payable(ref) do
+      Ash.update(payable, %{payment_intent_id: payment_intent_id},
+        action: :mark_payment_cancelled,
+        actor: system_actor()
+      )
+    end
   end
 
   defp find_payable(%{metadata: metadata}) when is_map(metadata) do

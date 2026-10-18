@@ -16,6 +16,26 @@ defmodule Edenflowers.Payments.Payable do
   alias Edenflowers.Payments.Validations
 
   actions do
+    update :add_payment_intent_id do
+      accept [:payment_intent_id]
+      validate Validations.PaymentIntentNotSet
+      validate Validations.Payable
+    end
+
+    update :mark_payment_cancelled do
+      argument :payment_intent_id, :string, allow_nil?: false
+      validate Validations.MatchesPaymentIntent
+      change set_attribute(:payment_intent_id, nil)
+    end
+
+    # Each resource triggers it with its own `where`.
+    update :reconcile_payment do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.Reconcile
+    end
+
     # Money Jennie took or handed back by any method except Stripe.
     update :record_payment do
       argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
@@ -73,6 +93,9 @@ defmodule Edenflowers.Payments.Payable do
 
     # A record refunded in Stripe without being cancelled reads as owed again
     # by its balance, but is settled.
+    # What a PaymentIntent can charge.
+    calculate :payable?, :boolean, expr(balance > 0 and not refunded?)
+
     calculate :settled?, :boolean, expr(balance == 0 or refunded?)
 
     # Money paid through Stripe goes back through Stripe, so Jennie can only
