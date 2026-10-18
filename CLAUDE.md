@@ -17,7 +17,7 @@
 
 ### Issue tracker
 
-Local Markdown files under `issues/<feature>/`. See `docs/agents/issue-tracker.md`.
+Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

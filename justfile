@@ -23,26 +23,10 @@ test *args: check-typst
 stripe-listen:
     stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,refund.created,refund.updated --forward-to localhost:{{ port }}/webhook/stripe
 
-# List open features in issues/ with the status and summary of their spec and each ticket
+# Open the Backlog.md issue board in the browser (npm i -g backlog.md)
 [group('development')]
 issues:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    field() { sed -n "s/^$1: //p" "$2" | head -1; }
-    for dir in issues/*/; do
-      feature=$(basename "$dir")
-      [ "$feature" = done ] && continue
-      spec="$dir/spec.md"
-      if [ -f "$spec" ]; then
-        printf '\n%-22s %-16s %s\n' "$feature" "$(field Status "$spec")" "$(field Summary "$spec")"
-      else
-        printf '\n%s\n' "$feature"
-      fi
-      for ticket in "$dir"issues/*.md; do
-        [ -f "$ticket" ] || continue
-        printf '  %-20s %-16s %s\n' "$(basename "$ticket" | cut -d- -f1)" "$(field Status "$ticket")" "$(sed -n 's/^# //p' "$ticket" | head -1)"
-      done
-    done
+    backlog browser
 
 # Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
 [group('setup')]
