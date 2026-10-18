@@ -3,9 +3,10 @@ id: TASK-30
 title: >-
   Drop the pay-on-delivery and pay-on-collection lines from the order-details
   email
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:36'
 labels:
   - spec
   - customers
@@ -26,6 +27,6 @@ ordinal: 85000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The order-details email for an unpaid order without a payment link shows the balance and no line about when to pay
-- [ ] #2 Neither sentence is left in the .pot or the en/fi/sv .po files
+- [x] #1 The order-details email for an unpaid order without a payment link shows the balance and no line about when to pay
+- [x] #2 Neither sentence is left in the .pot or the en/fi/sv .po files
 <!-- AC:END -->
