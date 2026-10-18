@@ -16,6 +16,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       element: 2,
       assert_redirect: 3,
       assert_push_event: 3,
+      assert_patch: 2,
+      has_element?: 2,
+      render_patch: 2,
       refute_push_event: 3
     ]
 
@@ -728,6 +731,30 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
         |> live("/checkout")
 
       refute_push_event(view, "focus-element", %{})
+    end
+  end
+
+  describe "Step in the URL" do
+    test "browser back steps the order back, and a step past it is corrected", %{conn: conn, order: order} do
+      {:ok, view, _html} =
+        conn
+        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> live("/checkout")
+
+      view
+      |> element("[data-testid='checkout-form-1']")
+      |> render_submit(%{"form" => %{"customer_name" => "Back Button", "customer_email" => "back@example.com"}})
+
+      assert_patch(view, "/checkout?step=gift_options")
+
+      render_patch(view, "/checkout?step=contact_details")
+      assert has_element?(view, "[data-testid='checkout-step-1']")
+      assert Orders.get_order_by_id!(order.id, authorize?: false).state == :contact_details
+
+      render_patch(view, "/checkout?step=gift_options")
+      assert_patch(view, "/checkout?step=contact_details")
+      assert has_element?(view, "[data-testid='checkout-step-1']")
+      assert Orders.get_order_by_id!(order.id, authorize?: false).state == :contact_details
     end
   end
 

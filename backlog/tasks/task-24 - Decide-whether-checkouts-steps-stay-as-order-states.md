@@ -1,10 +1,10 @@
 ---
 id: TASK-24
 title: Decide whether checkout's steps stay as order states
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-18 11:35'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 14:39'
 labels:
   - spec
   - developers
@@ -35,3 +35,16 @@ The steps become sections of one checkout page, held in the LiveView. The order 
 - Could the steps stay visually while their state moves out of the database? That keeps the UX and drops the transitions.
 - Cost: `CheckoutLive` (1,150 lines) and its tests are the bulk of the change.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Decided: the steps stay as order states. CheckoutLive mirrors the step in the URL (/checkout?step=...), so the browser's back button steps back through checkout. A URL step before the order's state calls the matching return_to_* action; any other is replaced with the order's state, as only Next moves the order forward. Browser forward was left out: it is rarely used, and after going back the customer presses Next with their details still filled in.
+
+Moving the steps out of the database was parked. What it would cost:
+- Nothing server-side would guarantee an order passed every submit_* validation before it gets a PaymentIntent. A checkout_complete? check before Payments.setup and in pay would have to repeat them all.
+- :payment means more than the step. OrderLive lets the owner wait for the webhook on it, and an Occurrence is created in it and placed from it by place_unpaid_occurrence, so the order would still need a middle state.
+- The cart drawer's Continue checkout label and delivery_fee's quote-or-stored choice read the state.
+- Orders in checkout at deploy would need their states mapped, keeping :payment orders with an open PaymentIntent placeable.
+The only gain over the URL mirror is browser forward working.
+<!-- SECTION:FINAL_SUMMARY:END -->

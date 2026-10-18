@@ -24,10 +24,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   @checkout_states Order.checkout_states()
 
-  @edit_steps %{
-    "contact_details" => {:contact_details, &Orders.return_to_contact_details!/2},
-    "gift_options" => {:gift_options, &Orders.return_to_gift_options!/2},
-    "delivery" => {:delivery, &Orders.return_to_delivery!/2}
+  @return_to %{
+    contact_details: &Orders.return_to_contact_details!/2,
+    gift_options: &Orders.return_to_gift_options!/2,
+    delivery: &Orders.return_to_delivery!/2
   }
 
   # A cart change after "pay" has updated the PaymentIntent would charge the
@@ -75,6 +75,41 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         handle_mount_error(socket, "Error loading checkout", ~t"Error loading checkout")
     end
   end
+
+  # The step is mirrored in the URL so the browser's back button steps back
+  # through checkout. The order's state still decides which step shows: a URL
+  # step before it steps the order back, and any other is corrected in place,
+  # as only Next moves the order forward.
+  #
+  # So browser forward after going back lands on the earlier step, with the
+  # customer's details still filled in for Next. Going back moves the order's
+  # state, and forward would have to submit the step again or work the step
+  # out from the order's data instead of storing it (TASK-24). Forward is
+  # rarely used, so neither was worth it.
+  @impl true
+  def handle_params(params, _uri, %{assigns: %{fulfillment_options: _}} = socket) do
+    order = socket.assigns.order
+    step = Enum.find(@checkout_states, &(Atom.to_string(&1) == params["step"]))
+
+    cond do
+      order.state not in @checkout_states or step == order.state ->
+        {:noreply, socket}
+
+      step && step_index(step) < step_index(order.state) ->
+        Map.fetch!(@return_to, step).(order, actor: actor(socket))
+
+        {:noreply,
+         socket
+         |> reload_order()
+         |> push_event("focus-element", %{id: section_id(socket.assigns.id, step)})}
+
+      true ->
+        {:noreply, correct_step_url(socket)}
+    end
+  end
+
+  # Mount navigated away.
+  def handle_params(_params, _uri, socket), do: {:noreply, socket}
 
   @impl true
   def render(assigns) do
@@ -407,6 +442,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         {:noreply,
          socket
          |> reload_order()
+         |> push_patch(to: step_path(order.state))
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
@@ -451,9 +487,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("edit_step", %{"state" => state}, socket) do
-    {state, return_to} = Map.fetch!(@edit_steps, state)
-    return_to.(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), state)}
+    {:noreply, push_patch(socket, to: ~p"/checkout?step=#{state}")}
   end
 
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
@@ -1024,6 +1058,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         {:noreply,
          socket
          |> reload_order()
+         |> push_patch(to: step_path(order.state))
          |> push_event("focus-element", %{id: next_section_id})}
 
       {:error, form} ->
@@ -1099,8 +1134,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp next_section_id(id, state) when state in @checkout_states, do: section_id(id, state)
   defp next_section_id(_, _), do: nil
 
-  defp scroll_to_state(socket, state) do
-    push_event(socket, "focus-element", %{id: section_id(socket.assigns.id, state)})
+  defp step_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
+
+  defp step_path(state), do: ~p"/checkout?step=#{state}"
+
+  # Replaced rather than pushed, so a correction adds no history entry for back to return to.
+  defp correct_step_url(socket) do
+    if connected?(socket) do
+      push_patch(socket, to: step_path(socket.assigns.order.state), replace: true)
+    else
+      socket
+    end
   end
 
   # Returning to checkout mid-way lands the customer on the step they left.
