@@ -99,7 +99,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
-      validate match(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change set_attribute(:status, :pending)
       change Changes.UpsertUser
       change Changes.ReserveSeats
@@ -112,7 +111,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     create :add_manually do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
-      validate match(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change Changes.UpsertUser
@@ -274,7 +272,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
-    attribute :email, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+    attribute :email, Edenflowers.Types.Email, allow_nil?: false
     # Seats bought, as on the receipt. Seats held is seats minus removed_seats.
     attribute :seats, :integer, allow_nil?: false, default: 1, constraints: [min: 1, max: @max_seats]
     attribute :removed_seats, :integer, allow_nil?: false, default: 0, constraints: [min: 0]

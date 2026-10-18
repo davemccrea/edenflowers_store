@@ -1172,7 +1172,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       String.downcase(email) == String.downcase(to_string(user.email)) ->
         {:ok, socket |> reset_details(user) |> assign(details_saved?: true)}
 
-      not String.match?(email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/) ->
+      not match?({:ok, address} when is_binary(address), Ash.Type.cast_input(Edenflowers.Types.Email, email)) ->
         {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
 
       # Each code goes to an address the customer only claims to own, so cap how

@@ -442,7 +442,6 @@ defmodule Edenflowers.Orders.Order do
       validate present([:customer_email, :customer_phone_number], at_least: 1),
         message: "enter a phone number or an email"
 
-      validate match(:customer_email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_option_id)
       validate present(:fulfillment_date)
@@ -504,7 +503,6 @@ defmodule Edenflowers.Orders.Order do
 
       argument :newsletter_opt_in, :boolean, default: false
 
-      validate match(:customer_email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change Changes.UpsertUserAndAssignToOrder
       change transition_state(:gift_options)
       require_atomic? false
@@ -634,7 +632,6 @@ defmodule Edenflowers.Orders.Order do
       validate present([:customer_email, :customer_phone_number], at_least: 1),
         message: "enter a phone number or an email"
 
-      validate match(:customer_email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/), message: "Must be a valid email address"
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_option_id)
       validate present(:fulfillment_date)
@@ -966,7 +963,7 @@ defmodule Edenflowers.Orders.Order do
 
     # Step 1 - Your Details
     attribute :customer_name, :string
-    attribute :customer_email, :string
+    attribute :customer_email, Edenflowers.Types.Email
     # Only custom orders ask for it: a phone customer may have no email.
     attribute :customer_phone_number, :string
 
