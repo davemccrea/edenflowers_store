@@ -1,6 +1,6 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Here is a link to pay for your booking on %{course} online, by card or MobilePay, before the course:", course: @registration.course.name) %>
+<%= gettext("Here is a link to pay for your booking for the course %{course} online, by card or MobilePay:", course: @registration.course.name) %>
 <%= @payment_link_url %>
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>

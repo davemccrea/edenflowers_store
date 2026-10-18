@@ -138,7 +138,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(from_address())
-      |> subject(~t"You're booked: #{course = registration.course.name}")
+      |> subject(~t"You're booked on the course #{course = registration.course.name}")
       |> text_body(render_course_confirmation(registration))
     end)
   end
@@ -161,7 +161,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(from_address())
-      |> subject(~t"Pay for your place on #{course = registration.course.name}")
+      |> subject(~t"Pay for your place on the course #{course = registration.course.name}")
       |> text_body(
         Templates.course_payment_link(%{
           registration: registration,

@@ -1910,13 +1910,6 @@ msgstr "Nähdään,"
 msgid "Sign up for the newsletter"
 msgstr "Tilaa uutiskirje"
 
-#: lib/edenflowers/email/templates/course_confirmation.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for booking. Your place on %{course} is confirmed."
-msgid_plural "Thank you for booking. Your %{count} places on %{course} are confirmed."
-msgstr[0] "Kiitos varauksestasi. Paikkasi kurssilla %{course} on vahvistettu."
-msgstr[1] "Kiitos varauksestasi. %{count} paikkaasi kurssilla %{course} on vahvistettu."
-
 #: lib/edenflowers_web/features/courses/courses_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
@@ -1974,11 +1967,6 @@ msgstr "Varaa paikka"
 #, elixir-autogen, elixir-format
 msgid "Change booking"
 msgstr "Muuta varausta"
-
-#: lib/edenflowers/email.ex:141
-#, elixir-autogen, elixir-format
-msgid "You're booked: %{course}"
-msgstr "Paikkasi on varattu: %{course}"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:305
 #, elixir-autogen, elixir-format
@@ -5845,21 +5833,11 @@ msgstr "Summa on suurempi kuin maksettavaa on jäljellä."
 msgid "That's more than was paid outside Stripe. Refund the rest with Stripe."
 msgstr "Summa on suurempi kuin Stripen ulkopuolella maksettiin. Hyvitä loput Stripellä."
 
-#: lib/edenflowers/email/templates/course_payment_link.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Here is a link to pay for your booking on %{course} online, by card or MobilePay, before the course:"
-msgstr "Tässä linkki, jolla voit maksaa varauksesi kurssille %{course} verkossa kortilla tai MobilePaylla ennen kurssia:"
-
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:35
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Pay for your booking"
 msgstr "Maksa varauksesi"
-
-#: lib/edenflowers/email.ex:164
-#, elixir-autogen, elixir-format
-msgid "Pay for your place on %{course}"
-msgstr "Maksa paikkasi kurssilla %{course}"
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:138
 #, elixir-autogen, elixir-format
@@ -5965,3 +5943,25 @@ msgstr "Tämä viikonpäivä on normaalisti suljettu. Varataan silti."
 #, elixir-autogen, elixir-format
 msgid "Record %{amount} as refunded? A mistake can be undone afterwards."
 msgstr "Kirjataanko %{amount} hyvitetyksi? Virheen voi perua jälkikäteen."
+
+#: lib/edenflowers/email/templates/course_payment_link.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here is a link to pay for your booking for the course %{course} online, by card or MobilePay:"
+msgstr "Tässä linkki, jolla voit maksaa varauksesi kurssille %{course} verkossa kortilla tai MobilePaylla:"
+
+#: lib/edenflowers/email.ex:164
+#, elixir-autogen, elixir-format
+msgid "Pay for your place on the course %{course}"
+msgstr "Maksa paikkasi kurssilla %{course}"
+
+#: lib/edenflowers/email/templates/course_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for booking. Your place on the course %{course} is confirmed."
+msgid_plural "Thank you for booking. Your %{count} places on the course %{course} are confirmed."
+msgstr[0] "Kiitos varauksestasi. Paikkasi kurssilla %{course} on vahvistettu."
+msgstr[1] "Kiitos varauksestasi. %{count} paikkaasi kurssilla %{course} on vahvistettu."
+
+#: lib/edenflowers/email.ex:141
+#, elixir-autogen, elixir-format
+msgid "You're booked on the course %{course}"
+msgstr "Paikkasi kurssilla %{course} on varattu"

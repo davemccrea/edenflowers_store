@@ -1,9 +1,10 @@
 ---
 id: TASK-31
 title: Call the course a course in booking emails
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:38'
 labels:
   - spec
   - customers
@@ -27,6 +28,6 @@ Change the copy in en/fi/sv:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The course confirmation email and its subject say 'the course <name>' in en, fi and sv
-- [ ] #2 The payment-link email says 'your booking for the course <name>' and no longer ends with 'before the course'
+- [x] #1 The course confirmation email and its subject say 'the course <name>' in en, fi and sv
+- [x] #2 The payment-link email says 'your booking for the course <name>' and no longer ends with 'before the course'
 <!-- AC:END -->
