@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               </div>
             </div>
 
-            <%!-- On desktop the photo's height is capped so the whole section fits one screen. --%>
+            <%!-- On desktop the width comes from the screen height, so the whole section fits one screen and no browser sizes the photo from its natural size. --%>
             <figure class="md:justify-self-end">
               <.image
                 src="local:///wedding/anna_riska_2.jpg"
@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 height={1000}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 priority
-                class="aspect-[4/5] w-full object-cover object-top md:max-h-[calc(100dvh-var(--header-clearance)-6rem)] md:w-auto"
+                class="aspect-[4/5] w-full object-cover object-top md:w-[calc((100dvh-var(--header-clearance)-6rem)*4/5)] md:max-w-full"
               />
               <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Anna Riska" /></figcaption>
             </figure>

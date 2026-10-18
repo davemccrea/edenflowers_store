@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
               </div>
             </div>
 
-            <%!-- On desktop the photo's height is capped so the whole section fits one screen. --%>
+            <%!-- On desktop the width comes from the screen height, so the whole section fits one screen and no browser sizes the photo from its natural size. --%>
             <figure class="md:justify-self-end">
               <.image
                 src="local:///condolence/condolence_5.jpg"
@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
                 height={1000}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 priority
-                class="aspect-[3/4] w-full object-cover md:max-h-[calc(100dvh-var(--header-clearance)-6rem)] md:w-auto"
+                class="aspect-[3/4] w-full object-cover md:w-[calc((100dvh-var(--header-clearance)-6rem)*3/4)] md:max-w-full"
               />
             </figure>
           </div>
