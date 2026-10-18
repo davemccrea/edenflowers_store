@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
 
   The florist clicks dates / weekday headers on a calendar to enable or
   disable them. Click semantics live in `Edenflowers.Fulfillment.Availability`.
-  Admin presentation lives in `EdenflowersWeb.Admin.Calendar`. This LiveView
+  Admin presentation lives in `EdenflowersWeb.AdminCalendar`. This LiveView
   only orchestrates state and persistence.
 
   Prices are edited through `:update_pricing`, which can't touch the option's
@@ -16,14 +16,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   """
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Calendar, only: [grid: 1, legend: 1]
+  import EdenflowersWeb.AdminCalendar, only: [admin_calendar: 1, legend: 1]
   import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Layouts
 
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
-  alias EdenflowersWeb.Admin.Calendar
+  alias EdenflowersWeb.AdminCalendar
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -142,21 +142,30 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     {:noreply, update_calendar(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
   end
 
-  @impl true
-  def handle_info({:fulfillment_date_toggled, date}, socket) do
-    {:noreply, update_calendar(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
+  # Past days stay focusable for the keyboard, so the click is refused here.
+  def handle_event("toggle-date", %{"date" => date}, socket) do
+    date = Date.from_iso8601!(date)
+
+    if Date.before?(date, socket.assigns.today) do
+      {:noreply, socket}
+    else
+      {:noreply, update_calendar(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
+    end
   end
 
-  def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
+  def handle_event("toggle-weekday", %{"weekday" => weekday}, socket) do
+    weekday = String.to_existing_atom(weekday)
     direction = if weekday in socket.assigns.calendar.available_days, do: :off, else: :on
 
     {:noreply, update_calendar(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
   end
 
-  def handle_info({:fulfillment_week_toggled, week}, socket) do
+  def handle_event("toggle-week", %{"week" => first}, socket) do
     %{calendar: calendar, today: today} = socket.assigns
+    first = Date.from_iso8601!(first)
+    week = Enum.map(0..6, &Date.add(first, &1))
 
-    case Calendar.week_toggle_direction(calendar, week, today) do
+    case AdminCalendar.week_toggle_direction(calendar, week, today) do
       nil ->
         {:noreply, socket}
 
@@ -195,7 +204,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
       <div class="w-full min-w-0 max-w-xl">
-        <.grid id="admin-fulfillment-calendar" calendar={@calendar} today={@today} />
+        <.admin_calendar id="admin-fulfillment-calendar" calendar={@calendar} today={@today} />
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
