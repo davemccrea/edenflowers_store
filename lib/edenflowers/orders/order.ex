@@ -435,6 +435,7 @@ defmodule Edenflowers.Orders.Order do
       change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
       change load(:payment_status)
 
+      # From here to PriceFulfillment, the same rules as :edit. Change both.
       validate Validations.EnteredLineItems
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
@@ -628,6 +629,7 @@ defmodule Edenflowers.Orders.Order do
       # cancelled or fulfilled since then matches no row and stock moves only once.
       change filter expr(state == :placed and fulfillment_status == :pending)
 
+      # From here to PriceFulfillment, the same rules as :place_custom. Change both.
       validate Validations.EnteredLineItems
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
