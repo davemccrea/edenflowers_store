@@ -1,9 +1,10 @@
 ---
 id: TASK-2
 title: Saved Cards
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-09 02:13'
+updated_date: '2026-10-18 04:46'
 labels: []
 dependencies: []
 ordinal: 2000
@@ -56,6 +57,24 @@ created: 2026-10-17 16:14
 2026-10-15: Implemented. Still to do by hand:
 - Turn Link off in the Stripe Dashboard (Settings → Payment methods), test and live.
 - Check in test mode with a signed-in user: save a card, come back, see it listed, remove it.
+
+---
+
+author: @claude
+created: 2026-10-18 04:44
+
+---
+
+2026-10-18: David checked saved cards on staging in test mode (save, see listed, remove). Still to do: turn Link off in the Stripe Dashboard, test and live.
+
+---
+
+author: @claude
+created: 2026-10-18 04:46
+
+---
+
+2026-10-18: Link turned off in the Stripe Dashboard. Done.
 
 ---
 <!-- COMMENTS:END -->
