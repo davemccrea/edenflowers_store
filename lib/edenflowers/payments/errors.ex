@@ -1,8 +1,8 @@
 defmodule Edenflowers.Payments.Errors.AlreadyPaid do
   @moduledoc """
-  Returned when an action would record a payment, or a failed payment, for
-  something already paid. Stripe delivers webhooks at least once, so
-  `Edenflowers.Payments` treats this as success, not failure.
+  Returned when an action would record a payment for something already paid.
+  Stripe delivers webhooks at least once, so `Edenflowers.Payments` treats this
+  as success, not failure.
   """
   use Splode.Error, fields: [:field], class: :invalid
 

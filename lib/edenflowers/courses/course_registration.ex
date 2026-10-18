@@ -133,7 +133,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
       argument :paid_with, :map, default: %{}
-      validate {Edenflowers.Payments.Validations.NotAlreadyPaid, attribute: :status, paid: :confirmed}
+      validate Edenflowers.Courses.Validations.NotAlreadyConfirmed
       validate Edenflowers.Payments.Validations.MatchesPaymentIntent
       validate Edenflowers.Courses.Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
