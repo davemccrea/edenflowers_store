@@ -4,7 +4,9 @@ title: Look up every external API's implementation the same way
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:12'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-18
 type: refactor

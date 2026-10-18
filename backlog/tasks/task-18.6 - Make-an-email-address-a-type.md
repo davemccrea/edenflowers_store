@@ -4,7 +4,9 @@ title: Make an email address a type
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:12'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-18
 type: refactor
