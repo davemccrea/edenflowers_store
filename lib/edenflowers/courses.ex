@@ -21,10 +21,8 @@ defmodule Edenflowers.Courses do
       define :add_registration_manually, action: :add_manually
       define :get_registration_by_id, action: :read, get_by: [:id]
       define :add_registration_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
-      define :mark_registration_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
 
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
-      define :record_registration_link_payment, action: :record_link_payment, args: [:payment_intent_id]
       define :open_registration_payment_link, action: :open_payment_link
       define :email_registration_payment_link, action: :email_payment_link
       define :get_registration_by_payment_link_token, action: :by_payment_link_token, args: [:token]

@@ -1754,7 +1754,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert {:error, %Ash.Error.Invalid{} = error} =
                Orders.add_payment_intent_id(order, "pi_new", actor: %{system: true})
 
-      assert Exception.message(error) =~ "order is not payable"
+      assert Exception.message(error) =~ "is not payable"
     end
   end
 

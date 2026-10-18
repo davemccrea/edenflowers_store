@@ -725,14 +725,8 @@ defmodule Edenflowers.Orders.Order do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
-      # No check that this is the order's current PaymentIntent: one Jennie
-      # dropped can still be paid, and that money has arrived all the same.
-      # Only the PaymentIntent that was paid stops being open.
-      change fn changeset, _context ->
-        if changeset.data.payment_intent_id == Ash.Changeset.get_argument(changeset, :payment_intent_id),
-          do: Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil),
-          else: changeset
-      end
+      # No check that this is the order's current PaymentIntent: see ClearPaidPaymentIntent.
+      change PaymentChanges.ClearPaidPaymentIntent
 
       # The receipt goes out again, showing the order as it now stands.
       change set_attribute(:receipt_emailed_at, nil)
@@ -801,12 +795,6 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_in(:locale, @locales)
     end
 
-    update :add_payment_intent_id do
-      accept [:payment_intent_id]
-      validate PaymentValidations.PaymentIntentNotSet
-      validate Validations.Payable
-    end
-
     update :send_confirmation_email do
       accept []
       transaction? false
@@ -819,19 +807,6 @@ defmodule Edenflowers.Orders.Order do
       transaction? false
       require_atomic? false
       change Changes.SendDeliveredEmail
-    end
-
-    update :reconcile_payment do
-      accept []
-      transaction? false
-      require_atomic? false
-      change PaymentChanges.Reconcile
-    end
-
-    update :mark_payment_cancelled do
-      argument :payment_intent_id, :string, allow_nil?: false
-      validate PaymentValidations.MatchesPaymentIntent
-      change set_attribute(:payment_intent_id, nil)
     end
 
     action :sales_summary, :map do
@@ -1137,9 +1112,6 @@ defmodule Edenflowers.Orders.Order do
 
     # Some of the customer's money is still with us: paid, and not all refunded.
     calculate :holds_money?, :boolean, expr(amount_paid > 0)
-
-    # What the payment link can charge.
-    calculate :payable?, :boolean, expr(balance > 0 and not refunded?)
 
     # Jennie has had time to buy flowers for anything closer, so the customer
     # gets the same notice as for a subscription change. Money paid outside

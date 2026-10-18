@@ -1,10 +1,10 @@
 ---
 id: TASK-17
 title: Share Stripe payment handling between orders and course bookings
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 12:16'
 labels:
   - spec
   - developers

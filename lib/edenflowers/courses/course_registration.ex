@@ -119,17 +119,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change PaymentChanges.ScheduleConfirmationEmail
     end
 
-    update :add_payment_intent_id do
-      accept [:payment_intent_id]
-      validate PaymentValidations.PaymentIntentNotSet
-    end
-
-    update :mark_payment_cancelled do
-      argument :payment_intent_id, :string, allow_nil?: false
-      validate PaymentValidations.MatchesPaymentIntent
-      change set_attribute(:payment_intent_id, nil)
-    end
-
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
     # A released hold that still got paid is confirmed anyway: the customer
     # has paid, so they have a place.
@@ -157,13 +146,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
-      # One Jennie dropped by recording a payment can still be paid, and that
-      # money has arrived all the same. Only the PaymentIntent paid stops being open.
-      change fn changeset, _context ->
-        if changeset.data.payment_intent_id == Ash.Changeset.get_argument(changeset, :payment_intent_id),
-          do: Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil),
-          else: changeset
-      end
+      change PaymentChanges.ClearPaidPaymentIntent
 
       # The confirmation goes out again, now with the receipt.
       change set_attribute(:confirmation_emailed_at, nil)
@@ -221,13 +204,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       transaction? false
       require_atomic? false
       change Changes.SendConfirmationEmail
-    end
-
-    update :reconcile_payment do
-      accept []
-      transaction? false
-      require_atomic? false
-      change PaymentChanges.Reconcile
     end
   end
 

@@ -1,10 +1,10 @@
 ---
 id: TASK-17.1
 title: Move the shared Stripe actions into Payable and call them by name
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 12:16'
 labels: []
 dependencies: []
 parent_task_id: TASK-17
@@ -33,7 +33,13 @@ ordinal: 48000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No action in the table in `TASK-17` is defined twice, apart from `record_link_payment` and `open_payment_link`
-- [ ] #2 `Payments` has no per-resource clause for cancelling, storing a PaymentIntent id or recording a link payment
-- [ ] #3 The existing suite passes
+- [x] #1 No action in the table in `TASK-17` is defined twice, apart from `record_link_payment` and `open_payment_link`
+- [x] #2 `Payments` has no per-resource clause for cancelling, storing a PaymentIntent id or recording a link payment
+- [x] #3 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Validations.Payable and the payable? calculation moved into Payable too: a booking at checkout or on a payment link owes its balance the same way. The system-actor bypass stays listed per resource, since a fragment bypass's place among each resource's policies isn't controlled. Payments stores the PaymentIntent id as the system actor for both resources.
+<!-- SECTION:NOTES:END -->
