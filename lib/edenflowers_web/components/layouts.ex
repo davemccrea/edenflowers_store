@@ -319,14 +319,14 @@ defmodule EdenflowersWeb.Layouts do
         <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-lg">
           Eden Flowers
         </.link>
-        <button
+        <.icon_button
           :if={@closeable}
-          type="button"
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
-          aria-label={~t"Close navigation menu"}
+          size="sm"
+          aria_label={~t"Close navigation menu"}
         >
-          <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
-        </button>
+          <.icon name="hero-x-mark" class="h-5 w-5" />
+        </.icon_button>
       </div>
 
       <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3">

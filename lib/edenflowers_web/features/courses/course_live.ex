@@ -128,7 +128,6 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                   label={~t"Places"}
                   field={@form[:seats]}
                   type="select"
-                  class="select select-lg w-full"
                   options={seat_options(@course)}
                   data-testid="seats-select"
                 />

@@ -426,7 +426,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={[@class || "select w-full", @errors != [] && (@error_class || "select-error")]}
+          class={[@class || "select select-lg w-full", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
@@ -452,7 +452,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <textarea
           id={@id}
           name={@name}
-          class={[@class || "textarea w-full", @errors != [] && (@error_class || "textarea-error")]}
+          class={[@class || "textarea textarea-lg w-full", @errors != [] && (@error_class || "textarea-error")]}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
           {@rest}
@@ -481,7 +481,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <%= for option <- @options do %>
           <label
             for={"#{@id_prefix}_#{option[:value]}"}
-            class={["border-base-300 flex flex-1 items-center gap-3 border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 hover:border-primary"]}
+            class={["radio-card border-base-300 flex flex-1 items-center gap-3 border px-4 py-3 transition-all has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 hover:border-primary"]}
           >
             <input
               type="radio"

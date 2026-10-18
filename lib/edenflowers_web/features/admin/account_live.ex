@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                   <div class="flex items-center gap-2">
                     <.live_file_input
                       upload={@uploads.avatar}
-                      class="file-input file-input-sm min-w-0 flex-1 sm:max-w-xs"
+                      class="file-input min-w-0 flex-1 sm:max-w-xs"
                       aria-labelledby="avatar-label"
                       aria-describedby="avatar-help"
                       aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
@@ -74,7 +74,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                       type="button"
                       phx-click="remove_avatar"
                       variant="ghost"
-                      size="sm"
                     >
                       {~t"Remove"}
                     </.button>

@@ -56,9 +56,13 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         >
           <header class="flex items-center justify-between gap-4 p-4">
             <h2 class="text-lg font-semibold">{~t"Export"}</h2>
-            <button type="button" phx-click={JS.exec("phx-hide", to: "#export-drawer")} aria-label={~t"Close"}>
-              <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
-            </button>
+            <.icon_button
+              phx-click={JS.exec("phx-hide", to: "#export-drawer")}
+              size="sm"
+              aria_label={~t"Close"}
+            >
+              <.icon name="hero-x-mark" class="h-5 w-5" />
+            </.icon_button>
           </header>
           <form action={~p"/admin/accounting"} method="get" class="flex flex-col gap-4 p-4">
             <label class="flex flex-col gap-1 text-sm">

@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   defp count_badge(assigns) do
     ~H"""
-    <span class={["rounded-full px-2 py-0.5 text-sm font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
+    <span class={["badge badge-sm rounded-full border-0 font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
       {@count}
     </span>
     """
@@ -403,7 +403,6 @@ defmodule EdenflowersWeb.Admin.Components do
             ~t"Refund #{amount = Edenflowers.Format.currency(@record.stripe_refund, @locale)} to the customer's card with Stripe?"
           }
           variant="primary"
-          size="sm"
         >
           {~t"Refund with Stripe"}
         </.button>
@@ -425,13 +424,13 @@ defmodule EdenflowersWeb.Admin.Components do
         <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="mt-3">
           <input type="hidden" name="record_id" value={@record.id} />
           <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"}>
-            <div class="grid grid-cols-2 items-end gap-2 text-sm">
+            <div class="grid grid-cols-2 items-end gap-2">
               <.input
                 field={@form[:payment_method]}
                 id={"#{@id}-method"}
                 type="select"
                 label={~t"How"}
-                class="select select-sm w-full"
+                class="select w-full"
                 options={payment_method_options()}
               />
               <.input
@@ -440,7 +439,7 @@ defmodule EdenflowersWeb.Admin.Components do
                 type="text"
                 inputmode="decimal"
                 label={~t"Amount (€)"}
-                class="input input-sm w-full tabular-nums"
+                class="input w-full tabular-nums"
               />
               <div :if={@collect? and @settles? and @receipt_email?} class="col-span-2">
                 <.input
@@ -453,7 +452,6 @@ defmodule EdenflowersWeb.Admin.Components do
               <.button
                 type="submit"
                 variant="primary"
-                size="sm"
                 class="col-span-2"
                 data-confirm={
                   if @collect?,
@@ -464,7 +462,7 @@ defmodule EdenflowersWeb.Admin.Components do
                 {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
               </.button>
             </div>
-            <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-xs">
+            <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">
               {~t"A minus amount records a refund."}
             </p>
           </fieldset>
