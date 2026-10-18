@@ -10,6 +10,8 @@ defmodule Edenflowers.Orders.Subscription do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource]
 
+  import Edenflowers.Actors
+
   alias Edenflowers.Orders.Changes
   alias Edenflowers.Orders.Validations
 
@@ -53,7 +55,7 @@ defmodule Edenflowers.Orders.Subscription do
 
   @doc "Starts a subscription held at `:payment_failed` making Occurrences again."
   def reactivate_if_held(%{state: :payment_failed} = subscription) do
-    Edenflowers.Orders.reactivate_subscription(subscription, actor: Edenflowers.Actors.system_actor())
+    Edenflowers.Orders.reactivate_subscription(subscription, actor: system_actor())
   end
 
   def reactivate_if_held(subscription), do: {:ok, subscription}
@@ -89,7 +91,7 @@ defmodule Edenflowers.Orders.Subscription do
         scheduler_cron "0 * * * *"
         worker_module_name Edenflowers.Orders.Workers.CreateOccurrence
         scheduler_module_name Edenflowers.Orders.Schedulers.CreateOccurrence
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         where expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@lead_days, :day))
       end
 
@@ -103,7 +105,7 @@ defmodule Edenflowers.Orders.Subscription do
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionSetupEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         where expr(is_nil(setup_emailed_at))
       end
     end
