@@ -1,9 +1,10 @@
 ---
 id: TASK-37.2
 title: Add a Courses section to the FAQ
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 19:45'
 labels: []
 dependencies: []
 parent_task_id: TASK-37
@@ -21,5 +22,24 @@ Add a Courses section to `faq_live.ex`: how to cancel (reply to the confirmation
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The FAQ has a Courses section that explains cancelling and the late-cancellation fee
+- [x] #1 The FAQ has a Courses section that explains cancelling and the late-cancellation fee
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added a Courses section to the FAQ (#courses): how to cancel (reply to the confirmation email) and the 7-day rule with any late-cancellation fee shown on the course's page. Worded generically because fees vary per course and can be 0.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 19:45
+
+---
+
+Jennie: any other course questions you get asked (what to bring, what's included, group bookings)? Send them and I'll add them to the FAQ.
+
+---
+<!-- COMMENTS:END -->

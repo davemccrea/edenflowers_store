@@ -59,6 +59,7 @@ msgstr "Yhteystiedot"
 #: lib/edenflowers_web/features/courses/course_live.ex:58
 #: lib/edenflowers_web/features/courses/courses_live.ex:17
 #: lib/edenflowers_web/features/courses/courses_live.ex:27
+#: lib/edenflowers_web/features/marketing/faq_live.ex:48
 #: lib/edenflowers_web/features/marketing/home_live.ex:185
 #, elixir-autogen, elixir-format
 msgid "Courses"
@@ -4669,47 +4670,47 @@ msgstr "Toimitustasi %{date} valmistellaan jo, ja se tulee silti."
 msgid "Your flowers are still ready to collect at the shop on %{date}."
 msgstr "Kukkasi ovat silti noudettavissa liikkeestä %{date}."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:56
+#: lib/edenflowers_web/features/marketing/faq_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Can I pick it up instead?"
 msgstr "Voinko noutaa sen itse?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:59
+#: lib/edenflowers_web/features/marketing/faq_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "Can I take a break or stop?"
 msgstr "Voinko pitää tauon tai lopettaa?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:61
+#: lib/edenflowers_web/features/marketing/faq_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "What if my card doesn't go through?"
 msgstr "Entä jos korttimaksu ei mene läpi?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:57
+#: lib/edenflowers_web/features/marketing/faq_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "When do I pay?"
 msgstr "Milloin maksan?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:60
+#: lib/edenflowers_web/features/marketing/faq_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account, where you can also change the size, how often or the day. Make any change at least %{close} days before a bouquet; after that, it's already on its way."
 msgstr "Kyllä, tililtäsi. Siellä voit myös vaihtaa kokoa, toimitusväliä tai päivää. Tee muutokset viimeistään %{close} päivää ennen kimppua; sen jälkeen se on jo matkalla."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:58
+#: lib/edenflowers_web/features/marketing/faq_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "You pay for the first bouquet at checkout. After that, your card is charged %{days} days before each one, so I know to order your flowers."
 msgstr "Maksat ensimmäisen kimpun kassalla. Sen jälkeen korttiasi veloitetaan %{days} päivää ennen jokaista kimppua, jotta ehdin tilata kukat ajoissa."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:62
+#: lib/edenflowers_web/features/marketing/faq_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."
 msgstr "Kimppusi tulee silti, ja lähetän sinulle sähköpostilla linkin sen maksamiseen. Kestotilauksesi odottaa, kunnes asia on hoidettu."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:76
+#: lib/edenflowers_web/features/marketing/faq_live.ex:88
 #, elixir-autogen, elixir-format
 msgid "Of course. Choose delivery or pickup at checkout."
 msgstr "Totta kai. Valitse kassalla toimitus tai nouto."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:73
+#: lib/edenflowers_web/features/marketing/faq_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Of course. Choose delivery or pickup at checkout. The first %{km} km of delivery are free. Further out, it's %{base} plus %{per_km} for each km after that."
 msgstr "Totta kai. Valitse kassalla toimitus tai nouto. Toimituksen ensimmäiset %{km} km ovat ilmaisia. Kauempana hinta on %{base} sekä %{per_km} jokaiselta seuraavalta kilometriltä."
@@ -6428,3 +6429,23 @@ msgstr "Myöhäisen peruutuksen maksu (€)"
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full. After that, I keep a %{fee} late-cancellation fee."
 msgstr "Kuitti on liitteenä. Jos suunnitelmasi muuttuvat, vastaa tähän viestiin viimeistään 7 päivää ennen kurssia, niin palautan koko summan. Sen jälkeen pidätän %{fee} peruutusmaksun."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:54
+#, elixir-autogen, elixir-format
+msgid "Cancel at least 7 days before the course for a full refund. If you cancel later, any late-cancellation fee shown on the course's page is kept."
+msgstr "Peru viimeistään 7 päivää ennen kurssia, niin saat koko summan takaisin. Jos perut myöhemmin, kurssin sivulla mainittua peruutusmaksua ei palauteta."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:50
+#, elixir-autogen, elixir-format
+msgid "How do I cancel a course booking?"
+msgstr "Miten peruun kurssivaraukseni?"
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Reply to your confirmation email and let me know."
+msgstr "Vastaa vahvistussähköpostiisi ja kerro siitä minulle."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:53
+#, elixir-autogen, elixir-format
+msgid "Will I get my money back?"
+msgstr "Saanko rahani takaisin?"

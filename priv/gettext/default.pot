@@ -59,6 +59,7 @@ msgstr ""
 #: lib/edenflowers_web/features/courses/course_live.ex:58
 #: lib/edenflowers_web/features/courses/courses_live.ex:17
 #: lib/edenflowers_web/features/courses/courses_live.ex:27
+#: lib/edenflowers_web/features/marketing/faq_live.ex:48
 #: lib/edenflowers_web/features/marketing/home_live.ex:185
 #, elixir-autogen, elixir-format
 msgid "Courses"
@@ -4669,47 +4670,47 @@ msgstr ""
 msgid "Your flowers are still ready to collect at the shop on %{date}."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:56
+#: lib/edenflowers_web/features/marketing/faq_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Can I pick it up instead?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:59
+#: lib/edenflowers_web/features/marketing/faq_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "Can I take a break or stop?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:61
+#: lib/edenflowers_web/features/marketing/faq_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "What if my card doesn't go through?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:57
+#: lib/edenflowers_web/features/marketing/faq_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "When do I pay?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:60
+#: lib/edenflowers_web/features/marketing/faq_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account, where you can also change the size, how often or the day. Make any change at least %{close} days before a bouquet; after that, it's already on its way."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:58
+#: lib/edenflowers_web/features/marketing/faq_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "You pay for the first bouquet at checkout. After that, your card is charged %{days} days before each one, so I know to order your flowers."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:62
+#: lib/edenflowers_web/features/marketing/faq_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:76
+#: lib/edenflowers_web/features/marketing/faq_live.ex:88
 #, elixir-autogen, elixir-format
 msgid "Of course. Choose delivery or pickup at checkout."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:73
+#: lib/edenflowers_web/features/marketing/faq_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Of course. Choose delivery or pickup at checkout. The first %{km} km of delivery are free. Further out, it's %{base} plus %{per_km} for each km after that."
 msgstr ""
@@ -6427,4 +6428,24 @@ msgstr ""
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:11
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full. After that, I keep a %{fee} late-cancellation fee."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:54
+#, elixir-autogen, elixir-format
+msgid "Cancel at least 7 days before the course for a full refund. If you cancel later, any late-cancellation fee shown on the course's page is kept."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:50
+#, elixir-autogen, elixir-format
+msgid "How do I cancel a course booking?"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Reply to your confirmation email and let me know."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:53
+#, elixir-autogen, elixir-format
+msgid "Will I get my money back?"
 msgstr ""
