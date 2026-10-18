@@ -4,10 +4,11 @@ title: Decide whether course bookings become ordinary orders
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-18 11:24'
 labels:
   - spec
 dependencies: []
+priority: medium
 type: grilling
 ordinal: 46000
 ---
