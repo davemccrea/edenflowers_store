@@ -4,10 +4,10 @@ title: Refund an unhappy customer on a fulfilled order or booking
 status: needs-info
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 11:38'
 labels:
   - spec
-  - jennie
+  - admin
 dependencies: []
 priority: high
 type: feature
