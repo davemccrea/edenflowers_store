@@ -3,7 +3,7 @@
 ## Project
 
 - Call `source .env` before running mix.
-- Do active work on the `staging` branch, not `main`. Pushing `staging` deploys it to the staging server. To release, fast-forward `main` to `staging` and run `just deploy production` (it runs from `main`), then fast-forward `staging` to `main` to pick up the version bump.
+- Work on `main`. Pushing `main` deploys nothing. `just deploy staging` deploys the current branch to the staging server; `just deploy production` tags a release from `main`.
 
 ## Coding Standards
 

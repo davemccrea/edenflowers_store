@@ -4,8 +4,7 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - staging
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -39,9 +38,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/staging' }}
+            type=semver,pattern={{version}},enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=raw,value=staging,enable=${{ github.event_name == 'workflow_dispatch' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -60,7 +59,7 @@ jobs:
     name: Deploy to server
     runs-on: ubuntu-latest
     needs: build-and-push
-    environment: ${{ github.ref_type == 'tag' && 'production' || 'staging' }}
+    environment: ${{ github.event_name == 'push' && 'production' || 'staging' }}
 
     steps:
       - name: Deploy via SSH
