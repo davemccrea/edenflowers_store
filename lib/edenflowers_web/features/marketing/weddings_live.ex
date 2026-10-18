@@ -50,8 +50,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 {~t"Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."}
               </p>
               <div class="mt-8 flex flex-wrap items-center gap-6">
-                <.button href="#enquire" variant="primary">{~t"Request a quote"}</.button>
-                <.button href="#my-work" variant="text">{~t"See my work"}</.button>
+                <.button href="#my-work" variant="primary">{~t"See my work"}</.button>
+                <.button href="#prices" variant="secondary">{~t"Estimate your price"}</.button>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </figure>
       </section>
 
-      <section class="not-last:border-b" aria-labelledby="prices-heading">
+      <section id="prices" class="scroll-anchor-below-header not-last:border-b" aria-labelledby="prices-heading">
         <div class="container py-24">
           <div class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div>
