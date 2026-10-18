@@ -77,6 +77,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 <.maps_link address={@course.location_address} />
               </dd>
 
+              <dt class="eyebrow text-base-content/70">{~t"Language"}</dt>
+              <dd data-testid="course-language">{language_name(@course.language)}</dd>
+
               <dt class="eyebrow text-base-content/70">{~t"Price"}</dt>
               <dd class="tabular-nums">{~t"#{price = Format.storefront_price(@course.price, @locale)} per person"}</dd>
 
@@ -288,6 +291,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
     Decimal.mult(course.price, seats)
   end
+
+  defp language_name(:sv), do: ~t"Swedish"
+  defp language_name(:en), do: ~t"English"
 
   defp availability(%{seats_left: seats_left}) when seats_left <= 0, do: ~t"Fully booked"
   defp availability(%{seats_left: seats_left}), do: ~t"#{count = seats_left} place(s) left"N

@@ -112,6 +112,16 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               </div>
             </.form_section>
 
+            <.form_section title={~t"Taught in"}>
+              <.input
+                field={@form[:language]}
+                type="select"
+                label={~t"Language"}
+                options={[{~t"Swedish", :sv}, {~t"English", :en}]}
+                class="select max-w-48 w-full"
+              />
+            </.form_section>
+
             <.form_section title={~t"Where"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input field={@form[:location_name]} type="text" label={~t"Venue"} class="input w-full" />

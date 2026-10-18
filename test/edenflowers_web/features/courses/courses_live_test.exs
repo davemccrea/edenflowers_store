@@ -28,6 +28,16 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/:id" do
+    test "shows the language the course is taught in, here and in the listing", %{conn: conn} do
+      course = generate(course(language: :en))
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course.id}")
+      assert has_element?(view, "[data-testid=course-language]", "English")
+
+      {:ok, view, _html} = live(conn, ~p"/courses")
+      assert has_element?(view, "[data-testid=course-language]", "In English")
+    end
+
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
