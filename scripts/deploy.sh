@@ -5,13 +5,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 source scripts/lib/ui.sh
 
-offer_watch() {
-  echo
-  read -r -p "  Watch the deploy? [Y/n] " REPLY
-  if [[ "$REPLY" =~ ^[Nn]$ ]]; then
-    return
-  fi
-
+watch_deploy() {
   # The run takes a few seconds to appear after the push; until then "latest" is the previous deploy.
   local sha run_id=""
   sha="$(git rev-parse HEAD)"
@@ -22,10 +16,21 @@ offer_watch() {
     sleep 2
   done
   if [[ -z "$run_id" ]]; then
-    fail "no deploy run found for $sha, try 'just deploy-watch' in a moment"
+    printf "  %s✗ no deploy run found for %s, try 'just deploy-watch' in a moment%s\n" "$RED" "$sha" "$RESET" >&2
+    return 1
   fi
 
   gh run watch "$run_id" --compact --exit-status
+}
+
+offer_watch() {
+  echo
+  read -r -p "  Watch the deploy? [Y/n] " REPLY
+  if [[ "$REPLY" =~ ^[Nn]$ ]]; then
+    return
+  fi
+
+  watch_deploy
 }
 
 section "Preflight checks"
@@ -188,12 +193,17 @@ fi
 
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
-printf '\n%s%s✓ Deployed %s%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
+printf '\n%s%s✓ Pushed %s%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
   "$BOLD" "$GREEN" "$TAG" "$RESET" "$DIM" "$RESET"
 
-# The deploy is already under way, so a failed release mustn't look like a failed deploy.
-if ! scripts/release.sh "$TAG"; then
-  printf '\n  %srelease notes not published — rerun with: scripts/release.sh %s%s\n' "$DIM" "$TAG" "$RESET"
+# Publish the release only once it is live, so GitHub never announces a version production isn't running.
+section "Watching deploy"
+if ! watch_deploy; then
+  fail "deploy of $TAG did not succeed. Once it is live (fix, or 'gh run rerun'), publish notes with: scripts/release.sh $TAG"
 fi
+ok "$TAG deployed to production"
 
-offer_watch
+# The deploy has succeeded, so a failed release mustn't look like a failed deploy.
+if ! scripts/release.sh "$TAG"; then
+  printf '\n  %srelease notes not published, rerun with: scripts/release.sh %s%s\n' "$DIM" "$TAG" "$RESET"
+fi
