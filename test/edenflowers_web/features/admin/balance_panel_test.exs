@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.BalancePanelTest do
   @moduledoc """
-  Every case in the loop runs on the order page and on the courses page, which
-  show the same panel. The courses page shows it only to refund.
+  Every case in the loop runs on the order page's panel and on a courses page
+  row, which settle a balance the same ways.
   """
   use EdenflowersWeb.ConnCase, async: true
 
@@ -60,8 +60,11 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
   defp open(conn, :booking, registration) do
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
-    {view, "#balance-#{registration.id}"}
+    {view, "#registration-#{registration.id}"}
   end
+
+  defp refund_form(:order, _record), do: "#order-balance-form"
+  defp refund_form(:booking, registration), do: "#refund-#{registration.id}"
 
   defp balance(record), do: Ash.load!(record, :balance, authorize?: false, reuse_values?: false).balance
 
@@ -75,14 +78,15 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
         assert has_element?(view, panel, "To refund €88.50")
         assert has_element?(view, ~s|#{panel} button[phx-click="refund_with_stripe"]|, "Refund with Stripe")
-        assert has_element?(view, ~s|#{panel}-form input[name="payment[amount]"][value="-30.00"]|)
+        assert has_element?(view, ~s|#{refund_form(@parent, record)} input[name="payment[amount]"][value="-30.00"]|)
       end
 
-      test "a settled one has no panel", %{conn: conn} do
+      test "a settled one has nothing to settle", %{conn: conn} do
         record = build(@parent, payments: [cash: "88.50"])
         {view, panel} = open(conn, @parent, record)
 
-        refute has_element?(view, panel)
+        refute has_element?(view, panel, "To refund")
+        refute has_element?(view, ~s|button[phx-click="refund_with_stripe"]|)
       end
 
       test "a cancelled one paid by card is refunded with Stripe from the panel", %{conn: conn} do
@@ -97,12 +101,12 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         {view, panel} = open(conn, @parent, record)
 
         assert has_element?(view, panel, "To refund €88.50")
-        refute has_element?(view, "#{panel}-form")
+        refute has_element?(view, refund_form(@parent, record))
 
         assert view |> element(~s|#{panel} button[phx-click="refund_with_stripe"]|) |> render_click() =~
                  "Refunded with Stripe."
 
-        refute has_element?(view, panel)
+        refute has_element?(view, panel, "To refund")
       end
 
       test "a cancelled one paid in cash is settled by the prefilled refund", %{conn: conn} do
@@ -110,20 +114,10 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         {view, panel} = open(conn, @parent, record)
 
         refute has_element?(view, ~s|#{panel} button[phx-click="refund_with_stripe"]|)
-        view |> form("#{panel}-form", payment: %{payment_method: "cash"}) |> render_submit()
+        view |> form(refund_form(@parent, record), payment: %{payment_method: "cash"}) |> render_submit()
 
-        refute has_element?(view, panel)
+        refute has_element?(view, panel, "To refund")
         assert Decimal.eq?(balance(record), 0)
-      end
-
-      test "a refused amount says why and records nothing", %{conn: conn} do
-        record = build(@parent, cancelled: true, payments: [cash: "88.50"])
-        {view, panel} = open(conn, @parent, record)
-
-        assert view |> form("#{panel}-form", payment: %{amount: "-100,00"}) |> render_submit() =~
-                 "That&#39;s more than is owed back"
-
-        assert Decimal.equal?(balance(record), "-88.50")
       end
 
       test "a payment recorded by mistake is undone, once", %{conn: conn} do
@@ -162,6 +156,16 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
     refute has_element?(view, panel)
     assert Decimal.eq?(balance(order), 0)
+  end
+
+  test "an order refund above what's owed back says why and records nothing", %{conn: conn} do
+    order = build(:order, cancelled: true, payments: [cash: "88.50"])
+    {view, _panel} = open(conn, :order, order)
+
+    assert view |> form("#order-balance-form", payment: %{amount: "-100,00"}) |> render_submit() =~
+             "That&#39;s more than is owed back"
+
+    assert Decimal.equal?(balance(order), "-88.50")
   end
 
   test "an order payment above the balance says why and records nothing", %{conn: conn} do
