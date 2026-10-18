@@ -9,7 +9,7 @@ Blocked by: 01
 The spec's decision 2, for what no Credo check covers:
 
 1. **Ash DSL names.** In every resource, alias `Changes`, `Validations`, `Calculations` and `Actions` (own domain and others') and use the short names in `change`/`validate`/`calculate` lines. Worst offenders:
-   - `lib/edenflowers/orders/order.ex`: the `Edenflowers.Payments.Changes.*` and `Edenflowers.Payments.Validations.*` references; `relationships` keep full names, but `:1030`/`:1033` should at least not mix with the aliased `FulfillmentOption`/`Subscription` used elsewhere in the file. Pick one per module.
+   - `lib/edenflowers/orders/order.ex`: the `Edenflowers.Payments.Changes.*` and `Edenflowers.Payments.Validations.*` references. Relationship targets (e.g. `:1030`, `:1033`) stay in full, as everywhere else.
    - `lib/edenflowers/orders/subscription.ex`: every `Edenflowers.Orders.Changes.*` / `Validations.*`.
    - `lib/edenflowers/courses/course_registration.ex`: `Edenflowers.Courses.Validations.MatchesPaymentAmount` and the `Edenflowers.Payments.*` references.
    - `user.ex`, `product.ex`, `line_item.ex`, `fulfillment_option.ex`.
