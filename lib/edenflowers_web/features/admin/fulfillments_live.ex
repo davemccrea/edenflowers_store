@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       end
 
     case Fulfillment.set_same_day_for_all(changes, actor: socket.assigns.current_user) do
-      {:ok, updated} ->
+      %Ash.BulkResult{status: :success, records: updated} ->
         {:noreply,
          socket
          |> replace_options(updated)
@@ -150,8 +150,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          |> Cinder.refresh_table("fulfillment-options")
          |> put_flash(:info, ~t"Saved.")}
 
-      {:error, error} ->
-        errors = for %{field: field} = e <- Ash.Error.to_error_class(error).errors, do: {field, {e.message, []}}
+      %Ash.BulkResult{errors: bulk_errors} ->
+        errors = for %{field: field} = e <- Ash.Error.to_error_class(bulk_errors).errors, do: {field, {e.message, []}}
 
         {:noreply,
          socket
