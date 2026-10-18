@@ -1,6 +1,6 @@
 defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   @moduledoc """
-  Toggles a single date on or off in the shop calendar.s overrides.
+  Toggles a single date on or off in the shop calendar's overrides.
 
   ## Click semantics
 

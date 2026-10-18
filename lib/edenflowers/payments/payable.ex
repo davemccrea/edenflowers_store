@@ -91,11 +91,11 @@ defmodule Edenflowers.Payments.Payable do
                   amount_paid <= 0
               )
 
-    # A record refunded in Stripe without being cancelled reads as owed again
-    # by its balance, but is settled.
     # What a PaymentIntent can charge.
     calculate :payable?, :boolean, expr(balance > 0 and not refunded?)
 
+    # A record refunded in Stripe without being cancelled reads as owed again
+    # by its balance, but is settled.
     calculate :settled?, :boolean, expr(balance == 0 or refunded?)
 
     # Money paid through Stripe goes back through Stripe, so Jennie can only
