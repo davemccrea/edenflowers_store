@@ -510,7 +510,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "header", "Cancelled")
       refute has_element?(view, "header", "Unpaid")
       refute has_element?(view, "#payment-link-url")
-      refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+      refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     end
 
     test "asks before fulfilling an unpaid order", ctx do
@@ -518,7 +518,10 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, ~s|button[phx-click="mark_fulfilled"][data-confirm*="still unpaid"]|)
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+
+      assert has_element?(view, "#confirm-fulfillment", "This order is still unpaid.")
+      assert Orders.get_order_for_admin!(order.id, actor: ctx.admin).fulfillment_status == :pending
     end
   end
 end
