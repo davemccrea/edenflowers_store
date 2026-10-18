@@ -41,6 +41,12 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "[data-status=cancelled]", "Cancelled Carl")
   end
 
+  test "View in store opens the public courses listing in a new tab", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+    assert has_element?(view, ~s|a[href="/courses"][target="_blank"]|, "View in store")
+  end
+
   test "a link from the Overview opens the booking's course and highlights the booking", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths"))
     other_course = generate(course(name: "Spring posies"))

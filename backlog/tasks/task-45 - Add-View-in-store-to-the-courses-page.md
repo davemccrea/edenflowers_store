@@ -1,9 +1,10 @@
 ---
 id: TASK-45
 title: Add View in store to the courses page
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:40'
 labels:
   - spec
   - admin
@@ -24,5 +25,5 @@ Add a View in store button in the courses page header, opening the public course
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The courses page header has View in store, opening the public courses listing in a new tab
+- [x] #1 The courses page header has View in store, opening the public courses listing in a new tab
 <!-- AC:END -->
