@@ -1,10 +1,10 @@
 ---
 id: TASK-22
 title: Recover quietly when a reconnecting tab's cart is gone
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 07:17'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:09'
 labels: []
 dependencies: []
 ordinal: 74000
