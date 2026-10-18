@@ -111,6 +111,45 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       assert_no_email_sent()
     end
 
+    test "sends the photo of where the flowers were left instead, shrunk by imgproxy" do
+      Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+        assert conn.request_path =~ "rs:fit:1600:1600"
+        assert conn.request_path =~ "q:80"
+        Plug.Conn.send_resp(conn, 200, "small jpeg")
+      end)
+
+      order =
+        fulfillable_order(
+          fulfillment_status: :fulfilled,
+          delivery_photo_slug: "local:///uploads/door.jpg",
+          email_delivery_photo: true
+        )
+
+      assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Your Eden Flowers order 1400 was left for you"
+        assert email.text_body =~ "Nobody was home"
+        assert [%{data: "small jpeg", content_type: "image/jpeg"}] = email.attachments
+      end)
+    end
+
+    test "sends the usual email when Jennie chose not to send the photo" do
+      order =
+        fulfillable_order(
+          fulfillment_status: :fulfilled,
+          delivery_photo_slug: "local:///uploads/door.jpg",
+          email_delivery_photo: false
+        )
+
+      assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ "Your flowers have been delivered."
+        assert email.attachments == []
+      end)
+    end
+
     test "doesn't send twice" do
       order = fulfillable_order(fulfillment_status: :fulfilled)
 

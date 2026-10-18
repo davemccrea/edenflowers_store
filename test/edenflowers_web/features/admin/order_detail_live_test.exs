@@ -185,6 +185,59 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
+  describe "confirming a delivery" do
+    test "the customer was home: fulfils with no photo", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+
+      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
+      view |> form("#confirm-delivery-form", delivery: %{customer_home: "true"}) |> render_change()
+      refute has_element?(view, "#confirm-delivery-form input[type=file]")
+      view |> form("#confirm-delivery-form") |> render_submit()
+
+      assert has_element?(view, "#order-status", "Fulfilled")
+      refute has_element?(view, "#order-delivery-photo")
+    end
+
+    test "nobody was home: keeps the photo under a name that can't be guessed", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
+      view |> form("#confirm-delivery-form", delivery: %{customer_home: "false"}) |> render_change()
+
+      view
+      |> file_input("#confirm-delivery-form", "photo_delivery[photo]", [
+        %{name: "IMG_0001.JPG", content: "jpeg bytes", type: "image/jpeg"}
+      ])
+      |> render_upload("IMG_0001.JPG")
+
+      view |> form("#confirm-delivery-form", delivery: %{email_photo: "false"}) |> render_submit()
+
+      assert has_element?(view, "#order-status", "Fulfilled")
+      assert has_element?(view, "#order-delivery-photo img")
+
+      reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
+      assert "local:///uploads/" <> file = reloaded.delivery_photo_slug
+      assert file =~ ~r/\A[0-9a-f]{32}\.jpg\z/
+      refute reloaded.email_delivery_photo
+    end
+
+    test "nobody was home: won't confirm without a photo", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
+      view |> form("#confirm-delivery-form", delivery: %{customer_home: "false"}) |> render_change()
+      view |> form("#confirm-delivery-form") |> render_submit()
+
+      assert render(view) =~ "Take a photo of where you left the flowers."
+      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
+    end
+  end
+
   test "shows customer and recipient as separate sections for a gift order", %{conn: conn} do
     order =
       placed_order(

@@ -44,10 +44,14 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   @doc """
   Stores finished uploads and remembers their slugs, so a save that fails
   validation doesn't lose a photo that's already on disk.
+
+  Pass `private: true` for a photo nobody should find by guessing, like a
+  customer's doorstep: uploads are public through imgproxy, so its file gets a
+  random name.
   """
-  def store_uploads(socket, names) do
+  def store_uploads(socket, names, opts \\ []) do
     Enum.reduce(names, socket, fn name, socket ->
-      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store/2) do
+      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store(&1, &2, opts)) do
         [slug] -> Phoenix.Component.update(socket, :photo_slugs, &Map.put(&1, name, slug))
         [] -> socket
       end
@@ -65,9 +69,14 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
 
   defp upload_name(field_name), do: "photo_" <> field_name
 
-  defp store(%{path: path}, entry) do
+  defp store(%{path: path}, entry, opts) do
     dir = Application.fetch_env!(:edenflowers, :uploads_dir)
-    filename = file_name(entry.client_name)
+
+    filename =
+      if opts[:private],
+        do: private_file_name(entry.client_name),
+        else: file_name(entry.client_name)
+
     dest = Path.join(dir, filename)
 
     File.mkdir_p!(dir)
@@ -95,6 +104,10 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     suffix = Base.encode16(:crypto.strong_rand_bytes(3), case: :lower)
 
     "#{base}-#{suffix}#{ext}"
+  end
+
+  def private_file_name(client_name) do
+    Base.encode16(:crypto.strong_rand_bytes(16), case: :lower) <> String.downcase(Path.extname(client_name))
   end
 
   defp deep_merge(left, right) do

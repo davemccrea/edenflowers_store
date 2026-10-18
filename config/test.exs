@@ -61,3 +61,7 @@ config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.P
 
 # Push services are stubbed per test with Req.Test.
 config :edenflowers, :web_push_req_options, plug: {Req.Test, Edenflowers.WebPush}
+
+config :edenflowers, :delivery_photo_req_options,
+  plug: {Req.Test, Edenflowers.Orders.Changes.SendDeliveredEmail},
+  retry: false
