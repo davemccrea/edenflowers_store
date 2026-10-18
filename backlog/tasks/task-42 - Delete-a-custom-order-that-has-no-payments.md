@@ -1,9 +1,10 @@
 ---
 id: TASK-42
 title: Delete a custom order that has no payments
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:49'
 labels:
   - spec
   - admin
@@ -23,7 +24,7 @@ Add a destroy action for custom orders with no recorded payments, and a Delete b
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A custom order with no payments can be deleted from its page after confirming
-- [ ] #2 Its stock is returned
-- [ ] #3 Online orders and orders with a payment have no Delete button and the action refuses them
+- [x] #1 A custom order with no payments can be deleted from its page after confirming
+- [x] #2 Its stock is returned
+- [x] #3 Online orders and orders with a payment have no Delete button and the action refuses them
 <!-- AC:END -->

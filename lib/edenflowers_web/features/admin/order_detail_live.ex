@@ -360,6 +360,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  def handle_event("delete_order", _params, socket) do
+    case Orders.delete_custom_order(socket.assigns.order, actor: socket.assigns.current_user) do
+      :ok ->
+        {:noreply, socket |> put_flash(:info, ~t"Order deleted.") |> push_navigate(to: ~p"/admin/orders")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not delete the order.")}
+    end
+  end
+
   def handle_event("record_payment", %{"payment" => params}, socket) do
     result = PaymentActions.record_payment(socket.assigns.order, params, socket.assigns.current_user)
     {:noreply, flash_payment_result(socket, result)}
@@ -791,6 +801,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
       |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
+      |> assign(:deletable?, assigns.order.origin == :custom and assigns.payments == [])
 
     ~H"""
     <.actions_menu id="order-actions" class="w-56">
@@ -860,6 +871,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
         {~t"Cancel order"}
       </.unavailable_menu_item>
+
+      <.actions_menu_button
+        :if={@deletable?}
+        menu="order-actions"
+        phx-click="delete_order"
+        data-confirm={~t"Delete this order for good? Nothing about it is kept."}
+        class="text-error"
+      >
+        {~t"Delete order"}
+      </.actions_menu_button>
     </.actions_menu>
     """
   end

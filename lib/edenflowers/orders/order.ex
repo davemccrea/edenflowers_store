@@ -273,7 +273,7 @@ defmodule Edenflowers.Orders.Order do
     # full_diff would show "from → to", but it can't track atomic updates,
     # and checkout's payment guards depend on being atomic.
     change_tracking_mode :changes_only
-    # The only destroy purges abandoned carts, which have no log.
+    # Abandoned carts have no log, and a deleted Custom Order takes its log with it.
     create_version_on_destroy? false
     # An edit that changes only the lines changes nothing on the order row, but
     # still belongs in the log. RecordEnteredLineItems asks to skip an edit that
@@ -312,6 +312,18 @@ defmodule Edenflowers.Orders.Order do
     defaults [:read]
 
     destroy :purge_abandoned_cart
+
+    # For test orders and ones added by mistake.
+    destroy :delete_custom do
+      validate Validations.Deletable
+      change PaymentChanges.CancelOpenPaymentIntent
+
+      change {Changes.AdjustStock, direction: :return},
+        where: [negate(attribute_equals(:fulfillment_status, :cancelled))]
+
+      change Changes.DeleteOrderLog
+      require_atomic? false
+    end
 
     read :for_checkout do
       prepare build(load: @checkout_load)
@@ -900,6 +912,7 @@ defmodule Edenflowers.Orders.Order do
                      :edit,
                      :update_florist_note,
                      :cancel,
+                     :delete_custom,
                      :record_payment,
                      :undo_payment,
                      :open_payment_link,

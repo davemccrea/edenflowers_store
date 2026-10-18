@@ -49,6 +49,31 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
+  test "an unpaid custom order can be deleted, an online one can't", %{conn: conn} do
+    custom = placed_order(origin: :custom, payment_intent_id: nil)
+    online = placed_order()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{online.id}")
+    refute has_element?(view, ~s|button[phx-click="delete_order"]|)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{custom.id}")
+    assert has_element?(view, ~s|button[phx-click="delete_order"][data-confirm]|, "Delete order")
+
+    assert {:error, {:live_redirect, %{to: "/admin/orders"}}} =
+             view |> element(~s|button[phx-click="delete_order"]|) |> render_click()
+
+    assert {:error, _} = Orders.get_order_by_id(custom.id, authorize?: false)
+  end
+
+  test "a custom order with a payment can't be deleted", %{conn: conn, admin: admin} do
+    order = placed_order(origin: :custom, payment_intent_id: nil)
+    {:ok, _order} = Orders.record_payment(order, "1.00", :cash, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    refute has_element?(view, ~s|button[phx-click="delete_order"]|)
+  end
+
   test "the actions menu offers the order details until paid, then the receipt", %{conn: conn} do
     order = placed_order()
 
