@@ -1,11 +1,12 @@
 ---
 id: TASK-19.3
 title: Write the order-details rules once for place_custom and edit
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
-labels: []
+updated_date: '2026-10-18 10:05'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-19
 type: refactor
@@ -41,3 +42,16 @@ ordinal: 63000
 - [ ] #1 Each rule in the block appears once in `order.ex`
 - [ ] #2 The existing suite passes
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 10:05
+
+---
+
+Tried resource-level validations and changes with where: action_is([:place_custom, :edit]). Ash still runs atomic/3 on every global change and validation for every other update, even when the where clause excludes it, so mark_fulfilled, return_to_* and the rest stopped being atomic (67 failures with the changes, compile warnings with the validations alone). A macro or a hand-run change module costs more than 15 repeated lines, so each action now carries a comment saying to change both.
+
+---
+<!-- COMMENTS:END -->
