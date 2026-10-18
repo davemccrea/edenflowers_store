@@ -6,13 +6,11 @@ defmodule EdenflowersWeb.DatePicker do
   alias EdenflowersWeb.DatePicker.Keymap
 
   @week_begins :default
-  @default_timezone "Europe/Helsinki"
-
   @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
 
   @impl true
   def mount(socket) do
-    today_date = today()
+    today_date = Edenflowers.ShopTime.today()
 
     {:ok,
      socket
@@ -475,12 +473,6 @@ defmodule EdenflowersWeb.DatePicker do
 
   defp same_month?(day, view_date) do
     Date.beginning_of_month(day) == Date.beginning_of_month(view_date)
-  end
-
-  defp today(tz \\ @default_timezone) do
-    tz
-    |> DateTime.now!()
-    |> DateTime.to_date()
   end
 
   defp parse_date(%Date{} = date), do: date

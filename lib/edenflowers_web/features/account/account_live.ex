@@ -8,17 +8,16 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.RateLimiter
+  alias Edenflowers.ShopTime
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
-  @timezone "Europe/Helsinki"
   @saved_visible_ms 2500
   @newsletter_form_id "newsletter-preference"
   @email_code_ttl_ms :timer.minutes(10)
@@ -415,7 +414,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <li class="border-base-content/12 grid-cols-[5rem_1fr] grid items-baseline gap-x-4 gap-y-2 border-t py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
       <p class="tabular-nums">
         {Format.day_month(@entry.date, @locale)}
-        <span :if={@entry.date.year != HelsinkiToday.today().year} class="block">{@entry.date.year}</span>
+        <span :if={@entry.date.year != ShopTime.today().year} class="block">{@entry.date.year}</span>
       </p>
       <.order_entry :if={@entry.type == :order} order={@entry.item} locale={@locale} />
       <.course_entry :if={@entry.type == :course} registration={@entry.item} upcoming?={@entry.upcoming?} locale={@locale} />
@@ -772,7 +771,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     orders
     |> Enum.filter(fn order ->
       order.subscription_id == subscription.id and order.fulfillment_status != :cancelled and
-        not Date.before?(order.fulfillment_date, HelsinkiToday.today())
+        not Date.before?(order.fulfillment_date, ShopTime.today())
     end)
     |> Enum.min_by(& &1.fulfillment_date, Date, fn -> nil end)
   end
@@ -1280,7 +1279,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   def status_label(%{fulfillment_status: :fulfilled}), do: ~t"Delivered"
 
   def status_label(order) do
-    case {Date.compare(order.fulfillment_date, HelsinkiToday.today()), order.fulfillment_method} do
+    case {Date.compare(order.fulfillment_date, ShopTime.today()), order.fulfillment_method} do
       {:eq, :pickup} -> ~t"Ready to collect today"
       {:eq, _} -> ~t"Arriving today"
       {:gt, :pickup} -> ~t"For pickup"
@@ -1294,7 +1293,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp assign_timeline(socket) do
     %{orders: orders, registrations: registrations, subscriptions: subscriptions} = socket.assigns
-    today = HelsinkiToday.today()
+    today = ShopTime.today()
 
     order_entries =
       Enum.map(orders, &%{type: :order, item: &1, date: order_date(&1), upcoming?: upcoming_order?(&1, today)})
@@ -1333,5 +1332,5 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp ordered_on(order), do: helsinki_date(order.ordered_at || order.inserted_at)
 
-  defp helsinki_date(datetime), do: datetime |> DateTime.shift_zone!(@timezone) |> DateTime.to_date()
+  defp helsinki_date(datetime), do: datetime |> DateTime.shift_zone!(ShopTime.timezone()) |> DateTime.to_date()
 end

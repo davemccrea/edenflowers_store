@@ -33,7 +33,7 @@ defmodule Edenflowers.Orders.Actions.SalesSummary do
 
   defp helsinki_midnight_utc(date) do
     date
-    |> DateTime.new!(~T[00:00:00], "Europe/Helsinki")
+    |> DateTime.new!(~T[00:00:00], Edenflowers.ShopTime.timezone())
     |> DateTime.shift_zone!("Etc/UTC")
   end
 end

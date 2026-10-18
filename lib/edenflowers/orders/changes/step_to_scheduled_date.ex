@@ -6,7 +6,7 @@ defmodule Edenflowers.Orders.Changes.StepToScheduledDate do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Expressions.HelsinkiToday
+  alias Edenflowers.ShopTime
 
   @impl true
   def change(changeset, opts, _context) do
@@ -17,7 +17,7 @@ defmodule Edenflowers.Orders.Changes.StepToScheduledDate do
   end
 
   def scheduled_date(date, weeks, days_from_today) do
-    earliest = Date.add(HelsinkiToday.today(), days_from_today)
+    earliest = Date.add(ShopTime.today(), days_from_today)
 
     date
     |> Stream.iterate(&Date.add(&1, weeks * 7))

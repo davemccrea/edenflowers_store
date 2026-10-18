@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
   end
 
   test "shows whether a promotion can still be used", %{conn: conn} do
-    today = Edenflowers.Expressions.HelsinkiToday.today()
+    today = Edenflowers.ShopTime.today()
     active = generate(promotion(usage_limit: 10))
     scheduled = generate(promotion(start_date: Date.add(today, 3)))
     expired = generate(promotion(expiration_date: Date.add(today, -1)))

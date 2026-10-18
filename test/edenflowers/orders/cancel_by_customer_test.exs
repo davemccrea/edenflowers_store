@@ -5,16 +5,16 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendCancelledEmail
+  alias Edenflowers.ShopTime
 
   setup do
     %{customer: generate(admin_user(admin: false))}
   end
 
-  defp days_ahead(days), do: Date.add(HelsinkiToday.today(), days)
+  defp days_ahead(days), do: Date.add(ShopTime.today(), days)
 
   defp paid_order(customer, opts \\ []) do
     order =

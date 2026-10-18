@@ -40,7 +40,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     %{admin: generate(admin_user()), tax_rate: tax_rate, variant: variant, pickup: pickup, delivery: delivery}
   end
 
-  defp tomorrow, do: Date.add(DateTime.now!("Europe/Helsinki") |> DateTime.to_date(), 1)
+  defp tomorrow, do: Date.add(Edenflowers.ShopTime.today(), 1)
 
   defp custom_line(tax_rate, attrs \\ %{}) do
     Map.merge(

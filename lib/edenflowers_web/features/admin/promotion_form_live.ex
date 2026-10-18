@@ -3,9 +3,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
 
@@ -292,7 +292,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   defp history_label(:usage_limit), do: ~t"Usage limit"
 
   defp status(promotion) do
-    today = HelsinkiToday.today()
+    today = ShopTime.today()
 
     cond do
       promotion.start_date && Date.after?(promotion.start_date, today) -> {~t"Scheduled", :neutral}

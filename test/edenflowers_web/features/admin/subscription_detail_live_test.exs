@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
   end
 
   test "Jennie can pause, resume and cancel, even inside the customer's cutoff", %{conn: conn, customer: customer} do
-    next_date = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() |> Date.add(4)
+    next_date = Edenflowers.ShopTime.today() |> Date.add(4)
     subscription = generate(subscription(user_id: customer.id, next_fulfillment_date: next_date))
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")

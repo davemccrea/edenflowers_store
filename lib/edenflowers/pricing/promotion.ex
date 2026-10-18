@@ -48,7 +48,7 @@ defmodule Edenflowers.Pricing.Promotion do
     read :by_code do
       argument :code, :string, allow_nil?: false
 
-      argument :today, :date, default: fn -> "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date() end
+      argument :today, :date, default: fn -> Edenflowers.ShopTime.today() end
 
       filter expr(
                code == ^arg(:code) and

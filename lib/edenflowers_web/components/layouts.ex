@@ -808,7 +808,7 @@ defmodule EdenflowersWeb.Layouts do
           <.footer_locale_picker current_path={@current_path} current_locale={@current_locale} />
 
           <span class="text-xs">
-            © Eden Flowers {DateTime.now!("Europe/Helsinki") |> Map.get(:year)} • {~t"Business ID:"}
+            © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}
             <a
               class="text-base-content link-underline-hover whitespace-nowrap"
               href="https://tietopalvelu.ytj.fi/yritys/2944459-6"

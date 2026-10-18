@@ -71,7 +71,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
     test "subscribed to, says what the card is charged and how often before paying",
          %{conn: conn, variant: variant, delivery_option: delivery_option} do
-      first_delivery = Date.add(Edenflowers.Expressions.HelsinkiToday.today(), 5)
+      first_delivery = Date.add(Edenflowers.ShopTime.today(), 5)
 
       order =
         generate(

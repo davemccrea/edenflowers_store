@@ -260,7 +260,7 @@ defmodule Generator do
     seed_generator(
       %Subscription{
         interval_weeks: 2,
-        next_fulfillment_date: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), 14),
+        next_fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 14),
         locale: "en",
         stripe_customer_id: "cus_ada",
         stripe_payment_method_id: "pm_card"

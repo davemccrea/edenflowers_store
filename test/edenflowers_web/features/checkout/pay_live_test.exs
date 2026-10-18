@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
           customer_name: "Anna Holm",
           customer_email: "anna@example.com",
           fulfillment_option_id: pickup.id,
-          fulfillment_date: Date.add(DateTime.now!("Europe/Helsinki") |> DateTime.to_date(), 1),
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
           locale: "en-GB",
           florist_note: "Customer is particular about lilies",
           email_customer?: false,

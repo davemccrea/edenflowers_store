@@ -105,7 +105,7 @@ defmodule Edenflowers.WebPushTest do
 
     test "tells each device about a same-day order and forgets expired ones" do
       admin = generate(admin_user())
-      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+      today = Edenflowers.ShopTime.today()
       order = placed_order(fulfillment_date: today, order_reference: "1042")
 
       Accounts.subscribe_to_push!("https://push.example.com/live", @ua_public, @auth_secret, "en-GB", actor: admin)

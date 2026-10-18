@@ -249,7 +249,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       |> assign(:registrations, registrations)
       |> assign(:seats, Enum.sum_by(registrations, & &1.seats_held))
       |> assign(:still_to_pay, Enum.count(registrations, &to_collect?/1))
-      |> assign(:past?, Date.before?(assigns.course.date, DateTime.to_date(DateTime.now!("Europe/Helsinki"))))
+      |> assign(:past?, Date.before?(assigns.course.date, Edenflowers.ShopTime.today()))
       |> assign(:bcc, registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(","))
 
     ~H"""

@@ -49,7 +49,7 @@ defmodule Edenflowers.Fulfillment.Availability do
   and a today that's past its deadline collapses to `:past`.
   """
   @spec customer_cell_state(FulfillmentOption.t(), Date.t(), DateTime.t()) :: customer_cell_state()
-  def customer_cell_state(%FulfillmentOption{} = option, %Date{} = date, now \\ now()) do
+  def customer_cell_state(%FulfillmentOption{} = option, %Date{} = date, now \\ Edenflowers.ShopTime.now()) do
     case unavailable_reason(option, date, now) do
       nil -> :open
       reason when reason in [:date_disabled, :weekday_disabled] -> :closed
@@ -83,6 +83,4 @@ defmodule Edenflowers.Fulfillment.Availability do
   def override?(%FulfillmentOption{} = option, %Date{} = date) do
     date in option.enabled_dates or date in option.disabled_dates
   end
-
-  defp now, do: DateTime.now!("Europe/Helsinki")
 end

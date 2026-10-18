@@ -564,7 +564,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       with %{} <- option,
            {:ok, date} <- parse_date(form[:fulfillment_date].value),
            reason when reason not in [nil, :past] <-
-             Availability.unavailable_reason(option, date, DateTime.now!("Europe/Helsinki")) do
+             Availability.unavailable_reason(option, date, Edenflowers.ShopTime.now()) do
         date_warning(reason)
       else
         _ -> nil

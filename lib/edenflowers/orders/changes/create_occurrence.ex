@@ -127,7 +127,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   end
 
   defp first_open_day(option, date, interval_weeks) do
-    now = DateTime.now!("Europe/Helsinki")
+    now = Edenflowers.ShopTime.now()
 
     date
     |> Stream.iterate(&Date.add(&1, 1))

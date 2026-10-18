@@ -9,8 +9,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
-  @timezone "Europe/Helsinki"
-
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
@@ -75,7 +73,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     actor = socket.assigns.current_user
     open_orders = Orders.list_open_orders!(actor: actor)
 
-    today = @timezone |> DateTime.now!() |> DateTime.to_date()
+    today = Edenflowers.ShopTime.today()
 
     sales = Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor)
 

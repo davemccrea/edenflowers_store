@@ -706,7 +706,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <dt class="text-base-content/75">
         {payment_label(@payment)} ·
         <time datetime={DateTime.to_iso8601(@payment.paid_at)} title={Format.datetime(@payment.paid_at, @locale)}>
-          {@payment.paid_at |> DateTime.shift_zone!("Europe/Helsinki") |> DateTime.to_date() |> Format.day_month(@locale)}
+          {@payment.paid_at
+          |> DateTime.shift_zone!(Edenflowers.ShopTime.timezone())
+          |> DateTime.to_date()
+          |> Format.day_month(@locale)}
         </time>
         <a
           :if={@payment.payment_intent_id}
@@ -1025,7 +1028,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # A fulfilled order is historical, so we skip relative framing there.
   defp fulfillment_relative(date, locale, status) when not is_nil(date) and status != :fulfilled do
-    today = store_today()
+    today = Edenflowers.ShopTime.today()
 
     if Date.diff(date, today) == 0,
       do: ~t"Today",
@@ -1040,7 +1043,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp date_tone(date) do
-    case Date.compare(date, store_today()) do
+    case Date.compare(date, Edenflowers.ShopTime.today()) do
       :lt -> :overdue
       :eq -> :today
       :gt -> :upcoming
@@ -1049,8 +1052,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge_tone(:overdue), do: :error
   defp relative_date_badge_tone(:today), do: :success
-
-  defp store_today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 
   defp delivery_address?(order), do: order.fulfillment_method == :delivery && present?(order.delivery_address)
 

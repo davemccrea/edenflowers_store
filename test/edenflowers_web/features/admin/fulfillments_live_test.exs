@@ -5,9 +5,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   import Generator
 
   alias AshAuthentication.Plug.Helpers
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Weekday
+  alias Edenflowers.ShopTime
 
   setup %{conn: conn} do
     tax_rate = generate(tax_rate())
@@ -184,7 +184,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
 
       future = next_weekday(:monday)
-      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+      today = Edenflowers.ShopTime.today()
 
       if future.month != today.month do
         view
@@ -213,7 +213,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       # Pick a week payload whose weekday dates are all strictly in the future,
       # so the click actually has something to disable. Navigate to next month
       # if no such week exists in the current view (e.g. running near month-end).
-      today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+      today = Edenflowers.ShopTime.today()
       tomorrow = Date.add(today, 1)
 
       find_future_week = fn html ->
@@ -259,8 +259,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
         generate(
           fulfillment_option(
             available_days: [:monday],
-            enabled_dates: [Date.add(HelsinkiToday.today(), 30)],
-            disabled_dates: [Date.add(HelsinkiToday.today(), 31)]
+            enabled_dates: [Date.add(ShopTime.today(), 30)],
+            disabled_dates: [Date.add(ShopTime.today(), 31)]
           )
         )
 
@@ -473,7 +473,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   # Pick the next future date that lands on a given weekday.
   defp next_weekday(weekday_atom) do
     target = Weekday.to_integer(weekday_atom)
-    today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+    today = Edenflowers.ShopTime.today()
     offset = Enum.find(1..21, &(Date.day_of_week(Date.add(today, &1)) == target))
     Date.add(today, offset)
   end

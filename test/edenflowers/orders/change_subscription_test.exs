@@ -4,10 +4,10 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
   import Generator
   import Mox
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Payments
+  alias Edenflowers.ShopTime
 
   setup :verify_on_exit!
 
@@ -33,7 +33,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     generate(subscription(Keyword.merge(defaults, attrs)))
   end
 
-  defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
+  defp days_from_today(days), do: Date.add(ShopTime.today(), days)
 
   defp first_on_or_after(date, day_of_week),
     do: Date.add(date, rem(day_of_week - Date.day_of_week(date) + 7, 7))

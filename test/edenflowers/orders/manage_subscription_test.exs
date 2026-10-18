@@ -3,9 +3,9 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
   import Generator
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.ShopTime
 
   setup do
     %{
@@ -26,7 +26,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     generate(subscription(Keyword.merge(defaults, attrs)))
   end
 
-  defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
+  defp days_from_today(days), do: Date.add(ShopTime.today(), days)
 
   defp occurrence(subscription, days) do
     generate(
