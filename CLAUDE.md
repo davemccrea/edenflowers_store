@@ -4,6 +4,7 @@
 
 - Call `source .env` before running mix.
 - Work on `main`. Pushing `main` deploys nothing. `just deploy staging` deploys the current branch to the staging server; `just deploy production` tags a release from `main`.
+- When a commit finishes or changes a Backlog task, update the task's status (and `quick` label) in the same commit.
 
 ## Coding Standards
 
