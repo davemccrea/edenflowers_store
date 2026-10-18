@@ -17,10 +17,12 @@ defmodule Edenflowers.Pricing.TaxRate do
     defaults [:read, :destroy, create: [:name, :percentage], update: [:name, :percentage]]
 
     # Highest first, so the standard rate is what a select in an admin form
-    # starts on.
+    # starts on. `percentages` adds the retired rates an order already charges,
+    # so editing it keeps them.
     read :selectable do
-      filter expr(is_nil(retired_at))
-      prepare build(sort: [percentage: :desc])
+      argument :percentages, {:array, :decimal}, default: []
+      filter expr(is_nil(retired_at) or percentage in ^arg(:percentages))
+      prepare build(sort: [retired_at: :asc_nils_first, percentage: :desc])
     end
 
     # Hides a rate from the admin forms while what already uses it keeps it.

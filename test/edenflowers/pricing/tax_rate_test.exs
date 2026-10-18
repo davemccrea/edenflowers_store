@@ -26,6 +26,18 @@ defmodule Edenflowers.Pricing.TaxRateTest do
     assert id == standard.id
   end
 
+  test "an order's form also lists the retired rates its lines still charge" do
+    standard = generate(tax_rate(percentage: "0.255"))
+    retired = generate(tax_rate(percentage: "0.24"))
+    generate(tax_rate(percentage: "0.10")) |> Pricing.retire_tax_rate!(authorize?: false)
+    Pricing.retire_tax_rate!(retired, authorize?: false)
+
+    assert [%{id: first}, %{id: second}] =
+             Pricing.list_selectable_tax_rates!(%{percentages: ["0.24"]}, authorize?: false)
+
+    assert {first, second} == {standard.id, retired.id}
+  end
+
   test "a rate still in use can't be destroyed" do
     tax_rate = generate(tax_rate())
     generate(product(tax_rate_id: tax_rate.id))

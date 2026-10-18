@@ -1,13 +1,11 @@
 defmodule EdenflowersWeb.Admin.SearchLive do
   use EdenflowersWeb, :live_view
 
-  require Ash.Query
-
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Accounts.User
+  alias Edenflowers.Accounts
   alias Edenflowers.Format
-  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders
   alias EdenflowersWeb.Layouts
 
   @limit 10
@@ -25,7 +23,12 @@ defmodule EdenflowersWeb.Admin.SearchLive do
     actor = socket.assigns.current_user
 
     {orders, customers} =
-      if term == "", do: {[], []}, else: {search_orders(term, actor), search_customers(term, actor)}
+      if term == "" do
+        {[], []}
+      else
+        {Orders.search_orders!(term, actor: actor, query: [limit: @limit]),
+         Accounts.search_customers!(term, actor: actor, query: [limit: @limit])}
+      end
 
     {:noreply,
      socket
@@ -98,29 +101,5 @@ defmodule EdenflowersWeb.Admin.SearchLive do
       </.admin_page>
     </Layouts.admin>
     """
-  end
-
-  defp search_orders(term, actor) do
-    term = Ash.CiString.new(term)
-
-    Order
-    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
-    |> Ash.Query.filter(
-      contains(customer_name, ^term) or contains(order_reference, ^term) or
-        contains(customer_phone_number, ^term) or contains(customer_email, ^term) or
-        contains(recipient_name, ^term) or contains(delivery_address, ^term)
-    )
-    |> Ash.Query.limit(@limit)
-    |> Ash.read!()
-  end
-
-  defp search_customers(term, actor) do
-    term = Ash.CiString.new(term)
-
-    User
-    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
-    |> Ash.Query.filter(contains(name, ^term) or contains(email, ^term))
-    |> Ash.Query.limit(@limit)
-    |> Ash.read!()
   end
 end

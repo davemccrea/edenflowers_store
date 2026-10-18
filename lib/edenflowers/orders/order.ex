@@ -384,6 +384,19 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    read :search do
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(
+               state == :placed and
+                 (contains(customer_name, ^arg(:term)) or contains(order_reference, ^arg(:term)) or
+                    contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
+                    contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)))
+             )
+
+      prepare build(sort: [ordered_at: :desc], load: [:settled?, :amount_paid, :balance, :payment_status])
+    end
+
     # What the Overview lists as still to collect or refund.
     read :unsettled do
       filter expr(committed? and not settled?)
@@ -1041,7 +1054,10 @@ defmodule Edenflowers.Orders.Order do
     # The Subscription this order started or was created by.
     belongs_to :subscription, Edenflowers.Orders.Subscription
     has_many :line_items, Edenflowers.Orders.LineItem
-    has_many :payments, Edenflowers.Payments.Payment
+
+    has_many :payments, Edenflowers.Payments.Payment do
+      sort paid_at: :asc
+    end
   end
 
   calculations do

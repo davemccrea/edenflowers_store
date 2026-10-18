@@ -20,7 +20,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Orders.EnteredLineItems
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
-  alias Edenflowers.Pricing.TaxRate
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -461,18 +460,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp tax_rates(nil, actor), do: Pricing.list_selectable_tax_rates!(actor: actor)
 
   defp tax_rates(order, actor) do
-    selectable = Pricing.list_selectable_tax_rates!(actor: actor)
-
-    used_percentages =
-      for %{product_variant_id: nil, tax_rate: percentage} <- order.line_items,
-          do: percentage
-
-    historical =
-      TaxRate
-      |> Ash.read!(actor: actor)
-      |> Enum.filter(fn rate -> Enum.any?(used_percentages, &Decimal.equal?(&1, rate.percentage)) end)
-
-    Enum.uniq_by(selectable ++ historical, & &1.id)
+    percentages = for %{product_variant_id: nil, tax_rate: percentage} <- order.line_items, do: percentage
+    Pricing.list_selectable_tax_rates!(%{percentages: percentages}, actor: actor)
   end
 
   defp variant_options(actor) do
