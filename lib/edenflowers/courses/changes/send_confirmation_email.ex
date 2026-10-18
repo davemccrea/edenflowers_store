@@ -10,9 +10,13 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   alias Edenflowers.Translations
 
   @impl true
-  def change(%{data: %{skip_confirmation_email: true}} = changeset, _opts, _context), do: changeset
-
   def change(changeset, _opts, _context) do
+    if Ash.Changeset.get_attribute(changeset, :skip_confirmation_email),
+      do: changeset,
+      else: send_email(changeset)
+  end
+
+  defp send_email(changeset) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
 

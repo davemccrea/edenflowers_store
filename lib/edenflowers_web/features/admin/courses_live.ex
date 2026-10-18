@@ -99,16 +99,18 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   @impl true
-  def handle_event("mark_paid", %{"registration_id" => id, "payment_method" => payment_method}, socket) do
+  def handle_event("mark_paid", %{"registration_id" => id} = params, socket) do
     actor = socket.assigns.current_user
 
     socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor, load: [:balance]),
-           {:ok, _} <-
-             Courses.record_registration_payment(registration, registration.balance, payment_method, actor: actor) do
-        put_flash(socket, :info, ~t"Payment recorded.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not record the payment.")
+      case Courses.get_registration_by_id(id, actor: actor, load: [:balance]) do
+        {:ok, registration} ->
+          params = Map.put(params, "amount", Decimal.to_string(registration.balance, :normal))
+          {kind, message} = PaymentActions.record_payment(registration, params, actor)
+          put_flash(socket, kind, message)
+
+        {:error, _error} ->
+          put_flash(socket, :error, ~t"Booking not found.")
       end
 
     {:noreply, load_courses(socket)}
@@ -396,6 +398,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   >
                     {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
                   </select>
+                  <label
+                    :if={registration.status == :confirmed}
+                    class="flex shrink-0 items-center gap-1.5 text-sm pointer-coarse:min-h-11"
+                  >
+                    <input type="hidden" name="email_receipt" value="false" />
+                    <input type="checkbox" name="email_receipt" value="true" checked class="checkbox checkbox-sm" />
+                    {~t"Email a receipt"}
+                  </label>
                   <.button type="submit" variant="neutral" size="sm">{~t"Record payment"}</.button>
                 </form>
                 <.refund_controls registration={registration} />

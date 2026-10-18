@@ -5,6 +5,8 @@ defmodule Edenflowers.Payments.Payable do
 
   The including resource supplies:
 
+    * an `:email_receipt` update action that emails the customer their receipt
+
     * `has_many :payments`
     * `calculate :total_due`: what it's still to be paid for, 0 once cancelled
       apart from anything it keeps, like a booking's late-cancellation fee.
@@ -41,6 +43,7 @@ defmodule Edenflowers.Payments.Payable do
     update :record_payment do
       argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :email_receipt?, :boolean, default: false
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate Validations.Recordable
@@ -48,6 +51,7 @@ defmodule Edenflowers.Payments.Payable do
       # opens a PaymentIntent for whatever is left.
       change Changes.CancelOpenPaymentIntent
       change {Changes.RecordPayment, amount: :amount}
+      change Changes.EmailReceipt, where: [argument_equals(:email_receipt?, true)]
       require_atomic? false
     end
 
