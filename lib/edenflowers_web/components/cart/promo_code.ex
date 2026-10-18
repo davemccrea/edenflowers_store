@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
 
   alias Edenflowers.Orders
 
+  @impl true
   def update(%{order: order} = assigns, socket) do
     socket =
       socket
@@ -28,6 +29,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     {:ok, socket}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <%!-- Hidden rather than removed: the badge rendered elsewhere targets this id. --%>
@@ -94,6 +96,7 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     """
   end
 
+  @impl true
   def handle_event("open_promo", _, socket) do
     {:noreply, assign(socket, open: true)}
   end

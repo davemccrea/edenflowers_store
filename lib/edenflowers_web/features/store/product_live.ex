@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     product =
       case Catalog.get_product_by_id(id, load: [:product_category, :product_variants, :tax_rate]) do
@@ -67,6 +68,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
+  @impl true
   def render(assigns) do
     %{order: order, product: product, subscribe?: subscribe?} = assigns
     lines = Enum.reject(order.line_items, & &1.is_card)
@@ -332,6 +334,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
     """
   end
 
+  @impl true
   def handle_event("change", %{"product_variant_id" => id} = params, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
 

@@ -6,12 +6,14 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(_params, _session, socket) do
     products = Catalog.list_featured_products!() |> Translations.translate()
 
     {:ok, socket |> assign(products: products)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

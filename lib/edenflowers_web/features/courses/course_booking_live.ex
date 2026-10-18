@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   # Stripe returns guests here too, so the booking is read by its unguessable
   # id rather than through the owner policy. The page shows only what the
   # booker already knows: never the email address.
+  @impl true
   def mount(%{"id" => id} = params, _session, socket) do
     payment_failed? = params["redirect_status"] == "failed"
 
@@ -38,6 +39,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
     end
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   # A UX brake only; AshRateLimiter on :request_otp enforces the real limit.
   @resend_cooldown_seconds 30
 
+  @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
@@ -22,6 +23,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   # The code step keeps the email in the URL so switching language, which
   # reloads the page, lands back on it. current_path carries the query
   # because the locale links redirect back to it.
+  @impl true
   def handle_params(params, uri, socket) do
     socket =
       case params do
@@ -38,6 +40,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     {:noreply, assign(socket, current_path: current_path)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash} current_path={@current_path}>
@@ -126,6 +129,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     """
   end
 
+  @impl true
   def handle_event("change", %{"user" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.request_form, params)
     {:noreply, assign(socket, request_form: form)}
@@ -156,6 +160,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     {:noreply, socket |> reset_state() |> push_patch(to: ~p"/sign-in")}
   end
 
+  @impl true
   def handle_info(:resend_tick, socket) do
     remaining = socket.assigns.resend_remaining - 1
 

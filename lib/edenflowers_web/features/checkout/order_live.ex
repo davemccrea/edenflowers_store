@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   # `@order` is taken by the PutOrder hook (the cart), hence `@shown_order`.
+  @impl true
   def mount(%{"id" => id}, session, socket) do
     user = socket.assigns.current_user
     guest_order_id = session["guest_order_id"]
@@ -39,6 +40,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   end
 
   # Only the order's owner subscribes, in mount.
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:placed:" <> _}, socket) do
     order = Orders.get_order_by_id!(socket.assigns.shown_order.id, authorize?: false)
     {:noreply, assign_order(socket, order)}
@@ -78,6 +80,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     }
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

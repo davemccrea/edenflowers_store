@@ -8,6 +8,7 @@ defmodule Edenflowers.Accounts.Workers.SendEmailChangeCode do
     args |> __MODULE__.new() |> Oban.insert()
   end
 
+  @impl true
   def perform(%Oban.Job{args: %{"email" => email, "code" => code, "locale" => locale}}) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       Email.email_change_code(email, code) |> Mailer.deliver()

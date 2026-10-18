@@ -19,6 +19,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   # `@order` is taken by the PutOrder hook (the cart), hence `@shown_order`.
+  @impl true
   def mount(%{"token" => token} = params, _session, socket) do
     case Orders.get_order_by_payment_link_token(token, authorize?: false) do
       {:ok, order} ->
@@ -49,6 +50,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
     end
   end
 
+  @impl true
   def handle_event("pay", _params, socket) do
     with {:ok, order} <- Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false),
          true <- order.payable?,
@@ -74,11 +76,13 @@ defmodule EdenflowersWeb.Checkout.PayLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:paid:" <> _}, socket) do
     {:ok, order} = Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false)
     {:noreply, socket |> assign(:shown_order, order) |> assign(:client_secret, nil)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

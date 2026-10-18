@@ -27,6 +27,7 @@ defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmail do
     exception -> Logger.warning("Failed to enqueue error alert: #{Exception.message(exception)}")
   end
 
+  @impl true
   def perform(%Oban.Job{args: %{"error_id" => error_id}}) do
     case Repo.get(ErrorTracker.Error, error_id) do
       %{muted: false, status: :unresolved} = error -> error |> Email.error_alert() |> Mailer.deliver()

@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(_params, _session, socket) do
     courses =
       [load: [:seats_left, :booking_open?], query: [sort: [date: :asc, start_time: :asc]]]
@@ -16,6 +17,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
     {:ok, assign(socket, page_title: ~t"Courses", locale: Format.locale(), courses: courses)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

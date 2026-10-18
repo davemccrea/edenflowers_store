@@ -4,6 +4,7 @@ defmodule Edenflowers.WeddingEnquiry.SendEmails do
   alias Edenflowers.Email
   alias Edenflowers.Mailer
 
+  @impl true
   def perform(%Oban.Job{args: %{"locale" => locale} = args}) do
     enquiry = Map.update!(args, "wedding_date", &Date.from_iso8601!/1)
 
