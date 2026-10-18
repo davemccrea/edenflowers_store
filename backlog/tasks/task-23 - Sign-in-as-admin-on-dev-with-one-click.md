@@ -4,8 +4,9 @@ title: Sign in as admin on dev with one click
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 05:42'
-updated_date: '2026-10-18 05:48'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 type: chore
 ordinal: 76000

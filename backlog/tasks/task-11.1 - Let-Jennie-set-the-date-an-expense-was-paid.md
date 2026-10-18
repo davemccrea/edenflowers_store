@@ -4,8 +4,9 @@ title: Let Jennie set the date an expense was paid
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:48'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-11
 type: feature

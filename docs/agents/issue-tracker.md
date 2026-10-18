@@ -10,6 +10,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 - Each implementation ticket is a **subtask** of the feature: `backlog task create "<title>" -p TASK-N`. Subtasks number themselves `TASK-N.1`, `TASK-N.2`, … Never combine several tickets into one task
 - Put the problem, what to build and any decisions in the description (`-d`). Put each acceptance criterion in its own `--ac`
 - Set the ticket type with `--type` (`feature`, `bug`, `refactor`, `chore`, `task`, `research`, `prototype`, `grilling`)
+- Label a task `quick` (`--add-label quick`) if it fits in one sitting with nothing left to decide. `backlog task list --plain -l quick` lists them
 - Blocking tickets go in `--dep TASK-N.M` (comma-separated). Don't write a "Blocked by" section
 - Status is the task's `status` field, one of the triage strings in `triage-labels.md` plus `in-progress` and `done`. It is the only record of status, so keep it current as work lands: `backlog task edit TASK-N.M -s <status>`
 - Comments and conversation history go in as task comments: `backlog task edit TASK-N.M --comment "<text>" --comment-author @claude`

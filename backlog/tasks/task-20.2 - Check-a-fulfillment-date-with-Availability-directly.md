@@ -4,7 +4,9 @@ title: Check a fulfillment date with Availability directly
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:31'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-20
 type: refactor
