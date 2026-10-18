@@ -1,4 +1,4 @@
-project_name: "Edenflowers"
+project_name: "Eden Flowers"
 default_status: "needs-triage"
 statuses: ["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "in-progress", "done"]
 types: ["feature", "bug", "refactor", "chore", "task", "research", "prototype", "grilling"]
