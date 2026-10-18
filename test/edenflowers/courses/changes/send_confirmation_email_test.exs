@@ -25,6 +25,19 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     refute reloaded.receipt_emailed_at
   end
 
+  test "a booking Jennie chose not to email gets nothing" do
+    registration = generate(course_registration(status: :confirmed))
+    registration = Ash.Seed.update!(registration, %{skip_confirmation_email: true})
+
+    registration =
+      registration
+      |> Ash.Changeset.for_update(:send_confirmation_email, %{}, authorize?: false)
+      |> Ash.update!()
+
+    assert_no_email_sent()
+    refute registration.confirmation_emailed_at
+  end
+
   @tag :typst
   test "a paid booking gets its receipt" do
     registration = generate(course_registration(status: :confirmed, payment_intent_id: nil))

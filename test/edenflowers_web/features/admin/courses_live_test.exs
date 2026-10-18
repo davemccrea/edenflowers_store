@@ -124,6 +124,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       registration = add_booking(view, course, "true", "true")
       assert registration.payment_link_token
+      refute registration.skip_confirmation_email
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
@@ -143,6 +144,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       registration = add_booking(view, course, "true", "false")
       assert registration.payment_link_token
+      assert registration.skip_confirmation_email
+      refute registration.confirmation_emailed_at
 
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
       perform_job(Edenflowers.Courses.Schedulers.SendConfirmationEmail, %{})
