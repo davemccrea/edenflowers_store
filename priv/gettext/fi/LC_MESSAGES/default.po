@@ -5847,11 +5847,6 @@ msgstr "Stripe"
 msgid "Could not record it. Check the amount."
 msgstr "Kirjaus ei onnistunut. Tarkista summa."
 
-#: lib/edenflowers_web/features/admin/dashboard_live.ex:190
-#, elixir-autogen, elixir-format
-msgid "To collect / To refund"
-msgstr "Perittävää / Hyvitettävää"
-
 #: lib/edenflowers_web/features/admin/components/components.ex:452
 #, elixir-autogen, elixir-format
 msgid "A minus amount records a refund."
@@ -6045,3 +6040,8 @@ msgstr "tarkempia tilauksia varten."
 #, elixir-autogen, elixir-format
 msgid "or"
 msgstr "tai"
+
+#: lib/edenflowers_web/features/admin/dashboard_live.ex:190
+#, elixir-autogen, elixir-format
+msgid "Open balances"
+msgstr "Avoimet saldot"
