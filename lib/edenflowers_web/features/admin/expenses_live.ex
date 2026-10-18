@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       <.admin_page>
         <.admin_page_header title={~t"Expenses"}>
           <:actions>
-            <.button type="button" size="sm" phx-click={JS.exec("phx-show", to: "#export-drawer")}>
+            <.button type="button" size="sm" variant="neutral" phx-click={JS.exec("phx-show", to: "#export-drawer")}>
               <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
               {~t"Export"}
             </.button>
@@ -51,11 +51,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
         <.drawer
           id="export-drawer"
           placement="right"
-          label={~t"Export for the accountant"}
+          label={~t"Export"}
           class="bg-base-100 border-base-content/12 w-[88vw] flex h-full flex-col border-l sm:w-96"
         >
           <header class="flex items-center justify-between gap-4 p-4">
-            <h2 class="text-lg font-semibold">{~t"Export for the accountant"}</h2>
+            <h2 class="text-lg font-semibold">{~t"Export"}</h2>
             <button type="button" phx-click={JS.exec("phx-hide", to: "#export-drawer")} aria-label={~t"Close"}>
               <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
             </button>
