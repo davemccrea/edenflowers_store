@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     end
 
     test "warns about a closed day without refusing it", ctx do
-      Ash.Seed.update!(ctx.pickup, %{available_days: []})
+      shop_calendar(available_days: [])
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 

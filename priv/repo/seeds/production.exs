@@ -52,7 +52,6 @@ Repo.transaction(fn ->
     free_dist_km: 5,
     max_dist_km: 20,
     tax_rate_id: standard_tax_rate.id,
-    available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
     translations: %{
       "sv-FI": %{name: "Hemleverans"},
       fi: %{name: "Kotiinkuljetus"}
@@ -74,6 +73,9 @@ Repo.transaction(fn ->
     }
   })
   |> Ash.create!(authorize?: false)
+
+  Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+  |> Ash.Seed.update!(%{available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]})
 
   categories = [
     %{

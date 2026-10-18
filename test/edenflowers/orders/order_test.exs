@@ -191,7 +191,6 @@ defmodule Edenflowers.Orders.OrderTest do
           fulfillment_method: :pickup,
           rate_type: :fixed,
           base_price: "4.99",
-          order_deadline: ~T[12:00:00],
           tax_rate_id: tax_rate_1.id
         )
       )
@@ -1080,9 +1079,7 @@ defmodule Edenflowers.Orders.OrderTest do
             name: "Store Pickup",
             fulfillment_method: :pickup,
             rate_type: :fixed,
-            base_price: "5.00",
-            same_day: true,
-            order_deadline: ~T[15:00:00]
+            base_price: "5.00"
           )
         )
 
@@ -1093,9 +1090,7 @@ defmodule Edenflowers.Orders.OrderTest do
             name: "Delivery - Fixed",
             fulfillment_method: :delivery,
             rate_type: :fixed,
-            base_price: "10.00",
-            same_day: false,
-            order_deadline: ~T[12:00:00]
+            base_price: "10.00"
           )
         )
 
@@ -1109,9 +1104,7 @@ defmodule Edenflowers.Orders.OrderTest do
             base_price: "5.00",
             price_per_km: "2.00",
             free_dist_km: 3,
-            max_dist_km: 15,
-            same_day: true,
-            order_deadline: ~T[14:00:00]
+            max_dist_km: 15
           )
         )
 
@@ -1239,11 +1232,11 @@ defmodule Edenflowers.Orders.OrderTest do
       assert %Ash.Error.Invalid{} = error
     end
 
-    test "save_step_3 rejects a date the option no longer allows", %{pickup_option: pickup_option} do
+    test "save_step_3 rejects a date the shop has closed", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
       closed_date = Date.add(Date.utc_today(), 3)
 
-      {:ok, _} = Edenflowers.Fulfillment.toggle_date(pickup_option, closed_date, authorize?: false)
+      shop_calendar(disabled_dates: [closed_date])
 
       assert {:error, error} =
                order

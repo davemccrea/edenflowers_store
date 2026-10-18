@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.DatePicker do
       "(Date.t() -> atom). The caller picks the vocabulary; this component only " <>
         "uses the returned atom to look up styling (`cell_class`) and clickability " <>
         "(`clickable_states`). Customer checkout uses `:open | :closed | :past`; " <>
-        "the admin editor uses `:open | :past | :weekday_disabled | :date_disabled | :mixed`. " <>
+        "the admin editor uses `:open | :past | :weekday_disabled | :date_disabled`. " <>
         "Defaults to always-`:open`."
 
   attr :cell_class, :any,

@@ -12,25 +12,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   setup %{conn: conn} do
     tax_rate = generate(tax_rate())
 
-    delivery =
-      generate(
-        fulfillment_option(
-          tax_rate_id: tax_rate.id,
-          fulfillment_method: :delivery,
-          name: "Delivery",
-          available_days: [:monday, :tuesday, :wednesday, :thursday, :friday]
-        )
-      )
-
-    pickup =
-      generate(
-        fulfillment_option(
-          tax_rate_id: tax_rate.id,
-          fulfillment_method: :pickup,
-          name: "Pickup",
-          available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
-        )
-      )
+    delivery = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :delivery, name: "Delivery"))
+    pickup = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :pickup, name: "Pickup"))
+    shop_calendar(available_days: [:monday, :tuesday, :wednesday, :thursday, :friday])
 
     admin = generate(admin_user()) |> with_token()
 
@@ -69,8 +53,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
           base_price: "3.00",
           price_per_km: "1.50",
           free_dist_km: 5,
-          max_dist_km: 20,
-          same_day: false
+          max_dist_km: 20
         )
       )
 
@@ -86,13 +69,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   end
 
   describe "accessible state" do
-    test "weekday toggles announce open, closed and mixed", %{conn: conn, delivery: delivery} do
+    test "weekday toggles announce open and closed", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
 
       assert html =~ ~s(aria-label="Toggle Monday, open")
-      assert html =~ ~s(aria-label="Toggle Saturday, options have different settings")
-
-      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
       assert html =~ ~s(aria-label="Toggle Sunday, closed")
     end
   end
@@ -102,9 +82,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      # Sundays are closed for both options set up in `setup`. Next month's
-      # Sundays are all still ahead, whatever today is, so they render as
-      # closed rather than past.
+      # Weekends are closed in `setup`. Next month's Sundays are all still
+      # ahead, whatever today is, so they render as closed rather than past.
       view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
 
       assert has_element?(view, "button.calendar-strike-after")
@@ -113,11 +92,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   end
 
   describe "weekday toggle" do
-    test "disables the weekday across every option when scope is :all", %{
-      conn: conn,
-      delivery: delivery,
-      pickup: pickup
-    } do
+    test "closes an open weekday", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
@@ -126,20 +101,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       drain(view)
 
-      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
-
-      refute :monday in reloaded_delivery.available_days
-      refute :monday in reloaded_pickup.available_days
+      refute :monday in Fulfillment.get_shop_calendar!().available_days
     end
 
-    test "closes the weekday everywhere when options disagree and at least one has it on", %{
-      conn: conn,
-      delivery: delivery,
-      pickup: pickup
-    } do
-      # Saturday: delivery=off, pickup=on. The smart toggle aggregates: any
-      # option has Saturday on → click closes Saturday everywhere.
+    test "opens a closed weekday", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
@@ -148,40 +113,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       drain(view)
 
-      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
-
-      refute :saturday in reloaded_delivery.available_days
-      refute :saturday in reloaded_pickup.available_days
-    end
-
-    test "toggling a weekday updates only the scoped option", %{
-      conn: conn,
-      delivery: delivery,
-      pickup: pickup
-    } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
-
-      view
-      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
-      |> render_click()
-
-      drain(view)
-
-      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
-
-      refute :monday in reloaded_delivery.available_days
-      assert :monday in reloaded_pickup.available_days
+      assert :saturday in Fulfillment.get_shop_calendar!().available_days
     end
   end
 
   describe "date toggle" do
-    test "clicking an open future date adds it to disabled_dates for the scoped option", %{
-      conn: conn,
-      delivery: delivery
-    } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
+    test "clicking an open future date closes it", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       future = next_weekday(:monday)
       today = Edenflowers.ShopTime.today()
@@ -198,17 +136,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       drain(view)
 
-      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      assert future in reloaded.disabled_dates
+      assert future in Fulfillment.get_shop_calendar!().disabled_dates
     end
   end
 
   describe "week toggle" do
-    test "clicking the week-toggle button closes every open cell in that week for the scoped option", %{
-      conn: conn,
-      delivery: delivery
-    } do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
+    test "clicking the week-toggle button closes every open cell in that week", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       # Pick a week payload whose weekday dates are all strictly in the future,
       # so the click actually has something to disable. Navigate to next month
@@ -244,74 +178,36 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       drain(view)
 
-      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-
-      # Delivery is open Mon-Fri; clicking the week-toggle closes Mon-Fri of that week.
+      # The shop is open Mon-Fri; clicking the week-toggle closes Mon-Fri of that week.
       week_dates = week_payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
       weekday_cells = Enum.filter(week_dates, &(Date.day_of_week(&1) in 1..5))
-      assert Enum.all?(weekday_cells, &(&1 in reloaded.disabled_dates))
+      assert Enum.all?(weekday_cells, &(&1 in Fulfillment.get_shop_calendar!().disabled_dates))
     end
   end
 
   describe "reset" do
-    test "wipes overrides and reopens every weekday for the scoped option", %{conn: conn} do
-      option =
-        generate(
-          fulfillment_option(
-            available_days: [:monday],
-            enabled_dates: [Date.add(ShopTime.today(), 30)],
-            disabled_dates: [Date.add(ShopTime.today(), 31)]
-          )
-        )
-
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{option.id}")
-
-      view
-      |> element(~s|button[phx-click="reset-calendar"]|)
-      |> render_click()
-
-      drain(view)
-
-      reloaded = Fulfillment.get_option_by_id!(option.id, authorize?: false)
-
-      assert Enum.sort(reloaded.available_days) ==
-               [:friday, :monday, :saturday, :sunday, :thursday, :tuesday, :wednesday]
-
-      assert reloaded.enabled_dates == []
-      assert reloaded.disabled_dates == []
-    end
-
-    test "resets every option when scope is :all", %{
-      conn: conn,
-      delivery: delivery,
-      pickup: pickup
-    } do
+    test "wipes overrides and reopens every weekday", %{conn: conn} do
+      shop_calendar(enabled_dates: [Date.add(ShopTime.today(), 30)], disabled_dates: [Date.add(ShopTime.today(), 31)])
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
+      assert has_element?(view, ~s|button[phx-click="reset-calendar"][data-confirm]|)
+
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
       |> render_click()
 
       drain(view)
 
-      reloaded_delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      reloaded_pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
-
-      for option <- [reloaded_delivery, reloaded_pickup] do
-        assert :sunday in option.available_days
-        assert option.enabled_dates == []
-        assert option.disabled_dates == []
-      end
-    end
-
-    test "renders a data-confirm attribute on the reset button", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")
-      assert html =~ "Reset every fulfillment option?"
+      calendar = Fulfillment.get_shop_calendar!()
+      assert Enum.sort(calendar.available_days) == Enum.sort(Weekday.all())
+      assert calendar.enabled_dates == []
+      assert calendar.disabled_dates == []
     end
   end
 
-  describe "same-day for every option" do
-    test "switching same-day off applies to every option", %{conn: conn, delivery: delivery, pickup: pickup} do
+  describe "same-day" do
+    test "switching same-day off", %{conn: conn} do
+      shop_calendar(same_day: true, order_deadline: ~T[14:00:00])
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
       assert has_element?(view, "#same-day-form input.toggle[type=checkbox]")
       refute has_element?(view, "#same-day-form fieldset.hidden input[type=time]")
@@ -324,28 +220,21 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       |> render_submit()
 
       assert render(view) =~ "Saved."
-      refute Fulfillment.get_option_by_id!(delivery.id, authorize?: false).same_day
-      refute Fulfillment.get_option_by_id!(pickup.id, authorize?: false).same_day
+      refute Fulfillment.get_shop_calendar!().same_day
     end
 
-    test "options that differ all get what's saved", %{conn: conn, delivery: delivery, pickup: pickup} do
-      Fulfillment.update_pricing!(pickup, %{same_day: false}, authorize?: false)
+    test "switching same-day on with a deadline", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-      assert render(view) =~ "Options differ. Saving applies to all."
 
       view
       |> form("#same-day-form", %{"same_day" => %{"same_day" => "true", "order_deadline" => "12:00"}})
       |> render_submit()
 
-      delivery = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
-      pickup = Fulfillment.get_option_by_id!(pickup.id, authorize?: false)
-      assert {delivery.same_day, delivery.order_deadline} == {true, ~T[12:00:00]}
-      assert {pickup.same_day, pickup.order_deadline} == {true, ~T[12:00:00]}
+      calendar = Fulfillment.get_shop_calendar!()
+      assert {calendar.same_day, calendar.order_deadline} == {true, ~T[12:00:00]}
     end
 
-    test "turning same-day on needs a deadline", %{conn: conn, delivery: delivery, pickup: pickup} do
-      Fulfillment.update_pricing!(delivery, %{same_day: false}, authorize?: false)
-      Fulfillment.update_pricing!(pickup, %{same_day: false, order_deadline: nil}, authorize?: false)
+    test "turning same-day on needs a deadline", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       html =
@@ -354,8 +243,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
         |> render_submit()
 
       assert html =~ "is required"
-      refute Fulfillment.get_option_by_id!(delivery.id, authorize?: false).same_day
-      refute Fulfillment.get_option_by_id!(pickup.id, authorize?: false).same_day
+      refute Fulfillment.get_shop_calendar!().same_day
     end
   end
 
@@ -423,16 +311,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
                home_delivery.free_dist_km
     end
 
-    test "same-day without a deadline shows an error", %{conn: conn, pickup: pickup} do
+    test "the option page has no calendar or same-day fields", %{conn: conn, pickup: pickup} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{pickup.id}")
 
-      html =
-        view
-        |> form("#pricing-form", %{"pricing" => %{"same_day" => "true", "order_deadline" => ""}})
-        |> render_submit()
-
-      assert html =~ "is required"
-      assert Fulfillment.get_option_by_id!(pickup.id, authorize?: false).order_deadline == pickup.order_deadline
+      refute has_element?(view, "#admin-fulfillment-calendar")
+      refute has_element?(view, "#pricing-form input[name='pricing[same_day]']")
     end
   end
 

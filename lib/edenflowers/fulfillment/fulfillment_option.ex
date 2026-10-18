@@ -15,8 +15,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     extensions: [AshTranslation.Resource]
 
   alias Edenflowers.Fulfillment.Actions
-  alias Edenflowers.Fulfillment.Changes
-  alias Edenflowers.Fulfillment.Weekday
 
   postgres do
     table "fulfillment_options"
@@ -52,11 +50,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :price_per_km,
         :free_dist_km,
         :max_dist_km,
-        :same_day,
-        :order_deadline,
-        :available_days,
-        :enabled_dates,
-        :disabled_dates,
         :tax_rate_id,
         :translations
       ],
@@ -69,8 +62,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
         :price_per_km,
         :free_dist_km,
         :max_dist_km,
-        :same_day,
-        :order_deadline,
         :tax_rate_id,
         :translations
       ]
@@ -81,43 +72,10 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     update :update_pricing do
-      description "Admin-only update narrowed to prices, distances and the same-day cutoff. " <>
-                    "Prevents accidental writes to the fulfillment method, rate type or calendar."
+      description "Admin-only update narrowed to prices and distances. " <>
+                    "Prevents accidental writes to the fulfillment method or rate type."
 
-      accept [:base_price, :price_per_km, :free_dist_km, :max_dist_km, :same_day, :order_deadline]
-    end
-
-    update :toggle_date do
-      description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics in Changes.ToggleDate."
-      # The change reads the existing option to compute the new override sets,
-      # so it can't be expressed as a single DB expression.
-      require_atomic? false
-      argument :date, :date, allow_nil?: false
-      change Changes.ToggleDate
-    end
-
-    update :set_weekday do
-      description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per Changes.SetWeekday."
-      require_atomic? false
-      argument :weekday, Weekday, allow_nil?: false
-      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
-      change Changes.SetWeekday
-    end
-
-    update :set_week do
-      description "Set every non-past date in `week` to :open or :closed, idempotently."
-      require_atomic? false
-      argument :week, {:array, :date}, allow_nil?: false
-      argument :today, :date, allow_nil?: false
-      argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:open, :closed]]
-      change Changes.SetWeek
-    end
-
-    update :reset_calendar do
-      description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
-      change set_attribute(:available_days, Weekday.all())
-      change set_attribute(:enabled_dates, [])
-      change set_attribute(:disabled_dates, [])
+      accept [:base_price, :price_per_km, :free_dist_km, :max_dist_km]
     end
 
     action :calculate_delivery, :map do
@@ -151,10 +109,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       where attribute_equals(:rate_type, :dynamic)
     end
 
-    validate present(:order_deadline) do
-      where attribute_equals(:same_day, true)
-    end
-
     validate compare(:free_dist_km, less_than_or_equal_to: :max_dist_km) do
       where attribute_equals(:rate_type, :dynamic)
     end
@@ -174,17 +128,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
     attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]
     attribute :max_dist_km, :integer, public?: true, constraints: [min: 1]
-
-    attribute :same_day, :boolean, allow_nil?: false, default: false, public?: true
-    attribute :order_deadline, :time, public?: true
-
-    attribute :available_days, {:array, Weekday},
-      allow_nil?: false,
-      default: Weekday.all(),
-      public?: true
-
-    attribute :enabled_dates, {:array, :date}, allow_nil?: false, default: [], public?: true
-    attribute :disabled_dates, {:array, :date}, allow_nil?: false, default: [], public?: true
   end
 
   relationships do

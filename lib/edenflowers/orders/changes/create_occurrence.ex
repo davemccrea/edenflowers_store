@@ -24,6 +24,7 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   import Edenflowers.Actors
 
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
@@ -80,8 +81,8 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   # Each occurrence may move within its own schedule window, but never into the
   # next one's window. This keeps closed periods from piling up deliveries.
   defp occur_unless_missed(subscription, date) do
-    with {:ok, subscription} <- Ash.load(subscription, [:user, :fulfillment_option], actor: system_actor()) do
-      case first_open_day(subscription.fulfillment_option, date, subscription.interval_weeks) do
+    with {:ok, subscription} <- Ash.load(subscription, :user, actor: system_actor()) do
+      case first_open_day(date, subscription.interval_weeks) do
         nil ->
           Logger.error(
             "Subscription #{subscription.id} missed its delivery on #{date}: " <>
@@ -126,13 +127,14 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
     )
   end
 
-  defp first_open_day(option, date, interval_weeks) do
+  defp first_open_day(date, interval_weeks) do
+    calendar = Fulfillment.get_shop_calendar!(authorize?: false)
     now = Edenflowers.ShopTime.now()
 
     date
     |> Stream.iterate(&Date.add(&1, 1))
     |> Enum.take(interval_weeks * 7)
-    |> Enum.find(&is_nil(Availability.unavailable_reason(option, &1, now)))
+    |> Enum.find(&is_nil(Availability.unavailable_reason(calendar, &1, now)))
   end
 
   defp pay(%Order{payment_intent_id: nil} = order, subscription) do

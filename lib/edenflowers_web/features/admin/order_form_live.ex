@@ -39,6 +39,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:page_title, page_title(mode, order))
          |> assign(:locale, Localize.get_locale())
          |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor))
+         |> assign(:shop_calendar, Fulfillment.get_shop_calendar!(actor: actor))
          |> assign(:variant_options, variant_options(actor))
          |> assign(:tax_rates, tax_rates)
          |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
@@ -555,16 +556,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp assign_date_warning(socket) do
     form = socket.assigns.form
 
-    option_id =
-      form[:fulfillment_option_id].value || (socket.assigns.order && socket.assigns.order.fulfillment_option_id)
-
-    option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == option_id))
-
     warning =
-      with %{} <- option,
-           {:ok, date} <- parse_date(form[:fulfillment_date].value),
+      with {:ok, date} <- parse_date(form[:fulfillment_date].value),
            reason when reason not in [nil, :past] <-
-             Availability.unavailable_reason(option, date, Edenflowers.ShopTime.now()) do
+             Availability.unavailable_reason(socket.assigns.shop_calendar, date, Edenflowers.ShopTime.now()) do
         date_warning(reason)
       else
         _ -> nil
@@ -577,11 +572,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp parse_date(value) when is_binary(value), do: Date.from_iso8601(value)
   defp parse_date(_value), do: :error
 
-  defp date_warning(:weekday_disabled), do: ~t"This weekday is normally closed for this option. Booking it anyway."
+  defp date_warning(:weekday_disabled), do: ~t"This weekday is normally closed. Booking it anyway."
   defp date_warning(:date_disabled), do: ~t"You've closed this date in the calendar. Booking it anyway."
 
-  defp date_warning(:same_day_delivery_disabled),
-    do: ~t"Same-day isn't normally offered for this option. Booking it anyway."
+  defp date_warning(:same_day_delivery_disabled), do: ~t"Same-day isn't normally offered. Booking it anyway."
 
   defp date_warning(:order_deadline_passed), do: ~t"Today's order deadline has passed. Booking it anyway."
 

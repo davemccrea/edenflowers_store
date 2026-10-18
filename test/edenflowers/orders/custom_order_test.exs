@@ -170,9 +170,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "may be booked on a closed day, but never in the past", ctx do
-      closed = Ash.Seed.update!(ctx.pickup, %{available_days: []})
+      shop_calendar(available_days: [])
 
-      assert {:ok, _order} = place(ctx, %{fulfillment_option_id: closed.id})
+      assert {:ok, _order} = place(ctx)
 
       assert {:error, error} = place(ctx, %{fulfillment_date: Date.add(tomorrow(), -2)})
       assert Exception.message(error) =~ "cannot be in the past"

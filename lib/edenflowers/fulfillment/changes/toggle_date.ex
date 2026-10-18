@@ -1,6 +1,6 @@
 defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   @moduledoc """
-  Toggles a single date on or off in a fulfillment option's overrides.
+  Toggles a single date on or off in the shop calendar.s overrides.
 
   ## Click semantics
 
@@ -21,15 +21,15 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment.ShopCalendar
   alias Edenflowers.Fulfillment.Weekday
 
   @impl true
   def change(changeset, _opts, _context) do
     date = Ash.Changeset.get_argument(changeset, :date)
-    option = changeset.data
+    calendar = changeset.data
 
-    %{enabled_dates: enabled, disabled_dates: disabled} = toggle_date(option, date)
+    %{enabled_dates: enabled, disabled_dates: disabled} = toggle_date(calendar, date)
 
     changeset
     |> Ash.Changeset.force_change_attribute(:enabled_dates, enabled)
@@ -37,17 +37,17 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   end
 
   @doc """
-  Toggle a date for a single fulfillment option, returning the updated
+  Toggle a date in the shop calendar, returning the updated
   `%{enabled_dates: [...], disabled_dates: [...]}` map. See module doc for the
   click semantics.
   """
-  @spec toggle_date(FulfillmentOption.t(), Date.t()) :: %{
+  @spec toggle_date(ShopCalendar.t(), Date.t()) :: %{
           enabled_dates: [Date.t()],
           disabled_dates: [Date.t()]
         }
-  def toggle_date(%FulfillmentOption{} = option, %Date{} = date) do
-    enabled = option.enabled_dates
-    disabled = option.disabled_dates
+  def toggle_date(%ShopCalendar{} = calendar, %Date{} = date) do
+    enabled = calendar.enabled_dates
+    disabled = calendar.disabled_dates
 
     cond do
       date in enabled ->
@@ -56,7 +56,7 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
       date in disabled ->
         %{enabled_dates: enabled, disabled_dates: List.delete(disabled, date)}
 
-      Weekday.from_date(date) in option.available_days ->
+      Weekday.from_date(date) in calendar.available_days ->
         %{enabled_dates: enabled, disabled_dates: [date | disabled]}
 
       true ->

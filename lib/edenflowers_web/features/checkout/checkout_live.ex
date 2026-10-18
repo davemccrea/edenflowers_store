@@ -56,6 +56,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:id, "checkout")
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
+       |> assign(:shop_calendar, Fulfillment.get_shop_calendar!())
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:delivery_quote, quote_from_order(order))
@@ -279,7 +280,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                             }
                             selected_date={@form[:fulfillment_date].value}
                             module={EdenflowersWeb.DatePicker}
-                            cell_state={fn date -> Availability.customer_cell_state(@order.fulfillment_option, date) end}
+                            cell_state={fn date -> Availability.customer_cell_state(@shop_calendar, date) end}
                           >
                             <:day_decoration :let={%{date: day, state: state, selected?: selected?}}>
                               <.key_date_icon date={day} selected?={selected?} muted?={state == :past} />
@@ -493,9 +494,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     previous_method = socket.assigns.order.fulfillment_method
     Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    # The action clears the date, as each option has its own calendar; drop
-    # the typed one so it doesn't shadow that.
-    socket = reload_order(socket, drop: ["fulfillment_date"])
+    socket = reload_order(socket)
 
     # Switching to pickup unmounts the address field. It remounts with
     # whatever address the order holds, which may be prefilled.

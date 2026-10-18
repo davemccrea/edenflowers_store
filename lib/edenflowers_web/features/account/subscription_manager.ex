@@ -51,6 +51,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         subscription={@subscription}
         orders={@orders}
         locale={@locale}
+        open_days={@open_days}
         edited?={@edited?}
         notice={@notice}
         target={@myself}
@@ -144,8 +145,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp delivery_day(subscription), do: Weekday.from_date(subscription.next_fulfillment_date)
 
-  defp delivery_day_options(subscription, locale) do
-    for day <- Weekday.all(), day in subscription.fulfillment_option.available_days do
+  defp delivery_day_options(open_days, locale) do
+    for day <- Weekday.all(), day in open_days do
       {String.capitalize(Format.weekday_name(day, locale)), day}
     end
   end
@@ -396,6 +397,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   attr :subscription, :map, required: true
   attr :orders, :list, required: true
   attr :locale, :string, required: true
+  attr :open_days, :list, required: true
   attr :edited?, :boolean, required: true
   attr :notice, :any, default: nil
   attr :target, :any, required: true
@@ -553,7 +555,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-day"}
                 name="delivery_day"
                 label={~t"Delivery day"}
-                options={delivery_day_options(@subscription, @locale)}
+                options={delivery_day_options(@open_days, @locale)}
                 value={delivery_day(@subscription)}
               />
               <.button

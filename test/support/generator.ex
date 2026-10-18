@@ -304,16 +304,17 @@ defmodule Generator do
         base_price: "4.50",
         price_per_km: "1.60",
         free_dist_km: 5,
-        max_dist_km: 20,
-        same_day: true,
-        order_deadline: ~T[14:00:00],
-        available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
-        enabled_dates: [],
-        disabled_dates: []
+        max_dist_km: 20
       },
       overrides: opts,
       authorize?: false
     )
+  end
+
+  @doc "Sets the shop calendar, which every test starts with open every day and same-day off."
+  def shop_calendar(attrs \\ []) do
+    Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+    |> Ash.Seed.update!(Map.new(attrs))
   end
 
   def course(opts \\ []) do

@@ -156,8 +156,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "a closed day moves delivery to the next open day, but the schedule keeps its own date", ctx do
-    closed = generate(fulfillment_option(fulfillment_method: :delivery, disabled_dates: [ctx.date]))
-    subscription = subscription_for(ctx, fulfillment_option_id: closed.id)
+    shop_calendar(disabled_dates: [ctx.date])
+    subscription = subscription_for(ctx)
     stub_geocoding()
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
@@ -170,9 +170,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "a closed schedule window is skipped instead of colliding with the next occurrence", ctx do
-    disabled_dates = Enum.map(0..6, &Date.add(ctx.date, &1))
-    closed = generate(fulfillment_option(fulfillment_method: :delivery, disabled_dates: disabled_dates))
-    subscription = subscription_for(ctx, fulfillment_option_id: closed.id, interval_weeks: 1)
+    shop_calendar(disabled_dates: Enum.map(0..6, &Date.add(ctx.date, &1)))
+    subscription = subscription_for(ctx, interval_weeks: 1)
     stub_geocoding()
     stub(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
 
@@ -197,17 +196,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   test "a past scheduled date is delivered when its first open fulfillment date is today", ctx do
     today = ShopTime.today()
 
-    delivery =
-      generate(
-        fulfillment_option(
-          fulfillment_method: :delivery,
-          same_day: true,
-          order_deadline: ~T[23:59:59]
-        )
-      )
-
-    subscription =
-      subscription_for(ctx, fulfillment_option_id: delivery.id, next_fulfillment_date: Date.add(today, -1))
+    shop_calendar(same_day: true, order_deadline: ~T[23:59:59])
+    subscription = subscription_for(ctx, next_fulfillment_date: Date.add(today, -1))
 
     stub_geocoding()
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
