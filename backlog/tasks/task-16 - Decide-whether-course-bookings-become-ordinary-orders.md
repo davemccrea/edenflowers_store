@@ -4,7 +4,7 @@ title: Decide whether course bookings become ordinary orders
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 46000
@@ -14,6 +14,8 @@ ordinal: 46000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Decide whether a course booking becomes an ordinary Order, so the shop has one sales record instead of two
+
+**Why:** A course booking is a sale that isn't an order, so every piece of money code handles two kinds of record. Deciding settles whether that duplication stays.
 
 ### Problem
 

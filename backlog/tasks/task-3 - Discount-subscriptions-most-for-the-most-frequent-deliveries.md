@@ -4,7 +4,7 @@ title: 'Discount subscriptions, most for the most frequent deliveries'
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 02:13'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 3000
@@ -14,6 +14,8 @@ ordinal: 3000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Discount subscriptions, most for the most frequent deliveries
+
+**Why:** A Subscription costs the same as reordering, so there's little reason to subscribe, yet subscriptions are worth more to the shop: predictable demand, less waste and recurring income.
 
 ### Problem
 

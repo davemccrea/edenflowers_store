@@ -4,6 +4,7 @@ title: Manage a custom order's lines with manage_relationship
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:24'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -14,6 +15,8 @@ ordinal: 62000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** `ReplaceLineItems` does by hand what `manage_relationship` does, and a bad line is reported by number instead of on its own fields.
+
 ### Problem
 
 When Jennie places or edits an order, `Changes.ReplaceLineItems` does by hand what `manage_relationship` does: it loads the order's lines, updates the kept ones (`set_quantity`), destroys the missing ones (`remove_item`), and creates the new ones (`add_line_item` for a catalogue variant, `add_custom_item` for one she describes). `EnteredLineItems` first parses the form's maps into tuples, and `Validations.EnteredLineItems` reports the first bad line by its number.

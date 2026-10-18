@@ -4,7 +4,7 @@ title: Enforce one module layout and dependency style with Credo
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 04:05'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 71000
@@ -14,6 +14,8 @@ ordinal: 71000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 One way to declare dependencies and lay out modules, checked by Credo so it stays that way
+
+**Why:** Nothing enforces module conventions, so the code has drifted into several styles and new code adds more.
 
 ### Problem
 

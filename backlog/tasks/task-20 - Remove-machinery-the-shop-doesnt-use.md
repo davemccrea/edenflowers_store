@@ -4,7 +4,7 @@ title: Remove machinery the shop doesn't use
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 67000
@@ -14,6 +14,8 @@ ordinal: 67000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Remove machinery the shop doesn't use, so there's less to read and keep working
+
+**Why:** Code the shop doesn't use still has to be read, upgraded and kept passing.
 
 Each ticket is a deletion with no behaviour change for Jennie or customers. They're independent.
 

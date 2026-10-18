@@ -4,7 +4,7 @@ title: Let customers pay extra for a delivery time window
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 00:15'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 1000
@@ -14,6 +14,8 @@ ordinal: 1000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Let customers book a delivery time window, for an extra fee
+
+**Why:** Customers already ask for set delivery times and Jennie arranges them by hand over the phone. Letting them book and pay for a window earns the fee and saves her the calls.
 
 Parked: 2026-10-07. Design agreed in a grilling session, not yet broken into subtasks.
 

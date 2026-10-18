@@ -4,6 +4,7 @@ title: Share Jennie's payment controls between the order page and the courses pa
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies:
   - TASK-17.1
@@ -15,6 +16,8 @@ ordinal: 50000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** The order page and the courses page each handle payments, refunds and payment links with their own messages and errors, so they drift apart.
+
 ### Problem
 
 `Admin.OrderDetailLive` and `Admin.CoursesLive` each handle `record_payment`, `undo_payment`, `refund_with_stripe`, `open_payment_link` and `email_payment_link` against a payable, with their own flash messages and error handling. The order page also renders the payments list, money rows and payment-link buttons, which the courses page shows its own way for each booking.

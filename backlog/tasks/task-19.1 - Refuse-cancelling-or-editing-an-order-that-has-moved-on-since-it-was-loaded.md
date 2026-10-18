@@ -4,6 +4,7 @@ title: Refuse cancelling or editing an order that has moved on since it was load
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -14,6 +15,8 @@ ordinal: 61000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** An order cancelled or fulfilled while Jennie's page was open can be cancelled or edited again, returning its stock twice.
+
 ### Problem
 
 `Order.cancel`, `cancel_by_customer` and `edit` are `require_atomic? false` (they call Stripe and run `AdjustStock` after the write). So `validate attribute_equals(:state, :placed)` and `validate attribute_equals(:fulfillment_status, :pending)` check the record passed in, not the row.

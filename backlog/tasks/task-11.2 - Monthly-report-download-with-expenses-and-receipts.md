@@ -4,7 +4,7 @@ title: Monthly report download with expenses and receipts
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies:
   - TASK-11.1
@@ -16,6 +16,8 @@ ordinal: 24000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Gets the download working end to end, so Jennie can send expenses and receipts before the sales and Stripe sheets exist.
+
 ### What to build
 
 The end-to-end path: Jennie picks a month on the admin expenses page and downloads a zip holding the spreadsheet, with its Inköp (expenses) sheet, and every receipt PDF. The Försäljning and Stripe sheets come in `TASK-11.3` and `TASK-11.4`. See decisions 1, 2, 5, 6 and 7 in `TASK-11`.

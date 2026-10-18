@@ -4,7 +4,7 @@ title: Add the sales sheet with income split by VAT rate
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies:
   - TASK-11.2
@@ -21,6 +21,8 @@ ordinal: 25000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** The accountant needs income split by VAT rate for the VAT return, and payments are the shop's only sales record.
+
 ### What to build
 
 Add the Försäljning (sales) sheet: every payment received in the month, split by VAT rate, with per-rate totals the accountant copies into the VAT return. This report is the shop's only sales record (ADR 0004), so every payment method counts. See decisions 3 and 4 in `TASK-11`.
