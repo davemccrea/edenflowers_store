@@ -632,6 +632,36 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert {:error, _} = Orders.cancel_order(order, actor: ctx.admin)
       assert stock(ctx.wreath) == 1
     end
+
+    test "an order cancelled since Jennie loaded it can't be cancelled again, so stock comes back once", ctx do
+      {:ok, stale} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
+      {:ok, _order} = Orders.cancel_order(stale, actor: ctx.admin)
+
+      assert {:error, _} = Orders.cancel_order(stale, actor: ctx.admin)
+      assert stock(ctx.wreath) == 3
+    end
+
+    test "an order fulfilled since Jennie loaded it can't be cancelled", ctx do
+      {:ok, stale} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
+      {:ok, _order} = Orders.mark_order_fulfilled(stale, actor: ctx.admin)
+
+      assert {:error, _} = Orders.cancel_order(stale, actor: ctx.admin)
+      assert Orders.get_order_by_id!(stale.id, authorize?: false).fulfillment_status == :fulfilled
+      assert stock(ctx.wreath) == 1
+    end
+
+    test "an order cancelled since Jennie opened the form can't be edited", ctx do
+      {:ok, stale} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
+      {:ok, _order} = Orders.cancel_order(stale, actor: ctx.admin)
+
+      assert {:error, _} =
+               Orders.edit_order(stale, params(ctx, %{line_items: [catalogue_line(ctx.wreath, "1")]}), actor: ctx.admin)
+
+      order = Orders.get_order_by_id!(stale.id, authorize?: false, load: [:line_items])
+      assert order.fulfillment_status == :cancelled
+      assert [%{quantity: 2}] = order.line_items
+      assert stock(ctx.wreath) == 3
+    end
   end
 
   describe "paying" do
