@@ -52,7 +52,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
         worker_module_name Edenflowers.Courses.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendConfirmationEmail
         default_actor system_actor()
-        where expr(status == :confirmed and is_nil(confirmation_emailed_at))
+        where expr(status == :confirmed and is_nil(confirmation_emailed_at) and not skip_confirmation_email)
       end
 
       trigger :reconcile_payment do
@@ -119,11 +119,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
       change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change set_attribute(:skip_confirmation_email, true), where: [argument_equals(:email_customer?, false)]
       change PaymentChanges.ScheduleConfirmationEmail, where: [argument_equals(:email_customer?, true)]
-
-      # Marked as sent so the trigger's scheduler doesn't send it after all.
-      change set_attribute(:confirmation_emailed_at, &DateTime.utc_now/0),
-        where: [argument_equals(:email_customer?, false)]
     end
 
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
@@ -155,8 +152,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :paid_with, :map, default: %{}
       change PaymentChanges.ClearPaidPaymentIntent
 
-      # The confirmation goes out again, now with the receipt.
+      # The confirmation goes out again, now with the receipt, even if Jennie
+      # chose not to email one when she added the booking.
       change set_attribute(:confirmation_emailed_at, nil)
+      change set_attribute(:skip_confirmation_email, false)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change PaymentChanges.ScheduleConfirmationEmail
       require_atomic? false
@@ -276,6 +275,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
+    # Jennie added the booking and chose not to email the customer.
+    attribute :skip_confirmation_email, :boolean, allow_nil?: false, default: false
     attribute :receipt_emailed_at, :utc_datetime
 
     timestamps()
