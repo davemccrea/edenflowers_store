@@ -14,9 +14,11 @@ defmodule Edenflowers.Orders.Changes.ResetCheckout do
   require Ash.Query
 
   alias Edenflowers.Orders.Changes.ClearDeliveryFields
+  alias Edenflowers.Orders.Changes.ClearPromotionFields
   alias Edenflowers.Orders.LineItem
 
-  @reset_attrs Map.merge(Map.from_keys(ClearDeliveryFields.fields(), nil), %{
+  @reset_attrs Map.from_keys(ClearDeliveryFields.fields() ++ ClearPromotionFields.fields(), nil)
+               |> Map.merge(%{
                  customer_name: nil,
                  customer_email: nil,
                  user_id: nil,
@@ -28,12 +30,7 @@ defmodule Edenflowers.Orders.Changes.ResetCheckout do
                  fulfillment_option_id: nil,
                  fulfillment_method: nil,
                  fulfillment_tax_rate: nil,
-                 fulfillment_option_name: nil,
-                 promotion_id: nil,
-                 discount_rate: nil,
-                 promotion_name: nil,
-                 promotion_code: nil,
-                 promotion_minimum_cart_total: nil
+                 fulfillment_option_name: nil
                })
 
   @impl true

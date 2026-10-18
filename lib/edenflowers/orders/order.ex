@@ -837,11 +837,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     update :clear_promotion do
-      change set_attribute(:promotion_id, nil)
-      change set_attribute(:discount_rate, nil)
-      change set_attribute(:promotion_name, nil)
-      change set_attribute(:promotion_code, nil)
-      change set_attribute(:promotion_minimum_cart_total, nil)
+      change Changes.ClearPromotionFields
     end
 
     update :restart_checkout do
