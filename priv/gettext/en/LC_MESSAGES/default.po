@@ -3094,6 +3094,7 @@ msgid "View customer's orders"
 msgstr "View customer's orders"
 
 #: lib/edenflowers/email/templates/order_delivered.text.eex:5
+#: lib/edenflowers/email/templates/order_left_at_door.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr ""
@@ -6109,11 +6110,6 @@ msgstr ""
 msgid "Take a photo of where you left the flowers."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_left_at_door.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Thank you for your order. If you can't find them, just reply and I'll help."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:408
 #, elixir-autogen, elixir-format
 msgid "This order is still unpaid."
@@ -6462,4 +6458,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/payment_actions.ex:30
 #, elixir-autogen, elixir-format
 msgid "Payment recorded, but the receipt could not be emailed."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_left_at_door.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Your flowers for %{recipient} were delivered while nobody was home, so I left them in the spot shown in the attached photo."
 msgstr ""

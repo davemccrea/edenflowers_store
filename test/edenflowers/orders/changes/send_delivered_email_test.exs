@@ -28,6 +28,15 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
 
   defp admin, do: generate(admin_user())
 
+  defp stub_delivery_photo do
+    Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+      assert conn.host == "imgproxy.test"
+      assert conn.request_path =~ "rs:fit:1600:1600"
+      assert conn.request_path =~ "q:80"
+      Plug.Conn.send_resp(conn, 200, "small jpeg")
+    end)
+  end
+
   describe "marking an order fulfilled" do
     test "queues the delivered email for a delivery order" do
       order = fulfillable_order([])
@@ -112,12 +121,7 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
     end
 
     test "sends the photo of where the flowers were left instead, shrunk by imgproxy" do
-      Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
-        assert conn.host == "imgproxy.test"
-        assert conn.request_path =~ "rs:fit:1600:1600"
-        assert conn.request_path =~ "q:80"
-        Plug.Conn.send_resp(conn, 200, "small jpeg")
-      end)
+      stub_delivery_photo()
 
       order =
         fulfillable_order(
@@ -131,7 +135,28 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       assert_email_sent(fn email ->
         assert email.subject == "Your Eden Flowers order 1400 was left for you"
         assert email.text_body =~ "Nobody was home"
+        assert email.text_body =~ "If anything isn't as it should be, just reply and I'll take care of it."
+        refute email.text_body =~ "can't find them"
         assert [%{data: "small jpeg", content_type: "image/jpeg"}] = email.attachments
+      end)
+    end
+
+    test "names the recipient when a gift was left at the door" do
+      stub_delivery_photo()
+
+      order =
+        fulfillable_order(
+          gift: true,
+          recipient_name: "Grace Hopper",
+          fulfillment_status: :fulfilled,
+          delivery_photo_slug: "local:///uploads/door.jpg",
+          email_delivery_photo: true
+        )
+
+      assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ "Your flowers for Grace were delivered while nobody was home"
       end)
     end
 

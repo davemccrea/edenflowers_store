@@ -1,8 +1,8 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Nobody was home when I delivered your flowers, so I left them in the spot shown in the attached photo.") %>
+<%= if @order.recipient_first_name do %><%= gettext("Your flowers for %{recipient} were delivered while nobody was home, so I left them in the spot shown in the attached photo.", recipient: @order.recipient_first_name) %><% else %><%= gettext("Nobody was home when I delivered your flowers, so I left them in the spot shown in the attached photo.") %><% end %>
 
-<%= gettext("Thank you for your order. If you can't find them, just reply and I'll help.") %>
+<%= gettext("Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it.") %>
 
 <%= gettext("Warm wishes,") %>
 
