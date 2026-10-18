@@ -60,6 +60,8 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
     |> Map.new(fn {variant_id, quantities} -> {variant_id, Enum.sum(quantities)} end)
   end
 
+  # adjust_stock alone is safe. The lock is only so the oversell report reads
+  # the count the update will act on.
   defp adjust(order, variant_id, quantity, opts) do
     ProductVariant
     |> Ash.Query.filter(id == ^variant_id and not is_nil(stock_quantity))

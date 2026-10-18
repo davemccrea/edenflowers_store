@@ -1,10 +1,10 @@
 ---
 id: TASK-19.6
 title: 'Drop AdjustStock''s row lock, or keep it on purpose'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 10:09'
 labels:
   - quick
 dependencies: []
@@ -31,6 +31,12 @@ ordinal: 66000
 
 Keep it unless profiling says otherwise. Recorded so nobody "simplifies" it without knowing why it's there: add a one-line comment to `adjust/3` saying the lock is for the oversell report.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Kept the lock: it makes the oversell log exact, and dropping it would save one read per tracked size. adjust/3 now says why it's there.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 
