@@ -53,6 +53,8 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "h1", "Pay for your order")
     assert has_element?(view, "dl", "Funeral spray")
     assert has_element?(view, "[data-testid=pay-total]", "85.00")
+    refute has_element?(view, "[data-testid=pay-balance]")
+    refute render(view) =~ "Paid so far"
     assert has_element?(view, ~s|#pay-form[data-client-secret="pi_link_secret"]|)
     refute render(view) =~ "lilies"
   end

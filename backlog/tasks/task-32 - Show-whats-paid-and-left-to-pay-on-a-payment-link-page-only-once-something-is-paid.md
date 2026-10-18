@@ -3,9 +3,10 @@ id: TASK-32
 title: >-
   Show what's paid and left to pay on a payment-link page only once something is
   paid
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:39'
 labels:
   - spec
   - customers
@@ -26,6 +27,6 @@ ordinal: 87000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A payment link with nothing paid shows only the amount due, on both the order and the booking page
-- [ ] #2 A payment link after a part payment shows the total, what's paid and what's left to pay
+- [x] #1 A payment link with nothing paid shows only the amount due, on both the order and the booking page
+- [x] #2 A payment link after a part payment shows the total, what's paid and what's left to pay
 <!-- AC:END -->
