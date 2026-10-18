@@ -44,6 +44,7 @@ defmodule Edenflowers.Orders.Order do
     :customer_name,
     :customer_email,
     :customer_phone_number,
+    :gift,
     :recipient_name,
     :recipient_phone_number,
     :card_message,
@@ -478,7 +479,7 @@ defmodule Edenflowers.Orders.Order do
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
       change Changes.NormalizePhoneNumber
-      change Changes.SetGiftFromRecipient
+      change Changes.ClearGiftFields
       change Changes.PriceFulfillment
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
 
@@ -681,7 +682,7 @@ defmodule Edenflowers.Orders.Order do
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
       change Changes.NormalizePhoneNumber
-      change Changes.SetGiftFromRecipient
+      change Changes.ClearGiftFields
       change Changes.PriceFulfillment
       change set_attribute(:user_id, nil), where: [changing(:customer_email)]
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]

@@ -153,20 +153,29 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "carries a card message without a card in its lines", ctx do
-      {:ok, order} = place(ctx, %{card_message: "With deepest sympathy"})
+      {:ok, order} = place(ctx, %{gift: true, card_message: "With deepest sympathy"})
 
       assert order.card_message == "With deepest sympathy"
 
-      assert {:error, error} = place(ctx, %{card_message: String.duplicate("a", 201)})
+      assert {:error, error} = place(ctx, %{gift: true, card_message: String.duplicate("a", 201)})
       assert Exception.message(error) =~ "at most 200 characters"
     end
 
-    test "names a recipient only when the flowers are for somebody else", ctx do
-      {:ok, for_herself} = place(ctx)
-      {:ok, gift} = place(ctx, %{recipient_name: "St. Olof's church"})
+    test "keeps a recipient and card only when the flowers are for somebody else", ctx do
+      recipient = %{recipient_name: "St. Olof's church", recipient_phone_number: "040 765 4321", card_message: "Rest"}
+
+      {:ok, gift} = place(ctx, Map.put(recipient, :gift, true))
+      {:ok, for_herself} = place(ctx, Map.put(recipient, :gift, false))
+
+      assert gift.gift
+      assert gift.recipient_name == "St. Olof's church"
+      assert gift.recipient_phone_number
+      assert gift.card_message == "Rest"
 
       refute for_herself.gift
-      assert gift.gift
+      assert for_herself.recipient_name == nil
+      assert for_herself.recipient_phone_number == nil
+      assert for_herself.card_message == nil
     end
 
     test "may be booked on a closed day, but never in the past", ctx do

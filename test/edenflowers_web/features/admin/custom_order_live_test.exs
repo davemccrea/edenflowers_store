@@ -122,6 +122,46 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.payment_link_open?
     end
 
+    test "asks for a recipient and card only for a gift", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      assert has_element?(view, ~s|input[name="form[gift]"][value="false"][checked]|)
+      refute has_element?(view, ~s|input[name="form[recipient_name]"]|)
+      refute has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
+      refute has_element?(view, ~s|textarea[name="form[card_message]"]|)
+
+      view |> form("#order-form", form: %{gift: "true"}) |> render_change()
+
+      assert has_element?(view, ~s|input[name="form[recipient_name]"]|)
+      assert has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
+      assert has_element?(view, ~s|textarea[name="form[card_message]"]|)
+
+      render_click(view, "add_line", %{"kind" => "custom"})
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Mrs Holm",
+                   customer_phone_number: "040 123 4567",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   gift: "true",
+                   recipient_name: "St. Olof's church",
+                   card_message: "Rest in peace",
+                   line_items: %{
+                     "0" => %{"product_name" => "Wreath", "unit_price" => "85", "tax_rate_id" => ctx.tax_rate.id}
+                   }
+                 }
+               )
+               |> render_submit()
+
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin)
+      assert order.gift
+      assert order.recipient_name == "St. Olof's church"
+      assert order.card_message == "Rest in peace"
+    end
+
     test "warns about a closed day without refusing it", ctx do
       shop_calendar(available_days: [])
 
