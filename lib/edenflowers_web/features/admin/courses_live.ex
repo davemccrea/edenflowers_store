@@ -328,6 +328,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               type="select"
               label={~t"Language"}
               options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+              class="select w-full"
             />
           </div>
           <.input
@@ -344,8 +345,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             label={~t"Email the booking confirmation to the customer"}
           />
           <div class="flex gap-2">
-            <.button type="submit" variant="primary" size="sm">{~t"Add booking"}</.button>
-            <.button type="button" phx-click="close_booking" variant="ghost" size="sm">{~t"Close"}</.button>
+            <.button type="submit" variant="primary">{~t"Add booking"}</.button>
+            <.button type="button" phx-click="close_booking" variant="ghost">{~t"Close"}</.button>
           </div>
         </.form>
 
@@ -400,7 +401,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   </select>
                   <label
                     :if={registration.status == :confirmed}
-                    class="flex shrink-0 items-center gap-1.5 text-sm pointer-coarse:min-h-11"
+                    class="flex shrink-0 items-center gap-1.5 text-xs pointer-coarse:min-h-11"
                   >
                     <input type="hidden" name="email_receipt" value="false" />
                     <input type="checkbox" name="email_receipt" value="true" checked class="checkbox checkbox-sm" />

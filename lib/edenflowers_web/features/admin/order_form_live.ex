@@ -114,6 +114,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   label={~t"Language"}
                   help={~t"Used for their emails and the payment page."}
                   options={locale_options()}
+                  class="select w-full"
                 />
               </div>
             </.form_section>
@@ -152,6 +153,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   label={~t"Method"}
                   prompt={~t"Choose…"}
                   options={Enum.map(@fulfillment_options, &{&1.name, &1.id})}
+                  class="select w-full"
                 />
                 <div>
                   <.input field={@form[:fulfillment_date]} type="date" label={~t"Date"} class="input w-full" />
@@ -256,6 +258,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     label={~t"Card message"}
                     rows="3"
                     maxlength="200"
+                    class="textarea w-full"
                   />
                   <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
                     <span id="char-count">0</span>/200
@@ -268,7 +271,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           <aside class="flex flex-col gap-6 xl:row-span-2">
             <.form_section title={~t"Florist note"}>
               <:description>{~t"Only you see this."}</:description>
-              <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
+              <.input
+                field={@form[:florist_note]}
+                type="textarea"
+                rows="4"
+                aria-label={~t"Florist note"}
+                class="textarea w-full"
+              />
             </.form_section>
           </aside>
 
@@ -699,6 +708,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           label={~t"Product"}
           prompt={~t"Choose…"}
           options={@variant_options}
+          class="select w-full"
         />
       </div>
       <div class="w-20">
@@ -731,7 +741,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         />
       </div>
       <div class="min-w-0 flex-1 basis-40">
-        <.input field={@line[:tax_rate_id]} type="select" label={~t"VAT"} options={@tax_rate_options} />
+        <.input field={@line[:tax_rate_id]} type="select" label={~t"VAT"} options={@tax_rate_options} class="select w-full" />
       </div>
       <div class="w-20">
         <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />

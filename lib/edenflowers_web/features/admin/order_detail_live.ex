@@ -204,8 +204,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   rows="3"
                   aria-label={~t"Florist note"}
                   placeholder={~t"Only you see this."}
+                  class="textarea w-full"
                 />
-                <.button type="submit" variant="neutral" size="sm">{~t"Save note"}</.button>
+                <.button type="submit" variant="neutral">{~t"Save note"}</.button>
               </.form>
             </.widget>
 
@@ -404,12 +405,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <.button
             type="submit"
             variant="primary"
-            size="sm"
             disabled={@order.fulfillment_method == :delivery and @form[:customer_home].value not in ["true", "false"]}
           >
             {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as fulfilled"}
           </.button>
-          <.button type="button" phx-click="cancel_fulfillment" variant="ghost" size="sm">{~t"Cancel"}</.button>
+          <.button type="button" phx-click="cancel_fulfillment" variant="ghost">{~t"Cancel"}</.button>
         </div>
       </.form>
     </.widget>

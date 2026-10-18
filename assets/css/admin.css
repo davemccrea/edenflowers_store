@@ -145,6 +145,20 @@ body:has(.admin-theme) {
   @apply text-base-content text-base;
 }
 
+/* The radio card is sized to sit beside the storefront's lg fields. Admin
+   fields are md, so match their text and height, while touch screens keep
+   their 44px target. */
+.admin-theme .radio-card {
+  @apply py-1.5 text-sm;
+  min-height: 2.5rem;
+}
+
+@media (pointer: coarse) {
+  .admin-theme .radio-card {
+    min-height: 2.75rem;
+  }
+}
+
 /* Tailwind UI-style pills: a 50-tint fill, 700 text, inset 600/20 ring. */
 .badge.admin-badge-success {
   border-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent);

@@ -40,13 +40,13 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/65"
 
-  set :filter_text_input_class, "input input-bordered input-sm w-full"
-  set :filter_date_input_class, "input input-bordered input-sm w-full sm:w-40"
+  set :filter_text_input_class, "input input-sm w-full"
+  set :filter_date_input_class, "input input-sm w-full sm:w-40"
 
   set :filter_number_input_class,
-      "input input-bordered input-sm w-full sm:w-24 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+      "input input-sm w-full sm:w-24 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
 
-  set :filter_select_input_class, "select select-bordered select-sm w-full min-w-0 sm:min-w-44"
+  set :filter_select_input_class, "select select-sm w-full min-w-0 sm:min-w-44"
   set :filter_range_container_class, "flex flex-col gap-2 sm:flex-row sm:items-center"
 
   # Outlined rather than the stock `btn-ghost`, which hides a lone "×" until hover.
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
       "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/65 hover:border-error hover:bg-error/10 hover:text-error"
 
   # `pl-10` leaves room for the search icon the renderer overlays.
-  set :search_input_class, "input input-bordered input-sm w-full pl-10"
+  set :search_input_class, "input input-sm w-full pl-10"
 
   set :pagination_container_class, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
   set :pagination_info_class, "text-sm"
