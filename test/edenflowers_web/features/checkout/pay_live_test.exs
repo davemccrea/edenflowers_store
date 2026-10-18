@@ -28,7 +28,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
           line_items: [
             %{
               "kind" => "custom",
-              "description" => "Funeral spray",
+              "product_name" => "Funeral spray",
               "unit_price" => "85.00",
               "tax_rate_id" => tax_rate.id,
               "quantity" => "1"

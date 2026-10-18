@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   Payments come from their own records rather than versions: a Stripe refund
   changes nothing on the order row, and only the record holds the amount.
   Lines live on another resource, so a version shows them only through its
-  `items`, which `ReplaceLineItems` sets when they change.
+  `items`, which `RecordEnteredLineItems` sets when they change.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

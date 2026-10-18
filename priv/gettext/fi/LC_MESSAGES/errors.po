@@ -120,3 +120,18 @@ msgstr "Tätä kurssia ei ole enää olemassa."
 
 msgid "Must be a valid email address"
 msgstr "Anna kelvollinen sähköpostiosoite"
+
+msgid "choose a product"
+msgstr "valitse tuote"
+
+msgid "describe the item"
+msgstr "kuvaile tuote"
+
+msgid "enter a price"
+msgstr "anna hinta"
+
+msgid "choose a VAT rate"
+msgstr "valitse ALV-kanta"
+
+msgid "Add at least one item"
+msgstr "Lisää vähintään yksi tuote"

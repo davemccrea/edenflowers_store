@@ -1,10 +1,10 @@
 ---
 id: TASK-19.2
 title: Manage a custom order's lines with manage_relationship
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 11:03'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -34,3 +34,9 @@ When Jennie places or edits an order, `Changes.ReplaceLineItems` does by hand wh
 - A kept line keeps the price it was sold at. `on_match: :set_quantity` already only accepts `quantity`, so that holds.
 - Cost: the order form is 780 lines; the nested-forms change is most of the work. Worth it if the form is being touched anyway.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+LineItem :enter (kind argument picks catalogue or custom) and manage_relationship(direct_control, on_match :set_quantity, on_no_match :enter, on_missing :remove_item) on place_custom and edit. OrderFormLive uses nested AshPhoenix forms, so a line's errors show on its own fields. Existing custom lines are built as create forms, so they're entered afresh as before and :set_quantity stays quantity-only. AdjustStock :return now runs before_action, since manage_relationship saves the new lines before after_action hooks run. Edenflowers.Types.Price takes decimal commas and gives 'enter a price'. Line messages moved to the errors gettext domain with their fi/sv translations.
+<!-- SECTION:NOTES:END -->
