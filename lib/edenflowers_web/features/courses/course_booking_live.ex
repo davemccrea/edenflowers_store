@@ -78,7 +78,10 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
             <dd class="tabular-nums">{@registration.reference}</dd>
           </dl>
 
-          <p class="text-base-content/70 mt-6">
+          <p :if={Decimal.positive?(@registration.course.late_cancellation_fee)} class="text-base-content/70 mt-6">
+            {~t"Cancel at least 7 days before the course for a full refund: reply to your confirmation email. If you cancel later, a #{fee = Format.currency(@registration.course.late_cancellation_fee, @locale)} late-cancellation fee is kept."}
+          </p>
+          <p :if={!Decimal.positive?(@registration.course.late_cancellation_fee)} class="text-base-content/70 mt-6">
             {~t"Cancel at least 7 days before the course for a full refund: reply to your confirmation email."}
           </p>
         </div>

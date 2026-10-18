@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
             </.form_section>
 
             <.form_section title={~t"Seats and price"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input
                   field={@form[:total_places]}
                   type="number"
@@ -100,6 +100,13 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                   type="text"
                   inputmode="decimal"
                   label={~t"Price per seat (€)"}
+                  class="input max-w-48 w-full tabular-nums"
+                />
+                <.input
+                  field={@form[:late_cancellation_fee]}
+                  type="text"
+                  inputmode="decimal"
+                  label={~t"Late-cancellation fee (€)"}
                   class="input max-w-48 w-full tabular-nums"
                 />
                 <.input
