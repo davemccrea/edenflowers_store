@@ -1,13 +1,14 @@
 ---
 id: TASK-16
 title: Decide whether course bookings become ordinary orders
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 14:18'
 labels:
   - spec
   - developers
+  - wontfix
 dependencies: []
 priority: medium
 type: grilling
@@ -53,3 +54,16 @@ Not yet. Finish `TASK-17` first: it removes most of the duplication for a fracti
 - Is a course genuinely a sale like any other for the accountant, at the same VAT treatment as the order's lines? (It is today: `tax_rate` is on the booking.)
 - Would Jennie want to sell a course seat over the counter as part of a Custom Order with flowers? If yes, that argues for this change.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 14:18
+
+---
+
+Decided not worth implementing. TASK-17 removed most of the duplication; making fulfilment optional on orders, seat holds and migrating registrations cost more than the remaining duplication.
+
+---
+<!-- COMMENTS:END -->
