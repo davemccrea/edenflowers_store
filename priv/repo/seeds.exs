@@ -1,6 +1,9 @@
 # Dev and staging fixtures, built on the production base seed. Run it with:
 #
 #     just db-seed local
+#
+# One example of each feature or variation the store and admin show. Add a new
+# fixture only when it shows something none of the existing ones do.
 
 alias Edenflowers.Accounts
 alias Edenflowers.Accounts.User
@@ -27,140 +30,62 @@ next_reference = fn ->
 end
 
 tax_rate = Ash.get!(TaxRate, %{name: "Standard 25.5%"}, authorize?: false)
+reduced_tax_rate = Ash.get!(TaxRate, %{name: "Reduced 13.5%"}, authorize?: false)
 
 category = fn slug -> Ash.get!(ProductCategory, %{slug: slug}, authorize?: false) end
 bouquets_category = category.("bouquets")
-plants_category = category.("plants")
-cards_category = category.("cards")
-pre_loved_category = category.("pre-loved")
 
-for n <- 1..6 do
+create_product = fn attrs, prices ->
   product =
-    Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: bouquets_category.id,
-      tax_rate_id: tax_rate.id,
-      name: "Bouquet #{n}",
-      image_slug: "https://placehold.co/400x400",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      draft: false,
-      featured: n <= 3,
-      free_delivery: n <= 2
-    })
+    Ash.Changeset.for_create(
+      Product,
+      :create,
+      Map.merge(
+        %{
+          tax_rate_id: tax_rate.id,
+          image_slug: "https://placehold.co/400x400",
+          description:
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+          draft: false
+        },
+        attrs
+      )
+    )
     |> Ash.create!(authorize?: false)
 
-  for size <- [:small, :medium, :large] do
+  for {size, price} <- prices do
     Ash.Changeset.for_create(ProductVariant, :create, %{
       product_id: product.id,
-      price:
-        "#{case size do
-          :small -> 40
-          :medium -> 50
-          :large -> 60
-        end}",
+      price: price,
       size: size,
       image_slug: "https://placehold.co/400x400",
       draft: false
     })
     |> Ash.create!(authorize?: false)
   end
+
+  product
 end
 
-for n <- 1..4 do
-  product =
-    Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: plants_category.id,
-      tax_rate_id: tax_rate.id,
-      name: "Plant #{n}",
-      image_slug: "https://placehold.co/400x400",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
+bouquet_prices = [small: "40", medium: "50", large: "60"]
 
-  for size <- [:small, :medium, :large] do
-    Ash.Changeset.for_create(ProductVariant, :create, %{
-      product_id: product.id,
-      price:
-        "#{case size do
-          :small -> 18
-          :medium -> 32
-          :large -> 55
-        end}",
-      size: size,
-      image_slug: "https://placehold.co/400x400",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
-  end
-end
+create_product.(
+  %{product_category_id: bouquets_category.id, name: "Bouquet 1", featured: true, free_delivery: true},
+  bouquet_prices
+)
+
+create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true}, bouquet_prices)
+create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices)
+create_product.(%{product_category_id: category.("plants").id, name: "Plant"}, small: "18", medium: "32", large: "55")
 
 # The Cards category keeps them out of the store ribbon, but they can still be
 # added during checkout.
-for n <- 1..4 do
-  product =
-    Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: cards_category.id,
-      tax_rate_id: tax_rate.id,
-      name: "Card #{n}",
-      image_slug: "https://placehold.co/400x400",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
+create_product.(%{product_category_id: category.("cards").id, name: "Card"}, small: "5", medium: "7", large: "10")
 
-  for size <- [:small, :medium, :large] do
-    Ash.Changeset.for_create(ProductVariant, :create, %{
-      product_id: product.id,
-      price:
-        "#{case size do
-          :small -> 5
-          :medium -> 7
-          :large -> 10
-        end}",
-      size: size,
-      image_slug: "https://placehold.co/400x400",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
-  end
-end
-
-for n <- 1..3 do
-  product =
-    Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: pre_loved_category.id,
-      tax_rate_id: tax_rate.id,
-      name: "Pre-Loved Item #{n}",
-      image_slug: "https://placehold.co/400x400",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
-
-  for size <- [:small, :medium] do
-    Ash.Changeset.for_create(ProductVariant, :create, %{
-      product_id: product.id,
-      price:
-        "#{case size do
-          :small -> 15
-          :medium -> 25
-        end}",
-      size: size,
-      image_slug: "https://placehold.co/400x400",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
-  end
-end
+create_product.(%{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"}, small: "15", medium: "25")
 
 # Chocolate is an add-on: it shows in the store but can only be checked out
 # alongside flowers.
-reduced_tax_rate = Ash.get!(TaxRate, %{name: "Reduced 13.5%"}, authorize?: false)
-
 chocolate_category =
   Ash.Changeset.for_create(ProductCategory, :create, %{
     name: "Chocolate",
@@ -176,39 +101,20 @@ chocolate_category =
   |> Ash.create!(authorize?: false)
 
 # The truffles come in one size, so their page has no size to choose.
-for {name, sizes} <- [
-      {"Dark Chocolate Truffles", [{nil, "8"}]},
-      {"Milk Chocolate Pralines", [small: "6", medium: "12"]}
-    ] do
-  product =
-    Ash.Changeset.for_create(Product, :create, %{
-      product_category_id: chocolate_category.id,
-      tax_rate_id: reduced_tax_rate.id,
-      name: name,
-      image_slug: "https://placehold.co/400x400",
-      description: "A box of handmade chocolates, sold with a bouquet.",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
+create_product.(
+  %{
+    product_category_id: chocolate_category.id,
+    tax_rate_id: reduced_tax_rate.id,
+    name: "Dark Chocolate Truffles",
+    description: "A box of handmade chocolates, sold with a bouquet."
+  },
+  [{nil, "8"}]
+)
 
-  for {size, price} <- sizes do
-    Ash.Changeset.for_create(ProductVariant, :create, %{
-      product_id: product.id,
-      price: price,
-      size: size,
-      image_slug: "https://placehold.co/400x400",
-      draft: false
-    })
-    |> Ash.create!(authorize?: false)
-  end
-end
-
-subscription_product =
-  Ash.Changeset.for_create(Product, :create, %{
+create_product.(
+  %{
     product_category_id: bouquets_category.id,
-    tax_rate_id: tax_rate.id,
     name: "Florist's choice bouquet",
-    image_slug: "https://placehold.co/400x400",
     description:
       "A florist's-choice bouquet of whatever is best that week. Buy one, or subscribe to have it delivered every one, two or four weeks.",
     translations: %{
@@ -223,42 +129,27 @@ subscription_product =
           "Floristin valitsema kimppu viikon parhaista kukista. Osta yksi tai tilaa se toimitettavaksi viikon, kahden tai neljän viikon välein."
       }
     },
-    draft: false,
     featured: true,
     position: 0,
     free_delivery: true,
     subscribable: true
-  })
-  |> Ash.create!(authorize?: false)
-
-for {size, price} <- [small: "45", medium: "60", large: "75"] do
-  Ash.Changeset.for_create(ProductVariant, :create, %{
-    product_id: subscription_product.id,
-    price: price,
-    size: size,
-    image_slug: "https://placehold.co/400x400",
-    draft: false
-  })
-  |> Ash.create!(authorize?: false)
-end
-
-Promotion
-|> Ash.Changeset.for_create(
-  :create,
-  %{
-    name: "Summer offer, 15% off",
-    code: "SUMMER15",
-    discount_rate: "0.15",
-    minimum_cart_total: "30.00",
-    start_date: nil,
-    expiration_date: ~D[2099-07-01]
-  }
+  },
+  small: "45",
+  medium: "60",
+  large: "75"
 )
-|> Ash.create!(authorize?: false)
 
-# One promotion per state the admin list tells apart: ended, not started yet,
-# and used up (its one use is the overdue order below).
+# One promotion per state the admin list tells apart: running, ended, not
+# started yet, and used up (its one use is the overdue order below).
 for attrs <- [
+      %{
+        name: "Summer offer, 15% off",
+        code: "SUMMER15",
+        discount_rate: "0.15",
+        minimum_cart_total: "30.00",
+        start_date: nil,
+        expiration_date: ~D[2099-07-01]
+      },
       %{
         name: "Valentine's, 20% off",
         code: "LOVE20",
@@ -288,37 +179,14 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
+# One per confidence level, the last from a vendor without a VAT number.
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
-      {"doc-001", "Staples Finland Oy", "FI12345678", ~D[2026-01-08], "47.50", "9.69", :eur, :office_supplies,
-       "Printer paper and pens", :high},
-      {"doc-002", "Finnair Oyj", "FI23456789", ~D[2026-01-15], "312.00", "0.00", :eur, :travel,
-       "Flight to Helsinki for supplier meeting", :high},
-      {"doc-003", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :entertainment,
+      {"doc-001", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :flowers_and_plants,
+       "Bulk flower stock, spring delivery", :high},
+      {"doc-002", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :entertainment,
        "Lunch with wedding client", :medium},
-      {"doc-004", "Adobe Systems", nil, ~D[2026-02-01], "54.99", "0.00", :eur, :software,
-       "Adobe Creative Cloud monthly subscription", :high},
-      {"doc-005", "Vaasan Energia", "FI45678901", ~D[2026-02-10], "189.30", "38.63", :eur, :utilities,
-       "Electricity bill — February", :high},
-      {"doc-006", "Meta Platforms Ireland", nil, ~D[2026-02-14], "120.00", "0.00", :eur, :marketing,
-       "Instagram ad campaign — Valentine's Day", :high},
-      {"doc-007", "Tilitoimisto Laskenta Oy", "FI56789012", ~D[2026-02-28], "450.00", "91.85", :eur,
-       :professional_services, "Monthly bookkeeping", :high},
-      {"doc-008", "Tokmanni", "FI67890123", ~D[2026-03-05], "23.80", "4.86", :eur, :office_supplies,
-       "Cleaning supplies", :medium},
-      {"doc-009", "VR Group", "FI78901234", ~D[2026-03-12], "44.60", "0.00", :eur, :travel,
-       "Train tickets Vaasa–Tampere", :high},
-      {"doc-010", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :entertainment,
-       "Lunch with venue coordinator", :low},
-      {"doc-011", "Google Ireland Limited", nil, ~D[2026-04-01], "29.99", "0.00", :eur, :software,
-       "Google Workspace monthly", :high},
-      {"doc-012", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :flowers_and_plants,
-       "Bulk flower stock — spring delivery", :high},
-      {"doc-013", "Elisa Oyj", "FI90123456", ~D[2026-04-07], "39.90", "8.15", :eur, :utilities,
-       "Business mobile subscription", :high},
-      {"doc-014", "Sanoma Media Finland", "FI01234567", ~D[2026-04-18], "600.00", "122.46", :eur, :marketing,
-       "Print ad in local newspaper", :medium},
-      {"doc-015", "Vaasan kaupunki", "FI11223344", ~D[2026-05-01], "210.00", "0.00", :eur, :other,
-       "Annual business licence fee", :high}
+      {"doc-003", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :entertainment,
+       "Lunch with venue coordinator", :low}
     ] do
   Expense
   |> Ash.Changeset.for_create(:ingest, %{
@@ -340,7 +208,7 @@ end
 # booking, plus one that has already happened.
 today = Date.utc_today()
 
-[autumn_wreath, christmas_wreath, _table_arrangement, midsummer_crown] =
+[autumn_wreath, _table_arrangement, midsummer_crown] =
   [
     %{
       name: "Autumn Wreath Workshop",
@@ -370,50 +238,10 @@ today = Date.utc_today()
       price: "75.00"
     },
     %{
-      name: "Christmas Door Wreath",
-      description:
-        "An evening of spruce, pine, cones and ribbon. We bind a full evergreen wreath on a straw base that " <>
-          "lasts well into January outdoors. Mulled juice and gingerbread while we work.",
-      translations: %{
-        "sv-FI": %{
-          name: "Julkrans till dörren",
-          description:
-            "En kväll med gran, tall, kottar och band. Vi binder en tät vintergrön krans på halmstomme som håller " <>
-              "långt in i januari utomhus. Glögg och pepparkakor medan vi jobbar."
-        },
-        fi: %{
-          name: "Joulukranssi oveen",
-          description:
-            "Ilta kuusen, männyn, käpyjen ja nauhojen parissa. Sidomme tuuhean havukranssin olkipohjalle, ja se " <>
-              "kestää ulkona pitkälle tammikuuhun. Glögiä ja pipareita työskennellessä."
-        }
-      },
-      date: Date.add(today, 64),
-      start_time: ~T[17:30:00],
-      end_time: ~T[20:30:00],
-      register_before: Date.add(today, 57),
-      total_places: 10,
-      price: "85.00"
-    },
-    %{
       name: "Christmas Table Arrangement",
       description:
         "A low arrangement for the Christmas table in a bowl of your choosing, with amaryllis, hyacinth, moss " <>
           "and evergreens. I'll show you how to keep it fresh through the holidays.",
-      translations: %{
-        "sv-FI": %{
-          name: "Juldekoration till bordet",
-          description:
-            "Ett lågt arrangemang för julbordet i en skål du väljer själv, med amaryllis, hyacint, mossa och " <>
-              "vintergröna kvistar. Jag visar hur du håller det fräscht över helgerna."
-        },
-        fi: %{
-          name: "Joulupöydän asetelma",
-          description:
-            "Matala asetelma joulupöytään itse valitsemaasi kulhoon: amaryllista, hyasinttia, sammalta ja havuja. " <>
-              "Näytän, miten pidät sen raikkaana pyhien yli."
-        }
-      },
       date: Date.add(today, 78),
       start_time: ~T[17:30:00],
       end_time: ~T[20:00:00],
@@ -426,20 +254,6 @@ today = Date.utc_today()
       description:
         "Bind a crown from meadow flowers and garden greenery, in time for midsummer eve. Suitable for " <>
           "beginners and children from ten years old with an adult.",
-      translations: %{
-        "sv-FI": %{
-          name: "Midsommarkrans",
-          description:
-            "Bind en krans av ängsblommor och grönt från trädgården, lagom till midsommarafton. Passar nybörjare " <>
-              "och barn från tio år tillsammans med en vuxen."
-        },
-        fi: %{
-          name: "Juhannusseppele",
-          description:
-            "Sido seppele niittykukista ja puutarhan vihreästä juhannusaatoksi. Sopii aloittelijoille ja " <>
-              "yli kymmenvuotiaille lapsille aikuisen kanssa."
-        }
-      },
       date: Date.add(today, -90),
       start_time: ~T[13:00:00],
       end_time: ~T[15:00:00],
@@ -464,25 +278,20 @@ today = Date.utc_today()
 
 # Course bookings. Ash.Seed for the same reason as orders below: a booking is
 # confirmed by a Stripe payment or by Jennie. Like a placed order, a booking paid
-# online keeps its PaymentIntent only on its Stripe payment. Emma, Kristina and
-# Matti were added by Jennie and pay at the course; Kristina and Matti already have.
-# Johan cancelled and is still owed his money; Elin cancelled and was refunded.
-# The third course is left empty on purpose, and the past one has its history.
+# online keeps its PaymentIntent only on its Stripe payment. Emma and Kristina
+# were added by Jennie and pay at the course; Kristina already has. Johan
+# cancelled and is still owed his money; Elin cancelled and was refunded. The
+# Christmas course is left empty on purpose, and the past one has its history.
 [
   {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI", :stripe},
-  {autumn_wreath, "Mikael Berg", "mikael.berg@example.com", 1, :confirmed, "sv-FI", :stripe},
-  {autumn_wreath, "Laura Virtanen", "laura.virtanen@example.com", 2, :confirmed, "fi", :stripe},
   {autumn_wreath, "Emma Nyström", "emma.nystrom@example.com", 1, :confirmed, "sv-FI", :direct},
   {autumn_wreath, "Kristina Ahlroos", "kristina.ahlroos@example.com", 2, :confirmed, "sv-FI", :direct_paid},
-  {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "sv-FI", :stripe},
-  {christmas_wreath, "Sofia Korhonen", "sofia.korhonen@example.com", 2, :confirmed, "fi", :stripe},
-  {christmas_wreath, "Sarah Mitchell", "sarah.mitchell@example.com", 1, :confirmed, "en-GB", :stripe},
-  {christmas_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI", :stripe},
+  {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "en-GB", :stripe},
+  {autumn_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI", :stripe},
   # No PaymentIntent: a fake one makes the ReconcilePayment cron fail against
   # Stripe, so it stays an abandoned checkout instead.
-  {christmas_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe},
-  {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI", :stripe},
-  {midsummer_crown, "Matti Laine", "matti.laine@example.com", 1, :confirmed, "fi", :direct_paid}
+  {autumn_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe},
+  {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI", :stripe}
 ]
 |> Enum.each(fn {course, name, email, seats, status, locale, paid_via} ->
   registration =
@@ -498,7 +307,7 @@ today = Date.utc_today()
       amount: Decimal.mult(course.price, seats),
       confirmed_at: if(status != :pending, do: DateTime.utc_now()),
       # Already emailed, otherwise the SendConfirmationEmail trigger emails every
-      # seeded booking — for real on staging.
+      # seeded booking, for real on staging.
       confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now())
     })
 
@@ -547,12 +356,8 @@ CourseRegistration
 
 # Placed orders. Checkout drives orders through a state machine and seals them
 # once placed, so normal Ash actions can't construct a finished order. Ash.Seed
-# writes attributes directly, bypassing transitions and policies — the right
+# writes attributes directly, bypassing transitions and policies: the right
 # escape hatch for fixtures, the same as the admin user above.
-#
-# Line item unit_price/tax_rate are snapshots; at checkout PopulateFromVariant
-# copies them off the chosen variant. We mirror that here so the dashboard's
-# subtotal/tax aggregates add up.
 home_delivery =
   FulfillmentOption
   |> Ash.Query.filter(fulfillment_method == :delivery)
@@ -569,10 +374,6 @@ promotion_by_code = fn code ->
   |> Ash.read_first!(authorize?: false)
 end
 
-summer_promo = promotion_by_code.("SUMMER15")
-
-# Pick a handful of variants to build carts from, loading the tax rate so we can
-# snapshot it onto the line items.
 variants =
   ProductVariant
   |> Ash.Query.load(product: [:tax_rate])
@@ -580,6 +381,117 @@ variants =
 
 variant_for = fn product_name, size ->
   Enum.find(variants, fn v -> v.product.name == product_name and v.size == size end)
+end
+
+# Line items snapshot the variant the same way PopulateFromVariant does at
+# checkout, so the dashboard's subtotal/tax aggregates add up.
+line_item = fn product_name, size, quantity ->
+  variant = variant_for.(product_name, size)
+
+  %{
+    product_id: variant.product.id,
+    product_variant_id: variant.id,
+    quantity: quantity,
+    unit_price: variant.price,
+    tax_rate: variant.product.tax_rate.percentage,
+    product_name: variant.product.name,
+    product_image_slug: variant.image_slug,
+    variant_size: variant.size,
+    free_delivery: variant.product.free_delivery,
+    is_card: false
+  }
+end
+
+# Checkout enforces one card per order (SwapCardLineItem).
+card_line_item = fn -> %{line_item.("Card", :medium, 1) | is_card: true} end
+
+# Inside the free delivery radius.
+nearby_address = %{
+  delivery_address: "Gerbyntie 16, 65230 Vaasa",
+  geocoded_address: "Gerbyvägen 16, 65230 Vasa",
+  position: "63.1157,21.61864",
+  here_id: "here:af:streetsection:olhtF0fcY2Tg2P7kFPBnMB:EAIaAjE2",
+  distance: 1651
+}
+
+# Far enough out to pay for delivery.
+distant_address = %{
+  delivery_address: "Sundomintie 130, 65410 Sundom",
+  geocoded_address: "Sundomvägen 130, 65410 Vasa",
+  position: "63.03232,21.54662",
+  here_id: "here:af:streetsection:DnEELU-r45CN9NK9d3YMnB:EAIaAzEzMA",
+  distance: 12_711
+}
+
+# Takes the order's attributes plus :fulfillment_option, :items (line item maps),
+# an optional :promotion, and :payment_card ({brand, last4}, or nil if unpaid).
+seed_placed_order = fn attrs ->
+  {option, attrs} = Map.pop!(attrs, :fulfillment_option)
+  {items, attrs} = Map.pop!(attrs, :items)
+  {promotion, attrs} = Map.pop(attrs, :promotion)
+  {payment_card, attrs} = Map.pop(attrs, :payment_card)
+  {fulfillment_status, attrs} = Map.pop(attrs, :fulfillment_status)
+  fulfillment_status = fulfillment_status || :pending
+  %{error: nil} = fee = Fee.calculate(option, attrs[:distance] || 0)
+
+  order =
+    Ash.Seed.seed!(
+      Order,
+      Map.merge(
+        %{
+          order_reference: next_reference.(),
+          state: :placed,
+          fulfillment_status: fulfillment_status,
+          # Already emailed, otherwise the SendConfirmationEmail and SendDeliveredEmail
+          # triggers email every seeded customer, for real on staging.
+          receipt_emailed_at: DateTime.utc_now(),
+          delivered_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
+          ordered_at: DateTime.utc_now(),
+          locale: "sv-FI",
+          fulfillment_option_id: option.id,
+          fulfillment_option_name: option.name,
+          fulfillment_method: option.fulfillment_method,
+          quoted_fulfillment_fee: fee.fulfillment_fee,
+          in_free_delivery_zone: fee.in_free_delivery_zone,
+          fulfillment_tax_rate: tax_rate.percentage,
+          # Snapshot the promotion the same way SnapshotPromotion does at checkout.
+          # LineItem.discount keys off order.discount_rate + promotion_id, so both
+          # the relationship and the frozen columns must be set for totals to match.
+          promotion_id: promotion && promotion.id,
+          discount_rate: promotion && promotion.discount_rate,
+          promotion_name: promotion && promotion.name,
+          promotion_code: promotion && to_string(promotion.code)
+        },
+        attrs
+      )
+    )
+
+  for item <- items do
+    Ash.Seed.seed!(LineItem, Map.put(item, :order_id, order.id))
+  end
+
+  # Snapshot the VAT breakdown the same way SnapshotVatBreakdown does at checkout.
+  # Clearing state makes Vat.breakdown compute from the line items rather than
+  # read the snapshot this is about to write.
+  order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
+  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
+
+  if payment_card do
+    {card_brand, card_last4} = payment_card
+
+    Ash.Seed.seed!(Payment, %{
+      order_id: order.id,
+      amount: order.grand_total,
+      method: :stripe,
+      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      paid_at: order.ordered_at,
+      payment_method_type: "card",
+      card_brand: card_brand,
+      card_last4: card_last4
+    })
+  end
+
+  order
 end
 
 # Fulfillment dates are relative to whenever the seed runs. Future dates are
@@ -603,268 +515,103 @@ fulfillment_date_for = fn option, days_out ->
   end
 end
 
-# Each order varies a different axis: fulfillment method, gift vs. not, a
-# promotion, a larger multi-item cart, locales, and one already fulfilled so the
-# dashboard's open/completed split has data on both sides.
 orders = [
-  %{
-    customer_name: "Aino Virtanen",
-    customer_email: "aino.virtanen@example.fi",
-    fulfillment_option: home_delivery,
-    fulfillment_date: today,
-    recipient_name: "Aino Virtanen",
-    recipient_phone_number: "040 1234567",
-    delivery_address: "Gerbyntie 16, 65230 Vaasa",
-    geocoded_address: "Gerbyvägen 16, 65230 Vasa",
-    position: "63.1157,21.61864",
-    here_id: "here:af:streetsection:olhtF0fcY2Tg2P7kFPBnMB:EAIaAjE2",
-    distance: 1651,
-    gift: false,
-    locale: "fi",
-    items: [{"Bouquet 1", :medium, 1}, {"Plant 2", :small, 1}]
-  },
-  %{
+  # A gift with a card, delivered today, outside the free delivery radius.
+  Map.merge(distant_address, %{
     customer_name: "Mikael Lindholm",
     customer_email: "mikael.lindholm@example.fi",
     fulfillment_option: home_delivery,
     fulfillment_date: today,
+    gift: true,
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "050 9876543",
-    delivery_address: "Sundomintie 130, 65410 Sundom",
-    geocoded_address: "Sundomvägen 130, 65410 Vasa",
-    position: "63.03232,21.54662",
-    here_id: "here:af:streetsection:DnEELU-r45CN9NK9d3YMnB:EAIaAzEzMA",
-    distance: 12_711,
-    gift: true,
     card_message: "Happy birthday, with love.",
-    # A gift order carries a card: a line item flagged is_card, built from a
-    # variant in the Cards category. Checkout enforces one card per order
-    # (SwapCardLineItem), so at most one card entry here.
-    card: {"Card 1", :medium},
-    items: [{"Bouquet 3", :large, 1}]
-  },
-  %{
-    customer_name: "Elina Korhonen",
-    customer_email: "elina.korhonen@example.fi",
-    fulfillment_option: store_pickup,
-    days_out: 1,
-    gift: false,
-    items: [{"Plant 1", :medium, 2}, {"Bouquet 2", :small, 1}]
-  },
-  %{
-    customer_name: "Johan Nyström",
-    customer_email: "johan.nystrom@example.fi",
-    fulfillment_option: home_delivery,
-    days_out: 3,
-    recipient_name: "Johan Nyström",
-    recipient_phone_number: "044 2221188",
-    delivery_address: "Västervikintie 17, 65280 Vaasa",
-    geocoded_address: "Västerviksvägen 17, 65280 Vasa",
-    position: "63.13433,21.59774",
-    here_id: "here:af:streetsection:JsgM2SKLxD8mRXEtSARhmA:CgcIBCDIufx9EAEaAjE3",
-    distance: 2254,
-    gift: false,
-    items: [{"Bouquet 4", :medium, 1}, {"Bouquet 5", :medium, 1}]
-  },
-  %{
+    items: [line_item.("Bouquet 3", :large, 1), card_line_item.()]
+  }),
+  # Cart total well above the promo's €30 minimum so the discount applies.
+  Map.merge(nearby_address, %{
     customer_name: "Liisa Mäkinen",
     customer_email: "liisa.makinen@example.fi",
     fulfillment_option: home_delivery,
-    days_out: 4,
+    fulfillment_date: fulfillment_date_for.(home_delivery, 4),
     recipient_name: "Liisa Mäkinen",
     recipient_phone_number: "041 5550099",
-    delivery_address: "Vanhan Vaasan katu 20, 65370 Vaasa",
-    geocoded_address: "Gamla Vasa gatan 20, 65370 Vasa",
-    position: "63.08621,21.72555",
-    here_id: "here:af:streetsection:HL-snKUH905p0HXizdKhkC:CgcIBCCayoF-EAEaAjIw",
-    distance: 9273,
-    gift: false,
     locale: "fi",
-    # Cart total well above the promo's €30 minimum so the discount applies.
-    promotion: summer_promo,
-    items: [{"Bouquet 6", :large, 2}, {"Plant 3", :medium, 1}]
-  },
-  %{
-    customer_name: "Erik Sundström",
-    customer_email: "erik.sundstrom@example.fi",
-    fulfillment_option: store_pickup,
-    days_out: 5,
-    # A gift order: checkout's submit_gift_options requires recipient_name when
-    # gift is true, and a card message rides on a card line item. Mirror both so
-    # this fixture matches an order that actually passed through checkout.
-    gift: true,
-    recipient_name: "Astrid Sundström",
-    card_message: "Tack för allt!",
-    card: {"Card 2", :medium},
-    # A large mixed cart to exercise multi-line aggregates.
-    items: [{"Bouquet 1", :large, 1}, {"Bouquet 4", :small, 2}, {"Plant 1", :large, 1}, {"Plant 4", :small, 1}]
-  },
-  %{
+    promotion: promotion_by_code.("SUMMER15"),
+    items: [line_item.("Bouquet 2", :large, 2), line_item.("Plant", :medium, 1)]
+  }),
+  # Ordered a few days back and already delivered, so it lands in the dashboard's
+  # completed side. Both dates sit in the past, in order.
+  Map.merge(nearby_address, %{
     customer_name: "Hanna Järvinen",
     customer_email: "hanna.jarvinen@example.fi",
     fulfillment_option: home_delivery,
-    # Ordered a few days back and already delivered — lands in the dashboard's
-    # completed side, not open orders. Both dates sit in the past, in order.
     ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
-    days_out: -2,
+    fulfillment_date: fulfillment_date_for.(home_delivery, -2),
     recipient_name: "Hanna Järvinen",
     recipient_phone_number: "045 3217654",
-    delivery_address: "Rantamaantie 31, 65350 Vaasa",
-    geocoded_address: "Strandvägen 31, 65350 Vasa",
-    position: "63.07736,21.67323",
-    here_id: "here:af:streetsection:KI1pyE5DUdLEue2Mt7LnjC:EAIaAjMx",
-    distance: 7902,
-    gift: false,
     fulfillment_status: :fulfilled,
-    items: [{"Bouquet 2", :medium, 1}]
-  },
+    items: [line_item.("Bouquet 2", :medium, 1)]
+  }),
+  # Paid, but its pickup day has passed without Jennie marking it collected.
   %{
-    # Paid, but its pickup day has passed without Jennie marking it collected.
     customer_name: "Tuula Rantanen",
     customer_email: "tuula.rantanen@example.fi",
     fulfillment_option: store_pickup,
     ordered_at: DateTime.add(DateTime.utc_now(), -4, :day),
-    days_out: -1,
-    gift: false,
+    fulfillment_date: fulfillment_date_for.(store_pickup, -1),
     locale: "fi",
     promotion: promotion_by_code.("MOR10"),
-    items: [{"Bouquet 6", :medium, 1}]
+    items: [line_item.("Bouquet 3", :medium, 1)]
   },
-  # The three below are changed after placing, further down.
+  # A large mixed cart with both VAT rates. The four below are changed after
+  # placing, further down.
+  %{
+    customer_name: "Erik Sundström",
+    customer_email: "erik.sundstrom@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: fulfillment_date_for.(store_pickup, 5),
+    items: [
+      line_item.("Bouquet 1", :large, 1),
+      line_item.("Bouquet 2", :small, 2),
+      line_item.("Plant", :large, 1),
+      line_item.("Dark Chocolate Truffles", nil, 1)
+    ]
+  },
   %{
     customer_name: "Petra Holm",
     customer_email: "petra.holm@example.fi",
     fulfillment_option: store_pickup,
-    days_out: 2,
-    gift: false,
-    items: [{"Bouquet 3", :small, 1}]
+    fulfillment_date: fulfillment_date_for.(store_pickup, 2),
+    items: [line_item.("Bouquet 3", :small, 1)]
   },
   %{
     customer_name: "Oskar Wikström",
     customer_email: "oskar.wikstrom@example.fi",
     fulfillment_option: store_pickup,
-    days_out: 3,
-    gift: false,
+    fulfillment_date: fulfillment_date_for.(store_pickup, 3),
     locale: "en-GB",
-    items: [{"Plant 4", :large, 1}]
+    items: [line_item.("Plant", :large, 1)]
   },
   %{
     customer_name: "Nora Back",
     customer_email: "nora.back@example.fi",
     fulfillment_option: store_pickup,
-    days_out: 4,
-    gift: false,
-    items: [{"Bouquet 5", :small, 1}, {"Plant 2", :medium, 1}]
+    fulfillment_date: fulfillment_date_for.(store_pickup, 4),
+    items: [line_item.("Bouquet 1", :small, 1), line_item.("Plant", :medium, 1)]
   }
 ]
 
-for order_attrs <- orders do
-  fulfillment_option = order_attrs.fulfillment_option
-  promotion = order_attrs[:promotion]
-  user = Accounts.upsert_user!(order_attrs.customer_email, order_attrs.customer_name, actor: Actors.system_actor())
+for {attrs, index} <- Enum.with_index(orders) do
+  user = Accounts.upsert_user!(attrs.customer_email, attrs.customer_name, actor: Actors.system_actor())
 
-  %{error: nil} = fee = Fee.calculate(fulfillment_option, order_attrs[:distance] || 0)
-
-  order =
-    Ash.Seed.seed!(Order, %{
-      order_reference: next_reference.(),
-      state: :placed,
-      fulfillment_status: order_attrs[:fulfillment_status] || :pending,
-      # Already emailed, otherwise the SendConfirmationEmail and SendDeliveredEmail
-      # triggers email every seeded customer — for real on staging.
-      receipt_emailed_at: DateTime.utc_now(),
-      delivered_emailed_at: if(order_attrs[:fulfillment_status] == :fulfilled, do: DateTime.utc_now()),
-      ordered_at: order_attrs[:ordered_at] || DateTime.utc_now(),
-      customer_name: order_attrs.customer_name,
-      customer_email: order_attrs.customer_email,
+  seed_placed_order.(
+    Map.merge(attrs, %{
       user_id: user.id,
-      gift: order_attrs.gift,
-      card_message: order_attrs[:card_message],
-      recipient_name: order_attrs[:recipient_name],
-      recipient_phone_number: order_attrs[:recipient_phone_number],
-      delivery_address: order_attrs[:delivery_address],
-      geocoded_address: order_attrs[:geocoded_address],
-      position: order_attrs[:position],
-      here_id: order_attrs[:here_id],
-      distance: order_attrs[:distance],
-      fulfillment_date:
-        order_attrs[:fulfillment_date] ||
-          fulfillment_date_for.(fulfillment_option, order_attrs.days_out),
-      fulfillment_option_id: fulfillment_option.id,
-      fulfillment_option_name: fulfillment_option.name,
-      fulfillment_method: fulfillment_option.fulfillment_method,
-      quoted_fulfillment_fee: fee.fulfillment_fee,
-      in_free_delivery_zone: fee.in_free_delivery_zone,
-      fulfillment_tax_rate: tax_rate.percentage,
-      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
-      locale: order_attrs[:locale] || "sv-FI",
-      # Snapshot the promotion the same way SnapshotPromotion does at checkout.
-      # LineItem.discount keys off order.discount_rate + promotion_id, so both
-      # the relationship and the frozen columns must be set for totals to match.
-      promotion_id: promotion && promotion.id,
-      discount_rate: promotion && promotion.discount_rate,
-      promotion_name: promotion && promotion.name,
-      promotion_code: promotion && to_string(promotion.code)
+      gift: Map.get(attrs, :gift, false),
+      payment_card: Enum.at([{"visa", "4242"}, {"mastercard", "4444"}, {"amex", "0005"}], rem(index, 3))
     })
-
-  for {product_name, size, quantity} <- order_attrs.items do
-    variant = variant_for.(product_name, size)
-
-    Ash.Seed.seed!(LineItem, %{
-      order_id: order.id,
-      product_id: variant.product.id,
-      product_variant_id: variant.id,
-      quantity: quantity,
-      unit_price: variant.price,
-      tax_rate: variant.product.tax_rate.percentage,
-      product_name: variant.product.name,
-      product_image_slug: variant.image_slug,
-      variant_size: variant.size,
-      is_card: false
-    })
-  end
-
-  if card = order_attrs[:card] do
-    {card_name, card_size} = card
-    card_variant = variant_for.(card_name, card_size)
-
-    Ash.Seed.seed!(LineItem, %{
-      order_id: order.id,
-      product_id: card_variant.product.id,
-      product_variant_id: card_variant.id,
-      quantity: 1,
-      unit_price: card_variant.price,
-      tax_rate: card_variant.product.tax_rate.percentage,
-      product_name: card_variant.product.name,
-      product_image_slug: card_variant.image_slug,
-      variant_size: card_variant.size,
-      is_card: true
-    })
-  end
-
-  # Snapshot the VAT breakdown the same way SnapshotVatBreakdown does at checkout.
-  # Clearing state makes Vat.breakdown compute from the line items rather than
-  # read the snapshot this is about to write.
-  order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
-
-  Ash.Seed.update!(order, %{
-    vat_breakdown: Vat.breakdown(%{order | state: nil}),
-    payment_intent_id: nil
-  })
-
-  {card_brand, card_last4} =
-    Enum.at([{"visa", "4242"}, {"mastercard", "4444"}, {"amex", "0005"}], :erlang.phash2(order.id, 3))
-
-  Ash.Seed.seed!(Payment, %{
-    order_id: order.id,
-    amount: order.grand_total,
-    method: :stripe,
-    payment_intent_id: order.payment_intent_id,
-    paid_at: order.ordered_at,
-    payment_method_type: "card",
-    card_brand: card_brand,
-    card_last4: card_last4
-  })
+  )
 end
 
 # Subscriptions, one per state the admin list and account page show, each with
@@ -875,87 +622,44 @@ end
 # next dates sit beyond the lead time and the change cutoff, so the hourly
 # occurrence job doesn't try to charge the fake Stripe ids in dev, and
 # customers can still change them.
-# Every email is marked sent, for the same reason as above.
 alias Edenflowers.Orders.Subscription
 
 weekly_bouquet = fn size -> variant_for.("Florist's choice bouquet", size) end
 
 seed_subscription_order = fn subscription, user, attrs ->
-  variant = weekly_bouquet.(attrs.size)
-  %{error: nil} = fee = Fee.calculate(home_delivery, 1651)
   paid? = Map.get(attrs, :paid?, true)
+  online? = attrs.origin == :online
 
-  order =
-    Ash.Seed.seed!(Order, %{
-      order_reference: next_reference.(),
-      state: :placed,
-      origin: attrs.origin,
-      subscription_id: subscription.id,
-      subscription_date: attrs[:subscription_date],
-      fulfillment_status: attrs[:fulfillment_status] || :pending,
-      receipt_emailed_at: DateTime.utc_now(),
-      details_emailed_at: if(not paid?, do: DateTime.utc_now()),
-      delivered_emailed_at: if(attrs[:fulfillment_status] == :fulfilled, do: DateTime.utc_now()),
-      ordered_at: DateTime.utc_now(),
-      customer_name: user.name,
-      customer_email: to_string(user.email),
-      user_id: user.id,
-      gift: subscription.recipient_name != user.name,
-      card_message: attrs[:card_message],
-      recipient_name: subscription.recipient_name,
-      recipient_phone_number: subscription.recipient_phone_number,
-      delivery_address: subscription.delivery_address,
-      geocoded_address: "Gerbyvägen 16, 65230 Vasa",
-      position: "63.1157,21.61864",
-      here_id: "here:af:streetsection:olhtF0fcY2Tg2P7kFPBnMB:EAIaAjE2",
-      distance: 1651,
-      fulfillment_date: attrs.fulfillment_date,
-      fulfillment_option_id: home_delivery.id,
-      fulfillment_option_name: home_delivery.name,
-      fulfillment_method: :delivery,
-      quoted_fulfillment_fee: fee.fulfillment_fee,
-      in_free_delivery_zone: fee.in_free_delivery_zone,
-      fulfillment_tax_rate: tax_rate.percentage,
-      payment_link_token: if(not paid?, do: :crypto.strong_rand_bytes(24) |> Base.url_encode64(padding: false)),
-      stripe_customer_id: if(attrs.origin == :online, do: subscription.stripe_customer_id),
-      stripe_payment_method_id: if(attrs.origin == :online, do: subscription.stripe_payment_method_id),
-      locale: subscription.locale
-    })
-
-  Ash.Seed.seed!(LineItem, %{
-    order_id: order.id,
-    product_id: variant.product.id,
-    product_variant_id: variant.id,
-    quantity: 1,
-    unit_price: variant.price,
-    tax_rate: variant.product.tax_rate.percentage,
-    product_name: variant.product.name,
-    product_image_slug: variant.image_slug,
-    variant_size: variant.size,
-    free_delivery: true,
+  item =
+    line_item.("Florist's choice bouquet", attrs.size, 1)
     # Only the order that started the subscription carries the interval; an
     # Occurrence's line is a one-off.
-    interval_weeks: if(attrs.origin == :online, do: subscription.interval_weeks),
-    is_card: false
+    |> Map.put(:interval_weeks, if(online?, do: subscription.interval_weeks))
+
+  nearby_address
+  |> Map.merge(%{
+    fulfillment_option: home_delivery,
+    items: [item],
+    payment_card: if(paid?, do: {subscription.card_brand, subscription.card_last4}),
+    origin: attrs.origin,
+    subscription_id: subscription.id,
+    subscription_date: attrs[:subscription_date],
+    fulfillment_status: attrs[:fulfillment_status],
+    details_emailed_at: if(not paid?, do: DateTime.utc_now()),
+    customer_name: user.name,
+    customer_email: to_string(user.email),
+    user_id: user.id,
+    gift: subscription.recipient_name != user.name,
+    card_message: attrs[:card_message],
+    recipient_name: subscription.recipient_name,
+    recipient_phone_number: subscription.recipient_phone_number,
+    fulfillment_date: attrs.fulfillment_date,
+    payment_link_token: if(not paid?, do: :crypto.strong_rand_bytes(24) |> Base.url_encode64(padding: false)),
+    stripe_customer_id: if(online?, do: subscription.stripe_customer_id),
+    stripe_payment_method_id: if(online?, do: subscription.stripe_payment_method_id),
+    locale: subscription.locale
   })
-
-  order = Ash.load!(order, [:grand_total | Vat.load(nil, nil, nil)], authorize?: false)
-  Ash.Seed.update!(order, %{vat_breakdown: Vat.breakdown(%{order | state: nil})})
-
-  if paid? do
-    Ash.Seed.seed!(Payment, %{
-      order_id: order.id,
-      amount: order.grand_total,
-      method: :stripe,
-      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
-      paid_at: order.ordered_at,
-      payment_method_type: "card",
-      card_brand: subscription.card_brand,
-      card_last4: subscription.card_last4
-    })
-  end
-
-  order
+  |> seed_placed_order.()
 end
 
 subscriptions = [
@@ -971,21 +675,8 @@ subscriptions = [
     locale: "sv-FI",
     occurrences: [%{fulfillment_status: :fulfilled}]
   },
-  # A gift every two weeks.
-  %{
-    email: "helena.nyman@example.fi",
-    name: "Helena Nyman",
-    state: :active,
-    size: :large,
-    interval_weeks: 2,
-    first_days_out: -15,
-    recipient_name: "Ingrid Nyman",
-    card_message: "Lots of love from Helena",
-    locale: "sv-FI",
-    occurrences: [%{fulfillment_status: :fulfilled}]
-  },
-  # Paused before its second delivery was charged, so its next date stays put
-  # until it resumes.
+  # A gift, paused before its second delivery was charged, so its next date
+  # stays put until it resumes.
   %{
     email: "otto.makinen@example.fi",
     name: "Otto Mäkinen",
@@ -993,7 +684,8 @@ subscriptions = [
     size: :small,
     interval_weeks: 4,
     first_days_out: -28,
-    recipient_name: "Otto Mäkinen",
+    recipient_name: "Ingrid Mäkinen",
+    card_message: "Lots of love from Otto",
     locale: "fi",
     occurrences: []
   },
@@ -1014,7 +706,7 @@ subscriptions = [
     email: "jonas.berg@example.fi",
     name: "Jonas Berg",
     state: :cancelled,
-    size: :medium,
+    size: :large,
     interval_weeks: 2,
     first_days_out: -21,
     recipient_name: "Jonas Berg",
@@ -1038,7 +730,7 @@ for attrs <- subscriptions do
       next_fulfillment_date: scheduled_date.(length(attrs.occurrences) + 1),
       recipient_name: attrs.recipient_name,
       recipient_phone_number: "040 1234567",
-      delivery_address: "Gerbyntie 16, 65230 Vaasa",
+      delivery_address: nearby_address.delivery_address,
       card_message: attrs[:card_message],
       locale: attrs.locale,
       stripe_customer_id: "cus_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
@@ -1114,30 +806,6 @@ place_custom = fn attrs ->
   |> Orders.place_custom_order!(actor: jennie)
 end
 
-mark_emailed = fn order -> Ash.Seed.update!(order, %{receipt_emailed_at: DateTime.utc_now()}) end
-
-# A Stripe payment arriving through the payment link, as the webhook would record it.
-pay_by_link = fn order, payment_intent_id ->
-  order = Orders.get_order_for_admin!(order.id, actor: jennie)
-  Ash.Seed.update!(order, %{payment_intent_id: payment_intent_id})
-
-  {:ok, :completed} =
-    Payments.complete(%{
-      id: payment_intent_id,
-      metadata: %{"order_id" => order.id},
-      amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(order.balance)
-    })
-
-  # complete/1 looks the method up in Stripe from a real payment_method id,
-  # which a seed can't have, so the payment is named here instead.
-  Payment
-  |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
-  |> Ash.read_one!(authorize?: false)
-  |> Ash.Seed.update!(%{payment_method_type: "mobilepay"})
-
-  mark_emailed.(Orders.get_order_for_admin!(order.id, actor: jennie))
-end
-
 # Phoned in for a funeral: no email, so Jennie copies the payment link into a text message.
 place_custom.(%{
   customer_name: "Margareta Holm",
@@ -1145,54 +813,8 @@ place_custom.(%{
   recipient_name: "Funeral of Gunnar Holm",
   card_message: "Tack för allt, vila i frid.",
   florist_note: "White roses and lilies only. The funeral home collects at 10:00, service at 11:00.",
-  line_items: [custom_line.("Funeral spray, white roses and lilies", "120.00"), catalogue_line.("Card 3", :large, 1)]
+  line_items: [custom_line.("Funeral spray, white roses and lilies", "120.00"), catalogue_line.("Card", :large, 1)]
 })
-
-# A walk-in who paid with MobilePay at the counter.
-walk_in =
-  place_custom.(%{
-    customer_name: "Kalle Nieminen",
-    customer_phone_number: "050 1239876",
-    locale: "fi",
-    days_out: 1,
-    payment_link?: false,
-    line_items: [catalogue_line.("Bouquet 2", :medium, 1), custom_line.("Extra eucalyptus", "8.00")]
-  })
-
-walk_in = Orders.get_order_for_admin!(walk_in.id, actor: jennie)
-Orders.record_payment!(walk_in, walk_in.balance, :mobilepay, actor: jennie)
-
-# Paid through the link, then made smaller, then refunded in the Stripe dashboard.
-smaller =
-  place_custom.(%{
-    customer_name: "Sara Björk",
-    customer_email: "sara.bjork@example.fi",
-    days_out: 3,
-    line_items: [catalogue_line.("Bouquet 5", :large, 2), custom_line.("Hand-tied ribbon", "6.00")]
-  })
-
-pay_by_link.(smaller, "pi_seed_smaller")
-smaller = Orders.get_order_for_admin!(smaller.id, actor: jennie, load: [:line_items])
-[bouquets | _] = Enum.filter(smaller.line_items, &(&1.product_variant_id != nil))
-
-Orders.edit_order!(
-  smaller,
-  %{
-    line_items: [
-      %{"kind" => "catalogue", "id" => bouquets.id, "quantity" => "1"},
-      custom_line.("Hand-tied ribbon", "6.00")
-    ]
-  },
-  actor: jennie
-)
-
-{:ok, :recorded} =
-  Payments.record_stripe_refund(%{
-    id: "re_seed_smaller",
-    payment_intent: "pi_seed_smaller",
-    amount: 6000,
-    status: "succeeded"
-  })
 
 # Delivered to a phone-only customer who promised to pay next week.
 fulfilled_unpaid =
@@ -1227,10 +849,11 @@ erik =
 
 kept_lines = Enum.map(erik.line_items, &%{"kind" => "catalogue", "id" => &1.id, "quantity" => to_string(&1.quantity)})
 
-Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant 2", :small, 1)]}, actor: jennie)
+Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant", :small, 1)]}, actor: jennie)
 Orders.open_payment_link!(erik, actor: jennie)
 
-# A custom order paid in part by link, the rest still owed.
+# A custom order paid in part by link, the rest still owed. The link payment
+# is recorded as the Stripe webhook would.
 part_paid =
   place_custom.(%{
     customer_name: "Johanna Lind",
@@ -1240,8 +863,25 @@ part_paid =
     line_items: [catalogue_line.("Bouquet 3", :medium, 1)]
   })
 
-pay_by_link.(part_paid, "pi_seed_part_paid")
+part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie)
+Ash.Seed.update!(part_paid, %{payment_intent_id: "pi_seed_part_paid"})
+
+{:ok, :completed} =
+  Payments.complete(%{
+    id: "pi_seed_part_paid",
+    metadata: %{"order_id" => part_paid.id},
+    amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(part_paid.balance)
+  })
+
+# complete/1 looks the method up in Stripe from a real payment_method id,
+# which a seed can't have, so the payment is named here instead.
+Payment
+|> Ash.Query.filter(payment_intent_id == "pi_seed_part_paid")
+|> Ash.read_one!(authorize?: false)
+|> Ash.Seed.update!(%{payment_method_type: "mobilepay"})
+
 part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie, load: [:line_items])
+Ash.Seed.update!(part_paid, %{receipt_emailed_at: DateTime.utc_now()})
 [bouquet] = part_paid.line_items
 
 Orders.edit_order!(
@@ -1258,33 +898,29 @@ Orders.edit_order!(
 online_order = fn customer_name ->
   Order
   |> Ash.Query.filter(customer_name == ^customer_name)
-  |> Ash.Query.load([:grand_total, :line_items, :payments])
+  |> Ash.Query.load([:line_items, :payments])
   |> Ash.read_one!(authorize?: false)
-end
-
-refund_in_full = fn order ->
-  [payment] = order.payments
-
-  {:ok, :recorded} =
-    Payments.record_stripe_refund(%{
-      id: "re_seed_#{order.order_reference}",
-      payment_intent: payment.payment_intent_id,
-      amount: Edenflowers.External.StripeAPI.to_stripe_amount(payment.amount),
-      status: "succeeded"
-    })
 end
 
 # Called off and refunded in full in the Stripe dashboard.
 petra = online_order.("Petra Holm")
 Orders.cancel_order!(petra, actor: jennie)
-refund_in_full.(petra)
+[petra_payment] = petra.payments
+
+{:ok, :recorded} =
+  Payments.record_stripe_refund(%{
+    id: "re_seed_#{petra.order_reference}",
+    payment_intent: petra_payment.payment_intent_id,
+    amount: Edenflowers.External.StripeAPI.to_stripe_amount(petra_payment.amount),
+    status: "succeeded"
+  })
 
 # Called off, but Jennie hasn't refunded it yet.
 Orders.cancel_order!(online_order.("Oskar Wikström"), actor: jennie)
 
 # Paid, then the plant was out of stock: money to hand back through Stripe.
 nora = online_order.("Nora Back")
-[bouquet | _] = Enum.filter(nora.line_items, &(&1.product_name == "Bouquet 5"))
+[bouquet | _] = Enum.filter(nora.line_items, &(&1.product_name == "Bouquet 1"))
 
 Orders.edit_order!(nora, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
   actor: jennie
@@ -1297,7 +933,7 @@ cash =
     customer_phone_number: "040 5557788",
     days_out: 2,
     payment_link?: false,
-    line_items: [catalogue_line.("Bouquet 4", :medium, 1), custom_line.("Gift wrapping", "5.00")]
+    line_items: [catalogue_line.("Bouquet 2", :medium, 1), custom_line.("Gift wrapping", "5.00")]
   })
 
 cash = Orders.get_order_for_admin!(cash.id, actor: jennie, load: [:line_items])
@@ -1308,25 +944,10 @@ Orders.edit_order!(cash, %{line_items: [%{"kind" => "catalogue", "id" => bouquet
   actor: jennie
 )
 
-# Collected and paid by card at the counter.
-collected =
-  place_custom.(%{
-    customer_name: "Henrik Ström",
-    customer_phone_number: "050 4443322",
-    locale: "fi",
-    days_out: 0,
-    payment_link?: false,
-    line_items: [catalogue_line.("Plant 3", :large, 1)]
-  })
-
-collected = Orders.get_order_for_admin!(collected.id, actor: jennie)
-collected = Orders.record_payment!(collected, collected.balance, :zettle, actor: jennie)
-Orders.mark_order_fulfilled!(collected, actor: jennie)
-
 # A free replacement for a returning customer whose first bouquet wilted.
 place_custom.(%{
-  customer_name: "Aino Virtanen",
-  customer_email: "aino.virtanen@example.fi",
+  customer_name: "Liisa Mäkinen",
+  customer_email: "liisa.makinen@example.fi",
   locale: "fi",
   days_out: 1,
   payment_link?: false,
