@@ -1,9 +1,10 @@
 ---
 id: TASK-15.3
-title: Jennie emails or copies a booking's payment link from the courses page
+title: Email or copy a booking's payment link from the courses page
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-15.1

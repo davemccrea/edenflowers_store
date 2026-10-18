@@ -1,9 +1,10 @@
 ---
 id: TASK-9.1
-title: Installable admin app
+title: Make the admin installable on Jennie's phone
 status: done
 assignee: []
 created_date: '2026-10-15 23:06'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 parent_task_id: TASK-9

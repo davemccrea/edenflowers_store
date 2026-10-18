@@ -1,9 +1,10 @@
 ---
 id: TASK-15
-title: Booking Payment Links
+title: Send a course booking a payment link
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 ordinal: 42000

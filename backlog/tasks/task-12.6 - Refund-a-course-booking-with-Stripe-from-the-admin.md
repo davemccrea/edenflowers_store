@@ -1,9 +1,10 @@
 ---
 id: TASK-12.6
-title: Refund course bookings from the app
+title: Refund a course booking with Stripe from the admin
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-12.2

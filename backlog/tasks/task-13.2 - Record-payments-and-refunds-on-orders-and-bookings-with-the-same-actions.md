@@ -1,9 +1,10 @@
 ---
 id: TASK-13.2
-title: Jennie records payments and refunds on orders and bookings the same way
+title: Record payments and refunds on orders and bookings with the same actions
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-13.1

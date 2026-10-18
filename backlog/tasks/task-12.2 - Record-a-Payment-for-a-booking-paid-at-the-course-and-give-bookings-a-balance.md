@@ -1,9 +1,10 @@
 ---
 id: TASK-12.2
-title: 'Bookings paid at the course record a Payment, and registrations get a balance'
+title: Record a Payment for a booking paid at the course and give bookings a balance
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-12.1

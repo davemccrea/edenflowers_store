@@ -1,9 +1,10 @@
 ---
 id: TASK-13.4
-title: To collect / To refund on the Overview
+title: List what's to collect and to refund on the Overview
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-13.1

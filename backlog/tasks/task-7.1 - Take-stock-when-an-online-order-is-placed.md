@@ -1,9 +1,10 @@
 ---
 id: TASK-7.1
-title: Online orders take stock
+title: Take stock when an online order is placed
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 parent_task_id: TASK-7
