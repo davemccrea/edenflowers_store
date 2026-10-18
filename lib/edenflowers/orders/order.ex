@@ -199,14 +199,15 @@ defmodule Edenflowers.Orders.Order do
       end
 
       # Started after the paid order is placed, never inside finalize_checkout,
-      # so a Subscription that can't start retries here and never stops the
-      # order being placed (ADR 0002).
+      # so a Subscription that can't start never stops the order being placed
+      # (ADR 0002). Placing runs this trigger straight away; the schedule only
+      # retries starts that failed, so every 15 minutes is enough.
       trigger :start_subscription do
         action :start_subscription
         queue :default
         max_attempts 20
         lock_for_update? false
-        scheduler_cron "* * * * *"
+        scheduler_cron "*/15 * * * *"
         worker_module_name Edenflowers.Orders.Workers.StartSubscription
         scheduler_module_name Edenflowers.Orders.Schedulers.StartSubscription
         default_actor system_actor()
