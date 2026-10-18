@@ -171,7 +171,7 @@ defmodule Edenflowers.Catalog.ProductTest do
 
       assert found_product != nil
       assert Decimal.equal?(found_product.cheapest_price, "15.99")
-      assert length(found_product.product_variants) > 0
+      assert found_product.product_variants != []
       assert found_product.product_category.id == published_category.id
     end
   end

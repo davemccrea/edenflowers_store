@@ -63,7 +63,7 @@ defmodule Edenflowers.Expenses.ExpenseTest do
 
       assert error
              |> Ash.Error.to_ash_error()
-             |> Map.get(:errors)
+             |> Map.fetch!(:errors)
              |> Enum.any?(fn e ->
                Map.get(e, :field) == :document_id
              end)

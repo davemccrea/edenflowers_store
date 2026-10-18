@@ -85,6 +85,8 @@ defmodule Edenflowers.External.ClaudeAPI do
 
     schema =
       for locale <- targets, field <- ["name", "description"] do
+        # A fixed set of locale and field keys, so no unbounded atom creation.
+        # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
         {String.to_atom(key(locale, field)),
          [type: :string, required: true, doc: "The #{field} in #{@languages[locale]}."]}
       end
