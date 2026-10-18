@@ -303,12 +303,28 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> push_navigate(to: ~p"/admin/orders/#{order.id}")}
 
       {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, form)
-         |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
+        if closed_meanwhile?(socket) do
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             ~t"This order was cancelled or fulfilled while you were editing it, so it wasn't saved."
+           )
+           |> push_navigate(to: ~p"/admin/orders/#{socket.assigns.order.id}")}
+        else
+          {:noreply,
+           socket
+           |> assign(:form, form)
+           |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
+        end
     end
   end
+
+  defp closed_meanwhile?(%{assigns: %{mode: :edit, order: order, current_user: actor}}) do
+    Orders.get_order_for_admin!(order.id, actor: actor).fulfillment_status != :pending
+  end
+
+  defp closed_meanwhile?(_socket), do: false
 
   @impl true
   def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: nil} = result}}}, socket) do

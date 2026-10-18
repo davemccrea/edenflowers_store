@@ -1,10 +1,10 @@
 ---
 id: TASK-19.1
 title: Refuse cancelling or editing an order that has moved on since it was loaded
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 08:26'
+updated_date: '2026-10-18 09:29'
 labels:
   - quick
 dependencies: []
@@ -53,6 +53,12 @@ ordinal: 61000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case above passes
-- [ ] #2 The existing suite passes
+- [x] #1 Every case above passes
+- [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Filter on cancel, cancel_by_customer and edit. Admin detail page reloads and flashes when the cancel lost the race; the edit form flashes and goes back to the order page.
+<!-- SECTION:NOTES:END -->

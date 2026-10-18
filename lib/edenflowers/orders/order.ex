@@ -624,6 +624,9 @@ defmodule Edenflowers.Orders.Order do
 
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
+      # The checks above read the copy Jennie loaded. This one is on the UPDATE, so an order
+      # cancelled or fulfilled since then matches no row and stock moves only once.
+      change filter expr(state == :placed and fulfillment_status == :pending)
 
       validate Validations.EnteredLineItems
       validate attribute_in(:locale, @locales)
@@ -661,6 +664,7 @@ defmodule Edenflowers.Orders.Order do
     update :cancel do
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
+      change filter expr(state == :placed and fulfillment_status == :pending)
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
       change PaymentChanges.CancelOpenPaymentIntent
@@ -671,6 +675,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :cancel_by_customer do
       validate Validations.CancellableByCustomer
+      change filter expr(state == :placed and fulfillment_status == :pending)
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
       change PaymentChanges.CancelOpenPaymentIntent

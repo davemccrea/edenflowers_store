@@ -346,7 +346,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order cancelled.")}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not cancel the order.")}
+        case reload(socket.assigns.order, socket) do
+          %{fulfillment_status: :pending} ->
+            {:noreply, put_flash(socket, :error, ~t"Could not cancel the order.")}
+
+          order ->
+            {:noreply,
+             socket
+             |> assign_order(order)
+             |> put_flash(:error, ~t"This order changed while you had it open, so it wasn't cancelled.")}
+        end
     end
   end
 
