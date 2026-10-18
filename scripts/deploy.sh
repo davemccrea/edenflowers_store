@@ -44,7 +44,7 @@ TARGET="${1:-}"
 
 if [[ -z "$TARGET" ]]; then
   section "Target selection"
-  echo "  1) staging     (push current branch to staging)"
+  echo "  1) staging     (deploy current branch to staging)"
   echo "  2) production  (tag a release from main)"
   echo
   read -r -p "  Choice [1]: " CHOICE
@@ -71,8 +71,13 @@ if [[ "$TARGET" == "staging" ]]; then
 
   scripts/sync-images.sh staging
 
-  # staging is a deploy pointer, not a shared branch, so overwriting it is expected.
-  SKIP_HOOKS=1 git push --force origin HEAD:refs/heads/staging
+  if [[ "$BRANCH" == "HEAD" ]]; then
+    fail "detached HEAD, check out a branch first"
+  fi
+
+  # The workflow builds the ref on GitHub, so it must be pushed first.
+  SKIP_HOOKS=1 git push --quiet origin "$BRANCH"
+  gh workflow run deploy.yml --ref "$BRANCH"
 
   printf '\n%s%s✓ Deployed %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
     "$BOLD" "$GREEN" "$BRANCH" "$RESET" "$DIM" "$RESET"

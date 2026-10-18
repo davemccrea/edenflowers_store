@@ -41,7 +41,7 @@ just db-seed local|staging      # seed the local or staging database
 just db-seed-production         # one-off base seed of an empty production database
 just db-backup-production       # pg_dump production into tmp/
 just db-wipe-staging            # drop the staging schema so the next deploy migrates from scratch
-just deploy staging             # push current branch to staging
+just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run
 just images-sync [staging|production] # sync images/ to servers (both if omitted)
@@ -49,7 +49,7 @@ just server-logs staging        # tail app logs on a server
 just server-console production  # remote IEx on a server
 ```
 
-`just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Pushes to the `staging` branch deploy the same way.
+`just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. `just deploy staging` pushes the current branch and triggers the deploy workflow on it; plain pushes deploy nothing.
 
 `images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It doesn't delete: files removed locally stay on the server, as do photos uploaded through the admin (`images/uploads/`, never pushed to). Filenames must be ASCII.
 
