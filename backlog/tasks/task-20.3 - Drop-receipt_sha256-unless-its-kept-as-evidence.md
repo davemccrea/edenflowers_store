@@ -1,10 +1,10 @@
 ---
 id: TASK-20.3
 title: 'Drop receipt_sha256, unless it''s kept as evidence'
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 08:17'
 labels: []
 dependencies: []
 parent_task_id: TASK-20
@@ -37,9 +37,15 @@ Is the hash ever going to be checked: by the accountant, in a dispute, or to pro
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `grep -r receipt_sha256 lib test` finds nothing outside migrations
-- [ ] #2 The existing suite passes
+- [x] #1 `grep -r receipt_sha256 lib test` finds nothing outside migrations
+- [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The owner confirmed nobody will check the hash, so it was removed.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

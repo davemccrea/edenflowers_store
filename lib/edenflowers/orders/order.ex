@@ -1016,9 +1016,6 @@ defmodule Edenflowers.Orders.Order do
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :receipt_emailed_at, :utc_datetime
-    # Proves what was sent without keeping the PDF: re-rendering the placed
-    # order reproduces the same bytes.
-    attribute :receipt_sha256, :string
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
     attribute :delivered_emailed_at, :utc_datetime
     # The order details a custom order's customer is sent when it is placed.

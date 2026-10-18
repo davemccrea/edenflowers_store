@@ -44,7 +44,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
 
     reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
     assert reloaded.receipt_emailed_at != nil
-    assert reloaded.receipt_sha256 =~ ~r/^[0-9a-f]{64}$/
   end
 
   test "renders the email in the order's locale" do
