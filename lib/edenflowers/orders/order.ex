@@ -97,6 +97,8 @@ defmodule Edenflowers.Orders.Order do
     line_items: [:subtotal, :total]
   ]
 
+  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -122,8 +124,6 @@ defmodule Edenflowers.Orders.Order do
       end
     end
   end
-
-  @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
   def checkout_states, do: @checkout_states
 

@@ -10,9 +10,9 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   alias Edenflowers.Orders.Order
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @limit 10
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(_params, _session, socket) do

@@ -11,9 +11,9 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @photo_fields ["form[image_slug]"]
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(params, _session, socket) do

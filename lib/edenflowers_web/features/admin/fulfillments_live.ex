@@ -27,9 +27,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   alias Edenflowers.Fulfillment
   alias EdenflowersWeb.Admin.CalendarViewModel
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @timezone "Europe/Helsinki"
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(params, _session, socket) do

@@ -22,8 +22,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.PhoneNumber
   alias Edenflowers.Translations
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
-
   @checkout_states Order.checkout_states()
 
   @edit_steps %{
@@ -36,6 +34,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # old amount, so anything that changes the total is inert from the click
   # until Stripe settles.
   @locked_while_paying "#cart-drawer, [data-locked-while-paying]"
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
