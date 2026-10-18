@@ -25,6 +25,8 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  import Edenflowers.Actors
+
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.Actions
@@ -160,7 +162,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron "*/10 * * * *"
         worker_module_name Edenflowers.Orders.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendConfirmationEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         # A payment Jennie records gets its receipt only when she sends one.
         where expr(
                 state == :placed and exists(payments, method == :stripe) and not is_nil(customer_email) and
@@ -178,7 +180,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendOrderDetailsEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderDetailsEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         where expr(origin == :custom and not is_nil(customer_email) and is_nil(details_emailed_at))
       end
 
@@ -191,7 +193,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
 
         where expr(payment_link_open? and is_nil(details_emailed_at))
       end
@@ -207,7 +209,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron "* * * * *"
         worker_module_name Edenflowers.Orders.Workers.StartSubscription
         scheduler_module_name Edenflowers.Orders.Schedulers.StartSubscription
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         where expr(state == :placed and origin == :online and subscription? and is_nil(subscription_id))
       end
 
@@ -219,7 +221,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron "*/10 * * * *"
         worker_module_name Edenflowers.Orders.Workers.SendDeliveredEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendDeliveredEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
 
         where expr(
                 state == :placed and fulfillment_method == :delivery and fulfillment_status == :fulfilled and
@@ -235,7 +237,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron "*/10 * * * *"
         worker_module_name Edenflowers.Orders.Workers.ReconcilePayment
         scheduler_module_name Edenflowers.Orders.Schedulers.ReconcilePayment
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
 
         # payment_intent_id is only set while a PaymentIntent waits for the
         # customer, at checkout or on a payment link.
@@ -254,7 +256,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron "0 3 * * *"
         worker_module_name Edenflowers.Orders.Workers.PurgeAbandonedCart
         scheduler_module_name Edenflowers.Orders.Schedulers.PurgeAbandonedCart
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
 
         where expr(
                 state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and

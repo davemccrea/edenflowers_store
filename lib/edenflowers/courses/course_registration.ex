@@ -11,6 +11,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     extensions: [AshOban],
     fragments: [Edenflowers.Payments.Payable]
 
+  import Edenflowers.Actors
+
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Courses.Changes
   alias Edenflowers.Courses.Validations
@@ -49,7 +51,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
         scheduler_cron "*/10 * * * *"
         worker_module_name Edenflowers.Courses.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendConfirmationEmail
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
         where expr(status == :confirmed and is_nil(confirmation_emailed_at))
       end
 
@@ -61,7 +63,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
         scheduler_cron "*/10 * * * *"
         worker_module_name Edenflowers.Courses.Workers.ReconcilePayment
         scheduler_module_name Edenflowers.Courses.Schedulers.ReconcilePayment
-        default_actor Edenflowers.Actors.system_actor()
+        default_actor system_actor()
 
         where expr(
                 status == :pending and not is_nil(payment_intent_id) and
