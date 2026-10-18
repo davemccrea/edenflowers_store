@@ -118,6 +118,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
                   {Format.weekday_day_month(@order.fulfillment_date, @locale)}
+                  <span :if={Format.fulfillment_time(@order, @locale)} id="order-fulfillment-time" class="block">
+                    {Format.fulfillment_time(@order, @locale)}
+                  </span>
                   <.relative_date_badge
                     :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
                     label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}

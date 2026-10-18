@@ -254,6 +254,63 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "the time of day" do
+    test "is any time, an exact time or a window", ctx do
+      {:ok, any} = place(ctx, %{fulfillment_time: :any, fulfillment_time_start: ~T[14:00:00]})
+
+      {:ok, at} =
+        place(ctx, %{fulfillment_time: :at, fulfillment_time_start: ~T[14:00:00], fulfillment_time_end: ~T[15:00:00]})
+
+      {:ok, between} =
+        place(ctx, %{
+          fulfillment_time: :between,
+          fulfillment_time_start: ~T[14:00:00],
+          fulfillment_time_end: ~T[15:00:00]
+        })
+
+      assert {any.fulfillment_time_start, any.fulfillment_time_end} == {nil, nil}
+      assert {at.fulfillment_time_start, at.fulfillment_time_end} == {~T[14:00:00], nil}
+      assert {between.fulfillment_time_start, between.fulfillment_time_end} == {~T[14:00:00], ~T[15:00:00]}
+    end
+
+    test "needs its times, and a window that ends after it starts", ctx do
+      assert {:error, error} = place(ctx, %{fulfillment_time: :at})
+      assert Exception.message(error) =~ "Enter a time"
+
+      assert {:error, error} =
+               place(ctx, %{
+                 fulfillment_time: :between,
+                 fulfillment_time_start: ~T[14:00:00],
+                 fulfillment_time_end: ~T[14:00:00]
+               })
+
+      assert Exception.message(error) =~ "Must be after the start"
+    end
+
+    test "is kept when an edit doesn't choose again, and goes in the order details email", ctx do
+      {:ok, order} =
+        place(ctx, %{
+          customer_email: "son@example.com",
+          locale: "sv-FI",
+          fulfillment_time: :between,
+          fulfillment_time_start: ~T[14:00:00],
+          fulfillment_time_end: ~T[15:00:00]
+        })
+
+      Oban.drain_queue(queue: :default)
+      assert_email_sent(fn email -> assert email.text_body =~ "kl. 14.00–15.00" end)
+
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+
+      {:ok, edited} =
+        Orders.edit_order(order, %{florist_note: "Ring first", line_items: [custom_line(ctx.tax_rate)]},
+          actor: ctx.admin
+        )
+
+      assert {edited.fulfillment_time_start, edited.fulfillment_time_end} == {~T[14:00:00], ~T[15:00:00]}
+    end
+  end
+
   describe "a delivery" do
     test "saves without a recipient phone, and is flagged until it has one", ctx do
       stub_geocoding(8_000)
@@ -275,10 +332,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "still needs a method and a date", ctx do
-      assert {:error, error} = place(ctx, %{fulfillment_option_id: nil, fulfillment_date: nil})
+      assert {:error, %{errors: errors}} = place(ctx, %{fulfillment_option_id: nil, fulfillment_date: nil})
 
-      assert error |> Ash.Error.to_error_class() |> Map.get(:errors) |> Enum.map(& &1.field) |> Enum.sort() ==
-               [:fulfillment_date, :fulfillment_option_id]
+      assert errors |> Enum.map(& &1.field) |> Enum.sort() == [:fulfillment_date, :fulfillment_option_id]
     end
   end
 

@@ -333,6 +333,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <div class="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
           <.fulfillment_method method={@order.fulfillment_method} class="text-base-content text-sm font-medium" />
+          <span
+            :if={Format.fulfillment_time(@order, Format.locale())}
+            class="text-base-content text-xs tabular-nums"
+            data-testid="fulfillment-time"
+          >
+            {Format.fulfillment_time(@order, Format.locale())}
+          </span>
           <span :if={@order.distance_km} class="text-base-content/65 text-xs tabular-nums">
             {@order.distance_km} km
           </span>

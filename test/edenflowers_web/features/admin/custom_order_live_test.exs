@@ -134,6 +134,63 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert LazyHTML.text(submit) =~ "Place order"
     end
 
+    test "sets an exact time or a window, and the order page and Overview show it", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      assert has_element?(view, ~s|input[name="form[fulfillment_time]"][value="any"][checked]|)
+      refute has_element?(view, ~s|input[name="form[fulfillment_time_start]"]|)
+
+      view |> form("#order-form", form: %{fulfillment_time: "at"}) |> render_change()
+      assert has_element?(view, ~s|input[name="form[fulfillment_time_start]"]|)
+      refute has_element?(view, ~s|input[name="form[fulfillment_time_end]"]|)
+
+      view |> form("#order-form", form: %{fulfillment_time: "between"}) |> render_change()
+      assert has_element?(view, ~s|input[name="form[fulfillment_time_end]"]|)
+
+      render_click(view, "add_line", %{"kind" => "custom"})
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Mrs Holm",
+                   customer_phone_number: "040 123 4567",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   fulfillment_time: "between",
+                   fulfillment_time_start: "14:00",
+                   fulfillment_time_end: "15:00",
+                   line_items: %{
+                     "0" => %{"product_name" => "Wreath", "unit_price" => "85", "tax_rate_id" => ctx.tax_rate.id}
+                   }
+                 }
+               )
+               |> render_submit()
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{id}")
+      assert has_element?(view, "#order-fulfillment-time", "14:00–15:00")
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin")
+      assert has_element?(view, "[data-testid=fulfillment-time]", "14:00–15:00")
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{id}/edit")
+      assert has_element?(view, ~s|input[name="form[fulfillment_time]"][value="between"][checked]|)
+    end
+
+    test "refuses a window that ends before it starts", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      view |> form("#order-form", form: %{fulfillment_time: "between"}) |> render_change()
+
+      html =
+        view
+        |> form("#order-form",
+          form: %{fulfillment_time: "between", fulfillment_time_start: "15:00", fulfillment_time_end: "14:00"}
+        )
+        |> render_submit()
+
+      assert html =~ "Must be after the start"
+    end
+
     test "asks for a recipient and card only for a gift", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 

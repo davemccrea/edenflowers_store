@@ -50,6 +50,8 @@ defmodule Edenflowers.Orders.Order do
     :card_message,
     :fulfillment_option_id,
     :fulfillment_date,
+    :fulfillment_time_start,
+    :fulfillment_time_end,
     :delivery_address,
     :delivery_instructions,
     :fulfillment_fee_override,
@@ -360,6 +362,8 @@ defmodule Edenflowers.Orders.Order do
                   :customer_name,
                   :order_reference,
                   :fulfillment_date,
+                  :fulfillment_time_start,
+                  :fulfillment_time_end,
                   :fulfillment_option_name,
                   :fulfillment_method,
                   :grand_total,
@@ -456,6 +460,7 @@ defmodule Edenflowers.Orders.Order do
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
       argument :payment_link?, :boolean, default: true
+      argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :email_customer?, :boolean, default: true
 
       change set_attribute(:state, :placed)
@@ -476,6 +481,7 @@ defmodule Edenflowers.Orders.Order do
       validate present(:fulfillment_option_id)
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDateNotPast
+      change Changes.SetFulfillmentTime
       validate Validations.DeliveryAddress
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
@@ -660,6 +666,7 @@ defmodule Edenflowers.Orders.Order do
 
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
+      argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
 
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
@@ -678,6 +685,7 @@ defmodule Edenflowers.Orders.Order do
       validate present(:fulfillment_option_id)
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDateNotPast
+      change Changes.SetFulfillmentTime
       validate Validations.DeliveryAddress
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
@@ -1000,6 +1008,9 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
     attribute :fulfillment_date, :date
+    # Only Custom Orders have these for now; checkout doesn't ask for a time.
+    attribute :fulfillment_time_start, :time
+    attribute :fulfillment_time_end, :time
     # The Subscription's date an Occurrence was made for. Its fulfillment_date
     # is later when that day was closed.
     attribute :subscription_date, :date
