@@ -18,8 +18,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
-
   @timezone "Europe/Helsinki"
   @saved_visible_ms 2500
   @newsletter_form_id "newsletter-preference"
@@ -28,6 +26,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @email_codes_per_window 5
   @email_code_window_ms :timer.minutes(15)
   @past_visible 5
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
   @impl true
   def mount(_params, _session, socket) do

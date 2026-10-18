@@ -9,9 +9,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @history_fields [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(params, _session, socket) do

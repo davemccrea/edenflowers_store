@@ -1,8 +1,6 @@
 defmodule EdenflowersWeb.Marketing.WeddingsLive do
   use EdenflowersWeb, :live_view
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
-
   alias Edenflowers.WeddingEnquiry
 
   # Photographers without a known website are credited by name only.
@@ -15,6 +13,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     "Marie Lillhannus" => "https://www.picmi.fi/",
     "Sara Björkskog" => "https://www.grann.fi/"
   }
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
   def mount(_params, _session, socket) do

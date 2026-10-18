@@ -9,9 +9,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @timezone "Europe/Helsinki"
+
+  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
   def mount(_params, _session, socket) do
