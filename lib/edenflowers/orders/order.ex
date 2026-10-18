@@ -95,6 +95,7 @@ defmodule Edenflowers.Orders.Order do
     :vat,
     :discount,
     :distance_km,
+    :missing_delivery_phone?,
     :promotion,
     :fulfillment_option,
     line_items: [:subtotal, :total]
@@ -370,6 +371,7 @@ defmodule Edenflowers.Orders.Order do
                   :gift,
                   :recipient_name,
                   :card_message,
+                  :missing_delivery_phone?,
                   :line_items
                 ]
               )
@@ -475,7 +477,6 @@ defmodule Edenflowers.Orders.Order do
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDateNotPast
       validate Validations.DeliveryAddress
-      validate present(:recipient_phone_number), where: [attribute_equals(:fulfillment_method, :delivery)]
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
       change Changes.NormalizePhoneNumber
@@ -678,7 +679,6 @@ defmodule Edenflowers.Orders.Order do
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDateNotPast
       validate Validations.DeliveryAddress
-      validate present(:recipient_phone_number), where: [attribute_equals(:fulfillment_method, :delivery)]
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
       change Changes.NormalizePhoneNumber
@@ -1070,6 +1070,15 @@ defmodule Edenflowers.Orders.Order do
     # `distance` is snapshotted in metres; expose it as a kilometre string for
     # display, and only for deliveries.
     calculate :distance_km, :string, Calculations.DistanceKm
+
+    # A Custom Order may be saved before Jennie has a number to call at the
+    # door: the recipient's for a gift, otherwise the customer's own.
+    calculate :missing_delivery_phone?,
+              :boolean,
+              expr(
+                fulfillment_method == :delivery and is_nil(recipient_phone_number) and
+                  (gift or is_nil(customer_phone_number))
+              )
 
     # A code stays on the order when the cart drops below its minimum, but
     # only discounts while the cart meets it.

@@ -303,6 +303,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.badge :if={present?(@order.card_message)} tone={:warning} icon="hero-pencil-square">
               {~t"Card to write"}
             </.badge>
+            <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
+              {~t"Missing recipient phone"}
+            </.badge>
             <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
               <%= if Decimal.positive?(@order.amount_paid) do %>
                 {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}

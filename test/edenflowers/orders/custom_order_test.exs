@@ -254,6 +254,34 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "a delivery" do
+    test "saves without a recipient phone, and is flagged until it has one", ctx do
+      stub_geocoding(8_000)
+      delivery = %{fulfillment_option_id: ctx.delivery.id, delivery_address: "Kyrkvägen 5"}
+
+      {:ok, gift} = place(ctx, Map.merge(delivery, %{gift: true, recipient_name: "Grandma"}))
+      {:ok, gift_with_phone} = place(ctx, Map.merge(delivery, %{gift: true, recipient_phone_number: "040 765 4321"}))
+      {:ok, own} = place(ctx, delivery)
+      {:ok, own_no_phone} = place(ctx, Map.merge(delivery, %{customer_phone_number: nil, customer_email: "a@b.fi"}))
+      {:ok, pickup} = place(ctx, %{gift: true, recipient_name: "Grandma"})
+
+      flagged? = &Ash.load!(&1, :missing_delivery_phone?, authorize?: false).missing_delivery_phone?
+
+      assert flagged?.(gift)
+      refute flagged?.(gift_with_phone)
+      refute flagged?.(own)
+      assert flagged?.(own_no_phone)
+      refute flagged?.(pickup)
+    end
+
+    test "still needs a method and a date", ctx do
+      assert {:error, error} = place(ctx, %{fulfillment_option_id: nil, fulfillment_date: nil})
+
+      assert error |> Ash.Error.to_error_class() |> Map.get(:errors) |> Enum.map(& &1.field) |> Enum.sort() ==
+               [:fulfillment_date, :fulfillment_option_id]
+    end
+  end
+
   describe "the delivery fee" do
     test "is calculated from the address", ctx do
       stub_geocoding(8_000)
