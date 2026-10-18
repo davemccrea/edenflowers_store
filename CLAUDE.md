@@ -8,22 +8,12 @@
 
 ## Coding Standards
 
-- Do not add comments that reiterate what the code does.
-- Only comment on code if the intent is non-obvious or complex.
+- Only comment when the intent is non-obvious or complex. Never restate what the code does.
 - Do not leave dead code or commented-out blocks.
-- I don't mind more lines of code if future-me understands it more easily.
-- Optimise for readability and maintainability rather than blindly pursing DRY.
+- Optimise for readability and maintainability over DRY. More lines are fine if future-me understands them more easily.
 
 ## Agent skills
 
-### Issue tracker
-
-Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Canonical status strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (created lazily when needed). See `docs/agents/domain.md`.
+- Issue tracker: Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`.
+- Triage: status strings and the `wontfix` label. See `docs/agents/triage-labels.md`.
+- Domain docs: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
