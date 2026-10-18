@@ -26,6 +26,40 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page>
+        <.admin_page_header title={greeting(@current_user)} overview>
+          <:actions>
+            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
+              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
+            </.button>
+          </:actions>
+        </.admin_page_header>
+
+        <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
+
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+          <aside class="flex flex-col gap-6 xl:order-last">
+            <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+          </aside>
+          <div class="flex min-w-0 flex-col gap-6">
+            <.orders_widget
+              orders_by_date={@orders_by_date}
+              open_order_count={@open_order_count}
+              today={@today}
+              locale={@locale}
+            />
+            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
+          </div>
+        </div>
+      </.admin_page>
+    </Layouts.admin>
+    """
+  end
+
+  @impl true
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
@@ -92,40 +126,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       [{"collect", ~t"To collect", to_collect}, {"refund", ~t"To refund", to_refund}],
       fn {_key, _title, rows} -> rows == [] end
     )
-  end
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page>
-        <.admin_page_header title={greeting(@current_user)} overview>
-          <:actions>
-            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
-              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
-            </.button>
-          </:actions>
-        </.admin_page_header>
-
-        <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
-
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <aside class="flex flex-col gap-6 xl:order-last">
-            <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
-          </aside>
-          <div class="flex min-w-0 flex-col gap-6">
-            <.orders_widget
-              orders_by_date={@orders_by_date}
-              open_order_count={@open_order_count}
-              today={@today}
-              locale={@locale}
-            />
-            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
-          </div>
-        </div>
-      </.admin_page>
-    </Layouts.admin>
-    """
   end
 
   attr :vapid_public_key, :string, required: true

@@ -225,6 +225,156 @@ defmodule EdenflowersWeb.Account.AccountLive do
     """
   end
 
+  @impl true
+  def handle_event("save_details", %{"details" => params}, socket) do
+    user = socket.assigns.current_user
+    name = blank_to_nil(params["name"])
+    email = String.trim(params["email"] || "")
+
+    case update_name(user, name) do
+      {:ok, user} ->
+        {_, socket} = maybe_start_email_change(assign(socket, current_user: user), email)
+        {:noreply, socket}
+
+      {:error, error} ->
+        Logger.error(inspect(error))
+        {:noreply, put_flash(socket, :error, ~t"Your details couldn't be saved.")}
+    end
+  end
+
+  def handle_event("confirm_email", %{"confirm" => %{"code" => code}}, socket) do
+    pending = socket.assigns.pending_email
+    user = socket.assigns.current_user
+
+    cond do
+      pending == nil ->
+        {:noreply, socket}
+
+      System.monotonic_time(:millisecond) > pending.expires_at ->
+        {:noreply, abandon_email_change(socket, ~t"That code has expired. Please try again.")}
+
+      not Plug.Crypto.secure_compare(String.trim(code), pending.code) ->
+        attempts = pending.attempts + 1
+
+        if attempts >= @email_code_attempts do
+          {:noreply, abandon_email_change(socket, ~t"Too many wrong codes. Please try again.")}
+        else
+          {:noreply,
+           socket
+           |> assign(pending_email: %{pending | attempts: attempts})
+           |> assign(
+             code_form: to_form(%{"code" => ""}, as: :confirm, errors: [code: {~t"That code isn't right.", []}])
+           )}
+        end
+
+      true ->
+        case Accounts.change_email(user, pending.email, actor: user, load: [:first_name]) do
+          {:ok, user} ->
+            {:noreply, socket |> assign(current_user: user) |> reset_details(user) |> assign(details_saved?: true)}
+
+          {:error, error} ->
+            Logger.info("Email change failed: #{inspect(error)}")
+
+            {:noreply,
+             abandon_email_change(socket, ~t"That email can't be used. It may already belong to another account.")}
+        end
+    end
+  end
+
+  def handle_event("cancel_email_change", _params, socket) do
+    {:noreply, reset_details(socket, socket.assigns.current_user)}
+  end
+
+  def handle_event("pause_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, fn _ -> ~t"Subscription paused" end)}
+  end
+
+  def handle_event("resume_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, fn _ -> ~t"Subscription resumed" end)}
+  end
+
+  def handle_event("cancel_subscription", %{"id" => id}, socket) do
+    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)}
+  end
+
+  def handle_event("cancel_order", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
+
+    socket =
+      with {:ok, order} <- Orders.get_order_by_id(id, actor: user),
+           {:ok, _order} <- Orders.cancel_order_by_customer(order, actor: user) do
+        put_flash(socket, :info, ~t"Your order is cancelled. A confirmation is on its way to your email.")
+      else
+        {:error, error} ->
+          Logger.info("Order cancel refused: #{inspect(error)}")
+          put_flash(socket, :error, order_cancel_error_message(error))
+      end
+
+    {:noreply, socket |> assign(orders: orders(user)) |> assign_timeline()}
+  end
+
+  def handle_event("edit_subscription", %{"subscription_id" => id} = params, socket) do
+    subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
+
+    edited? =
+      subscription != nil and
+        (params["product_variant_id"] != subscription.product_variant_id or
+           params["interval_weeks"] != to_string(subscription.interval_weeks) or
+           params["delivery_day"] != to_string(delivery_day(subscription)))
+
+    edited =
+      if edited?,
+        do: MapSet.put(socket.assigns.edited_subscriptions, id),
+        else: MapSet.delete(socket.assigns.edited_subscriptions, id)
+
+    {:noreply, assign(socket, edited_subscriptions: edited)}
+  end
+
+  def handle_event("change_subscription", %{"subscription_id" => id} = params, socket) do
+    changes = Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"])
+    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, :product_variant))
+
+    socket =
+      socket
+      |> change_subscription(id, change, &change_confirmation(&1, socket.assigns.locale))
+      |> assign(edited_subscriptions: MapSet.delete(socket.assigns.edited_subscriptions, id))
+
+    {:noreply, socket}
+  end
+
+  def handle_event("toggle_newsletter", params, socket) do
+    user = socket.assigns.current_user
+    opt_in = params["newsletter_opt_in"] == "true"
+
+    case Accounts.update_newsletter_preference(user, opt_in, actor: user) do
+      {:ok, user} ->
+        token = System.unique_integer()
+        Process.send_after(self(), {:clear_newsletter_saved, token}, @saved_visible_ms)
+
+        {:noreply, assign(socket, current_user: user, newsletter_saved?: true, newsletter_saved_token: token)}
+
+      {:error, error} ->
+        Logger.error(inspect(error))
+
+        # Nothing in the form changed server-side, so LiveView would leave the
+        # box ticked. A new form id re-renders it from what was saved.
+        {:noreply,
+         socket
+         |> assign(newsletter_form_id: "#{@newsletter_form_id}-#{System.unique_integer([:positive])}")
+         |> put_flash(:error, ~t"Your newsletter preference couldn't be saved.")}
+    end
+  end
+
+  # Only the most recent save clears the confirmation. Toggling twice inside the
+  # visible window would otherwise let the first timer wipe the "Saved" the
+  # second save has only just put up.
+  @impl true
+  def handle_info({:clear_newsletter_saved, token}, %{assigns: %{newsletter_saved_token: token}} = socket) do
+    {:noreply, assign(socket, newsletter_saved?: false)}
+  end
+
+  def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
+
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :class, :any, default: "pt-12 sm:pt-16"
@@ -409,156 +559,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp line_item_label(%{quantity: 1} = item), do: item.product_name
   defp line_item_label(item), do: "#{item.quantity} × #{item.product_name}"
-
-  @impl true
-  def handle_event("save_details", %{"details" => params}, socket) do
-    user = socket.assigns.current_user
-    name = blank_to_nil(params["name"])
-    email = String.trim(params["email"] || "")
-
-    case update_name(user, name) do
-      {:ok, user} ->
-        {_, socket} = maybe_start_email_change(assign(socket, current_user: user), email)
-        {:noreply, socket}
-
-      {:error, error} ->
-        Logger.error(inspect(error))
-        {:noreply, put_flash(socket, :error, ~t"Your details couldn't be saved.")}
-    end
-  end
-
-  def handle_event("confirm_email", %{"confirm" => %{"code" => code}}, socket) do
-    pending = socket.assigns.pending_email
-    user = socket.assigns.current_user
-
-    cond do
-      pending == nil ->
-        {:noreply, socket}
-
-      System.monotonic_time(:millisecond) > pending.expires_at ->
-        {:noreply, abandon_email_change(socket, ~t"That code has expired. Please try again.")}
-
-      not Plug.Crypto.secure_compare(String.trim(code), pending.code) ->
-        attempts = pending.attempts + 1
-
-        if attempts >= @email_code_attempts do
-          {:noreply, abandon_email_change(socket, ~t"Too many wrong codes. Please try again.")}
-        else
-          {:noreply,
-           socket
-           |> assign(pending_email: %{pending | attempts: attempts})
-           |> assign(
-             code_form: to_form(%{"code" => ""}, as: :confirm, errors: [code: {~t"That code isn't right.", []}])
-           )}
-        end
-
-      true ->
-        case Accounts.change_email(user, pending.email, actor: user, load: [:first_name]) do
-          {:ok, user} ->
-            {:noreply, socket |> assign(current_user: user) |> reset_details(user) |> assign(details_saved?: true)}
-
-          {:error, error} ->
-            Logger.info("Email change failed: #{inspect(error)}")
-
-            {:noreply,
-             abandon_email_change(socket, ~t"That email can't be used. It may already belong to another account.")}
-        end
-    end
-  end
-
-  def handle_event("cancel_email_change", _params, socket) do
-    {:noreply, reset_details(socket, socket.assigns.current_user)}
-  end
-
-  def handle_event("pause_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.pause_subscription/2, fn _ -> ~t"Subscription paused" end)}
-  end
-
-  def handle_event("resume_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.resume_subscription/2, fn _ -> ~t"Subscription resumed" end)}
-  end
-
-  def handle_event("cancel_subscription", %{"id" => id}, socket) do
-    {:noreply, change_subscription(socket, id, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)}
-  end
-
-  def handle_event("cancel_order", %{"id" => id}, socket) do
-    user = socket.assigns.current_user
-
-    socket =
-      with {:ok, order} <- Orders.get_order_by_id(id, actor: user),
-           {:ok, _order} <- Orders.cancel_order_by_customer(order, actor: user) do
-        put_flash(socket, :info, ~t"Your order is cancelled. A confirmation is on its way to your email.")
-      else
-        {:error, error} ->
-          Logger.info("Order cancel refused: #{inspect(error)}")
-          put_flash(socket, :error, order_cancel_error_message(error))
-      end
-
-    {:noreply, socket |> assign(orders: orders(user)) |> assign_timeline()}
-  end
-
-  def handle_event("edit_subscription", %{"subscription_id" => id} = params, socket) do
-    subscription = Enum.find(socket.assigns.subscriptions, &(&1.id == id))
-
-    edited? =
-      subscription != nil and
-        (params["product_variant_id"] != subscription.product_variant_id or
-           params["interval_weeks"] != to_string(subscription.interval_weeks) or
-           params["delivery_day"] != to_string(delivery_day(subscription)))
-
-    edited =
-      if edited?,
-        do: MapSet.put(socket.assigns.edited_subscriptions, id),
-        else: MapSet.delete(socket.assigns.edited_subscriptions, id)
-
-    {:noreply, assign(socket, edited_subscriptions: edited)}
-  end
-
-  def handle_event("change_subscription", %{"subscription_id" => id} = params, socket) do
-    changes = Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"])
-    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, :product_variant))
-
-    socket =
-      socket
-      |> change_subscription(id, change, &change_confirmation(&1, socket.assigns.locale))
-      |> assign(edited_subscriptions: MapSet.delete(socket.assigns.edited_subscriptions, id))
-
-    {:noreply, socket}
-  end
-
-  def handle_event("toggle_newsletter", params, socket) do
-    user = socket.assigns.current_user
-    opt_in = params["newsletter_opt_in"] == "true"
-
-    case Accounts.update_newsletter_preference(user, opt_in, actor: user) do
-      {:ok, user} ->
-        token = System.unique_integer()
-        Process.send_after(self(), {:clear_newsletter_saved, token}, @saved_visible_ms)
-
-        {:noreply, assign(socket, current_user: user, newsletter_saved?: true, newsletter_saved_token: token)}
-
-      {:error, error} ->
-        Logger.error(inspect(error))
-
-        # Nothing in the form changed server-side, so LiveView would leave the
-        # box ticked. A new form id re-renders it from what was saved.
-        {:noreply,
-         socket
-         |> assign(newsletter_form_id: "#{@newsletter_form_id}-#{System.unique_integer([:positive])}")
-         |> put_flash(:error, ~t"Your newsletter preference couldn't be saved.")}
-    end
-  end
-
-  # Only the most recent save clears the confirmation. Toggling twice inside the
-  # visible window would otherwise let the first timer wipe the "Saved" the
-  # second save has only just put up.
-  @impl true
-  def handle_info({:clear_newsletter_saved, token}, %{assigns: %{newsletter_saved_token: token}} = socket) do
-    {:noreply, assign(socket, newsletter_saved?: false)}
-  end
-
-  def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
 
   # The outcome shows inside the subscription's drawer, which sits above the
   # page's flash while it's open.

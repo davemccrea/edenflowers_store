@@ -6,9 +6,6 @@ defmodule EdenflowersWeb.Cart.Drawer do
     {:ok, assign(socket, assigns)}
   end
 
-  defp checkout_cta(state) when state in [:gift_options, :delivery, :payment], do: ~t"Continue checkout"
-  defp checkout_cta(_), do: ~t"Checkout"
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -70,4 +67,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
     </div>
     """
   end
+
+  defp checkout_cta(state) when state in [:gift_options, :delivery, :payment], do: ~t"Continue checkout"
+  defp checkout_cta(_), do: ~t"Checkout"
 end

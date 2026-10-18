@@ -39,47 +39,6 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     end
   end
 
-  # Only the order's owner subscribes, in mount.
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:placed:" <> _}, socket) do
-    order = Orders.get_order_by_id!(socket.assigns.shown_order.id, authorize?: false)
-    {:noreply, assign_order(socket, order)}
-  end
-
-  # A guest is granted the order their session's cart became (see `InitStore` and
-  # `CheckoutCompleteController`); everyone else goes through the order's read policy.
-  def get_order(id, guest_order_id, _user) when id == guest_order_id,
-    do: Orders.get_order_by_id(id, authorize?: false, load: [:payment_status])
-
-  def get_order(id, _guest_order_id, user), do: Orders.get_order_by_id(id, actor: user, load: [:payment_status])
-
-  defp assign_order(socket, order) do
-    {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)
-    subscription_line = Enum.find(order.line_items, & &1.interval_weeks)
-
-    socket
-    |> assign(:page_title, ~t"Thank you for your order")
-    |> assign(:shown_order, order)
-    |> assign(:paid?, order.state == :placed)
-    |> assign(:first_name, order.customer_first_name)
-    |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
-    |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
-    |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
-  end
-
-  # Each later delivery is priced afresh, so this is today's price for it.
-  defp next_delivery(order, line) do
-    locale = Format.locale()
-
-    date = Date.add(order.fulfillment_date, line.interval_weeks * 7)
-
-    %{
-      date: Format.weekday_date(date, locale),
-      charge_date: Format.weekday_date(Edenflowers.Orders.Subscription.charged_on(date), locale),
-      amount: Format.currency(Decimal.add(line.subtotal, order.fulfillment_fee || 0), locale)
-    }
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -175,5 +134,46 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
       </.container>
     </Layouts.app>
     """
+  end
+
+  # Only the order's owner subscribes, in mount.
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:placed:" <> _}, socket) do
+    order = Orders.get_order_by_id!(socket.assigns.shown_order.id, authorize?: false)
+    {:noreply, assign_order(socket, order)}
+  end
+
+  # A guest is granted the order their session's cart became (see `InitStore` and
+  # `CheckoutCompleteController`); everyone else goes through the order's read policy.
+  def get_order(id, guest_order_id, _user) when id == guest_order_id,
+    do: Orders.get_order_by_id(id, authorize?: false, load: [:payment_status])
+
+  def get_order(id, _guest_order_id, user), do: Orders.get_order_by_id(id, actor: user, load: [:payment_status])
+
+  defp assign_order(socket, order) do
+    {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)
+    subscription_line = Enum.find(order.line_items, & &1.interval_weeks)
+
+    socket
+    |> assign(:page_title, ~t"Thank you for your order")
+    |> assign(:shown_order, order)
+    |> assign(:paid?, order.state == :placed)
+    |> assign(:first_name, order.customer_first_name)
+    |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
+    |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
+    |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
+  end
+
+  # Each later delivery is priced afresh, so this is today's price for it.
+  defp next_delivery(order, line) do
+    locale = Format.locale()
+
+    date = Date.add(order.fulfillment_date, line.interval_weeks * 7)
+
+    %{
+      date: Format.weekday_date(date, locale),
+      charge_date: Format.weekday_date(Edenflowers.Orders.Subscription.charged_on(date), locale),
+      amount: Format.currency(Decimal.add(line.subtotal, order.fulfillment_fee || 0), locale)
+    }
   end
 end

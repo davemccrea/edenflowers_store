@@ -79,23 +79,6 @@ defmodule EdenflowersWeb.Cart.PromoCode do
     """
   end
 
-  attr :code, :string, required: true
-  attr :target, :any, required: true, doc: "the PromoCode component (`@myself` or its DOM id selector)"
-
-  def badge(assigns) do
-    ~H"""
-    <button
-      type="button"
-      phx-click="clear_promo"
-      phx-target={@target}
-      class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
-      data-testid="promo-badge"
-    >
-      {@code} <.icon name="hero-x-mark" class="h-3 w-3" />
-    </button>
-    """
-  end
-
   @impl true
   def handle_event("open_promo", _, socket) do
     {:noreply, assign(socket, open: true)}
@@ -124,6 +107,23 @@ defmodule EdenflowersWeb.Cart.PromoCode do
        form: build_form(order),
        open: false
      )}
+  end
+
+  attr :code, :string, required: true
+  attr :target, :any, required: true, doc: "the PromoCode component (`@myself` or its DOM id selector)"
+
+  def badge(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="clear_promo"
+      phx-target={@target}
+      class="border-base-content/30 text-base-content/70 inline-flex cursor-pointer items-center gap-1 border px-2 py-0.5 text-xs hover:border-base-content hover:text-base-content"
+      data-testid="promo-badge"
+    >
+      {@code} <.icon name="hero-x-mark" class="h-3 w-3" />
+    </button>
+    """
   end
 
   defp build_form(order) do

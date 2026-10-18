@@ -37,11 +37,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # until Stripe settles.
   @locked_while_paying "#cart-drawer, [data-locked-while-paying]"
 
-  defp submit_action_for(:contact_details), do: :submit_contact_details
-  defp submit_action_for(:gift_options), do: :submit_gift_options
-  defp submit_action_for(:delivery), do: :submit_delivery
-  defp submit_action_for(:payment), do: nil
-
   @impl true
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
@@ -379,6 +374,174 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     """
   end
 
+  @impl true
+  def handle_event("validate_form", %{"form" => params}, socket) do
+    form = AshPhoenix.Form.validate(socket.assigns.form, params)
+    {:noreply, assign(socket, form: form)}
+  end
+
+  def handle_event("format_phone_number", %{"value" => typed}, socket) do
+    case PhoneNumber.format(typed) do
+      {:ok, formatted} ->
+        params = Map.put(socket.assigns.form.params, "recipient_phone_number", formatted)
+        {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  # AddressInput keeps its own state, so the parent only learns the typed
+  # address on submit.
+  def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
+    params =
+      case all_params do
+        %{"delivery_address" => address} -> Map.put(params, "delivery_address", address)
+        _ -> params
+      end
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, order} ->
+        next_section_id = next_section_id(socket.assigns.id, order.state)
+
+        {:noreply,
+         socket
+         |> reload_order()
+         |> push_event("focus-element", %{id: next_section_id})}
+
+      {:error, form} ->
+        forward_delivery_address_error(form)
+        focus_first_error()
+        # A rejected date may have just been closed, so refresh the calendar.
+        {:noreply, socket |> reload_order() |> assign(form: form)}
+    end
+  end
+
+  def handle_event("save_form", %{"form" => params}, socket) do
+    submit_form(socket, params)
+  end
+
+  # The cart drawer hides Checkout for these carts; this catches a bouquet
+  # removed mid-checkout, or /checkout typed in directly.
+  def handle_event("pay", _, %{assigns: %{order: %{add_ons_only?: true}}} = socket) do
+    {:noreply,
+     socket
+     |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
+     |> push_navigate(to: ~p"/store")}
+  end
+
+  def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
+    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
+  end
+
+  # Others may have bought the last of a size since it went in the cart.
+  def handle_event("pay", _, socket) do
+    order = Ash.load!(socket.assigns.order, [line_items: [:over_stock?, :product_variant]], actor: actor(socket))
+
+    case Enum.filter(order.line_items, & &1.over_stock?) do
+      [] ->
+        pay(socket)
+
+      lines ->
+        {:noreply,
+         socket
+         |> put_flash(:error, over_stock_message(lines))
+         |> push_event("stripe:ready", %{})}
+    end
+  end
+
+  def handle_event("edit_step", %{"state" => state}, socket) do
+    {state, return_to} = Map.fetch!(@edit_steps, state)
+    return_to.(socket.assigns.order, actor: actor(socket))
+    {:noreply, scroll_to_state(reload_order(socket), state)}
+  end
+
+  def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
+    previous_method = socket.assigns.order.fulfillment_method
+    Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
+    # The action clears the date, as each option has its own calendar; drop
+    # the typed one so it doesn't shadow that.
+    socket = reload_order(socket, drop: ["fulfillment_date"])
+
+    # Switching to pickup unmounts the address field. It remounts with
+    # whatever address the order holds, which may be prefilled.
+    case socket.assigns.order.fulfillment_method do
+      :pickup ->
+        {:noreply, assign(socket, delivery_quote: nil)}
+
+      :delivery when previous_method == :pickup ->
+        {:noreply, assign(socket, delivery_quote: quote_from_order(socket.assigns.order))}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
+    Orders.set_gift!(socket.assigns.order, gift, actor: actor(socket))
+    {:noreply, reload_order(socket)}
+  end
+
+  def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
+    variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
+    Orders.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
+    {:noreply, reload_order(socket)}
+  end
+
+  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
+    Logger.error("Stripe client error for order #{socket.assigns.order.id}: #{message}: #{inspect(details)}")
+
+    {:noreply,
+     put_flash(
+       socket,
+       :error,
+       ~t"Payment is temporarily unavailable. Please refresh the page and try again."
+     )}
+  end
+
+  # The `pay` handler syncs the PaymentIntent amount, so only a switch between
+  # one-off and subscription, which changes card saving, replaces it here.
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
+    order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+    payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
+
+    # A card removed from the cart takes its message with it; drop the typed
+    # value too, or it would reappear if a card is picked again.
+    socket =
+      if has_card?(socket.assigns.order) and not has_card?(order) do
+        assign_forms(socket, order, drop: ["card_message"])
+      else
+        assign(socket, order: order)
+      end
+
+    socket = if payment_mode_changed?, do: maybe_setup_payment(socket, order, actor(socket)), else: socket
+
+    {:noreply, socket}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
+    {:noreply, push_navigate(socket, to: ~p"/")}
+  end
+
+  def handle_info(:focus_first_error, socket) do
+    {:noreply, push_event(socket, "focus-first-error", %{})}
+  end
+
+  def handle_info({:delivery_quoted, quote}, socket) do
+    {:noreply, assign(socket, delivery_quote: quote)}
+  end
+
+  def handle_info({:date_selected, date}, socket) do
+    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
+    {:noreply, assign(socket, form: form)}
+  end
+
+  defp submit_action_for(:contact_details), do: :submit_contact_details
+  defp submit_action_for(:gift_options), do: :submit_gift_options
+  defp submit_action_for(:delivery), do: :submit_delivery
+  defp submit_action_for(:payment), do: nil
+
   attr :order, :map, required: true
   attr :id, :string, required: true
   attr :state, :atom, required: true
@@ -655,169 +818,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     ~t"Up to #{max_length} characters"
   end
 
-  @impl true
-  def handle_event("validate_form", %{"form" => params}, socket) do
-    form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    {:noreply, assign(socket, form: form)}
-  end
-
-  def handle_event("format_phone_number", %{"value" => typed}, socket) do
-    case PhoneNumber.format(typed) do
-      {:ok, formatted} ->
-        params = Map.put(socket.assigns.form.params, "recipient_phone_number", formatted)
-        {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
-
-      :error ->
-        {:noreply, socket}
-    end
-  end
-
-  # AddressInput keeps its own state, so the parent only learns the typed
-  # address on submit.
-  def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
-    params =
-      case all_params do
-        %{"delivery_address" => address} -> Map.put(params, "delivery_address", address)
-        _ -> params
-      end
-
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        next_section_id = next_section_id(socket.assigns.id, order.state)
-
-        {:noreply,
-         socket
-         |> reload_order()
-         |> push_event("focus-element", %{id: next_section_id})}
-
-      {:error, form} ->
-        forward_delivery_address_error(form)
-        focus_first_error()
-        # A rejected date may have just been closed, so refresh the calendar.
-        {:noreply, socket |> reload_order() |> assign(form: form)}
-    end
-  end
-
-  def handle_event("save_form", %{"form" => params}, socket) do
-    submit_form(socket, params)
-  end
-
-  # The cart drawer hides Checkout for these carts; this catches a bouquet
-  # removed mid-checkout, or /checkout typed in directly.
-  def handle_event("pay", _, %{assigns: %{order: %{add_ons_only?: true}}} = socket) do
-    {:noreply,
-     socket
-     |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
-     |> push_navigate(to: ~p"/store")}
-  end
-
-  def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
-    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
-  end
-
-  # Others may have bought the last of a size since it went in the cart.
-  def handle_event("pay", _, socket) do
-    order = Ash.load!(socket.assigns.order, [line_items: [:over_stock?, :product_variant]], actor: actor(socket))
-
-    case Enum.filter(order.line_items, & &1.over_stock?) do
-      [] ->
-        pay(socket)
-
-      lines ->
-        {:noreply,
-         socket
-         |> put_flash(:error, over_stock_message(lines))
-         |> push_event("stripe:ready", %{})}
-    end
-  end
-
-  def handle_event("edit_step", %{"state" => state}, socket) do
-    {state, return_to} = Map.fetch!(@edit_steps, state)
-    return_to.(socket.assigns.order, actor: actor(socket))
-    {:noreply, scroll_to_state(reload_order(socket), state)}
-  end
-
-  def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
-    previous_method = socket.assigns.order.fulfillment_method
-    Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    # The action clears the date, as each option has its own calendar; drop
-    # the typed one so it doesn't shadow that.
-    socket = reload_order(socket, drop: ["fulfillment_date"])
-
-    # Switching to pickup unmounts the address field. It remounts with
-    # whatever address the order holds, which may be prefilled.
-    case socket.assigns.order.fulfillment_method do
-      :pickup ->
-        {:noreply, assign(socket, delivery_quote: nil)}
-
-      :delivery when previous_method == :pickup ->
-        {:noreply, assign(socket, delivery_quote: quote_from_order(socket.assigns.order))}
-
-      _ ->
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("set_gift", %{"form" => %{"gift" => gift}}, socket) do
-    Orders.set_gift!(socket.assigns.order, gift, actor: actor(socket))
-    {:noreply, reload_order(socket)}
-  end
-
-  def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    variant = Enum.find(socket.assigns.card_variants, &(&1.id == variant_id))
-    Orders.add_card!(socket.assigns.order, variant.id, actor: actor(socket))
-    {:noreply, reload_order(socket)}
-  end
-
-  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error("Stripe client error for order #{socket.assigns.order.id}: #{message}: #{inspect(details)}")
-
-    {:noreply,
-     put_flash(
-       socket,
-       :error,
-       ~t"Payment is temporarily unavailable. Please refresh the page and try again."
-     )}
-  end
-
-  # The `pay` handler syncs the PaymentIntent amount, so only a switch between
-  # one-off and subscription, which changes card saving, replaces it here.
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
-    payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
-
-    # A card removed from the cart takes its message with it; drop the typed
-    # value too, or it would reappear if a card is picked again.
-    socket =
-      if has_card?(socket.assigns.order) and not has_card?(order) do
-        assign_forms(socket, order, drop: ["card_message"])
-      else
-        assign(socket, order: order)
-      end
-
-    socket = if payment_mode_changed?, do: maybe_setup_payment(socket, order, actor(socket)), else: socket
-
-    {:noreply, socket}
-  end
-
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/")}
-  end
-
-  def handle_info(:focus_first_error, socket) do
-    {:noreply, push_event(socket, "focus-first-error", %{})}
-  end
-
-  def handle_info({:delivery_quoted, quote}, socket) do
-    {:noreply, assign(socket, delivery_quote: quote)}
-  end
-
-  def handle_info({:date_selected, date}, socket) do
-    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
-    {:noreply, assign(socket, form: form)}
-  end
-
   defp pay(socket) do
     case Payments.update_amount(socket.assigns.order) do
       {:ok, _payment_intent} ->
@@ -1087,6 +1087,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok
+
   defp lock_while_paying(js \\ %JS{}), do: JS.set_attribute(js, {"inert", ""}, to: @locked_while_paying)
 
   defp unlock_after_paying(js), do: JS.remove_attribute(js, "inert", to: @locked_while_paying)

@@ -45,20 +45,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   end
 
   @impl true
-  def handle_event("save_card", _params, socket) do
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
-  end
-
-  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error(
-      "Stripe client error for subscription #{socket.assigns.subscription.id}: #{message}: #{inspect(details)}"
-    )
-
-    {:noreply,
-     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -104,6 +90,20 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
       </.container>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("save_card", _params, socket) do
+    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+  end
+
+  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
+    Logger.error(
+      "Stripe client error for subscription #{socket.assigns.subscription.id}: #{message}: #{inspect(details)}"
+    )
+
+    {:noreply,
+     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
   defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do

@@ -56,353 +56,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     end
   end
 
-  defp load(%{"id" => id}, actor) do
-    case Orders.get_order_for_admin(id, actor: actor, load: [:free_delivery?, line_items: [:subtotal]]) do
-      {:ok, %Order{} = order} -> edit_mode(order)
-      _ -> {:error, ~t"Order not found."}
-    end
-  end
-
-  defp load(_params, _actor), do: {:ok, :new, nil}
-
-  defp edit_mode(%{fulfillment_status: status}) when status != :pending,
-    do: {:error, ~t"This order is no longer open, so it can't be changed."}
-
-  defp edit_mode(order), do: {:ok, :edit, order}
-
-  defp page_title(:new, _order), do: ~t"New custom order"
-  defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
-
-  defp order_form_breadcrumbs(nil), do: [{~t"Orders", ~p"/admin/orders"}]
-
-  defp order_form_breadcrumbs(order) do
-    [
-      {~t"Orders", ~p"/admin/orders"},
-      {order.customer_name || order.order_reference, ~p"/admin/orders/#{order.id}"}
-    ]
-  end
-
-  defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
-  defp back_path(_params), do: ~p"/admin/orders"
-
-  defp build_form(:new, _order, actor) do
-    Order
-    |> AshPhoenix.Form.for_create(:place_custom,
-      actor: actor,
-      params: %{"locale" => "sv-FI", "payment_link?" => "true", "email_customer?" => "true"},
-      transform_params: &transform_params/3
-    )
-    |> to_form()
-  end
-
-  defp build_form(:edit, order, actor) do
-    order
-    |> AshPhoenix.Form.for_update(:edit, actor: actor, transform_params: &transform_params/3)
-    |> to_form()
-  end
-
-  # The browser sends the lines as an index-keyed map; the action takes a list.
-  # Submit runs this again over params it has already transformed.
-  # Removing the last line leaves no line_items key at all, hence the default.
-  defp transform_params(_form, params, _action) do
-    params
-    |> Map.update("line_items", [], &lines_from_params/1)
-    |> Map.update("fulfillment_fee_override", nil, &decimal_comma/1)
-  end
-
-  defp lines_from_params(lines) when is_list(lines), do: lines
-
-  defp lines_from_params(lines) when is_map(lines) do
-    lines
-    |> Enum.sort_by(fn {index, _line} -> String.to_integer(index) end)
-    |> Enum.map(fn {_index, line} -> line end)
-  end
-
-  defp lines_from_params(_lines), do: []
-
-  defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
-  defp decimal_comma(value), do: value
-
-  defp initial_lines(:new, _order, _tax_rates), do: []
-
-  defp initial_lines(:edit, order, tax_rates) do
-    Enum.map(order.line_items, fn
-      %{product_variant_id: nil} = line_item ->
-        %{
-          "kind" => "custom",
-          "description" => line_item.product_name,
-          "unit_price" => Decimal.to_string(line_item.unit_price, :normal),
-          "tax_rate_id" => tax_rate_id_for(tax_rates, line_item.tax_rate),
-          "quantity" => to_string(line_item.quantity)
-        }
-
-      # Kept by id, so it keeps the price it was sold at.
-      line_item ->
-        %{
-          "kind" => "catalogue",
-          "id" => line_item.id,
-          "name" => existing_line_name(line_item),
-          "quantity" => to_string(line_item.quantity)
-        }
-    end)
-  end
-
-  defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
-
-  defp existing_line_name(line_item),
-    do: "#{line_item.product_name} · #{variant_size_label(line_item.variant_size)}"
-
-  # A line stores the percentage it was charged, not the rate it came from.
-  defp tax_rate_id_for(tax_rates, percentage) do
-    Enum.find_value(tax_rates, fn rate -> Decimal.equal?(rate.percentage, percentage) && rate.id end)
-  end
-
-  defp default_tax_rate_id([]), do: nil
-  defp default_tax_rate_id([standard | _]), do: standard.id
-
-  defp tax_rates(nil, actor), do: Pricing.list_selectable_tax_rates!(actor: actor)
-
-  defp tax_rates(order, actor) do
-    selectable = Pricing.list_selectable_tax_rates!(actor: actor)
-
-    used_percentages =
-      for %{product_variant_id: nil, tax_rate: percentage} <- order.line_items,
-          do: percentage
-
-    historical =
-      TaxRate
-      |> Ash.read!(actor: actor)
-      |> Enum.filter(fn rate -> Enum.any?(used_percentages, &Decimal.equal?(&1, rate.percentage)) end)
-
-    Enum.uniq_by(selectable ++ historical, & &1.id)
-  end
-
-  defp variant_options(actor) do
-    ProductVariant
-    |> Ash.Query.load(:product)
-    |> Ash.read!(actor: actor)
-    |> Enum.sort_by(&{&1.product.name, &1.price})
-    |> Enum.map(fn variant ->
-      {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
-       variant.id}
-    end)
-  end
-
-  @impl true
-  def handle_event("validate", %{"form" => params}, socket) do
-    option_before = current_option_id(socket.assigns)
-
-    socket =
-      socket
-      |> assign(:lines, lines_from_params(params["line_items"]))
-      |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
-      |> assign_date_warning()
-
-    if current_option_id(socket.assigns) == option_before do
-      {:noreply, socket}
-    else
-      {:noreply, requote_for_new_option(socket)}
-    end
-  end
-
-  def handle_event("quote_delivery", %{"value" => address}, socket) do
-    {:noreply, quote_delivery(socket, address, current_option_id(socket.assigns))}
-  end
-
-  def handle_event("add_line", %{"kind" => "catalogue"}, socket) do
-    {:noreply, update(socket, :lines, &(&1 ++ [%{"kind" => "catalogue", "quantity" => "1"}]))}
-  end
-
-  def handle_event("add_line", %{"kind" => "custom"}, socket) do
-    line = %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id}
-    {:noreply, update(socket, :lines, &(&1 ++ [line]))}
-  end
-
-  def handle_event("remove_line", %{"index" => index}, socket) do
-    {:noreply, update(socket, :lines, &List.delete_at(&1, String.to_integer(index)))}
-  end
-
-  def handle_event("save", %{"form" => params}, socket) do
-    socket = assign(socket, :lines, lines_from_params(params["line_items"]))
-
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, order} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, saved_message(socket.assigns.mode))
-         |> push_navigate(to: ~p"/admin/orders/#{order.id}")}
-
-      {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, form)
-         |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
-    end
-  end
-
-  # Priced as soon as the address is typed, so Jennie can tell a caller what
-  # delivery costs. Saving prices it again: this quote is only for her to read.
-  defp quote_delivery(socket, address, option_id) do
-    address = String.trim(address || "")
-
-    cond do
-      address == "" or is_nil(option_id) ->
-        assign(socket, :delivery_quote, nil)
-
-      quoted?(socket.assigns.delivery_quote, address, option_id) ->
-        socket
-
-      true ->
-        # A newer lookup with the same name cancels one still in flight.
-        socket
-        |> assign(:delivery_quote, %{status: :loading, address: address, option_id: option_id})
-        |> start_async(:delivery_quote, fn ->
-          {address, option_id, Fulfillment.calculate_delivery(address, option_id, authorize?: false)}
-        end)
-    end
-  end
-
-  defp requote_for_new_option(socket) do
-    if selected_method(socket.assigns.form, socket.assigns.fulfillment_options, socket.assigns.order) == :delivery do
-      quote_delivery(socket, socket.assigns.form[:delivery_address].value, current_option_id(socket.assigns))
-    else
-      assign(socket, :delivery_quote, nil)
-    end
-  end
-
-  defp quoted?(%{address: address, option_id: option_id}, address, option_id), do: true
-  defp quoted?(_quote, _address, _option_id), do: false
-
-  defp current_option_id(%{form: form, order: order}) do
-    form[:fulfillment_option_id].value || (order && order.fulfillment_option_id)
-  end
-
-  @impl true
-  def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: nil} = result}}}, socket) do
-    quote = %{
-      status: :ok,
-      address: address,
-      option_id: option_id,
-      fee: result.fulfillment_fee,
-      in_free_delivery_zone: result.in_free_delivery_zone,
-      distance: result.distance
-    }
-
-    {:noreply, assign(socket, :delivery_quote, quote)}
-  end
-
-  def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: reason}}}}, socket) do
-    quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(reason)}
-    {:noreply, assign(socket, :delivery_quote, quote)}
-  end
-
-  def handle_async(:delivery_quote, {:exit, {:shutdown, :cancel}}, socket), do: {:noreply, socket}
-
-  def handle_async(:delivery_quote, result, socket) do
-    Logger.error("Delivery quote failed: #{inspect(result)}")
-    {address, option_id} = {socket.assigns.delivery_quote.address, socket.assigns.delivery_quote.option_id}
-    quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(:unknown)}
-    {:noreply, assign(socket, :delivery_quote, quote)}
-  end
-
-  # An order already priced by distance can be quoted again without geocoding.
-  defp stored_quote(:edit, %{fulfillment_method: :delivery, distance: distance} = order)
-       when is_integer(distance) do
-    case Fulfillment.get_option_by_id(order.fulfillment_option_id, authorize?: false) do
-      {:ok, option} ->
-        case Fee.calculate(option, distance) do
-          %{error: nil} = fee ->
-            %{
-              status: :ok,
-              address: order.delivery_address,
-              option_id: option.id,
-              fee: fee.fulfillment_fee,
-              in_free_delivery_zone: fee.in_free_delivery_zone,
-              distance: distance
-            }
-
-          _out_of_range ->
-            nil
-        end
-
-      _ ->
-        nil
-    end
-  end
-
-  defp stored_quote(_mode, _order), do: nil
-
-  # ponytail: charged on the lines the order was saved with, not the lines in
-  # the form; saving prices the new lines. Track the form's lines if Jennie misreads it.
-  defp charge(%{status: :ok} = quote, order) do
-    free_delivery? = !!(order && order.free_delivery?)
-    %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.in_free_delivery_zone, free_delivery?)}
-  end
-
-  defp charge(quote, _order), do: quote
-
-  # A quote for an address or option no longer in the form says nothing.
-  defp current_quote(quote, form, option_id) do
-    address = String.trim(form[:delivery_address].value || "")
-    if quoted?(quote, address, option_id), do: quote
-  end
-
-  defp saved_message(:new), do: ~t"Order placed."
-  defp saved_message(_mode), do: ~t"Order updated."
-
-  # Jennie may book a closed day; she is told it is closed, not stopped.
-  defp assign_date_warning(socket) do
-    form = socket.assigns.form
-
-    option_id =
-      form[:fulfillment_option_id].value || (socket.assigns.order && socket.assigns.order.fulfillment_option_id)
-
-    option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == option_id))
-
-    warning =
-      with %{} <- option,
-           {:ok, date} <- parse_date(form[:fulfillment_date].value),
-           reason when reason not in [nil, :past] <-
-             Availability.unavailable_reason(option, date, DateTime.now!("Europe/Helsinki")) do
-        date_warning(reason)
-      else
-        _ -> nil
-      end
-
-    assign(socket, :date_warning, warning)
-  end
-
-  defp parse_date(%Date{} = date), do: {:ok, date}
-  defp parse_date(value) when is_binary(value), do: Date.from_iso8601(value)
-  defp parse_date(_value), do: :error
-
-  defp date_warning(:weekday_disabled), do: ~t"This weekday is normally closed for this option. Booking it anyway."
-  defp date_warning(:date_disabled), do: ~t"You've closed this date in the calendar. Booking it anyway."
-
-  defp date_warning(:same_day_delivery_disabled),
-    do: ~t"Same-day isn't normally offered for this option. Booking it anyway."
-
-  defp date_warning(:order_deadline_passed), do: ~t"Today's order deadline has passed. Booking it anyway."
-
-  defp selected_method(form, fulfillment_options, order) do
-    option_id = form[:fulfillment_option_id].value || (order && order.fulfillment_option_id)
-
-    case Enum.find(fulfillment_options, &(&1.id == option_id)) do
-      %{fulfillment_method: method} -> method
-      nil -> order && order.fulfillment_method
-    end
-  end
-
-  defp locale_options, do: [{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]
-
-  defp payment_options do
-    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
-  end
-
-  defp tax_rate_options(tax_rates) do
-    Enum.map(tax_rates, &{"#{&1.name} (#{Format.percentage(&1.percentage, Format.locale())})", &1.id})
-  end
-
   @impl true
   def render(assigns) do
     assigns =
@@ -603,6 +256,353 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  @impl true
+  def handle_event("validate", %{"form" => params}, socket) do
+    option_before = current_option_id(socket.assigns)
+
+    socket =
+      socket
+      |> assign(:lines, lines_from_params(params["line_items"]))
+      |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
+      |> assign_date_warning()
+
+    if current_option_id(socket.assigns) == option_before do
+      {:noreply, socket}
+    else
+      {:noreply, requote_for_new_option(socket)}
+    end
+  end
+
+  def handle_event("quote_delivery", %{"value" => address}, socket) do
+    {:noreply, quote_delivery(socket, address, current_option_id(socket.assigns))}
+  end
+
+  def handle_event("add_line", %{"kind" => "catalogue"}, socket) do
+    {:noreply, update(socket, :lines, &(&1 ++ [%{"kind" => "catalogue", "quantity" => "1"}]))}
+  end
+
+  def handle_event("add_line", %{"kind" => "custom"}, socket) do
+    line = %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id}
+    {:noreply, update(socket, :lines, &(&1 ++ [line]))}
+  end
+
+  def handle_event("remove_line", %{"index" => index}, socket) do
+    {:noreply, update(socket, :lines, &List.delete_at(&1, String.to_integer(index)))}
+  end
+
+  def handle_event("save", %{"form" => params}, socket) do
+    socket = assign(socket, :lines, lines_from_params(params["line_items"]))
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, order} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, saved_message(socket.assigns.mode))
+         |> push_navigate(to: ~p"/admin/orders/#{order.id}")}
+
+      {:error, form} ->
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
+    end
+  end
+
+  @impl true
+  def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: nil} = result}}}, socket) do
+    quote = %{
+      status: :ok,
+      address: address,
+      option_id: option_id,
+      fee: result.fulfillment_fee,
+      in_free_delivery_zone: result.in_free_delivery_zone,
+      distance: result.distance
+    }
+
+    {:noreply, assign(socket, :delivery_quote, quote)}
+  end
+
+  def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: reason}}}}, socket) do
+    quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(reason)}
+    {:noreply, assign(socket, :delivery_quote, quote)}
+  end
+
+  def handle_async(:delivery_quote, {:exit, {:shutdown, :cancel}}, socket), do: {:noreply, socket}
+
+  def handle_async(:delivery_quote, result, socket) do
+    Logger.error("Delivery quote failed: #{inspect(result)}")
+    {address, option_id} = {socket.assigns.delivery_quote.address, socket.assigns.delivery_quote.option_id}
+    quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(:unknown)}
+    {:noreply, assign(socket, :delivery_quote, quote)}
+  end
+
+  defp load(%{"id" => id}, actor) do
+    case Orders.get_order_for_admin(id, actor: actor, load: [:free_delivery?, line_items: [:subtotal]]) do
+      {:ok, %Order{} = order} -> edit_mode(order)
+      _ -> {:error, ~t"Order not found."}
+    end
+  end
+
+  defp load(_params, _actor), do: {:ok, :new, nil}
+
+  defp edit_mode(%{fulfillment_status: status}) when status != :pending,
+    do: {:error, ~t"This order is no longer open, so it can't be changed."}
+
+  defp edit_mode(order), do: {:ok, :edit, order}
+
+  defp page_title(:new, _order), do: ~t"New custom order"
+  defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
+
+  defp order_form_breadcrumbs(nil), do: [{~t"Orders", ~p"/admin/orders"}]
+
+  defp order_form_breadcrumbs(order) do
+    [
+      {~t"Orders", ~p"/admin/orders"},
+      {order.customer_name || order.order_reference, ~p"/admin/orders/#{order.id}"}
+    ]
+  end
+
+  defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
+  defp back_path(_params), do: ~p"/admin/orders"
+
+  defp build_form(:new, _order, actor) do
+    Order
+    |> AshPhoenix.Form.for_create(:place_custom,
+      actor: actor,
+      params: %{"locale" => "sv-FI", "payment_link?" => "true", "email_customer?" => "true"},
+      transform_params: &transform_params/3
+    )
+    |> to_form()
+  end
+
+  defp build_form(:edit, order, actor) do
+    order
+    |> AshPhoenix.Form.for_update(:edit, actor: actor, transform_params: &transform_params/3)
+    |> to_form()
+  end
+
+  # The browser sends the lines as an index-keyed map; the action takes a list.
+  # Submit runs this again over params it has already transformed.
+  # Removing the last line leaves no line_items key at all, hence the default.
+  defp transform_params(_form, params, _action) do
+    params
+    |> Map.update("line_items", [], &lines_from_params/1)
+    |> Map.update("fulfillment_fee_override", nil, &decimal_comma/1)
+  end
+
+  defp lines_from_params(lines) when is_list(lines), do: lines
+
+  defp lines_from_params(lines) when is_map(lines) do
+    lines
+    |> Enum.sort_by(fn {index, _line} -> String.to_integer(index) end)
+    |> Enum.map(fn {_index, line} -> line end)
+  end
+
+  defp lines_from_params(_lines), do: []
+
+  defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
+  defp decimal_comma(value), do: value
+
+  defp initial_lines(:new, _order, _tax_rates), do: []
+
+  defp initial_lines(:edit, order, tax_rates) do
+    Enum.map(order.line_items, fn
+      %{product_variant_id: nil} = line_item ->
+        %{
+          "kind" => "custom",
+          "description" => line_item.product_name,
+          "unit_price" => Decimal.to_string(line_item.unit_price, :normal),
+          "tax_rate_id" => tax_rate_id_for(tax_rates, line_item.tax_rate),
+          "quantity" => to_string(line_item.quantity)
+        }
+
+      # Kept by id, so it keeps the price it was sold at.
+      line_item ->
+        %{
+          "kind" => "catalogue",
+          "id" => line_item.id,
+          "name" => existing_line_name(line_item),
+          "quantity" => to_string(line_item.quantity)
+        }
+    end)
+  end
+
+  defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
+
+  defp existing_line_name(line_item),
+    do: "#{line_item.product_name} · #{variant_size_label(line_item.variant_size)}"
+
+  # A line stores the percentage it was charged, not the rate it came from.
+  defp tax_rate_id_for(tax_rates, percentage) do
+    Enum.find_value(tax_rates, fn rate -> Decimal.equal?(rate.percentage, percentage) && rate.id end)
+  end
+
+  defp default_tax_rate_id([]), do: nil
+  defp default_tax_rate_id([standard | _]), do: standard.id
+
+  defp tax_rates(nil, actor), do: Pricing.list_selectable_tax_rates!(actor: actor)
+
+  defp tax_rates(order, actor) do
+    selectable = Pricing.list_selectable_tax_rates!(actor: actor)
+
+    used_percentages =
+      for %{product_variant_id: nil, tax_rate: percentage} <- order.line_items,
+          do: percentage
+
+    historical =
+      TaxRate
+      |> Ash.read!(actor: actor)
+      |> Enum.filter(fn rate -> Enum.any?(used_percentages, &Decimal.equal?(&1, rate.percentage)) end)
+
+    Enum.uniq_by(selectable ++ historical, & &1.id)
+  end
+
+  defp variant_options(actor) do
+    ProductVariant
+    |> Ash.Query.load(:product)
+    |> Ash.read!(actor: actor)
+    |> Enum.sort_by(&{&1.product.name, &1.price})
+    |> Enum.map(fn variant ->
+      {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
+       variant.id}
+    end)
+  end
+
+  # Priced as soon as the address is typed, so Jennie can tell a caller what
+  # delivery costs. Saving prices it again: this quote is only for her to read.
+  defp quote_delivery(socket, address, option_id) do
+    address = String.trim(address || "")
+
+    cond do
+      address == "" or is_nil(option_id) ->
+        assign(socket, :delivery_quote, nil)
+
+      quoted?(socket.assigns.delivery_quote, address, option_id) ->
+        socket
+
+      true ->
+        # A newer lookup with the same name cancels one still in flight.
+        socket
+        |> assign(:delivery_quote, %{status: :loading, address: address, option_id: option_id})
+        |> start_async(:delivery_quote, fn ->
+          {address, option_id, Fulfillment.calculate_delivery(address, option_id, authorize?: false)}
+        end)
+    end
+  end
+
+  defp requote_for_new_option(socket) do
+    if selected_method(socket.assigns.form, socket.assigns.fulfillment_options, socket.assigns.order) == :delivery do
+      quote_delivery(socket, socket.assigns.form[:delivery_address].value, current_option_id(socket.assigns))
+    else
+      assign(socket, :delivery_quote, nil)
+    end
+  end
+
+  defp quoted?(%{address: address, option_id: option_id}, address, option_id), do: true
+  defp quoted?(_quote, _address, _option_id), do: false
+
+  defp current_option_id(%{form: form, order: order}) do
+    form[:fulfillment_option_id].value || (order && order.fulfillment_option_id)
+  end
+
+  # An order already priced by distance can be quoted again without geocoding.
+  defp stored_quote(:edit, %{fulfillment_method: :delivery, distance: distance} = order)
+       when is_integer(distance) do
+    case Fulfillment.get_option_by_id(order.fulfillment_option_id, authorize?: false) do
+      {:ok, option} ->
+        case Fee.calculate(option, distance) do
+          %{error: nil} = fee ->
+            %{
+              status: :ok,
+              address: order.delivery_address,
+              option_id: option.id,
+              fee: fee.fulfillment_fee,
+              in_free_delivery_zone: fee.in_free_delivery_zone,
+              distance: distance
+            }
+
+          _out_of_range ->
+            nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  defp stored_quote(_mode, _order), do: nil
+
+  # ponytail: charged on the lines the order was saved with, not the lines in
+  # the form; saving prices the new lines. Track the form's lines if Jennie misreads it.
+  defp charge(%{status: :ok} = quote, order) do
+    free_delivery? = !!(order && order.free_delivery?)
+    %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.in_free_delivery_zone, free_delivery?)}
+  end
+
+  defp charge(quote, _order), do: quote
+
+  # A quote for an address or option no longer in the form says nothing.
+  defp current_quote(quote, form, option_id) do
+    address = String.trim(form[:delivery_address].value || "")
+    if quoted?(quote, address, option_id), do: quote
+  end
+
+  defp saved_message(:new), do: ~t"Order placed."
+  defp saved_message(_mode), do: ~t"Order updated."
+
+  # Jennie may book a closed day; she is told it is closed, not stopped.
+  defp assign_date_warning(socket) do
+    form = socket.assigns.form
+
+    option_id =
+      form[:fulfillment_option_id].value || (socket.assigns.order && socket.assigns.order.fulfillment_option_id)
+
+    option = Enum.find(socket.assigns.fulfillment_options, &(&1.id == option_id))
+
+    warning =
+      with %{} <- option,
+           {:ok, date} <- parse_date(form[:fulfillment_date].value),
+           reason when reason not in [nil, :past] <-
+             Availability.unavailable_reason(option, date, DateTime.now!("Europe/Helsinki")) do
+        date_warning(reason)
+      else
+        _ -> nil
+      end
+
+    assign(socket, :date_warning, warning)
+  end
+
+  defp parse_date(%Date{} = date), do: {:ok, date}
+  defp parse_date(value) when is_binary(value), do: Date.from_iso8601(value)
+  defp parse_date(_value), do: :error
+
+  defp date_warning(:weekday_disabled), do: ~t"This weekday is normally closed for this option. Booking it anyway."
+  defp date_warning(:date_disabled), do: ~t"You've closed this date in the calendar. Booking it anyway."
+
+  defp date_warning(:same_day_delivery_disabled),
+    do: ~t"Same-day isn't normally offered for this option. Booking it anyway."
+
+  defp date_warning(:order_deadline_passed), do: ~t"Today's order deadline has passed. Booking it anyway."
+
+  defp selected_method(form, fulfillment_options, order) do
+    option_id = form[:fulfillment_option_id].value || (order && order.fulfillment_option_id)
+
+    case Enum.find(fulfillment_options, &(&1.id == option_id)) do
+      %{fulfillment_method: method} -> method
+      nil -> order && order.fulfillment_method
+    end
+  end
+
+  defp locale_options, do: [{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]
+
+  defp payment_options do
+    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
+  end
+
+  defp tax_rate_options(tax_rates) do
+    Enum.map(tax_rates, &{"#{&1.name} (#{Format.percentage(&1.percentage, Format.locale())})", &1.id})
   end
 
   attr :quote, :map, default: nil

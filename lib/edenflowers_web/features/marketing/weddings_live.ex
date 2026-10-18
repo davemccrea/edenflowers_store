@@ -38,42 +38,6 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   end
 
   @impl true
-  def handle_event("validate_enquiry", %{"enquiry" => params}, socket) do
-    {:noreply, assign(socket, enquiry_form: build_enquiry_form(params, :validate))}
-  end
-
-  def handle_event("send_enquiry", %{"enquiry" => params}, socket) do
-    items = socket.assigns.personal_flowers ++ socket.assigns.decorations
-    quantities = socket.assigns.quantities
-    estimate = estimate_label(estimate(items, quantities))
-    locale = to_string(Edenflowers.Format.locale())
-
-    case WeddingEnquiry.submit(params, selection_lines(items, quantities), estimate, locale) do
-      :ok ->
-        {:noreply, assign(socket, enquiry_sent?: true)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, enquiry_form: to_form(changeset, as: :enquiry))}
-
-      {:error, _reason} ->
-        {:noreply,
-         put_flash(socket, :error, ~t"Your enquiry couldn't be sent. Please try again, or email me directly.")}
-    end
-  end
-
-  def handle_event("change_quantity", %{"item" => id, "by" => by}, socket) when by in ["1", "-1"] do
-    {:noreply, update_quantity(socket, id, &max(&1 + String.to_integer(by), 0))}
-  end
-
-  defp update_quantity(socket, id, fun) do
-    if Enum.any?(socket.assigns.personal_flowers ++ socket.assigns.decorations, &(&1.id == id)) do
-      update(socket, :quantities, fn quantities -> Map.update(quantities, id, fun.(0), fun) end)
-    else
-      socket
-    end
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -273,6 +237,42 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       </.drawer>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("validate_enquiry", %{"enquiry" => params}, socket) do
+    {:noreply, assign(socket, enquiry_form: build_enquiry_form(params, :validate))}
+  end
+
+  def handle_event("send_enquiry", %{"enquiry" => params}, socket) do
+    items = socket.assigns.personal_flowers ++ socket.assigns.decorations
+    quantities = socket.assigns.quantities
+    estimate = estimate_label(estimate(items, quantities))
+    locale = to_string(Edenflowers.Format.locale())
+
+    case WeddingEnquiry.submit(params, selection_lines(items, quantities), estimate, locale) do
+      :ok ->
+        {:noreply, assign(socket, enquiry_sent?: true)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, enquiry_form: to_form(changeset, as: :enquiry))}
+
+      {:error, _reason} ->
+        {:noreply,
+         put_flash(socket, :error, ~t"Your enquiry couldn't be sent. Please try again, or email me directly.")}
+    end
+  end
+
+  def handle_event("change_quantity", %{"item" => id, "by" => by}, socket) when by in ["1", "-1"] do
+    {:noreply, update_quantity(socket, id, &max(&1 + String.to_integer(by), 0))}
+  end
+
+  defp update_quantity(socket, id, fun) do
+    if Enum.any?(socket.assigns.personal_flowers ++ socket.assigns.decorations, &(&1.id == id)) do
+      update(socket, :quantities, fn quantities -> Map.update(quantities, id, fun.(0), fun) end)
+    else
+      socket
+    end
   end
 
   # width/height are the dimensions PhotoSwipe opens the photo at, and the

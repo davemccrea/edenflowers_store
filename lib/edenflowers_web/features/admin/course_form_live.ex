@@ -37,54 +37,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     end
   end
 
-  defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Course, id, actor: actor) do
-      {:ok, course} ->
-        form = AshPhoenix.Form.for_update(course, :update, actor: actor) |> TranslationFields.add_forms()
-        {:ok, course.name, to_form(form)}
-
-      {:error, _} ->
-        :error
-    end
-  end
-
-  defp load_form(_params, actor) do
-    form = AshPhoenix.Form.for_create(Course, :create, actor: actor) |> TranslationFields.add_forms()
-    {:ok, ~t"New course", to_form(form)}
-  end
-
-  @impl true
-  def handle_event("validate", %{"form" => params}, socket) do
-    params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
-  end
-
-  def handle_event("translate", %{"from" => from}, socket),
-    do: {:noreply, TranslationFields.translate(socket, from)}
-
-  def handle_event("save", %{"form" => params}, socket) do
-    socket = PhotoUpload.store_uploads(socket, @photo_fields)
-    params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
-
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _course} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, ~t"Course saved.")
-         |> push_navigate(to: ~p"/admin/courses")}
-
-      {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, form)
-         |> put_flash(:error, ~t"The course wasn't saved. Check the fields marked below.")}
-    end
-  end
-
-  @impl true
-  def handle_async(:translate, result, socket),
-    do: {:noreply, TranslationFields.put_translations(socket, result)}
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -192,5 +144,53 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  @impl true
+  def handle_event("validate", %{"form" => params}, socket) do
+    params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
+  end
+
+  def handle_event("translate", %{"from" => from}, socket),
+    do: {:noreply, TranslationFields.translate(socket, from)}
+
+  def handle_event("save", %{"form" => params}, socket) do
+    socket = PhotoUpload.store_uploads(socket, @photo_fields)
+    params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, _course} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, ~t"Course saved.")
+         |> push_navigate(to: ~p"/admin/courses")}
+
+      {:error, form} ->
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The course wasn't saved. Check the fields marked below.")}
+    end
+  end
+
+  @impl true
+  def handle_async(:translate, result, socket),
+    do: {:noreply, TranslationFields.put_translations(socket, result)}
+
+  defp load_form(%{"id" => id}, actor) do
+    case Ash.get(Course, id, actor: actor) do
+      {:ok, course} ->
+        form = AshPhoenix.Form.for_update(course, :update, actor: actor) |> TranslationFields.add_forms()
+        {:ok, course.name, to_form(form)}
+
+      {:error, _} ->
+        :error
+    end
+  end
+
+  defp load_form(_params, actor) do
+    form = AshPhoenix.Form.for_create(Course, :create, actor: actor) |> TranslationFields.add_forms()
+    {:ok, ~t"New course", to_form(form)}
   end
 end

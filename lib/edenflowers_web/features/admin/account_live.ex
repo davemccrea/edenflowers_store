@@ -23,44 +23,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   end
 
   @impl true
-  def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
-
-  def handle_event("push_subscribed", params, socket),
-    do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
-
-  def handle_event("push_unsubscribed", params, socket),
-    do: {:reply, PushSubscriptions.unsubscribe(params, socket.assigns.current_user), socket}
-
-  def handle_event("remove_avatar", _params, socket) do
-    user = socket.assigns.current_user
-
-    case Ash.update(user, %{}, action: :remove_avatar, actor: user) do
-      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
-      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
-    end
-  end
-
-  defp handle_avatar_progress(:avatar, %{done?: false}, socket), do: {:noreply, socket}
-
-  defp handle_avatar_progress(:avatar, entry, socket) do
-    user = socket.assigns.current_user
-
-    # Content type comes from the extension, which allow_upload has already
-    # checked against the accept list; the client-reported type is untrusted.
-    result =
-      consume_uploaded_entry(socket, entry, fn %{path: path} ->
-        params = %{avatar: File.read!(path), avatar_content_type: MIME.from_path(entry.client_name)}
-        {:ok, Ash.update(user, params, action: :update_avatar, actor: user)}
-      end)
-
-    case result do
-      # A full reload so the browser refetches the image at the unchanged URL.
-      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
-      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
-    end
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -152,6 +114,44 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  @impl true
+  def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
+
+  def handle_event("push_subscribed", params, socket),
+    do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
+
+  def handle_event("push_unsubscribed", params, socket),
+    do: {:reply, PushSubscriptions.unsubscribe(params, socket.assigns.current_user), socket}
+
+  def handle_event("remove_avatar", _params, socket) do
+    user = socket.assigns.current_user
+
+    case Ash.update(user, %{}, action: :remove_avatar, actor: user) do
+      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
+    end
+  end
+
+  defp handle_avatar_progress(:avatar, %{done?: false}, socket), do: {:noreply, socket}
+
+  defp handle_avatar_progress(:avatar, entry, socket) do
+    user = socket.assigns.current_user
+
+    # Content type comes from the extension, which allow_upload has already
+    # checked against the accept list; the client-reported type is untrusted.
+    result =
+      consume_uploaded_entry(socket, entry, fn %{path: path} ->
+        params = %{avatar: File.read!(path), avatar_content_type: MIME.from_path(entry.client_name)}
+        {:ok, Ash.update(user, params, action: :update_avatar, actor: user)}
+      end)
+
+    case result do
+      # A full reload so the browser refetches the image at the unchanged URL.
+      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
+    end
   end
 
   attr :vapid_public_key, :string, required: true

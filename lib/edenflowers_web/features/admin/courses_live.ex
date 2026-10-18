@@ -28,6 +28,38 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   def handle_params(params, _uri, socket), do: {:noreply, assign(socket, :highlighted_booking_id, params["booking"])}
 
   @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page>
+        <.admin_page_header title={~t"Courses"}>
+          <:actions>
+            <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">
+              <.icon name="hero-plus" class="h-4 w-4" />
+              {~t"New course"}
+            </.button>
+          </:actions>
+        </.admin_page_header>
+
+        <p :if={@courses == []} class="text-base-content/65 py-6 text-center text-sm">
+          {~t"No upcoming courses"}
+        </p>
+
+        <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+          <.course
+            :for={course <- @courses}
+            course={course}
+            locale={@locale}
+            booking_form={if @booking_course_id == course.id, do: @booking_form}
+            highlighted_booking_id={@highlighted_booking_id}
+          />
+        </div>
+      </.admin_page>
+    </Layouts.admin>
+    """
+  end
+
+  @impl true
   def handle_event("new_booking", %{"course-id" => course_id}, socket) do
     form =
       AshPhoenix.Form.for_create(CourseRegistration, :add_manually,
@@ -201,38 +233,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       )
 
     assign(socket, :courses, courses)
-  end
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
-      <.admin_page>
-        <.admin_page_header title={~t"Courses"}>
-          <:actions>
-            <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">
-              <.icon name="hero-plus" class="h-4 w-4" />
-              {~t"New course"}
-            </.button>
-          </:actions>
-        </.admin_page_header>
-
-        <p :if={@courses == []} class="text-base-content/65 py-6 text-center text-sm">
-          {~t"No upcoming courses"}
-        </p>
-
-        <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-          <.course
-            :for={course <- @courses}
-            course={course}
-            locale={@locale}
-            booking_form={if @booking_course_id == course.id, do: @booking_form}
-            highlighted_booking_id={@highlighted_booking_id}
-          />
-        </div>
-      </.admin_page>
-    </Layouts.admin>
-    """
   end
 
   attr :course, :map, required: true

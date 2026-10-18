@@ -31,10 +31,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
-    do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -140,6 +136,10 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
 
   defp overdue?(%{fulfillment_status: :pending, fulfillment_date: %Date{} = date}, today),
     do: Date.before?(date, today)

@@ -50,40 +50,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
   end
 
   @impl true
-  def handle_event("pay", _params, socket) do
-    with {:ok, registration} <- load_registration(socket.assigns.token),
-         true <- registration.payment_link_open?,
-         true <- registration.payment_intent_id == socket.assigns.registration.payment_intent_id,
-         :ok <- sync_amount(registration) do
-      {:noreply,
-       socket
-       |> assign(:registration, translate_course(registration))
-       |> push_event("stripe:process_payment", %{})}
-    else
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, ~t"The booking changed. Please try again.")
-         |> push_navigate(to: ~p"/courses/pay/#{socket.assigns.token}")}
-    end
-  end
-
-  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error(
-      "Stripe client error for course registration #{socket.assigns.registration.id}: #{message}: #{inspect(details)}"
-    )
-
-    {:noreply,
-     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
-  end
-
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket) do
-    {:ok, registration} = load_registration(socket.assigns.token)
-    {:noreply, socket |> assign(:registration, translate_course(registration)) |> assign(:client_secret, nil)}
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -167,6 +133,40 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
       </.container>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("pay", _params, socket) do
+    with {:ok, registration} <- load_registration(socket.assigns.token),
+         true <- registration.payment_link_open?,
+         true <- registration.payment_intent_id == socket.assigns.registration.payment_intent_id,
+         :ok <- sync_amount(registration) do
+      {:noreply,
+       socket
+       |> assign(:registration, translate_course(registration))
+       |> push_event("stripe:process_payment", %{})}
+    else
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"The booking changed. Please try again.")
+         |> push_navigate(to: ~p"/courses/pay/#{socket.assigns.token}")}
+    end
+  end
+
+  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
+    Logger.error(
+      "Stripe client error for course registration #{socket.assigns.registration.id}: #{message}: #{inspect(details)}"
+    )
+
+    {:noreply,
+     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket) do
+    {:ok, registration} = load_registration(socket.assigns.token)
+    {:noreply, socket |> assign(:registration, translate_course(registration)) |> assign(:client_secret, nil)}
   end
 
   defp load_registration(token), do: Courses.get_registration_by_payment_link_token(token, actor: system_actor())
