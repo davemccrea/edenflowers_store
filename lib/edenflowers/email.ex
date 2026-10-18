@@ -122,6 +122,20 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  def order_left_at_door(order, photo_jpeg) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(from_address())
+      |> subject(~t"Your Eden Flowers order #{order.order_reference} was left for you")
+      |> text_body(Templates.order_left_at_door(%{order: order}))
+      |> attachment(
+        Swoosh.Attachment.new({:data, photo_jpeg}, filename: "eden-flowers-delivery.jpg", content_type: "image/jpeg")
+      )
+    end)
+  end
+
   def order_cancelled(order, refunded_amount) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()

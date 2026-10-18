@@ -1,9 +1,10 @@
 ---
 id: TASK-47
 title: Photograph a delivery left when the customer wasn't home
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 19:10'
 labels:
   - spec
   - admin

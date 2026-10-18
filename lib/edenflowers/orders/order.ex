@@ -846,6 +846,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     update :mark_fulfilled do
+      accept [:delivery_photo_slug, :email_delivery_photo]
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
       change run_oban_trigger(:send_delivered_email)
@@ -1052,6 +1053,10 @@ defmodule Edenflowers.Orders.Order do
     attribute :receipt_emailed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
     attribute :delivered_emailed_at, :utc_datetime
+    # Where Jennie left a delivery nobody answered the door for.
+    attribute :delivery_photo_slug, :string
+    # Sends the photo in place of the delivered email.
+    attribute :email_delivery_photo, :boolean, allow_nil?: false, default: false
     # The order details a custom order's customer is sent when it is placed.
     attribute :details_emailed_at, :utc_datetime
 

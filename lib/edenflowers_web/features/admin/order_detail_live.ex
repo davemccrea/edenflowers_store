@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   require Logger
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
@@ -12,9 +13,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.PhoneNumber
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
+  alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+
+  @photo_field "delivery[photo]"
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -26,6 +30,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign_order(order)
+         |> assign(:delivery_form, nil)
+         |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
       _ ->
@@ -84,7 +90,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </:subtitle>
           <:actions>
             <.button
-              :if={@order.fulfillment_status == :pending}
+              :if={@order.fulfillment_status == :pending and @order.fulfillment_method == :delivery}
+              type="button"
+              phx-click="confirm_delivery"
+              variant="primary"
+              size="sm"
+            >
+              {~t"Mark as delivered"}
+            </.button>
+            <.button
+              :if={@order.fulfillment_status == :pending and @order.fulfillment_method != :delivery}
               type="button"
               phx-click="mark_fulfilled"
               data-confirm={
@@ -114,6 +129,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
+            <.confirm_delivery
+              :if={@delivery_form && @order.fulfillment_status == :pending}
+              form={@delivery_form}
+              order={@order}
+              uploads={@uploads}
+            />
+
             <.widget id="order-fulfillment-summary" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
@@ -161,6 +183,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">{@order.delivery_instructions}</p>
                 </div>
               </div>
+
+              <figure :if={@order.delivery_photo_slug} id="order-delivery-photo" class="mt-5">
+                <figcaption class="text-base-content/65 mb-2 text-sm">
+                  {~t"Nobody was home. The flowers were left here."}
+                </figcaption>
+                <.image
+                  src={@order.delivery_photo_slug}
+                  alt={~t"Where the flowers were left"}
+                  width={640}
+                  height={800}
+                  crop_type="fit"
+                  class="max-w-60 h-auto w-full"
+                />
+              </figure>
             </.widget>
 
             <.widget id="order-items" title={~t"To make"}>
@@ -329,18 +365,83 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  @impl true
-  def handle_event("mark_fulfilled", _params, socket) do
-    case Orders.mark_order_fulfilled(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply,
-         socket
-         |> assign_order(reload(order, socket))
-         |> put_flash(:info, ~t"Order marked as fulfilled.")}
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :order, Order, required: true
+  attr :uploads, :map, required: true
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
+  defp confirm_delivery(assigns) do
+    ~H"""
+    <.widget id="confirm-delivery" title={~t"Confirm delivery"} class="border-primary/40 border">
+      <.form
+        for={@form}
+        id="confirm-delivery-form"
+        phx-change="validate_delivery"
+        phx-submit="mark_fulfilled"
+        class="space-y-5"
+      >
+        <.input
+          :let={option}
+          field={@form[:customer_home]}
+          type="radio-card"
+          label={~t"Was the customer home?"}
+          options={[%{name: ~t"Yes", value: "true"}, %{name: ~t"No", value: "false"}]}
+        >
+          {option.name}
+        </.input>
+        <div :if={@form[:customer_home].value == "false"} class="space-y-4">
+          <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the flowers"} />
+          <.input
+            :if={@order.customer_email}
+            field={@form[:email_photo]}
+            type="checkbox"
+            label={~t"Email the photo to the customer"}
+          />
+        </div>
+        <p :if={@order.unpaid?} class="text-warning-content text-sm font-semibold">
+          {~t"This order is still unpaid."}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <.button type="submit" variant="primary" size="sm" disabled={@form[:customer_home].value not in ["true", "false"]}>
+            {~t"Mark as delivered"}
+          </.button>
+          <.button type="button" phx-click="cancel_confirm_delivery" variant="ghost" size="sm">{~t"Cancel"}</.button>
+        </div>
+      </.form>
+    </.widget>
+    """
+  end
+
+  @impl true
+  def handle_event("confirm_delivery", _params, socket) do
+    {:noreply, assign(socket, :delivery_form, to_form(%{"email_photo" => "true"}, as: :delivery))}
+  end
+
+  def handle_event("cancel_confirm_delivery", _params, socket) do
+    {:noreply, socket |> PhotoUpload.forget([@photo_field]) |> assign(:delivery_form, nil)}
+  end
+
+  def handle_event("validate_delivery", %{"delivery" => params}, socket) do
+    {:noreply, assign(socket, :delivery_form, to_form(params, as: :delivery))}
+  end
+
+  def handle_event("mark_fulfilled", %{"delivery" => %{"customer_home" => "true"}}, socket) do
+    mark_fulfilled(socket, %{})
+  end
+
+  def handle_event("mark_fulfilled", %{"delivery" => %{"customer_home" => "false"} = params}, socket) do
+    socket = PhotoUpload.store_uploads(socket, [@photo_field], private: true)
+
+    case socket.assigns.photo_slugs[@photo_field] do
+      nil ->
+        {:noreply, put_flash(socket, :error, ~t"Take a photo of where you left the flowers.")}
+
+      slug ->
+        mark_fulfilled(socket, %{delivery_photo_slug: slug, email_delivery_photo: params["email_photo"] == "true"})
     end
+  end
+
+  def handle_event("mark_fulfilled", _params, socket) do
+    mark_fulfilled(socket, %{})
   end
 
   def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
@@ -450,6 +551,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp flash_payment_result(socket, {:error, message}), do: put_flash(socket, :error, message)
+
+  defp mark_fulfilled(socket, attrs) do
+    case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply,
+         socket
+         |> assign_order(reload(order, socket))
+         |> assign(:delivery_form, nil)
+         |> put_flash(:info, ~t"Order marked as fulfilled.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
+    end
+  end
 
   defp assign_order(socket, order) do
     payments = payments(order)
