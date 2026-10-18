@@ -1,13 +1,14 @@
 ---
 id: TASK-27
-title: Snapshot an order's promotion as one embedded value
-status: needs-triage
+title: Share one list of an order's promotion fields
+status: done
 assignee: []
 created_date: '2026-10-18 11:35'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 17:42'
 labels:
   - spec
   - developers
+  - quick
 dependencies: []
 priority: low
 type: refactor
@@ -17,19 +18,11 @@ ordinal: 82000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-An order keeps its promotion's terms as one embedded value, so setting or clearing a promotion is one attribute
+An order's promotion fields are listed in one place, so clearing a promotion can't leave half of one behind
 
-**Why:** Every place that sets or clears an order's promotion has to list five attributes, and missing one leaves an order with half a promotion.
+**Why:** `clear_promotion` and `ResetCheckout` each listed all five promotion attributes, and missing one in either leaves an order with half a promotion.
 
-### Problem
+### Decision
 
-An order copies its promotion into five attributes (`promotion_id`, `discount_rate`, `promotion_name`, `promotion_code`, `promotion_minimum_cart_total`), so the receipt keeps the terms the order was placed under. Every place that sets or clears the promotion has to list all five: `clear_promotion`, `ApplyPromotion`, `ResetCheckout`, and anything reading them.
-
-### The idea
-
-One embedded `promotion_snapshot` (an `Ash.Resource` embedded type with name, code, rate and minimum), next to `promotion_id`. Setting and clearing become one attribute, and the snapshot's shape is defined in one place.
-
-### To decide
-
-- Is the migration worth it for five fields? It needs a data migration of existing orders, and every expression reading `discount_rate` (`promotion_applied?` on the order, the line discount in `LineItem` at `order.discount_rate`) has to read the embedded field, which Ash expressions handle less comfortably than a column.
+The embedded `promotion_snapshot` idea was dropped: only three places write these fields, and it would need a data migration plus reaching into an embedded map from the `discount_rate` expressions in `Order` and `LineItem`. Instead `Changes.ClearPromotionFields` holds the list (like `ClearDeliveryFields`), used by `clear_promotion` and `ResetCheckout`. `ApplyPromotion` still sets each field explicitly, as it copies each one from the promotion.
 <!-- SECTION:DESCRIPTION:END -->
