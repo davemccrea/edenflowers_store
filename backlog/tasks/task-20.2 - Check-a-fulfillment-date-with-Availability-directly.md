@@ -1,10 +1,10 @@
 ---
 id: TASK-20.2
 title: Check a fulfillment date with Availability directly
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 06:22'
 labels:
   - quick
 dependencies: []
@@ -30,7 +30,13 @@ ordinal: 69000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `grep -r fulfill_on_date lib test` finds nothing
-- [ ] #2 The checkout `submit_delivery` date tests pass unchanged
-- [ ] #3 The existing suite passes
+- [x] #1 `grep -r fulfill_on_date lib test` finds nothing
+- [x] #2 The checkout `submit_delivery` date tests pass unchanged
+- [x] #3 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The Helsinki-normalisation test was dropped, not moved: the validator now takes DateTime.now!("Europe/Helsinki") itself, so there is no passed-in now to shift. availability_test.exs already covers the past and bookable cases.
+<!-- SECTION:NOTES:END -->
