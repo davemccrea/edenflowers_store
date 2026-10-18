@@ -234,6 +234,33 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert {calendar.same_day, calendar.order_deadline} == {true, ~T[12:00:00]}
     end
 
+    test "saving keeps calendar edits made since the page loaded", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      view
+      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
+      |> render_click()
+
+      drain(view)
+
+      view
+      |> form("#same-day-form", %{"same_day" => %{"same_day" => "true", "order_deadline" => "12:00"}})
+      |> render_submit()
+
+      assert render(view) =~ ~s(aria-label="Toggle Monday, closed")
+
+      view
+      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="tuesday"]|)
+      |> render_click()
+
+      drain(view)
+
+      calendar = Fulfillment.get_shop_calendar!()
+      refute :monday in calendar.available_days
+      refute :tuesday in calendar.available_days
+      assert calendar.same_day
+    end
+
     test "turning same-day on needs a deadline", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 

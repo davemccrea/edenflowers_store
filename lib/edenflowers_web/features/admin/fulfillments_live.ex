@@ -118,8 +118,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     {:noreply, assign(socket, :same_day_form, AshPhoenix.Form.validate(socket.assigns.same_day_form, params))}
   end
 
+  # Submitted against the current calendar, not the one the form was built
+  # from, so the saved record doesn't undo calendar clicks made since.
   def handle_event("save-same-day", %{"same_day" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.same_day_form, params: params) do
+    form = same_day_form(socket.assigns.calendar, socket.assigns.current_user)
+
+    case AshPhoenix.Form.submit(form, params: params) do
       {:ok, calendar} ->
         {:noreply,
          socket
@@ -311,14 +315,15 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   defp assign_calendar(socket, calendar) do
-    same_day_form =
-      calendar
-      |> AshPhoenix.Form.for_update(:update_same_day, actor: socket.assigns.current_user, as: "same_day")
-      |> to_form()
-
     socket
     |> assign(:calendar, calendar)
-    |> assign(:same_day_form, same_day_form)
+    |> assign(:same_day_form, same_day_form(calendar, socket.assigns.current_user))
+  end
+
+  defp same_day_form(calendar, actor) do
+    calendar
+    |> AshPhoenix.Form.for_update(:update_same_day, actor: actor, as: "same_day")
+    |> to_form()
   end
 
   # Leaves the same-day form alone, so a click on the calendar keeps its unsaved edits.
