@@ -7,9 +7,15 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   alias Edenflowers.Accounting.MonthlyReport
   alias Edenflowers.Expenses
   alias Edenflowers.External.PapraAPI
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders.VatRow
 
   setup :verify_on_exit!
+
+  setup do
+    stub(StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:ok, %{data: [], has_more: false}} end)
+    :ok
+  end
 
   # A 25.5% product for 80.00 and a 13.5% delivery fee of 5.00.
   @two_rates [
@@ -229,6 +235,73 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     expect(PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, {:papra_http_error, 500}} end)
 
     assert {:error, _} = MonthlyReport.build(2026, 9)
+  end
+
+  test "the Stripe sheet lists the month's balance transactions across every page" do
+    # Helsinki midnight on 1 September and 1 October 2026.
+    from = DateTime.to_unix(~U[2026-08-31 21:00:00Z])
+    until = DateTime.to_unix(~U[2026-09-30 21:00:00Z])
+
+    first_page = [
+      transaction("txn_3", "payout", ~U[2026-09-20 06:00:00Z], -16_000, 0, "po_1", "STRIPE PAYOUT"),
+      transaction("txn_2", "refund", ~U[2026-09-10 06:00:00Z], -2_000, 0, "re_1", "Refund for 1001")
+    ]
+
+    second_page = [
+      transaction("txn_1", "charge", ~U[2026-09-02 06:00:00Z], 8_355, 145, "ch_1", "Order 1001"),
+      transaction("txn_4", "stripe_fee", ~U[2026-08-31 21:30:00Z], -200, 0, "fee_1", "Radar"),
+      transaction("txn_5", "adjustment", ~U[2026-09-15 06:00:00Z], 300, 0, "adj_1", nil)
+    ]
+
+    expect(StripeAPI.Mock, :list_balance_transactions_page, fn %{gte: ^from, lt: ^until}, nil ->
+      {:ok, %{data: first_page, has_more: true}}
+    end)
+
+    expect(StripeAPI.Mock, :list_balance_transactions_page, fn %{gte: ^from, lt: ^until}, "txn_2" ->
+      {:ok, %{data: second_page, has_more: false}}
+    end)
+
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(3)
+
+    assert headings == ["Datum", "Typ", "Beskrivning", "Brutto", "Avgift", "Netto", "Utbetalnings-id"]
+
+    {transactions, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
+
+    assert Enum.map(transactions, &Enum.drop(&1, 1)) == [
+             ["Avgift", "Radar", "-2.0", "0.0", "-2.0"],
+             ["Debitering", "Order 1001", "85.0", "1.45", "83.55"],
+             ["Återbetalning", "Refund for 1001", "-20.0", "0.0", "-20.0"],
+             ["Justering", nil, "3.0", "0.0", "3.0"],
+             ["Utbetalning", "STRIPE PAYOUT", "-160.0", "0.0", "-160.0", "po_1"]
+           ]
+
+    assert hd(hd(transactions)) == excel_date(~D[2026-09-01])
+
+    # Fees are the charge's 1.45 and the 2.00 Radar fee; paid out is the one payout.
+    assert totals == [
+             [nil, nil, "Avgifter totalt", nil, "3.45"],
+             [nil, nil, "Utbetalt till bank", nil, nil, "160.0"]
+           ]
+  end
+
+  test "fails when Stripe can't be reached" do
+    expect(StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
+
+    assert {:error, :timeout} = MonthlyReport.build(2026, 9)
+  end
+
+  defp transaction(id, type, created, net, fee, source, description) do
+    %{
+      id: id,
+      type: type,
+      created: DateTime.to_unix(created),
+      amount: net + fee,
+      fee: fee,
+      net: net,
+      source: source,
+      description: description
+    }
   end
 
   defp split(amount, breakdown) do

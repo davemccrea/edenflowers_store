@@ -187,10 +187,23 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
         {:ok, %{body: "%PDF", content_type: "application/pdf"}}
       end)
 
+      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, nil ->
+        {:ok, %{data: [], has_more: false}}
+      end)
+
       conn = get(conn, ~p"/admin/accounting?month=2026-09")
 
       assert response_content_type(conn, :zip) =~ "application/zip"
       assert get_resp_header(conn, "content-disposition") == [~s(attachment; filename="redovisning-2026-09.zip")]
+    end
+
+    test "flashes an error and sends nothing when Stripe can't be reached", %{conn: conn} do
+      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
+
+      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+
+      assert redirected_to(conn) == ~p"/admin/expenses"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
     end
 
     test "flashes an error and sends nothing when a receipt can't be fetched", %{conn: conn} do
