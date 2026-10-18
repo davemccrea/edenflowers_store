@@ -778,7 +778,7 @@ jennie =
 custom_line = fn description, unit_price ->
   %{
     "kind" => "custom",
-    "description" => description,
+    "product_name" => description,
     "unit_price" => unit_price,
     "tax_rate_id" => tax_rate.id,
     "quantity" => "1"
@@ -847,7 +847,7 @@ erik =
   |> Ash.Query.load(:line_items)
   |> Ash.read_one!(authorize?: false)
 
-kept_lines = Enum.map(erik.line_items, &%{"kind" => "catalogue", "id" => &1.id, "quantity" => to_string(&1.quantity)})
+kept_lines = Enum.map(erik.line_items, &%{"id" => &1.id, "quantity" => to_string(&1.quantity)})
 
 Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant", :small, 1)]}, actor: jennie)
 Orders.open_payment_link!(erik, actor: jennie)
@@ -888,7 +888,7 @@ Orders.edit_order!(
   part_paid,
   %{
     line_items: [
-      %{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"},
+      %{"id" => bouquet.id, "quantity" => "1"},
       custom_line.("Vase, hand-thrown", "35.00")
     ]
   },
@@ -922,9 +922,7 @@ Orders.cancel_order!(online_order.("Oskar Wikström"), actor: jennie)
 nora = online_order.("Nora Back")
 [bouquet | _] = Enum.filter(nora.line_items, &(&1.product_name == "Bouquet 1"))
 
-Orders.edit_order!(nora, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
-  actor: jennie
-)
+Orders.edit_order!(nora, %{line_items: [%{"id" => bouquet.id, "quantity" => "1"}]}, actor: jennie)
 
 # Paid in cash, then the gift wrap was left off: money to hand back in person.
 cash =
@@ -940,9 +938,7 @@ cash = Orders.get_order_for_admin!(cash.id, actor: jennie, load: [:line_items])
 [bouquet | _] = Enum.filter(cash.line_items, &(&1.product_variant_id != nil))
 cash = Orders.record_payment!(cash, cash.balance, :cash, actor: jennie)
 
-Orders.edit_order!(cash, %{line_items: [%{"kind" => "catalogue", "id" => bouquet.id, "quantity" => "1"}]},
-  actor: jennie
-)
+Orders.edit_order!(cash, %{line_items: [%{"id" => bouquet.id, "quantity" => "1"}]}, actor: jennie)
 
 # A free replacement for a returning customer whose first bouquet wilted.
 place_custom.(%{

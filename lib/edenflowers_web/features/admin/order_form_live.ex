@@ -632,7 +632,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp order_line(%{line: %{source: %{type: :update}}} = assigns) do
     ~H"""
     <.line_row line={@line}>
-      <div class="flex min-w-0 flex-1 basis-64 flex-col text-sm">
+      <div class="flex min-w-0 flex-1 basis-64 flex-col">
         <span class="mb-1">{~t"Product"}</span>
         <p class="flex h-10 items-center text-base font-medium">{existing_line_name(@line.data)}</p>
       </div>
@@ -703,12 +703,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     ~H"""
     <fieldset class="border-base-content/12 border p-3" data-testid="order-line">
       <legend class="text-base-content/65 px-1 text-xs">{~t"Item #{number = @line.index + 1}"}</legend>
-      <div class="flex flex-wrap items-end gap-3">
+      <%!-- Top-aligned so an error under one field leaves the others in line. --%>
+      <div class="flex flex-wrap items-start gap-3">
         {render_slot(@inner_block)}
         <.icon_button
           phx-click="remove_line"
           phx-value-path={@line.name}
-          class="text-error size-10"
+          class="text-error size-10 mt-7"
           aria_label={~t"Remove item #{number = @line.index + 1}"}
         >
           <.icon name="hero-trash" class="h-4 w-4" />
