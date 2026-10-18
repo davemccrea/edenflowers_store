@@ -1,10 +1,10 @@
 ---
 id: TASK-21.2
 title: Apply the conventions Credo can't check
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-18 04:05'
-updated_date: '2026-10-18 06:55'
+updated_date: '2026-10-18 06:59'
 labels: []
 dependencies:
   - TASK-21.1
@@ -36,7 +36,13 @@ Split into several commits by item so each diff is reviewable; moving functions 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each item above holds across `lib/`
-- [ ] #2 `mix precommit` passes
-- [ ] #3 No behaviour change; the existing suite passes
+- [x] #1 Each item above holds across `lib/`
+- [x] #2 `mix precommit` passes
+- [x] #3 No behaviour change; the existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Clashing aliases use as: (PaymentChanges, PaymentValidations, AccountCalculations). Most attributes in item 5 were already in place after TASK-21.1; the remaining ones sat after on_mount, which now follows them. expense_import.ex keeps its single full system_actor() call.
+<!-- SECTION:NOTES:END -->
