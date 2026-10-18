@@ -26,6 +26,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     assert has_element?(view, "h1", "Ada Lovelace")
+    assert has_element?(view, ~s|header a[href="/admin/orders"]|, "Orders")
     assert has_element?(view, "header", order.order_reference)
     assert has_element?(view, "header", "Payment")
     refute has_element?(view, "header", "Fulfillment")

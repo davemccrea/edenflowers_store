@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       <.admin_page>
         <.admin_page_header
           title={@page_title}
-          breadcrumbs={order_form_breadcrumbs(@order)}
+          back={order_form_back(@order)}
         >
           <:subtitle :if={@order && @order.payment_status == :paid}>
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
@@ -411,14 +411,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp page_title(:new, _order), do: ~t"New custom order"
   defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
 
-  defp order_form_breadcrumbs(nil), do: [{~t"Orders", ~p"/admin/orders"}]
-
-  defp order_form_breadcrumbs(order) do
-    [
-      {~t"Orders", ~p"/admin/orders"},
-      {order.customer_name || order.order_reference, ~p"/admin/orders/#{order.id}"}
-    ]
-  end
+  defp order_form_back(nil), do: {~t"Orders", ~p"/admin/orders"}
+  defp order_form_back(order), do: {order.customer_name || order.order_reference, ~p"/admin/orders/#{order.id}"}
 
   defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
   defp back_path(_params), do: ~p"/admin/orders"

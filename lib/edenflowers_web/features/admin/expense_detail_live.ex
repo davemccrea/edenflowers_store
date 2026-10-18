@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
       <.admin_page>
         <.admin_page_header
           title={@expense.vendor_name || ~t"Unknown vendor"}
-          breadcrumbs={[{~t"Expenses", ~p"/admin/expenses"}]}
+          back={{~t"Expenses", ~p"/admin/expenses"}}
         >
           <:subtitle :if={@expense.reviewed_at}>
             <.badge tone={:success} icon="hero-check">{~t"Reviewed"}</.badge>

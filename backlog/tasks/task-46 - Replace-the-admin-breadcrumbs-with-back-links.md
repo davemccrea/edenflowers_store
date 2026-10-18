@@ -1,9 +1,10 @@
 ---
 id: TASK-46
 title: Replace the admin breadcrumbs with back links
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 20:16'
 labels:
   - spec
   - admin
@@ -23,6 +24,12 @@ Remove the breadcrumbs from the admin pages that use them and give each detail a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No admin page shows breadcrumbs
-- [ ] #2 Each detail and form page has a back link to its list
+- [x] #1 No admin page shows breadcrumbs
+- [x] #2 Each detail and form page has a back link to its list
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+admin_page_header takes back={{label, path}} in place of the breadcrumb trail and the overview flag. Detail and form pages link back to their list; editing an existing order links back to that order, matching where Save and Cancel return.
+<!-- SECTION:NOTES:END -->

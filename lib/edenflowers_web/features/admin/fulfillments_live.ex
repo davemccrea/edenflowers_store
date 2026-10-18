@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} breadcrumbs={[{~t"Fulfillments", ~p"/admin/fulfillments"}]} />
+        <.admin_page_header title={@page_title} back={{~t"Fulfillments", ~p"/admin/fulfillments"}} />
 
         <.form_section title={~t"Prices"}>
           <:description>{~t"Placed orders keep their fee unless you change their delivery."}</:description>
