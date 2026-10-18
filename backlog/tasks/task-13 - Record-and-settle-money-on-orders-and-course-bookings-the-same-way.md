@@ -1,9 +1,10 @@
 ---
 id: TASK-13
-title: Payment Balance
+title: Record and settle money on orders and course bookings the same way
 status: done
 assignee: []
 created_date: '2026-10-17 16:08'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 ordinal: 34000

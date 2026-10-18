@@ -1,9 +1,10 @@
 ---
 id: TASK-7.4
-title: 'Custom Orders, edits and cancels adjust stock'
+title: Adjust stock when a custom order is edited or cancelled
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-7.1

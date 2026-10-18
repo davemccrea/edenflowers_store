@@ -1,9 +1,10 @@
 ---
 id: TASK-12.5
-title: In-person refunds on course bookings
+title: Let Jennie record a refund she hands back on a course booking
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-12.2

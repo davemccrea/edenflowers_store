@@ -1,9 +1,10 @@
 ---
 id: TASK-7.3
-title: Payment step blocks lines over stock
+title: Block the payment step when a line is over stock
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-7.1

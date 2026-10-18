@@ -1,9 +1,10 @@
 ---
 id: TASK-12.4
-title: In-person refunds can't be recorded on cancelled orders
+title: Let Jennie record a refund on a cancelled order
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 parent_task_id: TASK-12

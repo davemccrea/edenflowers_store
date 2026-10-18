@@ -1,9 +1,10 @@
 ---
 id: TASK-7.2
-title: Customers can't add more than is in stock
+title: Stop customers adding more to the cart than is in stock
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-7.1

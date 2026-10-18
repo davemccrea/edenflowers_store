@@ -1,9 +1,10 @@
 ---
 id: TASK-15.1
-title: A booking can open a payment link and record what's paid through it
+title: Open a payment link on a booking and record what's paid through it
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 parent_task_id: TASK-15

@@ -1,9 +1,10 @@
 ---
 id: TASK-12
-title: Course Payments
+title: 'Record course booking money as Payments, as orders do'
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 ordinal: 27000

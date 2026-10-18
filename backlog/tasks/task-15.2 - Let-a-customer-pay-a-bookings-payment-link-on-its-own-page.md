@@ -1,9 +1,10 @@
 ---
 id: TASK-15.2
-title: The customer pays a booking's link on its own page
+title: Let a customer pay a booking's payment link on its own page
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-15.1

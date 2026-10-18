@@ -1,9 +1,10 @@
 ---
 id: TASK-13.1
-title: Orders and bookings work out what's owed the same way
+title: Work out what's owed on orders and bookings the same way
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 parent_task_id: TASK-13

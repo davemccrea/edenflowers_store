@@ -1,9 +1,10 @@
 ---
 id: TASK-7
-title: Stock Tracking
+title: Stop selling what's out of stock
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies: []
 ordinal: 10000

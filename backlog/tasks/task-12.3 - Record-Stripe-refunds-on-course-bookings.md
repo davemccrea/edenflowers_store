@@ -1,9 +1,10 @@
 ---
 id: TASK-12.3
-title: Stripe refunds on course bookings are recorded
+title: Record Stripe refunds on course bookings
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
+updated_date: '2026-10-18 07:27'
 labels: []
 dependencies:
   - TASK-12.1
