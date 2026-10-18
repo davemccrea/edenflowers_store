@@ -13,7 +13,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   import Edenflowers.Actors
 
-  alias Edenflowers.Accounts.Calculations
+  alias Edenflowers.Accounts.Calculations, as: AccountCalculations
   alias Edenflowers.Courses.Changes
   alias Edenflowers.Courses.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
@@ -311,7 +311,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   end
 
   calculations do
-    calculate :first_name, :string, {Calculations.FirstName, source: :name}
+    calculate :first_name, :string, {AccountCalculations.FirstName, source: :name}
 
     calculate :seats_held, :integer, expr(seats - removed_seats)
 
