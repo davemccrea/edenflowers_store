@@ -238,7 +238,7 @@ Square is the system. Buttons are explicitly `rounded-none` against daisyUI's de
 - **Rule** (`border-base-content/12`): rules inside content (account, checkout steps, course details, FAQ), table and list edges, the edge of an admin panel, the admin sidebar and top bars, a totals rule.
 - **Row** (`divide-base-content/8`): dividers between rows inside something that already has a rule around it, so the container still reads above its rows.
 
-A tinted divider that carries meaning (the admin dashboard's overdue `divide-error/15` and today `divide-success/20`) keeps its tint. The admin used to draw its lines in `base-300/70` and `/50`, about half the contrast of the storefront's, and on a panel that sits on the same `base-100` as the page, that left the border as the only edge and made it nearly invisible. Do not reach for `base-300` to draw a line.
+A tinted divider that carries meaning (the admin Overview's overdue `divide-error/15` and today `divide-success/20`) keeps its tint. The admin used to draw its lines in `base-300/70` and `/50`, about half the contrast of the storefront's, and on a panel that sits on the same `base-100` as the page, that left the border as the only edge and made it nearly invisible. Do not reach for `base-300` to draw a line.
 
 ## Components
 

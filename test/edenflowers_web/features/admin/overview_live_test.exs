@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.Admin.DashboardLiveTest do
+defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest

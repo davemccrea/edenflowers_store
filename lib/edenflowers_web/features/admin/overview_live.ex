@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.Admin.DashboardLive do
+defmodule EdenflowersWeb.Admin.OverviewLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components

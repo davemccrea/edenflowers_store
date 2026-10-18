@@ -164,7 +164,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
     refute has_element?(view, ~s|#order-recipient a[href^="tel:"]|)
     assert has_element?(view, "#order-fulfillment-summary", "Pickup")
-    # Gift is also surfaced prominently in the header, matching the dashboard.
+    # Gift is also surfaced prominently in the header, matching the Overview.
     assert has_element?(view, "header", "Grace Hopper")
   end
 

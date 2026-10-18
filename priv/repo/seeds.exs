@@ -384,7 +384,7 @@ variant_for = fn product_name, size ->
 end
 
 # Line items snapshot the variant the same way PopulateFromVariant does at
-# checkout, so the dashboard's subtotal/tax aggregates add up.
+# checkout, so the Overview's subtotal/tax aggregates add up.
 line_item = fn product_name, size, quantity ->
   variant = variant_for.(product_name, size)
 
@@ -540,7 +540,7 @@ orders = [
     promotion: promotion_by_code.("SUMMER15"),
     items: [line_item.("Bouquet 2", :large, 2), line_item.("Plant", :medium, 1)]
   }),
-  # Ordered a few days back and already delivered, so it lands in the dashboard's
+  # Ordered a few days back and already delivered, so it lands in the Overview's
   # completed side. Both dates sit in the past, in order.
   Map.merge(nearby_address, %{
     customer_name: "Hanna Järvinen",
