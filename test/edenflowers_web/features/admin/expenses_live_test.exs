@@ -119,6 +119,18 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     refute saved.reviewed_at
   end
 
+  test "sets and clears the paid date", %{conn: conn} do
+    expense = create_expense("paid-on", "Kukkatukku", "Flowers")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+
+    view |> form("#expense-form", form: %{paid_on: "2026-06-02"}) |> render_submit()
+    assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == ~D[2026-06-02]
+
+    view |> form("#expense-form", form: %{paid_on: ""}) |> render_submit()
+    assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == nil
+  end
+
   test "deletes an expense along with its import", %{conn: conn} do
     expense = create_expense("delete-me", "Mistake Oy", "Not an expense")
 

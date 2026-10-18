@@ -69,6 +69,13 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 <.input field={@form[:vendor_vat_number]} type="text" label={~t"VAT number"} class="input w-full" />
                 <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
                 <.input
+                  field={@form[:paid_on]}
+                  type="date"
+                  label={~t"Paid on"}
+                  help={~t"Only needed when it was paid on a different day from its date."}
+                  class="input w-full"
+                />
+                <.input
                   field={@form[:currency]}
                   type="select"
                   label={~t"Currency"}
