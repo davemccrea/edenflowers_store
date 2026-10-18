@@ -108,6 +108,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
+      |> bcc(from_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
       |> text_body(Templates.order_delivered(%{order: order}))
     end)

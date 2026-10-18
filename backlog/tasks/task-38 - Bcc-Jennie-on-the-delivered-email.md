@@ -1,9 +1,10 @@
 ---
 id: TASK-38
 title: Bcc Jennie on the delivered email
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:36'
 labels:
   - spec
   - admin
@@ -24,5 +25,5 @@ Add `bcc(from_address())` to `Email.order_delivered/1`, as the other order email
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The delivered email bccs the shop address
+- [x] #1 The delivered email bccs the shop address
 <!-- AC:END -->
