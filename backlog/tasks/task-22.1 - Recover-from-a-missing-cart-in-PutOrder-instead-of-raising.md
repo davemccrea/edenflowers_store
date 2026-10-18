@@ -4,10 +4,12 @@ title: Recover from a missing cart in PutOrder instead of raising
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 07:17'
-labels: []
+updated_date: '2026-10-18 06:08'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-22
-type: task
+type: bug
 ordinal: 75000
 ---
 
