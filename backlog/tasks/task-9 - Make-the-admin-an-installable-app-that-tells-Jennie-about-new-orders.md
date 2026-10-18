@@ -4,9 +4,11 @@ title: Make the admin an installable app that tells Jennie about new orders
 status: done
 assignee: []
 created_date: '2026-10-15 23:06'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 17000
 ---
 

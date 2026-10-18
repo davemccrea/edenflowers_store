@@ -4,11 +4,12 @@ title: Push a notification to the admin when a paid order is placed
 status: done
 assignee: []
 created_date: '2026-10-15 23:06'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-18 08:25'
 labels: []
 dependencies:
   - TASK-9.1
 parent_task_id: TASK-9
+type: feature
 ordinal: 19000
 ---
 

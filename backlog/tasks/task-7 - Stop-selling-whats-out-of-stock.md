@@ -4,9 +4,11 @@ title: Stop selling what's out of stock
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 10000
 ---
 

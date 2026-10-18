@@ -4,9 +4,11 @@ title: Send a course booking a payment link
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 42000
 ---
 

@@ -4,9 +4,11 @@ title: Let customers pay extra for a delivery time window
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 00:15'
-updated_date: '2026-10-18 07:28'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 1000
 ---
 

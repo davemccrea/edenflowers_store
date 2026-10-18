@@ -4,9 +4,11 @@ title: Remove machinery the shop doesn't use
 status: done
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 08:23'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: chore
 ordinal: 67000
 ---
 

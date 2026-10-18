@@ -4,10 +4,11 @@ title: Take stock when an online order is placed
 status: done
 assignee: []
 created_date: '2026-10-11 12:26'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-18 08:25'
 labels: []
 dependencies: []
 parent_task_id: TASK-7
+type: feature
 ordinal: 11000
 ---
 
