@@ -1154,7 +1154,7 @@ defmodule Edenflowers.Orders.OrderTest do
                  order
                  |> Ash.Changeset.for_update(:submit_delivery, %{
                    fulfillment_option_id: pickup_option.id,
-                   fulfillment_date: Date.add(Date.utc_today(), 1),
+                   fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
                    recipient_phone_number: typed
                  })
                  |> Ash.update(authorize?: false)
@@ -1185,7 +1185,7 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 1),
+                 fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
                  recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
