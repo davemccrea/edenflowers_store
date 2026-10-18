@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Orders.Order
   alias Edenflowers.PhoneNumber
   alias EdenflowersWeb.Admin.OrderLog
+  alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -360,49 +361,23 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
-    amount = String.replace(params["amount"], ",", ".")
-
-    case Orders.record_payment(socket.assigns.order, amount, params["payment_method"],
-           actor: socket.assigns.current_user
-         ) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment recorded.")}
-
-      {:error, error} ->
-        {:noreply, put_flash(socket, :error, payment_error(error))}
-    end
+    result = PaymentActions.record_payment(socket.assigns.order, params, socket.assigns.current_user)
+    {:noreply, flash_payment_result(socket, result)}
   end
 
   def handle_event("undo_payment", %{"id" => payment_id}, socket) do
-    case Orders.undo_payment(socket.assigns.order, payment_id, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment undone.")}
-
-      {:error, _error} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not undo the payment.")}
-    end
+    result = PaymentActions.undo_payment(socket.assigns.order, payment_id, socket.assigns.current_user)
+    {:noreply, flash_payment_result(socket, result)}
   end
 
   def handle_event("open_payment_link", _params, socket) do
-    case Orders.open_payment_link(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment link created.")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not create a payment link.")}
-    end
+    result = PaymentActions.open_payment_link(socket.assigns.order, socket.assigns.current_user)
+    {:noreply, flash_payment_result(socket, result)}
   end
 
-  # The order details email carries the link, so sending it is opening one.
   def handle_event("email_payment_link", _params, socket) do
-    actor = socket.assigns.current_user
-
-    with {:ok, order} <- Orders.open_payment_link(socket.assigns.order, actor: actor),
-         {:ok, order} <- Orders.send_order_details_email(order, actor: actor) do
-      {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Payment link emailed.")}
-    else
-      {:error, _} -> {:noreply, put_flash(socket, :error, ~t"Could not email the payment link.")}
-    end
+    result = PaymentActions.email_payment_link(socket.assigns.order, socket.assigns.current_user)
+    {:noreply, flash_payment_result(socket, result)}
   end
 
   def handle_event("send_order_details", _params, socket) do
@@ -443,16 +418,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("refund_with_stripe", _params, socket) do
-    case Edenflowers.Payments.refund_balance(socket.assigns.order) do
-      {:ok, refunds} ->
-        {:noreply,
-         socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:info, refund_message(refunds))}
-
-      {:error, reason} ->
-        Logger.error("Stripe refund for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not refund with Stripe. Check the payment in Stripe.")}
-    end
+    {:noreply, flash_payment_result(socket, PaymentActions.refund_with_stripe(socket.assigns.order))}
   end
+
+  defp flash_payment_result(socket, {:info, message}) do
+    socket
+    |> assign_order(reload(socket.assigns.order, socket))
+    |> put_flash(:info, message)
+  end
+
+  defp flash_payment_result(socket, {:error, message}), do: put_flash(socket, :error, message)
 
   defp assign_order(socket, order) do
     payments = payments(order)
