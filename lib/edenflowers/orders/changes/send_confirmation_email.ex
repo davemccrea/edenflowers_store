@@ -22,7 +22,6 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
 
         changeset
         |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
-        |> Ash.Changeset.force_change_attribute(:receipt_sha256, Receipt.sha256(pdf))
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
       end

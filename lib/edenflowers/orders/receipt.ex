@@ -4,7 +4,7 @@ defmodule Edenflowers.Orders.Receipt do
   the Typst CLI.
 
   Deterministic over the placed order's snapshot columns, so the PDF
-  bytes aren't persisted — `Order.receipt_sha256` records what was sent.
+  bytes aren't persisted.
   Use `load_for_receipt/1` to load the aggregates `generate/1` expects.
   """
 
@@ -32,8 +32,6 @@ defmodule Edenflowers.Orders.Receipt do
   def attachment(pdf, reference) do
     Swoosh.Attachment.new({:data, pdf}, filename: "eden-flowers-#{reference}.pdf", content_type: "application/pdf")
   end
-
-  def sha256(pdf), do: :crypto.hash(:sha256, pdf) |> Base.encode16(case: :lower)
 
   def generate(%struct{} = record) when struct in [Order, CourseRegistration] do
     json = record |> build_payload() |> Jason.encode!()

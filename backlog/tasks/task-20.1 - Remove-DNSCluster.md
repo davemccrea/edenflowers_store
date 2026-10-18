@@ -1,9 +1,10 @@
 ---
 id: TASK-20.1
 title: Remove DNSCluster
-status: done
+status: ready-for-human
 assignee: []
 created_date: '2026-10-18 03:31'
+updated_date: '2026-10-18 08:17'
 labels: []
 dependencies: []
 parent_task_id: TASK-20
@@ -41,6 +42,15 @@ created: 2026-10-18 07:18
 ---
 
 Removed the dep, the supervisor child and the runtime config; compile with warnings-as-errors and the suite (1283 tests) pass. Left: deploy to staging and confirm it boots.
+
+---
+
+author: @claude
+created: 2026-10-18 08:17
+
+---
+
+Left for the owner: deploy to staging and confirm it boots.
 
 ---
 <!-- COMMENTS:END -->

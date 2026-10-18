@@ -294,7 +294,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
     attribute :receipt_emailed_at, :utc_datetime
-    attribute :receipt_sha256, :string
 
     timestamps()
   end

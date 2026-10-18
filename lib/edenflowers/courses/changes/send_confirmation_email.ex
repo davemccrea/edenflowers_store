@@ -48,7 +48,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
            |> Email.course_confirmation()
            |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
            |> Mailer.deliver() do
-      {:ok, %{receipt_emailed_at: DateTime.utc_now(), receipt_sha256: Receipt.sha256(pdf)}}
+      {:ok, %{receipt_emailed_at: DateTime.utc_now()}}
     end
   end
 
