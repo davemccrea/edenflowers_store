@@ -455,6 +455,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       generate(product_variant(product_id: product.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
+      assert has_element?(view, "[data-testid=no-subscriptions]", "No subscriptions yet.")
       assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/product/#{product.id}"]|)
     end
 
