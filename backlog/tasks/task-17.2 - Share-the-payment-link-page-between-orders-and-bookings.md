@@ -1,10 +1,10 @@
 ---
 id: TASK-17.2
 title: Share the payment-link page between orders and bookings
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 12:19'
 labels: []
 dependencies:
   - TASK-17.1
@@ -33,6 +33,12 @@ ordinal: 49000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The payment flow code exists once
-- [ ] #2 The existing suite passes
+- [x] #1 The payment flow code exists once
+- [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The flow lives in EdenflowersWeb.PaymentLink, next to url_for, on a shared @payable assign. Both pages now gate on payment_link_open? (the order's token read loads it in place of payable?, which it equals there). The status headings stay per page because their copy differs. The receipt controllers stay apart: they read the record with different actors and loads, so one controller would only hold the two actions side by side.
+<!-- SECTION:NOTES:END -->

@@ -421,7 +421,7 @@ defmodule Edenflowers.Orders.Order do
 
       prepare build(
                 load: [
-                  :payable?,
+                  :payment_link_open?,
                   :grand_total,
                   :amount_paid,
                   :balance,
