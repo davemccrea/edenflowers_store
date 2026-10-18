@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -111,75 +112,26 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   def handle_event("record_payment", %{"record_id" => id, "payment" => params}, socket) do
     actor = socket.assigns.current_user
-    amount = String.replace(params["amount"], ",", ".")
-
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.record_registration_payment(registration, amount, params["payment_method"], actor: actor) do
-        put_flash(socket, :info, ~t"Payment recorded.")
-      else
-        {:error, error} -> put_flash(socket, :error, payment_error(error))
-      end
-
-    {:noreply, load_courses(socket)}
+    with_registration(socket, id, &PaymentActions.record_payment(&1, params, actor))
   end
 
   def handle_event("undo_payment", %{"id" => id, "payment-id" => payment_id}, socket) do
     actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.undo_registration_payment(registration, payment_id, actor: actor) do
-        put_flash(socket, :info, ~t"Payment undone.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not undo the payment.")
-      end
-
-    {:noreply, load_courses(socket)}
+    with_registration(socket, id, &PaymentActions.undo_payment(&1, payment_id, actor))
   end
 
   def handle_event("refund_with_stripe", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, refunds} <- Edenflowers.Payments.refund_balance(registration) do
-        put_flash(socket, :info, refund_message(refunds))
-      else
-        error ->
-          Logger.error("Stripe refund for course registration #{id} failed: #{inspect(error)}")
-          put_flash(socket, :error, ~t"Could not refund with Stripe. Check the payment in Stripe.")
-      end
-
-    {:noreply, load_courses(socket)}
+    with_registration(socket, id, &PaymentActions.refund_with_stripe/1)
   end
 
   def handle_event("open_payment_link", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.open_registration_payment_link(registration, actor: actor) do
-        put_flash(socket, :info, ~t"Payment link created.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not create a payment link.")
-      end
-
-    {:noreply, load_courses(socket)}
+    with_registration(socket, id, &PaymentActions.open_payment_link(&1, actor))
   end
 
   def handle_event("email_payment_link", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.email_registration_payment_link(registration, actor: actor) do
-        put_flash(socket, :info, ~t"Payment link emailed.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not email the payment link.")
-      end
-
-    {:noreply, load_courses(socket)}
+    with_registration(socket, id, &PaymentActions.email_payment_link(&1, actor))
   end
 
   def handle_event("payment_link_copied", _params, socket) do
@@ -209,6 +161,20 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         put_flash(socket, :info, ~t"Booking cancelled.")
       else
         _ -> put_flash(socket, :error, ~t"Could not cancel the booking.")
+      end
+
+    {:noreply, load_courses(socket)}
+  end
+
+  defp with_registration(socket, id, payment_action) do
+    socket =
+      case Courses.get_registration_by_id(id, actor: socket.assigns.current_user) do
+        {:ok, registration} ->
+          {kind, message} = payment_action.(registration)
+          put_flash(socket, kind, message)
+
+        {:error, _error} ->
+          put_flash(socket, :error, ~t"Booking not found.")
       end
 
     {:noreply, load_courses(socket)}

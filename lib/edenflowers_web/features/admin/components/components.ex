@@ -486,19 +486,6 @@ defmodule EdenflowersWeb.Admin.Components do
       else: ~t"Undo the #{amount} payment by #{how}? This records the opposite amount."
   end
 
-  @doc "Why recording money was refused, in the action's own words, for a flash."
-  def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
-  def payment_error(_error), do: ~t"Could not record it. Check the amount."
-
-  @doc "What a Stripe refund of the balance did, from the refunds `Payments.refund_balance/1` returned, for a flash."
-  def refund_message([]), do: ~t"Nothing left to refund. Stripe already has refunds covering it."
-
-  def refund_message(refunds) do
-    if Enum.all?(refunds, &(&1.status == "succeeded")),
-      do: ~t"Refunded with Stripe.",
-      else: ~t"Refund sent to Stripe. It shows here once it goes through."
-  end
-
   attr :title, :string, required: true
   attr :class, :any, default: nil
   slot :description
