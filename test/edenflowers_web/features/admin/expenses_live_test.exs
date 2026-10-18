@@ -170,6 +170,59 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert Ash.get!(Expenses.Expense, expense.id, authorize?: false)
   end
 
+  describe "monthly report download" do
+    test "defaults the month to the previous one", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/admin/expenses")
+
+      previous_month =
+        Edenflowers.ShopTime.today() |> Date.beginning_of_month() |> Date.add(-1) |> Date.to_iso8601()
+
+      assert html =~ ~s(value="#{String.slice(previous_month, 0, 7)}")
+    end
+
+    test "sends the month's zip", %{conn: conn} do
+      create_expense("report-doc", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
+
+      expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ ->
+        {:ok, %{body: "%PDF", content_type: "application/pdf"}}
+      end)
+
+      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+
+      assert response_content_type(conn, :zip) =~ "application/zip"
+      assert get_resp_header(conn, "content-disposition") == [~s(attachment; filename="redovisning-2026-09.zip")]
+    end
+
+    test "flashes an error and sends nothing when a receipt can't be fetched", %{conn: conn} do
+      create_expense("report-missing", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
+      expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, :timeout} end)
+
+      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+
+      assert redirected_to(conn) == ~p"/admin/expenses"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
+    end
+
+    test "flashes an error for a malformed month", %{conn: conn} do
+      conn = get(conn, ~p"/admin/accounting?month=2026-13")
+
+      assert redirected_to(conn) == ~p"/admin/expenses"
+    end
+
+    test "gives a non-admin no report" do
+      user = generate(admin_user(admin: false)) |> with_token()
+
+      conn =
+        build_conn()
+        |> Plug.Test.init_test_session(%{})
+        |> Helpers.store_in_session(user)
+        |> get(~p"/admin/accounting?month=2026-09")
+
+      assert conn.status == 404
+      assert build_conn() |> get(~p"/admin/accounting?month=2026-09") |> Map.get(:status) == 404
+    end
+  end
+
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do
     Expenses.ingest_expense!(
       Map.merge(

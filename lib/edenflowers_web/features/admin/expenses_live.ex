@@ -15,7 +15,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
-     |> assign(:locale, Localize.get_locale())}
+     |> assign(:locale, Localize.get_locale())
+     |> assign(:report_month, previous_month())}
   end
 
   @impl true
@@ -30,6 +31,20 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       <.admin_page>
         <.admin_page_header title={~t"Expenses"}>
           <:actions>
+            <form action={~p"/admin/accounting"} method="get" class="flex items-center gap-2">
+              <input
+                type="month"
+                name="month"
+                value={@report_month}
+                required
+                aria-label={~t"Report month"}
+                class="input input-sm w-auto"
+              />
+              <.button type="submit" size="sm">
+                <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
+                {~t"Download for the accountant"}
+              </.button>
+            </form>
             <.button
               href={Edenflowers.External.PapraAPI.documents_url()}
               target="_blank"
@@ -121,6 +136,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp previous_month do
+    Edenflowers.ShopTime.today()
+    |> Date.beginning_of_month()
+    |> Date.add(-1)
+    |> Date.to_iso8601()
+    |> String.slice(0, 7)
   end
 
   defp search_expenses(query, _searchable_columns, search_term) do

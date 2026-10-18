@@ -1,10 +1,10 @@
 ---
 id: TASK-11.2
 title: Monthly report download with expenses and receipts
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 19:26'
 labels: []
 dependencies:
   - TASK-11.1
@@ -37,11 +37,17 @@ The end-to-end path: Jennie picks a month on the admin expenses page and downloa
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A non-admin gets no report from the route
-- [ ] #2 The zip holds `rapport-YYYY-MM.xlsx` and one PDF per expense under `kvitton/`, and each row's receipt file names its PDF
-- [ ] #3 An invoice dated in August with `paid_on` in September is in September's report, not August's
-- [ ] #4 Expenses with no date are left out
-- [ ] #5 A failed Papra fetch gives an error flash and no download
-- [ ] #6 Totals per currency equal the sum of their rows
-- [ ] #7 Tests build a report from fixtures, with Papra stubbed, and read the sheet back
+- [x] #1 A non-admin gets no report from the route
+- [x] #2 The zip holds `rapport-YYYY-MM.xlsx` and one PDF per expense under `kvitton/`, and each row's receipt file names its PDF
+- [x] #3 An invoice dated in August with `paid_on` in September is in September's report, not August's
+- [x] #4 Expenses with no date are left out
+- [x] #5 A failed Papra fetch gives an error flash and no download
+- [x] #6 Totals per currency equal the sum of their rows
+- [x] #7 Tests build a report from fixtures, with Papra stubbed, and read the sheet back
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Edenflowers.Accounting.MonthlyReport builds the zip (Inköp sheet via elixlsx, receipts from Papra, :zip in memory), rendered in sv with gettext context "accounting report"; categories reuse Admin.Components.category_label. Route is GET /admin/accounting?month=YYYY-MM (a plain GET form can't fill a path segment), 404 for non-admins, error flash back to /admin/expenses on failure. Expenses page header has a month input defaulting to the previous month. Tests in monthly_report_test.exs read the sheet XML back; controller tests in expenses_live_test.exs.
+<!-- SECTION:NOTES:END -->
