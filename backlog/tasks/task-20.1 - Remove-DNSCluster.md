@@ -1,7 +1,7 @@
 ---
 id: TASK-20.1
 title: Remove DNSCluster
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 03:31'
 updated_date: '2026-10-18 08:23'
@@ -30,7 +30,7 @@ ordinal: 68000
 <!-- AC:BEGIN -->
 - [x] #1 `grep -ri dns_cluster` finds nothing outside `deps/`
 - [x] #2 `mix compile --warnings-as-errors` and the existing suite pass
-- [ ] #3 Staging boots after deploy
+- [x] #3 Staging boots after deploy
 <!-- AC:END -->
 
 ## Comments

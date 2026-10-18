@@ -1,10 +1,10 @@
 ---
 id: TASK-20
 title: Remove machinery the shop doesn't use
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 08:17'
+updated_date: '2026-10-18 08:23'
 labels: []
 dependencies: []
 ordinal: 67000
