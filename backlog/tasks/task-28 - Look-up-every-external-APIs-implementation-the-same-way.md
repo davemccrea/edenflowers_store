@@ -1,10 +1,10 @@
 ---
 id: TASK-28
 title: Look up every external API's implementation the same way
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 11:35'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-18 12:02'
 labels:
   - spec
   - quick
@@ -44,6 +44,6 @@ Each repeats the config key and the default module, so a reader has to know the 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `Application.get_env(:edenflowers, :…_api, …)` appears only inside the `External` modules
-- [ ] #2 The existing suite passes
+- [x] #1 `Application.get_env(:edenflowers, :…_api, …)` appears only inside the `External` modules
+- [x] #2 The existing suite passes
 <!-- AC:END -->

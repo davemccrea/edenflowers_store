@@ -19,6 +19,9 @@ defmodule Edenflowers.External.ClaudeAPI do
 
   @behaviour Edenflowers.External.ClaudeAPI.Behaviour
 
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :claude_api, __MODULE__)
+
   alias Edenflowers.Expenses.Expense.Category
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
