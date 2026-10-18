@@ -122,6 +122,18 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.payment_link_open?
     end
 
+    test "ends with the payment choice and one Place order button", ctx do
+      {:ok, _view, html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      [form] = html |> LazyHTML.from_document() |> LazyHTML.query("#order-form") |> Enum.to_list()
+      sections = form |> LazyHTML.query("section h2") |> Enum.map(&LazyHTML.text/1)
+      submits = html |> LazyHTML.from_document() |> LazyHTML.query(~s|button[type="submit"]|) |> Enum.to_list()
+
+      assert List.last(sections) == "Payment"
+      assert [submit] = submits
+      assert LazyHTML.text(submit) =~ "Place order"
+    end
+
     test "asks for a recipient and card only for a gift", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 

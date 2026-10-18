@@ -1,9 +1,10 @@
 ---
 id: TASK-33
 title: Make the custom order form work like checkout
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:56'
 labels:
   - spec
   - admin
