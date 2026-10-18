@@ -1910,13 +1910,6 @@ msgstr ""
 msgid "Sign up for the newsletter"
 msgstr ""
 
-#: lib/edenflowers/email/templates/course_confirmation.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for booking. Your place on %{course} is confirmed."
-msgid_plural "Thank you for booking. Your %{count} places on %{course} are confirmed."
-msgstr[0] ""
-msgstr[1] ""
-
 #: lib/edenflowers_web/features/courses/courses_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
@@ -1973,11 +1966,6 @@ msgstr ""
 #: lib/edenflowers_web/features/courses/course_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Change booking"
-msgstr ""
-
-#: lib/edenflowers/email.ex:141
-#, elixir-autogen, elixir-format
-msgid "You're booked: %{course}"
 msgstr ""
 
 #: lib/edenflowers_web/features/courses/course_live.ex:305
@@ -5845,20 +5833,10 @@ msgstr ""
 msgid "That's more than was paid outside Stripe. Refund the rest with Stripe."
 msgstr ""
 
-#: lib/edenflowers/email/templates/course_payment_link.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Here is a link to pay for your booking on %{course} online, by card or MobilePay, before the course:"
-msgstr ""
-
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:35
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Pay for your booking"
-msgstr ""
-
-#: lib/edenflowers/email.ex:164
-#, elixir-autogen, elixir-format
-msgid "Pay for your place on %{course}"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:138
@@ -5964,4 +5942,26 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/courses_live.ex:554
 #, elixir-autogen, elixir-format
 msgid "Record %{amount} as refunded? A mistake can be undone afterwards."
+msgstr ""
+
+#: lib/edenflowers/email/templates/course_payment_link.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Here is a link to pay for your booking for the course %{course} online, by card or MobilePay:"
+msgstr ""
+
+#: lib/edenflowers/email.ex:164
+#, elixir-autogen, elixir-format
+msgid "Pay for your place on the course %{course}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/course_confirmation.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for booking. Your place on the course %{course} is confirmed."
+msgid_plural "Thank you for booking. Your %{count} places on the course %{course} are confirmed."
+msgstr[0] ""
+msgstr[1] ""
+
+#: lib/edenflowers/email.ex:141
+#, elixir-autogen, elixir-format
+msgid "You're booked on the course %{course}"
 msgstr ""
