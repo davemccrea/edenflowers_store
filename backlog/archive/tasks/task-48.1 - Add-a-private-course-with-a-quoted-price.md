@@ -1,10 +1,12 @@
 ---
 id: TASK-48.1
 title: Add a private course with a quoted price
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-labels: []
+updated_date: '2026-10-18 21:05'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-48
 type: feature
@@ -25,3 +27,16 @@ Add `private?` to Course. A private course is left out of the store listing and 
 - [ ] #2 A private course doesn't show on the website, and its page isn't reachable
 - [ ] #3 The courses page marks it Private
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 21:05
+
+---
+
+Closed without implementation at the user's request, together with TASK-48.
+
+---
+<!-- COMMENTS:END -->
