@@ -4,10 +4,11 @@ title: 'Discount subscriptions, most for the most frequent deliveries'
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 02:13'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-18 11:24'
 labels:
   - spec
 dependencies: []
+priority: medium
 type: feature
 ordinal: 3000
 ---

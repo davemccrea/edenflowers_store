@@ -4,10 +4,11 @@ title: 'Make the order, checkout and account code easier to read'
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-18 11:24'
 labels:
   - spec
 dependencies: []
+priority: low
 type: refactor
 ordinal: 51000
 ---

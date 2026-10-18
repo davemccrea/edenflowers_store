@@ -4,10 +4,11 @@ title: Enforce one module layout and dependency style with Credo
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 04:05'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-18 11:24'
 labels:
   - spec
 dependencies: []
+priority: low
 type: chore
 ordinal: 71000
 ---

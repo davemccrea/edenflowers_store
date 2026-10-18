@@ -4,10 +4,11 @@ title: Remind customers to reorder before last year's occasion
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 14:30'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-18 11:24'
 labels:
   - spec
 dependencies: []
+priority: medium
 type: feature
 ordinal: 4000
 ---
