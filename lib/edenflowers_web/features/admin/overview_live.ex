@@ -301,7 +301,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <span class="text-base-content truncate font-semibold">
               {@order.customer_name || ~t"Unnamed customer"}
             </span>
-            <.gift_badge :if={@order.gift} recipient_name={if present?(@order.recipient_name), do: @order.recipient_name} />
+            <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
             <.badge :if={present?(@order.card_message)} tone={:warning} icon="hero-pencil-square">
               {~t"Card to write"}
             </.badge>
@@ -340,9 +340,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     </li>
     """
   end
-
-  defp present?(nil), do: false
-  defp present?(value), do: String.trim(value) != ""
 
   defp date_group(date, today) do
     case Date.compare(date, today) do
