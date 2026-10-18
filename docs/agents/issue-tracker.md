@@ -7,7 +7,10 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 ## Conventions
 
 - One feature is one **parent task**. Its description is the spec, opening with a one-line summary of what the feature does for the shop
+- A spec is one deliverable with a finish line: something true once it's done that isn't true now. A theme ("tidy the checkout code", "remove unused machinery") is not a spec. Each piece of work under a theme is a spec of its own
 - Each implementation ticket is a **subtask** of the feature: `backlog task create "<title>" -p TASK-N`. Subtasks number themselves `TASK-N.1`, `TASK-N.2`, … Never combine several tickets into one task
+- A subtask is a step toward its parent's goal and makes little sense without it. If it would read fine to someone who never saw the parent, or could ship alone with nothing gained by the others, make it a spec instead
+- The CLI can't change a task's parent. To promote a subtask, recreate it as a top-level task, comment "Moved to TASK-N" on the old one and archive it
 - Every description has a `**Why:**` line near the top: one or two sentences on why the work is worth doing, in terms of the shop, Jennie, customers or whoever reads the code next. A parent puts it right after its summary line; a subtask opens with it
 - Put the problem, what to build and any decisions in the description (`-d`). Put each acceptance criterion in its own `--ac`
 - Set the ticket type with `--type` (`feature`, `bug`, `refactor`, `chore`, `task`, `research`, `prototype`, `grilling`)

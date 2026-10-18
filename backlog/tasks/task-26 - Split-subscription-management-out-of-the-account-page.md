@@ -1,20 +1,22 @@
 ---
-id: TASK-18.3
+id: TASK-26
 title: Split subscription management out of the account page
 status: ready-for-agent
 assignee: []
-created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
-labels: []
+created_date: '2026-10-18 11:35'
+labels:
+  - spec
 dependencies: []
-parent_task_id: TASK-18
+priority: medium
 type: refactor
-ordinal: 54000
+ordinal: 81000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+The account page renders a subscription manager instead of holding every subscription handler itself
+
 **Why:** `AccountLive` is 1,333 lines, much of it subscription management, which makes the account page hard to read and change.
 
 ### Problem

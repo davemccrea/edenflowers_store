@@ -1,20 +1,22 @@
 ---
-id: TASK-18.4
+id: TASK-27
 title: Snapshot an order's promotion as one embedded value
 status: needs-triage
 assignee: []
-created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
-labels: []
+created_date: '2026-10-18 11:35'
+labels:
+  - spec
 dependencies: []
-parent_task_id: TASK-18
+priority: low
 type: refactor
-ordinal: 55000
+ordinal: 82000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+An order keeps its promotion's terms as one embedded value, so setting or clearing a promotion is one attribute
+
 **Why:** Every place that sets or clears an order's promotion has to list five attributes, and missing one leaves an order with half a promotion.
 
 ### Problem
