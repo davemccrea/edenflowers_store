@@ -1,10 +1,12 @@
 ---
 id: TASK-19.4
 title: Set same-day for every option with one bulk update
-status: needs-triage
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
-labels: []
+updated_date: '2026-10-18 06:10'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-19
 type: refactor
