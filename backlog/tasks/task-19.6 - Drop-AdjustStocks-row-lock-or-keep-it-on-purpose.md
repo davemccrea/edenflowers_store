@@ -1,10 +1,12 @@
 ---
 id: TASK-19.6
 title: 'Drop AdjustStock''s row lock, or keep it on purpose'
-status: needs-triage
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
-labels: []
+updated_date: '2026-10-18 06:10'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-19
 type: refactor
@@ -27,3 +29,16 @@ ordinal: 66000
 
 Keep it unless profiling says otherwise. Recorded so nobody "simplifies" it without knowing why it's there: add a one-line comment to `adjust/3` saying the lock is for the oversell report.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 06:10
+
+---
+
+Decided: keep the lock, per the recommendation. Only the one-line comment on adjust/3 is left.
+
+---
+<!-- COMMENTS:END -->
