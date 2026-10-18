@@ -49,9 +49,6 @@ defmodule Edenflowers.Expenses.Expense do
     authorizers: [Ash.Policy.Authorizer]
 
   alias Edenflowers.Expenses.Changes
-  alias Edenflowers.Expenses.Expense.Category
-  alias Edenflowers.Expenses.Expense.Confidence
-  alias Edenflowers.Expenses.Expense.Currency
 
   postgres do
     table "expenses"
@@ -152,10 +149,10 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :date, :date
     attribute :total_amount, :decimal, constraints: [scale: 2]
     attribute :vat_amount, :decimal, constraints: [scale: 2]
-    attribute :currency, Currency
-    attribute :category, Category
+    attribute :currency, __MODULE__.Currency
+    attribute :category, __MODULE__.Category
     attribute :description, :string
-    attribute :confidence, Confidence, allow_nil?: false
+    attribute :confidence, __MODULE__.Confidence, allow_nil?: false
     attribute :processed_at, :utc_datetime, allow_nil?: false
     attribute :reviewed_at, :utc_datetime
 
