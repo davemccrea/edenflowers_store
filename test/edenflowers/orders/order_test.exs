@@ -1243,12 +1243,7 @@ defmodule Edenflowers.Orders.OrderTest do
       order = generate(order(state: :delivery))
       closed_date = Date.add(Date.utc_today(), 3)
 
-      {:ok, _} =
-        Edenflowers.Fulfillment.update_calendar(
-          pickup_option,
-          %{disabled_dates: [closed_date]},
-          authorize?: false
-        )
+      {:ok, _} = Edenflowers.Fulfillment.toggle_date(pickup_option, closed_date, authorize?: false)
 
       assert {:error, error} =
                order
