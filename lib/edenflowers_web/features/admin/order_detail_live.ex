@@ -35,41 +35,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp assign_order(socket, order) do
-    payments = payments(order)
-
-    socket
-    |> assign(:order, order)
-    |> assign(:pickup_message_urls, pickup_message_urls(order))
-    |> assign(:payment_message_urls, payment_message_urls(order))
-    |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
-    |> assign(:payments, payments)
-    |> assign(:log, order_log(order, payments, socket.assigns.locale))
-  end
-
-  defp payments(order) do
-    order
-    |> Ash.load!(
-      [payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)],
-      authorize?: false
-    )
-    |> Map.fetch!(:payments)
-  end
-
-  defp order_log(order, payments, locale) do
-    order
-    |> Ash.load!(:paper_trail_versions, authorize?: false)
-    |> Map.fetch!(:paper_trail_versions)
-    |> OrderLog.entries(payments, locale)
-  end
-
-  defp line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
-
-  defp line_label(line_item),
-    do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
-
-  defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -479,6 +444,41 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply, put_flash(socket, :error, ~t"Could not refund with Stripe. Check the payment in Stripe.")}
     end
   end
+
+  defp assign_order(socket, order) do
+    payments = payments(order)
+
+    socket
+    |> assign(:order, order)
+    |> assign(:pickup_message_urls, pickup_message_urls(order))
+    |> assign(:payment_message_urls, payment_message_urls(order))
+    |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
+    |> assign(:payments, payments)
+    |> assign(:log, order_log(order, payments, socket.assigns.locale))
+  end
+
+  defp payments(order) do
+    order
+    |> Ash.load!(
+      [payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)],
+      authorize?: false
+    )
+    |> Map.fetch!(:payments)
+  end
+
+  defp order_log(order, payments, locale) do
+    order
+    |> Ash.load!(:paper_trail_versions, authorize?: false)
+    |> Map.fetch!(:paper_trail_versions)
+    |> OrderLog.entries(payments, locale)
+  end
+
+  defp line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
+
+  defp line_label(line_item),
+    do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
+
+  defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
 

@@ -34,147 +34,6 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     end
   end
 
-  defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Promotion, id, actor: actor, load: [:usage]) do
-      {:ok, promotion} ->
-        form = AshPhoenix.Form.for_update(promotion, :update, actor: actor, transform_params: &percent_to_rate/3)
-        {:ok, promotion.name, to_form(form)}
-
-      {:error, _} ->
-        :error
-    end
-  end
-
-  defp load_form(_params, actor) do
-    form = AshPhoenix.Form.for_create(Promotion, :create, actor: actor, transform_params: &percent_to_rate/3)
-    {:ok, ~t"New promotion", to_form(form)}
-  end
-
-  # The form asks for a percentage (15) but the resource stores a rate (0.15).
-  # Submit runs this again over already-converted params, so only strings from the browser are converted.
-  defp percent_to_rate(_form, %{"discount_rate" => percent} = params, _action) when is_binary(percent) do
-    case Decimal.parse(String.trim(percent)) do
-      {decimal, ""} -> Map.put(params, "discount_rate", Decimal.div(decimal, 100))
-      _ -> params
-    end
-  end
-
-  defp percent_to_rate(_form, params, _action), do: params
-
-  defp rate_to_percent(%Decimal{} = rate),
-    do: rate |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)
-
-  defp rate_to_percent(value), do: value
-
-  defp assign_history(socket) do
-    history =
-      case socket.assigns.form.source do
-        %{type: :update, data: promotion} -> history(promotion, socket.assigns.locale)
-        _ -> []
-      end
-
-    assign(socket, :history, history)
-  end
-
-  defp history(promotion, locale) do
-    promotion
-    |> Ash.load!(:paper_trail_versions, authorize?: false)
-    |> Map.fetch!(:paper_trail_versions)
-    |> Enum.map(&history_entry(&1, locale))
-    |> Enum.reject(&is_nil/1)
-    |> Enum.sort_by(& &1.at, {:desc, DateTime})
-  end
-
-  defp history_entry(%{version_action_type: :create} = version, _locale),
-    do: %{at: version.version_inserted_at, title: ~t"Created", changes: []}
-
-  defp history_entry(version, locale) do
-    changes =
-      for field <- @history_fields, %{"from" => from, "to" => to} <- [version.changes[to_string(field)]] do
-        {history_label(field), show(from, field, locale), show(to, field, locale)}
-      end
-
-    # A save that changed nothing still leaves a version.
-    if changes != [], do: %{at: version.version_inserted_at, title: ~t"Edited", changes: changes}
-  end
-
-  defp history_label(:name), do: ~t"Name"
-  defp history_label(:code), do: ~t"Code"
-  defp history_label(:discount_rate), do: ~t"Discount"
-  defp history_label(:minimum_cart_total), do: ~t"Minimum cart total"
-  defp history_label(:start_date), do: ~t"Starts"
-  defp history_label(:expiration_date), do: ~t"Expires"
-  defp history_label(:usage_limit), do: ~t"Usage limit"
-
-  defp status(promotion) do
-    today = HelsinkiToday.today()
-
-    cond do
-      promotion.start_date && Date.after?(promotion.start_date, today) -> {~t"Scheduled", :neutral}
-      promotion.expiration_date && Date.before?(promotion.expiration_date, today) -> {~t"Expired", :neutral}
-      promotion.usage_limit && promotion.usage >= promotion.usage_limit -> {~t"Used up", :neutral}
-      true -> {~t"Active", :success}
-    end
-  end
-
-  defp usage_label(%{usage_limit: nil, usage: usage}), do: ~t"Used #{usage}"
-  defp usage_label(%{usage_limit: limit, usage: usage}), do: ~t"Used #{usage} / #{limit}"
-
-  defp show(nil, _field, _locale), do: "—"
-  defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)
-  defp show(value, :minimum_cart_total, locale), do: Format.currency(Decimal.new(value), locale)
-
-  defp show(value, field, locale) when field in [:start_date, :expiration_date],
-    do: Format.date(Date.from_iso8601!(value), locale)
-
-  defp show(value, _field, _locale), do: to_string(value)
-
-  @impl true
-  def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
-  end
-
-  def handle_event("generate_code", _params, socket) do
-    form = socket.assigns.form
-    params = Map.put(form.params, "code", Promotion.generate_code())
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
-  end
-
-  def handle_event("save", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _promotion} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, ~t"Promotion saved.")
-         |> push_navigate(to: PromotionsLive.default_path())}
-
-      {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, form)
-         |> put_flash(:error, ~t"The promotion wasn't saved. Check the fields marked below.")}
-    end
-  end
-
-  def handle_event("delete", _params, socket) do
-    case Ash.destroy(socket.assigns.form.source.data, actor: socket.assigns.current_user) do
-      :ok ->
-        {:noreply,
-         socket
-         |> put_flash(:info, ~t"Promotion deleted.")
-         |> push_navigate(to: PromotionsLive.default_path())}
-
-      # Orders and newsletter subscribers keep a reference to the promotion.
-      {:error, _} ->
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           ~t"This promotion has been used, so it can't be deleted. Set an expiry date to stop it being used."
-         )}
-    end
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -313,4 +172,145 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_event("validate", %{"form" => params}, socket) do
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
+  end
+
+  def handle_event("generate_code", _params, socket) do
+    form = socket.assigns.form
+    params = Map.put(form.params, "code", Promotion.generate_code())
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+  end
+
+  def handle_event("save", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, _promotion} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, ~t"Promotion saved.")
+         |> push_navigate(to: PromotionsLive.default_path())}
+
+      {:error, form} ->
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"The promotion wasn't saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("delete", _params, socket) do
+    case Ash.destroy(socket.assigns.form.source.data, actor: socket.assigns.current_user) do
+      :ok ->
+        {:noreply,
+         socket
+         |> put_flash(:info, ~t"Promotion deleted.")
+         |> push_navigate(to: PromotionsLive.default_path())}
+
+      # Orders and newsletter subscribers keep a reference to the promotion.
+      {:error, _} ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           ~t"This promotion has been used, so it can't be deleted. Set an expiry date to stop it being used."
+         )}
+    end
+  end
+
+  defp load_form(%{"id" => id}, actor) do
+    case Ash.get(Promotion, id, actor: actor, load: [:usage]) do
+      {:ok, promotion} ->
+        form = AshPhoenix.Form.for_update(promotion, :update, actor: actor, transform_params: &percent_to_rate/3)
+        {:ok, promotion.name, to_form(form)}
+
+      {:error, _} ->
+        :error
+    end
+  end
+
+  defp load_form(_params, actor) do
+    form = AshPhoenix.Form.for_create(Promotion, :create, actor: actor, transform_params: &percent_to_rate/3)
+    {:ok, ~t"New promotion", to_form(form)}
+  end
+
+  # The form asks for a percentage (15) but the resource stores a rate (0.15).
+  # Submit runs this again over already-converted params, so only strings from the browser are converted.
+  defp percent_to_rate(_form, %{"discount_rate" => percent} = params, _action) when is_binary(percent) do
+    case Decimal.parse(String.trim(percent)) do
+      {decimal, ""} -> Map.put(params, "discount_rate", Decimal.div(decimal, 100))
+      _ -> params
+    end
+  end
+
+  defp percent_to_rate(_form, params, _action), do: params
+
+  defp rate_to_percent(%Decimal{} = rate),
+    do: rate |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)
+
+  defp rate_to_percent(value), do: value
+
+  defp assign_history(socket) do
+    history =
+      case socket.assigns.form.source do
+        %{type: :update, data: promotion} -> history(promotion, socket.assigns.locale)
+        _ -> []
+      end
+
+    assign(socket, :history, history)
+  end
+
+  defp history(promotion, locale) do
+    promotion
+    |> Ash.load!(:paper_trail_versions, authorize?: false)
+    |> Map.fetch!(:paper_trail_versions)
+    |> Enum.map(&history_entry(&1, locale))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.sort_by(& &1.at, {:desc, DateTime})
+  end
+
+  defp history_entry(%{version_action_type: :create} = version, _locale),
+    do: %{at: version.version_inserted_at, title: ~t"Created", changes: []}
+
+  defp history_entry(version, locale) do
+    changes =
+      for field <- @history_fields, %{"from" => from, "to" => to} <- [version.changes[to_string(field)]] do
+        {history_label(field), show(from, field, locale), show(to, field, locale)}
+      end
+
+    # A save that changed nothing still leaves a version.
+    if changes != [], do: %{at: version.version_inserted_at, title: ~t"Edited", changes: changes}
+  end
+
+  defp history_label(:name), do: ~t"Name"
+  defp history_label(:code), do: ~t"Code"
+  defp history_label(:discount_rate), do: ~t"Discount"
+  defp history_label(:minimum_cart_total), do: ~t"Minimum cart total"
+  defp history_label(:start_date), do: ~t"Starts"
+  defp history_label(:expiration_date), do: ~t"Expires"
+  defp history_label(:usage_limit), do: ~t"Usage limit"
+
+  defp status(promotion) do
+    today = HelsinkiToday.today()
+
+    cond do
+      promotion.start_date && Date.after?(promotion.start_date, today) -> {~t"Scheduled", :neutral}
+      promotion.expiration_date && Date.before?(promotion.expiration_date, today) -> {~t"Expired", :neutral}
+      promotion.usage_limit && promotion.usage >= promotion.usage_limit -> {~t"Used up", :neutral}
+      true -> {~t"Active", :success}
+    end
+  end
+
+  defp usage_label(%{usage_limit: nil, usage: usage}), do: ~t"Used #{usage}"
+  defp usage_label(%{usage_limit: limit, usage: usage}), do: ~t"Used #{usage} / #{limit}"
+
+  defp show(nil, _field, _locale), do: "—"
+  defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)
+  defp show(value, :minimum_cart_total, locale), do: Format.currency(Decimal.new(value), locale)
+
+  defp show(value, field, locale) when field in [:start_date, :expiration_date],
+    do: Format.date(Date.from_iso8601!(value), locale)
+
+  defp show(value, _field, _locale), do: to_string(value)
 end

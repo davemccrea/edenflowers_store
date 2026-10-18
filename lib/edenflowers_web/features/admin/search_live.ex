@@ -35,30 +35,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
      |> assign(:customers, customers)}
   end
 
-  defp search_orders(term, actor) do
-    term = Ash.CiString.new(term)
-
-    Order
-    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
-    |> Ash.Query.filter(
-      contains(customer_name, ^term) or contains(order_reference, ^term) or
-        contains(customer_phone_number, ^term) or contains(customer_email, ^term) or
-        contains(recipient_name, ^term) or contains(delivery_address, ^term)
-    )
-    |> Ash.Query.limit(@limit)
-    |> Ash.read!()
-  end
-
-  defp search_customers(term, actor) do
-    term = Ash.CiString.new(term)
-
-    User
-    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
-    |> Ash.Query.filter(contains(name, ^term) or contains(email, ^term))
-    |> Ash.Query.limit(@limit)
-    |> Ash.read!()
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -122,5 +98,29 @@ defmodule EdenflowersWeb.Admin.SearchLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search_orders(term, actor) do
+    term = Ash.CiString.new(term)
+
+    Order
+    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
+    |> Ash.Query.filter(
+      contains(customer_name, ^term) or contains(order_reference, ^term) or
+        contains(customer_phone_number, ^term) or contains(customer_email, ^term) or
+        contains(recipient_name, ^term) or contains(delivery_address, ^term)
+    )
+    |> Ash.Query.limit(@limit)
+    |> Ash.read!()
+  end
+
+  defp search_customers(term, actor) do
+    term = Ash.CiString.new(term)
+
+    User
+    |> Ash.Query.for_read(:admin_list, %{}, actor: actor)
+    |> Ash.Query.filter(contains(name, ^term) or contains(email, ^term))
+    |> Ash.Query.limit(@limit)
+    |> Ash.read!()
   end
 end

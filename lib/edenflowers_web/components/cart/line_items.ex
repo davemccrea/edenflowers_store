@@ -160,12 +160,6 @@ defmodule EdenflowersWeb.Cart.LineItems do
     """
   end
 
-  # Removing the last non-card item restarts checkout, which blanks every
-  # field the customer has entered. See Orders.Changes.RemoveLineItem.
-  defp last_non_card_item?(order) do
-    Enum.count(order.line_items, &(not &1.is_card)) == 1
-  end
-
   @impl true
   def handle_event("remove_item", %{"id" => id}, socket) do
     Orders.remove_line_item(socket.assigns.order, id)
@@ -190,6 +184,12 @@ defmodule EdenflowersWeb.Cart.LineItems do
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     if item = line_item(socket.assigns.order, id), do: Orders.decrement_line_item(item)
     {:noreply, assign(socket, :refused, %{})}
+  end
+
+  # Removing the last non-card item restarts checkout, which blanks every
+  # field the customer has entered. See Orders.Changes.RemoveLineItem.
+  defp last_non_card_item?(order) do
+    Enum.count(order.line_items, &(not &1.is_card)) == 1
   end
 
   # Looked up on the session's own order, so a client can't adjust another cart's items,

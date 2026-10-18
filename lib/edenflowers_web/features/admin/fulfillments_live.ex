@@ -42,31 +42,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     mount_action(socket.assigns.live_action, params, socket)
   end
 
-  defp mount_action(:index, _params, socket) do
-    {:ok,
-     socket
-     |> assign(:page_title, ~t"Fulfillments")
-     |> assign(:scope, :all)
-     |> assign_same_day_form()}
-  end
-
-  defp mount_action(:edit, %{"id" => id}, socket) do
-    case Enum.find(socket.assigns.options, &(&1.id == id)) do
-      nil ->
-        {:ok,
-         socket
-         |> put_flash(:error, ~t"Fulfillment option not found.")
-         |> push_navigate(to: ~p"/admin/fulfillments")}
-
-      option ->
-        {:ok,
-         socket
-         |> assign(:page_title, option.name)
-         |> assign(:scope, option.id)
-         |> assign(:form, pricing_form(option, socket.assigns.current_user))}
-    end
-  end
-
   @impl true
   def render(%{live_action: :index} = assigns) do
     ~H"""
@@ -129,6 +104,114 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  @impl true
+  def handle_event("validate", %{"pricing" => params}, socket) do
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
+  end
+
+  def handle_event("save", %{"pricing" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, option} ->
+        {:noreply,
+         socket
+         |> replace_options([option])
+         |> assign(:form, pricing_form(option, socket.assigns.current_user))
+         |> push_event("admin-form-saved", %{id: "pricing-form"})
+         |> put_flash(:info, ~t"Saved.")}
+
+      {:error, form} ->
+        {:noreply,
+         socket
+         |> assign(:form, form)
+         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("validate-same-day", %{"same_day" => params}, socket) do
+    {:noreply, assign(socket, :same_day_form, to_form(params, as: "same_day"))}
+  end
+
+  def handle_event("save-same-day", %{"same_day" => params}, socket) do
+    # A blank deadline keeps each option's own, rather than clearing them all.
+    changes =
+      case params["order_deadline"] do
+        "" -> %{same_day: params["same_day"]}
+        deadline -> %{same_day: params["same_day"], order_deadline: deadline}
+      end
+
+    case Fulfillment.set_same_day_for_all(changes, actor: socket.assigns.current_user) do
+      {:ok, updated} ->
+        {:noreply,
+         socket
+         |> replace_options(updated)
+         |> assign_same_day_form()
+         |> Cinder.refresh_table("fulfillment-options")
+         |> put_flash(:info, ~t"Saved.")}
+
+      {:error, error} ->
+        errors = for %{field: field} = e <- Ash.Error.to_error_class(error).errors, do: {field, {e.message, []}}
+
+        {:noreply,
+         socket
+         |> assign(:same_day_form, to_form(params, as: "same_day", errors: errors, action: :validate))
+         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("reset-calendar", _, socket) do
+    {:noreply, apply_to_scope(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
+  end
+
+  @impl true
+  def handle_info({:fulfillment_date_toggled, date}, socket) do
+    {:noreply, apply_to_scope(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
+  end
+
+  def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
+    targets = scoped_options(socket)
+    direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
+
+    {:noreply, apply_to_scope(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
+  end
+
+  def handle_info({:fulfillment_week_toggled, week}, socket) do
+    %{today: today} = socket.assigns
+    targets = scoped_options(socket)
+
+    case CalendarViewModel.week_toggle_direction(targets, week, today) do
+      nil ->
+        {:noreply, socket}
+
+      direction ->
+        {:noreply, apply_to_scope(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
+    end
+  end
+
+  defp mount_action(:index, _params, socket) do
+    {:ok,
+     socket
+     |> assign(:page_title, ~t"Fulfillments")
+     |> assign(:scope, :all)
+     |> assign_same_day_form()}
+  end
+
+  defp mount_action(:edit, %{"id" => id}, socket) do
+    case Enum.find(socket.assigns.options, &(&1.id == id)) do
+      nil ->
+        {:ok,
+         socket
+         |> put_flash(:error, ~t"Fulfillment option not found.")
+         |> push_navigate(to: ~p"/admin/fulfillments")}
+
+      option ->
+        {:ok,
+         socket
+         |> assign(:page_title, option.name)
+         |> assign(:scope, option.id)
+         |> assign(:form, pricing_form(option, socket.assigns.current_user))}
+    end
   end
 
   attr :scope, :any, required: true
@@ -262,89 +345,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       end
 
     Enum.join([Format.currency(option.base_price, locale)] ++ distance, " · ")
-  end
-
-  @impl true
-  def handle_event("validate", %{"pricing" => params}, socket) do
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
-  end
-
-  def handle_event("save", %{"pricing" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, option} ->
-        {:noreply,
-         socket
-         |> replace_options([option])
-         |> assign(:form, pricing_form(option, socket.assigns.current_user))
-         |> push_event("admin-form-saved", %{id: "pricing-form"})
-         |> put_flash(:info, ~t"Saved.")}
-
-      {:error, form} ->
-        {:noreply,
-         socket
-         |> assign(:form, form)
-         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
-    end
-  end
-
-  def handle_event("validate-same-day", %{"same_day" => params}, socket) do
-    {:noreply, assign(socket, :same_day_form, to_form(params, as: "same_day"))}
-  end
-
-  def handle_event("save-same-day", %{"same_day" => params}, socket) do
-    # A blank deadline keeps each option's own, rather than clearing them all.
-    changes =
-      case params["order_deadline"] do
-        "" -> %{same_day: params["same_day"]}
-        deadline -> %{same_day: params["same_day"], order_deadline: deadline}
-      end
-
-    case Fulfillment.set_same_day_for_all(changes, actor: socket.assigns.current_user) do
-      {:ok, updated} ->
-        {:noreply,
-         socket
-         |> replace_options(updated)
-         |> assign_same_day_form()
-         |> Cinder.refresh_table("fulfillment-options")
-         |> put_flash(:info, ~t"Saved.")}
-
-      {:error, error} ->
-        errors = for %{field: field} = e <- Ash.Error.to_error_class(error).errors, do: {field, {e.message, []}}
-
-        {:noreply,
-         socket
-         |> assign(:same_day_form, to_form(params, as: "same_day", errors: errors, action: :validate))
-         |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
-    end
-  end
-
-  def handle_event("reset-calendar", _, socket) do
-    {:noreply, apply_to_scope(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
-  end
-
-  @impl true
-  def handle_info({:fulfillment_date_toggled, date}, socket) do
-    {:noreply, apply_to_scope(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
-  end
-
-  def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
-    targets = scoped_options(socket)
-    direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
-
-    {:noreply, apply_to_scope(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
-  end
-
-  def handle_info({:fulfillment_week_toggled, week}, socket) do
-    %{today: today} = socket.assigns
-    targets = scoped_options(socket)
-
-    case CalendarViewModel.week_toggle_direction(targets, week, today) do
-      nil ->
-        {:noreply, socket}
-
-      direction ->
-        {:noreply, apply_to_scope(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
-    end
   end
 
   defp pricing_form(option, actor) do

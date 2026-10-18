@@ -51,38 +51,6 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   @impl true
-  def handle_event("pay", _params, socket) do
-    with {:ok, order} <- Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false),
-         true <- order.payable?,
-         true <- order.payment_intent_id == socket.assigns.shown_order.payment_intent_id,
-         :ok <- sync_amount(order) do
-      {:noreply,
-       socket
-       |> assign(:shown_order, order)
-       |> push_event("stripe:process_payment", %{})}
-    else
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, ~t"The order changed. Please try again.")
-         |> push_navigate(to: ~p"/pay/#{socket.assigns.token}")}
-    end
-  end
-
-  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error("Stripe client error for order #{socket.assigns.shown_order.id}: #{message}: #{inspect(details)}")
-
-    {:noreply,
-     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
-  end
-
-  @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:paid:" <> _}, socket) do
-    {:ok, order} = Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false)
-    {:noreply, socket |> assign(:shown_order, order) |> assign(:client_secret, nil)}
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -191,6 +159,38 @@ defmodule EdenflowersWeb.Checkout.PayLive do
       </.container>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_event("pay", _params, socket) do
+    with {:ok, order} <- Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false),
+         true <- order.payable?,
+         true <- order.payment_intent_id == socket.assigns.shown_order.payment_intent_id,
+         :ok <- sync_amount(order) do
+      {:noreply,
+       socket
+       |> assign(:shown_order, order)
+       |> push_event("stripe:process_payment", %{})}
+    else
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"The order changed. Please try again.")
+         |> push_navigate(to: ~p"/pay/#{socket.assigns.token}")}
+    end
+  end
+
+  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
+    Logger.error("Stripe client error for order #{socket.assigns.shown_order.id}: #{message}: #{inspect(details)}")
+
+    {:noreply,
+     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:paid:" <> _}, socket) do
+    {:ok, order} = Orders.get_order_by_payment_link_token(socket.assigns.token, authorize?: false)
+    {:noreply, socket |> assign(:shown_order, order) |> assign(:client_secret, nil)}
   end
 
   # Stripe is only touched once the page is live, so a crawler or a link
