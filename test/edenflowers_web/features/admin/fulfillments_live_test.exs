@@ -254,23 +254,17 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   end
 
   describe "reset" do
-    test "wipes overrides and reopens every weekday for the scoped option", %{
-      conn: conn,
-      delivery: delivery
-    } do
-      # Seed delivery with an override and a non-default weekday rule.
-      {:ok, _} =
-        Fulfillment.update_calendar(
-          delivery,
-          %{
+    test "wipes overrides and reopens every weekday for the scoped option", %{conn: conn} do
+      option =
+        generate(
+          fulfillment_option(
             available_days: [:monday],
             enabled_dates: [Date.add(HelsinkiToday.today(), 30)],
             disabled_dates: [Date.add(HelsinkiToday.today(), 31)]
-          },
-          authorize?: false
+          )
         )
 
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{delivery.id}")
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{option.id}")
 
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
@@ -278,7 +272,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       drain(view)
 
-      reloaded = Fulfillment.get_option_by_id!(delivery.id, authorize?: false)
+      reloaded = Fulfillment.get_option_by_id!(option.id, authorize?: false)
 
       assert Enum.sort(reloaded.available_days) ==
                [:friday, :monday, :saturday, :sunday, :thursday, :tuesday, :wednesday]

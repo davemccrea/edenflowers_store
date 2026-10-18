@@ -78,13 +78,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       prepare build(sort: [sort_key: :asc, name: :asc])
     end
 
-    update :update_calendar do
-      description "Admin-only update narrowed to the calendar overrides. " <>
-                    "Prevents accidental writes to pricing or fulfillment-method attrs."
-
-      accept [:available_days, :enabled_dates, :disabled_dates]
-    end
-
     update :update_pricing do
       description "Admin-only update narrowed to prices, distances and the same-day cutoff. " <>
                     "Prevents accidental writes to the fulfillment method, rate type or calendar."

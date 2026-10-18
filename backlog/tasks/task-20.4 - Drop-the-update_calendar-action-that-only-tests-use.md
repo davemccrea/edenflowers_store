@@ -1,9 +1,10 @@
 ---
 id: TASK-20.4
 title: Drop the update_calendar action that only tests use
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 06:37'
+updated_date: '2026-10-18 06:46'
 labels:
   - quick
 dependencies: []
@@ -27,6 +28,6 @@ ordinal: 77000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `grep -rn update_calendar lib test` finds only DatePicker's unrelated `update_calendar_view`
-- [ ] #2 The existing suite passes
+- [x] #1 `grep -rn update_calendar lib test` finds only DatePicker's unrelated `update_calendar_view`
+- [x] #2 The existing suite passes
 <!-- AC:END -->
