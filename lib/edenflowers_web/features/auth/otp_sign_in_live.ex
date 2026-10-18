@@ -194,9 +194,18 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
         socket =
           socket
           |> assign(email: email, request_form: form, resend_remaining: @resend_cooldown_seconds)
+          |> prefill_dev_otp()
           |> push_patch(to: ~p"/sign-in?#{[email: email]}")
 
         {:ok, socket}
+    end
+  end
+
+  # Only ever set by SendOtp in dev, for admins.
+  defp prefill_dev_otp(socket) do
+    case Process.delete(:dev_otp_code) do
+      nil -> socket
+      code -> assign(socket, sign_in_form: AshPhoenix.Form.validate(socket.assigns.sign_in_form, %{"otp" => code}))
     end
   end
 
