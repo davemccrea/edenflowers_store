@@ -61,7 +61,7 @@ What is still owed on a placed order or a confirmed course booking: its Total du
 _Avoid_: Amount mismatch, outstanding, difference
 
 **Total due**:
-What a placed order or confirmed course booking is still to be paid for, before what's been paid is taken off. Zero once cancelled; the order's or booking's total itself stays as ordered, for the receipt.
+What a placed order or confirmed course booking is still to be paid for, before what's been paid is taken off. Zero once cancelled, apart from what a booking keeps: a late-cancellation fee when cancelled less than 7 days before the course, or less handed back than owed when Jennie chooses. The order's or booking's total itself stays as ordered, for the receipt.
 _Avoid_: Amount due, outstanding
 
 **Settled**:

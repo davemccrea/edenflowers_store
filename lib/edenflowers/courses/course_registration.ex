@@ -32,7 +32,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   postgres do
     repo Edenflowers.Repo
     table "course_registrations"
-    migration_types amount: :decimal
+    migration_types amount: :decimal, kept_amount: :decimal
 
     check_constraints do
       check_constraint :amount, "course_registrations_valid_amount",
@@ -201,7 +201,15 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Jennie to refund.
     update :cancel do
       change set_attribute(:status, :cancelled)
+      change Changes.KeepLateCancellationFee
       change PaymentChanges.CancelOpenPaymentIntent
+      require_atomic? false
+    end
+
+    # Jennie's choice of what to hand back, instead of the whole negative balance.
+    update :set_refund do
+      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      change Changes.SetRefund
       require_atomic? false
     end
 
@@ -270,6 +278,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
+    # Money not handed back: a late-cancellation fee, or what Jennie kept when she refunded less.
+    attribute :kept_amount, :decimal, allow_nil?: false, default: 0, constraints: [min: 0, scale: 2]
+
     attribute :payment_intent_id, :string
     attribute :payment_link_token, :string, sensitive?: true
     attribute :payment_link_emailed_at, :utc_datetime
@@ -303,7 +314,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # exactly their share of it.
     calculate :total_due,
               :decimal,
-              expr(if status == :cancelled, do: 0, else: round(amount * seats_held / seats, 2))
+              expr(if status == :cancelled, do: kept_amount, else: round(amount * seats_held / seats, 2) + kept_amount)
 
     # A pending booking only holds its seats while the customer pays.
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])

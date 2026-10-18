@@ -1,9 +1,10 @@
 ---
 id: TASK-37
 title: Keep a late-cancellation fee on courses
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 19:55'
 labels:
   - spec
   - customers

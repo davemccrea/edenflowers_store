@@ -6,7 +6,8 @@ defmodule Edenflowers.Payments.Payable do
   The including resource supplies:
 
     * `has_many :payments`
-    * `calculate :total_due`: what it's still to be paid for, 0 once cancelled.
+    * `calculate :total_due`: what it's still to be paid for, 0 once cancelled
+      apart from anything it keeps, like a booking's late-cancellation fee.
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a booking still holding its seats while the customer pays.
   """

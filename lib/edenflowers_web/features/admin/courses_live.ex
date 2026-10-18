@@ -114,18 +114,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
-  def handle_event("record_payment", %{"record_id" => id, "payment" => params}, socket) do
-    actor = socket.assigns.current_user
-    with_registration(socket, id, &PaymentActions.record_payment(&1, params, actor))
-  end
-
   def handle_event("undo_payment", %{"id" => id, "payment-id" => payment_id}, socket) do
     actor = socket.assigns.current_user
     with_registration(socket, id, &PaymentActions.undo_payment(&1, payment_id, actor))
   end
 
-  def handle_event("refund_with_stripe", %{"id" => id}, socket) do
-    with_registration(socket, id, &PaymentActions.refund_with_stripe/1)
+  def handle_event("refund", %{"record_id" => id, "refund" => params}, socket) do
+    actor = socket.assigns.current_user
+    with_registration(socket, id, &refund(&1, params, actor))
   end
 
   def handle_event("open_payment_link", %{"id" => id}, socket) do
@@ -182,6 +178,23 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       end
 
     {:noreply, load_courses(socket)}
+  end
+
+  # The amount Jennie leaves in the form is what's handed back; the rest of the balance is kept.
+  defp refund(registration, %{"amount" => amount} = params, actor) do
+    amount = String.replace(amount, ",", ".")
+
+    case Courses.set_registration_refund(registration, amount, actor: actor, load: [:outside_stripe_refund]) do
+      {:ok, registration} -> refund_by(registration, params, actor)
+      {:error, error} -> {:error, PaymentActions.payment_error(error)}
+    end
+  end
+
+  defp refund_by(registration, %{"by" => "stripe"}, _actor), do: PaymentActions.refund_with_stripe(registration)
+
+  defp refund_by(registration, %{"payment_method" => payment_method}, actor) do
+    amount = registration.outside_stripe_refund |> Decimal.negate() |> Decimal.to_string(:normal)
+    PaymentActions.record_payment(registration, %{"amount" => amount, "payment_method" => payment_method}, actor)
   end
 
   defp load_courses(socket) do
@@ -385,7 +398,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   </select>
                   <.button type="submit" variant="neutral" size="sm">{~t"Record payment"}</.button>
                 </form>
-                <.refund_controls registration={registration} locale={@locale} />
+                <.refund_controls registration={registration} />
               </div>
               <.actions_menu id={"registration-actions-#{registration.id}"}>
                 <li :if={stripe_payment_intent_id(registration)}>
@@ -484,7 +497,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               :if={to_refund?(registration)}
               class="flex w-full items-center gap-1 sm:ml-auto sm:w-auto sm:shrink-0"
             >
-              <.refund_controls registration={registration} locale={@locale} />
+              <.refund_controls registration={registration} />
             </div>
           </li>
         </ul>
@@ -521,59 +534,60 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   attr :registration, :map, required: true
-  attr :locale, :string, required: true
 
   # Sits beside "Record payment" so a refund is settled from the row the same way a payment is.
   # Money taken by card goes back through Stripe; cash or Zettle money is recorded as handed back.
+  # The amount starts at the balance, which leaves out a late-cancellation fee, and Jennie can change it.
   defp refund_controls(assigns) do
     ~H"""
-    <.button
-      :if={Decimal.positive?(@registration.stripe_refund)}
-      id={"refund-stripe-#{@registration.id}"}
-      type="button"
-      phx-click="refund_with_stripe"
-      phx-value-id={@registration.id}
-      phx-disable-with={~t"Refunding…"}
-      data-confirm={
-        ~t"Refund #{amount = Format.currency(@registration.stripe_refund, @locale)} to the customer's card with Stripe?"
-      }
-      variant="neutral"
-      size="sm"
-      class="flex-1 sm:flex-none"
-    >
-      {~t"Refund with Stripe"}
-    </.button>
     <form
-      :if={Decimal.positive?(@registration.outside_stripe_refund)}
       id={"refund-#{@registration.id}"}
-      phx-submit="record_payment"
-      class="flex flex-1 items-center gap-1 sm:flex-none"
+      phx-submit="refund"
+      class="flex flex-1 flex-wrap items-center gap-1 sm:flex-none"
     >
       <input type="hidden" name="record_id" value={@registration.id} />
+      <label for={"refund-amount-#{@registration.id}"} class="sr-only">{~t"Amount to refund (€)"}</label>
       <input
-        type="hidden"
-        name="payment[amount]"
-        value={Decimal.to_string(Decimal.negate(@registration.outside_stripe_refund), :normal)}
+        id={"refund-amount-#{@registration.id}"}
+        name="refund[amount]"
+        type="text"
+        inputmode="decimal"
+        value={Decimal.to_string(Decimal.abs(@registration.balance), :normal)}
+        class="input input-sm w-24 tabular-nums"
       />
-      <label for={"refund-method-#{@registration.id}"} class="sr-only">{~t"How"}</label>
-      <select
-        id={"refund-method-#{@registration.id}"}
-        name="payment[payment_method]"
-        class="select select-sm flex-1 sm:w-auto sm:flex-none"
-      >
-        {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
-      </select>
       <.button
+        :if={Decimal.positive?(@registration.stripe_refund)}
+        name="refund[by]"
+        value="stripe"
         type="submit"
+        phx-disable-with={~t"Refunding…"}
+        data-confirm={~t"Refund this amount to the customer's card with Stripe?"}
         variant="neutral"
         size="sm"
-        class="tabular-nums"
-        data-confirm={
-          ~t"Record #{amount = Format.currency(@registration.outside_stripe_refund, @locale)} as refunded? A mistake can be undone afterwards."
-        }
+        class="flex-1 sm:flex-none"
       >
-        {~t"Record refund"}
+        {~t"Refund with Stripe"}
       </.button>
+      <%= if Decimal.positive?(@registration.outside_stripe_refund) do %>
+        <label for={"refund-method-#{@registration.id}"} class="sr-only">{~t"How"}</label>
+        <select
+          id={"refund-method-#{@registration.id}"}
+          name="refund[payment_method]"
+          class="select select-sm flex-1 sm:w-auto sm:flex-none"
+        >
+          {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
+        </select>
+        <.button
+          name="refund[by]"
+          value="record"
+          type="submit"
+          variant="neutral"
+          size="sm"
+          data-confirm={~t"Record this amount as refunded? A mistake can be undone afterwards."}
+        >
+          {~t"Record refund"}
+        </.button>
+      <% end %>
     </form>
     """
   end

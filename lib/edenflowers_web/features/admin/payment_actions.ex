@@ -64,9 +64,9 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  # Why recording money was refused, in the action's own words.
-  defp payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
-  defp payment_error(_error), do: ~t"Could not record it. Check the amount."
+  @doc "Why recording money was refused, in the action's own words."
+  def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
+  def payment_error(_error), do: ~t"Could not record it. Check the amount."
 
   defp refund_message([]), do: ~t"Nothing left to refund. Stripe already has refunds covering it."
 

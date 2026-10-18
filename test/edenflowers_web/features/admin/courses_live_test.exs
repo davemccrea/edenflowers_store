@@ -72,6 +72,44 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :cancelled
   end
 
+  describe "refunding a late cancellation" do
+    setup do
+      today = Edenflowers.ShopTime.today()
+
+      course =
+        generate(course(date: Date.add(today, 3), register_before: today, late_cancellation_fee: "15.00"))
+
+      registration =
+        generate(course_registration(course_id: course.id, status: :confirmed, amount: Decimal.new("85.00")))
+
+      generate(payment(course_registration_id: registration.id, method: :cash, amount: Decimal.new("85.00")))
+
+      %{registration: registration}
+    end
+
+    test "suggests what was paid minus the fee", %{conn: conn, registration: registration} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+
+      assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
+      assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="70.00"]|)
+    end
+
+    test "refunds the amount Jennie changes it to", %{conn: conn, registration: registration} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+
+      view
+      |> form("#refund-#{registration.id}", refund: %{amount: "85,00", payment_method: "cash"})
+      |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
+      |> render_submit()
+
+      refute has_element?(view, "#registration-#{registration.id}", "To refund")
+      registration = Ash.load!(registration, [:amount_paid], authorize?: false, reuse_values?: false)
+      assert Decimal.equal?(registration.amount_paid, 0)
+    end
+  end
+
   describe "adding a booking" do
     defp add_booking(view, course, payment_link?, email_customer?) do
       view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
