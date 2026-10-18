@@ -10,6 +10,9 @@ defmodule Edenflowers.Orders.Subscription do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource]
 
+  alias Edenflowers.Orders.Changes
+  alias Edenflowers.Orders.Validations
+
   @intervals [1, 2, 4]
 
   # Notice Jennie gets to buy the flowers before an Occurrence is delivered.
@@ -36,7 +39,7 @@ defmodule Edenflowers.Orders.Subscription do
 
   @doc "The next delivery date a paused subscription would get if it resumed today."
   def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
-    Edenflowers.Orders.Changes.StepToScheduledDate.scheduled_date(date, weeks, @cutoff_days)
+    Changes.StepToScheduledDate.scheduled_date(date, weeks, @cutoff_days)
   end
 
   def lead_days, do: @lead_days
@@ -156,7 +159,7 @@ defmodule Edenflowers.Orders.Subscription do
       ]
 
       validate attribute_in(:interval_weeks, @intervals)
-      change Edenflowers.Orders.Changes.SnapshotCard
+      change Changes.SnapshotCard
       change run_oban_trigger(:send_setup_email)
     end
 
@@ -164,26 +167,26 @@ defmodule Edenflowers.Orders.Subscription do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Orders.Changes.SendSubscriptionSetupEmail
+      change Changes.SendSubscriptionSetupEmail
     end
 
     update :create_occurrence do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Orders.Changes.CreateOccurrence
+      change Changes.CreateOccurrence
     end
 
     # Dates that passed while it was held are not owed, so it picks up at the
     # first one not yet past.
     update :reactivate do
       change transition_state(:active)
-      change {Edenflowers.Orders.Changes.StepToScheduledDate, days_from_today: 0}
+      change {Changes.StepToScheduledDate, days_from_today: 0}
       require_atomic? false
     end
 
     update :pause do
-      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
+      validate Validations.SubscriptionChangesOpen
       change transition_state(:paused)
     end
 
@@ -191,7 +194,7 @@ defmodule Edenflowers.Orders.Subscription do
     # already passed, so resuming never creates an Occurrence at short notice.
     update :resume do
       change transition_state(:active)
-      change {Edenflowers.Orders.Changes.StepToScheduledDate, days_from_today: @cutoff_days}
+      change {Changes.StepToScheduledDate, days_from_today: @cutoff_days}
       require_atomic? false
     end
 
@@ -203,10 +206,10 @@ defmodule Edenflowers.Orders.Subscription do
       argument :delivery_day, Edenflowers.Fulfillment.Weekday
       validate attribute_does_not_equal(:state, :cancelled)
       validate attribute_in(:interval_weeks, @intervals)
-      validate Edenflowers.Orders.Validations.SubscriptionVariant
-      validate Edenflowers.Orders.Validations.SubscriptionDeliveryDay
-      validate Edenflowers.Orders.Validations.SubscriptionChangesOpen
-      change Edenflowers.Orders.Changes.Reschedule
+      validate Validations.SubscriptionVariant
+      validate Validations.SubscriptionDeliveryDay
+      validate Validations.SubscriptionChangesOpen
+      change Changes.Reschedule
       require_atomic? false
     end
 
@@ -216,7 +219,7 @@ defmodule Edenflowers.Orders.Subscription do
       argument :stripe_payment_method_id, :string, allow_nil?: false
       validate attribute_does_not_equal(:state, :cancelled)
       change set_attribute(:stripe_payment_method_id, arg(:stripe_payment_method_id))
-      change Edenflowers.Orders.Changes.SnapshotCard
+      change Changes.SnapshotCard
 
       change after_action(fn _changeset, subscription, _context -> reactivate_if_held(subscription) end)
 
@@ -225,7 +228,7 @@ defmodule Edenflowers.Orders.Subscription do
 
     update :cancel do
       change transition_state(:cancelled)
-      change Edenflowers.Orders.Changes.CancelOpenOccurrences
+      change Changes.CancelOpenOccurrences
       require_atomic? false
     end
   end

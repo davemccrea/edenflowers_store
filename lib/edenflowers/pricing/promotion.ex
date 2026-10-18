@@ -5,6 +5,8 @@ defmodule Edenflowers.Pricing.Promotion do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshPaperTrail.Resource]
 
+  alias Edenflowers.Pricing.Changes
+
   postgres do
     table "promotions"
     repo Edenflowers.Repo
@@ -57,7 +59,7 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     create :create_for_newsletter do
-      change Edenflowers.Pricing.Changes.SetNewsletterDefaults
+      change Changes.SetNewsletterDefaults
     end
   end
 

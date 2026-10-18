@@ -6,6 +6,9 @@ defmodule Edenflowers.Catalog.Product do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  alias Edenflowers.Catalog.Preparations
+  alias Edenflowers.Orders.Validations
+
   postgres do
     table "products"
     repo Edenflowers.Repo
@@ -20,12 +23,12 @@ defmodule Edenflowers.Catalog.Product do
     defaults [:read, :destroy]
 
     read :for_store do
-      prepare Edenflowers.Catalog.Preparations.VisibleInStore
+      prepare Preparations.VisibleInStore
     end
 
     read :featured do
       filter expr(featured == true)
-      prepare Edenflowers.Catalog.Preparations.VisibleInStore
+      prepare Preparations.VisibleInStore
       prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
@@ -33,7 +36,7 @@ defmodule Edenflowers.Catalog.Product do
       argument :category_id, :uuid, allow_nil?: false
 
       filter expr(product_category_id == ^arg(:category_id))
-      prepare Edenflowers.Catalog.Preparations.VisibleInStore
+      prepare Preparations.VisibleInStore
       prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
@@ -80,10 +83,10 @@ defmodule Edenflowers.Catalog.Product do
       argument :product_variants, {:array, :map}
       require_atomic? false
 
-      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+      validate {Validations.NotReferencedByCurrentSubscription,
                 reference: :product, field: :subscribable, changing_to: {:subscribable, false}}
 
-      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
+      validate {Validations.NotReferencedByCurrentSubscription,
                 reference: :product, field: :free_delivery, changing_to: {:free_delivery, false}}
 
       # A size left out of the form was removed; destroying archives it.

@@ -14,6 +14,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  alias Edenflowers.Fulfillment.Actions
+  alias Edenflowers.Fulfillment.Changes
   alias Edenflowers.Fulfillment.Weekday
 
   postgres do
@@ -91,7 +93,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       # so it can't be expressed as a single DB expression.
       require_atomic? false
       argument :date, :date, allow_nil?: false
-      change Edenflowers.Fulfillment.Changes.ToggleDate
+      change Changes.ToggleDate
     end
 
     update :set_weekday do
@@ -99,7 +101,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       require_atomic? false
       argument :weekday, Weekday, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
-      change Edenflowers.Fulfillment.Changes.SetWeekday
+      change Changes.SetWeekday
     end
 
     update :set_week do
@@ -108,7 +110,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       argument :week, {:array, :date}, allow_nil?: false
       argument :today, :date, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:open, :closed]]
-      change Edenflowers.Fulfillment.Changes.SetWeek
+      change Changes.SetWeek
     end
 
     update :reset_calendar do
@@ -121,7 +123,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     action :calculate_delivery, :map do
       argument :delivery_address, :string, allow_nil?: false
       argument :fulfillment_option_id, :uuid, allow_nil?: false
-      run Edenflowers.Fulfillment.Actions.CalculateDelivery
+      run Actions.CalculateDelivery
     end
   end
 

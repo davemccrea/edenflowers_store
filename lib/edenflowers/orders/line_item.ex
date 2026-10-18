@@ -5,6 +5,9 @@ defmodule Edenflowers.Orders.LineItem do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
+  alias Edenflowers.Orders.Changes
+  alias Edenflowers.Orders.Validations
+
   postgres do
     repo Edenflowers.Repo
     table "line_items"
@@ -38,10 +41,10 @@ defmodule Edenflowers.Orders.LineItem do
       upsert_fields [:quantity]
 
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
-      validate Edenflowers.Orders.Validations.Subscribable
-      validate Edenflowers.Orders.Validations.WithinStock
-      change Edenflowers.Orders.Changes.PopulateFromVariant
-      change Edenflowers.Orders.Changes.KeepSubscriptionAlone
+      validate Validations.Subscribable
+      validate Validations.WithinStock
+      change Changes.PopulateFromVariant
+      change Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
@@ -59,7 +62,7 @@ defmodule Edenflowers.Orders.LineItem do
     # A subscription is for one bouquet each time.
     update :increment_quantity do
       require_atomic? false
-      validate Edenflowers.Orders.Validations.WithinStock
+      validate Validations.WithinStock
       change atomic_update(:quantity, expr(if(is_nil(interval_weeks), quantity + 1, quantity)))
     end
 

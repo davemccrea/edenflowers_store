@@ -48,6 +48,7 @@ defmodule Edenflowers.Expenses.Expense do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  alias Edenflowers.Expenses.Changes
   alias Edenflowers.Expenses.Expense.Category
   alias Edenflowers.Expenses.Expense.Confidence
   alias Edenflowers.Expenses.Expense.Currency
@@ -75,7 +76,7 @@ defmodule Edenflowers.Expenses.Expense do
       description "Deletes an expense and removes its tags from the Papra document."
       primary? true
       require_atomic? false
-      change Edenflowers.Expenses.Changes.RemovePapraTags
+      change Changes.RemovePapraTags
     end
 
     read :admin_list do
