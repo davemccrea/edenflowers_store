@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  import ExUnit.CaptureLog
   import Generator
   import Mox
   import Phoenix.LiveViewTest
@@ -205,8 +206,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     test "flashes an error and sends nothing when Stripe can't be reached", %{conn: conn} do
       expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
 
-      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-09") end)
 
+      assert log =~ ~s(Monthly report for "2026-09" failed: {:error, :timeout})
       assert redirected_to(conn) == ~p"/admin/expenses"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
     end
@@ -215,15 +217,19 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       create_expense("report-missing", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
       expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, :timeout} end)
 
-      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-09") end)
+
+      assert log =~
+               ~s(Monthly report for "2026-09" failed: {:error, {:receipt_fetch_failed, "report-missing", :timeout}})
 
       assert redirected_to(conn) == ~p"/admin/expenses"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
     end
 
     test "flashes an error for a malformed month", %{conn: conn} do
-      conn = get(conn, ~p"/admin/accounting?month=2026-13")
+      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-13") end)
 
+      assert log =~ ~s(Monthly report for "2026-13" failed:)
       assert redirected_to(conn) == ~p"/admin/expenses"
     end
 

@@ -26,6 +26,8 @@ config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Test
 
 config :swoosh, :api_client, false
 
+config :imgproxy, prefix: "http://imgproxy.test"
+
 config :logger, level: :warning
 
 config :error_tracker, enabled: false

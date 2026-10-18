@@ -113,6 +113,7 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
 
     test "sends the photo of where the flowers were left instead, shrunk by imgproxy" do
       Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+        assert conn.host == "imgproxy.test"
         assert conn.request_path =~ "rs:fit:1600:1600"
         assert conn.request_path =~ "q:80"
         Plug.Conn.send_resp(conn, 200, "small jpeg")
