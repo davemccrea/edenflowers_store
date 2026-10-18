@@ -177,6 +177,51 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
+  describe "cancelling a paid booking" do
+    setup do
+      %{admin: generate(admin_user())}
+    end
+
+    defp paid_booking(days_before, admin, paid \\ "85.00") do
+      today = ShopTime.today()
+
+      course =
+        generate(course(date: Date.add(today, days_before), register_before: today, late_cancellation_fee: "15.00"))
+
+      {:ok, registration} = add_manually(course, 1, admin)
+      {:ok, registration} = Courses.record_registration_payment(registration, paid, :cash, actor: admin)
+      registration
+    end
+
+    test "less than 7 days before the course keeps the late-cancellation fee", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(6, admin), actor: admin)
+      assert Decimal.equal?(balance(registration), "-70.00")
+    end
+
+    test "7 days before the course refunds everything", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(7, admin), actor: admin)
+      assert Decimal.equal?(balance(registration), "-85.00")
+    end
+
+    test "keeps no more than was paid", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin, "10.00"), actor: admin)
+      assert Decimal.equal?(balance(registration), 0)
+    end
+
+    test "Jennie can refund more or less than suggested, but not more than was paid", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), actor: admin)
+
+      {:ok, registration} = Courses.set_registration_refund(registration, "85.00", actor: admin)
+      assert Decimal.equal?(balance(registration), "-85.00")
+
+      {:ok, registration} = Courses.set_registration_refund(registration, "50.00", actor: admin)
+      assert Decimal.equal?(balance(registration), "-50.00")
+
+      assert {:error, error} = Courses.set_registration_refund(registration, "85.01", actor: admin)
+      assert Exception.message(error) =~ "more than is owed back"
+    end
+  end
+
   defp balance(registration) do
     Ash.load!(registration, :balance, authorize?: false, reuse_values?: false).balance
   end
