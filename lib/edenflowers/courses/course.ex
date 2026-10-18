@@ -38,6 +38,7 @@ defmodule Edenflowers.Courses.Course do
       :total_places,
       :price,
       :tax_rate_id,
+      :language,
       :translations
     ]
 
@@ -86,6 +87,8 @@ defmodule Edenflowers.Courses.Course do
     attribute :register_before, :date, allow_nil?: false
     attribute :total_places, :integer, allow_nil?: false
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+    # The language the course is taught in, not the language of its page.
+    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :en]]
 
     timestamps()
   end

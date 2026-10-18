@@ -89,7 +89,8 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           <span :if={!@course.booking_open?} class="text-base-content/70">{@course.name}</span>
         </h3>
         <p class="text-base-content/70 mt-1 text-sm tabular-nums">
-          {Format.time(@course.start_time, @locale)}–{Format.time(@course.end_time, @locale)} · {@course.location_name}
+          {Format.time(@course.start_time, @locale)}–{Format.time(@course.end_time, @locale)} · {@course.location_name} ·
+          <span data-testid="course-language">{taught_in(@course.language)}</span>
         </p>
       </div>
 
@@ -100,6 +101,9 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
     </div>
     """
   end
+
+  defp taught_in(:sv), do: ~t"In Swedish"
+  defp taught_in(:en), do: ~t"In English"
 
   defp availability(%{seats_left: seats_left}) when seats_left <= 0, do: ~t"Fully booked"
   defp availability(%{booking_open?: false}), do: ~t"Booking closed"

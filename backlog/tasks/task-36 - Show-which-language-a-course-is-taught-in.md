@@ -1,9 +1,10 @@
 ---
 id: TASK-36
 title: Show which language a course is taught in
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:42'
 labels:
   - spec
   - customers
@@ -25,6 +26,6 @@ Add `language` to Course, `:sv` or `:en`, default `:sv`. Jennie picks it on the 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 New courses default to Swedish and Jennie can switch to English on the course form
-- [ ] #2 The course card and page show the language
+- [x] #1 New courses default to Swedish and Jennie can switch to English on the course form
+- [x] #2 The course card and page show the language
 <!-- AC:END -->
