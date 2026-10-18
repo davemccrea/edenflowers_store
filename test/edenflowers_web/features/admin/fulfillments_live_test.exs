@@ -159,8 +159,15 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert has_element?(view, "#admin-fulfillment-calendar-day-#{next}")
     end
 
-    test "every day is out of the Tab order until the hook picks one", %{conn: conn} do
+    # The id, key targets and tabindex all come from the slot's `attrs`, so
+    # this fails if AdminCalendar stops spreading them on its day buttons.
+    test "each day carries what CalendarHook needs, out of the Tab order", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      assert has_element?(
+               view,
+               ~s|button#admin-fulfillment-calendar-day-#{ShopTime.today()}[data-key-targets][tabindex="-1"]|
+             )
 
       refute has_element?(view, ~s|[id^="admin-fulfillment-calendar-day-"]:not([tabindex="-1"])|)
     end
