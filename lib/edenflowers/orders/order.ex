@@ -357,7 +357,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     # Table feed for /admin/orders, kept apart from :open so the table's loads
-    # and sorting stay out of the dashboard's read.
+    # and sorting stay out of the Overview's read.
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
 

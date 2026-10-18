@@ -1,9 +1,10 @@
 ---
 id: TASK-18.9
 title: Rename DashboardLive to OverviewLive
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 06:37'
+updated_date: '2026-10-18 06:39'
 labels:
   - quick
 dependencies: []
@@ -27,6 +28,6 @@ The admin landing page was renamed to Overview, but only its visible text change
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No reference to the admin Overview calls it the dashboard
-- [ ] #2 The existing suite passes
+- [x] #1 No reference to the admin Overview calls it the dashboard
+- [x] #2 The existing suite passes
 <!-- AC:END -->

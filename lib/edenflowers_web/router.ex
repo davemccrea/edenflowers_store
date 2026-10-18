@@ -119,7 +119,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ] do
-      live "/", EdenflowersWeb.Admin.DashboardLive
+      live "/", EdenflowersWeb.Admin.OverviewLive
       live "/orders", EdenflowersWeb.Admin.OrdersLive
       live "/orders/new", EdenflowersWeb.Admin.OrderFormLive
       live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
