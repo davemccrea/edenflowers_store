@@ -1,9 +1,10 @@
 ---
 id: TASK-49
 title: Retry failed subscription starts every 15 minutes
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:36'
 labels:
   - spec
   - developers
@@ -24,5 +25,5 @@ Change the `start_subscription` trigger's `scheduler_cron` to `"*/15 * * * *"` a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 start_subscription's scheduler runs every 15 minutes
+- [x] #1 start_subscription's scheduler runs every 15 minutes
 <!-- AC:END -->
