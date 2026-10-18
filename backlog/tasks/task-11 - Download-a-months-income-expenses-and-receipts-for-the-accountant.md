@@ -1,10 +1,10 @@
 ---
 id: TASK-11
 title: 'Download a month''s income, expenses and receipts for the accountant'
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-18 11:38'
+updated_date: '2026-10-18 21:04'
 labels:
   - spec
   - admin
@@ -120,3 +120,16 @@ Each month Jennie sends her accountant the shop's income and expenses. The data 
 - [Zettle Finance API migration guide](https://github.com/iZettle/api-documentation/blob/master/finance-api/finance-api-migration-guide.md)
 - [Ageras: does Zervant integrate with other software](https://ageras.com/us/support/360054605611-does-zervant-integrate-with-other-software)
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 21:04
+
+---
+
+Sequential queue verification: TASK-11.1, TASK-11.2, TASK-11.3 and TASK-11.5 are done; TASK-11.4 has all 4 acceptance criteria checked and is ready-for-human. Reviewed the existing Ash reads, admin-only Phoenix download/error flow and Stripe pagination/sheet implementation; no missing agent implementation identified. Verified on main with source .env && mix test test/edenflowers/accounting/monthly_report_test.exs test/edenflowers/external/stripe_api_test.exs test/edenflowers_web/features/admin/expenses_live_test.exs: 28 tests, 0 failures. Blocker: a human must download a month's report on staging (or locally with the test key) and compare the Stripe sheet's rows, fees and payout totals against the Stripe dashboard balance report for the same Helsinki-bounded month, then record the result on TASK-11.4. The first report also needs the accountant's terminology glance and confirmation that sales are booked only from Försäljning, Stripe fees/payouts from Stripe, and Zettle fees/payouts from Zettle's own report without duplicating sales. Keep TASK-11 and TASK-11.4 open until the human verification is recorded. No quick label was present.
+
+---
+<!-- COMMENTS:END -->
