@@ -7,9 +7,11 @@ import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
 import liveSelect from "live_select";
 
 // LiveSelect 1.7 supplies keyboard handling but no combobox ARIA semantics.
-const syncCustomerCombobox = (el) => {
+const syncCustomerCombobox = (el, selection) => {
   if (el.id !== "customer-select") return;
   const input = el.querySelector('input[type="text"]');
+  // Native focus clears the search; keep the committed selection visible as context.
+  input.placeholder = selection ? (selection[0]?.label ?? "") : input.value;
   const list = el.querySelector("ul");
   input.setAttribute("role", "combobox");
   input.setAttribute("aria-autocomplete", "list");
@@ -30,7 +32,7 @@ const syncCustomerCombobox = (el) => {
       "aria-selected",
       option.querySelector("[data-selected]").dataset.selected,
     );
-    if (option.classList.contains("menu-active")) {
+    if (option.classList.contains("bg-primary")) {
       input.setAttribute("aria-activedescendant", option.id);
     }
   });
@@ -40,11 +42,14 @@ const customerLiveSelect = {
   ...liveSelect.LiveSelect,
   mounted() {
     liveSelect.LiveSelect.mounted.call(this);
-    syncCustomerCombobox(this.el);
+    this.handleEvent("select", ({ id, selection }) => {
+      if (id === this.el.id) syncCustomerCombobox(this.el, selection);
+    });
+    syncCustomerCombobox(this.el, this.selection);
   },
   updated() {
     liveSelect.LiveSelect.updated.call(this);
-    syncCustomerCombobox(this.el);
+    syncCustomerCombobox(this.el, this.selection);
   },
 };
 
