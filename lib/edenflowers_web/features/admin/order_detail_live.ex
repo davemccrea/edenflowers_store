@@ -468,10 +468,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp payments(order) do
     order
-    |> Ash.load!(
-      [payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)],
-      authorize?: false
-    )
+    |> Ash.load!([payments: [:undoable?]], authorize?: false)
     |> Map.fetch!(:payments)
   end
 

@@ -1,10 +1,10 @@
 ---
 id: TASK-19.5
 title: Move the admin's own query rules into the domain
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 10:09'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -31,6 +31,12 @@ ordinal: 65000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `SearchLive` and `OrderFormLive.tax_rates/2` build no `Ash.Query` themselves
-- [ ] #2 The existing suite passes
+- [x] #1 `SearchLive` and `OrderFormLive.tax_rates/2` build no `Ash.Query` themselves
+- [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Order and User :search reads behind Orders.search_orders and Accounts.search_customers (limit as a query option). has_many :payments sorts by paid_at on Order and CourseRegistration. Tax rates: an optional percentages argument on the existing :selectable read rather than a second action; retired rates sort after the current ones.
+<!-- SECTION:NOTES:END -->

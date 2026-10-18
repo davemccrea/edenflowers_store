@@ -227,7 +227,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :stripe_refund,
             :seats_held,
             :payment_link_open?,
-            payments: Edenflowers.Payments.Payment |> Ash.Query.sort(paid_at: :asc) |> Ash.Query.load(:undoable?)
+            payments: [:undoable?]
           ]
         ]
       )

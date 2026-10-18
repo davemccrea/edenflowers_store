@@ -124,6 +124,12 @@ defmodule Edenflowers.Accounts.User do
               )
     end
 
+    read :search do
+      argument :term, :ci_string, allow_nil?: false
+      filter expr(exists(placed_orders, true) and (contains(name, ^arg(:term)) or contains(email, ^arg(:term))))
+      prepare build(sort: [last_ordered_at: :desc])
+    end
+
     read :admin_show do
       filter expr(exists(placed_orders, true))
 

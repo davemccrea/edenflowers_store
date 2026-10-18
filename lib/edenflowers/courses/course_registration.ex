@@ -304,7 +304,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     belongs_to :course, Edenflowers.Courses.Course, allow_nil?: false
-    has_many :payments, Edenflowers.Payments.Payment
+
+    has_many :payments, Edenflowers.Payments.Payment do
+      sort paid_at: :asc
+    end
   end
 
   calculations do
