@@ -31,20 +31,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       <.admin_page>
         <.admin_page_header title={~t"Expenses"}>
           <:actions>
-            <form action={~p"/admin/accounting"} method="get" class="flex items-center gap-2">
-              <input
-                type="month"
-                name="month"
-                value={@report_month}
-                required
-                aria-label={~t"Report month"}
-                class="input input-sm w-auto"
-              />
-              <.button type="submit" size="sm">
-                <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
-                {~t"Download for the accountant"}
-              </.button>
-            </form>
+            <.button type="button" size="sm" phx-click={JS.exec("phx-show", to: "#export-drawer")}>
+              <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
+              {~t"Export"}
+            </.button>
             <.button
               href={Edenflowers.External.PapraAPI.documents_url()}
               target="_blank"
@@ -57,6 +47,30 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </.button>
           </:actions>
         </.admin_page_header>
+
+        <.drawer
+          id="export-drawer"
+          placement="right"
+          label={~t"Export for the accountant"}
+          class="bg-base-100 border-base-content/12 w-[88vw] flex h-full flex-col border-l sm:w-96"
+        >
+          <header class="flex items-center justify-between gap-4 p-4">
+            <h2 class="text-lg font-semibold">{~t"Export for the accountant"}</h2>
+            <button type="button" phx-click={JS.exec("phx-hide", to: "#export-drawer")} aria-label={~t"Close"}>
+              <.icon name="hero-x-mark" class="text-base-content/60 h-5 w-5 hover:text-base-content/80" />
+            </button>
+          </header>
+          <form action={~p"/admin/accounting"} method="get" class="flex flex-col gap-4 p-4">
+            <label class="flex flex-col gap-1 text-sm">
+              {~t"Month"}
+              <input type="month" name="month" value={@report_month} required class="input w-full" />
+            </label>
+            <.button type="submit">
+              <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
+              {~t"Download"}
+            </.button>
+          </form>
+        </.drawer>
 
         <Cinder.collection
           id="expenses-table"

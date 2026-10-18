@@ -171,13 +171,18 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   end
 
   describe "monthly report download" do
-    test "defaults the month to the previous one", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/expenses")
+    test "the Export drawer defaults the month to the previous one", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
       previous_month =
         Edenflowers.ShopTime.today() |> Date.beginning_of_month() |> Date.add(-1) |> Date.to_iso8601()
 
-      assert html =~ ~s(value="#{String.slice(previous_month, 0, 7)}")
+      assert has_element?(view, ~s(button[phx-click*="phx-show"][phx-click*="export-drawer"]), "Export")
+
+      assert has_element?(
+               view,
+               ~s(#export-drawer form[action="/admin/accounting"] input[name="month"][value="#{String.slice(previous_month, 0, 7)}"])
+             )
     end
 
     test "sends the month's zip", %{conn: conn} do
