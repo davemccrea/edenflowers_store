@@ -4,7 +4,7 @@ title: Ask whether to send email when marking an order as fulfilled
 status: done
 assignee: []
 created_date: '2026-10-18 20:18'
-updated_date: '2026-10-18 20:43'
+updated_date: '2026-10-18 20:55'
 labels:
   - spec
   - admin
@@ -43,6 +43,24 @@ created: 2026-10-18 20:43
 ---
 
 Mark as fulfilled now opens a confirm form with an 'Email the customer' checkbox, ticked each time it opens. The order records the choice as skip_delivered_email, which keeps the delivered-email trigger from ever firing, so the scheduler can't send it later either. The delivery flow's confirm widget now serves pickups too, so both go through one form (renamed from delivery to fulfillment).
+
+---
+
+author: @claude
+created: 2026-10-18 20:52
+
+---
+
+Follow-up: the delivered-email change now re-checks skip_delivered_email itself, as SendConfirmationEmail does, so the order's choice holds for the worker and any direct caller, not only the trigger's where.
+
+---
+
+author: @claude
+created: 2026-10-18 20:55
+
+---
+
+Refined to Ash's declarative form: the :send_delivered_email action gates Changes.SendDeliveredEmail with where: [attribute_equals(:skip_delivered_email, false)] rather than an if inside the change.
 
 ---
 <!-- COMMENTS:END -->

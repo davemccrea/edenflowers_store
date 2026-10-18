@@ -190,6 +190,15 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       end)
     end
 
+    test "doesn't send an order Jennie chose not to email, whoever asks" do
+      order = fulfillable_order(fulfillment_status: :fulfilled, skip_delivered_email: true)
+
+      assert {:ok, reloaded} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
+
+      assert_no_email_sent()
+      assert reloaded.delivered_emailed_at == nil
+    end
+
     test "doesn't send twice" do
       order = fulfillable_order(fulfillment_status: :fulfilled)
 
