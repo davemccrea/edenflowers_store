@@ -164,15 +164,37 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       generate(order(state: :placed, user_id: customer.id))
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
+      assert has_element?(view, "#customer-search-help", "Search by name or email.")
       search_customers(view, "Keyboard")
       assert has_element?(view, "#customer-select ul", "keyboard@example.com")
       view |> element("#customer-select") |> render_hook("keydown", %{"key" => "ArrowDown"})
+      assert has_element?(view, "#customer-select .bg-primary.text-primary-content", "keyboard@example.com")
       view |> element("#customer-select") |> render_hook("keydown", %{"key" => "Enter"})
       assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: selected_id}]})
       assert selected_id == customer.id
       view |> form("#order-form", form: %{customer_id: customer.id}) |> render_change()
       assert has_element?(view, ~s|#form_customer_name[value="Keyboard Customer"]|)
+      refute has_element?(view, "#customer-results", "Customer selected.")
       refute render(view) =~ "The order wasn't saved."
+
+      for event <- ["focus", "click"] do
+        view |> element("#customer-select") |> render_hook(event)
+
+        assert_push_event(view, "select", %{
+          id: "customer-select",
+          current_text: "",
+          input_event: false,
+          selection: [%{value: ^selected_id}]
+        })
+      end
+
+      view |> element("#form_customer_id_text_input") |> render_blur()
+
+      assert_push_event(view, "select", %{
+        id: "customer-select",
+        current_text: "Keyboard Customer · keyboard@example.com",
+        selection: [%{value: ^selected_id}]
+      })
 
       view |> form("#order-form", form: %{customer_name: "Order-only name"}) |> render_change()
       assert has_element?(view, ~s|#form_customer_name[value="Order-only name"]|)

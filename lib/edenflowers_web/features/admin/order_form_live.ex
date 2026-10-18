@@ -104,10 +104,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   container_class="relative"
                   dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-300 border p-1 shadow"
                   option_class="break-words whitespace-normal pointer-coarse:min-h-11"
-                  active_option_class="menu-active"
+                  active_option_class="bg-primary text-primary-content"
                   available_option_class="cursor-pointer"
                   selected_option_class="cursor-pointer font-semibold"
-                  text_input_class="input w-full pr-10"
+                  text_input_class="input w-full pr-10 placeholder:text-base-content/65"
                   text_input_selected_class=""
                   no_basic_styles_for_clear_buttons
                   clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 h-full"
@@ -121,14 +121,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   </:clear_button>
                 </LiveSelect.live_select>
                 <p id="customer-search-help" class="text-base-content/65 mt-1.5 text-sm">
-                  {~t"Search by name or email, or enter contact details below. Changes apply only to this order."}
+                  {~t"Search by name or email."}
                 </p>
                 <div id="customer-results" role="status">
                   <p :if={@customer_search_empty?} class="text-base-content/65 mt-2 text-sm">
                     {~t"No customers found."}
-                  </p>
-                  <p :if={@form[:customer_id].value} class="text-base-content/65 mt-2 text-sm">
-                    {~t"Customer selected. Review the contact details below."}
                   </p>
                 </div>
               </div>
