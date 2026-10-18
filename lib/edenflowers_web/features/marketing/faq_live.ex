@@ -43,6 +43,18 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             </.faq_item>
           </dl>
         </section>
+
+        <section aria-labelledby="course-faq-heading" class="mt-20 md:mt-28" id="courses">
+          <h2 id="course-faq-heading" class="section-title mb-8">{~t"Courses"}</h2>
+          <dl class="max-w-3xl">
+            <.faq_item question={~t"How do I cancel a course booking?"} heading="h3">
+              {~t"Reply to your confirmation email and let me know."}
+            </.faq_item>
+            <.faq_item question={~t"Will I get my money back?"} heading="h3">
+              {~t"Cancel at least 7 days before the course for a full refund. If you cancel later, any late-cancellation fee shown on the course's page is kept."}
+            </.faq_item>
+          </dl>
+        </section>
       </.container>
     </Layouts.app>
     """
