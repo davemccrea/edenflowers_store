@@ -441,13 +441,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         mark_fulfilled(socket, %{
           delivery_photo_slug: slug,
           email_delivery_photo: params["email_photo"] == "true",
-          email_customer?: email_customer?(params)
+          email_customer?: params["email_customer"] != "false"
         })
     end
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => params}, socket) do
-    mark_fulfilled(socket, %{email_customer?: email_customer?(params)})
+    mark_fulfilled(socket, %{email_customer?: params["email_customer"] != "false"})
   end
 
   def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
@@ -574,9 +574,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
     end
   end
-
-  # The form opens with the checkbox ticked, so only an explicit "false" stops the email.
-  defp email_customer?(params), do: params["email_customer"] != "false"
 
   defp assign_order(socket, order) do
     payments = payments(order)

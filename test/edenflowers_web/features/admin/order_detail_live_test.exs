@@ -204,6 +204,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       assert has_element?(view, "#order-status", "Fulfilled")
       refute has_element?(view, "#order-delivery-photo")
+
+      assert_enqueued(
+        worker: Edenflowers.Orders.Workers.SendDeliveredEmail,
+        args: %{"primary_key" => %{"id" => order.id}}
+      )
     end
 
     test "nobody was home: keeps the photo under a name that can't be guessed", %{conn: conn} do
@@ -273,25 +278,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert reloaded.fulfillment_status == :fulfilled
       assert reloaded.skip_delivered_email
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
-    end
-
-    test "yes: fulfils and queues the delivered email", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
-      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
-      view |> form("#confirm-fulfillment-form") |> render_submit()
-
-      assert has_element?(view, "#order-status", "Fulfilled")
-
-      reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
-      refute reloaded.skip_delivered_email
-
-      assert_enqueued(
-        worker: Edenflowers.Orders.Workers.SendDeliveredEmail,
-        args: %{"primary_key" => %{"id" => order.id}}
-      )
     end
   end
 
