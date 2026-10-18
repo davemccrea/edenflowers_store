@@ -8,6 +8,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 
 - One feature is one **parent task**. Its description is the spec, opening with a one-line summary of what the feature does for the shop
 - Each implementation ticket is a **subtask** of the feature: `backlog task create "<title>" -p TASK-N`. Subtasks number themselves `TASK-N.1`, `TASK-N.2`, … Never combine several tickets into one task
+- Every description has a `**Why:**` line near the top: one or two sentences on why the work is worth doing, in terms of the shop, Jennie, customers or whoever reads the code next. A parent puts it right after its summary line; a subtask opens with it
 - Put the problem, what to build and any decisions in the description (`-d`). Put each acceptance criterion in its own `--ac`
 - Set the ticket type with `--type` (`feature`, `bug`, `refactor`, `chore`, `task`, `research`, `prototype`, `grilling`)
 - Label a task `quick` (`--add-label quick`) if it fits in one sitting with nothing left to decide. `backlog task list --plain -l quick` lists them

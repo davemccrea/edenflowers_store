@@ -4,6 +4,7 @@ title: Move the shared Stripe actions into Payable and call them by name
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-17
@@ -14,6 +15,8 @@ ordinal: 48000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Removes the per-resource branches in `Payments`, so the next Stripe change is written once.
+
 ### What to build
 
 `TASK-17` decisions 1 to 4.

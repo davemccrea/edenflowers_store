@@ -4,6 +4,7 @@ title: Give the shop's day and time one home
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:12'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -14,6 +15,8 @@ ordinal: 56000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** The shop's timezone is written out inline in four forms, so code can quietly disagree about what "today" is.
+
 ### Problem
 
 `Edenflowers.Expressions.HelsinkiToday` exists so Elixir code and Ash expressions agree on the shop's date, but only a handful of modules use it (`StepToScheduledDate`, `CancelOpenOccurrences`, `Subscription`, `PushNewOrder`, `PromotionFormLive`, `AccountLive`). Everywhere else repeats `"Europe/Helsinki"` inline, in four forms:

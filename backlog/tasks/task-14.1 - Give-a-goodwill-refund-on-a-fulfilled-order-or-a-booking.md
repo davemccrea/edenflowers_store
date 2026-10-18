@@ -4,6 +4,7 @@ title: Give a goodwill refund on a fulfilled order or a booking
 status: needs-info
 assignee: []
 created_date: '2026-10-17 18:40'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-14
@@ -14,6 +15,8 @@ ordinal: 41000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Jennie can't refund an unhappy customer on a fulfilled order or booking without it reading as owed again.
+
 ### What to build
 
 All of `TASK-14`: decisions 1 to 4.

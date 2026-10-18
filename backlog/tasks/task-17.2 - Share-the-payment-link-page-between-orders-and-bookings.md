@@ -4,6 +4,7 @@ title: Share the payment-link page between orders and bookings
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies:
   - TASK-17.1
@@ -15,6 +16,8 @@ ordinal: 49000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** `PayLive` and `CoursePayLive` are mostly the same page, so every fix to paying online has to be made in both.
+
 ### What to build
 
 `TASK-17` decision 5.

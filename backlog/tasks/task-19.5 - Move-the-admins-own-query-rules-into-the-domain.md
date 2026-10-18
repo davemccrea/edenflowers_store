@@ -4,6 +4,7 @@ title: Move the admin's own query rules into the domain
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -14,6 +15,8 @@ ordinal: 65000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Domain rules (what's searchable, payment order, which tax rates apply) live in admin LiveViews, where they can't be tested or reused from the domain.
+
 ### What to build
 
 1. **Admin search.** `Admin.SearchLive` builds its own filters: which order fields are searchable (customer name, reference, phone, email, recipient name, delivery address) and which user fields (name, email). Make them `read :search` on `Order` and `User`, each with a `term` argument, based on `:admin_list`, and code interfaces `Orders.search_orders/2` and `Accounts.search_customers/2` taking the limit as a query option.

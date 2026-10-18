@@ -4,7 +4,7 @@ title: Remind customers to reorder before last year's occasion
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 14:30'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 4000
@@ -14,6 +14,8 @@ ordinal: 4000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Remind customers to order again before an occasion they ordered for last year
+
+**Why:** A customer who ordered for an occasion has to remember to come back next year, and may order elsewhere. A reminder brings them back when they need flowers.
 
 Parked: 2026-10-10. Approach sketched in conversation, not yet broken into issues.
 

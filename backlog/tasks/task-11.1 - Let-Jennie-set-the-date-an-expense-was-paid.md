@@ -4,7 +4,7 @@ title: Let Jennie set the date an expense was paid
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 07:28'
 labels:
   - quick
 dependencies: []
@@ -16,6 +16,8 @@ ordinal: 23000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** VAT is reported on a cash basis, so a supplier invoice paid in a later month lands in the wrong month without a paid date.
+
 ### What to build
 
 The shop reports VAT on a cash basis, so an expense belongs to the month it was paid. A card receipt is paid on its date, but a supplier invoice may be paid in a later month. Give `Expense` a paid date Jennie can set for those. See decision 3 in `TASK-11`.

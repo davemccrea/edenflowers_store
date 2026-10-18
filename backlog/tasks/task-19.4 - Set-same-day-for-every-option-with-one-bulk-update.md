@@ -4,7 +4,7 @@ title: Set same-day for every option with one bulk update
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 06:10'
+updated_date: '2026-10-18 07:28'
 labels:
   - quick
 dependencies: []
@@ -16,6 +16,8 @@ ordinal: 64000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** A hand-rolled transaction and loop does what one bulk update does.
+
 ### Problem
 
 `Fulfillment.set_same_day_for_all/2` opens a transaction with `Ash.transact`, loops over every option calling `update_pricing`, and halts on the first error.

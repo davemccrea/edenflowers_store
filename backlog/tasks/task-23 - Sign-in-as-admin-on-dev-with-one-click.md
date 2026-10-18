@@ -4,7 +4,7 @@ title: Sign in as admin on dev with one click
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 05:42'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 07:28'
 labels:
   - quick
 dependencies: []
@@ -15,6 +15,8 @@ ordinal: 76000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Every DB reset means another OTP round trip through the dev mailbox to sign in as admin.
+
 Signing in as admin on dev takes an OTP round trip (type email, open /dev/mailbox, copy code, paste), and every DB reset wipes the tokens table so it happens often. Make it one click.
 
 Build:

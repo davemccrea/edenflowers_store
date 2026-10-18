@@ -4,7 +4,7 @@ title: 'Drop receipt_sha256, unless it''s kept as evidence'
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 06:10'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-20
@@ -15,6 +15,8 @@ ordinal: 70000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** The receipt hash is written on every receipt email and never read. It should go, or be documented as evidence.
+
 ### Problem
 
 `Order.receipt_sha256` and `CourseRegistration.receipt_sha256` are written whenever a receipt is emailed (`Orders.Changes.SendConfirmationEmail`, `Courses.Changes.SendConfirmationEmail`, via `Receipt.sha256/1`) and never read: no page, check or export uses them. `Receipt`'s moduledoc says the PDF bytes aren't stored and the hash "records what was sent".

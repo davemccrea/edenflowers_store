@@ -4,6 +4,7 @@ title: Decide whether checkout's steps stay as order states
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -14,6 +15,8 @@ ordinal: 52000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Storing the checkout step on the order brings a set of transitions, resets and policies. If the steps don't need to live in the database, most of that goes.
+
 ### Problem
 
 `Order`'s state machine stores which checkout step the customer is on: `contact_details → gift_options → delivery → payment`, with `return_to_contact_details`, `return_to_gift_options`, `return_to_delivery` and `restart_checkout` to step back. Around them sit `ResetCheckout`, `PrefillFromLastOrder`, `ensure_fulfillment_default` in `CheckoutLive`, the `@checkout_states` policies, and `finalize_checkout` accepting any step "because the customer has paid".

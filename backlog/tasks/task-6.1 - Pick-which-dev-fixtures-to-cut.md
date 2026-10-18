@@ -4,7 +4,7 @@ title: Pick which dev fixtures to cut
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 22:45'
-updated_date: '2026-10-18 06:10'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-6
@@ -15,6 +15,8 @@ ordinal: 9000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Most of the dev seeds put screens into states nobody checks. Knowing which ones matter lets `TASK-6` cut the rest.
+
 `priv/repo/seeds.exs` is ~1,250 lines of fixtures on top of `priv/repo/seeds/production.exs`. Each block exists to put an admin or storefront screen into a particular state. Mark the ones you never look at; the rest stay.
 
 | Keep? | Fixture | What it shows |

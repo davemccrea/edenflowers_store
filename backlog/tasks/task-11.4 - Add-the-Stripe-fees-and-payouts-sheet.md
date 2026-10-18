@@ -4,7 +4,7 @@ title: Add the Stripe fees and payouts sheet
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies:
   - TASK-11.2
@@ -16,6 +16,8 @@ ordinal: 26000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Without it the accountant has to log into Stripe to book its fees and match payouts in the bank.
+
 ### What to build
 
 Add the Stripe sheet so the accountant can book Stripe's fees and match its payouts in the bank without logging into Stripe. These rows are not sales; sales come from the Försäljning sheet. See decision 8 in `TASK-11`.

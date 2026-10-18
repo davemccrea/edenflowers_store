@@ -4,6 +4,7 @@ title: Write the order-details rules once for place_custom and edit
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-19
@@ -14,6 +15,8 @@ ordinal: 63000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** `place_custom` and `edit` repeat the same rules, so a rule added to one and not the other goes unnoticed.
+
 ### Problem
 
 `Order.place_custom` and `Order.edit` repeat the same block of about 15 validations and changes for what Jennie enters (`order.ex`, lines 430 to 449 and 622 to 642): locale, customer name, email or phone, email format, `SnapshotFulfillmentMethod`, fulfillment option and date, `FulfillmentDateNotPast`, `DeliveryAddress`, recipient phone for delivery, card message length, phone normalising, `SetGiftFromRecipient`, `PriceFulfillment`. A rule added to one and not the other goes unnoticed.

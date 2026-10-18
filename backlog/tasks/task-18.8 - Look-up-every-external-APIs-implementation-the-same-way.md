@@ -4,7 +4,7 @@ title: Look up every external API's implementation the same way
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:12'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 07:28'
 labels:
   - quick
 dependencies: []
@@ -16,6 +16,8 @@ ordinal: 59000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Each external API's mock is looked up a different way, so a reader has to know the convention to follow a call.
+
 ### Problem
 
 `config/test.exs` swaps each external API for a Mox mock (`:stripe_api`, `:here_api`, `:papra_api`, `:claude_api`). Stripe looks its implementation up once, in `StripeAPI.impl/0`. The others are looked up at each call site:

@@ -4,7 +4,7 @@ title: Refund an unhappy customer on a fulfilled order or booking
 status: needs-info
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 40000
@@ -14,6 +14,8 @@ ordinal: 40000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Refund part or all of a fulfilled order or a course booking when the customer isn't happy, without it reading as owed again
+
+**Why:** Jennie can't record a refund to an unhappy customer on a fulfilled order, and one made in Stripe makes the order read as owed again.
 
 ### Problem
 

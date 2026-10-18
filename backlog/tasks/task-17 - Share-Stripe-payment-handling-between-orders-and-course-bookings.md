@@ -4,7 +4,7 @@ title: Share Stripe payment handling between orders and course bookings
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 47000
@@ -14,6 +14,8 @@ ordinal: 47000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Orders and course bookings take Stripe payments through one shared set of actions, so payment changes are made once
+
+**Why:** `Order` and `CourseRegistration` each keep their own copy of the Stripe plumbing, so every payment change (goodwill refunds, saved cards) has to be made twice.
 
 ### Problem
 

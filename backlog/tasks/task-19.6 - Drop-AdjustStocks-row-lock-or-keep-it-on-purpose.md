@@ -4,7 +4,7 @@ title: 'Drop AdjustStock''s row lock, or keep it on purpose'
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 06:10'
+updated_date: '2026-10-18 07:28'
 labels:
   - quick
 dependencies: []
@@ -16,6 +16,8 @@ ordinal: 66000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** The lock in `AdjustStock` looks redundant. Recording why it's there stops someone removing it and losing the exact oversell log.
+
 ### Problem
 
 `Changes.AdjustStock` reads each tracked variant `FOR UPDATE`, then calls the atomic `adjust_stock`. The atomic update alone already prevents lost updates and keeps stock at 0 or above. The lock and read exist only so `report_oversell?: true` can log when an order takes more than is left.

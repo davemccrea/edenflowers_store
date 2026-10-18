@@ -4,6 +4,7 @@ title: Split subscription management out of the account page
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -14,6 +15,8 @@ ordinal: 54000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** `AccountLive` is 1,333 lines, much of it subscription management, which makes the account page hard to read and change.
+
 ### Problem
 
 `EdenflowersWeb.AccountLive` is 1,333 lines: account details, the email-change code flow, newsletter toggle, the order and course timeline, customer cancellation, and the whole subscription manager (`manage_drawer`, `subscription_payment`, `next_delivery`, `detail_row`, and the pause, resume, cancel, edit and change handlers). `SubscriptionCardLive` already handles the card replacement on its own.

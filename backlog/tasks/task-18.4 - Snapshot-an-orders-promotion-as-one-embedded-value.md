@@ -4,6 +4,7 @@ title: Snapshot an order's promotion as one embedded value
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -14,6 +15,8 @@ ordinal: 55000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+**Why:** Every place that sets or clears an order's promotion has to list five attributes, and missing one leaves an order with half a promotion.
+
 ### Problem
 
 An order copies its promotion into five attributes (`promotion_id`, `discount_rate`, `promotion_name`, `promotion_code`, `promotion_minimum_cart_total`), so the receipt keeps the terms the order was placed under. Every place that sets or clears the promotion has to list all five: `clear_promotion`, `ApplyPromotion`, `ResetCheckout`, and anything reading them.

@@ -4,7 +4,7 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-18 05:48'
+updated_date: '2026-10-18 07:28'
 labels: []
 dependencies: []
 ordinal: 22000
@@ -14,6 +14,8 @@ ordinal: 22000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 One monthly download of income and expenses, with receipts, for the accountant
+
+**Why:** Jennie gathers each month's income, expenses and receipts for the accountant by hand, though the data is all in the app. One download saves her that and gives the VAT return its figures.
 
 ### Problem
 
