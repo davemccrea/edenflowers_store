@@ -16,7 +16,6 @@ defmodule Edenflowers.Application do
     children = [
       EdenflowersWeb.Telemetry,
       Edenflowers.Repo,
-      {DNSCluster, query: Application.get_env(:edenflowers, :dns_cluster_query) || :ignore},
       {Oban,
        AshOban.config(
          Application.fetch_env!(:edenflowers, :ash_domains),
