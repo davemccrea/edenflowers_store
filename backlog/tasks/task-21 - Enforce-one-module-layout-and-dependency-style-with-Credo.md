@@ -1,10 +1,10 @@
 ---
 id: TASK-21
 title: Enforce one module layout and dependency style with Credo
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 04:05'
-updated_date: '2026-10-18 11:24'
+updated_date: '2026-10-18 11:30'
 labels:
   - spec
 dependencies: []
