@@ -13,3 +13,5 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 `in-progress` and `done` are statuses as well. Work moves through them after triage.
 
 To mark a task wontfix: `backlog task edit <id> -s done -l wontfix --comment "<why>" --comment-author @claude`, then `backlog task archive <id>`.
+
+Every top-level task gets the `spec` label; subtasks do not. It lets the board filter out subtasks.
