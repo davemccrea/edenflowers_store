@@ -4,10 +4,12 @@ title: Monthly report download with expenses and receipts
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
+updated_date: '2026-10-18 05:08'
 labels: []
 dependencies:
   - TASK-11.1
 parent_task_id: TASK-11
+type: feature
 ordinal: 24000
 ---
 
@@ -16,7 +18,7 @@ ordinal: 24000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-The end-to-end path: Jennie picks a month on the admin expenses page and downloads a zip holding the spreadsheet, with its Inköp (expenses) sheet, and every receipt PDF. The Försäljning and Stripe sheets come in issues 03 and 04. See decisions 1, 2, 5, 6 and 7 in `../spec.md`.
+The end-to-end path: Jennie picks a month on the admin expenses page and downloads a zip holding the spreadsheet, with its Inköp (expenses) sheet, and every receipt PDF. The Försäljning and Stripe sheets come in `TASK-11.3` and `TASK-11.4`. See decisions 1, 2, 5, 6 and 7 in `TASK-11`.
 
 - **Module:** `Edenflowers.Accounting.MonthlyReport.build(year, month)` returns `{:ok, filename, zip_binary}` or `{:error, reason}`. A plain module, not an Ash domain or action; reads use `authorize?: false`.
 - **Month boundaries:** Helsinki midnight, as `SalesSummary.helsinki_midnight_utc/1` does. Expenses carry plain dates, so they're filtered by date: an expense is in the month when `paid_on`, or `date` if `paid_on` is empty, falls in it. Expenses with neither are left out.

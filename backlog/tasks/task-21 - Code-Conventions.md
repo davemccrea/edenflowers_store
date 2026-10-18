@@ -51,6 +51,6 @@ Nothing enforces module conventions: `.formatter.exs` only formats, and there's 
 
 ### Out of scope
 
-- Credo's other checks (refactoring, design, warnings) beyond those named in ticket 01. Turn more on later, one at a time, if wanted.
+- Credo's other checks (refactoring, design, warnings) beyond those named in `TASK-21.1`. Turn more on later, one at a time, if wanted.
 - test/ beyond what Credo flags; it follows the same conventions with a handful of deviations.
 <!-- SECTION:DESCRIPTION:END -->

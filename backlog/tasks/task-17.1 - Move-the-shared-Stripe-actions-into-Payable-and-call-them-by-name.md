@@ -16,7 +16,7 @@ ordinal: 48000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-Spec decisions 1 to 4.
+`TASK-17` decisions 1 to 4.
 
 - `mark_payment_cancelled`, `reconcile_payment` and `add_payment_intent_id` defined once in `Edenflowers.Payments.Payable`, removed from `Order` and `CourseRegistration`. The system-actor bypass for them moves with them, or stays listed per resource if a fragment bypass would weaken either resource's policy.
 - A named change for "clear the PaymentIntent only if it's the one paid", used by both `record_link_payment` actions.
@@ -30,7 +30,7 @@ Spec decisions 1 to 4.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No action in the table in the spec is defined twice, apart from `record_link_payment` and `open_payment_link`
+- [ ] #1 No action in the table in `TASK-17` is defined twice, apart from `record_link_payment` and `open_payment_link`
 - [ ] #2 `Payments` has no per-resource clause for cancelling, storing a PaymentIntent id or recording a link payment
 - [ ] #3 The existing suite passes
 <!-- AC:END -->

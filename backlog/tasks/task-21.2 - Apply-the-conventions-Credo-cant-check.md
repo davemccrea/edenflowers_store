@@ -17,7 +17,7 @@ ordinal: 73000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-The spec's decision 2, for what no Credo check covers:
+`TASK-21` decision 2, for what no Credo check covers:
 
 1. **Ash DSL names.** In every resource, alias `Changes`, `Validations`, `Calculations` and `Actions` (own domain and others') and use the short names in `change`/`validate`/`calculate` lines. Worst offenders:
    - `lib/edenflowers/orders/order.ex`: the `Edenflowers.Payments.Changes.*` and `Edenflowers.Payments.Validations.*` references. Relationship targets (e.g. `:1030`, `:1033`) stay in full, as everywhere else.
