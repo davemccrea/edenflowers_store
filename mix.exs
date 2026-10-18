@@ -118,7 +118,6 @@ defmodule Edenflowers.MixProject do
       {:swoosh, "~> 1.16"},
       {:gen_smtp, "~> 1.2"},
       # Utilities
-      {:dns_cluster, "~> 0.3.0"},
       {:hammer, "~> 7.0"},
       {:ex_phone_number, "~> 0.4"},
       {:jason, "~> 1.2"},
