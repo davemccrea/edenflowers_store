@@ -850,7 +850,7 @@ msgstr ""
 #: lib/edenflowers_web/components/layouts.ex:762
 #: lib/edenflowers_web/features/marketing/contact_live.ex:56
 #, elixir-autogen, elixir-format
-msgid "Mon–Fri: 09:00–17:00"
+msgid "Mon–Fri: 10:00–18:00"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:752
