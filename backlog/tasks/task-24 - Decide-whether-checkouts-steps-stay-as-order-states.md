@@ -4,8 +4,10 @@ title: Decide whether checkout's steps stay as order states
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:37'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: medium
 type: grilling

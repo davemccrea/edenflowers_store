@@ -19,6 +19,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
   - **medium**: a real improvement people notice now and then, or a refactor that makes upcoming work easier
   - **low**: nice to have, rare edge cases, tidy-ups nobody will feel
 - Label a task `quick` (`--add-label quick`) if it fits in one sitting with nothing left to decide. `backlog task list --plain -l quick` lists them
+- Label each parent task with who feels it, read from its `**Why:**` line: `customers` (shoppers notice it), `jennie` (her admin, time or money) or `developers` (only whoever works on the code). Use both `customers` and `jennie` when both feel it. Subtasks don't get one
 - Blocking tickets go in `--dep TASK-N.M` (comma-separated). Don't write a "Blocked by" section
 - Status is the task's `status` field, one of the triage strings in `triage-labels.md` plus `in-progress` and `done`. It is the only record of status, so keep it current as work lands: `backlog task edit TASK-N.M -s <status>`
 - Comments and conversation history go in as task comments: `backlog task edit TASK-N.M --comment "<text>" --comment-author @claude`
