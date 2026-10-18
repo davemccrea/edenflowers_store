@@ -6,6 +6,9 @@ defmodule Edenflowers.Accounts.User do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshAuthentication, AshRateLimiter, AshAdmin.Resource]
 
+  alias Edenflowers.Accounts.Calculations
+  alias Edenflowers.Accounts.Changes
+
   authentication do
     add_ons do
       log_out_everywhere do
@@ -131,7 +134,7 @@ defmodule Edenflowers.Accounts.User do
     update :ensure_stripe_customer do
       require_atomic? false
       change get_and_lock_for_update()
-      change Edenflowers.Accounts.Changes.CreateStripeCustomer
+      change Changes.CreateStripeCustomer
     end
 
     # The Customer was deleted in Stripe; the next checkout creates a new one.
@@ -196,8 +199,8 @@ defmodule Edenflowers.Accounts.User do
   end
 
   calculations do
-    calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
-    calculate :initials, :string, {Edenflowers.Accounts.Calculations.Initials, source: :name}
+    calculate :first_name, :string, {Calculations.FirstName, source: :name}
+    calculate :initials, :string, {Calculations.Initials, source: :name}
     # A user without a promo has no usage, so the `if` turns that NULL into a strict false.
     calculate :newsletter_offer_hidden?,
               :boolean,

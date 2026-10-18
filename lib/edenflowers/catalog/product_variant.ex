@@ -6,6 +6,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshArchival.Resource]
 
+  alias Edenflowers.Orders.Validations
+
   postgres do
     table "product_variants"
     repo Edenflowers.Repo
@@ -56,8 +58,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
       primary? true
       require_atomic? false
 
-      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
-                reference: :product_variant, field: :id}
+      validate {Validations.NotReferencedByCurrentSubscription, reference: :product_variant, field: :id}
     end
 
     read :for_card_drawer do

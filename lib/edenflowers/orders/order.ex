@@ -25,12 +25,15 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  alias Edenflowers.Accounts.Calculations, as: AccountCalculations
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.Actions
   alias Edenflowers.Orders.Calculations
   alias Edenflowers.Orders.Changes
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Validations
+  alias Edenflowers.Payments.Changes, as: PaymentChanges
+  alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
 
@@ -427,7 +430,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:origin, :custom)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
-      change Edenflowers.Payments.Changes.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
       change load(:payment_status)
 
       validate Validations.EnteredLineItems
@@ -557,7 +560,7 @@ defmodule Edenflowers.Orders.Order do
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
       accept [:stripe_customer_id, :stripe_payment_method_id]
-      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
+      validate PaymentValidations.MatchesPaymentIntent
 
       change transition_state(:placed), always_atomic?: true
       # The PaymentIntent is spent; a later payment link must open a fresh one.
@@ -565,12 +568,12 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change {Changes.AdjustStock, direction: :take, report_oversell?: true}
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
 
-      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change PaymentChanges.ScheduleConfirmationEmail
       change Changes.PushNewOrder
 
       # Starts the Subscription straight away, so the confirmation page's link
@@ -606,7 +609,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
-      change Edenflowers.Payments.Changes.OpenPaymentLink
+      change PaymentChanges.OpenPaymentLink
       change run_oban_trigger(:send_payment_failed_email)
       require_atomic? false
     end
@@ -661,7 +664,7 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
-      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+      change PaymentChanges.CancelOpenPaymentIntent
       change {Changes.AdjustStock, direction: :return}
       change load(@admin_show_load)
       require_atomic? false
@@ -671,8 +674,8 @@ defmodule Edenflowers.Orders.Order do
       validate Validations.CancellableByCustomer
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
-      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
-      change Edenflowers.Payments.Changes.RefundInFull
+      change PaymentChanges.CancelOpenPaymentIntent
+      change PaymentChanges.RefundInFull
       change {Changes.AdjustStock, direction: :return}
       change Changes.SendCancelledEmail
       require_atomic? false
@@ -696,10 +699,10 @@ defmodule Edenflowers.Orders.Order do
 
       # The receipt goes out again, showing the order as it now stands.
       change set_attribute(:receipt_emailed_at, nil)
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
+      change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
-      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change PaymentChanges.ScheduleConfirmationEmail
       require_atomic? false
     end
 
@@ -708,7 +711,7 @@ defmodule Edenflowers.Orders.Order do
     update :open_payment_link do
       validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
       change set_context(%{skip_version_when_unchanged?: true})
-      change Edenflowers.Payments.Changes.OpenPaymentLink
+      change PaymentChanges.OpenPaymentLink
       change load(@admin_show_load)
       require_atomic? false
     end
@@ -763,7 +766,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
-      validate Edenflowers.Payments.Validations.PaymentIntentNotSet
+      validate PaymentValidations.PaymentIntentNotSet
       validate Validations.Payable
     end
 
@@ -785,12 +788,12 @@ defmodule Edenflowers.Orders.Order do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Payments.Changes.Reconcile
+      change PaymentChanges.Reconcile
     end
 
     update :mark_payment_cancelled do
       argument :payment_intent_id, :string, allow_nil?: false
-      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
+      validate PaymentValidations.MatchesPaymentIntent
       change set_attribute(:payment_intent_id, nil)
     end
 
@@ -1039,8 +1042,8 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
-    calculate :customer_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :customer_name}
-    calculate :recipient_first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :recipient_name}
+    calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name}
+    calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name}
 
     # `distance` is snapshotted in metres; expose it as a kilometre string for
     # display, and only for deliveries.

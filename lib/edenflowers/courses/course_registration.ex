@@ -11,7 +11,11 @@ defmodule Edenflowers.Courses.CourseRegistration do
     extensions: [AshOban],
     fragments: [Edenflowers.Payments.Payable]
 
+  alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Courses.Changes
+  alias Edenflowers.Courses.Validations
+  alias Edenflowers.Payments.Changes, as: PaymentChanges
+  alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
 
@@ -112,17 +116,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change Changes.UpsertUser
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
-      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change PaymentChanges.ScheduleConfirmationEmail
     end
 
     update :add_payment_intent_id do
       accept [:payment_intent_id]
-      validate Edenflowers.Payments.Validations.PaymentIntentNotSet
+      validate PaymentValidations.PaymentIntentNotSet
     end
 
     update :mark_payment_cancelled do
       argument :payment_intent_id, :string, allow_nil?: false
-      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
+      validate PaymentValidations.MatchesPaymentIntent
       change set_attribute(:payment_intent_id, nil)
     end
 
@@ -133,16 +137,16 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
       argument :paid_with, :map, default: %{}
-      validate Edenflowers.Courses.Validations.NotAlreadyConfirmed
-      validate Edenflowers.Payments.Validations.MatchesPaymentIntent
-      validate Edenflowers.Courses.Validations.MatchesPaymentAmount
+      validate Validations.NotAlreadyConfirmed
+      validate PaymentValidations.MatchesPaymentIntent
+      validate Validations.MatchesPaymentAmount
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       # The PaymentIntent is spent and kept on its Payment. Left here,
       # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
       change set_attribute(:payment_intent_id, nil)
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
-      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.ScheduleConfirmationEmail
 
       require_atomic? false
     end
@@ -163,22 +167,22 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
       # The confirmation goes out again, now with the receipt.
       change set_attribute(:confirmation_emailed_at, nil)
-      change {Edenflowers.Payments.Changes.RecordPayment, method: :stripe, amount: :amount_paid}
-      change Edenflowers.Payments.Changes.ScheduleConfirmationEmail
+      change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.ScheduleConfirmationEmail
       require_atomic? false
     end
 
     # Only a confirmed booking owes money; a pending one pays at checkout.
     update :open_payment_link do
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
-      change Edenflowers.Payments.Changes.OpenPaymentLink
+      change PaymentChanges.OpenPaymentLink
       require_atomic? false
     end
 
     # Opens the link if need be, so sending it is opening one.
     update :email_payment_link do
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
-      change Edenflowers.Payments.Changes.OpenPaymentLink
+      change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
       transaction? false
       require_atomic? false
@@ -208,7 +212,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Jennie to refund.
     update :cancel do
       change set_attribute(:status, :cancelled)
-      change Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+      change PaymentChanges.CancelOpenPaymentIntent
       require_atomic? false
     end
 
@@ -223,7 +227,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Payments.Changes.Reconcile
+      change PaymentChanges.Reconcile
     end
   end
 
@@ -305,7 +309,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   end
 
   calculations do
-    calculate :first_name, :string, {Edenflowers.Accounts.Calculations.FirstName, source: :name}
+    calculate :first_name, :string, {Calculations.FirstName, source: :name}
 
     calculate :seats_held, :integer, expr(seats - removed_seats)
 

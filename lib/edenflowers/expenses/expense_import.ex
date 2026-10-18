@@ -5,6 +5,8 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshOban]
 
+  alias Edenflowers.Expenses.Changes
+
   postgres do
     table "expense_imports"
     repo Edenflowers.Repo
@@ -47,7 +49,7 @@ defmodule Edenflowers.Expenses.ExpenseImport do
       accept []
       transaction? false
       require_atomic? false
-      change Edenflowers.Expenses.Changes.Process
+      change Changes.Process
     end
 
     # Stops the scheduler retrying a document that failed every attempt.
