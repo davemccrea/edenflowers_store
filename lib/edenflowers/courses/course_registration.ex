@@ -105,18 +105,25 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
     end
 
-    # For people who pay Jennie at the course, so they hold a seat without
-    # Stripe. Allowed after online booking closes, but never beyond the
-    # course's places.
+    # For bookings Jennie takes herself, so they hold a seat without Stripe
+    # checkout. Allowed after online booking closes, but never beyond the
+    # course's places. With a payment link the confirmation carries it.
     create :add_manually do
       accept [:name, :email, :seats, :course_id, :locale]
+      argument :payment_link?, :boolean, default: false
+      argument :email_customer?, :boolean, default: true
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change Changes.UpsertUser
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
-      change PaymentChanges.ScheduleConfirmationEmail
+      change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change PaymentChanges.ScheduleConfirmationEmail, where: [argument_equals(:email_customer?, true)]
+
+      # Marked as sent so the trigger's scheduler doesn't send it after all.
+      change set_attribute(:confirmation_emailed_at, &DateTime.utc_now/0),
+        where: [argument_equals(:email_customer?, false)]
     end
 
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
