@@ -289,7 +289,15 @@ Hooks.CalendarHook = {
 
   updated() {
     this.focusableDates = this.getFocusableDates() || [];
-    this.viewDate = this.getViewDate();
+
+    // Arrow keys within the month move focus without telling the server, so
+    // a re-render for anything else still carries the old view date. Only a
+    // view date the server changed replaces the client's.
+    const serverViewDate = this.getViewDate();
+    if (serverViewDate !== this.serverViewDate) {
+      this.serverViewDate = serverViewDate;
+      this.viewDate = serverViewDate;
+    }
     this.setTabIndex(this.viewDate);
 
     // If the server just moved the view date in response to a cross-month
@@ -412,6 +420,7 @@ Hooks.CalendarHook = {
     }
 
     this.viewDate = this.getViewDate();
+    this.serverViewDate = this.viewDate;
     if (!this.viewDate) {
       this.error(`Attribute 'data-view-date' is required.`);
       return false;

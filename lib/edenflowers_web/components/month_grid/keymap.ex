@@ -1,4 +1,4 @@
-defmodule EdenflowersWeb.DatePicker.Keymap do
+defmodule EdenflowersWeb.MonthGrid.Keymap do
   @moduledoc """
   WAI-ARIA date-picker keyboard navigation.
 
@@ -12,6 +12,15 @@ defmodule EdenflowersWeb.DatePicker.Keymap do
   require Logger
 
   @week_begins :default
+  @keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
+
+  @doc "Every key's next date from `from`, as JSON for a day's `data-key-targets`."
+  @spec targets_json(Date.t(), Date.t()) :: String.t()
+  def targets_json(from, today) do
+    @keys
+    |> Map.new(&{&1, Date.to_iso8601(next_date(from, &1, today))})
+    |> Jason.encode!()
+  end
 
   @doc """
   Returns the date that should receive focus after `key` is pressed on `from`.

@@ -322,10 +322,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         Edenflowers.Fulfillment.list_options!()
         |> Enum.find(&(&1.fulfillment_method == :pickup))
 
-      # User picks a date on the delivery calendar. The checkout LiveView
-      # stores that date in the form params via the `:date_selected` message.
-      selected_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
-      send(view.pid, {:date_selected, selected_date})
+      selected_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
+      render_click(view, "select-date", %{"date" => selected_date})
 
       assert render(view) =~ ~s(value="#{selected_date}")
 
@@ -335,6 +333,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
 
       assert render(view) =~ ~s(value="#{selected_date}")
+    end
+
+    # Closed days are only aria-disabled, so a click on one still arrives.
+    test "picking a closed date keeps the form as it was", %{conn: conn} do
+      closed = Edenflowers.ShopTime.today() |> Date.add(7)
+      shop_calendar(disabled_dates: [closed])
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      render_click(view, "select-date", %{"date" => Date.to_string(closed)})
+
+      assert has_element?(view, ~s|input[name="form[fulfillment_date]"]|)
+      refute has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{closed}"]|)
     end
   end
 end

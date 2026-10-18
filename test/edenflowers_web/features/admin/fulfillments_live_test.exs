@@ -96,10 +96,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
-      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
+      |> element(~s|button[phx-click="toggle-weekday"][phx-value-weekday="monday"]|)
       |> render_click()
-
-      drain(view)
 
       refute :monday in Fulfillment.get_shop_calendar!().available_days
     end
@@ -108,10 +106,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
-      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="saturday"]|)
+      |> element(~s|button[phx-click="toggle-weekday"][phx-value-weekday="saturday"]|)
       |> render_click()
-
-      drain(view)
 
       assert :saturday in Fulfillment.get_shop_calendar!().available_days
     end
@@ -131,12 +127,42 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       end
 
       view
-      |> element(~s|button[phx-click="select"][phx-value-date="#{Date.to_iso8601(future)}"]|)
+      |> element(~s|button[phx-click="toggle-date"][phx-value-date="#{Date.to_iso8601(future)}"]|)
       |> render_click()
 
-      drain(view)
-
       assert future in Fulfillment.get_shop_calendar!().disabled_dates
+    end
+
+    # Past days stay focusable for keyboard navigation, so only the server stops the click.
+    test "clicking a past date changes nothing", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      before = Fulfillment.get_shop_calendar!()
+
+      render_click(view, "toggle-date", %{"date" => Date.to_iso8601(Date.add(ShopTime.today(), -1))})
+
+      assert Fulfillment.get_shop_calendar!() == before
+    end
+  end
+
+  describe "keyboard navigation" do
+    test "an arrow key past the month's end shows the next month with focus on the new day", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      last = Date.end_of_month(ShopTime.today())
+      next = Date.add(last, 1)
+
+      # CalendarHook pushes to the element it's on, which reaches MonthGrid.
+      view
+      |> with_target("#admin-fulfillment-calendar")
+      |> render_hook("keydown", %{"key" => "ArrowRight", "viewDate" => Date.to_iso8601(last)})
+
+      assert has_element?(view, ~s|#admin-fulfillment-calendar[data-view-date="#{next}"]|)
+      assert has_element?(view, "#admin-fulfillment-calendar-day-#{next}")
+    end
+
+    test "every day is out of the Tab order until the hook picks one", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      refute has_element?(view, ~s|[id^="admin-fulfillment-calendar-day-"]:not([tabindex="-1"])|)
     end
   end
 
@@ -144,44 +170,24 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     test "clicking the week-toggle button closes every open cell in that week", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      # Pick a week payload whose weekday dates are all strictly in the future,
-      # so the click actually has something to disable. Navigate to next month
-      # if no such week exists in the current view (e.g. running near month-end).
-      today = Edenflowers.ShopTime.today()
-      tomorrow = Date.add(today, 1)
+      # Next month's second week is wholly in the future and wholly in view,
+      # whatever today is.
+      view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
 
-      find_future_week = fn html ->
-        Regex.scan(~r/phx-click="week-click" phx-value-week="([^"]+)"/, html)
-        |> Enum.map(fn [_, payload] -> payload end)
-        |> Enum.find(fn payload ->
-          dates = payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
-          weekdays = Enum.filter(dates, &(Date.day_of_week(&1) in 1..5))
-          weekdays != [] and Enum.all?(weekdays, &(Date.compare(&1, tomorrow) != :lt))
-        end)
-      end
-
-      week_payload =
-        case find_future_week.(render(view)) do
-          nil ->
-            view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
-            find_future_week.(render(view))
-
-          payload ->
-            payload
-        end
-
-      assert week_payload, "expected at least one future week button in the rendered view"
+      monday =
+        ShopTime.today()
+        |> Date.shift(month: 1)
+        |> Date.beginning_of_month()
+        |> Date.add(7)
+        |> Date.beginning_of_week()
 
       view
-      |> element(~s|button[phx-click="week-click"][phx-value-week="#{week_payload}"]|)
+      |> element(~s|button[phx-click="toggle-week"][phx-value-week="#{monday}"]|)
       |> render_click()
 
-      drain(view)
-
       # The shop is open Mon-Fri; clicking the week-toggle closes Mon-Fri of that week.
-      week_dates = week_payload |> String.split(",") |> Enum.map(&Date.from_iso8601!/1)
-      weekday_cells = Enum.filter(week_dates, &(Date.day_of_week(&1) in 1..5))
-      assert Enum.all?(weekday_cells, &(&1 in Fulfillment.get_shop_calendar!().disabled_dates))
+      weekdays = Enum.map(0..4, &Date.add(monday, &1))
+      assert Enum.all?(weekdays, &(&1 in Fulfillment.get_shop_calendar!().disabled_dates))
     end
   end
 
@@ -195,8 +201,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       view
       |> element(~s|button[phx-click="reset-calendar"]|)
       |> render_click()
-
-      drain(view)
 
       calendar = Fulfillment.get_shop_calendar!()
       assert Enum.sort(calendar.available_days) == Enum.sort(Weekday.all())
@@ -238,10 +242,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
       view
-      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="monday"]|)
+      |> element(~s|button[phx-click="toggle-weekday"][phx-value-weekday="monday"]|)
       |> render_click()
-
-      drain(view)
 
       view
       |> form("#same-day-form", %{"same_day" => %{"same_day" => "true", "order_deadline" => "12:00"}})
@@ -250,10 +252,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert render(view) =~ ~s(aria-label="Toggle Monday, closed")
 
       view
-      |> element(~s|button[phx-click="weekday-click"][phx-value-weekday="tuesday"]|)
+      |> element(~s|button[phx-click="toggle-weekday"][phx-value-weekday="tuesday"]|)
       |> render_click()
-
-      drain(view)
 
       calendar = Fulfillment.get_shop_calendar!()
       refute :monday in calendar.available_days
@@ -374,11 +374,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert to == "/sign-in?return_to=%2Fadmin%2Ffulfillments"
     end
   end
-
-  # The component sends results to the parent via send(self(), ...), which
-  # land as handle_info messages. render_click only awaits the handle_event,
-  # so we force a sync round-trip before asserting on persisted state.
-  defp drain(view), do: _ = render(view)
 
   # Pick the next future date that lands on a given weekday.
   defp next_weekday(weekday_atom) do

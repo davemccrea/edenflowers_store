@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   require Logger
 
   import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
-  import EdenflowersWeb.KeyDateIcon
+  import EdenflowersWeb.StoreCalendar, only: [store_calendar: 1]
 
   alias Edenflowers.Catalog.ProductVariantSize
 
@@ -272,23 +272,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                           <% end %>
                         </legend>
                         <div class="sm:max-w-md">
-                          <.live_component
+                          <.store_calendar
                             id="calendar"
                             error={
                               Phoenix.Component.used_input?(@form[:fulfillment_date]) and
                                 Enum.any?(@form[:fulfillment_date].errors)
                             }
                             selected_date={@form[:fulfillment_date].value}
-                            module={EdenflowersWeb.DatePicker}
-                            cell_state={fn date -> Availability.customer_cell_state(@shop_calendar, date) end}
-                          >
-                            <:day_decoration :let={%{date: day, state: state, selected?: selected?}}>
-                              <.key_date_icon date={day} selected?={selected?} muted?={state == :past} />
-                            </:day_decoration>
-                            <:footer :let={%{view_date: month}}>
-                              <.key_date_caption month={month} />
-                            </:footer>
-                          </.live_component>
+                            calendar={@shop_calendar}
+                          />
                         </div>
                         <.field_errors field={@form[:fulfillment_date]} />
                         <.input field={@form[:fulfillment_date]} hidden />
@@ -491,6 +483,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, push_patch(socket, to: ~p"/checkout?step=#{state}")}
   end
 
+  # A day that isn't open is still clickable, only marked aria-disabled.
+  def handle_event("select-date", %{"date" => date}, socket) do
+    with {:ok, date} <- Date.from_iso8601(date),
+         :open <- Availability.customer_cell_state(socket.assigns.shop_calendar, date) do
+      form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", Date.to_iso8601(date)))
+      {:noreply, assign(socket, form: form)}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
+
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     previous_method = socket.assigns.order.fulfillment_method
     Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
@@ -563,11 +566,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   def handle_info({:delivery_quoted, quote}, socket) do
     {:noreply, assign(socket, delivery_quote: quote)}
-  end
-
-  def handle_info({:date_selected, date}, socket) do
-    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", date))
-    {:noreply, assign(socket, form: form)}
   end
 
   defp submit_action_for(:contact_details), do: :submit_contact_details

@@ -1,11 +1,11 @@
-defmodule EdenflowersWeb.Admin.Calendar do
+defmodule EdenflowersWeb.AdminCalendar do
   @moduledoc """
-  Admin wrapper around `EdenflowersWeb.DatePicker` for the shop calendar.
+  The admin month grid for the shop calendar.
 
-  Holds every admin-specific binding — styling, override decoration,
-  weekday-click — so the LiveView only orchestrates state. The inner
-  component keeps its checkout-shaped contract; this module bridges to the
-  admin view.
+  Every date, weekday header and week toggle is a button that sends its event
+  straight to the LiveView: `"toggle-date"`, `"toggle-weekday"`,
+  `"toggle-week"`. `EdenflowersWeb.MonthGrid` draws the month and handles
+  month navigation and the keyboard; this module fills its slots.
   """
   use EdenflowersWeb, :html
 
@@ -13,6 +13,8 @@ defmodule EdenflowersWeb.Admin.Calendar do
 
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.KeyDates
+  alias Edenflowers.Fulfillment.Weekday
+  alias EdenflowersWeb.MonthGrid
 
   @swatch_base "relative inline-block w-4 h-4 mr-2 mt-0.5 shrink-0"
 
@@ -20,29 +22,53 @@ defmodule EdenflowersWeb.Admin.Calendar do
   attr :calendar, :any, required: true, doc: "`ShopCalendar.t()`"
   attr :today, :any, required: true, doc: "`Date.t()` — passed in so render stays pure"
 
-  def grid(assigns) do
+  def admin_calendar(assigns) do
     ~H"""
-    <.live_component
-      id={@id}
-      field={nil}
-      module={EdenflowersWeb.DatePicker}
-      selected_date={nil}
-      framed={false}
-      cell_state={fn date -> Availability.admin_cell_state(@calendar, date, @today) end}
-      cell_class={fn day, state, opts -> cell_class(state, opts, Availability.override?(@calendar, day)) end}
-      clickable_states={[:open, :weekday_disabled, :date_disabled]}
-      state_label={&cell_state_label/1}
-      weekday_state_label={fn weekday -> weekday_state_label(weekday in @calendar.available_days) end}
-      on_click={:fulfillment_date_toggled}
-      on_weekday_click={:fulfillment_weekday_toggled}
-      weekday_class={fn weekday -> weekday_class(weekday in @calendar.available_days) end}
-      on_week_click={:fulfillment_week_toggled}
-      week_class={fn week -> week_class(week_toggle_direction(@calendar, week, @today)) end}
-    >
-      <:day_decoration :let={%{date: day, state: state, selected?: selected?}}>
-        <.key_date_icon date={day} selected?={selected?} muted?={state == :past} />
-      </:day_decoration>
-      <:footer :let={%{view_date: month}}>
+    <.live_component module={MonthGrid} id={@id} today={@today}>
+      <:weekday :let={day}>
+        <% open? = Weekday.from_date(day) in @calendar.available_days %>
+        <button
+          type="button"
+          phx-click="toggle-weekday"
+          phx-value-weekday={Weekday.from_date(day)}
+          aria-label={weekday_aria_label(day, open?)}
+          class={weekday_class(open?)}
+        >
+          {Localize.DateTime.to_string!(day, format: "EEEEEE")}
+        </button>
+      </:weekday>
+      <:week :let={week}>
+        <% direction = week_toggle_direction(@calendar, week, @today) %>
+        <button
+          type="button"
+          phx-click="toggle-week"
+          phx-value-week={List.first(week)}
+          disabled={is_nil(direction)}
+          aria-label={week_aria_label(week)}
+          class={week_class(direction)}
+        >
+          <.icon name="hero-arrows-right-left" class="h-3 w-3" />
+        </button>
+      </:week>
+      <:day :let={%{date: day, attrs: attrs}}>
+        <% state = Availability.admin_cell_state(@calendar, day, @today) %>
+        <button
+          {attrs}
+          type="button"
+          phx-click="toggle-date"
+          phx-value-date={day}
+          aria-label={day_aria_label(day, @today, state)}
+          aria-current={if day == @today, do: "date"}
+          aria-disabled={if state == :past, do: "true"}
+          class={cell_class(state, day == @today, Availability.override?(@calendar, day))}
+        >
+          <time datetime={Date.to_iso8601(day)} aria-hidden="true" class="relative z-10">
+            {Localize.DateTime.to_string!(day, format: "d")}
+          </time>
+          <.key_date_icon date={day} selected?={false} muted?={state == :past} />
+        </button>
+      </:day>
+      <:footer :let={month}>
         <.key_date_caption month={month} />
       </:footer>
     </.live_component>
@@ -89,17 +115,32 @@ defmodule EdenflowersWeb.Admin.Calendar do
     """
   end
 
-  defp cell_state_label(:open), do: ~t"open"
-  defp cell_state_label(:weekday_disabled), do: ~t"closed"
-  defp cell_state_label(:date_disabled), do: ~t"closed"
-  defp cell_state_label(:past), do: ~t"past"
+  defp weekday_aria_label(date, open?) do
+    weekday = Localize.DateTime.to_string!(date, format: "cccc")
+    state = if open?, do: ~t"open", else: ~t"closed"
+    "#{~t"Toggle #{weekday}"}, #{state}"
+  end
 
-  defp weekday_state_label(true = _open?), do: ~t"open"
-  defp weekday_state_label(false = _open?), do: ~t"closed"
+  defp week_aria_label(week) do
+    first = Edenflowers.Format.day_month(List.first(week), Edenflowers.Format.locale())
+    last = Edenflowers.Format.day_month(List.last(week), Edenflowers.Format.locale())
+    ~t"Toggle week #{first} to #{last}"
+  end
 
-  defp cell_class(state, opts, override?) do
-    today? = Keyword.get(opts, :today?, false)
+  defp day_aria_label(day, today, state) do
+    date = Localize.Date.to_string!(day, format: :full)
 
+    if day == today,
+      do: "#{date}, #{~t"today"}, #{state_label(state)}",
+      else: "#{date}, #{state_label(state)}"
+  end
+
+  defp state_label(:open), do: ~t"open"
+  defp state_label(:weekday_disabled), do: ~t"closed"
+  defp state_label(:date_disabled), do: ~t"closed"
+  defp state_label(:past), do: ~t"past"
+
+  defp cell_class(state, today?, override?) do
     base = "relative aspect-square text-sm font-medium leading-none flex items-center justify-center"
 
     closed_class =

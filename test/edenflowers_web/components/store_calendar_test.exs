@@ -1,10 +1,10 @@
-defmodule EdenflowersWeb.DatePickerTest do
+defmodule EdenflowersWeb.StoreCalendarTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
   alias Edenflowers.ShopTime
-  alias EdenflowersWeb.DatePicker
+  alias EdenflowersWeb.StoreCalendar
 
   describe "update/2 — view_date sync with selected_date" do
     test "advances view_date to the month of selected_date when it falls outside today's month" do
@@ -14,9 +14,9 @@ defmodule EdenflowersWeb.DatePickerTest do
       future_date = ShopTime.today() |> Date.shift(month: 2) |> Date.to_iso8601()
 
       html =
-        render_component(DatePicker,
+        render_component(&StoreCalendar.store_calendar/1,
           id: "calendar",
-          field: nil,
+          calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
           selected_date: future_date
         )
 
@@ -33,9 +33,9 @@ defmodule EdenflowersWeb.DatePickerTest do
       today_iso = ShopTime.today() |> Date.to_iso8601()
 
       html =
-        render_component(DatePicker,
+        render_component(&StoreCalendar.store_calendar/1,
           id: "calendar",
-          field: nil,
+          calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
           selected_date: today_iso
         )
 
@@ -48,9 +48,9 @@ defmodule EdenflowersWeb.DatePickerTest do
 
     test "with no selected_date, renders today's month" do
       html =
-        render_component(DatePicker,
+        render_component(&StoreCalendar.store_calendar/1,
           id: "calendar",
-          field: nil,
+          calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
           selected_date: nil
         )
 
