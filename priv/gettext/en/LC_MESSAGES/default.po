@@ -6398,12 +6398,6 @@ msgstr "Download"
 msgid "Export"
 msgstr "Export"
 
-#: lib/edenflowers_web/features/admin/expenses_live.ex:54
-#: lib/edenflowers_web/features/admin/expenses_live.ex:58
-#, elixir-autogen, elixir-format
-msgid "Export for the accountant"
-msgstr "Export for the accountant"
-
 #: lib/edenflowers_web/features/admin/expenses_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Month"
