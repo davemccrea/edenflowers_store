@@ -1,10 +1,12 @@
 defmodule Edenflowers.Accounting.MonthlyReport do
   @moduledoc """
   Builds the zip Jennie sends her accountant each month: a spreadsheet of the
-  month's expenses and every receipt PDF behind them, in Swedish.
+  month's sales and expenses, and every receipt PDF behind them, in Swedish.
 
-  VAT is reported on a cash basis, so an expense counts in the month it was
-  paid: its `paid_on`, or its `date` when that's empty.
+  VAT is reported on a cash basis, so a payment counts in the month of its
+  `paid_at` (Helsinki time), and an expense in the month it was paid: its
+  `paid_on`, or its `date` when that's empty. The sales sheet is the shop's only
+  sales record (ADR 0004), so every payment method counts.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [context: "accounting report"]
 
@@ -12,7 +14,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
+  alias Edenflowers.Orders.Calculations.Vat
+  alias Edenflowers.Payments.Payment
+  alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.Components
+  alias EdenflowersWeb.Admin.OrderLog
   alias Elixlsx.Sheet
   alias Elixlsx.Workbook
 
@@ -22,10 +28,13 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       label = first |> Date.to_iso8601() |> String.slice(0, 7)
       spreadsheet = "rapport-#{label}.xlsx"
 
-      with {:ok, expenses} <- paid_expenses(first, Date.end_of_month(first)),
+      last = Date.end_of_month(first)
+
+      with {:ok, payments} <- payments(first, last),
+           {:ok, expenses} <- paid_expenses(first, last),
            rows = expenses |> Enum.with_index(1) |> Enum.map(fn {e, n} -> {n, e, receipt_name(n, e)} end),
            {:ok, receipts} <- fetch_receipts(rows),
-           workbook = %Workbook{sheets: [expenses_sheet(rows)]},
+           workbook = %Workbook{sheets: [sales_sheet(payments), expenses_sheet(rows)]},
            {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
            files = [{~c"#{spreadsheet}", xlsx} | receipts],
            {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
@@ -33,6 +42,123 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       end
     end)
   end
+
+  defp payments(first, last) do
+    from = helsinki_midnight_utc(first)
+    until = helsinki_midnight_utc(Date.add(last, 1))
+
+    Payment
+    |> Ash.Query.filter(paid_at >= ^from and paid_at < ^until)
+    |> Ash.Query.sort(paid_at: :asc)
+    |> Ash.Query.load(order: [:order_reference, :vat_breakdown], course_registration: [:reference, :tax_rate])
+    |> Ash.read(authorize?: false)
+  end
+
+  defp helsinki_midnight_utc(date) do
+    date
+    |> DateTime.new!(~T[00:00:00], ShopTime.timezone())
+    |> DateTime.shift_zone!("Etc/UTC")
+  end
+
+  @doc """
+  Splits a payment across an order's VAT breakdown by each rate's share of the
+  order's gross, as `{rate, gross}` pairs. Each share is rounded to the cent and
+  any leftover cent goes on the rate with the largest gross, so the shares
+  always sum to the payment.
+  """
+  def split_by_rate(amount, vat_breakdown) do
+    order_gross = vat_breakdown |> Enum.map(& &1.gross) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
+
+    shares =
+      Enum.map(vat_breakdown, fn row ->
+        {row.rate, amount |> Decimal.mult(row.gross) |> Decimal.div(order_gross) |> Decimal.round(2)}
+      end)
+
+    leftover = Decimal.sub(amount, shares |> Enum.map(&elem(&1, 1)) |> Enum.reduce(Decimal.new(0), &Decimal.add/2))
+    largest = vat_breakdown |> Enum.max_by(& &1.gross, Decimal) |> Map.fetch!(:rate)
+
+    Enum.map(shares, fn
+      {^largest, gross} -> {largest, Decimal.add(gross, leftover)}
+      share -> share
+    end)
+  end
+
+  defp sales_sheet(payments) do
+    rows = Enum.flat_map(payments, &sale_rows/1)
+
+    headings = [
+      ~t"Paid date",
+      ~t"Reference",
+      ~t"Source",
+      ~t"Payment method",
+      ~t"VAT rate",
+      ~t"Net",
+      ~t"VAT",
+      ~t"Gross"
+    ]
+
+    rate_totals =
+      rows
+      |> Enum.group_by(& &1.rate)
+      |> Enum.sort_by(fn {rate, _} -> rate end, {:desc, Decimal})
+      |> Enum.map(fn {rate, rate_rows} ->
+        [nil, nil, nil, [~t"Total per VAT rate", bold: true], rate_cell(rate) | sale_totals(rate_rows)]
+      end)
+
+    grand_total = [nil, nil, nil, [~t"Sum", bold: true], nil | sale_totals(rows)]
+
+    %Sheet{
+      name: "Försäljning",
+      rows:
+        [Enum.map(headings, &[&1, bold: true]) | Enum.map(rows, &sale_row/1)] ++ [[]] ++ rate_totals ++ [grand_total]
+    }
+  end
+
+  defp sale_rows(%Payment{order: %{} = order} = payment) do
+    for {rate, gross} <- split_by_rate(payment.amount, order.vat_breakdown),
+        do: sale(payment, order.order_reference, ~t"order", rate, gross)
+  end
+
+  defp sale_rows(%Payment{course_registration: registration} = payment) do
+    [sale(payment, registration.reference, ~t"course", registration.tax_rate, payment.amount)]
+  end
+
+  defp sale(payment, reference, source, rate, gross) do
+    net = Vat.net_of_vat(gross, rate)
+
+    %{
+      date: payment.paid_at |> DateTime.shift_zone!(ShopTime.timezone()) |> DateTime.to_date(),
+      reference: reference,
+      source: source,
+      method: OrderLog.payment_method_label(payment.method),
+      # Normalised, so the same rate read from an order and a booking totals together.
+      rate: Decimal.normalize(rate),
+      net: net,
+      vat: Decimal.sub(gross, net),
+      gross: gross
+    }
+  end
+
+  defp sale_row(sale) do
+    [
+      date_cell(sale.date),
+      sale.reference,
+      sale.source,
+      sale.method,
+      rate_cell(sale.rate),
+      amount_cell(sale.net),
+      amount_cell(sale.vat),
+      amount_cell(sale.gross)
+    ]
+  end
+
+  defp sale_totals(rows) do
+    for field <- [:net, :vat, :gross] do
+      rows |> Enum.map(&Map.fetch!(&1, field)) |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2) |> amount_cell()
+    end
+  end
+
+  defp rate_cell(rate), do: [Decimal.to_float(rate), num_format: "0.0%"]
 
   defp paid_expenses(first, last) do
     with {:ok, expenses} <-
