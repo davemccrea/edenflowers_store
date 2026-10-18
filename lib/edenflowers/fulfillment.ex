@@ -27,14 +27,12 @@ defmodule Edenflowers.Fulfillment do
   refuses them. Each option can still change them on its own afterwards.
   """
   def set_same_day_for_all(changes, opts) do
-    Ash.transact(Edenflowers.Fulfillment.FulfillmentOption, fn ->
-      Enum.reduce_while(list_options!(opts), [], fn option, updated ->
-        case update_pricing(option, changes, opts) do
-          {:ok, option} -> {:cont, [option | updated]}
-          error -> {:halt, error}
-        end
-      end)
-    end)
+    Ash.bulk_update(
+      Edenflowers.Fulfillment.FulfillmentOption,
+      :update_pricing,
+      changes,
+      Keyword.merge(opts, return_records?: true, return_errors?: true)
+    )
   end
 
   resources do
