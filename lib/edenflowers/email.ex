@@ -154,20 +154,21 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  def course_confirmation(registration) do
+  def course_confirmation(registration, payment_link_url) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
       |> to(registration.email)
       |> bcc(from_address())
       |> subject(~t"You're booked on the course #{course = registration.course.name}")
-      |> text_body(render_course_confirmation(registration))
+      |> text_body(render_course_confirmation(registration, payment_link_url))
     end)
   end
 
-  defp render_course_confirmation(registration) do
+  defp render_course_confirmation(registration, payment_link_url) do
     Templates.course_confirmation(%{
       registration: registration,
+      payment_link_url: payment_link_url,
       format_date: &Format.weekday_numeric_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale)
     })

@@ -5,7 +5,10 @@
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 
-<%= if Decimal.positive?(@registration.balance) do %><%= gettext("You pay at the course. If your plans change, reply to this email and let me know.") %><% else %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %><% end %>
+<%= cond do %><% @payment_link_url -> %><%= gettext("You can pay online here, by card or MobilePay:") %>
+<%= @payment_link_url %>
+
+<%= gettext("You can still pay at the course instead. If your plans change, reply to this email and let me know.") %><% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course. If your plans change, reply to this email and let me know.") %><% true -> %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %><% end %>
 
 <%= gettext("See you there,") %>
 

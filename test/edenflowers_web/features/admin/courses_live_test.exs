@@ -72,24 +72,83 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :cancelled
   end
 
-  test "adds a booking that pays at the course and emails a confirmation", %{conn: conn} do
-    course = generate(course(name: "Autumn wreaths", total_places: 10))
+  describe "adding a booking" do
+    defp add_booking(view, course, payment_link?, email_customer?) do
+      view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
 
-    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view
+      |> form("#booking-form-#{course.id}",
+        form: %{
+          name: "Birgitta",
+          email: "birgitta@example.com",
+          seats: "2",
+          locale: "en-GB",
+          payment_link?: payment_link?,
+          email_customer?: email_customer?
+        }
+      )
+      |> render_submit()
 
-    view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
+      Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false)
+    end
 
-    view
-    |> form("#booking-form-#{course.id}",
-      form: %{name: "Birgitta", email: "birgitta@example.com", seats: "2", locale: "sv-FI"}
-    )
-    |> render_submit()
+    test "to pay later emails a confirmation without a payment link", %{conn: conn} do
+      course = generate(course(name: "Autumn wreaths", total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    assert has_element?(view, "li", "Birgitta")
-    assert has_element?(view, "li", "To collect")
-    assert render(view) =~ "2 / 10 seats"
-    assert render(view) =~ "1 to collect"
-    assert_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+      assert has_element?(view, ~s|button[phx-value-course-id="#{course.id}"]|)
+      view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
+      assert has_element?(view, "#booking-form-#{course.id}", "Send a payment link")
+      assert has_element?(view, "#booking-form-#{course.id}", "Record the payment later")
+      view |> element("#booking-form-#{course.id} button", "Close") |> render_click()
+
+      registration = add_booking(view, course, "false", "true")
+
+      assert has_element?(view, "li", "Birgitta")
+      assert has_element?(view, "li", "To collect")
+      assert render(view) =~ "2 / 10 seats"
+      assert render(view) =~ "1 to collect"
+      refute registration.payment_link_token
+
+      assert %{success: 1} = Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "/pay/"
+        assert email.text_body =~ "You pay at the course"
+      end)
+    end
+
+    test "with a payment link puts it in the confirmation", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      registration = add_booking(view, course, "true", "true")
+      assert registration.payment_link_token
+
+      assert %{success: 1} = Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "birgitta@example.com"}]
+        assert email.text_body =~ "/pay/#{registration.payment_link_token}"
+        assert email.text_body =~ "You can still pay at the course instead"
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      assert render(view) =~ "Resend payment link"
+    end
+
+    test "without emailing sends nothing, even from the scheduler", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      registration = add_booking(view, course, "true", "false")
+      assert registration.payment_link_token
+
+      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+      perform_job(Edenflowers.Courses.Schedulers.SendConfirmationEmail, %{})
+      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+      assert_no_email_sent()
+    end
   end
 
   test "a past course stays listed, marked past, until its bookings are settled", %{conn: conn} do

@@ -35,8 +35,16 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   end
 
   # Nothing has been paid yet, so there is no receipt to send.
+  defp deliver_without_receipt(%{payment_link_open?: true} = registration) do
+    url = EdenflowersWeb.PaymentLink.url_for(registration)
+
+    with {:ok, _result} <- registration |> Email.course_confirmation(url) |> Mailer.deliver() do
+      {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
+    end
+  end
+
   defp deliver_without_receipt(registration) do
-    with {:ok, _result} <- registration |> Email.course_confirmation() |> Mailer.deliver() do
+    with {:ok, _result} <- registration |> Email.course_confirmation(nil) |> Mailer.deliver() do
       {:ok, %{}}
     end
   end
@@ -45,7 +53,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
     with {:ok, pdf} <- Receipt.generate(registration),
          {:ok, _result} <-
            registration
-           |> Email.course_confirmation()
+           |> Email.course_confirmation(nil)
            |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
            |> Mailer.deliver() do
       {:ok, %{receipt_emailed_at: DateTime.utc_now()}}
@@ -54,7 +62,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :balance], actor: system_actor())
+    |> Ash.load!([:course, :payments, :first_name, :balance, :payment_link_open?], actor: system_actor())
     |> translate_course()
   end
 

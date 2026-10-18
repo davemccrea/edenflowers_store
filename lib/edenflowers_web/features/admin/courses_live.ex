@@ -68,6 +68,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     form =
       AshPhoenix.Form.for_create(CourseRegistration, :add_manually,
         actor: socket.assigns.current_user,
+        params: %{"payment_link?" => "true", "email_customer?" => "true"},
         transform_params: fn _form, params, _action -> Map.put(params, "course_id", course_id) end
       )
       |> to_form()
@@ -314,9 +315,19 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
             />
           </div>
-          <p class="text-base-content/65 text-sm">
-            {~t"They'll get a confirmation email. Payment is taken at the course."}
-          </p>
+          <.input
+            :let={option}
+            field={@booking_form[:payment_link?]}
+            type="radio-card"
+            options={payment_options()}
+          >
+            {option.name}
+          </.input>
+          <.input
+            field={@booking_form[:email_customer?]}
+            type="checkbox"
+            label={~t"Email the booking confirmation to the customer"}
+          />
           <div class="flex gap-2">
             <.button type="submit" variant="primary" size="sm">{~t"Add booking"}</.button>
             <.button type="button" phx-click="close_booking" variant="ghost" size="sm">{~t"Close"}</.button>
@@ -480,6 +491,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       </div>
     </details>
     """
+  end
+
+  defp payment_options do
+    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
   end
 
   # A paid booking's PaymentIntent is on its Payment; a pending one's is still on the booking.

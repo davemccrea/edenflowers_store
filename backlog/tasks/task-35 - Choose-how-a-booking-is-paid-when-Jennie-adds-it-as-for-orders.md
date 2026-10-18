@@ -1,9 +1,10 @@
 ---
 id: TASK-35
 title: 'Choose how a booking is paid when Jennie adds it, as for orders'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 19:38'
 labels:
   - spec
   - admin
@@ -24,8 +25,14 @@ Give the Add booking form on the courses page the same payment radio and "Email 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Add booking offers Send a payment link and Record the payment later, worded as on the order form
-- [ ] #2 With a payment link and email ticked, the confirmation email carries the link
-- [ ] #3 With email unticked, no email is sent
-- [ ] #4 Record later behaves as Add booking does today
+- [x] #1 Add booking offers Send a payment link and Record the payment later, worded as on the order form
+- [x] #2 With a payment link and email ticked, the confirmation email carries the link
+- [x] #3 With email unticked, no email is sent
+- [x] #4 Record later behaves as Add booking does today
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+add_manually takes payment_link? (default false) and email_customer? (default true); the form defaults to a payment link with email ticked, as the order form does. The confirmation email carries the open link and sets payment_link_emailed_at, so the row menu offers Resend. Unticked marks confirmation_emailed_at so the trigger's 10-minute scheduler doesn't send it anyway.
+<!-- SECTION:NOTES:END -->
