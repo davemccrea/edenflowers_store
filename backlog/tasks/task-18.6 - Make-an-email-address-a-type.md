@@ -1,12 +1,11 @@
 ---
 id: TASK-18.6
 title: Make an email address a type
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:12'
-updated_date: '2026-10-18 06:08'
-labels:
-  - quick
+updated_date: '2026-10-18 07:17'
+labels: []
 dependencies: []
 parent_task_id: TASK-18
 type: refactor
@@ -40,8 +39,8 @@ A change to what counts as a valid address has to find all six, and a new action
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The regex exists once
-- [ ] #2 The existing suite passes
+- [x] #1 The regex exists once
+- [x] #2 The existing suite passes
 <!-- AC:END -->
 
 ## Comments
