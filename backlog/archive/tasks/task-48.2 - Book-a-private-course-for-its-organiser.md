@@ -1,10 +1,12 @@
 ---
 id: TASK-48.2
 title: Book a private course for its organiser
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-labels: []
+updated_date: '2026-10-18 21:05'
+labels:
+  - wontfix
 dependencies:
   - TASK-48.1
   - TASK-35
@@ -27,3 +29,16 @@ A private course takes one booking: the organiser's name and email and the numbe
 - [ ] #2 The booking owes the course's total price, not a price per seat
 - [ ] #3 The payment choice works as for other bookings
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 21:05
+
+---
+
+Closed without implementation at the user's request, together with TASK-48.
+
+---
+<!-- COMMENTS:END -->
