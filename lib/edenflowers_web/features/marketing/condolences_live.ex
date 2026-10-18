@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -15,6 +16,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
      |> assign(gallery: gallery(), order_mailto: order_mailto())}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

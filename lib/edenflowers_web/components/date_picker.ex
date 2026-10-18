@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.DatePicker do
 
   @nav_keys ~w(ArrowUp ArrowDown ArrowLeft ArrowRight Home End PageUp PageDown)
 
+  @impl true
   def mount(socket) do
     today_date = today()
 
@@ -29,6 +30,7 @@ defmodule EdenflowersWeb.DatePicker do
      |> update_calendar_view(today_date)}
   end
 
+  @impl true
   def update(assigns, socket) do
     selected_date = parse_date(assigns.selected_date)
     assigns = normalize_optional_assigns(assigns)
@@ -134,6 +136,7 @@ defmodule EdenflowersWeb.DatePicker do
     required: false,
     doc: "Optional content below the grid. Receives `%{view_date: Date.t()}` via `:let` — the month on screen."
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div
@@ -261,6 +264,7 @@ defmodule EdenflowersWeb.DatePicker do
     """
   end
 
+  @impl true
   def handle_event("current-month", _, socket) do
     {:noreply, update_calendar_view(socket, socket.assigns.today_date)}
   end

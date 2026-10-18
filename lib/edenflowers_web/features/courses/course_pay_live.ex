@@ -18,6 +18,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(%{"token" => token} = params, _session, socket) do
     case load_registration(token) do
       {:ok, registration} ->
@@ -48,6 +49,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
     end
   end
 
+  @impl true
   def handle_event("pay", _params, socket) do
     with {:ok, registration} <- load_registration(socket.assigns.token),
          true <- registration.payment_link_open?,
@@ -75,11 +77,13 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket) do
     {:ok, registration} = load_registration(socket.assigns.token)
     {:noreply, socket |> assign(:registration, translate_course(registration)) |> assign(:client_secret, nil)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

@@ -10,6 +10,7 @@ defmodule Edenflowers.Orders.Workers.SendCancelledEmail do
     new(%{"order_id" => order.id, "refunded_amount" => Decimal.to_string(refunded_amount)})
   end
 
+  @impl true
   def perform(%Oban.Job{args: %{"order_id" => order_id, "refunded_amount" => refunded_amount}}) do
     order =
       Edenflowers.Orders.get_order_by_id!(order_id,

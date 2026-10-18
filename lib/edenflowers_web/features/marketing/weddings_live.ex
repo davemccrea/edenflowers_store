@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     "Sara Björkskog" => "https://www.grann.fi/"
   }
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -36,6 +37,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
      |> assign(steps: steps(), testimonial: testimonial())}
   end
 
+  @impl true
   def handle_event("validate_enquiry", %{"enquiry" => params}, socket) do
     {:noreply, assign(socket, enquiry_form: build_enquiry_form(params, :validate))}
   end
@@ -71,6 +73,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     end
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

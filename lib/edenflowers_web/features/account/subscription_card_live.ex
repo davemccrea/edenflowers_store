@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
 
+  @impl true
   def mount(%{"id" => id} = params, _session, socket) do
     user = socket.assigns.current_user
 
@@ -43,6 +44,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
     end
   end
 
+  @impl true
   def handle_event("save_card", _params, socket) do
     {:noreply, push_event(socket, "stripe:process_payment", %{})}
   end
@@ -56,6 +58,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>

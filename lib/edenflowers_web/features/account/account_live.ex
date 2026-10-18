@@ -29,6 +29,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @email_code_window_ms :timer.minutes(15)
   @past_visible 5
 
+  @impl true
   def mount(_params, _session, socket) do
     user = Ash.load!(socket.assigns.current_user, :first_name, actor: socket.assigns.current_user)
 
@@ -54,6 +55,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(newsletter_saved_token: nil)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -408,6 +410,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp line_item_label(%{quantity: 1} = item), do: item.product_name
   defp line_item_label(item), do: "#{item.quantity} × #{item.product_name}"
 
+  @impl true
   def handle_event("save_details", %{"details" => params}, socket) do
     user = socket.assigns.current_user
     name = blank_to_nil(params["name"])
@@ -550,6 +553,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   # Only the most recent save clears the confirmation. Toggling twice inside the
   # visible window would otherwise let the first timer wipe the "Saved" the
   # second save has only just put up.
+  @impl true
   def handle_info({:clear_newsletter_saved, token}, %{assigns: %{newsletter_saved_token: token}} = socket) do
     {:noreply, assign(socket, newsletter_saved?: false)}
   end

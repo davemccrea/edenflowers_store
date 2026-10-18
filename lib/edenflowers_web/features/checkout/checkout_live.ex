@@ -42,6 +42,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp submit_action_for(:delivery), do: :submit_delivery
   defp submit_action_for(:payment), do: nil
 
+  @impl true
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
@@ -80,6 +81,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -653,6 +655,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     ~t"Up to #{max_length} characters"
   end
 
+  @impl true
   def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: form)}
@@ -779,6 +782,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   # The `pay` handler syncs the PaymentIntent amount, so only a switch between
   # one-off and subscription, which changes card saving, replaces it here.
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?

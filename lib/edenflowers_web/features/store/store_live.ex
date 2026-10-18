@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(_params, _session, socket) do
     categories =
       Catalog.list_categories!()
@@ -15,6 +16,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
     {:ok, assign(socket, categories: categories, products: [], selected_category: nil)}
   end
 
+  @impl true
   def handle_params(params, _uri, socket) do
     case Map.get(params, "category") do
       nil ->
@@ -45,6 +47,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
     end
   end
 
+  @impl true
   def render(assigns) do
     assigns =
       assign(

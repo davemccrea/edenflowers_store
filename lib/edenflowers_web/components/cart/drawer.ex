@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Cart.Drawer do
   use EdenflowersWeb, :live_component
 
+  @impl true
   def update(assigns, socket) do
     {:ok, assign(socket, assigns)}
   end
@@ -8,6 +9,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
   defp checkout_cta(state) when state in [:gift_options, :delivery, :payment], do: ~t"Continue checkout"
   defp checkout_cta(_), do: ~t"Checkout"
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>

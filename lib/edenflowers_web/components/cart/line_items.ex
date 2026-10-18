@@ -8,8 +8,10 @@ defmodule EdenflowersWeb.Cart.LineItems do
   attr :id, :string, required: true
   attr :order, :any, required: true
 
+  @impl true
   def mount(socket), do: {:ok, assign(socket, :refused, %{})}
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div id={@id}>
@@ -164,6 +166,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
     Enum.count(order.line_items, &(not &1.is_card)) == 1
   end
 
+  @impl true
   def handle_event("remove_item", %{"id" => id}, socket) do
     Orders.remove_line_item(socket.assigns.order, id)
     {:noreply, socket}

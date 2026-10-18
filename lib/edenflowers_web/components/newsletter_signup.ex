@@ -2,10 +2,12 @@ defmodule EdenflowersWeb.NewsletterSignup do
   use EdenflowersWeb, :live_component
   require Logger
 
+  @impl true
   def mount(socket) do
     {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <section class="max-w-md space-y-5">
@@ -60,6 +62,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
     """
   end
 
+  @impl true
   def handle_event("submit", %{"email_address" => email_address} = params, socket) do
     socket = assign(socket, form: to_form(params))
 

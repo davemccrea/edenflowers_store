@@ -19,6 +19,7 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
   # ponytail: a retry resends to every device, not just the ones that failed.
   # The notification's tag makes a repeat replace the first silently, so it
   # only costs a request. Fan out one job per device if that ever matters.
+  @impl true
   def perform(%Oban.Job{args: %{"order_id" => order_id}}) do
     order = Orders.get_order_by_id!(order_id, load: [:grand_total], authorize?: false)
 

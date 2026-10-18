@@ -8,6 +8,7 @@ defmodule Edenflowers.Accounts.Workers.SendOtpEmail do
     args |> __MODULE__.new() |> Oban.insert()
   end
 
+  @impl true
   def perform(%Oban.Job{args: %{"email" => email, "otp_code" => otp_code, "locale" => locale}}) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       Email.otp_sign_in(email, otp_code) |> Mailer.deliver()

@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @impl true
   def mount(%{"id" => id}, _session, socket) do
     case load_course(id) do
       {:ok, course} ->
@@ -30,6 +31,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
@@ -177,6 +179,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     """
   end
 
+  @impl true
   def handle_event("validate", %{"form" => params}, socket) do
     {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
