@@ -140,6 +140,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <div
+                :if={@order.missing_delivery_phone?}
+                id="order-missing-phone"
+                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
+              >
+                <.icon name="hero-phone-x-mark" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <p class="text-warning-content text-sm font-semibold">{~t"Missing recipient phone"}</p>
+              </div>
+
+              <div
                 :if={present?(@order.delivery_instructions)}
                 class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
               >

@@ -51,6 +51,27 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
+  test "flags a delivery with no phone to call", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+
+    attrs = [
+      state: :placed,
+      fulfillment_method: :delivery,
+      fulfillment_date: ~D[2026-06-10],
+      fulfillment_status: :pending,
+      gift: true
+    ]
+
+    missing = generate(order([customer_name: "No Phone"] ++ attrs))
+    phoned = generate(order([customer_name: "Has Phone", recipient_phone_number: "+358401234567"] ++ attrs))
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    assert has_element?(view, ~s|a[href="/admin/orders/#{missing.id}"]|, "Missing recipient phone")
+    refute has_element?(view, ~s|a[href="/admin/orders/#{phoned.id}"]|, "Missing recipient phone")
+  end
+
   test "shows an order placed elsewhere without a refresh", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)

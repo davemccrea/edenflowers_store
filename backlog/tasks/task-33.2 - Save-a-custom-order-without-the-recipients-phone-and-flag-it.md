@@ -1,9 +1,10 @@
 ---
 id: TASK-33.2
 title: 'Save a custom order without the recipient''s phone, and flag it'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:55'
 labels: []
 dependencies: []
 parent_task_id: TASK-33
@@ -21,7 +22,7 @@ Drop the `validate present(:recipient_phone_number)` for deliveries on the custo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A custom delivery order saves without a recipient phone
-- [ ] #2 Such an order shows 'Missing recipient phone' on the order page and the fulfillments list
-- [ ] #3 Customer name, a contact, method and date are still required
+- [x] #1 A custom delivery order saves without a recipient phone
+- [x] #2 Such an order shows 'Missing recipient phone' on the order page and the fulfillments list
+- [x] #3 Customer name, a contact, method and date are still required
 <!-- AC:END -->

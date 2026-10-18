@@ -49,6 +49,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
+  test "warns when a delivery has no phone to call", %{conn: conn} do
+    missing = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grandma")
+    phoned = placed_order(fulfillment_method: :delivery, recipient_phone_number: "+358401234567")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{missing.id}")
+    assert has_element?(view, "#order-missing-phone", "Missing recipient phone")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{phoned.id}")
+    refute has_element?(view, "#order-missing-phone")
+  end
+
   test "an unpaid custom order can be deleted, an online one can't", %{conn: conn} do
     custom = placed_order(origin: :custom, payment_intent_id: nil)
     online = placed_order()
