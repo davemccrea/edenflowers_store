@@ -229,6 +229,15 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
+    test "without a payment link, shows the total and says nothing about when to pay", ctx do
+      {:ok, _order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_link?: false})
+      Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ ~r/Ready to collect at the shop on [^\n]+\n\nIf anything needs changing/
+      end)
+    end
+
     test "sends nothing when Jennie chooses not to", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
