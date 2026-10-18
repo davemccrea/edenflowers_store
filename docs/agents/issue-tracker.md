@@ -18,7 +18,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 - `backlog board` or `backlog task list --plain` lists open work by status
 - Refer to tasks by ID (`TASK-18.5`), not by file path
 - When every subtask is `done` (or archived as `wontfix`), set the parent to `done` and archive the parent and its subtasks: `backlog task archive TASK-N.M`, then `backlog task archive TASK-N`. Archived tasks stay readable with `backlog task view`
-- When only the human can finish a task (a decision, a check on a real device or in a dashboard), set it to `ready-for-human` and add a comment saying what's left
+- When something is still undecided (whether to do it, or how), set it to `needs-triage` and say what's open in the description. When it's decided but only the human can do it (a check on a real device or in a dashboard), set it to `ready-for-human` and add a comment saying what's left
 
 ## When a skill says "publish to the issue tracker"
 

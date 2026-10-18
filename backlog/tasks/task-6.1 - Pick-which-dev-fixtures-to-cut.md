@@ -1,10 +1,10 @@
 ---
 id: TASK-6.1
 title: Pick which dev fixtures to cut
-status: ready-for-human
+status: needs-triage
 assignee: []
 created_date: '2026-10-10 22:45'
-updated_date: '2026-10-18 05:08'
+updated_date: '2026-10-18 06:10'
 labels: []
 dependencies: []
 parent_task_id: TASK-6

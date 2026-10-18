@@ -1,9 +1,10 @@
 ---
 id: TASK-20.3
 title: 'Drop receipt_sha256, unless it''s kept as evidence'
-status: ready-for-human
+status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:31'
+updated_date: '2026-10-18 06:10'
 labels: []
 dependencies: []
 parent_task_id: TASK-20
