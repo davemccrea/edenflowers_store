@@ -45,6 +45,7 @@ defmodule Edenflowers.Orders do
       define :edit_order, action: :edit
       define :update_florist_note, action: :update_florist_note
       define :cancel_order, action: :cancel
+      define :delete_custom_order, action: :delete_custom
       define :cancel_order_by_customer, action: :cancel_by_customer
       define :record_payment, action: :record_payment, args: [:amount, :payment_method]
       define :undo_payment, action: :undo_payment, args: [:payment_id]

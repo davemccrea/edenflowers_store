@@ -567,6 +567,46 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "deleting" do
+    test "removes an unpaid custom order, its lines and its log, and returns its stock", ctx do
+      wreath = generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(wreath, "2")]})
+      {:ok, order} = Orders.update_florist_note(order, %{florist_note: "Test"}, actor: ctx.admin)
+
+      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
+
+      assert {:error, _} = Orders.get_order_by_id(order.id, authorize?: false)
+      assert Ash.get!(Edenflowers.Catalog.ProductVariant, wreath.id, authorize?: false).stock_quantity == 3
+    end
+
+    test "doesn't return stock a cancelled order already gave back", ctx do
+      wreath = generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))
+      {:ok, order} = place(ctx, %{line_items: [catalogue_line(wreath, "2")]})
+      {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
+
+      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
+
+      assert Ash.get!(Edenflowers.Catalog.ProductVariant, wreath.id, authorize?: false).stock_quantity == 3
+    end
+
+    test "refuses an order with a payment, even an undone one", ctx do
+      {:ok, order} = place(ctx)
+      {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
+      [payment] = Ash.load!(order, :payments, authorize?: false).payments
+      {:ok, order} = Orders.undo_payment(order, payment.id, actor: ctx.admin)
+
+      assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
+      assert Exception.message(error) =~ "has a payment"
+    end
+
+    test "refuses an online order", ctx do
+      order = generate(order(state: :placed, origin: :online))
+
+      assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
+      assert Exception.message(error) =~ "isn't a custom order"
+    end
+  end
+
   describe "stock" do
     setup ctx do
       %{wreath: generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))}
