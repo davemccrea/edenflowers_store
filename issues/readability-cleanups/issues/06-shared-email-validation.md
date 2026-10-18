@@ -1,4 +1,4 @@
-# Validate email addresses in one place
+# Make an email address a type
 
 Status: ready-for-agent
 Type: refactor
@@ -11,17 +11,18 @@ The same email check, `~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/` with "Must be a valid ema
 - `CourseRegistration`: `register`, `add_manually` (on `:email`)
 - `AccountLive`: the email-change form, as `String.match?/2`
 
-A change to what counts as a valid address has to find all six.
+A change to what counts as a valid address has to find all six, and a new action that accepts an email has to remember the check.
 
 ## What to build
 
-- A validation module, e.g. `Edenflowers.Validations.Email`, taking the attribute: `validate {Edenflowers.Validations.Email, attribute: :customer_email}`. It owns the regex and the message (through gettext, if the message is shown to customers).
-- `AccountLive` calls a public `valid?/1` on the same module, or better, relies on the `User` action's own validation if the email change goes through one.
+- `Edenflowers.Types.Email`, an `Ash.Type.NewType` of `:string` with `constraints: [trim?: true, match: ~r/…/]` and the message. Use it for `Order.customer_email` and `CourseRegistration.email`, and drop the five `validate match(...)` lines: every action accepting the attribute then checks it.
+- `User.email` is `:ci_string` (it's the sign-in identity). Leave its type alone, or make a `:ci_string`-based variant if the email-change action should share the check; `AccountLive` then relies on the action's error rather than its own regex.
+- No data migration: the column types don't change. Existing rows aren't revalidated.
 
 ## Tests
 
-- A unit test for the module: valid, missing `@`, missing dot after `@`, whitespace.
-- The existing suite passes.
+- A unit test for the type: valid, missing `@`, missing dot after `@`, surrounding whitespace trimmed.
+- The existing suite passes, with error messages unchanged where tests assert them.
 
 ## Acceptance criteria
 
@@ -29,3 +30,5 @@ A change to what counts as a valid address has to find all six.
 - [ ] The existing suite passes
 
 ## Comments
+
+- Replaces the earlier "shared validation module" version of this ticket: a type makes the check impossible to forget (see `issues/lean-into-ash/`).
