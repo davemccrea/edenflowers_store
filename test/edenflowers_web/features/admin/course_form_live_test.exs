@@ -44,6 +44,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     [course] = Ash.read!(Course, authorize?: false)
     assert course.name == "Autumn wreaths"
     assert course.language == :sv
+    assert Decimal.eq?(course.late_cancellation_fee, "15.00")
     assert course.translations."sv-FI".name == "Höstkransar"
     assert "local:///uploads/" <> filename = course.image_slug
     assert filename =~ ~r/^kransar-a-[0-9a-f]{6}\.jpg$/
@@ -55,11 +56,14 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
-    view |> form("#course-form", form: %{total_places: "12", language: "en"}) |> render_submit()
+    view
+    |> form("#course-form", form: %{total_places: "12", language: "en", late_cancellation_fee: "10.00"})
+    |> render_submit()
 
     saved = Ash.get!(Course, course.id, authorize?: false)
     assert saved.total_places == 12
     assert saved.language == :en
+    assert Decimal.eq?(saved.late_cancellation_fee, "10.00")
   end
 
   describe "translating" do

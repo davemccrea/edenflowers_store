@@ -170,7 +170,8 @@ defmodule Edenflowers.Email do
       registration: registration,
       payment_link_url: payment_link_url,
       format_date: &Format.weekday_numeric_date(&1, registration.locale),
-      format_time: &Format.time(&1, registration.locale)
+      format_time: &Format.time(&1, registration.locale),
+      format_currency: &Format.currency(&1, registration.locale)
     })
   end
 

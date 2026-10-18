@@ -8,7 +8,7 @@
 <%= cond do %><% @payment_link_url -> %><%= gettext("You can pay online here, by card or MobilePay:") %>
 <%= @payment_link_url %>
 
-<%= gettext("You can still pay at the course instead. If your plans change, reply to this email and let me know.") %><% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course. If your plans change, reply to this email and let me know.") %><% true -> %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %><% end %>
+<%= gettext("You can still pay at the course instead. If your plans change, reply to this email and let me know.") %><% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course. If your plans change, reply to this email and let me know.") %><% Decimal.positive?(@registration.course.late_cancellation_fee) -> %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full. After that, I keep a %{fee} late-cancellation fee.", fee: @format_currency.(@registration.course.late_cancellation_fee)) %><% true -> %><%= gettext("Your receipt is attached. If your plans change, reply to this email at least 7 days before the course and I'll refund you in full.") %><% end %>
 
 <%= gettext("See you there,") %>
 
