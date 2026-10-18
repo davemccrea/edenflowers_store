@@ -62,4 +62,18 @@ defmodule EdenflowersWeb.StoreCalendarTest do
       refute html =~ ~s(aria-pressed="true")
     end
   end
+
+  # The id, key targets and tabindex all come from the slot's `attrs`, so this
+  # fails if StoreCalendar stops spreading them on its day buttons.
+  test "each day carries what CalendarHook needs, out of the Tab order" do
+    html =
+      render_component(&StoreCalendar.store_calendar/1,
+        id: "calendar",
+        calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
+        selected_date: nil
+      )
+
+    selector = ~s|button#calendar-day-#{ShopTime.today()}[data-key-targets][tabindex="-1"]|
+    assert html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> Enum.count() == 1
+  end
 end
