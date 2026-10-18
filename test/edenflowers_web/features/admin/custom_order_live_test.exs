@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
             line_items: [
               %{
                 "kind" => "custom",
-                "description" => "Funeral spray",
+                "product_name" => "Funeral spray",
                 "unit_price" => "85.00",
                 "tax_rate_id" => ctx.tax_rate.id,
                 "quantity" => "1"
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
                    line_items: %{
                      "0" => %{"product_variant_id" => ctx.variant.id, "quantity" => "1"},
                      "1" => %{
-                       "description" => "Funeral spray",
+                       "product_name" => "Funeral spray",
                        "unit_price" => "85,50",
                        "tax_rate_id" => ctx.tax_rate.id,
                        "quantity" => "1"
@@ -175,12 +175,12 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       |> form("#order-form",
         form: %{
           customer_name: "Mrs Holm",
-          line_items: %{"0" => %{"description" => "Spray", "unit_price" => "lots", "quantity" => "1"}}
+          line_items: %{"0" => %{"product_name" => "Spray", "unit_price" => "lots", "quantity" => "1"}}
         }
       )
       |> render_submit()
 
-      assert has_element?(view, "#line-0-error", "enter a price")
+      assert has_element?(view, "#form_line_items_0_unit_price-error", "enter a price")
       assert has_element?(view, ~s|input[name="form[line_items][0][unit_price]"][aria-invalid="true"]|)
       assert has_element?(view, ~s|button[aria-label="Remove item 1"]|)
     end
@@ -220,7 +220,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
                  form: %{
                    line_items: %{
                      "0" => %{
-                       "description" => "Funeral spray, larger",
+                       "product_name" => "Funeral spray, larger",
                        "unit_price" => "120.00",
                        "tax_rate_id" => ctx.tax_rate.id,
                        "quantity" => "1"
@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
                  form: %{
                    line_items: %{
                      "0" => %{
-                       "description" => "Funeral spray",
+                       "product_name" => "Funeral spray",
                        "unit_price" => "95.00",
                        "tax_rate_id" => ctx.tax_rate.id,
                        "quantity" => "1"
@@ -259,6 +259,24 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, "#order-balance", "To collect €10.00")
       assert has_element?(view, ~s|#order-balance-form input[value="10.00"]|)
+    end
+
+    test "a catalogue line keeps the price it was sold at, while its quantity changes", ctx do
+      order =
+        place_custom_order(ctx, %{
+          line_items: [%{"kind" => "catalogue", "product_variant_id" => ctx.variant.id, "quantity" => "1"}]
+        })
+
+      Ash.Seed.update!(ctx.variant, %{price: Decimal.new("59.00")})
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      assert {:error, {:live_redirect, _}} =
+               view
+               |> form("#order-form", form: %{line_items: %{"0" => %{"quantity" => "2"}}})
+               |> render_submit()
+
+      [line] = Ash.load!(order, :line_items, authorize?: false, reuse_values?: false).line_items
+      assert {line.quantity, Decimal.to_string(line.unit_price)} == {2, "49.00"}
     end
 
     test "keeps a retired VAT rate when editing another field", ctx do

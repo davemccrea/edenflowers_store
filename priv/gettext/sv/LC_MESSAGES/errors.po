@@ -120,3 +120,18 @@ msgstr "Den här kursen finns inte längre."
 
 msgid "Must be a valid email address"
 msgstr "Ange en giltig e-postadress"
+
+msgid "choose a product"
+msgstr "välj en produkt"
+
+msgid "describe the item"
+msgstr "beskriv artikeln"
+
+msgid "enter a price"
+msgstr "ange ett pris"
+
+msgid "choose a VAT rate"
+msgstr "välj momssats"
+
+msgid "Add at least one item"
+msgstr "Lägg till minst en artikel"

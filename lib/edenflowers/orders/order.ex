@@ -275,14 +275,14 @@ defmodule Edenflowers.Orders.Order do
     # The only destroy purges abandoned carts, which have no log.
     create_version_on_destroy? false
     # An edit that changes only the lines changes nothing on the order row, but
-    # still belongs in the log. ReplaceLineItems asks to skip an edit that
+    # still belongs in the log. RecordEnteredLineItems asks to skip an edit that
     # changed nothing at all.
     only_when_changed? false
     store_action_name? true
     ignore_attributes [:inserted_at, :updated_at]
     sensitive_attributes :redact
 
-    # Set by ReplaceLineItems when the lines change: what they now are,
+    # Set by RecordEnteredLineItems when the lines change: what they now are,
     # since changes_only can't see into another resource.
     metadata :items, :string
 
@@ -437,7 +437,8 @@ defmodule Edenflowers.Orders.Order do
     create :place_custom do
       accept @custom_order_fields
 
-      argument :line_items, {:array, :map}, allow_nil?: false
+      argument :line_items, {:array, :map}, default: []
+      validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
       argument :payment_link?, :boolean, default: true
       argument :email_customer?, :boolean, default: true
 
@@ -449,7 +450,6 @@ defmodule Edenflowers.Orders.Order do
       change load(:payment_status)
 
       # From here to PriceFulfillment, the same rules as :edit. Change both.
-      validate Validations.EnteredLineItems
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
 
@@ -468,7 +468,16 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SetGiftFromRecipient
       change Changes.PriceFulfillment
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
-      change Changes.ReplaceLineItems
+
+      change manage_relationship(:line_items,
+               type: :direct_control,
+               on_match: {:update, :set_quantity},
+               on_no_match: {:create, :enter},
+               on_missing: {:destroy, :remove_item},
+               authorize?: false
+             )
+
+      change Changes.RecordEnteredLineItems
       change {Changes.AdjustStock, direction: :take}
       change run_oban_trigger(:send_order_details_email), where: [argument_equals(:email_customer?, true)]
     end
@@ -634,7 +643,8 @@ defmodule Edenflowers.Orders.Order do
     update :edit do
       accept @custom_order_fields
 
-      argument :line_items, {:array, :map}, allow_nil?: false
+      argument :line_items, {:array, :map}, default: []
+      validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
 
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
@@ -643,7 +653,6 @@ defmodule Edenflowers.Orders.Order do
       change filter expr(state == :placed and fulfillment_status == :pending)
 
       # From here to PriceFulfillment, the same rules as :place_custom. Change both.
-      validate Validations.EnteredLineItems
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
 
@@ -665,7 +674,16 @@ defmodule Edenflowers.Orders.Order do
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
       # The old lines go back on the shelf before the new ones are taken.
       change {Changes.AdjustStock, direction: :return}
-      change Changes.ReplaceLineItems
+
+      change manage_relationship(:line_items,
+               type: :direct_control,
+               on_match: {:update, :set_quantity},
+               on_no_match: {:create, :enter},
+               on_missing: {:destroy, :remove_item},
+               authorize?: false
+             )
+
+      change Changes.RecordEnteredLineItems
       change {Changes.AdjustStock, direction: :take}
       require_atomic? false
     end

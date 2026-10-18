@@ -22,19 +22,32 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
       else: {:error, "direction must be :take or :return"}
   end
 
+  # Returned before the write, as an edit saves the lines replacing these with it.
   @impl true
   def change(changeset, opts, _context) do
-    Ash.Changeset.after_action(changeset, fn
-      # Occurrences are made fresh and never take stock, so they have none to return.
-      _changeset, %{origin: :subscription} = order ->
-        {:ok, order}
+    case opts[:direction] do
+      :return ->
+        Ash.Changeset.before_action(changeset, fn changeset ->
+          case adjust_order(changeset.data, opts) do
+            :ok -> changeset
+            {:error, error} -> Ash.Changeset.add_error(changeset, error)
+          end
+        end)
 
-      _changeset, order ->
-        with {:ok, %{line_items: line_items}} <- Ash.load(order, :line_items, authorize?: false),
-             :ok <- adjust_all(order, line_items, opts) do
-          {:ok, order}
-        end
-    end)
+      :take ->
+        Ash.Changeset.after_action(changeset, fn _changeset, order ->
+          with :ok <- adjust_order(order, opts), do: {:ok, order}
+        end)
+    end
+  end
+
+  # Occurrences are made fresh and never take stock, so they have none to return.
+  defp adjust_order(%{origin: :subscription}, _opts), do: :ok
+
+  defp adjust_order(order, opts) do
+    with {:ok, %{line_items: line_items}} <- Ash.load(order, :line_items, authorize?: false) do
+      adjust_all(order, line_items, opts)
+    end
   end
 
   # Sorted so two orders sharing sizes lock them in the same order and can't

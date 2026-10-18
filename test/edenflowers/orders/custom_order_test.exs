@@ -46,7 +46,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     Map.merge(
       %{
         "kind" => "custom",
-        "description" => "Funeral spray",
+        "product_name" => "Funeral spray",
         "unit_price" => "85,00",
         "tax_rate_id" => tax_rate.id,
         "quantity" => "1"
@@ -75,6 +75,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
   defp place(ctx, overrides \\ %{}) do
     Orders.place_custom_order(params(ctx, overrides), actor: ctx.admin)
+  end
+
+  defp line_errors(error, index) do
+    for %{path: [:line_items, ^index], field: field} = e <- Ash.Error.to_error_class(error).errors,
+        do: {field, e.message}
   end
 
   defp stub_geocoding(distance_m) do
@@ -178,10 +183,15 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Exception.message(error) =~ "Add at least one item"
 
       assert {:error, error} = place(ctx, %{line_items: [custom_line(ctx.tax_rate, %{"unit_price" => "lots"})]})
-      assert Exception.message(error) =~ "Item 1: enter a price"
+      assert {:unit_price, "enter a price"} in line_errors(error, 0)
 
-      assert {:error, error} = place(ctx, %{line_items: [custom_line(ctx.tax_rate, %{"description" => "   "})]})
-      assert Exception.message(error) =~ "Item 1: describe the item"
+      assert {:error, error} =
+               place(ctx, %{
+                 line_items: [catalogue_line(ctx.variant), custom_line(ctx.tax_rate, %{"product_name" => "  "})]
+               })
+
+      assert line_errors(error, 0) == []
+      assert {:product_name, "describe the item"} in line_errors(error, 1)
     end
 
     test "only Jennie can place one", ctx do
@@ -285,7 +295,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
     test "a stale line id is a validation error", ctx do
       {:ok, order} = place(ctx)
-      stale = %{"kind" => "catalogue", "id" => Ash.UUID.generate(), "quantity" => "1"}
+      stale = %{"id" => Ash.UUID.generate(), "quantity" => "1"}
 
       assert {:error, error} = Orders.edit_order(order, params(ctx, %{line_items: [stale]}), actor: ctx.admin)
       assert Exception.message(error) =~ "no longer available"
@@ -376,7 +386,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       {:ok, order} = place(ctx, delivery)
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
-      kept = [%{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}]
+      kept = [%{"id" => line_item.id, "quantity" => "1"}]
 
       stub_geocoding(12_000)
 
@@ -398,7 +408,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "the log lists the items when they change", ctx do
       {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
-      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+      kept = %{"id" => line_item.id, "quantity" => "2"}
 
       {:ok, order} =
         Orders.edit_order(order, params(ctx, %{line_items: [kept, custom_line(ctx.tax_rate)]}), actor: ctx.admin)
@@ -413,7 +423,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "the log names the language an edit switched to", ctx do
       {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
-      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}
+      kept = %{"id" => line_item.id, "quantity" => "1"}
 
       {:ok, order} = Orders.edit_order(order, params(ctx, %{locale: "fi", line_items: [kept]}), actor: ctx.admin)
 
@@ -426,7 +436,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "an edit that changes nothing leaves no entry in the log", ctx do
       {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.variant)]})
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
-      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "1"}
+      kept = %{"id" => line_item.id, "quantity" => "1"}
 
       {:ok, order} = Orders.edit_order(order, params(ctx, %{line_items: [kept]}), actor: ctx.admin)
 
@@ -439,7 +449,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
       Ash.Seed.update!(ctx.variant, %{price: Decimal.new("60.00")})
 
-      kept = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+      kept = %{"id" => line_item.id, "quantity" => "2"}
       {:ok, order} = Orders.edit_order(order, params(ctx, %{line_items: [kept]}), actor: ctx.admin)
 
       assert [%{id: id, quantity: 2, unit_price: price}] = Ash.load!(order, :line_items, authorize?: false).line_items
@@ -465,7 +475,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         )
 
       card_line = generate(line_item(order_id: order.id, product_variant_id: card.id, is_card: true))
-      kept = %{"kind" => "catalogue", "id" => card_line.id, "quantity" => "1"}
+      kept = %{"id" => card_line.id, "quantity" => "1"}
 
       {:ok, order} =
         Orders.edit_order(
@@ -602,7 +612,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       order = generate(order(origin: :online, state: :placed))
       line_item = generate(line_item(order_id: order.id, product_variant_id: ctx.wreath.id, quantity: 1))
 
-      line = %{"kind" => "catalogue", "id" => line_item.id, "quantity" => "2"}
+      line = %{"id" => line_item.id, "quantity" => "2"}
       {:ok, _order} = Orders.edit_order(order, params(ctx, %{line_items: [line]}), actor: ctx.admin)
 
       assert stock(ctx.wreath) == 2

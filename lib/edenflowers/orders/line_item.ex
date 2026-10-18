@@ -48,10 +48,22 @@ defmodule Edenflowers.Orders.LineItem do
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
-    # A line on a custom order that Jennie describes and prices herself, with
-    # no product behind it.
-    create :add_custom_item do
-      accept [:order_id, :product_name, :unit_price, :tax_rate, :quantity]
+    # A line Jennie enters when she places or edits an order: a size from the
+    # catalogue, priced from it, or one she describes and prices herself.
+    create :enter do
+      accept [:product_variant_id, :product_name, :unit_price, :quantity]
+      # A catalogue line takes them from its variant; a custom one is checked below.
+      allow_nil_input [:product_name, :unit_price]
+      argument :kind, :atom, allow_nil?: false, constraints: [one_of: [:catalogue, :custom]]
+      argument :tax_rate_id, :uuid
+
+      validate present(:product_variant_id), message: "choose a product", where: [argument_equals(:kind, :catalogue)]
+      validate present(:product_name), message: "describe the item", where: [argument_equals(:kind, :custom)]
+      validate present(:unit_price), message: "enter a price", where: [argument_equals(:kind, :custom)]
+      validate present(:tax_rate_id), message: "choose a VAT rate", where: [argument_equals(:kind, :custom)]
+
+      change Changes.PopulateFromVariant, where: [argument_equals(:kind, :catalogue)]
+      change Changes.SetTaxRate, where: [argument_equals(:kind, :custom)]
     end
 
     # The destroy notification publishes to the removed item's order_id topic.
@@ -116,7 +128,7 @@ defmodule Edenflowers.Orders.LineItem do
   attributes do
     uuid_primary_key :id
     attribute :quantity, :integer, allow_nil?: false, default: 1, constraints: [min: 1]
-    attribute :unit_price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+    attribute :unit_price, Edenflowers.Types.Price, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :product_name, :string, allow_nil?: false
     # Nil for a custom item, which has no product photo.

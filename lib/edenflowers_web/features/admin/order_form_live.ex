@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.EnteredLineItems
+  alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
   alias EdenflowersWeb.Layouts
@@ -42,8 +42,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:variant_options, variant_options(actor))
          |> assign(:tax_rates, tax_rates)
          |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
-         |> assign(:lines, initial_lines(mode, order, tax_rates))
-         |> assign(:form, build_form(mode, order, actor))
+         |> assign(:form, build_form(mode, order, actor, tax_rates))
          |> assign(:delivery_quote, stored_quote(mode, order))
          |> assign_date_warning()}
 
@@ -64,7 +63,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         :quote,
         assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
       )
-      |> assign(:line_error, line_error(assigns.form, assigns.lines))
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -124,17 +122,20 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
             <.form_section title={~t"Items"}>
               <div id="order-lines" class="space-y-3">
-                <.order_line
-                  :for={{line, index} <- Enum.with_index(@lines)}
-                  line={line}
-                  index={index}
-                  error={row_error(@line_error, index)}
-                  variant_options={@variant_options}
-                  tax_rate_options={tax_rate_options(@tax_rates)}
-                />
-                <p :if={@lines == []} class="text-base-content/65 text-sm">{~t"No items yet."}</p>
+                <.inputs_for :let={line} field={@form[:line_items]}>
+                  <.order_line
+                    line={line}
+                    variant_options={@variant_options}
+                    tax_rate_options={tax_rate_options(@tax_rates)}
+                  />
+                </.inputs_for>
+                <p :if={@form[:line_items].value in [nil, []]} class="text-base-content/65 text-sm">
+                  {~t"No items yet."}
+                </p>
               </div>
-              <.error :if={match?({nil, _message}, @line_error)}>{elem(@line_error, 1)}</.error>
+              <div :if={@form.source.submitted_once?}>
+                <.error :for={error <- @form[:line_items].errors}>{translate_error(error)}</.error>
+              </div>
               <div class="mt-4 flex flex-wrap gap-2">
                 <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="neutral" size="sm">
                   <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
@@ -263,7 +264,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     socket =
       socket
-      |> assign(:lines, lines_from_params(params["line_items"]))
       |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
       |> assign_date_warning()
 
@@ -279,21 +279,19 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   def handle_event("add_line", %{"kind" => "catalogue"}, socket) do
-    {:noreply, update(socket, :lines, &(&1 ++ [%{"kind" => "catalogue", "quantity" => "1"}]))}
+    {:noreply, add_line(socket, %{"kind" => "catalogue", "quantity" => "1"})}
   end
 
   def handle_event("add_line", %{"kind" => "custom"}, socket) do
-    line = %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id}
-    {:noreply, update(socket, :lines, &(&1 ++ [line]))}
+    {:noreply,
+     add_line(socket, %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id})}
   end
 
-  def handle_event("remove_line", %{"index" => index}, socket) do
-    {:noreply, update(socket, :lines, &List.delete_at(&1, String.to_integer(index)))}
+  def handle_event("remove_line", %{"path" => path}, socket) do
+    {:noreply, update(socket, :form, &AshPhoenix.Form.remove_form(&1, path))}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
-    socket = assign(socket, :lines, lines_from_params(params["line_items"]))
-
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
         {:noreply,
@@ -382,66 +380,62 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
   defp back_path(_params), do: ~p"/admin/orders"
 
-  defp build_form(:new, _order, actor) do
+  defp build_form(:new, _order, actor, _tax_rates) do
     Order
     |> AshPhoenix.Form.for_create(:place_custom,
       actor: actor,
       params: %{"locale" => "sv-FI", "payment_link?" => "true", "email_customer?" => "true"},
-      transform_params: &transform_params/3
+      transform_params: &transform_params/3,
+      forms: [line_items: [type: :list, resource: LineItem, create_action: :enter]]
     )
     |> to_form()
   end
 
-  defp build_form(:edit, order, actor) do
-    order
-    |> AshPhoenix.Form.for_update(:edit, actor: actor, transform_params: &transform_params/3)
-    |> to_form()
-  end
+  # A catalogue line the order has is kept by id, so it keeps the price it was
+  # sold at. A line Jennie priced herself carries its price in the form, so it
+  # is entered afresh.
+  defp build_form(:edit, order, actor, tax_rates) do
+    {catalogue, custom} = Enum.split_with(order.line_items, & &1.product_variant_id)
 
-  # The browser sends the lines as an index-keyed map; the action takes a list.
-  # Submit runs this again over params it has already transformed.
-  # Removing the last line leaves no line_items key at all, hence the default.
-  defp transform_params(_form, params, _action) do
-    params
-    |> Map.update("line_items", [], &lines_from_params/1)
-    |> Map.update("fulfillment_fee_override", nil, &decimal_comma/1)
-  end
+    form =
+      AshPhoenix.Form.for_update(order, :edit,
+        actor: actor,
+        transform_params: &transform_params/3,
+        forms: [
+          line_items: [
+            type: :list,
+            resource: LineItem,
+            create_action: :enter,
+            update_action: :set_quantity,
+            data: catalogue
+          ]
+        ]
+      )
 
-  defp lines_from_params(lines) when is_list(lines), do: lines
-
-  defp lines_from_params(lines) when is_map(lines) do
-    lines
-    |> Enum.sort_by(fn {index, _line} -> String.to_integer(index) end)
-    |> Enum.map(fn {_index, line} -> line end)
-  end
-
-  defp lines_from_params(_lines), do: []
-
-  defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
-  defp decimal_comma(value), do: value
-
-  defp initial_lines(:new, _order, _tax_rates), do: []
-
-  defp initial_lines(:edit, order, tax_rates) do
-    Enum.map(order.line_items, fn
-      %{product_variant_id: nil} = line_item ->
-        %{
+    custom
+    |> Enum.reduce(form, fn line_item, form ->
+      AshPhoenix.Form.add_form(form, :line_items,
+        params: %{
           "kind" => "custom",
-          "description" => line_item.product_name,
+          "product_name" => line_item.product_name,
           "unit_price" => Decimal.to_string(line_item.unit_price, :normal),
           "tax_rate_id" => tax_rate_id_for(tax_rates, line_item.tax_rate),
           "quantity" => to_string(line_item.quantity)
         }
-
-      # Kept by id, so it keeps the price it was sold at.
-      line_item ->
-        %{
-          "kind" => "catalogue",
-          "id" => line_item.id,
-          "name" => existing_line_name(line_item),
-          "quantity" => to_string(line_item.quantity)
-        }
+      )
     end)
+    |> to_form()
+  end
+
+  defp transform_params(_form, params, _action) do
+    Map.update(params, "fulfillment_fee_override", nil, &decimal_comma/1)
+  end
+
+  defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
+  defp decimal_comma(value), do: value
+
+  defp add_line(socket, params) do
+    update(socket, :form, &AshPhoenix.Form.add_form(&1, :line_items, params: params))
   end
 
   defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
@@ -630,157 +624,97 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     """
   end
 
-  # Errors only after the first save: the lines have no single input for
-  # used_input? to track. A nil number is about the lines as a whole.
-  defp line_error(form, lines) do
-    if form.source.submitted_once? do
-      case EnteredLineItems.parse(lines) do
-        {:error, number, message} -> {number, message}
-        {:ok, _lines} -> nil
-      end
-    end
-  end
-
-  defp row_error({number, message}, index) when number == index + 1, do: message
-  defp row_error(_line_error, _index), do: nil
-
-  attr :line, :map, required: true
-  attr :index, :integer, required: true
-  attr :error, :string, default: nil
+  attr :line, Phoenix.HTML.Form, required: true
   attr :variant_options, :list, required: true
   attr :tax_rate_options, :list, required: true
 
   # A line the order already has: its product is fixed, only how many changes.
-  defp order_line(%{line: %{"kind" => "catalogue", "id" => _}} = assigns) do
+  defp order_line(%{line: %{source: %{type: :update}}} = assigns) do
     ~H"""
-    <.line_row index={@index} error={@error}>
-      <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="catalogue" />
-      <input type="hidden" name={"form[line_items][#{@index}][id]"} value={@line["id"]} />
-      <input type="hidden" name={"form[line_items][#{@index}][name]"} value={@line["name"]} />
+    <.line_row line={@line}>
       <div class="flex min-w-0 flex-1 basis-64 flex-col text-sm">
         <span class="mb-1">{~t"Product"}</span>
-        <p class="flex h-10 items-center text-base font-medium">{@line["name"]}</p>
+        <p class="flex h-10 items-center text-base font-medium">{existing_line_name(@line.data)}</p>
       </div>
-      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
-      <.remove_line_button index={@index} />
+      <div class="w-20">
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+      </div>
     </.line_row>
     """
   end
 
-  defp order_line(%{line: %{"kind" => "catalogue"}} = assigns) do
+  defp order_line(%{line: %{params: %{"kind" => "catalogue"}}} = assigns) do
     ~H"""
-    <.line_row index={@index} error={@error}>
-      <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="catalogue" />
-      <label class="flex min-w-0 flex-1 basis-64 flex-col text-sm">
-        <span class="mb-1">{~t"Product"}</span>
-        <select
-          name={"form[line_items][#{@index}][product_variant_id]"}
-          class={["select w-full", @error && "select-error"]}
-          {error_attrs(@index, @error)}
-        >
-          <option value="">{~t"Choose…"}</option>
-          {Phoenix.HTML.Form.options_for_select(@variant_options, @line["product_variant_id"])}
-        </select>
-      </label>
-      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
-      <.remove_line_button index={@index} />
+    <.line_row line={@line}>
+      <.input field={@line[:kind]} type="hidden" />
+      <div class="min-w-0 flex-1 basis-64">
+        <.input
+          field={@line[:product_variant_id]}
+          type="select"
+          label={~t"Product"}
+          prompt={~t"Choose…"}
+          options={@variant_options}
+        />
+      </div>
+      <div class="w-20">
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+      </div>
     </.line_row>
     """
   end
 
   defp order_line(assigns) do
     ~H"""
-    <.line_row index={@index} error={@error}>
-      <input type="hidden" name={"form[line_items][#{@index}][kind]"} value="custom" />
-      <label class="flex min-w-0 flex-1 basis-full flex-col text-sm">
-        <span class="mb-1">{~t"Description"}</span>
-        <input
+    <.line_row line={@line}>
+      <.input field={@line[:kind]} type="hidden" />
+      <div class="min-w-0 flex-1 basis-full">
+        <.input
+          field={@line[:product_name]}
           type="text"
-          name={"form[line_items][#{@index}][description]"}
-          value={@line["description"]}
+          label={~t"Description"}
           placeholder={~t"e.g. Funeral spray, white roses"}
-          class={["input w-full", @error && "input-error"]}
-          {error_attrs(@index, @error)}
+          class="input w-full"
         />
-      </label>
-      <label class="flex w-32 flex-col text-sm">
-        <span class="mb-1">{~t"Price each (€)"}</span>
-        <input
+      </div>
+      <div class="w-32">
+        <.input
+          field={@line[:unit_price]}
           type="text"
           inputmode="decimal"
-          name={"form[line_items][#{@index}][unit_price]"}
-          value={@line["unit_price"]}
-          class={["input w-full tabular-nums", @error && "input-error"]}
-          {error_attrs(@index, @error)}
+          label={~t"Price each (€)"}
+          class="input w-full tabular-nums"
         />
-      </label>
-      <label class="flex min-w-0 flex-1 basis-40 flex-col text-sm">
-        <span class="mb-1">{~t"VAT"}</span>
-        <select name={"form[line_items][#{@index}][tax_rate_id]"} class="select w-full">
-          {Phoenix.HTML.Form.options_for_select(@tax_rate_options, @line["tax_rate_id"])}
-        </select>
-      </label>
-      <.quantity_input index={@index} value={@line["quantity"]} error={@error} />
-      <.remove_line_button index={@index} />
+      </div>
+      <div class="min-w-0 flex-1 basis-40">
+        <.input field={@line[:tax_rate_id]} type="select" label={~t"VAT"} options={@tax_rate_options} />
+      </div>
+      <div class="w-20">
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+      </div>
     </.line_row>
     """
   end
 
-  attr :index, :integer, required: true
-  attr :error, :string, default: nil
+  attr :line, Phoenix.HTML.Form, required: true
   slot :inner_block, required: true
 
-  # Numbered, so "Item 2: enter a price" points at a row Jennie can see.
+  # Numbered, so Jennie can tell the rows apart.
   defp line_row(assigns) do
     ~H"""
-    <fieldset
-      class={["border p-3", if(@error, do: "border-error", else: "border-base-content/12")]}
-      data-testid="order-line"
-    >
-      <legend class="text-base-content/65 px-1 text-xs">{~t"Item #{number = @index + 1}"}</legend>
+    <fieldset class="border-base-content/12 border p-3" data-testid="order-line">
+      <legend class="text-base-content/65 px-1 text-xs">{~t"Item #{number = @line.index + 1}"}</legend>
       <div class="flex flex-wrap items-end gap-3">
         {render_slot(@inner_block)}
+        <.icon_button
+          phx-click="remove_line"
+          phx-value-path={@line.name}
+          class="text-error size-10"
+          aria_label={~t"Remove item #{number = @line.index + 1}"}
+        >
+          <.icon name="hero-trash" class="h-4 w-4" />
+        </.icon_button>
       </div>
-      <p :if={@error} id={"line-#{@index}-error"} class="text-error mt-2 text-sm">{@error}</p>
     </fieldset>
-    """
-  end
-
-  defp error_attrs(_index, nil), do: []
-  defp error_attrs(index, _error), do: ["aria-invalid": "true", "aria-describedby": "line-#{index}-error"]
-
-  attr :index, :integer, required: true
-  attr :value, :any, required: true
-  attr :error, :string, default: nil
-
-  defp quantity_input(assigns) do
-    ~H"""
-    <label class="flex w-20 flex-col text-sm">
-      <span class="mb-1">{~t"Qty"}</span>
-      <input
-        type="number"
-        min="1"
-        name={"form[line_items][#{@index}][quantity]"}
-        value={@value}
-        class={["input w-full tabular-nums", @error && "input-error"]}
-        {error_attrs(@index, @error)}
-      />
-    </label>
-    """
-  end
-
-  attr :index, :integer, required: true
-
-  defp remove_line_button(assigns) do
-    ~H"""
-    <.icon_button
-      phx-click="remove_line"
-      phx-value-index={@index}
-      class="text-error size-10"
-      aria_label={~t"Remove item #{number = @index + 1}"}
-    >
-      <.icon name="hero-trash" class="h-4 w-4" />
-    </.icon_button>
     """
   end
 end

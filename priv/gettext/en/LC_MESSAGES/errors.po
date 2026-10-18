@@ -130,3 +130,18 @@ msgstr "This course no longer exists."
 
 msgid "Must be a valid email address"
 msgstr ""
+
+msgid "choose a product"
+msgstr ""
+
+msgid "describe the item"
+msgstr ""
+
+msgid "enter a price"
+msgstr ""
+
+msgid "choose a VAT rate"
+msgstr ""
+
+msgid "Add at least one item"
+msgstr ""
