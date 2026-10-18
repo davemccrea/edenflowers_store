@@ -1,21 +1,23 @@
 ---
-id: TASK-18.8
+id: TASK-28
 title: Look up every external API's implementation the same way
 status: ready-for-agent
 assignee: []
-created_date: '2026-10-18 03:12'
-updated_date: '2026-10-18 07:28'
+created_date: '2026-10-18 11:35'
 labels:
+  - spec
   - quick
 dependencies: []
-parent_task_id: TASK-18
+priority: low
 type: refactor
-ordinal: 59000
+ordinal: 83000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+Every external API module looks up its implementation with impl/0, as StripeAPI does
+
 **Why:** Each external API's mock is looked up a different way, so a reader has to know the convention to follow a call.
 
 ### Problem

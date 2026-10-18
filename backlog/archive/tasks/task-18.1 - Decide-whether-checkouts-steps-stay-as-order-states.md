@@ -4,7 +4,7 @@ title: Decide whether checkout's steps stay as order states
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 11:35'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -31,3 +31,16 @@ The steps become sections of one checkout page, held in the LiveView. The order 
 - Could the steps stay visually while their state moves out of the database? That keeps the UX and drops the transitions.
 - Cost: `CheckoutLive` (1,150 lines) and its tests are the bulk of the change.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 11:35
+
+---
+
+Moved to TASK-24 as a spec of its own: it doesn't depend on the rest of TASK-18.
+
+---
+<!-- COMMENTS:END -->

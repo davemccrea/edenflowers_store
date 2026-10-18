@@ -1,10 +1,10 @@
 ---
 id: TASK-6.1
 title: Pick which dev fixtures to cut
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-10 22:45'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 11:35'
 labels: []
 dependencies: []
 parent_task_id: TASK-6
@@ -37,3 +37,16 @@ ordinal: 9000
 | | Collected and paid by card at counter | Zettle in-person payment |
 | | Free replacement | Zero-total order |
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 11:35
+
+---
+
+Superseded: TASK-6 cut the seeds without this list (dacc8811).
+
+---
+<!-- COMMENTS:END -->

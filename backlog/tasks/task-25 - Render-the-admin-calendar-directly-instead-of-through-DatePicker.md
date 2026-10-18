@@ -1,20 +1,23 @@
 ---
-id: TASK-18.2
+id: TASK-25
 title: Render the admin calendar directly instead of through DatePicker
 status: needs-triage
 assignee: []
-created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 07:28'
-labels: []
+created_date: '2026-10-18 11:35'
+updated_date: '2026-10-18 11:35'
+labels:
+  - spec
 dependencies: []
-parent_task_id: TASK-18
+priority: low
 type: refactor
-ordinal: 53000
+ordinal: 80000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+The admin calendar draws its own month grid, so DatePicker drops the callbacks only the admin uses
+
 **Why:** Once there's one shop calendar, configuring `DatePicker` through admin-only callbacks may be harder to follow than drawing the calendar directly.
 
 ### Problem
@@ -29,12 +32,12 @@ Depends on the single shop calendar (moving the calendar off `FulfillmentOption`
 ## Comments
 
 <!-- COMMENTS:BEGIN -->
-author: @david
-created: 2026-10-18 03:08
+author: @claude
+created: 2026-10-18 11:35
 
 ---
 
-- Set to `ready-for-agent` once the shop calendar has landed, if the comparison favours it.
+From @david on TASK-18.2: set to `ready-for-agent` once the shop calendar has landed, if the comparison favours it.
 
 ---
 <!-- COMMENTS:END -->
