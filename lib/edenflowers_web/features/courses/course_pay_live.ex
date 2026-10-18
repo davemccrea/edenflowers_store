@@ -8,13 +8,12 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
   """
   use EdenflowersWeb, :live_view
 
-  require Logger
   import Edenflowers.Actors
 
   alias Edenflowers.Courses
   alias Edenflowers.Format
-  alias Edenflowers.Payments
   alias Edenflowers.Translations
+  alias EdenflowersWeb.PaymentLink
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -35,17 +34,10 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
          socket
          |> assign(:page_title, ~t"Pay for your booking")
          |> assign(:locale, Format.locale())
-         |> assign(:token, token)
-         |> assign(:returned_from_stripe?, params["redirect_status"] == "succeeded")
-         |> assign(:registration, translate_course(registration))
-         |> assign_payment()
-         |> maybe_flash_failed_payment(params)}
+         |> PaymentLink.mount(registration, params, fn -> load_registration(token) end)}
 
       _ ->
-        {:ok,
-         socket
-         |> put_flash(:error, ~t"This payment link doesn't work. Please get in touch.")
-         |> push_navigate(to: ~p"/")}
+        {:ok, PaymentLink.broken_link(socket)}
     end
   end
 
@@ -58,12 +50,12 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
 
           <%= cond do %>
-            <% @registration.status == :cancelled -> %>
+            <% @payable.status == :cancelled -> %>
               <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This booking has been cancelled, so there is nothing to pay. Get in touch if that's a surprise."}
               </p>
-            <% not @registration.payment_link_open? -> %>
+            <% not @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">
                 {~t"This booking is paid. Thank you!"}
@@ -79,56 +71,44 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
           <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-10 grid items-baseline gap-x-6 gap-y-3 border-y py-6">
             <dt class="eyebrow text-base-content/70">{~t"Course"}</dt>
-            <dd>{@registration.course.name}</dd>
+            <dd>{@payable.course.name}</dd>
 
             <dt class="eyebrow text-base-content/70">{~t"When"}</dt>
             <dd class="tabular-nums">
-              {Format.weekday_date(@registration.course.date, @locale)}, {Format.time(
-                @registration.course.start_time,
+              {Format.weekday_date(@payable.course.date, @locale)}, {Format.time(
+                @payable.course.start_time,
                 @locale
-              )}–{Format.time(@registration.course.end_time, @locale)}
+              )}–{Format.time(@payable.course.end_time, @locale)}
             </dd>
 
             <dt class="eyebrow text-base-content/70">{~t"Places"}</dt>
-            <dd class="tabular-nums">{@registration.seats_held}</dd>
+            <dd class="tabular-nums">{@payable.seats_held}</dd>
 
             <dt class="eyebrow text-base-content/70">{~t"Total"}</dt>
-            <dd class="tabular-nums" data-testid="pay-total">{Format.currency(@registration.total_due, @locale)}</dd>
+            <dd class="tabular-nums" data-testid="pay-total">{Format.currency(@payable.total_due, @locale)}</dd>
 
-            <%= if Decimal.positive?(@registration.amount_paid) do %>
+            <%= if Decimal.positive?(@payable.amount_paid) do %>
               <dt class="eyebrow text-base-content/70">{~t"Paid so far"}</dt>
-              <dd class="tabular-nums">{Format.currency(@registration.amount_paid, @locale)}</dd>
+              <dd class="tabular-nums">{Format.currency(@payable.amount_paid, @locale)}</dd>
             <% end %>
 
-            <%= if @registration.payment_link_open? do %>
+            <%= if @payable.payment_link_open? do %>
               <dt class="eyebrow text-base-content/70">{~t"Left to pay"}</dt>
               <dd class="font-semibold tabular-nums" data-testid="pay-balance">
-                {Format.currency(@registration.balance, @locale)}
+                {Format.currency(@payable.balance, @locale)}
               </dd>
             <% end %>
           </dl>
 
-          <section
-            :if={@registration.payment_link_open? and not @returned_from_stripe?}
-            class="mt-10"
-            aria-label={~t"Payment"}
-          >
-            <.stripe_form
-              :if={@client_secret}
-              id="pay-form"
-              phx-submit="pay"
-              client_secret={@client_secret}
-              return_url={url(~p"/courses/pay/#{@token}")}
-              billing_name={@registration.name}
-              billing_email={@registration.email}
-            >
-              {~t"Pay"} {Format.currency(@registration.balance, @locale)}
-            </.stripe_form>
-
-            <p :if={@payment_unavailable?} class="text-error" data-testid="stripe-unavailable">
-              {~t"Payment is temporarily unavailable. Please try again in a moment."}
-            </p>
-          </section>
+          <PaymentLink.payment_form
+            payable={@payable}
+            client_secret={@client_secret}
+            payment_unavailable?={@payment_unavailable?}
+            returned_from_stripe?={@returned_from_stripe?}
+            locale={@locale}
+            billing_name={@payable.name}
+            billing_email={@payable.email}
+          />
         </div>
       </.container>
     </Layouts.app>
@@ -137,82 +117,18 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
   @impl true
   def handle_event("pay", _params, socket) do
-    with {:ok, registration} <- load_registration(socket.assigns.token),
-         true <- registration.payment_link_open?,
-         true <- registration.payment_intent_id == socket.assigns.registration.payment_intent_id,
-         :ok <- sync_amount(registration) do
-      {:noreply,
-       socket
-       |> assign(:registration, translate_course(registration))
-       |> push_event("stripe:process_payment", %{})}
-    else
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, ~t"The booking changed. Please try again.")
-         |> push_navigate(to: ~p"/courses/pay/#{socket.assigns.token}")}
-    end
+    {:noreply, PaymentLink.pay(socket, ~t"The booking changed. Please try again.")}
   end
 
-  def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
-    Logger.error(
-      "Stripe client error for course registration #{socket.assigns.registration.id}: #{message}: #{inspect(details)}"
-    )
-
-    {:noreply,
-     put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
-  end
+  def handle_event("stripe:error", params, socket), do: {:noreply, PaymentLink.stripe_error(socket, params)}
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket) do
-    {:ok, registration} = load_registration(socket.assigns.token)
-    {:noreply, socket |> assign(:registration, translate_course(registration)) |> assign(:client_secret, nil)}
-  end
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket),
+    do: {:noreply, PaymentLink.paid(socket)}
 
-  defp load_registration(token), do: Courses.get_registration_by_payment_link_token(token, actor: system_actor())
-
-  defp translate_course(registration), do: Map.update!(registration, :course, &Translations.translate/1)
-
-  # Stripe is only touched once the page is live, so a crawler or a link
-  # preview never creates a PaymentIntent. Back from Stripe, the payment is
-  # in flight and its PaymentIntent must not change.
-  defp assign_payment(%{assigns: %{registration: registration}} = socket) do
-    if connected?(socket) and registration.payment_link_open? and not socket.assigns.returned_from_stripe? do
-      case client_secret(registration) do
-        {:ok, client_secret} ->
-          assign(socket, client_secret: client_secret, payment_unavailable?: false)
-
-        {:error, reason} ->
-          Logger.error("Could not set up payment for course registration #{registration.id}: #{inspect(reason)}")
-          assign(socket, client_secret: nil, payment_unavailable?: true)
-      end
-    else
-      assign(socket, client_secret: nil, payment_unavailable?: false)
+  defp load_registration(token) do
+    with {:ok, registration} <- Courses.get_registration_by_payment_link_token(token, actor: system_actor()) do
+      {:ok, Map.update!(registration, :course, &Translations.translate/1)}
     end
   end
-
-  # A seat removed since the PaymentIntent was made changes what's owed.
-  defp client_secret(registration) do
-    with :ok <- sync_amount(registration),
-         {:ok, _registration, client_secret} <- Payments.setup(registration, system_actor()) do
-      {:ok, client_secret}
-    end
-  end
-
-  defp sync_amount(%{payment_intent_id: nil}), do: :ok
-
-  defp sync_amount(registration) do
-    case Payments.update_amount(registration) do
-      {:ok, _payment_intent} -> :ok
-      error -> error
-    end
-  end
-
-  # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
-  # when the customer cancels or is declined in the app.
-  defp maybe_flash_failed_payment(socket, %{"redirect_status" => "failed"}) do
-    put_flash(socket, :error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
-  end
-
-  defp maybe_flash_failed_payment(socket, _params), do: socket
 end
