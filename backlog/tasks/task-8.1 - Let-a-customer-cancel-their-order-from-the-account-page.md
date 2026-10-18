@@ -4,10 +4,11 @@ title: Let a customer cancel their order from the account page
 status: done
 assignee: []
 created_date: '2026-10-15 22:23'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-18 08:25'
 labels: []
 dependencies: []
 parent_task_id: TASK-8
+type: feature
 ordinal: 16000
 ---
 

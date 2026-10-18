@@ -4,9 +4,11 @@ title: Save a logged-in customer's card for faster checkout
 status: done
 assignee: []
 created_date: '2026-10-09 02:13'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 2000
 ---
 

@@ -4,9 +4,11 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-18 07:28'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 22000
 ---
 

@@ -4,8 +4,9 @@ title: Refuse cancelling or editing an order that has moved on since it was load
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
-labels: []
+updated_date: '2026-10-18 08:26'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-19
 type: bug
@@ -34,17 +35,20 @@ ordinal: 61000
 
 ### What to build
 
-- `change filter expr(state == :placed and fulfillment_status == :pending)` on `cancel`, `cancel_by_customer` and `edit`, the idiom `CreateOccurrence` and `Token.expunge_expired` use. The UPDATE then matches no row, Ash returns `Ash.Error.Changes.StaleRecord`, and the transaction rolls back before `AdjustStock`'s after-action runs. Keep the existing validations: they give the readable message in the ordinary case.
-- `CancelOpenPaymentIntent` runs after the transaction; check it does nothing when the action failed.
-- `cancel_by_customer`: `RefundInFull` refunds in `before_transaction`, so the filter can't stop a refund already sent. The account page loads the order just before cancelling, so the window is small; the filter still stops the cancel overwriting a fulfilled order. Leave the refund ordering as it is (it guarantees the order is never cancelled while holding the customer's money), but log an error when the refund succeeded and the write then came back stale, so Jennie hears of it (ADR 0002).
-- `Admin.OrderDetailLive` and `Admin.OrderFormLive`: on a stale error, reload the order and flash that it changed meanwhile, instead of the generic "Could not cancel the order."
+- `change filter expr(state == :placed and fulfillment_status == :pending)` on `cancel`, `cancel_by_customer` and `edit`, the idiom `CreateOccurrence` uses. The UPDATE then matches no row, Ash returns `Ash.Error.Changes.StaleRecord`, and the transaction rolls back before `AdjustStock`'s after-action runs. Keep the existing validations: they give the readable message in the ordinary case.
+- `Admin.OrderDetailLive` cancel: on any error, reload the order. If it is no longer pending, flash that it changed meanwhile; otherwise keep "Could not cancel the order." The cancel button hides itself on the reloaded order.
+- `Admin.OrderFormLive` save: on an error, if the reloaded order is no longer pending, flash that it changed meanwhile and navigate to the order page, instead of "Check the fields marked below" with nothing marked.
+
+### Decided not to do
+
+- `CancelOpenPaymentIntent` already acts only on `{:ok, record}`, so a stale write cancels no PaymentIntent.
+- `cancel_by_customer` refunds in `before_transaction`, so the filter can't stop a refund already sent. No extra logging: `CancellableByCustomer` re-reads the row, so the window is one Stripe call; only a fulfil landing in it is wrong; and the refund still shows on the order through the `refund.created` webhook (ADR 0002).
 
 ### Tests
 
 - Cancelling an order through a stale struct after it was cancelled elsewhere fails, and stock is returned only once.
 - Cancelling through a stale struct after it was fulfilled fails and leaves it fulfilled.
 - Editing through a stale struct after a cancel fails and changes neither the order nor stock.
-- The ordinary cancel, customer cancel and edit tests pass unchanged.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

@@ -4,9 +4,11 @@ title: Let customers cancel their own order
 status: done
 assignee: []
 created_date: '2026-10-15 22:23'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: feature
 ordinal: 15000
 ---
 

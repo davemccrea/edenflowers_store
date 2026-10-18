@@ -4,9 +4,11 @@ title: Recover quietly when a reconnecting tab's cart is gone
 status: done
 assignee: []
 created_date: '2026-10-18 07:17'
-updated_date: '2026-10-18 07:09'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: bug
 ordinal: 74000
 ---
 

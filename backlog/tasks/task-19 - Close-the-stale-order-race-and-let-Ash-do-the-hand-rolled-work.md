@@ -4,9 +4,11 @@ title: Close the stale-order race and let Ash do the hand-rolled work
 status: needs-triage
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 07:28'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: refactor
 ordinal: 60000
 ---
 

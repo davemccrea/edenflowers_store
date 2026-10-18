@@ -4,9 +4,11 @@ title: Record and settle money on orders and course bookings the same way
 status: done
 assignee: []
 created_date: '2026-10-17 16:08'
-updated_date: '2026-10-18 07:27'
-labels: []
+updated_date: '2026-10-18 08:27'
+labels:
+  - spec
 dependencies: []
+type: refactor
 ordinal: 34000
 ---
 
