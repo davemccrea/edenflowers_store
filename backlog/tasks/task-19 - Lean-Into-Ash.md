@@ -27,17 +27,17 @@ Kept here so later work keeps the same idioms:
 
 ### The gap
 
-`Order.cancel`, `cancel_by_customer` and `edit` are not atomic, so their state checks read the record passed in rather than the row. The admin order page cancels the order it loaded on mount. Ticket 01.
+`Order.cancel`, `cancel_by_customer` and `edit` are not atomic, so their state checks read the record passed in rather than the row. The admin order page cancels the order it loaded on mount. `TASK-19.1`.
 
 ### Leaning further in
 
-| Ticket | Ash feature | Replaces |
+| Task | Ash feature | Replaces |
 |---|---|---|
-| 02 | `manage_relationship` + AshPhoenix nested forms | `ReplaceLineItems` and `EnteredLineItems` diffing the order's lines by hand |
-| 03 | Resource-level `validations` and `changes` with `where: action_is(...)` | The block repeated in `:place_custom` and `:edit` |
-| 04 | `Ash.bulk_update` | `Fulfillment.set_same_day_for_all/2` looping over options in a hand-rolled transaction |
-| 05 | Read actions with arguments, relationship sorts | Domain rules built inline in admin LiveViews |
-| 06 | — | `AdjustStock` locking a row only to log an oversell |
+| `TASK-19.2` | `manage_relationship` + AshPhoenix nested forms | `ReplaceLineItems` and `EnteredLineItems` diffing the order's lines by hand |
+| `TASK-19.3` | Resource-level `validations` and `changes` with `where: action_is(...)` | The block repeated in `:place_custom` and `:edit` |
+| `TASK-19.4` | `Ash.bulk_update` | `Fulfillment.set_same_day_for_all/2` looping over options in a hand-rolled transaction |
+| `TASK-19.5` | Read actions with arguments, relationship sorts | Domain rules built inline in admin LiveViews |
+| `TASK-19.6` | — | `AdjustStock` locking a row only to log an oversell |
 
 The email check (`TASK-18.6`) is now an `Ash.Type.NewType` too.
 

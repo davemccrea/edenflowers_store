@@ -25,7 +25,7 @@ The bang raises `Ash.Error.Invalid` (record not found), LiveView turns it into a
 
 Seen once, on `AccountLive`: 2026-10-18 03:40:34 UTC.
 
-### Fix
+### What to build
 
 In `PutOrder`, use the non-bang `get_order_for_checkout`. On not found, `{:halt, redirect(socket, to: <current path>)}` so the HTTP request runs through `InitStore`, which sets up a new cart. `PutCurrentPath` runs before `PutOrder` in the `:public` live session and may already provide the path.
 <!-- SECTION:DESCRIPTION:END -->

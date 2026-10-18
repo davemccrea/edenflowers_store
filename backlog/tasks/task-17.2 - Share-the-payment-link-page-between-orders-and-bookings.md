@@ -17,7 +17,7 @@ ordinal: 49000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-Spec decision 5.
+`TASK-17` decision 5.
 
 - A component (or function components plus a small helper module) holding the Stripe Elements mount, the `pay` handler's freshness checks, `sync_amount`, `maybe_flash_failed_payment` and the paid, settled and cancelled states.
 - `PayLive` and `CoursePayLive` keep their own mount (token lookup, locale, PubSub topic), summary and copy, and delegate the rest.

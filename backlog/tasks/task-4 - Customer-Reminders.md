@@ -48,7 +48,7 @@ A signed-in customer should be able to save the dates they buy flowers for and g
 
 ### Open questions
 
-- **How much notice?** One fixed lead time for everyone (5 days?) or per reminder. Fixed is simpler and matches the delivery cut-off. The delivery-windows spec may have a bearing on this.
+- **How much notice?** One fixed lead time for everyone (5 days?) or per reminder. Fixed is simpler and matches the delivery cut-off. Delivery Windows (`TASK-1`) may have a bearing on this.
 - **Email language.** `User` has no locale attribute. Either store one (taken from the session when the reminder is created) or send in the language of the customer's last order.
 - **Adding from an order.** On the order confirmation page, offer "Remind me next year" with the date and the recipient's name prefilled. This is the cheapest way to get reminders saved, and it may matter more than the account page.
 - **Guests.** Reminders need an account. Customers check out as guests today, and the order already upserts a user (`UpsertUserAndAssignToOrder`), so a guest could become a user by saving a reminder.

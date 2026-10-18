@@ -14,7 +14,7 @@ ordinal: 1000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Let customers book a delivery time window, for an extra fee
 
-Parked: 2026-10-07. Design agreed in a grilling session, not yet broken into issues.
+Parked: 2026-10-07. Design agreed in a grilling session, not yet broken into subtasks.
 
 ### Problem
 

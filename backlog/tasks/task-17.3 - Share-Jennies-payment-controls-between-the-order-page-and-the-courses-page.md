@@ -21,7 +21,7 @@ ordinal: 50000
 
 ### The idea
 
-The handlers call `Payable` actions that share names (after ticket 01), so they can live once: a LiveComponent for "the money on this record" (payments list, record and undo, refund, payment link), mounted on the order page and in each booking's row or drawer. Each page keeps its own layout around it.
+The handlers call `Payable` actions that share names (after `TASK-17.1`), so they can live once: a LiveComponent for "the money on this record" (payments list, record and undo, refund, payment link), mounted on the order page and in each booking's row or drawer. Each page keeps its own layout around it.
 
 ### To decide
 

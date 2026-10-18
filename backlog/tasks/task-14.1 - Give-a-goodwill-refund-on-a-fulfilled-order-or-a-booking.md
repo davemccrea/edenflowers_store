@@ -16,13 +16,13 @@ ordinal: 41000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-The whole spec: decisions 1 to 4.
+All of `TASK-14`: decisions 1 to 4.
 
 - `goodwill` on `Payment` (generated migration), left out of `amount_paid` for the balance but counted by `refunded?`.
 - A fragment action for Jennie's goodwill refund outside Stripe, and a `Payments` function that refunds an amount through Stripe and lets the webhook record it as goodwill.
 - `record_stripe_refund` marking the part beyond what was owed back as goodwill.
 - The "Refund" form in the order menu and the booking menu; order log and payments list labels.
-- CONTEXT.md: add **Goodwill refund**. The payment-balance spec's decision 3 gets a pointer here.
+- CONTEXT.md: add **Goodwill refund**. `TASK-13` decision 3 gets a pointer here.
 - New copy through gettext, with en, fi and sv msgstrs.
 
 ### Tests
@@ -47,7 +47,7 @@ created: 2026-10-17 18:40
 
 ---
 
-- Before building: decide whether a goodwill refund asks for a reason shown in the order log (spec, open question). Set to `ready-for-agent` once decided.
+- Before building: decide whether a goodwill refund asks for a reason shown in the order log (`TASK-14` open question). Set to `ready-for-agent` once decided.
 
 ---
 <!-- COMMENTS:END -->

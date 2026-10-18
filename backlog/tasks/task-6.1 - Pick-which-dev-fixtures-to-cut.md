@@ -4,9 +4,11 @@ title: Pick which dev fixtures to cut
 status: ready-for-human
 assignee: []
 created_date: '2026-10-10 22:45'
+updated_date: '2026-10-18 05:08'
 labels: []
 dependencies: []
 parent_task_id: TASK-6
+type: task
 ordinal: 9000
 ---
 

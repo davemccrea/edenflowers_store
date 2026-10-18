@@ -4,9 +4,11 @@ title: Expense paid date
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 07:07'
+updated_date: '2026-10-18 05:08'
 labels: []
 dependencies: []
 parent_task_id: TASK-11
+type: feature
 ordinal: 23000
 ---
 
@@ -15,7 +17,7 @@ ordinal: 23000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ### What to build
 
-The shop reports VAT on a cash basis, so an expense belongs to the month it was paid. A card receipt is paid on its date, but a supplier invoice may be paid in a later month. Give `Expense` a paid date Jennie can set for those. See decision 3 in `../spec.md`.
+The shop reports VAT on a cash basis, so an expense belongs to the month it was paid. A card receipt is paid on its date, but a supplier invoice may be paid in a later month. Give `Expense` a paid date Jennie can set for those. See decision 3 in `TASK-11`.
 
 - **Attribute:** nullable `paid_on` (`:date`) on `Edenflowers.Expenses.Expense`.
 - **Correcting:** add `paid_on` to the `correct` action's `accept` list.

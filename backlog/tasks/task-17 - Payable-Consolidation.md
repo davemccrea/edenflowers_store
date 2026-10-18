@@ -39,7 +39,7 @@ Goodwill refunds (`TASK-14`) and saved cards will each touch this code on both r
 3. **`record_link_payment` keeps one definition per resource but shares its core.** The "clear only the PaymentIntent that was paid" anonymous change becomes a named `Payments.Changes` module that both use. Each resource keeps its own reset and its follow-on changes.
    Rejected: one fragment action with per-resource hooks. Ash fragments don't compose changes onto one action cleanly, and a hook indirection would read worse than two short actions.
 4. **`Payments` calls actions by name, not by resource.** Every payable's actions share names, so `cancel_payable/2`, `add_payment_intent_id/3` and the link-payment branch of `complete_payable/4` call `Ash.update(payable, :action, …)` directly. The per-resource clauses that remain are the genuinely different ones: finding the record from metadata, and placing an order (`finalize_checkout`) versus confirming a booking (`confirm_payment`).
-5. **The payment-link pages share one component, and so do Jennie's payment controls in the admin (ticket 03).** The Stripe Elements mount, the "pay" handler's freshness checks, `sync_amount`, `maybe_flash_failed_payment` and the paid/settled states live once. Each LiveView keeps its own loading, summary and copy.
+5. **The payment-link pages share one component, and so do Jennie's payment controls in the admin (`TASK-17.3`).** The Stripe Elements mount, the "pay" handler's freshness checks, `sync_amount`, `maybe_flash_failed_payment` and the paid/settled states live once. Each LiveView keeps its own loading, summary and copy.
 
 ### Out of scope
 
