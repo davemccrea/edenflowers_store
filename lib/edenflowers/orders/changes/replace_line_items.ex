@@ -15,7 +15,8 @@ defmodule Edenflowers.Orders.Changes.ReplaceLineItems do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{EnteredLineItems, LineItem}
+  alias Edenflowers.Orders.EnteredLineItems
+  alias Edenflowers.Orders.LineItem
   alias Edenflowers.Pricing.TaxRate
 
   @impl true

@@ -8,15 +8,18 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   import Mox
   import Swoosh.TestAssertions
 
+  alias Ecto.Adapters.SQL
   alias Edenflowers.Expressions.HelsinkiToday
-  alias Edenflowers.External.{HereAPI, StripeAPI}
+  alias Edenflowers.External.HereAPI
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{Order, Subscription}
-  alias Edenflowers.Payments.Payment
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Workers.CreateOccurrence
   alias Edenflowers.Orders.Workers.SendConfirmationEmail
   alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
+  alias Edenflowers.Payments.Payment
 
   setup :verify_on_exit!
 
@@ -222,7 +225,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       assert {:ok, _} = run(subscription)
 
       # As if moving the date on had failed after the order was placed.
-      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
+      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
         ctx.date,
         Ecto.UUID.dump!(subscription.id)
       ])
@@ -388,7 +391,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       assert_email_sent()
 
       # As if moving the subscription on had failed after the order was placed.
-      Ecto.Adapters.SQL.query!(
+      SQL.query!(
         Edenflowers.Repo,
         "UPDATE subscriptions SET next_fulfillment_date = $1, state = 'active' WHERE id = $2",
         [ctx.date, Ecto.UUID.dump!(ctx.subscription.id)]
@@ -406,7 +409,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       refuse(:card_declined)
       run_refused(ctx.subscription)
 
-      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
+      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
         ctx.date,
         Ecto.UUID.dump!(ctx.subscription.id)
       ])
@@ -450,7 +453,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
       passed = Date.add(HelsinkiToday.today(), -1)
 
-      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
+      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
         passed,
         Ecto.UUID.dump!(ctx.subscription.id)
       ])

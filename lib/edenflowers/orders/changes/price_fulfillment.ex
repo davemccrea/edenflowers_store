@@ -12,7 +12,8 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.{DeliveryError, Fee}
+  alias Edenflowers.Fulfillment.DeliveryError
+  alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Changes.ClearDeliveryFields
 
   @geocoded_fields [:geocoded_address, :position, :here_id, :distance]

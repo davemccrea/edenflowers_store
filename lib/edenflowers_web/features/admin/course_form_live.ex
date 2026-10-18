@@ -5,11 +5,11 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
   import EdenflowersWeb.Admin.TranslationFields
 
+  alias Edenflowers.Courses.Course
+  alias Edenflowers.Pricing
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
-  alias Edenflowers.Courses.Course
-  alias Edenflowers.Pricing
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

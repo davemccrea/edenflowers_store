@@ -84,8 +84,8 @@ defmodule EdenflowersWeb do
       import Phoenix.HTML
       import EdenflowersWeb.CoreComponents
 
-      alias Phoenix.LiveView.JS
       alias EdenflowersWeb.Layouts
+      alias Phoenix.LiveView.JS
 
       unquote(verified_routes())
     end

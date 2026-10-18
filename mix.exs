@@ -126,6 +126,7 @@ defmodule Edenflowers.MixProject do
       {:tz, "~> 0.28"},
       # Dev & build tooling
       {:igniter, "~> 0.4"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:tidewave, "~> 0.9", only: [:dev]},
       {:usage_rules, "~> 1.1", only: [:dev]},
@@ -149,7 +150,13 @@ defmodule Edenflowers.MixProject do
         "esbuild edenflowers --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format --check-formatted", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format --check-formatted",
+        "credo --strict",
+        "test"
+      ]
     ]
   end
 end

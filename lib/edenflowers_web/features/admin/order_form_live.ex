@@ -5,17 +5,20 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   """
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Components
-
   require Ash.Query
   require Logger
+
+  import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.{Availability, DeliveryError, Fee}
+  alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Fulfillment.DeliveryError
+  alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.{EnteredLineItems, Order}
+  alias Edenflowers.Orders.EnteredLineItems
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
   alias Edenflowers.Pricing.TaxRate
   alias EdenflowersWeb.Layouts

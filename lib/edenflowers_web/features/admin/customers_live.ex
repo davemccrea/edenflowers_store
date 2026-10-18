@@ -4,9 +4,9 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Layouts
   alias Edenflowers.Accounts.User
   alias Edenflowers.Format
+  alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

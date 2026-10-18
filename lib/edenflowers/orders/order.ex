@@ -25,9 +25,12 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Orders.{Actions, Calculations, Changes, Validations}
   alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Orders.Actions
+  alias Edenflowers.Orders.Calculations
+  alias Edenflowers.Orders.Changes
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Orders.Validations
 
   @locales Edenflowers.Locales.all()
 

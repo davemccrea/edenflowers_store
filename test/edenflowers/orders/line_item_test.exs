@@ -1,8 +1,8 @@
 defmodule Edenflowers.Orders.LineItemTest do
   use Edenflowers.DataCase, async: true
   import Generator
-  alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.LineItem
 
   setup do
     order = generate(order())

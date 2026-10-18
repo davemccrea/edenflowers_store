@@ -2,11 +2,11 @@ defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmailTest do
   # Sync because the tests toggle the global :error_tracker, :enabled env
   use Edenflowers.DataCase, async: false
 
-  alias Edenflowers.Repo
   import Swoosh.TestAssertions
 
   alias Edenflowers.ErrorAlerts.SendErrorAlertEmail
   alias Edenflowers.ErrorTrackerLogHandler
+  alias Edenflowers.Repo
 
   setup do
     Application.put_env(:error_tracker, :enabled, true)

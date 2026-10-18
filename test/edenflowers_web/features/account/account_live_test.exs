@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
+  alias Edenflowers.Expressions.HelsinkiToday
   alias EdenflowersWeb.Account.AccountLive
 
   @locale "en-GB"
@@ -364,7 +365,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "subscriptions" do
-    defp days_from_today(days), do: Date.add(Edenflowers.Expressions.HelsinkiToday.today(), days)
+    defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
 
     defp weekday_date(date), do: Edenflowers.Format.weekday_date(date, @locale)
 
@@ -439,7 +440,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       ids = Regex.scan(~r/<li[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
       assert ids == [active.id, cancelled.id]
-      assert html =~ "Cancelled on #{weekday_date(Edenflowers.Expressions.HelsinkiToday.today())}."
+      assert html =~ "Cancelled on #{weekday_date(HelsinkiToday.today())}."
       refute html =~ long_gone.id
     end
 

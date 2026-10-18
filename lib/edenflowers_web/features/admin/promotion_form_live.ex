@@ -3,11 +3,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Admin.PromotionsLive
-  alias EdenflowersWeb.Layouts
   alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
+  alias EdenflowersWeb.Admin.PromotionsLive
+  alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

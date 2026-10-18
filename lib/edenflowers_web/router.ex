@@ -1,10 +1,10 @@
 defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
+  use ErrorTracker.Web, :router
 
   import AshAdmin.Router
   import Oban.Web.Router
-  use ErrorTracker.Web, :router
 
   pipeline :browser do
     plug :accepts, ["html"]

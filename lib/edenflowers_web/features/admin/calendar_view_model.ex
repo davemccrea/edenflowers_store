@@ -12,12 +12,10 @@ defmodule EdenflowersWeb.Admin.CalendarViewModel do
   call into it.
   """
 
-  alias Edenflowers.Fulfillment.{
-    Availability,
-    FulfillmentOption,
-    KeyDates,
-    Weekday
-  }
+  alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Fulfillment.FulfillmentOption
+  alias Edenflowers.Fulfillment.KeyDates
+  alias Edenflowers.Fulfillment.Weekday
 
   @typedoc """
   Which fulfillment options the admin grid is currently showing, set by the

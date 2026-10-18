@@ -1,8 +1,8 @@
 defmodule EdenflowersWeb.Admin.CalendarViewModelTest do
   use Edenflowers.DataCase, async: true
   import Generator
-  alias EdenflowersWeb.Admin.CalendarViewModel
   alias Edenflowers.Fulfillment.Weekday
+  alias EdenflowersWeb.Admin.CalendarViewModel
 
   setup do
     tax_rate = generate(tax_rate())

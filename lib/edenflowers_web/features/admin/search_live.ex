@@ -1,14 +1,14 @@
 defmodule EdenflowersWeb.Admin.SearchLive do
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Components
-
   require Ash.Query
 
-  alias EdenflowersWeb.Layouts
+  import EdenflowersWeb.Admin.Components
+
   alias Edenflowers.Accounts.User
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

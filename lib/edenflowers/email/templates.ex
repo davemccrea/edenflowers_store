@@ -5,8 +5,9 @@ defmodule Edenflowers.Email.Templates do
   `Edenflowers.Email` can stay focused on building Swoosh envelopes.
   """
 
-  require EEx
   use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  require EEx
 
   @templates [
     {:order_confirmation, [:assigns]},

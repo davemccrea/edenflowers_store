@@ -3,11 +3,17 @@ defmodule Generator do
 
   alias Edenflowers.Accounts.User
 
-  alias Edenflowers.Pricing.{TaxRate, Promotion}
-  alias Edenflowers.Catalog.{ProductCategory, Product, ProductVariant}
-  alias Edenflowers.Orders.{Order, LineItem, Subscription}
+  alias Edenflowers.Catalog.Product
+  alias Edenflowers.Catalog.ProductCategory
+  alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Courses.Course
+  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Fulfillment.FulfillmentOption
-  alias Edenflowers.Courses.{Course, CourseRegistration}
+  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Pricing.Promotion
+  alias Edenflowers.Pricing.TaxRate
 
   # seed_generator bypasses actions so we can set :admin directly
   # (the attribute is writable?: false on the resource).

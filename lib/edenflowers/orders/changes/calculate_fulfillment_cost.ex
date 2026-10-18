@@ -9,7 +9,8 @@ defmodule Edenflowers.Orders.Changes.CalculateFulfillmentCost do
   use Ash.Resource.Change
 
   alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.{DeliveryError, Fee}
+  alias Edenflowers.Fulfillment.DeliveryError
+  alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Changes.ClearDeliveryFields
 
   @impl true

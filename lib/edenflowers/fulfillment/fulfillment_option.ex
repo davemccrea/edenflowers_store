@@ -14,6 +14,8 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  alias Edenflowers.Fulfillment.Weekday
+
   postgres do
     table "fulfillment_options"
     repo Edenflowers.Repo
@@ -102,7 +104,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     update :set_weekday do
       description "Set a weekday's rule to :on or :off, idempotently. Prunes now-redundant overrides per Changes.SetWeekday."
       require_atomic? false
-      argument :weekday, Edenflowers.Fulfillment.Weekday, allow_nil?: false
+      argument :weekday, Weekday, allow_nil?: false
       argument :direction, :atom, allow_nil?: false, constraints: [one_of: [:on, :off]]
       change Edenflowers.Fulfillment.Changes.SetWeekday
     end
@@ -118,7 +120,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
     update :reset_calendar do
       description "Reset the calendar to fully-open / no overrides. Destructive — the admin reset button confirms before invoking."
-      change set_attribute(:available_days, Edenflowers.Fulfillment.Weekday.all())
+      change set_attribute(:available_days, Weekday.all())
       change set_attribute(:enabled_dates, [])
       change set_attribute(:disabled_dates, [])
     end
@@ -193,9 +195,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :same_day, :boolean, allow_nil?: false, default: false, public?: true
     attribute :order_deadline, :time, public?: true
 
-    attribute :available_days, {:array, Edenflowers.Fulfillment.Weekday},
+    attribute :available_days, {:array, Weekday},
       allow_nil?: false,
-      default: Edenflowers.Fulfillment.Weekday.all(),
+      default: Weekday.all(),
       public?: true
 
     attribute :enabled_dates, {:array, :date}, allow_nil?: false, default: [], public?: true

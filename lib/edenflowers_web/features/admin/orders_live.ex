@@ -4,10 +4,13 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Layouts
-  alias EdenflowersWeb.Admin.DefaultTableView
-  alias Edenflowers.Orders.Order
   alias Edenflowers.Format
+  alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Admin.DefaultTableView
+  alias EdenflowersWeb.Layouts
+
+  # Unfulfilled orders, soonest first, so overdue ones lead.
+  @default_view %{"fulfillment_status" => "pending", "sort" => "fulfillment_date"}
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -21,9 +24,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
   end
-
-  # Unfulfilled orders, soonest first, so overdue ones lead.
-  @default_view %{"fulfillment_status" => "pending", "sort" => "fulfillment_date"}
 
   @impl true
   def handle_params(params, uri, socket) do

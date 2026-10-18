@@ -19,6 +19,9 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Payment
 
+  # Whatever the caller loaded about the money is stale now.
+  @payable_fields [:amount_paid, :paid_outside_stripe, :balance, :refunded?, :settled?]
+
   @impl true
   def change(changeset, opts, _context) do
     Ash.Changeset.after_action(changeset, fn changeset, record ->
@@ -43,9 +46,6 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       end
     end)
   end
-
-  # Whatever the caller loaded about the money is stale now.
-  @payable_fields [:amount_paid, :paid_outside_stripe, :balance, :refunded?, :settled?]
 
   defp reload(%Order{} = order),
     do: Ash.load(order, [:payment_status | @payable_fields], authorize?: false, reuse_values?: false)

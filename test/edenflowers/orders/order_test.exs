@@ -4,8 +4,8 @@ defmodule Edenflowers.Orders.OrderTest do
   import Ecto.Query
   import ExUnit.CaptureLog
   import Generator
-  alias Edenflowers.Orders
   alias Edenflowers.Accounts
+  alias Edenflowers.Orders
 
   describe "Store Resource" do
     test "creates an order for checkout" do

@@ -19,9 +19,9 @@ defmodule Edenflowers.External.ClaudeAPI do
 
   @behaviour Edenflowers.External.ClaudeAPI.Behaviour
 
+  alias Edenflowers.Expenses.Expense.Category
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
-  alias Edenflowers.Expenses.Expense.Category
 
   @model "anthropic:claude-sonnet-4-6"
 
@@ -53,6 +53,10 @@ defmodule Edenflowers.External.ClaudeAPI do
   Set confidence to reflect your overall certainty across all fields.
   """
 
+  @translation_model "anthropic:claude-opus-5-5"
+
+  @languages %{"en-GB" => "British English", "sv-FI" => "Finland Swedish", "fi" => "Finnish"}
+
   @impl true
   def extract_expense(file_binary, content_type) do
     context =
@@ -68,10 +72,6 @@ defmodule Edenflowers.External.ClaudeAPI do
       {:error, reason} -> {:error, {:claude_extraction_failed, reason}}
     end
   end
-
-  @translation_model "anthropic:claude-opus-5-5"
-
-  @languages %{"en-GB" => "British English", "sv-FI" => "Finland Swedish", "fi" => "Finnish"}
 
   @doc """
   Translate a name and description from one store locale into the others.

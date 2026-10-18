@@ -11,7 +11,8 @@ defmodule Edenflowers.Orders.Validations.WithinStock do
   require Ash.Query
 
   alias Edenflowers.Catalog
-  alias Edenflowers.Orders.{LineItem, Order}
+  alias Edenflowers.Orders.LineItem
+  alias Edenflowers.Orders.Order
 
   @impl true
   def validate(changeset, _opts, _context) do

@@ -14,13 +14,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Fulfillment
 
   alias Edenflowers.Catalog
-  alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Validations.WithinStock
-  alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
-  alias Edenflowers.Translations
+  alias Edenflowers.Orders.Calculations.Vat
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Validations.WithinStock
   alias Edenflowers.PhoneNumber
+  alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -31,6 +31,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     "gift_options" => {:gift_options, &Orders.return_to_gift_options!/2},
     "delivery" => {:delivery, &Orders.return_to_delivery!/2}
   }
+
+  # A cart change after "pay" has updated the PaymentIntent would charge the
+  # old amount, so anything that changes the total is inert from the click
+  # until Stripe settles.
+  @locked_while_paying "#cart-drawer, [data-locked-while-paying]"
 
   defp submit_action_for(:contact_details), do: :submit_contact_details
   defp submit_action_for(:gift_options), do: :submit_gift_options
@@ -1078,12 +1083,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok
-
-  # A cart change after "pay" has updated the PaymentIntent would charge the
-  # old amount, so anything that changes the total is inert from the click
-  # until Stripe settles.
-  @locked_while_paying "#cart-drawer, [data-locked-while-paying]"
-
   defp lock_while_paying(js \\ %JS{}), do: JS.set_attribute(js, {"inert", ""}, to: @locked_while_paying)
 
   defp unlock_after_paying(js), do: JS.remove_attribute(js, "inert", to: @locked_while_paying)

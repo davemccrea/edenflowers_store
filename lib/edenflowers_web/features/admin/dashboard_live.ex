@@ -3,11 +3,11 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Courses
+  alias Edenflowers.Format
+  alias Edenflowers.Orders
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
-  alias Edenflowers.Courses
-  alias Edenflowers.Orders
-  alias Edenflowers.Format
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 

@@ -48,7 +48,9 @@ defmodule Edenflowers.Expenses.Expense do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
-  alias Edenflowers.Expenses.Expense.{Category, Confidence, Currency}
+  alias Edenflowers.Expenses.Expense.Category
+  alias Edenflowers.Expenses.Expense.Confidence
+  alias Edenflowers.Expenses.Expense.Currency
 
   postgres do
     table "expenses"

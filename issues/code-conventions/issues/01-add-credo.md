@@ -1,6 +1,6 @@
 # Add Credo with the module-layout and alias checks
 
-Status: ready-for-agent
+Status: done
 Type: chore
 
 ## What to build
@@ -17,8 +17,16 @@ Type: chore
 
 ## Acceptance criteria
 
-- [ ] `mix credo --strict` passes on lib/ and test/
-- [ ] `mix precommit` runs Credo and passes
-- [ ] No behaviour change; the existing suite passes
+- [x] `mix credo --strict` passes on lib/ and test/
+- [x] `mix precommit` runs Credo and passes
+- [x] No behaviour change; the existing suite passes
 
 ## Comments
+
+Landed with three departures from the plan:
+
+- `Design.AliasUsage` uses `if_nested_deeper_than: 2`, not 1. At 1 it flags two-part names such as `Ash.Changeset`, `Plug.Test` and `AshPhoenix.Form` (812 hits), which the code always writes in full.
+- `StrictModuleLayout` order has `:shortdoc` between `:alias` and `:module_attribute`, so Mix tasks keep `@shortdoc` after `use Mix.Task`.
+- `CoreComponents.flower/1`'s `attr ... values: Map.keys(@flowers)` reads as a mid-module attribute to Credo; it has a one-line disable.
+
+AliasUsage only sees calls (`Mod.fun()`), not module arguments in Ash DSL (`change Edenflowers.Orders.Changes.X`), so ticket 02 covers those.

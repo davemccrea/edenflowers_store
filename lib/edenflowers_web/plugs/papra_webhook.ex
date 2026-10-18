@@ -16,8 +16,9 @@ defmodule EdenflowersWeb.Plugs.PapraWebhook do
   Deliveries whose `webhook-timestamp` is more than five minutes from now, in
   either direction, are rejected to stop captured deliveries being replayed.
   """
-  import Plug.Conn
   require Logger
+
+  import Plug.Conn
 
   @timestamp_tolerance_seconds 5 * 60
 
