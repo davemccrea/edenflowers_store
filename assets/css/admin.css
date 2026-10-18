@@ -139,17 +139,34 @@ body:has(.admin-theme) {
   }
 }
 
-/* daisyUI draws checkbox labels as small grey captions; in admin forms they
-   sit beside text-field labels, so they match those instead. */
+/* Labels follow the md fields' type scale, including boolean choices. */
+.admin-theme
+  :is(fieldset > label, fieldset > legend, label[for], .fieldset-label) {
+  @apply text-base-content text-sm;
+}
+
 .admin-theme .fieldset-label {
-  @apply text-base-content text-base;
+  @apply gap-2;
+}
+
+/* Match the 16px radio markers without shrinking the surrounding tap target. */
+.admin-theme .checkbox {
+  @apply checkbox-xs;
+}
+
+.admin-theme .toggle {
+  @apply toggle-sm;
+}
+
+.admin-theme .select {
+  @apply pl-3;
 }
 
 /* The radio card is sized to sit beside the storefront's lg fields. Admin
    fields are md, so match their text and height, while touch screens keep
    their 44px target. */
 .admin-theme .radio-card {
-  @apply py-1.5 text-sm;
+  @apply gap-2 px-3 py-1.5 text-sm;
   min-height: 2.5rem;
 }
 
