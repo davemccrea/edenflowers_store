@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
             </.contact_item>
 
             <.contact_item label={~t"Opening hours"}>
-              {~t"Mon–Fri: 09:00–17:00"}<br />
+              {~t"Mon–Fri: 10:00–18:00"}<br />
               {~t"Sat: 10:00–15:00"}<br />
               {~t"Sun: closed"}
             </.contact_item>

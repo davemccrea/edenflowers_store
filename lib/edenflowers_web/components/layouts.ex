@@ -759,7 +759,7 @@ defmodule EdenflowersWeb.Layouts do
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
-                <p class="footer-line whitespace-nowrap">{~t"Mon–Fri: 09:00–17:00"}</p>
+                <p class="footer-line whitespace-nowrap">{~t"Mon–Fri: 10:00–18:00"}</p>
                 <p class="footer-line whitespace-nowrap">{~t"Sat: 10:00–15:00"}</p>
                 <p class="footer-line whitespace-nowrap">{~t"Sun: closed"}</p>
               </div>
