@@ -14,6 +14,7 @@ defmodule Edenflowers.Orders do
       define :get_order_for_checkout, action: :for_checkout, get_by: [:id]
       define :get_order_for_admin, action: :admin_show, get_by: [:id]
       define :search_orders, action: :search, args: [:term]
+      define :get_last_order_with_customer_phone, action: :last_with_customer_phone, args: [:customer_id]
       define :list_my_orders, action: :mine
       define :list_open_orders, action: :open
       define :list_orders_to_fulfil, action: :to_fulfil

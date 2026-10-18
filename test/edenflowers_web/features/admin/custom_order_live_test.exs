@@ -55,6 +55,21 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
   defp tomorrow, do: Date.add(Edenflowers.ShopTime.today(), 1)
 
+  defp search_customers(view, text) do
+    view |> element("#form_customer_id_text_input") |> render_change(%{"text" => text})
+    render_hook(view, "live_select_change", %{"id" => "customer-select", "text" => text})
+    render(view)
+  end
+
+  defp select_customer(view, customer, text) do
+    search_customers(view, text)
+    assert has_element?(view, "#customer-select ul", to_string(customer.email))
+    view |> element("#customer-select") |> render_hook("option_click", %{"idx" => "0"})
+    assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: selected_id}]})
+    assert selected_id == customer.id
+    view |> form("#order-form", form: %{customer_id: customer.id}) |> render_change()
+  end
+
   defp place_custom_order(ctx, overrides \\ %{}) do
     {:ok, order} =
       Orders.place_custom_order(
@@ -85,6 +100,273 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   end
 
   describe "placing a custom order" do
+    test "auto-recovery keeps the selected customer and order-only contacts, recipient and nested items", ctx do
+      customer = generate(admin_user(admin: false, name: "Original Customer", email: "original@example.com"))
+      generate(order(state: :placed, user_id: customer.id, customer_phone_number: "+358401234567"))
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      select_customer(view, customer, "Original")
+
+      recovered = %{
+        "customer_id" => customer.id,
+        "customer_name" => "Order-only Customer",
+        "customer_email" => "order-only@example.com",
+        "customer_phone_number" => "040 999 9999",
+        "gift" => "true",
+        "recipient_name" => "Separate Recipient",
+        "recipient_phone_number" => "050 765 4321",
+        "fulfillment_option_id" => ctx.pickup.id,
+        "fulfillment_date" => Date.to_iso8601(tomorrow()),
+        "email_customer?" => "false",
+        "line_items" => %{
+          "0" => %{
+            "_form_type" => "create",
+            "kind" => "custom",
+            "product_name" => "Recovered bouquet",
+            "unit_price" => "35.00",
+            "quantity" => "2",
+            "tax_rate_id" => ctx.tax_rate.id
+          }
+        }
+      }
+
+      # A fresh mount has no previous customer id or nested forms to compare against.
+      {:ok, remounted, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      assert has_element?(remounted, ~s|#order-form[phx-auto-recover="recover"]|)
+      render_change(remounted, "recover", %{"form" => recovered})
+
+      assert has_element?(remounted, ~s|#form_customer_id[value="#{customer.id}"]|)
+      assert has_element?(remounted, ~s|#form_customer_name[value="Order-only Customer"]|)
+      assert has_element?(remounted, ~s|#form_customer_email[value="order-only@example.com"]|)
+      assert has_element?(remounted, ~s|#form_customer_phone_number[value="040 9999999"]|)
+      assert has_element?(remounted, ~s|#form_recipient_name[value="Separate Recipient"]|)
+      assert has_element?(remounted, ~s|#form_recipient_phone_number[value="050 7654321"]|)
+      assert has_element?(remounted, ~s|#form_line_items_0_product_name[value="Recovered bouquet"]|)
+      assert has_element?(remounted, ~s|#form_line_items_0_quantity[value="2"]|)
+
+      remounted |> form("#order-form", form: %{florist_note: "After recovery"}) |> render_change()
+      assert has_element?(remounted, ~s|#form_customer_name[value="Order-only Customer"]|)
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               remounted |> form("#order-form") |> render_submit()
+
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin, load: [:line_items])
+      assert order.user_id == customer.id
+      assert order.customer_name == "Order-only Customer"
+      assert to_string(order.customer_email) == "order-only@example.com"
+      assert order.customer_phone_number == "040 9999999"
+      assert order.recipient_name == "Separate Recipient"
+      assert order.recipient_phone_number == "050 7654321"
+      assert [%{product_name: "Recovered bouquet", quantity: 2}] = order.line_items
+    end
+
+    test "selects with the keyboard and clears the association while retaining editable contact details", ctx do
+      customer = generate(admin_user(admin: false, name: "Keyboard Customer", email: "keyboard@example.com"))
+      generate(order(state: :placed, user_id: customer.id))
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      search_customers(view, "Keyboard")
+      assert has_element?(view, "#customer-select ul", "keyboard@example.com")
+      view |> element("#customer-select") |> render_hook("keydown", %{"key" => "ArrowDown"})
+      view |> element("#customer-select") |> render_hook("keydown", %{"key" => "Enter"})
+      assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: selected_id}]})
+      assert selected_id == customer.id
+      view |> form("#order-form", form: %{customer_id: customer.id}) |> render_change()
+      assert has_element?(view, ~s|#form_customer_name[value="Keyboard Customer"]|)
+      refute render(view) =~ "The order wasn't saved."
+
+      view |> form("#order-form", form: %{customer_name: "Order-only name"}) |> render_change()
+      assert has_element?(view, ~s|#form_customer_name[value="Order-only name"]|)
+      view |> element(~s|#customer-select button[phx-click="clear"]|) |> render_click()
+      view |> form("#order-form", form: %{customer_id: ""}) |> render_change()
+      assert has_element?(view, "#form_customer_id:not([value])")
+      assert has_element?(view, ~s|#form_customer_name[value="Order-only name"]|)
+      assert has_element?(view, ~s|#form_customer_email[value="keyboard@example.com"]|)
+    end
+
+    for change_email? <- [false, true] do
+      @change_email? change_email?
+      test "selected customer contact edits stay on the order (change email: #{change_email?})", ctx do
+        customer = generate(admin_user(admin: false, name: "Anna Holm", email: "anna@example.com"))
+
+        previous =
+          generate(
+            order(
+              state: :placed,
+              user_id: customer.id,
+              customer_phone_number: "+358401234567",
+              ordered_at: DateTime.utc_now()
+            )
+          )
+
+        {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+        render_click(view, "add_line", %{"kind" => "custom"})
+        view |> form("#order-form", form: %{gift: "true"}) |> render_change()
+
+        view
+        |> form("#order-form",
+          form: %{gift: "true", recipient_name: "Recipient", recipient_phone_number: "050 765 4321"}
+        )
+        |> render_change()
+
+        select_customer(view, customer, "ANNA")
+
+        assert has_element?(view, ~s|#form_customer_name[value="Anna Holm"]|)
+        assert has_element?(view, ~s|#form_customer_email[value="anna@example.com"]|)
+        assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
+        assert has_element?(view, ~s|#form_recipient_name[value="Recipient"]|)
+        assert has_element?(view, ~s|#form_recipient_phone_number[value="050 7654321"]|)
+        assert has_element?(view, ~s|input[name="form[line_items][0][product_name]"]|)
+
+        email = if @change_email?, do: "order-only@example.com", else: "anna@example.com"
+
+        assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+                 view
+                 |> form("#order-form",
+                   form: %{
+                     customer_name: "Anna Holm-Smith",
+                     customer_email: email,
+                     customer_phone_number: "040 999 9999",
+                     fulfillment_option_id: ctx.pickup.id,
+                     fulfillment_date: Date.to_iso8601(tomorrow()),
+                     email_customer?: false,
+                     line_items: %{
+                       "0" => %{"product_name" => "Bouquet", "unit_price" => "35", "tax_rate_id" => ctx.tax_rate.id}
+                     }
+                   }
+                 )
+                 |> render_submit()
+
+        order = Orders.get_order_for_admin!(id, actor: ctx.admin)
+        assert order.user_id == customer.id
+        assert order.customer_name == "Anna Holm-Smith"
+        assert to_string(order.customer_email) == email
+        assert order.customer_phone_number == "040 9999999"
+        assert order.recipient_name == "Recipient"
+        assert order.recipient_phone_number == "050 7654321"
+        saved_customer = Ash.reload!(customer, actor: ctx.admin)
+        assert saved_customer.name == "Anna Holm"
+        assert to_string(saved_customer.email) == "anna@example.com"
+        assert Ash.reload!(previous, actor: ctx.admin).customer_phone_number == "+358401234567"
+      end
+    end
+
+    test "searches by email and leaves missing customer details editable, without using a gift recipient's phone",
+         ctx do
+      customer = generate(admin_user(admin: false, name: nil, email: "returning@example.com"))
+
+      generate(
+        order(
+          state: :placed,
+          user_id: customer.id,
+          origin: :online,
+          gift: true,
+          fulfillment_method: :delivery,
+          recipient_phone_number: "+358501112222"
+        )
+      )
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      view
+      |> form("#order-form", form: %{customer_name: "Old entry", customer_phone_number: "040 111 1111"})
+      |> render_change()
+
+      select_customer(view, customer, "returning@")
+
+      assert has_element?(view, ~s|#form_customer_name:not([value])|)
+      assert has_element?(view, ~s|#form_customer_phone_number:not([value])|)
+      assert has_element?(view, ~s|#form_customer_email[value="returning@example.com"]|)
+
+      render_click(view, "add_line", %{"kind" => "custom"})
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Returning Customer",
+                   customer_phone_number: "040 222 2222",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   email_customer?: false,
+                   line_items: %{
+                     "0" => %{"product_name" => "Bouquet", "unit_price" => "35", "tax_rate_id" => ctx.tax_rate.id}
+                   }
+                 }
+               )
+               |> render_submit()
+
+      assert Orders.get_order_for_admin!(id, actor: ctx.admin).customer_phone_number == "040 2222222"
+      assert Ash.reload!(customer, actor: ctx.admin).name == nil
+    end
+
+    test "prefills an online customer's own phone but ignores a newer gift recipient", ctx do
+      customer = generate(admin_user(admin: false, name: "Online Customer"))
+
+      generate(
+        order(
+          state: :placed,
+          user_id: customer.id,
+          origin: :online,
+          gift: false,
+          fulfillment_method: :delivery,
+          recipient_phone_number: "+358401234567",
+          ordered_at: ~U[2026-10-01 12:00:00Z]
+        )
+      )
+
+      generate(
+        order(
+          state: :placed,
+          user_id: customer.id,
+          origin: :online,
+          gift: true,
+          fulfillment_method: :delivery,
+          recipient_phone_number: "+358509999999",
+          ordered_at: ~U[2026-10-02 12:00:00Z]
+        )
+      )
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      select_customer(view, customer, "Online")
+      assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
+
+      search_customers(view, "No match")
+      assert has_element?(view, "#customer-results", "No customers found.")
+      refute has_element?(view, "#customer-results button")
+    end
+
+    test "prefills the buyer's phone from an online gift pickup, ignoring a newer custom gift pickup", ctx do
+      customer = generate(admin_user(admin: false, name: "Pickup Customer"))
+
+      generate(
+        order(
+          state: :placed,
+          user_id: customer.id,
+          origin: :online,
+          gift: true,
+          fulfillment_method: :pickup,
+          recipient_phone_number: "+358401234567",
+          ordered_at: ~U[2026-10-01 12:00:00Z]
+        )
+      )
+
+      generate(
+        order(
+          state: :placed,
+          user_id: customer.id,
+          origin: :custom,
+          gift: true,
+          fulfillment_method: :pickup,
+          recipient_phone_number: "+358509999999",
+          ordered_at: ~U[2026-10-02 12:00:00Z]
+        )
+      )
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      select_customer(view, customer, "Pickup")
+      assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
+    end
+
     test "Jennie enters the order and lands on its page", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
@@ -117,6 +399,9 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       order = Orders.get_order_for_admin!(id, actor: ctx.admin)
 
       assert order.origin == :custom
+      assert order.customer_name == "Mrs Holm"
+      assert order.customer_phone_number == "040 1234567"
+      assert order.user_id == nil
       assert order.florist_note == "White only, no lilies"
       assert Decimal.equal?(order.grand_total, "134.50")
       assert order.payment_link_open?

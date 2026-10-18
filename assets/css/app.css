@@ -11,6 +11,7 @@
 @import "./admin.css";
 
 @source "../../deps/ash_authentication_phoenix";
+@source "../../deps/live_select/lib/live_select/component.*ex";
 @source "../js";
 /* With source(none) the watcher only watches @source directories, so without
    this it never sees edits to our own stylesheets. */

@@ -4,6 +4,49 @@ import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import Hooks from "./hooks";
 import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
+import liveSelect from "live_select";
+
+// LiveSelect 1.7 supplies keyboard handling but no combobox ARIA semantics.
+const syncCustomerCombobox = (el) => {
+  if (el.id !== "customer-select") return;
+  const input = el.querySelector('input[type="text"]');
+  const list = el.querySelector("ul");
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-expanded", String(!!list));
+  input.setAttribute("aria-describedby", "customer-search-help");
+  input.removeAttribute("aria-activedescendant");
+  input.removeAttribute("aria-controls");
+  if (!list) return;
+  list.id = `${el.id}-options`;
+  list.setAttribute("role", "listbox");
+  input.setAttribute("aria-controls", list.id);
+  list.querySelectorAll("li").forEach((item, index) => {
+    item.setAttribute("role", "presentation");
+    const option = item.firstElementChild;
+    option.id = `${list.id}-${index}`;
+    option.setAttribute("role", "option");
+    option.setAttribute(
+      "aria-selected",
+      option.querySelector("[data-selected]").dataset.selected,
+    );
+    if (option.classList.contains("menu-active")) {
+      input.setAttribute("aria-activedescendant", option.id);
+    }
+  });
+};
+
+const customerLiveSelect = {
+  ...liveSelect.LiveSelect,
+  mounted() {
+    liveSelect.LiveSelect.mounted.call(this);
+    syncCustomerCombobox(this.el);
+  },
+  updated() {
+    liveSelect.LiveSelect.updated.call(this);
+    syncCustomerCombobox(this.el);
+  },
+};
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -230,7 +273,12 @@ const liveSocket = new LiveSocket("/live", Socket, {
   // Waking a backgrounded tab drops the socket briefly; only toast if reconnecting drags on.
   disconnectedTimeout: 3000,
   params: { _csrf_token: csrfToken },
-  hooks: { ...Hooks, ...colocatedHooks },
+  hooks: {
+    ...Hooks,
+    ...colocatedHooks,
+    ...liveSelect,
+    LiveSelect: customerLiveSelect,
+  },
   dom: {
     onDocumentPatch,
     onNodeAdded(node) {

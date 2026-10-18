@@ -353,6 +353,22 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
+    read :last_with_customer_phone do
+      argument :customer_id, :uuid, allow_nil?: false
+      get? true
+
+      # Checkout (and its subscription occurrences) stores the buyer's phone in
+      # recipient_phone_number except for gift deliveries; custom gifts keep a separate recipient.
+      filter expr(
+               state == :placed and user_id == ^arg(:customer_id) and
+                 (not is_nil(customer_phone_number) or
+                    (origin in [:online, :subscription] and
+                       (gift == false or fulfillment_method == :pickup) and not is_nil(recipient_phone_number)))
+             )
+
+      prepare build(sort: [ordered_at: :desc], limit: 1)
+    end
+
     read :open do
       filter expr(state == :placed and fulfillment_status == :pending)
 
@@ -462,6 +478,7 @@ defmodule Edenflowers.Orders.Order do
       argument :payment_link?, :boolean, default: true
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :email_customer?, :boolean, default: true
+      argument :customer_id, :uuid
 
       change set_attribute(:state, :placed)
       change set_attribute(:origin, :custom)
@@ -488,7 +505,10 @@ defmodule Edenflowers.Orders.Order do
       change Changes.NormalizePhoneNumber
       change Changes.ClearGiftFields
       change Changes.PriceFulfillment
-      change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
+      change manage_relationship(:customer_id, :user, type: :append)
+
+      change Changes.UpsertUserAndAssignToOrder,
+        where: [present(:customer_email), argument_equals(:customer_id, nil)]
 
       change manage_relationship(:line_items,
                type: :direct_control,
