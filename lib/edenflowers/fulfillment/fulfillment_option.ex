@@ -165,11 +165,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :name, :string, allow_nil?: false, public?: true
     attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
 
-    attribute :fulfillment_method, Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod,
+    attribute :fulfillment_method, __MODULE__.FulfillmentMethod,
       allow_nil?: false,
       public?: true
 
-    attribute :rate_type, Edenflowers.Fulfillment.FulfillmentOption.RateType, allow_nil?: false, public?: true
+    attribute :rate_type, __MODULE__.RateType, allow_nil?: false, public?: true
     attribute :base_price, :decimal, allow_nil?: false, public?: true, constraints: [min: 0, scale: 2]
     attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
     attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]

@@ -1,9 +1,10 @@
 ---
 id: TASK-21.2
 title: Apply the conventions Credo can't check
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-18 04:05'
+updated_date: '2026-10-18 06:55'
 labels: []
 dependencies:
   - TASK-21.1
