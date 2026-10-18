@@ -3,10 +3,10 @@ id: TASK-52
 title: >-
   Reword the left-at-door delivery email so it doesn't suggest the flowers might
   be lost
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 19:21'
-updated_date: '2026-10-18 19:22'
+updated_date: '2026-10-18 20:38'
 labels:
   - spec
   - customers
@@ -33,7 +33,20 @@ Today the template (lib/edenflowers/email/templates/order_left_at_door.text.eex)
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The left-at-door email no longer says "If you can't find them" or anything suggesting the flowers might be lost
-- [ ] #2 The closing still thanks the customer and reads naturally in English, Finnish and Swedish
-- [ ] #3 The email works for gift orders too: it names the recipient, as the normal delivered email does
+- [x] #1 The left-at-door email no longer says "If you can't find them" or anything suggesting the flowers might be lost
+- [x] #2 The closing still thanks the customer and reads naturally in English, Finnish and Swedish
+- [x] #3 The email works for gift orders too: it names the recipient, as the normal delivered email does
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 20:38
+
+---
+
+Reworded the closing to the order_delivered wording (its fi/sv translations were already there) and branched on recipient_first_name so gift orders name the recipient. Added the new msgid's fi/sv translations and tests for both the non-gift wording and the gift case.
+
+---
+<!-- COMMENTS:END -->

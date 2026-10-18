@@ -3094,6 +3094,7 @@ msgid "View customer's orders"
 msgstr "Visa kundens beställningar"
 
 #: lib/edenflowers/email/templates/order_delivered.text.eex:5
+#: lib/edenflowers/email/templates/order_left_at_door.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it."
 msgstr "Tack för din beställning. Om något inte är som det ska, svara bara på det här mejlet så ordnar jag det."
@@ -6109,11 +6110,6 @@ msgstr "Bild på var du lämnade blommorna"
 msgid "Take a photo of where you left the flowers."
 msgstr "Ta en bild på var du lämnade blommorna."
 
-#: lib/edenflowers/email/templates/order_left_at_door.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Thank you for your order. If you can't find them, just reply and I'll help."
-msgstr "Tack för din beställning. Om du inte hittar dem, svara bara på det här mejlet så hjälper jag dig."
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:408
 #, elixir-autogen, elixir-format
 msgid "This order is still unpaid."
@@ -6463,3 +6459,8 @@ msgstr "Betalningen registrerad och kvittot mejlat."
 #, elixir-autogen, elixir-format
 msgid "Payment recorded, but the receipt could not be emailed."
 msgstr "Betalningen registrerad, men kvittot kunde inte mejlas."
+
+#: lib/edenflowers/email/templates/order_left_at_door.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Your flowers for %{recipient} were delivered while nobody was home, so I left them in the spot shown in the attached photo."
+msgstr "Dina blommor till %{recipient} levererades medan ingen var hemma, så jag lämnade dem på platsen som syns i den bifogade bilden."
