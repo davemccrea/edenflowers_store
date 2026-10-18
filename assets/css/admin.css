@@ -254,17 +254,6 @@ body:has(.admin-theme) {
   }
 }
 
-/* Options disagree at the current scope. Background only, so the digit stays readable. */
-@utility calendar-mixed {
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent 0,
-    transparent 4px,
-    color-mix(in oklab, var(--color-base-content) 22%, transparent) 4px,
-    color-mix(in oklab, var(--color-base-content) 22%, transparent) 5.5px
-  );
-}
-
 /* Card surface. On phones it runs to the screen edges (cancelling admin_page's
    px-4) and drops its side borders, so content gets the full width. */
 @utility admin-card {

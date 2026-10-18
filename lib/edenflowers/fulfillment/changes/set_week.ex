@@ -1,7 +1,7 @@
 defmodule Edenflowers.Fulfillment.Changes.SetWeek do
   @moduledoc """
-  Sets every non-past date in a week to `:open` or `:closed` for a fulfillment
-  option, idempotently per-date: cells already in the target direction pass
+  Sets every non-past date in a week to `:open` or `:closed` in the shop
+  calendar, idempotently per-date: cells already in the target direction pass
   through unchanged.
 
   Each per-date flip uses the same minimal-override discipline as
@@ -14,8 +14,8 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Fulfillment.KeyDates
+  alias Edenflowers.Fulfillment.ShopCalendar
   alias Edenflowers.Fulfillment.Weekday
 
   @impl true
@@ -23,9 +23,9 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
     week = Ash.Changeset.get_argument(changeset, :week)
     today = Ash.Changeset.get_argument(changeset, :today)
     direction = Ash.Changeset.get_argument(changeset, :direction)
-    option = changeset.data
+    calendar = changeset.data
 
-    %{enabled_dates: enabled, disabled_dates: disabled} = set_week(option, week, today, direction)
+    %{enabled_dates: enabled, disabled_dates: disabled} = set_week(calendar, week, today, direction)
 
     changeset
     |> Ash.Changeset.force_change_attribute(:enabled_dates, enabled)
@@ -33,29 +33,28 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
   end
 
   @doc """
-  Set every non-past date in `week` to the given direction for a single
-  option, returning the updated `%{enabled_dates: [...], disabled_dates: [...]}`
+  Set every non-past date in `week` to the given direction, returning the updated `%{enabled_dates: [...], disabled_dates: [...]}`
   map. Idempotent per-date.
   """
-  @spec set_week(FulfillmentOption.t(), [Date.t()], Date.t(), :open | :closed) :: %{
+  @spec set_week(ShopCalendar.t(), [Date.t()], Date.t(), :open | :closed) :: %{
           enabled_dates: [Date.t()],
           disabled_dates: [Date.t()]
         }
-  def set_week(%FulfillmentOption{} = option, week, %Date{} = today, direction)
+  def set_week(%ShopCalendar{} = calendar, week, %Date{} = today, direction)
       when is_list(week) and direction in [:open, :closed] do
-    initial = %{enabled_dates: option.enabled_dates, disabled_dates: option.disabled_dates}
+    initial = %{enabled_dates: calendar.enabled_dates, disabled_dates: calendar.disabled_dates}
 
     week
     |> Enum.reject(&(Date.compare(&1, today) == :lt))
     |> Enum.reject(&KeyDates.key_date?/1)
-    |> Enum.reduce(initial, fn date, acc -> set_date(option, acc, date, direction) end)
+    |> Enum.reduce(initial, fn date, acc -> set_date(calendar, acc, date, direction) end)
   end
 
   # Move a single date to the target direction in the given enabled/disabled
   # accumulator, without writing a redundant override.
-  defp set_date(option, %{enabled_dates: enabled, disabled_dates: disabled}, date, :open) do
+  defp set_date(calendar, %{enabled_dates: enabled, disabled_dates: disabled}, date, :open) do
     cond do
-      weekday_available?(option, date) ->
+      weekday_available?(calendar, date) ->
         %{enabled_dates: List.delete(enabled, date), disabled_dates: List.delete(disabled, date)}
 
       date in enabled ->
@@ -66,9 +65,9 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
     end
   end
 
-  defp set_date(option, %{enabled_dates: enabled, disabled_dates: disabled}, date, :closed) do
+  defp set_date(calendar, %{enabled_dates: enabled, disabled_dates: disabled}, date, :closed) do
     cond do
-      not weekday_available?(option, date) ->
+      not weekday_available?(calendar, date) ->
         %{enabled_dates: List.delete(enabled, date), disabled_dates: List.delete(disabled, date)}
 
       date in disabled ->
@@ -79,7 +78,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
     end
   end
 
-  defp weekday_available?(option, date) do
-    Weekday.from_date(date) in option.available_days
+  defp weekday_available?(calendar, date) do
+    Weekday.from_date(date) in calendar.available_days
   end
 end

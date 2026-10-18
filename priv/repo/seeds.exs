@@ -500,18 +500,20 @@ end
 now = DateTime.now!("Europe/Helsinki")
 today = DateTime.to_date(now)
 
-fulfillment_date_for = fn option, days_out ->
+shop_calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+
+fulfillment_date_for = fn days_out ->
   requested_date = Date.add(today, days_out)
 
   if days_out < 0 do
     Stream.iterate(requested_date, &Date.add(&1, -1))
     |> Enum.find(fn date ->
-      date not in option.disabled_dates and
-        (date in option.enabled_dates or Weekday.from_date(date) in option.available_days)
+      date not in shop_calendar.disabled_dates and
+        (date in shop_calendar.enabled_dates or Weekday.from_date(date) in shop_calendar.available_days)
     end)
   else
     Stream.iterate(requested_date, &Date.add(&1, 1))
-    |> Enum.find(fn date -> Availability.unavailable_reason(option, date, now) == nil end)
+    |> Enum.find(fn date -> Availability.unavailable_reason(shop_calendar, date, now) == nil end)
   end
 end
 
@@ -533,7 +535,7 @@ orders = [
     customer_name: "Liisa Mäkinen",
     customer_email: "liisa.makinen@example.fi",
     fulfillment_option: home_delivery,
-    fulfillment_date: fulfillment_date_for.(home_delivery, 4),
+    fulfillment_date: fulfillment_date_for.(4),
     recipient_name: "Liisa Mäkinen",
     recipient_phone_number: "041 5550099",
     locale: "fi",
@@ -547,7 +549,7 @@ orders = [
     customer_email: "hanna.jarvinen@example.fi",
     fulfillment_option: home_delivery,
     ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
-    fulfillment_date: fulfillment_date_for.(home_delivery, -2),
+    fulfillment_date: fulfillment_date_for.(-2),
     recipient_name: "Hanna Järvinen",
     recipient_phone_number: "045 3217654",
     fulfillment_status: :fulfilled,
@@ -559,7 +561,7 @@ orders = [
     customer_email: "tuula.rantanen@example.fi",
     fulfillment_option: store_pickup,
     ordered_at: DateTime.add(DateTime.utc_now(), -4, :day),
-    fulfillment_date: fulfillment_date_for.(store_pickup, -1),
+    fulfillment_date: fulfillment_date_for.(-1),
     locale: "fi",
     promotion: promotion_by_code.("MOR10"),
     items: [line_item.("Bouquet 3", :medium, 1)]
@@ -570,7 +572,7 @@ orders = [
     customer_name: "Erik Sundström",
     customer_email: "erik.sundstrom@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: fulfillment_date_for.(store_pickup, 5),
+    fulfillment_date: fulfillment_date_for.(5),
     items: [
       line_item.("Bouquet 1", :large, 1),
       line_item.("Bouquet 2", :small, 2),
@@ -582,14 +584,14 @@ orders = [
     customer_name: "Petra Holm",
     customer_email: "petra.holm@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: fulfillment_date_for.(store_pickup, 2),
+    fulfillment_date: fulfillment_date_for.(2),
     items: [line_item.("Bouquet 3", :small, 1)]
   },
   %{
     customer_name: "Oskar Wikström",
     customer_email: "oskar.wikstrom@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: fulfillment_date_for.(store_pickup, 3),
+    fulfillment_date: fulfillment_date_for.(3),
     locale: "en-GB",
     items: [line_item.("Plant", :large, 1)]
   },
@@ -597,7 +599,7 @@ orders = [
     customer_name: "Nora Back",
     customer_email: "nora.back@example.fi",
     fulfillment_option: store_pickup,
-    fulfillment_date: fulfillment_date_for.(store_pickup, 4),
+    fulfillment_date: fulfillment_date_for.(4),
     items: [line_item.("Bouquet 1", :small, 1), line_item.("Plant", :medium, 1)]
   }
 ]
@@ -717,7 +719,7 @@ subscriptions = [
 
 for attrs <- subscriptions do
   user = Accounts.upsert_user!(attrs.email, attrs.name, actor: Actors.system_actor())
-  first_date = fulfillment_date_for.(home_delivery, attrs.first_days_out)
+  first_date = fulfillment_date_for.(attrs.first_days_out)
   scheduled_date = fn n -> Date.add(first_date, n * attrs.interval_weeks * 7) end
 
   subscription =
@@ -798,7 +800,7 @@ place_custom = fn attrs ->
     %{
       locale: "sv-FI",
       fulfillment_option_id: store_pickup.id,
-      fulfillment_date: fulfillment_date_for.(store_pickup, attrs[:days_out] || 2),
+      fulfillment_date: fulfillment_date_for.(attrs[:days_out] || 2),
       email_customer?: false
     },
     Map.delete(attrs, :days_out)

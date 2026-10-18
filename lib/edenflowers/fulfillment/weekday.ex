@@ -1,6 +1,6 @@
 defmodule Edenflowers.Fulfillment.Weekday do
   @moduledoc """
-  The day of the week in `FulfillmentOption.available_days`, mapped to and
+  The day of the week in `ShopCalendar.available_days`, mapped to and
   from `Date.day_of_week/1` integers.
   """
   use Ash.Type.Enum, values: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]

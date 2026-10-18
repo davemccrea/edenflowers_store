@@ -780,7 +780,6 @@ defmodule Edenflowers.Orders.Order do
     update :update_fulfillment_option do
       accept [:fulfillment_option_id]
       change Changes.SnapshotFulfillmentMethod
-      change set_attribute(:fulfillment_date, nil)
       change Changes.ClearDeliveryFields
       change Changes.PrefillFromLastOrder
       require_atomic? false

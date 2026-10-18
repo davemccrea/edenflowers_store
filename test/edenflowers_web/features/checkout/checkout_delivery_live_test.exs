@@ -315,7 +315,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert delivery_pos < pickup_pos
     end
 
-    test "switching fulfillment option clears the previously selected date", %{conn: conn} do
+    test "switching fulfillment option keeps the selected date", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       pickup_option =
@@ -329,14 +329,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       assert render(view) =~ ~s(value="#{selected_date}")
 
-      # User then switches to a different fulfillment option. The new option
-      # has its own calendar, so the date that was valid for delivery may not
-      # be valid for pickup and must be cleared from the form.
+      # Delivery and pickup share the shop calendar, so the date stays open.
       view
       |> element("#checkout-form-3a")
       |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
 
-      refute render(view) =~ ~s(value="#{selected_date}")
+      assert render(view) =~ ~s(value="#{selected_date}")
     end
   end
 end

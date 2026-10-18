@@ -7,26 +7,18 @@ defmodule Edenflowers.Orders.Validations.FulfillmentDate do
 
   @impl true
   def validate(changeset, _opts, _context) do
-    fulfillment_date = Ash.Changeset.get_attribute(changeset, :fulfillment_date)
-    option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
-
-    check_availability(option_id, fulfillment_date)
+    case Ash.Changeset.get_attribute(changeset, :fulfillment_date) do
+      nil -> :ok
+      date -> check_availability(date)
+    end
   end
 
-  defp check_availability(nil, _date), do: :ok
-  defp check_availability(_option_id, nil), do: :ok
+  defp check_availability(date) do
+    calendar = Fulfillment.get_shop_calendar!(authorize?: false)
 
-  defp check_availability(option_id, date) do
-    case Fulfillment.get_option_by_id(option_id, authorize?: false) do
-      {:ok, option} ->
-        case Availability.unavailable_reason(option, date, Edenflowers.ShopTime.now()) do
-          nil -> :ok
-          reason -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
-        end
-
-      # SnapshotFulfillmentMethod reports the unknown option.
-      {:error, _} ->
-        :ok
+    case Availability.unavailable_reason(calendar, date, Edenflowers.ShopTime.now()) do
+      nil -> :ok
+      reason -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
     end
   end
 

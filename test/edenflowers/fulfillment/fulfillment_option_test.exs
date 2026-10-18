@@ -54,34 +54,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                })
                |> Ash.create(authorize?: false)
     end
-
-    test "fails to create fulfillment option when same_day is true and order_deadline is not present" do
-      assert {:error, _} =
-               FulfillmentOption
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "In store pickup",
-                 type: :fixed,
-                 base_price: "0.00",
-                 same_day: true,
-                 order_deadline: nil
-               })
-               |> Ash.create(authorize?: false)
-    end
-
-    test "creates fulfillment option when same_day is true and order_deadline is present", %{tax_rate: tax_rate} do
-      assert {:ok, _} =
-               FulfillmentOption
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "In store pickup",
-                 fulfillment_method: :pickup,
-                 rate_type: :fixed,
-                 base_price: "0.00",
-                 same_day: true,
-                 order_deadline: ~T[16:00:00],
-                 tax_rate_id: tax_rate.id
-               })
-               |> Ash.create(authorize?: false)
-    end
   end
 
   describe "pricing validations" do
@@ -159,7 +131,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       [option: option, admin: generate(admin_user())]
     end
 
-    test "updates prices, distances and the same-day cutoff", %{option: option, admin: admin} do
+    test "updates prices and distances", %{option: option, admin: admin} do
       assert {:ok, updated} =
                Fulfillment.update_pricing(
                  option,
@@ -167,9 +139,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                    base_price: "5.00",
                    price_per_km: "2.00",
                    free_dist_km: 8,
-                   max_dist_km: 25,
-                   same_day: false,
-                   order_deadline: ~T[12:00:00]
+                   max_dist_km: 25
                  },
                  actor: admin
                )
@@ -177,12 +147,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       assert Decimal.equal?(updated.base_price, "5.00")
       assert Decimal.equal?(updated.price_per_km, "2.00")
       assert {updated.free_dist_km, updated.max_dist_km} == {8, 25}
-      assert {updated.same_day, updated.order_deadline} == {false, ~T[12:00:00]}
     end
 
     test "can't change anything outside pricing", %{option: option, admin: admin} do
       assert {:error, _} = Fulfillment.update_pricing(option, %{rate_type: :fixed}, actor: admin)
-      assert {:error, _} = Fulfillment.update_pricing(option, %{disabled_dates: [Date.utc_today()]}, actor: admin)
+      assert {:error, _} = Fulfillment.update_pricing(option, %{fulfillment_method: :pickup}, actor: admin)
     end
 
     test "rejects free_dist_km greater than max_dist_km", %{option: option, admin: admin} do

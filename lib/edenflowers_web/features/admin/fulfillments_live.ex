@@ -2,19 +2,17 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   @moduledoc """
   Admin fulfillments pages.
 
-  `:index` shows one calendar for every fulfillment option at once (with a
-  `:mixed` indicator when options disagree) and lists the options with their
-  prices in a table. Its same-day form writes the same-day switch and deadline to every
-  option. `:edit` shows one option's prices form and a calendar for just that
-  option.
+  `:index` shows the shop calendar, which every fulfillment option shares,
+  with its same-day form, and lists the options with their prices in a table.
+  `:edit` shows one option's prices form.
 
   The florist clicks dates / weekday headers on a calendar to enable or
   disable them. Click semantics live in `Edenflowers.Fulfillment.Availability`.
   Admin presentation lives in `EdenflowersWeb.Admin.Calendar`. This LiveView
   only orchestrates state and persistence.
 
-  Prices are edited through `:update_pricing`, which can't touch the calendar
-  or the option's method and rate type.
+  Prices are edited through `:update_pricing`, which can't touch the option's
+  method and rate type.
   """
   use EdenflowersWeb, :live_view
 
@@ -25,7 +23,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
-  alias EdenflowersWeb.Admin.CalendarViewModel
+  alias EdenflowersWeb.Admin.Calendar
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -33,7 +31,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   def mount(params, _session, socket) do
     socket =
       socket
-      |> assign(:options, Fulfillment.list_options!())
       |> assign(:locale, Format.locale())
       |> assign(:today, Edenflowers.ShopTime.today())
 
@@ -48,13 +45,12 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         <.admin_page_header title={~t"Fulfillments"} />
 
         <.form_section title={~t"Calendar"}>
-          <:description>{~t"Changes here apply to every option."}</:description>
-          <.calendar scope={@scope} options={@options} today={@today} />
+          <:description>{~t"Delivery and pickup share these days."}</:description>
+          <.calendar calendar={@calendar} today={@today} />
         </.form_section>
 
         <.form_section title={~t"Same-day"} class="mt-6">
-          <:description>{~t"Changes here apply to every option."}</:description>
-          <.same_day_form form={@same_day_form} varies?={@same_day_varies?} />
+          <.same_day_form form={@same_day_form} />
         </.form_section>
 
         <.form_section title={~t"Options"} class="mt-6">
@@ -74,10 +70,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             <:col :let={option} label={~t"Prices"}>
               <span class="tabular-nums">{price_summary(option, @locale)}</span>
             </:col>
-            <:col :let={option} label={~t"Same-day until"}>
-              <span :if={option.same_day} class="tabular-nums">{Format.time(option.order_deadline, @locale)}</span>
-              <.blank :if={not option.same_day} />
-            </:col>
           </Cinder.collection>
         </.form_section>
       </.admin_page>
@@ -95,10 +87,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <:description>{~t"Placed orders keep their fee unless you change their delivery."}</:description>
           <.pricing_form form={@form} rate_type={@form.source.data.rate_type} />
         </.form_section>
-
-        <.form_section title={~t"Calendar"} class="mt-6">
-          <.calendar scope={@scope} options={@options} today={@today} />
-        </.form_section>
       </.admin_page>
     </Layouts.admin>
     """
@@ -114,7 +102,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       {:ok, option} ->
         {:noreply,
          socket
-         |> replace_options([option])
          |> assign(:form, pricing_form(option, socket.assigns.current_user))
          |> push_event("admin-form-saved", %{id: "pricing-form"})
          |> put_flash(:info, ~t"Saved.")}
@@ -128,62 +115,49 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   def handle_event("validate-same-day", %{"same_day" => params}, socket) do
-    {:noreply, assign(socket, :same_day_form, to_form(params, as: "same_day"))}
+    {:noreply, assign(socket, :same_day_form, AshPhoenix.Form.validate(socket.assigns.same_day_form, params))}
   end
 
   def handle_event("save-same-day", %{"same_day" => params}, socket) do
-    # A blank deadline keeps each option's own, rather than clearing them all.
-    changes =
-      case params["order_deadline"] do
-        "" -> %{same_day: params["same_day"]}
-        deadline -> %{same_day: params["same_day"], order_deadline: deadline}
-      end
-
-    case Fulfillment.set_same_day_for_all(changes, actor: socket.assigns.current_user) do
-      %Ash.BulkResult{status: :success, records: updated} ->
+    case AshPhoenix.Form.submit(socket.assigns.same_day_form, params: params) do
+      {:ok, calendar} ->
         {:noreply,
          socket
-         |> replace_options(updated)
-         |> assign_same_day_form()
-         |> Cinder.refresh_table("fulfillment-options")
+         |> assign_calendar(calendar)
          |> put_flash(:info, ~t"Saved.")}
 
-      %Ash.BulkResult{errors: bulk_errors} ->
-        errors = for %{field: field} = e <- Ash.Error.to_error_class(bulk_errors).errors, do: {field, {e.message, []}}
-
+      {:error, form} ->
         {:noreply,
          socket
-         |> assign(:same_day_form, to_form(params, as: "same_day", errors: errors, action: :validate))
+         |> assign(:same_day_form, form)
          |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
     end
   end
 
   def handle_event("reset-calendar", _, socket) do
-    {:noreply, apply_to_scope(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
+    {:noreply, update_calendar(socket, &Fulfillment.reset_calendar!(&1, actor: &2))}
   end
 
   @impl true
   def handle_info({:fulfillment_date_toggled, date}, socket) do
-    {:noreply, apply_to_scope(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
+    {:noreply, update_calendar(socket, &Fulfillment.toggle_date!(&1, date, actor: &2))}
   end
 
   def handle_info({:fulfillment_weekday_toggled, weekday}, socket) do
-    targets = scoped_options(socket)
-    direction = CalendarViewModel.weekday_toggle_direction(targets, weekday)
+    direction = if weekday in socket.assigns.calendar.available_days, do: :off, else: :on
 
-    {:noreply, apply_to_scope(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
+    {:noreply, update_calendar(socket, &Fulfillment.set_weekday!(&1, weekday, direction, actor: &2))}
   end
 
   def handle_info({:fulfillment_week_toggled, week}, socket) do
-    %{today: today} = socket.assigns
-    targets = scoped_options(socket)
+    %{calendar: calendar, today: today} = socket.assigns
 
-    case CalendarViewModel.week_toggle_direction(targets, week, today) do
+    case Calendar.week_toggle_direction(calendar, week, today) do
       nil ->
         {:noreply, socket}
 
       direction ->
-        {:noreply, apply_to_scope(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
+        {:noreply, update_calendar(socket, &Fulfillment.set_week!(&1, week, today, direction, actor: &2))}
     end
   end
 
@@ -191,44 +165,41 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Fulfillments")
-     |> assign(:scope, :all)
-     |> assign_same_day_form()}
+     |> assign_calendar(Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))}
   end
 
   defp mount_action(:edit, %{"id" => id}, socket) do
-    case Enum.find(socket.assigns.options, &(&1.id == id)) do
-      nil ->
+    case Fulfillment.get_option_by_id(id, actor: socket.assigns.current_user) do
+      {:error, _} ->
         {:ok,
          socket
          |> put_flash(:error, ~t"Fulfillment option not found.")
          |> push_navigate(to: ~p"/admin/fulfillments")}
 
-      option ->
+      {:ok, option} ->
         {:ok,
          socket
          |> assign(:page_title, option.name)
-         |> assign(:scope, option.id)
          |> assign(:form, pricing_form(option, socket.assigns.current_user))}
     end
   end
 
-  attr :scope, :any, required: true
-  attr :options, :list, required: true
+  attr :calendar, :any, required: true
   attr :today, Date, required: true
 
   defp calendar(assigns) do
     ~H"""
     <div class="flex min-w-0 flex-col gap-8 md:flex-row md:items-start">
       <div class="w-full min-w-0 max-w-xl">
-        <.grid id="admin-fulfillment-calendar" scope={@scope} options={@options} today={@today} />
+        <.grid id="admin-fulfillment-calendar" calendar={@calendar} today={@today} />
       </div>
 
       <div class="flex min-w-0 flex-col gap-4">
-        <.legend scope={@scope} />
+        <.legend />
         <.button
           type="button"
           phx-click="reset-calendar"
-          data-confirm={reset_confirm_message(@scope, @options)}
+          data-confirm={~t"Reset the calendar? All closed days reopen."}
           variant="ghost"
           size="sm"
           class="text-error self-start"
@@ -242,7 +213,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   attr :form, Phoenix.HTML.Form, required: true
-  attr :varies?, :boolean, required: true
 
   defp same_day_form(assigns) do
     ~H"""
@@ -263,7 +233,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           hidden={not Phoenix.HTML.Form.normalize_value("checkbox", @form[:same_day].value)}
         />
       </div>
-      <p :if={@varies?} class="text-base-content/65 text-sm">{~t"Options differ. Saving applies to all."}</p>
       <.button type="submit" variant="primary">{~t"Save"}</.button>
     </.form>
     """
@@ -315,16 +284,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           />
         <% end %>
       </div>
-      <.input field={@form[:same_day]} type="checkbox" label={~t"Same-day fulfillment"} class="toggle toggle-primary" />
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <.input
-          field={@form[:order_deadline]}
-          type="time"
-          label={~t"Same-day order deadline"}
-          class="input w-full"
-          hidden={not Phoenix.HTML.Form.normalize_value("checkbox", @form[:same_day].value)}
-        />
-      </div>
       <.button type="submit" variant="primary">{~t"Save"}</.button>
     </.form>
     """
@@ -351,45 +310,19 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     |> to_form()
   end
 
-  defp assign_same_day_form(socket) do
-    options = socket.assigns.options
-    deadline = shared(options, :order_deadline)
-
-    params = %{
-      "same_day" => to_string(Enum.all?(options, & &1.same_day)),
-      "order_deadline" => if(match?(%Time{}, deadline), do: Calendar.strftime(deadline, "%H:%M"), else: "")
-    }
+  defp assign_calendar(socket, calendar) do
+    same_day_form =
+      calendar
+      |> AshPhoenix.Form.for_update(:update_same_day, actor: socket.assigns.current_user, as: "same_day")
+      |> to_form()
 
     socket
-    |> assign(:same_day_form, to_form(params, as: "same_day"))
-    |> assign(:same_day_varies?, shared(options, :same_day) == :mixed or deadline == :mixed)
+    |> assign(:calendar, calendar)
+    |> assign(:same_day_form, same_day_form)
   end
 
-  defp shared(options, field) do
-    case options |> Enum.map(&Map.fetch!(&1, field)) |> Enum.uniq() do
-      [value] -> value
-      _ -> :mixed
-    end
-  end
-
-  defp scoped_options(%{assigns: %{scope: scope, options: options}}),
-    do: CalendarViewModel.scoped_options(scope, options)
-
-  defp apply_to_scope(socket, fun) do
-    actor = socket.assigns.current_user
-    replace_options(socket, Enum.map(scoped_options(socket), &fun.(&1, actor)))
-  end
-
-  defp replace_options(socket, updated) do
-    updated_by_id = Map.new(updated, &{&1.id, &1})
-    update(socket, :options, fn options -> Enum.map(options, &Map.get(updated_by_id, &1.id, &1)) end)
-  end
-
-  defp reset_confirm_message(:all, _options),
-    do: ~t"Reset every fulfillment option? All closed days reopen."
-
-  defp reset_confirm_message(option_id, options) do
-    name = options |> Enum.find(&(&1.id == option_id)) |> Map.fetch!(:name)
-    ~t"Reset #{name}? All closed days reopen."
+  # Leaves the same-day form alone, so a click on the calendar keeps its unsaved edits.
+  defp update_calendar(socket, fun) do
+    assign(socket, :calendar, fun.(socket.assigns.calendar, socket.assigns.current_user))
   end
 end

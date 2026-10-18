@@ -137,7 +137,6 @@ defmodule Edenflowers.Orders.Subscription do
                 sort: [inserted_at: :asc],
                 load: [
                   :changes_closed?,
-                  :fulfillment_option,
                   product_variant: [product: :product_variants]
                 ]
               )

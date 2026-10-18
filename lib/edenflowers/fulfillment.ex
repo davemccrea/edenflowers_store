@@ -22,30 +22,22 @@ defmodule Edenflowers.Fulfillment do
     end
   end
 
-  @doc """
-  Apply `:same_day` and/or `:order_deadline` to every option, or to none if any
-  refuses them. Each option can still change them on its own afterwards.
-  """
-  def set_same_day_for_all(changes, opts) do
-    Ash.bulk_update(
-      Edenflowers.Fulfillment.FulfillmentOption,
-      :update_pricing,
-      changes,
-      Keyword.merge(opts, return_records?: true, return_errors?: true)
-    )
-  end
-
   resources do
     resource Edenflowers.Fulfillment.FulfillmentOption do
       define :list_options, action: :read
       define :list_options_for_checkout, action: :list_for_checkout
       define :get_option_by_id, action: :read, get_by: [:id]
       define :update_pricing, action: :update_pricing
+      define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
+    end
+
+    resource Edenflowers.Fulfillment.ShopCalendar do
+      define :get_shop_calendar, action: :get
+      define :update_same_day, action: :update_same_day
       define :toggle_date, action: :toggle_date, args: [:date]
       define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
       define :set_week, action: :set_week, args: [:week, :today, :direction]
       define :reset_calendar, action: :reset_calendar
-      define :calculate_delivery, action: :calculate_delivery, args: [:delivery_address, :fulfillment_option_id]
     end
   end
 end
