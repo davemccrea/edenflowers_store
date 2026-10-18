@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Admin.DashboardLive do
 
   defp balances_widget(assigns) do
     ~H"""
-    <.widget id="balances" title={~t"To collect / To refund"}>
+    <.widget id="balances" title={~t"Open balances"}>
       <div class="space-y-4">
         <section :for={{key, title, rows} <- @balances} aria-label={title}>
           <p class="eyebrow text-base-content/65 flex items-baseline justify-between gap-4 pb-1.5">

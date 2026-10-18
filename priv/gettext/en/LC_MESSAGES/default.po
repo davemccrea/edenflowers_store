@@ -5847,11 +5847,6 @@ msgstr ""
 msgid "Could not record it. Check the amount."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/dashboard_live.ex:190
-#, elixir-autogen, elixir-format
-msgid "To collect / To refund"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/components/components.ex:452
 #, elixir-autogen, elixir-format
 msgid "A minus amount records a refund."
@@ -6044,4 +6039,9 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/about_live.ex:23
 #, elixir-autogen, elixir-format
 msgid "or"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/dashboard_live.ex:190
+#, elixir-autogen, elixir-format
+msgid "Open balances"
 msgstr ""
