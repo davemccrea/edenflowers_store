@@ -3,9 +3,10 @@ id: TASK-33.3
 title: >-
   Put the payment choice and the only Place order button at the bottom of the
   custom order form
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:56'
 labels: []
 dependencies: []
 parent_task_id: TASK-33
@@ -23,6 +24,6 @@ In `order_form_live.ex`, move the Payment section into the main column after Rec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Payment is the last section before the submit button on desktop and mobile
-- [ ] #2 The form has one submit button, at the bottom
+- [x] #1 Payment is the last section before the submit button on desktop and mobile
+- [x] #2 The form has one submit button, at the bottom
 <!-- AC:END -->

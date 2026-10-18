@@ -76,11 +76,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           <:subtitle :if={@order && @order.payment_status == :paid}>
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
-          <:actions>
-            <.button type="submit" form="order-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
-              {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
-            </.button>
-          </:actions>
         </.admin_page_header>
 
         <.form
@@ -244,24 +239,25 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           </div>
 
           <aside class="flex flex-col gap-6 xl:row-span-2">
-            <.form_section :if={@mode == :new} title={~t"Payment"}>
-              <div class="space-y-4">
-                <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
-                  {option.name}
-                </.input>
-                <.input
-                  field={@form[:email_customer?]}
-                  type="checkbox"
-                  label={~t"Email the order details to the customer (needs an email)"}
-                />
-              </div>
-            </.form_section>
-
             <.form_section title={~t"Florist note"}>
               <:description>{~t"Only you see this."}</:description>
               <.input field={@form[:florist_note]} type="textarea" rows="4" aria-label={~t"Florist note"} />
             </.form_section>
           </aside>
+
+          <%!-- After the aside, so once stacked it is the last thing before the button. --%>
+          <.form_section :if={@mode == :new} title={~t"Payment"} class="xl:col-start-1">
+            <div class="space-y-4">
+              <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
+                {option.name}
+              </.input>
+              <.input
+                field={@form[:email_customer?]}
+                type="checkbox"
+                label={~t"Email the order details to the customer (needs an email)"}
+              />
+            </div>
+          </.form_section>
 
           <%!-- After the aside so its fields sit above Save once stacked. --%>
           <.button
