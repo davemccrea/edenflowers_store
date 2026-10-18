@@ -230,7 +230,7 @@ defmodule Edenflowers.Orders.Order do
 
         where expr(
                 state == :placed and fulfillment_method == :delivery and fulfillment_status == :fulfilled and
-                  not is_nil(customer_email) and is_nil(delivered_emailed_at)
+                  not is_nil(customer_email) and is_nil(delivered_emailed_at) and not skip_delivered_email
               )
       end
 
@@ -847,9 +847,11 @@ defmodule Edenflowers.Orders.Order do
 
     update :mark_fulfilled do
       accept [:delivery_photo_slug, :email_delivery_photo]
+      argument :email_customer?, :boolean, default: true
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
-      change run_oban_trigger(:send_delivered_email)
+      change set_attribute(:skip_delivered_email, true), where: [argument_equals(:email_customer?, false)]
+      change run_oban_trigger(:send_delivered_email), where: [argument_equals(:email_customer?, true)]
       change load(@admin_show_load)
     end
 
@@ -1057,6 +1059,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_photo_slug, :string
     # Sends the photo in place of the delivered email.
     attribute :email_delivery_photo, :boolean, allow_nil?: false, default: false
+    # Jennie marked the order fulfilled and chose not to email the customer.
+    attribute :skip_delivered_email, :boolean, allow_nil?: false, default: false
     # The order details a custom order's customer is sent when it is placed.
     attribute :details_emailed_at, :utc_datetime
 

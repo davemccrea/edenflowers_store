@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  use Oban.Testing, repo: Edenflowers.Repo
+
   import Generator
   import Phoenix.LiveViewTest
 
@@ -46,7 +48,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-items", "€42.00")
     refute has_element?(view, ~s|header a[href="/order/#{order.id}/receipt"]|)
     refute has_element?(view, "#order-technical-details")
-    assert has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
   end
 
@@ -176,10 +178,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view
-    |> element(~s|button[phx-click="mark_fulfilled"]|)
+    |> element(~s|button[phx-click="confirm_fulfillment"]|)
     |> render_click()
 
-    refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
+    view |> form("#confirm-fulfillment-form") |> render_submit()
+
+    refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, "#order-status", "Fulfilled")
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
@@ -191,12 +195,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      refute has_element?(view, ~s|button[phx-click="mark_fulfilled"]|)
 
-      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
-      view |> form("#confirm-delivery-form", delivery: %{customer_home: "true"}) |> render_change()
-      refute has_element?(view, "#confirm-delivery-form input[type=file]")
-      view |> form("#confirm-delivery-form") |> render_submit()
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
+      refute has_element?(view, "#confirm-fulfillment-form input[type=file]")
+      view |> form("#confirm-fulfillment-form") |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")
       refute has_element?(view, "#order-delivery-photo")
@@ -206,16 +210,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
-      view |> form("#confirm-delivery-form", delivery: %{customer_home: "false"}) |> render_change()
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
 
       view
-      |> file_input("#confirm-delivery-form", "photo_delivery[photo]", [
+      |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
         %{name: "IMG_0001.JPG", content: "jpeg bytes", type: "image/jpeg"}
       ])
       |> render_upload("IMG_0001.JPG")
 
-      view |> form("#confirm-delivery-form", delivery: %{email_photo: "false"}) |> render_submit()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_photo: "false"}) |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")
       assert has_element?(view, "#order-delivery-photo img")
@@ -230,12 +234,64 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      view |> element(~s|button[phx-click="confirm_delivery"]|) |> render_click()
-      view |> form("#confirm-delivery-form", delivery: %{customer_home: "false"}) |> render_change()
-      view |> form("#confirm-delivery-form") |> render_submit()
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
+      view |> form("#confirm-fulfillment-form") |> render_submit()
 
       assert render(view) =~ "Take a photo of where you left the flowers."
       assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
+    end
+  end
+
+  describe "choosing whether to email the customer" do
+    test "the choice starts ticked each time the form opens", %{conn: conn} do
+      order = placed_order()
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
+      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+
+      render_click(view, "cancel_fulfillment")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+    end
+
+    test "no: fulfils without queueing the delivered email", %{conn: conn} do
+      order = placed_order()
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+
+      assert has_element?(view, "#order-status", "Fulfilled")
+
+      reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
+      assert reloaded.fulfillment_status == :fulfilled
+      assert reloaded.skip_delivered_email
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+    end
+
+    test "yes: fulfils and queues the delivered email", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+
+      assert has_element?(view, "#order-status", "Fulfilled")
+
+      reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
+      refute reloaded.skip_delivered_email
+
+      assert_enqueued(
+        worker: Edenflowers.Orders.Workers.SendDeliveredEmail,
+        args: %{"primary_key" => %{"id" => order.id}}
+      )
     end
   end
 
@@ -552,8 +608,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
     view
-    |> element(~s|button[phx-click="mark_fulfilled"]|)
+    |> element(~s|button[phx-click="confirm_fulfillment"]|)
     |> render_click()
+
+    view |> form("#confirm-fulfillment-form") |> render_submit()
 
     assert has_element?(view, "#order-queue-nav", "Fulfilled · 2 left")
     refute has_element?(view, "#order-queue-nav", "1 of 3 to fulfil")

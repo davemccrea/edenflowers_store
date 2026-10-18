@@ -1,9 +1,10 @@
 ---
 id: TASK-54
 title: Ask whether to send email when marking an order as fulfilled
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 20:18'
+updated_date: '2026-10-18 20:43'
 labels:
   - spec
   - admin
@@ -27,8 +28,21 @@ The Mark as fulfilled flow must ask whether to send the fulfillment email before
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Mark as fulfilled asks whether to send the customer a fulfillment email before completing the action.
-- [ ] #2 The send-email choice defaults to yes each time the flow is opened.
-- [ ] #3 Confirming with yes marks the order as fulfilled and sends the usual fulfillment email.
-- [ ] #4 Confirming with no marks the order as fulfilled without sending the fulfillment email.
+- [x] #1 Mark as fulfilled asks whether to send the customer a fulfillment email before completing the action.
+- [x] #2 The send-email choice defaults to yes each time the flow is opened.
+- [x] #3 Confirming with yes marks the order as fulfilled and sends the usual fulfillment email.
+- [x] #4 Confirming with no marks the order as fulfilled without sending the fulfillment email.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-18 20:43
+
+---
+
+Mark as fulfilled now opens a confirm form with an 'Email the customer' checkbox, ticked each time it opens. The order records the choice as skip_delivered_email, which keeps the delivered-email trigger from ever firing, so the scheduler can't send it later either. The delivery flow's confirm widget now serves pickups too, so both go through one form (renamed from delivery to fulfillment).
+
+---
+<!-- COMMENTS:END -->

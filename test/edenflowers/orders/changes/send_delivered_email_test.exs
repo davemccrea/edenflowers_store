@@ -64,6 +64,20 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       assert_no_email_sent()
     end
 
+    test "sends nothing when Jennie chose not to email the customer" do
+      order = fulfillable_order([])
+
+      {:ok, order} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: admin())
+
+      assert order.fulfillment_status == :fulfilled
+      assert order.skip_delivered_email
+      refute_enqueued(worker: SendDeliveredEmail)
+
+      perform_job(Edenflowers.Orders.Schedulers.SendDeliveredEmail, %{})
+      refute_enqueued(worker: SendDeliveredEmail)
+      assert_no_email_sent()
+    end
+
     test "queues nothing when the order is already fulfilled" do
       order = fulfillable_order(fulfillment_status: :fulfilled)
 
