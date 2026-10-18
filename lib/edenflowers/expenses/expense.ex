@@ -122,7 +122,18 @@ defmodule Edenflowers.Expenses.Expense do
 
     update :correct do
       description "Corrects fields that were mis-extracted by the LLM."
-      accept [:vendor_name, :vendor_vat_number, :date, :total_amount, :vat_amount, :currency, :category, :description]
+
+      accept [
+        :vendor_name,
+        :vendor_vat_number,
+        :date,
+        :paid_on,
+        :total_amount,
+        :vat_amount,
+        :currency,
+        :category,
+        :description
+      ]
     end
   end
 
@@ -147,6 +158,8 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :vendor_name, :string
     attribute :vendor_vat_number, :string
     attribute :date, :date
+    # Set by an admin only; ingest leaves it alone so re-processing keeps it.
+    attribute :paid_on, :date
     attribute :total_amount, :decimal, constraints: [scale: 2]
     attribute :vat_amount, :decimal, constraints: [scale: 2]
     attribute :currency, __MODULE__.Currency

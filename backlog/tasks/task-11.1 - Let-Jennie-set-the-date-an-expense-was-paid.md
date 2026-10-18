@@ -1,10 +1,10 @@
 ---
 id: TASK-11.1
 title: Let Jennie set the date an expense was paid
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 19:20'
 labels:
   - quick
 dependencies: []
@@ -31,8 +31,14 @@ The shop reports VAT on a cash basis, so an expense belongs to the month it was 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An admin can set and clear "Paid on" on an expense, and it's saved
-- [ ] #2 Re-ingesting the same Papra document leaves `paid_on` unchanged
-- [ ] #3 The migration was generated from the resource
-- [ ] #4 Tests cover setting `paid_on` through `correct` and it surviving `ingest`
+- [x] #1 An admin can set and clear "Paid on" on an expense, and it's saved
+- [x] #2 Re-ingesting the same Papra document leaves `paid_on` unchanged
+- [x] #3 The migration was generated from the resource
+- [x] #4 Tests cover setting `paid_on` through `correct` and it surviving `ingest`
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added nullable paid_on to Expense, accepted by correct only (not ingest/upsert_fields). Paid on date input with help text in ExpenseDetailLive; en/fi/sv translations, fuzzy cleared. Migration generated with mix ash.codegen. Tests in expense_test.exs and expenses_live_test.exs.
+<!-- SECTION:NOTES:END -->

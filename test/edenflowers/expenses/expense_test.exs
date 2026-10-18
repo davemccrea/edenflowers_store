@@ -123,6 +123,27 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert corrected.category == :travel
       assert corrected.document_id == expense.document_id
     end
+
+    test "sets and clears the paid date" do
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
+
+      {:ok, paid} = Expenses.correct_expense(expense, %{paid_on: "2026-06-02"}, actor: admin_actor())
+      assert paid.paid_on == ~D[2026-06-02]
+
+      {:ok, cleared} = Expenses.correct_expense(paid, %{paid_on: nil}, actor: admin_actor())
+      assert cleared.paid_on == nil
+    end
+
+    test "re-ingesting the document keeps the paid date" do
+      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
+      {:ok, _} = Expenses.correct_expense(expense, %{paid_on: "2026-06-02"}, actor: admin_actor())
+
+      {:ok, reingested} =
+        Expenses.ingest_expense(Map.put(@valid_attrs, :vendor_name, "Acme Ab"), actor: system_actor())
+
+      assert reingested.vendor_name == "Acme Ab"
+      assert reingested.paid_on == ~D[2026-06-02]
+    end
   end
 
   describe "policies" do
