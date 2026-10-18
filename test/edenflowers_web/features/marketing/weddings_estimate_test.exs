@@ -8,6 +8,15 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
 
   @enquiry %{"name" => "Anna Svensson", "email" => "anna@example.com", "wedding_date" => "2027-06-12"}
 
+  test "the hero leads to the work and the estimator, not a quote", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/weddings")
+
+    assert has_element?(view, ~s|a[href="#my-work"]|, "See my work")
+    assert has_element?(view, ~s|a[href="#prices"]|, "Estimate your price")
+    assert has_element?(view, "section#prices")
+    refute has_element?(view, ~s|a[href="#enquire"]|)
+  end
+
   test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/weddings")
 

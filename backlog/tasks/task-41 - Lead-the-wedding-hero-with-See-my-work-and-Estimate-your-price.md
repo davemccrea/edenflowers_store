@@ -1,9 +1,10 @@
 ---
 id: TASK-41
 title: Lead the wedding hero with See my work and Estimate your price
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:41'
 labels:
   - spec
   - customers
@@ -24,7 +25,7 @@ In `weddings_live.ex`, the hero's buttons become **See my work** (primary, `#my-
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The hero's primary button is See my work and scrolls to the gallery
-- [ ] #2 Next to it, Estimate your price scrolls to the estimator
-- [ ] #3 The hero no longer has a Request a quote button
+- [x] #1 The hero's primary button is See my work and scrolls to the gallery
+- [x] #2 Next to it, Estimate your price scrolls to the estimator
+- [x] #3 The hero no longer has a Request a quote button
 <!-- AC:END -->
