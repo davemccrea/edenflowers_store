@@ -1,9 +1,10 @@
 ---
 id: TASK-33.1
 title: 'Ask whether a custom order is a gift, as checkout does'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:53'
 labels: []
 dependencies: []
 parent_task_id: TASK-33
@@ -21,7 +22,7 @@ Add the gift toggle to `order_form_live.ex`, matching checkout's wording. Not a 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The form has a gift / not a gift choice like checkout's
-- [ ] #2 Recipient and card fields only show for a gift, and switching to not a gift clears them
-- [ ] #3 The order's gift attribute matches the choice
+- [x] #1 The form has a gift / not a gift choice like checkout's
+- [x] #2 Recipient and card fields only show for a gift, and switching to not a gift clears them
+- [x] #3 The order's gift attribute matches the choice
 <!-- AC:END -->

@@ -1,7 +1,7 @@
 defmodule Edenflowers.Orders.Changes.SetGiftFromRecipient do
   @moduledoc """
-  Checkout asks "for me or for somebody else"; on a custom order Jennie only
-  fills in a recipient when it is somebody else.
+  A Subscription has no gift flag of its own: an Occurrence is a gift when
+  the Subscription delivers to a recipient.
   """
   use Ash.Resource.Change
 

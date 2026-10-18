@@ -60,6 +60,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     assigns =
       assigns
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
+      |> assign(:gift?, assigns.form[:gift].value in [true, "true"])
       |> assign(
         :quote,
         assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
@@ -199,16 +200,34 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </.form_section>
 
             <.form_section title={~t"Recipient and card"}>
-              <:description>{~t"Leave the recipient blank when the flowers are for the customer."}</:description>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input field={@form[:recipient_name]} type="text" label={~t"Recipient"} class="input w-full" />
+                <div class="sm:col-span-2">
+                  <.input
+                    :let={option}
+                    field={@form[:gift]}
+                    type="radio-card"
+                    label={~t"Recipient"}
+                    options={[%{name: ~t"For me", value: "false"}, %{name: ~t"For somebody else", value: "true"}]}
+                  >
+                    {option.name}
+                  </.input>
+                </div>
                 <.input
+                  :if={@gift?}
+                  field={@form[:recipient_name]}
+                  type="text"
+                  label={~t"Recipient name"}
+                  class="input w-full"
+                />
+                <%!-- An online order keeps the buyer's own number here when it isn't a gift. --%>
+                <.input
+                  :if={@gift? or (@order && @order.origin != :custom)}
                   field={@form[:recipient_phone_number]}
                   type="tel"
                   label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
                   class="input w-full"
                 />
-                <div id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
+                <div :if={@gift?} id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
                   <.input
                     field={@form[:card_message]}
                     type="textarea"
@@ -385,7 +404,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Order
     |> AshPhoenix.Form.for_create(:place_custom,
       actor: actor,
-      params: %{"locale" => "sv-FI", "payment_link?" => "true", "email_customer?" => "true"},
+      params: %{"locale" => "sv-FI", "gift" => "false", "payment_link?" => "true", "email_customer?" => "true"},
       transform_params: &transform_params/3,
       forms: [line_items: [type: :list, resource: LineItem, create_action: :enter]]
     )
