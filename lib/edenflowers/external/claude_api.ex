@@ -19,9 +19,6 @@ defmodule Edenflowers.External.ClaudeAPI do
 
   @behaviour Edenflowers.External.ClaudeAPI.Behaviour
 
-  @doc "The configured implementation: this module, or the mock in tests."
-  def impl, do: Application.get_env(:edenflowers, :claude_api, __MODULE__)
-
   alias Edenflowers.Expenses.Expense.Category
   alias ReqLLM.Context
   alias ReqLLM.Message.ContentPart
@@ -59,6 +56,9 @@ defmodule Edenflowers.External.ClaudeAPI do
   @translation_model "anthropic:claude-opus-5-5"
 
   @languages %{"en-GB" => "British English", "sv-FI" => "Finland Swedish", "fi" => "Finnish"}
+
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :claude_api, __MODULE__)
 
   @impl true
   def extract_expense(file_binary, content_type) do

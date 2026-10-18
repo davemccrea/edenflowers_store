@@ -10,11 +10,11 @@ defmodule EdenflowersWeb.PaymentLink do
   use GettextSigils, backend: EdenflowersWeb.Gettext
   use Phoenix.Component
 
+  require Logger
+
   import Edenflowers.Actors
   import EdenflowersWeb.CoreComponents, only: [stripe_form: 1]
   import Phoenix.LiveView
-
-  require Logger
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format

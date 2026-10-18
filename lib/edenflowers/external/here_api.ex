@@ -7,14 +7,14 @@ end
 defmodule Edenflowers.External.HereAPI do
   @behaviour Edenflowers.External.HereAPI.Behaviour
 
-  @doc "The configured implementation: this module, or the mock in tests."
-  def impl, do: Application.get_env(:edenflowers, :here_api, __MODULE__)
-
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger
 
   @origin "63.1243488,21.5974075"
+
+  @doc "The configured implementation: this module, or the mock in tests."
+  def impl, do: Application.get_env(:edenflowers, :here_api, __MODULE__)
 
   def geocode(query) when is_binary(query) do
     url =
