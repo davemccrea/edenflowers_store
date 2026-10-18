@@ -4,7 +4,7 @@ title: Remove DNSCluster
 status: ready-for-human
 assignee: []
 created_date: '2026-10-18 03:31'
-updated_date: '2026-10-18 08:17'
+updated_date: '2026-10-18 08:23'
 labels: []
 dependencies: []
 parent_task_id: TASK-20
@@ -51,6 +51,15 @@ created: 2026-10-18 08:17
 ---
 
 Left for the owner: deploy to staging and confirm it boots.
+
+---
+
+author: @claude
+created: 2026-10-18 08:23
+
+---
+
+Deployed 079968c1 to staging (run 39110908420). The migration ran and the container started. Cloudflare Access blocks unauthenticated checks, so someone signed in still has to load staging.edenflowers.fi to confirm the app is serving.
 
 ---
 <!-- COMMENTS:END -->
