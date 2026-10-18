@@ -1,9 +1,10 @@
 ---
 id: TASK-44
 title: Say 'No subscriptions yet' on the account page
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 18:39'
 labels:
   - spec
   - customers
@@ -24,5 +25,5 @@ When the customer has no subscriptions, the account page's Subscriptions section
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A customer with no subscriptions sees 'No subscriptions yet'
+- [x] #1 A customer with no subscriptions sees 'No subscriptions yet'
 <!-- AC:END -->
