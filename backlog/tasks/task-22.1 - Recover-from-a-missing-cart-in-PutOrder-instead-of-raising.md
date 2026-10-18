@@ -1,10 +1,10 @@
 ---
 id: TASK-22.1
 title: Recover from a missing cart in PutOrder instead of raising
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 07:17'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 07:09'
 labels:
   - quick
 dependencies: []
@@ -34,7 +34,7 @@ In `PutOrder`, use the non-bang `get_order_for_checkout`. On not found, `{:halt,
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A LiveView test mounts a `:public` page with a session `order_id` for an order that has been deleted. It redirects instead of raising.
-- [ ] #2 The same works for a guest whose session order is `:placed`.
-- [ ] #3 Mounting with a valid cart behaves as before.
+- [x] #1 A LiveView test mounts a `:public` page with a session `order_id` for an order that has been deleted. It redirects instead of raising.
+- [x] #2 The same works for a guest whose session order is `:placed`.
+- [x] #3 Mounting with a valid cart behaves as before.
 <!-- AC:END -->

@@ -7,12 +7,18 @@ defmodule EdenflowersWeb.Hooks.PutOrder do
     locale = to_string(Edenflowers.Format.locale())
     actor = socket.assigns[:current_user]
 
-    order =
-      order_id
-      |> Orders.get_order_for_checkout!(actor: actor)
-      |> put_locale(locale, actor)
+    case Orders.get_order_for_checkout(order_id, actor: actor) do
+      {:ok, order} ->
+        {:cont, assign(socket, order: put_locale(order, locale, actor))}
 
-    {:cont, assign(socket, order: order)}
+      # InitStore only checks the session cart on HTTP requests, so a tab that
+      # reconnects after the cart was purged or placed elsewhere lands here.
+      # Reloading over HTTP lets InitStore start a new cart.
+      {:error, %Ash.Error.Invalid{}} ->
+        uri = Phoenix.LiveView.get_connect_info(socket, :uri)
+        to = if uri.query in [nil, ""], do: uri.path, else: "#{uri.path}?#{uri.query}"
+        {:halt, Phoenix.LiveView.redirect(socket, to: to)}
+    end
   end
 
   defp put_locale(%{locale: locale} = order, locale, _actor), do: order
