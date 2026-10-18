@@ -625,8 +625,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     """
   end
 
-  defp present?(value), do: is_binary(value) and String.trim(value) != ""
-
   # Errors only after the first save: the lines have no single input for
   # used_input? to track. A nil number is about the lines as a whole.
   defp line_error(form, lines) do

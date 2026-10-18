@@ -1,10 +1,10 @@
 ---
 id: TASK-18.7
 title: Agree on what counts as blank in the admin
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:12'
-updated_date: '2026-10-18 06:08'
+updated_date: '2026-10-18 07:21'
 labels:
   - quick
 dependencies: []
@@ -39,6 +39,6 @@ So an order whose Card Message is only whitespace gets an empty card widget on t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 One definition of `present?/1` in the web layer
-- [ ] #2 The existing suite passes
+- [x] #1 One definition of `present?/1` in the web layer
+- [x] #2 The existing suite passes
 <!-- AC:END -->

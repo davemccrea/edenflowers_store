@@ -1007,12 +1007,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end)
   end
 
-  defp present?(nil), do: false
-  defp present?(""), do: false
-  defp present?(_), do: true
-
-  defp presence(value), do: if(present?(value), do: value)
-
   defp positive?(nil), do: false
   defp positive?(value), do: Decimal.compare(value, 0) == :gt
 

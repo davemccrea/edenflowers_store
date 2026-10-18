@@ -705,6 +705,11 @@ defmodule EdenflowersWeb.Admin.Components do
   defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
 
+  @doc "Only a string with non-whitespace content is present."
+  def present?(value), do: is_binary(value) and String.trim(value) != ""
+
+  def presence(value), do: if(present?(value), do: value)
+
   defp history_time(at, locale) do
     local = DateTime.shift_zone!(at, "Europe/Helsinki")
 
