@@ -1,10 +1,10 @@
 ---
 id: TASK-29
 title: Give the shop one calendar instead of one per fulfillment option
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 14:27'
-updated_date: '2026-10-18 15:06'
+updated_date: '2026-10-18 17:34'
 labels:
   - spec
   - admin
