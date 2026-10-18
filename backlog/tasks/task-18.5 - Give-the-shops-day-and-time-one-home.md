@@ -1,10 +1,10 @@
 ---
 id: TASK-18.5
 title: Give the shop's day and time one home
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 03:12'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-18 11:29'
 labels: []
 dependencies: []
 parent_task_id: TASK-18
@@ -42,6 +42,12 @@ Shifting to Helsinki for display (`Format`, `Admin.Components`, `OrderDetailLive
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `"Europe/Helsinki"` appears only in `ShopTime` (and config, if any)
-- [ ] #2 The existing suite passes
+- [x] #1 `"Europe/Helsinki"` appears only in `ShopTime` (and config, if any)
+- [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added Edenflowers.ShopTime (timezone/0, now/0, today/1). HelsinkiToday keeps only the Ash expression and reads ShopTime.today/0. Course's three SQL fragments are now helsinki_today(). Private wrappers around today/now are inlined. Tests use ShopTime.today/0 too; Availability tests keep the literal zone for their fixed timestamps.
+<!-- SECTION:NOTES:END -->

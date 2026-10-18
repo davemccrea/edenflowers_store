@@ -48,7 +48,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
   # Mirrors the expiry in Promotion's :by_code read, so the email never offers
   # a code checkout would turn down.
   defp still_usable?(%{usage: 0, expiration_date: expiration_date}) do
-    today = "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
+    today = Edenflowers.ShopTime.today()
     Date.compare(today, expiration_date) != :gt
   end
 

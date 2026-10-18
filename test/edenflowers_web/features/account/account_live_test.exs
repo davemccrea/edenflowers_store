@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
-  alias Edenflowers.Expressions.HelsinkiToday
+  alias Edenflowers.ShopTime
   alias EdenflowersWeb.Account.AccountLive
 
   @locale "en-GB"
@@ -80,9 +80,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   describe "orders" do
     test "cancels an order before the cut-off and refunds it", %{conn: conn, user: user} do
-      order = placed_order(user_id: user.id, payment_intent_id: nil, fulfillment_date: Date.add(store_today(), 10))
+      order = placed_order(user_id: user.id, payment_intent_id: nil, fulfillment_date: Date.add(ShopTime.today(), 10))
       generate(payment(order_id: order.id, amount: order.grand_total, payment_intent_id: "pi_account_cancel"))
-      too_late = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(store_today(), 2))
+      too_late = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(ShopTime.today(), 2))
 
       Edenflowers.External.StripeAPI.Mock
       |> Mox.stub(:list_refunds, fn "pi_account_cancel" -> {:ok, []} end)
@@ -188,7 +188,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   describe "timeline" do
     test "splits what's still to come from what's done, soonest and latest first", %{conn: conn, user: user} do
-      today = store_today()
+      today = ShopTime.today()
       tomorrow = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 1))
       next_week = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 7))
       last_week = placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, -7))
@@ -217,7 +217,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "tucks older history away behind a toggle", %{conn: conn, user: user} do
-      for days <- 1..7, do: placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(store_today(), -days))
+      for days <- 1..7,
+          do: placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(ShopTime.today(), -days))
+
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past-more] li")
@@ -254,21 +256,21 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "looks forward to a fulfillment date still to come" do
-      order = order_for(fulfillment_date: Date.add(store_today(), 3))
+      order = order_for(fulfillment_date: Date.add(ShopTime.today(), 3))
 
       assert AccountLive.status_label(order) == "Arriving"
       assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "For pickup"
     end
 
     test "says today when the order lands today" do
-      order = order_for(fulfillment_date: store_today())
+      order = order_for(fulfillment_date: ShopTime.today())
 
       assert AccountLive.status_label(order) == "Arriving today"
       assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Ready to collect today"
     end
 
     test "never claims delivery for a past date Jennie hasn't marked fulfilled" do
-      order = order_for(fulfillment_date: Date.add(store_today(), -3))
+      order = order_for(fulfillment_date: Date.add(ShopTime.today(), -3))
 
       assert AccountLive.status_label(order) == "Scheduled delivery"
       assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Scheduled pickup"
@@ -365,7 +367,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "subscriptions" do
-    defp days_from_today(days), do: Date.add(HelsinkiToday.today(), days)
+    defp days_from_today(days), do: Date.add(ShopTime.today(), days)
 
     defp weekday_date(date), do: Edenflowers.Format.weekday_date(date, @locale)
 
@@ -440,7 +442,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       ids = Regex.scan(~r/<li[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
       assert ids == [active.id, cancelled.id]
-      assert html =~ "Cancelled on #{weekday_date(HelsinkiToday.today())}."
+      assert html =~ "Cancelled on #{weekday_date(ShopTime.today())}."
       refute html =~ long_gone.id
     end
 
@@ -790,6 +792,4 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     Map.merge(defaults, Map.new(overrides))
   end
-
-  defp store_today, do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
 end

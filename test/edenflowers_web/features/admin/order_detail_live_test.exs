@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "capitalizes the today badge", %{conn: conn} do
-    today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+    today = Edenflowers.ShopTime.today()
     order = placed_order(fulfillment_date: today)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")

@@ -9,9 +9,9 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
   require Logger
 
   alias Edenflowers.Accounts
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.ShopTime
   alias Edenflowers.WebPush
 
   def new_for(order), do: new(%{"order_id" => order.id})
@@ -49,7 +49,7 @@ defmodule Edenflowers.Orders.Workers.PushNewOrder do
   defp payload(order, locale) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       title =
-        if order.fulfillment_date == HelsinkiToday.today(),
+        if order.fulfillment_date == ShopTime.today(),
           do: ~t"Same-day order #{order.order_reference}",
           else: ~t"New order #{order.order_reference}"
 

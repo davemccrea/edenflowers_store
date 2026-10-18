@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, distance_m} end)
   end
 
-  defp tomorrow, do: Date.add(DateTime.now!("Europe/Helsinki") |> DateTime.to_date(), 1)
+  defp tomorrow, do: Date.add(Edenflowers.ShopTime.today(), 1)
 
   defp place_custom_order(ctx, overrides \\ %{}) do
     {:ok, order} =

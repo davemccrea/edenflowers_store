@@ -47,7 +47,7 @@ defmodule Edenflowers.Format do
 
   def date(%DateTime{} = datetime, locale) do
     datetime
-    |> DateTime.shift_zone!("Europe/Helsinki")
+    |> DateTime.shift_zone!(Edenflowers.ShopTime.timezone())
     |> DateTime.to_date()
     |> date(locale)
   end
@@ -144,7 +144,7 @@ defmodule Edenflowers.Format do
   defp language(locale), do: locale |> to_string() |> String.split("-") |> hd()
 
   @spec datetime(DateTime.t(), Localize.Locale.locale_id(), String.t()) :: String.t()
-  def datetime(datetime, locale, time_zone \\ "Europe/Helsinki") do
+  def datetime(datetime, locale, time_zone \\ Edenflowers.ShopTime.timezone()) do
     shifted = DateTime.shift_zone!(datetime, time_zone)
     {:ok, date_part} = Localize.Date.to_string(shifted, locale: locale, format: :short)
     {:ok, time_part} = Localize.Time.to_string(shifted, locale: locale, format: :short)

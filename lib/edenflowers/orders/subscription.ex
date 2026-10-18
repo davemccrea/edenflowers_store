@@ -36,7 +36,7 @@ defmodule Edenflowers.Orders.Subscription do
 
   @doc "Whether a customer can still change an occurrence scheduled for `date`."
   def changes_open_for?(date) do
-    Date.after?(date, Date.add(Edenflowers.Expressions.HelsinkiToday.today(), @cutoff_days))
+    Date.after?(date, Date.add(Edenflowers.ShopTime.today(), @cutoff_days))
   end
 
   @doc "The next delivery date a paused subscription would get if it resumed today."

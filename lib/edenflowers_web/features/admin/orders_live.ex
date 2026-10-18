@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
      socket
      |> assign(:page_title, ~t"Orders")
      |> assign(:locale, Localize.get_locale())
-     |> assign(:today, DateTime.now!("Europe/Helsinki") |> DateTime.to_date())}
+     |> assign(:today, Edenflowers.ShopTime.today())}
   end
 
   @impl true

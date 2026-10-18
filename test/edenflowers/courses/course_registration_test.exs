@@ -4,7 +4,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
   import Generator
 
   alias Edenflowers.Courses
-  alias Edenflowers.Expressions.HelsinkiToday
+  alias Edenflowers.ShopTime
 
   defp register(course, seats) do
     Courses.register_for_course(
@@ -91,7 +91,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
   end
 
   test "booking is open on register_before itself and closed the day after" do
-    today = HelsinkiToday.today()
+    today = ShopTime.today()
 
     assert {:ok, _} = register(generate(course(register_before: today)), 1)
 

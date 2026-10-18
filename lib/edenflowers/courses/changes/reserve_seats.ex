@@ -42,7 +42,7 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
 
   defp reserve(changeset, course, seats, allow_after_cutoff?) do
     cond do
-      not allow_after_cutoff? and Date.before?(course.register_before, helsinki_today()) ->
+      not allow_after_cutoff? and Date.before?(course.register_before, Edenflowers.ShopTime.today()) ->
         Ash.Changeset.add_error(changeset, field: :course_id, message: "booking has closed")
 
       seats > course.seats_left ->
@@ -62,6 +62,4 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
         )
     end
   end
-
-  defp helsinki_today, do: "Europe/Helsinki" |> DateTime.now!() |> DateTime.to_date()
 end

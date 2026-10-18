@@ -3,7 +3,7 @@ defmodule Edenflowers.Pricing.Changes.SetNewsletterDefaults do
 
   @impl true
   def change(changeset, _opts, _context) do
-    today = DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
+    today = Edenflowers.ShopTime.today()
 
     Ash.Changeset.force_change_attributes(changeset,
       code: Edenflowers.Pricing.Promotion.generate_code(),

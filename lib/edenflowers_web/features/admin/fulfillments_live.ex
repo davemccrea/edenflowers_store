@@ -27,8 +27,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   alias Edenflowers.Fulfillment
   alias EdenflowersWeb.Admin.CalendarViewModel
 
-  @timezone "Europe/Helsinki"
-
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
   @impl true
@@ -37,7 +35,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       socket
       |> assign(:options, Fulfillment.list_options!())
       |> assign(:locale, Format.locale())
-      |> assign(:today, today())
+      |> assign(:today, Edenflowers.ShopTime.today())
 
     mount_action(socket.assigns.live_action, params, socket)
   end
@@ -386,8 +384,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     updated_by_id = Map.new(updated, &{&1.id, &1})
     update(socket, :options, fn options -> Enum.map(options, &Map.get(updated_by_id, &1.id, &1)) end)
   end
-
-  defp today, do: @timezone |> DateTime.now!() |> DateTime.to_date()
 
   defp reset_confirm_message(:all, _options),
     do: ~t"Reset every fulfillment option? All closed days reopen."

@@ -3,10 +3,10 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
 
   require Ash.Query
 
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.ShopTime
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -34,7 +34,7 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
   defp cancellable?(order) do
     deadline_date = order.subscription_date || order.fulfillment_date
 
-    Date.after?(order.fulfillment_date, HelsinkiToday.today()) and
+    Date.after?(order.fulfillment_date, ShopTime.today()) and
       Subscription.changes_open_for?(deadline_date)
   end
 end

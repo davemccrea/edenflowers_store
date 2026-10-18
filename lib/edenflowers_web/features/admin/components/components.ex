@@ -711,7 +711,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def presence(value), do: if(present?(value), do: value)
 
   defp history_time(at, locale) do
-    local = DateTime.shift_zone!(at, "Europe/Helsinki")
+    local = DateTime.shift_zone!(at, Edenflowers.ShopTime.timezone())
 
     "#{Edenflowers.Format.day_month(DateTime.to_date(local), locale)} #{Edenflowers.Format.time(DateTime.to_time(local), locale)}"
   end

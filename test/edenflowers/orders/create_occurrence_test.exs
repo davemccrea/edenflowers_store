@@ -9,7 +9,6 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   import Swoosh.TestAssertions
 
   alias Ecto.Adapters.SQL
-  alias Edenflowers.Expressions.HelsinkiToday
   alias Edenflowers.External.HereAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
@@ -20,6 +19,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   alias Edenflowers.Orders.Workers.SendConfirmationEmail
   alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
   alias Edenflowers.Payments.Payment
+  alias Edenflowers.ShopTime
 
   setup :verify_on_exit!
 
@@ -45,7 +45,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       )
 
     {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
-    date = Date.add(HelsinkiToday.today(), 3)
+    date = Date.add(ShopTime.today(), 3)
 
     %{variant: variant, delivery: delivery, user: user, date: date}
   end
@@ -184,7 +184,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "a date missed while the job was down creates no order and is reported", ctx do
-    missed = Date.add(HelsinkiToday.today(), -15)
+    missed = Date.add(ShopTime.today(), -15)
     subscription = subscription_for(ctx, next_fulfillment_date: missed)
 
     log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
@@ -195,7 +195,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   end
 
   test "a past scheduled date is delivered when its first open fulfillment date is today", ctx do
-    today = HelsinkiToday.today()
+    today = ShopTime.today()
 
     delivery =
       generate(
@@ -451,7 +451,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       run_refused(ctx.subscription)
       [order] = occurrences(ctx.subscription)
 
-      passed = Date.add(HelsinkiToday.today(), -1)
+      passed = Date.add(ShopTime.today(), -1)
 
       SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
         passed,

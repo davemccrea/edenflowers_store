@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.Validations.FulfillmentDate do
   defp check_availability(option_id, date) do
     case Fulfillment.get_option_by_id(option_id, authorize?: false) do
       {:ok, option} ->
-        case Availability.unavailable_reason(option, date, DateTime.now!("Europe/Helsinki")) do
+        case Availability.unavailable_reason(option, date, Edenflowers.ShopTime.now()) do
           nil -> :ok
           reason -> {:error, field: :fulfillment_date, message: unavailable_message(reason)}
         end

@@ -10,7 +10,7 @@ defmodule Edenflowers.Orders.Validations.FulfillmentDateNotPast do
   def validate(changeset, _opts, _context) do
     case Ash.Changeset.get_attribute(changeset, :fulfillment_date) do
       %Date{} = date ->
-        if Date.before?(date, today()) do
+        if Date.before?(date, Edenflowers.ShopTime.today()) do
           {:error, field: :fulfillment_date, message: ~t"Fulfillment date cannot be in the past"}
         else
           :ok
@@ -20,6 +20,4 @@ defmodule Edenflowers.Orders.Validations.FulfillmentDateNotPast do
         :ok
     end
   end
-
-  defp today, do: DateTime.now!("Europe/Helsinki") |> DateTime.to_date()
 end
