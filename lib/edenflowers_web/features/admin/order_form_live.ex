@@ -61,6 +61,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       assigns
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
       |> assign(:gift?, assigns.form[:gift].value in [true, "true"])
+      |> assign(:time_choice, to_string(assigns.form[:fulfillment_time].value || "any"))
       |> assign(
         :quote,
         assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
@@ -162,6 +163,32 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     >
                       {@date_warning}
                     </p>
+                  </div>
+                </div>
+                <div class="sm:col-span-2">
+                  <.input
+                    :let={option}
+                    field={@form[:fulfillment_time]}
+                    type="radio-card"
+                    label={~t"Time"}
+                    options={fulfillment_time_options()}
+                  >
+                    {option.name}
+                  </.input>
+                  <div :if={@time_choice != "any"} class="mt-3 grid grid-cols-2 gap-4 sm:max-w-sm">
+                    <.input
+                      field={@form[:fulfillment_time_start]}
+                      type="time"
+                      label={if @time_choice == "at", do: ~t"At", else: ~t"From"}
+                      class="input w-full"
+                    />
+                    <.input
+                      :if={@time_choice == "between"}
+                      field={@form[:fulfillment_time_end]}
+                      type="time"
+                      label={~t"To"}
+                      class="input w-full"
+                    />
                   </div>
                 </div>
                 <div :if={@method == :delivery} class="sm:col-span-2">
@@ -400,7 +427,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Order
     |> AshPhoenix.Form.for_create(:place_custom,
       actor: actor,
-      params: %{"locale" => "sv-FI", "gift" => "false", "payment_link?" => "true", "email_customer?" => "true"},
+      params: %{
+        "locale" => "sv-FI",
+        "gift" => "false",
+        "fulfillment_time" => "any",
+        "payment_link?" => "true",
+        "email_customer?" => "true"
+      },
       transform_params: &transform_params/3,
       forms: [line_items: [type: :list, resource: LineItem, create_action: :enter]]
     )
@@ -416,6 +449,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     form =
       AshPhoenix.Form.for_update(order, :edit,
         actor: actor,
+        params: %{"fulfillment_time" => time_choice(order)},
         transform_params: &transform_params/3,
         forms: [
           line_items: [
@@ -604,6 +638,14 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp locale_options, do: [{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]
+
+  defp time_choice(%{fulfillment_time_start: nil}), do: "any"
+  defp time_choice(%{fulfillment_time_end: nil}), do: "at"
+  defp time_choice(_order), do: "between"
+
+  defp fulfillment_time_options do
+    [%{name: ~t"Any time", value: "any"}, %{name: ~t"At", value: "at"}, %{name: ~t"Between", value: "between"}]
+  end
 
   defp payment_options do
     [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]

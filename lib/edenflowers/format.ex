@@ -4,6 +4,8 @@ defmodule Edenflowers.Format do
   All functions return strings formatted via CLDR for the supplied locale.
   """
 
+  use GettextSigils, backend: EdenflowersWeb.Gettext
+
   @spec locale() :: Localize.Locale.locale_id()
   def locale, do: Localize.get_locale().cldr_locale_id
 
@@ -83,6 +85,20 @@ defmodule Edenflowers.Format do
   @spec time(Time.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
   def time(nil, _locale), do: nil
   def time(time, locale), do: Localize.Time.to_string!(time, locale: locale, format: :short)
+
+  @doc """
+  An order's time of day, e.g. "kl. 14:00" or "kl. 14:00–15:00", or nil when
+  any time will do. In the current Gettext locale, like the rest of the copy
+  around it.
+  """
+  @spec fulfillment_time(map(), Localize.Locale.locale_id()) :: String.t() | nil
+  def fulfillment_time(%{fulfillment_time_start: nil}, _locale), do: nil
+
+  def fulfillment_time(%{fulfillment_time_start: start, fulfillment_time_end: nil}, locale),
+    do: ~t"at #{time = time(start, locale)}"
+
+  def fulfillment_time(%{fulfillment_time_start: start, fulfillment_time_end: finish}, locale),
+    do: ~t"at #{time = "#{time(start, locale)}–#{time(finish, locale)}"}"
 
   @doc "Localized delivery distance from metres, e.g. \"850 m\" / \"3,4 km\"."
   @spec distance(non_neg_integer(), Localize.Locale.locale_id()) :: String.t()

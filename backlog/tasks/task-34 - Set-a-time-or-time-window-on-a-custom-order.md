@@ -1,9 +1,10 @@
 ---
 id: TASK-34
 title: Set a time or time window on a custom order
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
+updated_date: '2026-10-18 19:02'
 labels:
   - spec
   - admin
@@ -26,8 +27,8 @@ Add optional `fulfillment_time_start` and `fulfillment_time_end` to Order. In th
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The custom order form offers Any time, At and Between, and saves the matching times
-- [ ] #2 Between refuses an end at or before the start
-- [ ] #3 The time shows on the order page, the fulfillments list and the order emails
-- [ ] #4 Online orders are unchanged
+- [x] #1 The custom order form offers Any time, At and Between, and saves the matching times
+- [x] #2 Between refuses an end at or before the start
+- [x] #3 The time shows on the order page, the fulfillments list and the order emails
+- [x] #4 Online orders are unchanged
 <!-- AC:END -->
