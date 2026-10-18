@@ -152,6 +152,7 @@ defmodule Edenflowers.MixProject do
       ],
       precommit: [
         "compile --warnings-as-errors",
+        "ash.codegen --check",
         "deps.unlock --unused",
         "format --check-formatted",
         "credo --strict",
