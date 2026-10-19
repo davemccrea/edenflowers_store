@@ -128,6 +128,9 @@ defmodule Edenflowers.External.StripeAPI do
     |> Map.merge(%{
       amount: amount_cents,
       currency: "EUR",
+      # Stripe refuses error_on_requires_action on a PaymentIntent that takes
+      # the Dashboard's payment methods.
+      payment_method_types: ["card"],
       off_session: true,
       confirm: true,
       error_on_requires_action: true
