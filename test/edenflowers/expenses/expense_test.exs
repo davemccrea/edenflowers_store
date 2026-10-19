@@ -106,6 +106,19 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       {:ok, reviewed} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
       assert reviewed.reviewed_at != nil
     end
+
+    test "a draft missing its date, vendor, total or currency is stored but can't be saved or reviewed until filled in" do
+      draft = Map.drop(@valid_attrs, [:date, :vendor_name, :total_amount, :currency])
+      {:ok, expense} = Expenses.ingest_expense(draft, actor: system_actor())
+
+      assert {:error, %{errors: errors}} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
+      assert errors |> Enum.map(& &1.field) |> Enum.sort() == [:currency, :date, :total_amount, :vendor_name]
+
+      assert {:error, _} = Expenses.correct_expense(expense, %{vendor_name: "Acme Oy"}, actor: admin_actor())
+
+      complete = %{date: "2026-06-01", vendor_name: "Acme Oy", total_amount: "12.40", currency: :eur}
+      assert {:ok, _} = Expenses.correct_expense(expense, complete, actor: admin_actor())
+    end
   end
 
   describe ":correct" do

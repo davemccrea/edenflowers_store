@@ -4,7 +4,7 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-human
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-19 07:27'
+updated_date: '2026-10-19 10:24'
 labels:
   - spec
   - admin
@@ -148,6 +148,15 @@ created: 2026-10-19 07:27
 ---
 
 Deployed 44ef1432 to staging. Waiting on the user's final approval. To check: download a month's report from Expenses > Export; the Stripe sheet's rows, fees and payout total match Stripe's balance report for that month (TASK-11.4); if a receipt can't be fetched from Papra, its row says Saknas and the expenses page flashes the count. Keep TASK-11 and TASK-11.4 open until approved.
+
+---
+
+author: @claude
+created: 2026-10-19 10:24
+
+---
+
+An expense now can't be saved or reviewed without its date, vendor, total and currency. A draft Claude couldn't date still sits outside every month's report until Jennie fills it in, which the export rethink should cover.
 
 ---
 <!-- COMMENTS:END -->

@@ -262,6 +262,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
           document_id: document_id,
           vendor_name: vendor_name,
           description: description,
+          date: ~D[2026-06-01],
+          total_amount: "10.00",
+          currency: :eur,
           confidence: :high
         },
         Map.new(attrs)
