@@ -147,7 +147,17 @@ window.addEventListener("phx:before-navigate", (event) => {
   event.preventDefault();
 });
 
+// Only warn when the person leaves. LiveView disconnects before its own reload
+// after a failed rejoin, and retries every few seconds if the reload is
+// cancelled; dev live reload also reloads on .po and asset changes.
+let liveReloading = false;
+
+window.addEventListener("phx:live_reload:attached", ({ detail: reloader }) => {
+  reloader.channel.on("assets_change", () => (liveReloading = true));
+});
+
 window.addEventListener("beforeunload", (event) => {
+  if (liveReloading || !liveSocket.isConnected()) return;
   if (unsavedForm()) event.preventDefault();
 });
 
