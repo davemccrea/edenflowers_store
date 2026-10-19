@@ -6,8 +6,8 @@
 <% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
 <% end %><%= gettext("Total") %>  <%= @format_currency.(@order.grand_total) %>
 <%= if Decimal.positive?(@order.amount_paid) do %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
-<%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
-<% end %>
+<%= if Decimal.positive?(@order.balance) do %><%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
+<% end %><% end %>
 <%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Ready to collect at the shop on %{date}", date: @fulfillment_on) %><% end %>
 <%= if @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
 <% end %>
