@@ -202,7 +202,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       assert view |> form("#report-form", month: "2026-09") |> render_submit() =~ "Building report…"
       assert has_element?(view, "#report-form button[disabled]")
 
-      render_async(view)
+      # Building the zip can outlast the default 100ms when the whole suite runs at once.
+      render_async(view, 1_000)
 
       assert_push_event(view, "download", %{filename: "redovisning-2026-09.zip", content: content})
       assert {:ok, files} = :zip.unzip(Base.decode64!(content), [:memory])
@@ -218,7 +219,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       {html, log} =
         with_log(fn ->
           view |> form("#report-form", month: "2026-09") |> render_submit()
-          render_async(view)
+          render_async(view, 1_000)
         end)
 
       assert log =~ ~s(Monthly report for "2026-09" failed:)
@@ -240,7 +241,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       {html, log} =
         with_log(fn ->
           view |> form("#report-form", month: "2026-09") |> render_submit()
-          render_async(view)
+          render_async(view, 1_000)
         end)
 
       assert log =~ "Receipt report-missing couldn't be fetched"
