@@ -6509,8 +6509,8 @@ msgstr "Merkitse noudetuksi"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:471
 #, elixir-autogen, elixir-format
-msgid "No confirmation will be emailed — this order has no email address."
-msgstr "Vahvistusta ei lähetetä sähköpostilla — tältä tilaukselta puuttuu sähköpostiosoite."
+msgid "This order has no email address, so no confirmation will be emailed."
+msgstr "Tilaukselta puuttuu sähköpostiosoite, joten vahvistusta ei lähetetä sähköpostilla."
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:681
 #, elixir-autogen, elixir-format

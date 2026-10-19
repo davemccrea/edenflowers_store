@@ -6509,8 +6509,8 @@ msgstr "Markera som hämtad"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:471
 #, elixir-autogen, elixir-format
-msgid "No confirmation will be emailed — this order has no email address."
-msgstr "Ingen bekräftelse mejlas — den här beställningen saknar e-postadress."
+msgid "This order has no email address, so no confirmation will be emailed."
+msgstr "Den här beställningen saknar e-postadress, så ingen bekräftelse mejlas."
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:681
 #, elixir-autogen, elixir-format

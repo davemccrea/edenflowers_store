@@ -6509,8 +6509,8 @@ msgstr "Mark as collected"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:471
 #, elixir-autogen, elixir-format
-msgid "No confirmation will be emailed — this order has no email address."
-msgstr "No confirmation will be emailed — this order has no email address."
+msgid "This order has no email address, so no confirmation will be emailed."
+msgstr "This order has no email address, so no confirmation will be emailed."
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:681
 #, elixir-autogen, elixir-format
