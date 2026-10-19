@@ -276,9 +276,10 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp currency(currency), do: currency |> to_string() |> String.upcase()
 
   # Stripe's rows are not sales: they let the accountant book Stripe's fees and
-  # match its payouts, which arrive in the bank net of fees.
+  # match its payouts, which arrive in the bank net of fees. The sheet keeps
+  # Stripe's own English terms so it reads like the Stripe dashboard.
   defp stripe_sheet(transactions) do
-    headings = [~t"Date", ~t"Type", ~t"Description", ~t"Gross amount", ~t"Fee", ~t"Net amount", ~t"Payout id"]
+    headings = ["Created", "Type", "Description", "Amount", "Fee", "Net", "Payout"]
 
     rows =
       transactions
@@ -290,7 +291,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
           |> DateTime.shift_zone!(ShopTime.timezone())
           |> DateTime.to_date()
           |> date_cell(),
-          transaction_type(transaction.type),
+          transaction.type,
           transaction.description,
           stripe_amount_cell(transaction.amount),
           stripe_amount_cell(transaction.fee),
@@ -313,22 +314,13 @@ defmodule Edenflowers.Accounting.MonthlyReport do
         [Enum.map(headings, &[&1, bold: true]) | rows] ++
           [
             [],
-            [nil, nil, [~t"Total fees", bold: true], nil, stripe_amount_cell(fees)],
-            [nil, nil, [~t"Paid out to bank", bold: true], nil, nil, stripe_amount_cell(paid_out)]
+            [nil, nil, ["Total fees", bold: true], nil, stripe_amount_cell(fees)],
+            [nil, nil, ["Total payouts", bold: true], nil, nil, stripe_amount_cell(paid_out)]
           ]
     }
   end
 
   defp fee_type?(type), do: type in ["stripe_fee", "stripe_fx_fee", "tax_fee", "application_fee"]
-
-  defp transaction_type(type) when type in ["charge", "payment"], do: ~t"Charge"
-  defp transaction_type(type) when type in ["refund", "payment_refund"], do: ~t"Refund"
-  defp transaction_type("payout"), do: ~t"Payout"
-  defp transaction_type("adjustment"), do: ~t"Adjustment"
-
-  defp transaction_type(type) do
-    if fee_type?(type), do: ~t"Fee", else: type
-  end
 
   defp stripe_amount_cell(cents), do: cents |> StripeAPI.from_stripe_amount() |> amount_cell()
 

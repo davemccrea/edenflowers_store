@@ -277,24 +277,24 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
     [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(3)
 
-    assert headings == ["Datum", "Typ", "Beskrivning", "Brutto", "Avgift", "Netto", "Utbetalnings-id"]
+    assert headings == ["Created", "Type", "Description", "Amount", "Fee", "Net", "Payout"]
 
     {transactions, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
 
     assert Enum.map(transactions, &Enum.drop(&1, 1)) == [
-             ["Avgift", "Radar", "-2.0", "0.0", "-2.0"],
-             ["Debitering", "Order 1001", "85.0", "1.45", "83.55"],
-             ["Återbetalning", "Refund for 1001", "-20.0", "0.0", "-20.0"],
-             ["Justering", nil, "3.0", "0.0", "3.0"],
-             ["Utbetalning", "STRIPE PAYOUT", "-160.0", "0.0", "-160.0", "po_1"]
+             ["stripe_fee", "Radar", "-2.0", "0.0", "-2.0"],
+             ["charge", "Order 1001", "85.0", "1.45", "83.55"],
+             ["refund", "Refund for 1001", "-20.0", "0.0", "-20.0"],
+             ["adjustment", nil, "3.0", "0.0", "3.0"],
+             ["payout", "STRIPE PAYOUT", "-160.0", "0.0", "-160.0", "po_1"]
            ]
 
     assert hd(hd(transactions)) == excel_date(~D[2026-09-01])
 
     # Fees are the charge's 1.45 and the 2.00 Radar fee; paid out is the one payout.
     assert totals == [
-             [nil, nil, "Avgifter totalt", nil, "3.45"],
-             [nil, nil, "Utbetalt till bank", nil, nil, "160.0"]
+             [nil, nil, "Total fees", nil, "3.45"],
+             [nil, nil, "Total payouts", nil, nil, "160.0"]
            ]
   end
 
