@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
       :send_payment_failed_email -> ~t"Payment link emailed"
       :send_confirmation_email -> ~t"Receipt emailed"
       :email_receipt -> ~t"Receipt emailed"
-      :send_delivered_email -> ~t"Fulfillment email sent"
+      :send_delivered_email -> ~t"Fulfillment confirmation emailed"
       other -> to_string(other)
     end
   end
@@ -88,6 +88,10 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   # The title already names the field, so the note stands alone.
   defp field_details(%{version_action_name: :update_florist_note} = version, locale) do
     [{nil, show(version.changes["florist_note"], :florist_note, locale)}]
+  end
+
+  defp field_details(%{version_action_name: :send_delivered_email} = version, _locale) do
+    [{~t"Sent to", version.changes["delivered_emailed_to"]}]
   end
 
   defp field_details(version, locale) do

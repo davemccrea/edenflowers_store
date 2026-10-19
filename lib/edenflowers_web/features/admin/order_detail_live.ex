@@ -173,7 +173,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <div
-                :if={@order.fulfillment_status == :fulfilled}
+                :if={@order.fulfillment_status == :fulfilled and @fulfillment_email_status.state != :sent}
                 id="order-confirmation-email"
                 role="status"
                 aria-live="polite"
