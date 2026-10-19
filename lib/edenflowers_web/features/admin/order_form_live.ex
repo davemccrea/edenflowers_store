@@ -274,7 +274,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               </div>
             </.form_section>
 
-            <.form_section title={~t"Recipient and card"}>
+            <.form_section title={~t"Who it's for"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <.input
