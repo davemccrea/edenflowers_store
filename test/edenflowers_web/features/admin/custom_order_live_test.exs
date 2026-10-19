@@ -565,6 +565,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert render_async(view, 500) =~ "8.0 km"
       assert has_element?(view, "#delivery-quote", "13.00")
+      assert has_element?(view, "#delivery-quote", "Delivering to Kyrkvägen 5, Vasa")
     end
 
     test "says when an address can't be delivered to", ctx do

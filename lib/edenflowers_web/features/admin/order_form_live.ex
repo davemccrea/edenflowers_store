@@ -241,6 +241,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     class="input w-full"
                     phx-blur="quote_delivery"
                     loading={match?(%{status: :loading}, @quote)}
+                    confirmed={match?(%{status: :ok}, @quote)}
                   />
                   <.delivery_quote quote={@quote} override={@form[:fulfillment_fee_override].value} />
                 </div>
@@ -436,6 +437,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       status: :ok,
       address: address,
       option_id: option_id,
+      geocoded_address: result.geocoded_address,
       fee: result.fulfillment_fee,
       in_free_delivery_zone: result.in_free_delivery_zone,
       distance: result.distance
@@ -671,6 +673,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               status: :ok,
               address: order.delivery_address,
               option_id: option.id,
+              geocoded_address: order.geocoded_address,
               fee: fee.fulfillment_fee,
               in_free_delivery_zone: fee.in_free_delivery_zone,
               distance: distance
@@ -769,13 +772,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp delivery_quote(assigns) do
     ~H"""
     <div aria-live="polite">
-      <p :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="mt-1.5 text-sm">
-        <span class="font-medium">{~t"Delivery #{fee = Format.currency(@quote.fee, Format.locale())}"}</span>
-        <span class="text-base-content/65">({Format.distance(@quote.distance, Format.locale())})</span>
-        <span :if={present?(@override)} class="text-base-content/65">
-          · {~t"your own fee replaces this"}
-        </span>
-      </p>
+      <div :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="text-base-content/65 mt-1.5 text-sm">
+        <p :if={@quote.geocoded_address}>{~t"Delivering to #{address = @quote.geocoded_address}"}</p>
+        <p>
+          {Format.currency(@quote.fee, Format.locale())} ({Format.distance(@quote.distance, Format.locale())})
+          <span :if={present?(@override)}>· {~t"your own fee replaces this"}</span>
+        </p>
+      </div>
       <p :if={match?(%{status: :error}, @quote)} id="delivery-quote" class="text-warning-content mt-1.5 text-sm">
         {@quote.message}. {~t"You can still set your own fee."}
       </p>
