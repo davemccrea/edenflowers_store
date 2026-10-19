@@ -31,6 +31,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign_order(order)
          |> assign(:fulfillment_form, nil)
+         |> assign(:fulfillment_error, nil)
          |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
@@ -96,7 +97,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               variant="primary"
               size="sm"
             >
-              {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as fulfilled"}
+              {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as collected"}
             </.button>
             <.button
               :if={@order.fulfillment_status == :pending}
@@ -112,16 +113,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </:menu>
         </.admin_page_header>
 
+        <.confirm_fulfillment
+          :if={@order.fulfillment_status == :pending}
+          form={@fulfillment_form}
+          error={@fulfillment_error}
+          order={@order}
+          uploads={@uploads}
+        />
+
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
-            <.confirm_fulfillment
-              :if={@fulfillment_form && @order.fulfillment_status == :pending}
-              form={@fulfillment_form}
-              order={@order}
-              uploads={@uploads}
-            />
-
             <.widget id="order-fulfillment-summary" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
@@ -170,13 +172,46 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </div>
               </div>
 
+              <div
+                :if={@order.fulfillment_status == :fulfilled}
+                id="order-confirmation-email"
+                role="status"
+                aria-live="polite"
+                class="border-base-content/12 mt-5 border-t pt-4"
+              >
+                <h3 class="text-base-content text-sm font-semibold">{~t"Confirmation email"}</h3>
+                <p class="text-base-content/75 mt-1 text-sm">
+                  {confirmation_status_label(@fulfillment_email_status, @locale)}
+                </p>
+                <p :if={@order.customer_email} class="text-base-content/65 mt-1 break-all text-sm">
+                  {~t"To: #{email = @order.customer_email}"}
+                </p>
+                <p :if={@fulfillment_email_status.reason == :photo_unavailable} class="text-warning-content mt-2 text-sm">
+                  {~t"The delivery photo is unavailable. Check the photo before retrying."}
+                </p>
+                <p :if={@fulfillment_email_status.reason == :send_failed} class="text-base-content/75 mt-2 text-sm">
+                  {~t"An error prevented sending. Check the error details before retrying."}
+                  <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
+                </p>
+                <.button
+                  :if={@fulfillment_email_status.retry?}
+                  type="button"
+                  phx-click="retry_fulfillment_email"
+                  variant="ghost"
+                  size="sm"
+                  class="mt-2"
+                >
+                  {~t"Retry confirmation"}
+                </.button>
+              </div>
+
               <figure :if={@order.delivery_photo_slug} id="order-delivery-photo" class="mt-5">
                 <figcaption class="text-base-content/65 mb-2 text-sm">
-                  {~t"Nobody was home. The flowers were left here."}
+                  {~t"Nobody was home. The order was left here."}
                 </figcaption>
                 <.image
                   src={@order.delivery_photo_slug}
-                  alt={~t"Where the flowers were left"}
+                  alt={~t"Where the order was left"}
                   width={640}
                   height={800}
                   crop_type="fit"
@@ -210,7 +245,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </.form>
             </.widget>
 
-            <%!-- Last in the job: only needed once the flowers are leaving the shop. --%>
+            <%!-- Last in the job: only needed once the order is leaving the shop. --%>
             <.delivery_map
               :if={@order.fulfillment_method == :delivery}
               position={parse_position(@order.position)}
@@ -359,71 +394,132 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  attr :form, Phoenix.HTML.Form, required: true
+  attr :form, :any, default: nil
+  attr :error, :string, default: nil
   attr :order, Order, required: true
   attr :uploads, :map, required: true
 
   defp confirm_fulfillment(assigns) do
     ~H"""
-    <.widget id="confirm-fulfillment" title={~t"Confirm fulfillment"} class="border-primary/40 border">
+    <.drawer
+      id="confirm-fulfillment"
+      placement="right"
+      label={~t"Confirm fulfillment"}
+      class="bg-base-100 border-base-content/12 w-[88vw] flex h-full flex-col border-l sm:w-[28rem]"
+    >
+      <header class="border-base-content/12 flex items-center justify-between gap-4 border-b p-4">
+        <h2 class="text-lg font-semibold">{~t"Confirm fulfillment"}</h2>
+        <.icon_button
+          phx-click={JS.exec("phx-hide", to: "#confirm-fulfillment") |> JS.push("cancel_fulfillment")}
+          size="sm"
+          aria_label={~t"Close"}
+        >
+          <.icon name="hero-x-mark" class="h-5 w-5" />
+        </.icon_button>
+      </header>
       <.form
+        :if={@form}
         for={@form}
         id="confirm-fulfillment-form"
         phx-change="validate_fulfillment"
         phx-submit="mark_fulfilled"
-        class="space-y-5"
+        class="flex min-h-0 flex-1 flex-col"
       >
-        <.input
-          :let={option}
-          :if={@order.fulfillment_method == :delivery}
-          field={@form[:customer_home]}
-          type="radio-card"
-          label={~t"Was the customer home?"}
-          options={[%{name: ~t"Yes", value: "true"}, %{name: ~t"No", value: "false"}]}
-        >
-          {option.name}
-        </.input>
-        <div :if={@form[:customer_home].value == "false"} class="space-y-4">
-          <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the flowers"} />
+        <div class="flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
+          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
           <.input
-            :if={@order.customer_email}
-            field={@form[:email_photo]}
-            type="checkbox"
-            label={~t"Email the photo to the customer"}
-          />
+            :let={option}
+            :if={@order.fulfillment_method == :delivery}
+            field={@form[:customer_home]}
+            type="radio-card"
+            label={~t"Was the customer home?"}
+            options={[%{name: ~t"Yes", value: "true"}, %{name: ~t"No", value: "false"}]}
+          >
+            {option.name}
+          </.input>
+          <div :if={@form[:customer_home].value == "false"} class="space-y-4">
+            <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the order"} />
+          </div>
+          <div :if={@order.customer_email} class="space-y-2">
+            <.input
+              field={@form[:email_customer]}
+              type="checkbox"
+              label={
+                if @order.fulfillment_method == :delivery,
+                  do: ~t"Email delivery confirmation",
+                  else: ~t"Email collection confirmation"
+              }
+            />
+            <div class="ml-7 space-y-3">
+              <p class="text-base-content/65 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
+              <.input
+                :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
+                field={@form[:email_photo]}
+                type="checkbox"
+                label={~t"Include the delivery photo"}
+              />
+            </div>
+          </div>
+          <div :if={!@order.customer_email} class="text-base-content/75 space-y-2 text-sm">
+            <p>{~t"No confirmation will be emailed — this order has no email address."}</p>
+            <.link navigate={~p"/admin/orders/#{@order.id}/edit"} class="link link-primary">
+              {~t"Edit customer details"}
+            </.link>
+          </div>
+          <input :if={!@order.customer_email} type="hidden" name="fulfillment[email_customer]" value="false" />
+          <p :if={@order.unpaid?} class="text-warning-content text-sm font-semibold">
+            {~t"This order is still unpaid."}
+          </p>
         </div>
-        <.input
-          :if={@order.customer_email}
-          field={@form[:email_customer]}
-          type="checkbox"
-          label={~t"Email the customer"}
-        />
-        <p :if={@order.unpaid?} class="text-warning-content text-sm font-semibold">
-          {~t"This order is still unpaid."}
-        </p>
-        <div class="flex flex-wrap gap-2">
+        <div class="border-base-content/12 flex shrink-0 flex-wrap gap-2 border-t p-4">
           <.button
             type="submit"
             variant="primary"
             disabled={@order.fulfillment_method == :delivery and @form[:customer_home].value not in ["true", "false"]}
           >
-            {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as fulfilled"}
+            {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as collected"}
           </.button>
-          <.button type="button" phx-click="cancel_fulfillment" variant="ghost">{~t"Cancel"}</.button>
+          <.button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#confirm-fulfillment") |> JS.push("cancel_fulfillment")}
+            variant="ghost"
+          >{~t"Cancel"}</.button>
         </div>
       </.form>
-    </.widget>
+    </.drawer>
     """
   end
 
   @impl true
   def handle_event("confirm_fulfillment", _params, socket) do
     form = to_form(%{"email_customer" => "true", "email_photo" => "true"}, as: :fulfillment)
-    {:noreply, assign(socket, :fulfillment_form, form)}
+
+    {:noreply,
+     socket
+     |> PhotoUpload.forget([@photo_field])
+     |> assign(:fulfillment_form, form)
+     |> assign(:fulfillment_error, nil)
+     |> push_event("js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})}
   end
 
   def handle_event("cancel_fulfillment", _params, socket) do
     {:noreply, socket |> PhotoUpload.forget([@photo_field]) |> assign(:fulfillment_form, nil)}
+  end
+
+  def handle_event("retry_fulfillment_email", _params, socket) do
+    case Orders.retry_fulfillment_email(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, _order} ->
+        {:noreply,
+         socket
+         |> refresh_fulfillment_email()
+         |> put_flash(:info, ~t"Confirmation queued.")}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> refresh_fulfillment_email()
+         |> put_flash(:error, ~t"Could not retry the confirmation. Check its current status.")}
+    end
   end
 
   def handle_event("validate_fulfillment", %{"fulfillment" => params}, socket) do
@@ -435,7 +531,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     case socket.assigns.photo_slugs[@photo_field] do
       nil ->
-        {:noreply, put_flash(socket, :error, ~t"Take a photo of where you left the flowers.")}
+        {:noreply, assign(socket, :fulfillment_error, ~t"Take a photo of where you left the order.")}
 
       slug ->
         mark_fulfilled(socket, %{
@@ -554,6 +650,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, flash_payment_result(socket, PaymentActions.refund_with_stripe(socket.assigns.order))}
   end
 
+  @impl true
+  def handle_info(:refresh_fulfillment_email, socket) do
+    {:noreply, refresh_fulfillment_email(socket)}
+  end
+
+  def handle_info(_message, socket), do: {:noreply, socket}
+
   # Reloads on an error too: a payment can be recorded while its receipt failed to send.
   defp flash_payment_result(socket, {kind, message}) do
     socket
@@ -564,14 +667,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp mark_fulfilled(socket, attrs) do
     case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
       {:ok, order} ->
+        socket = socket |> assign_order(reload(order, socket)) |> assign(:fulfillment_form, nil)
+
+        message =
+          if order.fulfillment_method == :delivery,
+            do: ~t"Order marked as delivered.",
+            else: ~t"Order marked as collected."
+
         {:noreply,
          socket
-         |> assign_order(reload(order, socket))
-         |> assign(:fulfillment_form, nil)
-         |> put_flash(:info, ~t"Order marked as fulfilled.")}
+         |> put_flash(
+           :info,
+           message <> " " <> confirmation_status_label(socket.assigns.fulfillment_email_status, socket.assigns.locale)
+         )}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, ~t"Could not mark order as fulfilled.")}
+        {:noreply, assign(socket, :fulfillment_error, ~t"Could not mark order as fulfilled.")}
     end
   end
 
@@ -580,6 +691,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     socket
     |> assign(:order, order)
+    |> assign_fulfillment_email(order)
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
@@ -587,6 +699,40 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
+
+  defp assign_fulfillment_email(socket, order) do
+    if timer = socket.assigns[:fulfillment_email_timer], do: Process.cancel_timer(timer)
+    status = Orders.fulfillment_email_status(order)
+
+    timer =
+      if connected?(socket) && status.poll?,
+        do: Process.send_after(self(), :refresh_fulfillment_email, 5_000)
+
+    socket
+    |> assign(:fulfillment_email_status, status)
+    |> assign(:fulfillment_email_timer, timer)
+  end
+
+  defp refresh_fulfillment_email(socket) do
+    order = reload(socket.assigns.order, socket)
+
+    socket
+    |> assign(:order, order)
+    |> assign_fulfillment_email(order)
+    |> assign(:log, order_log(order, socket.assigns.payments, socket.assigns.locale))
+  end
+
+  defp confirmation_status_label(%{state: :sent, sent_at: at}, locale),
+    do: ~t"Confirmation emailed at #{time = Format.datetime(at, locale)}."
+
+  defp confirmation_status_label(%{state: :no_email}, _locale), do: ~t"Not sent — no customer email address"
+  defp confirmation_status_label(%{state: :skipped}, _locale), do: ~t"Not sent — email confirmation was deselected"
+  defp confirmation_status_label(%{state: :pending}, _locale), do: ~t"Confirmation pending"
+  defp confirmation_status_label(%{state: :queued}, _locale), do: ~t"Confirmation queued."
+  defp confirmation_status_label(%{state: :sending}, _locale), do: ~t"Sending confirmation…"
+  defp confirmation_status_label(%{state: :retrying}, _locale), do: ~t"Confirmation delayed — retrying automatically."
+  defp confirmation_status_label(%{state: :failed}, _locale), do: ~t"Confirmation could not be emailed."
+  defp confirmation_status_label(_status, _locale), do: ~t"Confirmation not requested"
 
   defp payments(order) do
     order

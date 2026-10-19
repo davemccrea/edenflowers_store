@@ -185,18 +185,74 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, "#order-status", "Fulfilled")
+    assert has_element?(view, "#order-confirmation-email", "Confirmation queued")
+    assert render(view) =~ "Order marked as collected."
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
   end
 
+  test "fulfills a pickup with no customer email", %{conn: conn} do
+    order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+    refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
+    assert has_element?(view, "#confirm-fulfillment-form", "No confirmation will be emailed")
+    view |> form("#confirm-fulfillment-form") |> render_submit()
+
+    assert has_element?(view, "#order-status", "Fulfilled")
+    assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :fulfilled
+    assert has_element?(view, "#order-confirmation-email", "Not sent — no customer email address")
+    refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+  end
+
+  test "retries a pending confirmation and updates the status when sending finishes", %{conn: conn} do
+    order = placed_order(fulfillment_status: :fulfilled)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-confirmation-email", "Confirmation pending")
+    view |> element(~s|button[phx-click="retry_fulfillment_email"]|) |> render_click()
+    assert has_element?(view, "#order-confirmation-email", "Confirmation queued")
+    refute has_element?(view, ~s|button[phx-click="retry_fulfillment_email"]|)
+    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+
+    send(view.pid, :refresh_fulfillment_email)
+    assert has_element?(view, "#order-confirmation-email", "Confirmation emailed at")
+    assert has_element?(view, "#order-confirmation-email", "To: ada@example.com")
+    refute has_element?(view, ~s|button[phx-click="retry_fulfillment_email"]|)
+  end
+
   describe "confirming a delivery" do
+    test "reopening after native drawer dismissal forgets the previous photo", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
+
+      view
+      |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
+        %{name: "old-door.jpg", content: "jpeg bytes", type: "image/jpeg"}
+      ])
+      |> render_upload("old-door.jpg")
+
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+
+      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
+      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+    end
+
     test "the customer was home: fulfils with no photo", %{conn: conn} do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      assert has_element?(view, "#confirm-fulfillment-form label", "Email delivery confirmation")
+      assert has_element?(view, "#confirm-fulfillment-form", "To: ada@example.com")
       assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
       refute has_element?(view, "#confirm-fulfillment-form input[type=file]")
@@ -243,17 +299,43 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
       view |> form("#confirm-fulfillment-form") |> render_submit()
 
-      assert render(view) =~ "Take a photo of where you left the flowers."
+      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
       assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
     end
   end
 
   describe "choosing whether to email the customer" do
+    test "the photo email choice follows the confirmation choice", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
+      assert has_element?(view, ~s|input[name="fulfillment[email_photo]"][type="checkbox"]|)
+
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
+      refute has_element?(view, ~s|input[name="fulfillment[email_photo]"]|)
+
+      view
+      |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
+        %{name: "door.jpg", content: "jpeg bytes", type: "image/jpeg"}
+      ])
+      |> render_upload("door.jpg")
+
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+      order = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
+      assert order.fulfillment_status == :fulfilled
+      refute order.email_delivery_photo
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+    end
+
     test "the choice starts ticked each time the form opens", %{conn: conn} do
       order = placed_order()
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      assert_push_event(view, "js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})
+      assert has_element?(view, "dialog.slide-drawer--right #confirm-fulfillment-form")
+      assert has_element?(view, "#confirm-fulfillment-form label", "Email collection confirmation")
       assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
 
       view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()

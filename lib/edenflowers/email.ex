@@ -111,14 +111,19 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  def order_delivered(order) do
+  def order_fulfilled(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      subject =
+        if order.fulfillment_method == :pickup,
+          do: ~t"Your Eden Flowers order #{order.order_reference} has been collected",
+          else: ~t"Your Eden Flowers order #{order.order_reference} has been delivered"
+
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
-      |> text_body(Templates.order_delivered(%{order: order}))
+      |> subject(subject)
+      |> text_body(Templates.order_fulfilled(%{order: order}))
     end)
   end
 
