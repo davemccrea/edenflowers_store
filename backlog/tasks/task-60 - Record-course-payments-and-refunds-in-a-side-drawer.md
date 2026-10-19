@@ -4,8 +4,10 @@ title: Record course payments and refunds in a side drawer
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-19 06:44'
+updated_date: '2026-10-19 13:03'
 labels:
   - admin
+  - spec
 dependencies: []
 priority: medium
 type: feature

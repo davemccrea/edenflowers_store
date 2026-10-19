@@ -1,10 +1,10 @@
 ---
 id: TASK-61
 title: 'Record a customer email that failed to send, and let Jennie send it again'
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-19 07:58'
-updated_date: '2026-10-19 07:59'
+updated_date: '2026-10-19 13:03'
 labels:
   - spec
   - admin

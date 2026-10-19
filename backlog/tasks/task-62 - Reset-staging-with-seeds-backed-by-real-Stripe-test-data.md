@@ -1,10 +1,10 @@
 ---
 id: TASK-62
 title: Reset staging with seeds backed by real Stripe test data
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-19 08:02'
-updated_date: '2026-10-19 09:22'
+updated_date: '2026-10-19 13:48'
 labels:
   - spec
   - developers
@@ -50,7 +50,7 @@ Reset staging to the seeded shop with real Stripe test data behind every seeded 
 - [x] #1 With the flag on, every seeded Stripe payment, refund and subscription customer exists in Stripe test mode with matching ids and amounts
 - [x] #2 Without the flag, local seeding makes no Stripe calls and produces the same data as today
 - [x] #3 Seeding with the flag refuses a key that isn't sk_test_ before writing anything
-- [ ] #4 On a reset staging, a seeded order can be refunded through Stripe from the admin and the current month's Stripe sheet lists the seeded charges and refunds
+- [x] #4 On a reset staging, a seeded order can be refunded through Stripe from the admin and the current month's Stripe sheet lists the seeded charges and refunds
 - [x] #5 just db-seed staging --stripe seeds with Stripe on; just db-reset staging empties and migrates staging and runs it, after a confirmation, reminding to wipe Stripe test data first
 <!-- AC:END -->
 
@@ -63,6 +63,15 @@ created: 2026-10-19 09:22
 ---
 
 Staging was reset and reseeded with --stripe on 2026-10-19 (backup in tmp/staging-2026-10-19.dump). Left to check (AC #4): in the staging admin, refund Nora Back's order, which owes money after an item was removed, and confirm Stripe records the refund; then download this month's report and confirm its Stripe sheet lists the seeded charges and refunds. The staging Stripe test data was not wiped first: the sandbox is the same one local .env uses (acct ...L97TreKmaJ), so it also holds objects from the local seeding check.
+
+---
+
+author: @claude
+created: 2026-10-19 13:48
+
+---
+
+Verified on staging by the user on 2026-10-19: a seeded order refunded through Stripe from the admin, and this month's Stripe sheet lists the seeded charges and refunds.
 
 ---
 <!-- COMMENTS:END -->
