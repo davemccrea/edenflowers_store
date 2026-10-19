@@ -3,8 +3,6 @@ defmodule Edenflowers.Orders do
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]
 
-  defdelegate fulfillment_email_status(order), to: Edenflowers.Orders.FulfillmentEmail, as: :status
-
   admin do
     show?(true)
   end
@@ -34,7 +32,7 @@ defmodule Edenflowers.Orders do
       define :place_unpaid_occurrence, action: :place_unpaid_occurrence
       define :mark_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
       define :mark_order_fulfilled, action: :mark_fulfilled
-      define :retry_fulfillment_email, action: :retry_fulfillment_email
+      define :email_fulfillment_confirmation, action: :email_fulfillment_confirmation
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
       define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
       define :clear_promotion, action: :clear_promotion

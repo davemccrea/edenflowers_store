@@ -28,76 +28,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
 
   defp admin, do: generate(admin_user())
 
-  describe "confirmation email status and retry" do
-    test "explains why an email was not requested or cannot be sent" do
-      order = fulfillable_order(fulfillment_status: :fulfilled)
-
-      assert %{state: :pending, retry?: true} = Orders.fulfillment_email_status(order)
-      assert %{state: :skipped, retry?: false} = Orders.fulfillment_email_status(%{order | skip_delivered_email: true})
-
-      assert %{state: :no_email, retry?: false} =
-               Orders.fulfillment_email_status(%{order | customer_email: nil, skip_delivered_email: true})
-
-      assert %{state: :sent, retry?: false, sent_at: %DateTime{}} =
-               Orders.fulfillment_email_status(%{order | delivered_emailed_at: DateTime.utc_now()})
-    end
-
-    test "shows a photo failure and retries the existing job rather than creating another" do
-      order = fulfillable_order([])
-      actor = admin()
-      {:ok, order} = Orders.mark_order_fulfilled(order, actor: actor)
-      assert %{state: :queued, retry?: false} = Orders.fulfillment_email_status(order)
-
-      [job] = all_enqueued(worker: SendDeliveredEmail)
-
-      job
-      |> Ecto.Changeset.change(
-        state: "retryable",
-        attempt: 1,
-        scheduled_at: DateTime.add(DateTime.utc_now(), 600),
-        errors: [%{"error" => "imgproxy answered 404 for the delivery photo"}]
-      )
-      |> Edenflowers.Repo.update!()
-
-      assert %{state: :retrying, reason: :photo_unavailable, retry?: true} = Orders.fulfillment_email_status(order)
-      assert {:ok, order} = Orders.retry_fulfillment_email(order, actor: actor)
-      assert [%{id: id}] = all_enqueued(worker: SendDeliveredEmail)
-      assert id == job.id
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-
-      order = Orders.get_order_by_id!(order.id, authorize?: false)
-      assert %{state: :sent, retry?: false} = Orders.fulfillment_email_status(order)
-      assert {:error, _} = Orders.retry_fulfillment_email(order, actor: actor)
-    end
-
-    test "retry respects opt-out and admin authorization" do
-      order = fulfillable_order(fulfillment_status: :fulfilled, skip_delivered_email: true)
-      assert {:error, _} = Orders.retry_fulfillment_email(order, actor: admin())
-
-      order = Ash.Seed.update!(order, %{skip_delivered_email: false})
-      assert {:error, _} = Orders.retry_fulfillment_email(order, actor: generate(admin_user(admin: false)))
-      refute_enqueued(worker: SendDeliveredEmail)
-    end
-
-    test "retry does not revive a discarded job alongside its scheduled replacement" do
-      order = fulfillable_order([])
-      actor = admin()
-      {:ok, order} = Orders.mark_order_fulfilled(order, actor: actor)
-      [old_job] = all_enqueued(worker: SendDeliveredEmail)
-      old_job |> Ecto.Changeset.change(state: "discarded") |> Edenflowers.Repo.update!()
-
-      perform_job(Edenflowers.Orders.Schedulers.SendDeliveredEmail, %{})
-      assert {:ok, _} = Orders.retry_fulfillment_email(order, actor: actor)
-
-      assert [%{id: new_id}] = all_enqueued(worker: SendDeliveredEmail)
-      refute new_id == old_job.id
-      assert Edenflowers.Repo.get!(Oban.Job, old_job.id).state == "discarded"
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-      assert_email_sent()
-      assert_no_email_sent()
-    end
-  end
-
   defp stub_delivery_photo do
     Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
       assert conn.host == "imgproxy.test"
@@ -150,11 +80,8 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       {:ok, order} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: admin())
 
       assert order.fulfillment_status == :fulfilled
-      assert order.skip_delivered_email
       refute_enqueued(worker: SendDeliveredEmail)
-
-      perform_job(Edenflowers.Orders.Schedulers.SendDeliveredEmail, %{})
-      refute_enqueued(worker: SendDeliveredEmail)
+      assert %{failure: 0} = Oban.drain_queue(queue: :default)
       assert_no_email_sent()
     end
 
@@ -181,7 +108,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
                )
 
       assert order.fulfillment_status == :fulfilled
-      assert order.skip_delivered_email
       refute order.email_delivery_photo
       assert order.delivery_photo_slug == "local:///uploads/door.jpg"
       refute_enqueued(worker: SendDeliveredEmail)
@@ -244,36 +170,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       end)
     end
 
-    test "recovers an unsent pickup confirmation through the scheduler" do
-      order = fulfillable_order(fulfillment_method: :pickup, fulfillment_status: :fulfilled)
-
-      perform_job(Edenflowers.Orders.Schedulers.SendDeliveredEmail, %{})
-      assert_enqueued(worker: SendDeliveredEmail, args: %{"primary_key" => %{"id" => order.id}})
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-
-      assert_email_sent(fn email -> assert email.text_body =~ "Your order has been collected." end)
-      perform_job(Edenflowers.Orders.Schedulers.SendDeliveredEmail, %{})
-      refute_enqueued(worker: SendDeliveredEmail)
-    end
-
-    test "rechecks eligibility when an already queued job runs" do
-      for overrides <- [
-            [skip_delivered_email: true],
-            [customer_email: nil, customer_phone_number: "+358401234567"],
-            [fulfillment_status: :cancelled],
-            [fulfillment_status: :pending],
-            [state: :payment],
-            [delivered_emailed_at: DateTime.utc_now()]
-          ] do
-        order = fulfillable_order(order_reference: "T#{System.unique_integer([:positive])}")
-        {:ok, order} = Orders.mark_order_fulfilled(order, actor: admin())
-        Ash.Seed.update!(order, Map.new(overrides))
-
-        assert %{failure: 0} = Oban.drain_queue(queue: :default)
-        assert_no_email_sent()
-      end
-    end
-
     @tag capture_log: true
     test "a missing opted-in photo does not fall back to a plain confirmation" do
       order = fulfillable_order(fulfillment_status: :fulfilled, email_delivery_photo: true)
@@ -284,33 +180,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
 
       assert_no_email_sent()
       assert Orders.get_order_by_id!(order.id, authorize?: false).delivered_emailed_at == nil
-    end
-
-    @tag capture_log: true
-    test "retries photo failures without marking the confirmation sent" do
-      Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
-        Plug.Conn.send_resp(conn, 503, "unavailable")
-      end)
-
-      order =
-        fulfillable_order(
-          delivery_photo_slug: "local:///uploads/door.jpg",
-          email_delivery_photo: true
-        )
-
-      actor = admin()
-      assert {:ok, order} = Orders.mark_order_fulfilled(order, actor: actor)
-      assert %{failure: 1} = Oban.drain_queue(queue: :default)
-      assert %{state: :retrying, reason: :photo_unavailable} = Orders.fulfillment_email_status(order)
-
-      assert_no_email_sent()
-      assert Orders.get_order_by_id!(order.id, authorize?: false).delivered_emailed_at == nil
-
-      stub_delivery_photo()
-      assert {:ok, _} = Orders.retry_fulfillment_email(order, actor: actor)
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-      assert_email_sent(fn email -> assert [%{data: "small jpeg"}] = email.attachments end)
-      assert Orders.get_order_by_id!(order.id, authorize?: false).delivered_emailed_at
     end
 
     test "sends the photo of where the order was left instead, shrunk by imgproxy" do
@@ -372,15 +241,6 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       end)
     end
 
-    test "doesn't send an order Jennie chose not to email, whoever asks" do
-      order = fulfillable_order(fulfillment_status: :fulfilled, skip_delivered_email: true)
-
-      assert {:ok, reloaded} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
-
-      assert_no_email_sent()
-      assert reloaded.delivered_emailed_at == nil
-    end
-
     test "collection confirmation uses the customer's locale, not the worker's" do
       for {locale, reference, subject, greeting, body} <- [
             {"sv-FI", "1400", "Din Eden Flowers-beställning 1400 har hämtats", "Hej Ada,",
@@ -405,60 +265,86 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
       end
     end
 
-    test "direct action calls also respect eligibility" do
-      for overrides <- [
-            [fulfillment_status: :pending],
-            [fulfillment_status: :cancelled],
-            [state: :payment],
-            [customer_email: nil, customer_phone_number: "+358401234567"],
-            [delivered_emailed_at: DateTime.utc_now()]
-          ] do
-        order =
-          fulfillable_order(
-            Keyword.merge(
-              [fulfillment_status: :fulfilled, order_reference: "T#{System.unique_integer([:positive])}"],
-              overrides
-            )
-          )
+    test "a successful send records the recipient and clears a recorded failure" do
+      order = fulfillable_order(fulfillment_status: :fulfilled, delivered_email_failed_at: DateTime.utc_now())
 
-        assert {:ok, _} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
-        assert_no_email_sent()
-      end
+      assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
+
+      reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert reloaded.delivered_emailed_to == "ada@example.com"
+      assert reloaded.delivered_email_failed_at == nil
     end
 
-    test "direct action calls recheck a recorded send even when passed the original order" do
-      order = fulfillable_order(fulfillment_status: :fulfilled)
+    @tag capture_log: true
+    test "the last failed attempt records the failure in the order log" do
+      Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+        Plug.Conn.send_resp(conn, 503, "unavailable")
+      end)
 
-      assert {:ok, _} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
-      assert_email_sent()
-      assert {:ok, _} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
-      assert_no_email_sent()
+      order =
+        fulfillable_order(
+          fulfillment_status: :fulfilled,
+          delivery_photo_slug: "local:///uploads/door.jpg",
+          email_delivery_photo: true
+        )
 
-      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      assert Enum.count(versions, &(&1.version_action_name == :send_delivered_email)) == 1
-    end
+      args = %{"primary_key" => %{"id" => order.id}}
 
-    test "direct action calls recheck a persisted opt-out even when passed a stale order" do
-      order = fulfillable_order(fulfillment_status: :fulfilled)
-      Ash.Seed.update!(order, %{skip_delivered_email: true})
+      assert_raise Ash.Error.Invalid, fn -> perform_job(SendDeliveredEmail, args, attempt: 1, max_attempts: 3) end
+      refute Orders.get_order_by_id!(order.id, authorize?: false).delivered_email_failed_at
 
-      assert {:ok, reloaded} = Ash.update(order, %{}, action: :send_delivered_email, authorize?: false)
-      assert reloaded.skip_delivered_email
+      perform_job(SendDeliveredEmail, args, attempt: 3, max_attempts: 3)
+
+      reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert reloaded.delivered_email_failed_at
       assert reloaded.delivered_emailed_at == nil
       assert_no_email_sent()
 
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      refute Enum.any?(versions, &(&1.version_action_name == :send_delivered_email))
+      assert Enum.any?(versions, &(&1.version_action_name == :record_fulfillment_email_failure))
     end
 
-    test "doesn't send twice" do
-      order = fulfillable_order(fulfillment_status: :fulfilled)
+    test "has no scheduler to send one nobody queued" do
+      refute Code.ensure_loaded?(Edenflowers.Orders.Schedulers.SendDeliveredEmail)
+    end
+  end
 
-      assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
+  describe "emailing the confirmation from the admin" do
+    test "queues it after Jennie unticked it, and again after it was sent" do
+      order = fulfillable_order([])
+      actor = admin()
+      {:ok, order} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: actor)
+      refute_enqueued(worker: SendDeliveredEmail)
+
+      assert {:ok, _} = Orders.email_fulfillment_confirmation(order, actor: actor)
+      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
       assert_email_sent()
 
-      perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
-      assert_no_email_sent()
+      assert {:ok, _} = Orders.email_fulfillment_confirmation(order, actor: actor)
+      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+      assert_email_sent()
+    end
+
+    test "needs a fulfilled order with an email, and an admin" do
+      assert {:error, _} =
+               Orders.email_fulfillment_confirmation(fulfillable_order(order_reference: "1401"), actor: admin())
+
+      no_email =
+        fulfillable_order(
+          fulfillment_status: :fulfilled,
+          order_reference: "1402",
+          customer_email: nil,
+          customer_phone_number: "+358401234567"
+        )
+
+      assert {:error, _} = Orders.email_fulfillment_confirmation(no_email, actor: admin())
+
+      fulfilled = fulfillable_order(fulfillment_status: :fulfilled)
+
+      assert {:error, _} =
+               Orders.email_fulfillment_confirmation(fulfilled, actor: generate(admin_user(admin: false)))
+
+      refute_enqueued(worker: SendDeliveredEmail)
     end
   end
 end

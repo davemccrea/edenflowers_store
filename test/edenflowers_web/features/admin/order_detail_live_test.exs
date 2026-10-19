@@ -185,8 +185,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, "#order-status", "Fulfilled")
-    assert has_element?(view, "#order-confirmation-email", "Confirmation queued")
-    assert render(view) =~ "Order marked as collected."
+    assert render(view) =~ "Order marked as collected. Confirmation queued."
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
@@ -203,30 +202,52 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#order-status", "Fulfilled")
     assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :fulfilled
-    assert has_element?(view, "#order-confirmation-email", "Not sent — no customer email address")
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
   end
 
-  test "retries a pending confirmation and updates the status when sending finishes", %{conn: conn} do
+  test "emails the confirmation from the menu and logs it when sent", %{conn: conn} do
     order = placed_order(fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-confirmation-email", "Confirmation pending")
-    view |> element(~s|button[phx-click="retry_fulfillment_email"]|) |> render_click()
-    assert has_element?(view, "#order-confirmation-email", "Confirmation queued")
-    refute has_element?(view, ~s|button[phx-click="retry_fulfillment_email"]|)
+    view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|, "Email confirmation") |> render_click()
+    assert render(view) =~ "Confirmation queued."
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
-    send(view.pid, :refresh_fulfillment_email)
-    refute has_element?(view, "#order-confirmation-email")
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
-    refute has_element?(view, ~s|button[phx-click="retry_fulfillment_email"]|)
+    assert has_element?(view, ~s|button[phx-click="email_fulfillment_confirmation"]|, "Resend confirmation")
+  end
+
+  @tag capture_log: true
+  test "an open page shows a confirmation that failed in the background", %{conn: conn} do
+    Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+      Plug.Conn.send_resp(conn, 503, "unavailable")
+    end)
+
+    order =
+      placed_order(
+        fulfillment_method: :delivery,
+        fulfillment_status: :fulfilled,
+        delivery_photo_slug: "local:///uploads/door.jpg",
+        email_delivery_photo: true
+      )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    refute has_element?(view, "#order-confirmation-failed")
+
+    perform_job(Edenflowers.Orders.Workers.SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}},
+      attempt: 3,
+      max_attempts: 3
+    )
+
+    assert render(view) =~ "Couldn&#39;t email the confirmation."
+    assert has_element?(view, "#order-confirmation-failed", "Check the delivery photo")
+    assert has_element?(view, "#order-log li", "Fulfillment confirmation failed")
   end
 
   test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
     order = placed_order(fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    view |> element(~s|button[phx-click="retry_fulfillment_email"]|) |> render_click()
+    view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|) |> render_click()
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
     order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
@@ -371,7 +392,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert reloaded.fulfillment_status == :fulfilled
-      assert reloaded.skip_delivered_email
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
     end
   end

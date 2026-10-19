@@ -3,10 +3,10 @@ id: TASK-61.1
 title: >-
   Queue the fulfillment confirmation once, record its failure, and let Jennie
   send it again
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-19 07:59'
-updated_date: '2026-10-19 07:59'
+updated_date: '2026-10-19 08:06'
 labels: []
 dependencies: []
 parent_task_id: TASK-61
@@ -40,10 +40,16 @@ Generate the migration from the resource.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Marking an order fulfilled with "email the customer" queues one job; unticked queues none, and no scheduler sends it later
-- [ ] #2 A successful send logs "Fulfillment confirmation emailed" with the recipient and clears any recorded failure
-- [ ] #3 After the last attempt fails, the order records the failure, the log shows "Fulfillment confirmation failed", and an open order page flashes it without polling
-- [ ] #4 Jennie can email the confirmation from the actions menu after unticking it, after a failure, and again after a send
-- [ ] #5 FulfillmentEmail, QueueFulfillmentEmail, retry_fulfillment_email, skip_delivered_email, the scheduler and the status polling are gone
-- [ ] #6 Tests cover queueing, sending, final failure through on_error, resend, and the order page's live update; translations have no fuzzy entries
+- [x] #1 Marking an order fulfilled with "email the customer" queues one job; unticked queues none, and no scheduler sends it later
+- [x] #2 A successful send logs "Fulfillment confirmation emailed" with the recipient and clears any recorded failure
+- [x] #3 After the last attempt fails, the order records the failure, the log shows "Fulfillment confirmation failed", and an open order page flashes it without polling
+- [x] #4 Jennie can email the confirmation from the actions menu after unticking it, after a failure, and again after a send
+- [x] #5 FulfillmentEmail, QueueFulfillmentEmail, retry_fulfillment_email, skip_delivered_email, the scheduler and the status polling are gone
+- [x] #6 Tests cover queueing, sending, final failure through on_error, resend, and the order page's live update; translations have no fuzzy entries
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Background email outcomes publish on ["order", "email", :id] rather than ["order", "fulfillment_email", :id], so TASK-61.2 can share the one topic; the page tells them apart by event (action name).
+<!-- SECTION:NOTES:END -->
