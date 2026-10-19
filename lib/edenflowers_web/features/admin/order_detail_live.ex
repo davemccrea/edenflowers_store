@@ -507,7 +507,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   @impl true
   def handle_event("confirm_fulfillment", _params, socket) do
-    form = to_form(%{"email_customer" => "true", "email_photo" => "true"}, as: :fulfillment)
+    form =
+      to_form(%{"email_customer" => email_by_default(socket.assigns.order, nil), "email_photo" => "true"},
+        as: :fulfillment
+      )
 
     {:noreply,
      socket
@@ -528,7 +531,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  # Answering "Was the customer home?" picks the email default again; ticking
+  # the box by hand otherwise sticks.
   def handle_event("validate_fulfillment", %{"fulfillment" => params}, socket) do
+    params =
+      if params["customer_home"] == socket.assigns.fulfillment_form[:customer_home].value,
+        do: params,
+        else: Map.put(params, "email_customer", email_by_default(socket.assigns.order, params["customer_home"]))
+
     {:noreply, assign(socket, :fulfillment_form, to_form(params, as: :fulfillment))}
   end
 
@@ -692,6 +702,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp email_failed_message("record_receipt_email_failure"), do: ~t"Couldn't email the receipt."
   defp email_failed_message("record_order_details_email_failure"), do: ~t"Couldn't email the order details."
   defp email_failed_message(_event), do: nil
+
+  # Worth an email only when the customer didn't see it arrive: a gift, or an
+  # order left while nobody was home.
+  defp email_by_default(%{fulfillment_method: :pickup}, _customer_home), do: "false"
+  defp email_by_default(%{gift: true}, _customer_home), do: "true"
+  defp email_by_default(_order, "false"), do: "true"
+  defp email_by_default(_order, _customer_home), do: "false"
 
   defp mark_fulfilled(socket, attrs) do
     case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do

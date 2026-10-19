@@ -21,7 +21,7 @@ defmodule Edenflowers.Email.Templates do
     {:course_payment_link, [:assigns]},
     {:newsletter_promo, [:assigns]},
     {:newsletter_already_subscribed, [:assigns]},
-    {:newsletter_resubscribed, [:_assigns]},
+    {:newsletter_resubscribed, [:assigns]},
     {:otp_sign_in, [:assigns]},
     {:email_change_code, [:assigns]},
     {:wedding_enquiry, [:assigns]}
@@ -34,5 +34,18 @@ defmodule Edenflowers.Email.Templates do
       Path.join([__DIR__, "templates", "#{name}.text.eex"]),
       args
     )
+  end
+
+  @doc "Jennie's shop, where pickup orders are collected."
+  def shop_address, do: "Minimossen, #{~t"Myrvägen 1"}, #{~t"65230 Vasa"}"
+
+  @doc "How the emails Jennie sends are signed."
+  def signature do
+    """
+    Jennie
+    Eden Flowers
+    #{shop_address()}
+    040 220 9494 · edenflowers.fi\
+    """
   end
 end

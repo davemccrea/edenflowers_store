@@ -1,14 +1,15 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= if @order.order_details_emailed_at do %><%= gettext("Here is your order as it stands now:") %><% else %><%= gettext("Thank you for your order. Here is what we agreed:") %><% end %>
+<%= if @order.order_details_emailed_at || @order.origin != :custom do %><%= gettext("Here is your order as it stands now:") %><% else %><%= gettext("Thank you for your order. Here is what we agreed:") %><% end %>
 
 <%= for line_item <- @order.line_items do %><%= line_item.quantity %> × <%= line_item.product_name %>  <%= @format_currency.(line_item.subtotal) %>
 <% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
 <% end %><%= gettext("Total") %>  <%= @format_currency.(@order.grand_total) %>
-<%= if Decimal.positive?(@order.amount_paid) do %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
-<%= if Decimal.positive?(@order.balance) do %><%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
-<% end %><% end %>
-<%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Ready to collect at the shop on %{date}", date: @fulfillment_on) %><% end %>
+<%= cond do %><% not Decimal.positive?(@order.amount_paid) -> %><% Decimal.positive?(@order.balance) -> %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
+<%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
+<% true -> %><%= gettext("Paid in full") %>  <%= @format_currency.(@order.amount_paid) %>
+<% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Collect on %{date} from %{shop}", date: @fulfillment_on, shop: shop_address()) %><% end %>
 <%= if @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
 <% end %>
 <%= cond do %><% @payment_link_url -> %><%= gettext("You can pay online here, by card or MobilePay:") %>
@@ -16,9 +17,16 @@
 
 <% not Decimal.positive?(@order.balance) -> %><%= gettext("Nothing is left to pay.") %>
 
+<% @order.payment_terms == :invoice and @order.fulfillment_method == :delivery -> %><%= gettext("I'll send you an invoice after delivery.") %>
+
+<% @order.payment_terms == :invoice -> %><%= gettext("I'll send you an invoice after you've collected your order.") %>
+
+<% @order.payment_terms == :on_fulfillment and @order.fulfillment_method == :delivery -> %><%= gettext("You pay on delivery.") %>
+
+<% @order.payment_terms == :on_fulfillment -> %><%= gettext("You pay when you collect your order.") %>
+
 <% true -> %><% end %><%= gettext("If anything needs changing, just reply and I'll take care of it.") %>
 
 <%= gettext("Warm wishes,") %>
 
-Jennie
-Eden Flowers
+<%= signature() %>

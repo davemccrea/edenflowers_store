@@ -18,4 +18,13 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert [{"Order confirmation", _scenario, :order_confirmation, email} | _] = Previews.all("fi")
     assert email.text_body =~ "lauantaina 14.11.2026"
   end
+
+  test "a cancellation says the refund went back the way the customer paid" do
+    bodies =
+      for {"Order cancelled", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email.text_body}
+
+    assert bodies["refunded to a card"] =~ "to your Visa card ending in 4242."
+    assert bodies["refunded to MobilePay"] =~ "to your MobilePay."
+    assert bodies["refunded, paid more than one way"] =~ "the way you paid."
+  end
 end

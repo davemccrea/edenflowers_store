@@ -2,7 +2,7 @@
 
 <%= gettext("You're already on the Eden Flowers newsletter list, so there's no need to sign up again.") %>
 
-<%= gettext("Your 15% welcome code is still valid:") %>
+<%= gettext("Your 15% welcome code is still valid until %{date}:", date: @use_by) %>
 
 <%= @promo_code %>
 

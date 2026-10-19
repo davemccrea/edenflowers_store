@@ -14,8 +14,8 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
-      assert email.subject =~ "You're booked on the course Course "
-      assert email.text_body =~ ~r/Your place on the course Course \d+ is confirmed\./
+      assert email.subject =~ "You're booked on Course "
+      assert email.text_body =~ ~r/Your place on Course \d+ is confirmed\./
       assert email.text_body =~ "You pay at the course"
       assert email.attachments == []
     end)
@@ -65,7 +65,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     end
 
     test "names the course's late-cancellation fee" do
-      assert paid_confirmation("15.00") =~ ~r/After that, I keep a €15\.00 late-cancellation fee\./
+      assert paid_confirmation("15.00") =~ ~r/After that, I keep €15\.00 of the booking as a late-cancellation fee\./
     end
 
     test "keeps the full-refund wording when there is no fee" do

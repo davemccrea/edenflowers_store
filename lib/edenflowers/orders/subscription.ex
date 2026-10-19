@@ -315,5 +315,11 @@ defmodule Edenflowers.Orders.Subscription do
     min :first_delivery_date, :orders, :fulfillment_date do
       filter expr(origin == :online)
     end
+
+    # Each Occurrence prices delivery afresh to the same address, so the
+    # first order's fee is what later ones cost too, for the set-up email.
+    first :first_order_fulfillment_fee, :orders, :fulfillment_fee do
+      filter expr(origin == :online)
+    end
   end
 end

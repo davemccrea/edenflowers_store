@@ -170,7 +170,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
         assert email.text_body =~ "/pay/#{registration.payment_link_token}"
-        assert email.text_body =~ "You can still pay at the course instead"
+        assert email.text_body =~ "Or pay at the course if you prefer."
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")

@@ -27,7 +27,7 @@ defmodule Edenflowers.WeddingEnquiry.SendEmailsTest do
       assert email.text_body =~ "Hi Anna,"
       assert email.text_body =~ "Saturday 12.6.2027"
       assert email.text_body =~ "- 1 × Bridal bouquet"
-      assert email.text_body =~ "Estimate: €110–€190"
+      assert email.text_body =~ "Rough estimate, not a quote: €110–€190"
     end)
   end
 end

@@ -14,7 +14,7 @@ defmodule Edenflowers.Orders.Workers.SendCancelledEmail do
   def perform(%Oban.Job{args: %{"order_id" => order_id, "refunded_amount" => refunded_amount}}) do
     order =
       Edenflowers.Orders.get_order_by_id!(order_id,
-        load: [:customer_first_name, :recipient_first_name],
+        load: [:customer_first_name, :recipient_first_name, :payments],
         authorize?: false
       )
 

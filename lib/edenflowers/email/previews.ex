@@ -30,7 +30,7 @@ defmodule Edenflowers.Email.Previews do
         course_confirmation(locale) ++
         course_payment_link(locale) ++
         wedding_enquiry(locale) ++
-        account_and_newsletter()
+        account_and_newsletter(locale)
     end)
   end
 
@@ -41,6 +41,8 @@ defmodule Edenflowers.Email.Previews do
           {"fulfilled at checkout (counter sale)", %{fulfillment_status: :fulfilled, cancellable_by_customer?: false}},
           {"with a delivery time", %{fulfillment_time_start: ~T[14:00:00]}},
           {"with a delivery time window", %{fulfillment_time_start: ~T[12:00:00], fulfillment_time_end: ~T[16:00:00]}},
+          {"pickup", %{fulfillment_method: :pickup, recipient_name: nil, delivery_address: nil}},
+          {"subscription order", %{origin: :subscription, cancellable_by_customer?: false}},
           {"no customer first name", %{customer_first_name: nil}}
         ] do
       {"Order confirmation", title, :order_confirmation, Email.order_confirmation(order(attrs, locale))}
@@ -49,15 +51,22 @@ defmodule Edenflowers.Email.Previews do
 
   defp order_details(locale) do
     for {title, attrs, link} <- [
-          {"first send, delivery to a recipient, unpaid, payment link", %{}, @payment_link},
+          {"first send, delivery to a recipient, unpaid, payment link", %{payment_terms: :payment_link}, @payment_link},
           {"re-sent after an edit", %{order_details_emailed_at: ~U[2026-11-10 09:00:00Z]}, @payment_link},
+          {"online order edited after payment, part paid",
+           %{origin: :online, amount_paid: Decimal.new("54.00"), balance: Decimal.new("10.00")}, @payment_link},
           {"pickup, no recipient, no delivery fee",
            %{fulfillment_method: :pickup, fulfillment_fee: nil, recipient_name: nil, delivery_address: nil},
            @payment_link},
           {"part paid, payment link", %{amount_paid: Decimal.new("20.00"), balance: Decimal.new("44.00")},
            @payment_link},
-          {"fully paid", %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}, nil},
-          {"unpaid, no payment link (pay on delivery or invoice)", %{}, nil},
+          {"unpaid, invoice after delivery", %{payment_terms: :invoice}, nil},
+          {"unpaid, invoice after pickup",
+           %{payment_terms: :invoice, fulfillment_method: :pickup, fulfillment_fee: nil, recipient_name: nil}, nil},
+          {"unpaid, pays on delivery", %{payment_terms: :on_fulfillment}, nil},
+          {"unpaid, pays at pickup",
+           %{payment_terms: :on_fulfillment, fulfillment_method: :pickup, fulfillment_fee: nil, recipient_name: nil},
+           nil},
           {"zero delivery fee, with delivery time window",
            %{
              fulfillment_fee: Decimal.new(0),
@@ -89,12 +98,19 @@ defmodule Edenflowers.Email.Previews do
              fulfillment_option: %{fulfillment_method: :pickup},
              delivery_address: nil,
              interval_weeks: 1,
-             product_variant: %{size: :small},
+             next_fulfillment_date: ~D[2026-11-21],
+             product_variant: %{size: :small, price: Decimal.new("35.00")},
+             first_order_fulfillment_fee: Decimal.new(0),
              first_order_discounted?: false,
              card_message: nil,
              user: %{email: "maria@example.com", first_name: nil}
            }},
-          {"delivery, every 4 weeks, large", %{interval_weeks: 4, product_variant: %{size: :large}}}
+          {"delivery, every 4 weeks, large",
+           %{
+             interval_weeks: 4,
+             next_fulfillment_date: ~D[2026-12-12],
+             product_variant: %{size: :large, price: Decimal.new("69.00")}
+           }}
         ] do
       {"Subscription set up", title, :subscription_set_up, Email.subscription_set_up(subscription(attrs, locale))}
     end
@@ -125,11 +141,20 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_cancelled(locale) do
+    mobilepay = [%{amount: Decimal.new("64.00"), payment_method_type: "mobilepay", card_brand: nil, card_last4: nil}]
+
     [
-      {"Order cancelled", "refunded", :order_cancelled,
+      {"Order cancelled", "refunded to a card", :order_cancelled,
        Email.order_cancelled(order(%{}, locale), Decimal.new("64.00"))},
+      {"Order cancelled", "refunded to MobilePay", :order_cancelled,
+       Email.order_cancelled(order(%{payments: mobilepay}, locale), Decimal.new("64.00"))},
+      {"Order cancelled", "refunded, paid more than one way", :order_cancelled,
+       Email.order_cancelled(
+         order(%{payments: [hd(order(%{}, locale).payments) | mobilepay]}, locale),
+         Decimal.new("64.00")
+       )},
       {"Order cancelled", "nothing to refund, no customer first name", :order_cancelled,
-       Email.order_cancelled(order(%{customer_first_name: nil}, locale), Decimal.new(0))}
+       Email.order_cancelled(order(%{customer_first_name: nil, payments: []}, locale), Decimal.new(0))}
     ]
   end
 
@@ -141,6 +166,7 @@ defmodule Edenflowers.Email.Previews do
           {"paid, no late-cancellation fee",
            %{balance: Decimal.new(0), course: %{late_cancellation_fee: Decimal.new(0)}}, nil},
           {"2 places, paid", %{seats: 2, balance: Decimal.new(0)}, nil},
+          {"2 places, unpaid, payment link", %{seats: 2, balance: Decimal.new("90.00")}, @payment_link},
           {"no first name", %{first_name: nil}, @payment_link}
         ] do
       {"Course confirmation", title, :course_confirmation, Email.course_confirmation(registration(attrs, locale), link)}
@@ -175,12 +201,14 @@ defmodule Edenflowers.Email.Previews do
     ]
   end
 
-  defp account_and_newsletter do
+  defp account_and_newsletter(locale) do
+    promo = %{code: "WELCOME-7K2P", expiration_date: ~D[2026-11-18]}
+
     [
       {"Newsletter", "welcome with promo code", :newsletter_promo,
-       Email.newsletter_promo("maria@example.com", "WELCOME-7K2P")},
+       Email.newsletter_promo("maria@example.com", promo, locale)},
       {"Newsletter", "already subscribed", :newsletter_already_subscribed,
-       Email.newsletter_already_subscribed("maria@example.com", "WELCOME-7K2P")},
+       Email.newsletter_already_subscribed("maria@example.com", promo, locale)},
       {"Newsletter", "resubscribed", :newsletter_resubscribed, Email.newsletter_resubscribed("maria@example.com")},
       {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
       {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "730184")}
@@ -194,6 +222,8 @@ defmodule Edenflowers.Email.Previews do
         locale: locale,
         customer_email: "maria@example.com",
         customer_first_name: "Maria",
+        origin: :custom,
+        payment_terms: nil,
         gift: true,
         recipient_name: "Sara Nyström",
         recipient_first_name: "Sara",
@@ -213,7 +243,8 @@ defmodule Edenflowers.Email.Previews do
         fulfillment_fee: Decimal.new("10.00"),
         grand_total: Decimal.new("64.00"),
         amount_paid: Decimal.new(0),
-        balance: Decimal.new("64.00")
+        balance: Decimal.new("64.00"),
+        payments: [%{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}]
       },
       attrs
     )
@@ -225,7 +256,8 @@ defmodule Edenflowers.Email.Previews do
         locale: locale,
         user: %{email: "maria@example.com", first_name: "Maria"},
         fulfillment_option: %{fulfillment_method: :delivery},
-        product_variant: %{size: :medium},
+        product_variant: %{size: :medium, price: Decimal.new("49.00")},
+        first_order_fulfillment_fee: Decimal.new("10.00"),
         interval_weeks: 2,
         delivery_address: "Strandgatan 12, 65100 Vaasa",
         first_delivery_date: ~D[2026-11-14],

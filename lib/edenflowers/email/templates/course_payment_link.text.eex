@@ -1,14 +1,14 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Here is a link to pay for your booking for the course %{course} online, by card or MobilePay:", course: @registration.course.name) %>
+<%= gettext("You can pay for your booking on %{course} online, by card or MobilePay:", course: @registration.course.name) %>
 <%= @payment_link_url %>
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
+<%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 <%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
 
-<%= gettext("You can still pay at the course instead. If your plans change, reply to this email and let me know.") %>
+<%= gettext("Or pay at the course if you prefer.") %> <%= gettext("If your plans change, just reply and let me know at least 7 days before the course.") %>
 
 <%= gettext("See you there,") %>
 
-Jennie
-Eden Flowers
+<%= signature() %>

@@ -26,8 +26,8 @@ defmodule Edenflowers.Email do
     Templates.order_confirmation(%{
       order: order,
       format_date: &Format.weekday_date(&1, order.locale),
-      fulfillment_on: fulfillment_on(Format.weekday_date(order.fulfillment_date, order.locale), order),
-      account_url: EdenflowersWeb.Endpoint.url() <> "/account"
+      fulfillment_on: fulfillment_on(order),
+      account_url: account_url()
     })
   end
 
@@ -48,17 +48,26 @@ defmodule Edenflowers.Email do
         Templates.order_details(%{
           order: order,
           payment_link_url: payment_link_url,
-          fulfillment_on: fulfillment_on(Format.weekday_date(order.fulfillment_date, order.locale), order),
+          fulfillment_on: fulfillment_on(order),
           format_currency: &Format.currency(&1, order.locale)
         })
       )
     end)
   end
 
-  defp fulfillment_on(date, order) do
-    case Format.fulfillment_time(order, order.locale) do
-      nil -> date
-      time -> "#{date} #{time}"
+  # A window reads as the course emails write theirs: "Saturday 14.11.2026, 12:00–16:00".
+  defp fulfillment_on(order) do
+    date = Format.weekday_date(order.fulfillment_date, order.locale)
+
+    case order do
+      %{fulfillment_time_start: nil} ->
+        date
+
+      %{fulfillment_time_end: nil} ->
+        "#{date} #{Format.fulfillment_time(order, order.locale)}"
+
+      %{fulfillment_time_start: start, fulfillment_time_end: finish} ->
+        "#{date}, #{Format.time(start, order.locale)}–#{Format.time(finish, order.locale)}"
     end
   end
 
@@ -70,14 +79,15 @@ defmodule Edenflowers.Email do
   def payment_failed(order, payment_link_url) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
-      |> from(automated_from_address())
+      |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Payment needed for your subscription order #{order.order_reference}")
+      |> subject(~t"Payment needed for your Eden Flowers order #{order.order_reference}")
       |> text_body(
         Templates.payment_failed(%{
           order: order,
           payment_link_url: payment_link_url,
+          account_url: account_url(),
           format_date: &Format.weekday_date(&1, order.locale),
           format_currency: &Format.currency(&1, order.locale)
         })
@@ -87,9 +97,10 @@ defmodule Edenflowers.Email do
 
   @doc """
   What a customer is sent once their Subscription is started: what comes and
-  how often, the first two dates, and where to change it. The first order's
-  receipt goes separately. Expects `:product_variant`, `:fulfillment_option`,
-  `:first_delivery_date` and `user: [:first_name]` loaded.
+  how often, what each costs, the first two dates, and where to change it.
+  The first order's receipt goes separately. Expects `:product_variant`,
+  `:fulfillment_option`, `:first_delivery_date`, `:first_order_fulfillment_fee`
+  and `user: [:first_name]` loaded.
   """
   def subscription_set_up(subscription) do
     EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
@@ -104,11 +115,17 @@ defmodule Edenflowers.Email do
           pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
           size: EdenflowersWeb.Admin.Components.variant_size_label(subscription.product_variant.size),
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
-          account_url: EdenflowersWeb.Endpoint.url() <> "/account",
+          price: Format.currency(subscription_price(subscription), subscription.locale),
+          charge_days: Edenflowers.Orders.Subscription.lead_days(),
+          account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
       )
     end)
+  end
+
+  defp subscription_price(subscription) do
+    Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
 
   def order_fulfilled(order) do
@@ -133,7 +150,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(from_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference} was left for you")
+      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered (photo attached)")
       |> text_body(Templates.order_left_at_door(%{order: order}))
       |> attachment(
         Swoosh.Attachment.new({:data, photo_jpeg}, filename: "eden-flowers-delivery.jpg", content_type: "image/jpeg")
@@ -141,6 +158,9 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  Expects `:payments` loaded, to say where the refund went.
+  """
   def order_cancelled(order, refunded_amount) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
@@ -152,11 +172,27 @@ defmodule Edenflowers.Email do
         Templates.order_cancelled(%{
           order: order,
           refunded: refunded_amount,
+          refunded_to: refunded_to(order.payments),
           format_currency: &Format.currency(&1, order.locale),
           format_date: &Format.weekday_date(&1, order.locale)
         })
       )
     end)
+  end
+
+  # Only orders paid through Stripe can be cancelled by the customer, and
+  # almost always with one payment, so the refund goes back the same way.
+  defp refunded_to(payments) do
+    paid_with =
+      for payment <- payments, Decimal.positive?(payment.amount), uniq: true do
+        {payment.payment_method_type, payment.card_brand, payment.card_last4}
+      end
+
+    case paid_with do
+      [{"card", brand, last4}] when is_binary(brand) and is_binary(last4) -> {:card, String.capitalize(brand), last4}
+      [{"mobilepay", _brand, _last4}] -> :mobilepay
+      _mixed_or_unknown -> :unknown
+    end
   end
 
   def course_confirmation(registration, payment_link_url) do
@@ -165,7 +201,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(from_address())
-      |> subject(~t"You're booked on the course #{course = registration.course.name}")
+      |> subject(~t"You're booked on #{course = registration.course.name}")
       |> text_body(render_course_confirmation(registration, payment_link_url))
     end)
   end
@@ -190,7 +226,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(from_address())
-      |> subject(~t"Pay for your place on the course #{course = registration.course.name}")
+      |> subject(~t"Pay for your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.course_payment_link(%{
           registration: registration,
@@ -222,28 +258,30 @@ defmodule Edenflowers.Email do
     )
   end
 
-  def newsletter_promo(email_address, promo_code) do
+  def newsletter_promo(email_address, promo, locale) do
     new()
     |> from(automated_from_address())
     |> to(email_address)
     |> subject(~t"Welcome to Eden Flowers: your 15% off code inside")
-    |> text_body(Templates.newsletter_promo(%{promo_code: promo_code}))
+    |> text_body(Templates.newsletter_promo(%{promo_code: promo.code, use_by: use_by(promo, locale)}))
   end
 
-  def newsletter_already_subscribed(email_address, promo_code) do
+  def newsletter_already_subscribed(email_address, promo, locale) do
     new()
     |> from(automated_from_address())
     |> to(email_address)
     |> subject(~t"Your Eden Flowers promo code")
-    |> text_body(Templates.newsletter_already_subscribed(%{promo_code: promo_code}))
+    |> text_body(Templates.newsletter_already_subscribed(%{promo_code: promo.code, use_by: use_by(promo, locale)}))
   end
+
+  defp use_by(promo, locale), do: Format.weekday_date(promo.expiration_date, locale)
 
   def newsletter_resubscribed(email_address) do
     new()
     |> from(automated_from_address())
     |> to(email_address)
     |> subject(~t"Welcome back to the Eden Flowers newsletter")
-    |> text_body(Templates.newsletter_resubscribed(%{}))
+    |> text_body(Templates.newsletter_resubscribed(%{shop_url: EdenflowersWeb.Endpoint.url()}))
   end
 
   def error_alert(error) do
@@ -277,6 +315,8 @@ defmodule Edenflowers.Email do
     |> subject(~t"#{code} is your code to confirm your new Eden Flowers email")
     |> text_body(Templates.email_change_code(%{code: code}))
   end
+
+  defp account_url, do: EdenflowersWeb.Endpoint.url() <> "/account"
 
   defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)
 
